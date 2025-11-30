@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-11-30
+
+### Fixed
+
+#### Python Package Distribution
+- **Critical**: Fixed PyPI package missing Python wrapper code - Added `python-source = "packages/python"` to maturin configuration in `crates/spikard-py/pyproject.toml`. Previous releases only contained the native `_spikard` binary module without the Python framework classes (Spikard, Query, Body, etc.), making the package completely unusable. Now maturin properly bundles both the Rust binary and all Python source files.
+
+#### Ruby Gem Distribution
+- **Critical**: Fixed Ruby gem installation failures due to missing workspace crates - Implemented workspace crate vendoring following rb-sys best practices. Added `rake vendor:sync` task to bundle spikard-rb, spikard-core, and spikard-http source files into `packages/ruby/vendor/`. Updated `ext/spikard_rb/Cargo.toml` to reference vendored crates and gemspec to include vendor directory in gem distribution. Previous releases failed to install from RubyGems with "no such file or directory" errors for workspace path dependencies.
+
+#### npm Package Migration
+- **Changed**: Migrated npm packages to @spikard organization scope to prevent spam detection on platform-specific binaries:
+  - `spikard` → `@spikard/node` (Node.js bindings)
+  - `spikard-wasm` → `@spikard/wasm` (WebAssembly bindings)
+  - Platform packages → `@spikard/darwin-arm64`, `@spikard/linux-x64-gnu`, `@spikard/win32-x64-msvc`
+- Updated all documentation, examples, and tests to use new scoped package names
+- Added migration guide (`MIGRATION-0.2.1.md`) for users upgrading from unscoped packages
+
+#### Crates.io Compliance
+- **Fixed**: Reduced keywords to 5 maximum across all crates to comply with crates.io publishing requirements:
+  - `spikard`: 8→5 keywords (removed "web", "web-framework", "rest")
+  - `spikard-node`: 6→5 keywords (removed "bindings")
+  - `spikard-cli`: 6→5 keywords (removed "framework")
+  - `spikard-py`: 6→5 keywords (removed "bindings")
+
+#### CI/CD Improvements
+- Fixed PHP Windows builds to use nightly Rust (required by ext-php-rs)
+- Fixed PHP macOS linking by adding `-undefined dynamic_lookup` linker flags
+- Fixed Ruby Windows builds by adding MSVC compatibility headers for `strings.h`
+- Fixed Python CI tests to use `uv pip install` for proper wheel installation
+- Re-enabled path filters for validated CI workflows (ci-validate, ci-rust, ci-node, ci-ruby, ci-cli, ci-php, ci-python, docs)
+
+### Infrastructure
+- Removed npm package deprecation job from publish workflow (user feedback)
+- Improved documentation deployment with optimized path filters
+- Enhanced sccache integration across all build jobs
+
 ## [0.1.0] - 2025-11-23
 
 ### Added
@@ -178,6 +215,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OpenAPI documentation generation requires schemars types (raw JSON schemas supported but don't contribute to OpenAPI)
 - WebAssembly bindings have limited threading support due to WASM runtime constraints
 - Background tasks in Python require explicit awaitable coroutines (no automatic lambda wrapping)
+
+## [0.2.1] - 2025-11-30
+
+### Changed
+
+#### Breaking Changes - npm Package Scope Migration
+
+All npm packages have been migrated to the `@spikard` organization scope:
+
+- **Node.js bindings**: `spikard` → `@spikard/node`
+- **WebAssembly bindings**: `spikard-wasm` → `@spikard/wasm`
+- **Platform packages**: Automatically scoped under `@spikard` (e.g., `@spikard/darwin-arm64`, `@spikard/linux-x64-gnu`)
+
+**Migration required for TypeScript/JavaScript users:**
+```bash
+# Old installation
+npm install spikard
+npm install spikard-wasm
+
+# New installation
+npm install @spikard/node
+npm install @spikard/wasm
+```
+
+Update all imports:
+```typescript
+// Before
+import { Spikard } from 'spikard';
+import * as wasm from 'spikard-wasm';
+
+// After
+import { Spikard } from '@spikard/node';
+import * as wasm from '@spikard/wasm';
+```
+
+See [MIGRATION-0.2.1.md](MIGRATION-0.2.1.md) for detailed migration instructions.
+
+**Rationale:**
+- Prevents npm spam detection on platform-specific packages
+- Establishes proper package organization under `@spikard` namespace
+- Follows napi-rs best practices for native Node.js addons
+
+**Other language bindings unchanged:**
+- Python: `pip install spikard` (no change)
+- Ruby: `gem install spikard` (no change)
+- PHP: `composer require spikard/spikard` (no change)
+- Rust: `cargo add spikard` (no change)
+
+### Deprecated
+
+- `spikard@0.2.0` on npm (use `@spikard/node@0.2.1`)
+- `spikard-wasm@0.2.0` on npm (use `@spikard/wasm@0.2.1`)
 
 ## [0.2.0] - TBD
 

@@ -5,7 +5,7 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { TestClient } from "spikard-wasm/node";
+import { TestClient } from "@spikard/wasm/node";
 import { describe, expect, test } from "vitest";
 import {
 	createAppSseNotifications,

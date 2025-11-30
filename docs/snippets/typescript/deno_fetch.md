@@ -1,5 +1,5 @@
 ```typescript
-import { Spikard, get } from "npm:spikard-wasm";
+import { Spikard, get } from "npm:@spikard/wasm";
 
 const app = new Spikard();
 

@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "spikard";
+import { TestClient } from "@spikard/node";
 import { describe, expect, test } from "vitest";
 import {
 	createAppQueryParams42NegativeIntegerQueryParam,

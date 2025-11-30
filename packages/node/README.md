@@ -1,9 +1,11 @@
 # Spikard for Node.js
 
+> **Note:** As of v0.2.1, this package has moved to `@spikard/node`. Update your imports from `'spikard'` to `'@spikard/node'`. See [MIGRATION-0.2.1.md](../../MIGRATION-0.2.1.md) for details.
+
 [![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
-[![npm](https://img.shields.io/npm/v/spikard.svg)](https://www.npmjs.com/package/spikard)
-[![npm downloads](https://img.shields.io/npm/dm/spikard.svg)](https://www.npmjs.com/package/spikard)
-[![Node](https://img.shields.io/node/v/spikard.svg)](https://www.npmjs.com/package/spikard)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![npm downloads](https://img.shields.io/npm/dm/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![Node](https://img.shields.io/node/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/Goldziher/spikard/ci.yml?branch=main)](https://github.com/Goldziher/spikard/actions)
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
@@ -32,11 +34,11 @@ High-performance HTTP framework for Node.js powered by a Rust core (Axum + Tower
 Install from npm:
 
 ```bash
-npm install spikard
+npm install @spikard/node
 # or with pnpm
-pnpm add spikard
+pnpm add @spikard/node
 # or with yarn
-yarn add spikard
+yarn add @spikard/node
 ```
 
 **Build from source:**
@@ -55,7 +57,7 @@ pnpm build
 ## Quick Start
 
 ```typescript
-import { Spikard, type Request } from "spikard";
+import { Spikard, type Request } from "@spikard/node";
 import { z } from "zod";
 
 const UserSchema = z.object({
@@ -106,7 +108,7 @@ if (require.main === module) {
 Routes are registered manually using `app.addRoute(metadata, handler)`:
 
 ```typescript
-import { Spikard, type Request } from "spikard";
+import { Spikard, type Request } from "@spikard/node";
 
 const app = new Spikard();
 
@@ -157,7 +159,7 @@ Spikard supports **Zod schemas** and **raw JSON Schema objects**.
 **With Zod (recommended - type inference):**
 
 ```typescript
-import { post } from "spikard";
+import { post } from "@spikard/node";
 import { z } from "zod";
 
 const CreateUserSchema = z.object({
@@ -273,7 +275,7 @@ For automatic parameter extraction:
 ## File Uploads
 
 ```typescript
-import { UploadFile } from "spikard";
+import { UploadFile } from "@spikard/node";
 
 interface UploadRequest {
   file: UploadFile;
@@ -295,7 +297,7 @@ post("/upload")(async function upload(req) {
 ## Streaming Responses
 
 ```typescript
-import { StreamingResponse } from "spikard";
+import { StreamingResponse } from "@spikard/node";
 
 async function* generateData() {
   for (let i = 0; i < 10; i++) {
@@ -315,7 +317,7 @@ get("/stream")(async function stream() {
 ## Configuration
 
 ```typescript
-import { Spikard, runServer, type ServerConfig } from "spikard";
+import { Spikard, runServer, type ServerConfig } from "@spikard/node";
 
 const app = new Spikard();
 
@@ -398,7 +400,7 @@ app.onError(async (response) => {
 ## Background Tasks
 
 ```typescript
-import * as background from "spikard/background";
+import * as background from "@spikard/node/background";
 
 post("/process")(async function process(req) {
   const data = req.json();
@@ -415,7 +417,7 @@ post("/process")(async function process(req) {
 ## Testing
 
 ```typescript
-import { TestClient } from "spikard";
+import { TestClient } from "@spikard/node";
 import { expect } from "vitest";
 
 const app = {
@@ -465,13 +467,13 @@ import {
   type ServerConfig,
   type RouteOptions,
   type HandlerFunction,
-} from "spikard";
+} from "@spikard/node";
 ```
 
 ### Parameter Types
 
 ```typescript
-import { Query, Path, Body, QueryDefault } from "spikard";
+import { Query, Path, Body, QueryDefault } from "@spikard/node";
 
 function handler(
   id: Path<number>,
@@ -582,12 +584,12 @@ Spikard is available across multiple languages:
 
 | Platform | Package | Status |
 |----------|---------|--------|
-| **Node.js** | [spikard](https://www.npmjs.com/package/spikard) | Stable |
+| **Node.js** | [@spikard/node](https://www.npmjs.com/package/@spikard/node) | Stable |
 | **Python** | [spikard](https://pypi.org/project/spikard/) | Stable |
 | **Rust** | [spikard](https://crates.io/crates/spikard) | Stable |
 | **Ruby** | [spikard](https://rubygems.org/gems/spikard) | Stable |
 | **PHP** | [spikard/spikard](https://packagist.org/packages/spikard/spikard) | Stable |
-| **WebAssembly** | [spikard-wasm](https://www.npmjs.com/package/spikard-wasm) | Stable |
+| **WebAssembly** | [@spikard/wasm](https://www.npmjs.com/package/@spikard/wasm) | Stable |
 
 ## License
 

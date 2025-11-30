@@ -10,7 +10,7 @@
  * Run with: node node_basic.js
  */
 
-const { Spikard, get } = require("spikard");
+const { Spikard, get } = require("@spikard/node");
 
 async function runSmokeTest() {
 	const app = new Spikard();

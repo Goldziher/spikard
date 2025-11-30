@@ -10,7 +10,7 @@
 	"devDependencies": {
 		"@types/node": "^24.10.1",
 		"@vitest/coverage-v8": "^4.0.14",
-		"spikard-wasm": "workspace:*",
+		"@spikard/wasm": "workspace:*",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.14"
 	}

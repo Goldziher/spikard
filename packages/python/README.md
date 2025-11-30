@@ -608,10 +608,10 @@ See [examples/README.md](../../examples/README.md) for code generation instructi
 ## Ecosystem Links
 
 - Rust: [Crates.io](https://crates.io/crates/spikard)
-- Node.js: [npm](https://www.npmjs.com/package/spikard)
+- Node.js: [npm (@spikard/node)](https://www.npmjs.com/package/@spikard/node)
 - Ruby: [RubyGems](https://rubygems.org/gems/spikard)
 - PHP: [Packagist](https://packagist.org/packages/spikard/spikard)
-- WebAssembly: [npm (spikard-wasm)](https://www.npmjs.com/package/spikard-wasm)
+- WebAssembly: [npm (@spikard/wasm)](https://www.npmjs.com/package/@spikard/wasm)
 
 ## License
 

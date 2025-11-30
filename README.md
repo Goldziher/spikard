@@ -1,10 +1,12 @@
 # Spikard
 
+> **Note:** As of v0.2.1, npm packages have moved to the `@spikard` scope. Install with `npm install @spikard/node` instead of `npm install spikard`. See [MIGRATION-0.2.1.md](MIGRATION-0.2.1.md) for details.
+
 [![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
 [![PyPI](https://badge.fury.io/py/spikard.svg)](https://badge.fury.io/py/spikard)
-[![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
-[![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
+[![npm](https://img.shields.io/npm/v/@spikard/node)](https://www.npmjs.com/package/@spikard/node)
+[![npm (WASM)](https://img.shields.io/npm/v/@spikard/wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/@spikard/wasm)
 [![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard)](https://packagist.org/packages/spikard/spikard)
 [![Crates.io](https://img.shields.io/crates/v/spikard)](https://crates.io/crates/spikard)
@@ -135,7 +137,7 @@ if __name__ == "__main__":
 
 ### TypeScript (Node/Bun)
 ```typescript
-import { Spikard, type Request } from "spikard";
+import { Spikard, type Request } from "@spikard/node";
 import { z } from "zod";
 
 const UserSchema = z.object({
@@ -498,9 +500,9 @@ See [Python README](packages/python/README.md) for more details.
 
 #### Node.js / TypeScript
 ```bash
-npm install spikard
+npm install @spikard/node
 # or with pnpm
-pnpm add spikard
+pnpm add @spikard/node
 ```
 See [Node.js README](packages/node/README.md) for more details.
 
@@ -518,9 +520,9 @@ See [PHP README](packages/php/README.md) for more details.
 
 #### WebAssembly
 ```bash
-npm install spikard-wasm
+npm install @spikard/wasm
 # or
-pnpm add spikard-wasm
+pnpm add @spikard/wasm
 ```
 See [WASM README](crates/spikard-wasm/README.md) for more details.
 

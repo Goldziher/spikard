@@ -1,7 +1,9 @@
-# spikard-wasm
+# @spikard/wasm
 
-[![npm](https://img.shields.io/npm/v/spikard-wasm.svg)](https://www.npmjs.com/package/spikard-wasm)
-[![npm downloads](https://img.shields.io/npm/dm/spikard-wasm.svg)](https://www.npmjs.com/package/spikard-wasm)
+> **Note:** As of v0.2.1, this package has moved to `@spikard/wasm`. Update your imports from `'spikard-wasm'` to `'@spikard/wasm'`. See [MIGRATION-0.2.1.md](../../MIGRATION-0.2.1.md) for details.
+
+[![npm](https://img.shields.io/npm/v/@spikard/wasm.svg)](https://www.npmjs.com/package/@spikard/wasm)
+[![npm downloads](https://img.shields.io/npm/dm/@spikard/wasm.svg)](https://www.npmjs.com/package/@spikard/wasm)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/Goldziher/spikard/actions/workflows/ci.yaml/badge.svg)](https://github.com/Goldziher/spikard/actions/workflows/ci.yaml)
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
@@ -29,11 +31,11 @@ Spikard HTTP framework compiled to **WebAssembly with full TypeScript support** 
 ### From npm
 
 ```bash
-npm install spikard-wasm
+npm install @spikard/wasm
 # or with yarn
-yarn add spikard-wasm
+yarn add @spikard/wasm
 # or with pnpm
-pnpm add spikard-wasm
+pnpm add @spikard/wasm
 ```
 
 ### From source
@@ -49,7 +51,7 @@ pnpm build   # outputs to dist/
 ### Cloudflare Workers
 
 ```typescript
-import { Spikard, createFetchHandler, get, post } from "spikard-wasm";
+import { Spikard, createFetchHandler, get, post } from "@spikard/wasm";
 
 const app = new Spikard();
 
@@ -73,7 +75,7 @@ export default {
 ### Deno
 
 ```typescript
-import { Spikard, get, post } from "npm:spikard-wasm@0.2.0";
+import { Spikard, get, post } from "npm:@spikard/wasm@0.2.1";
 
 const app = new Spikard();
 
@@ -92,7 +94,7 @@ Deno.serve({ port: 8000 }, (request) => app.handleRequest(request));
 ### Node.js / Bun
 
 ```typescript
-import { Spikard, createFetchHandler, get } from "spikard-wasm";
+import { Spikard, createFetchHandler, get } from "@spikard/wasm";
 
 const app = new Spikard();
 
@@ -112,7 +114,7 @@ console.log(`Server running on http://localhost:${server.port}`);
 ### Browser (with bundler)
 
 ```typescript
-import { Spikard, get } from "spikard-wasm";
+import { Spikard, get } from "@spikard/wasm";
 
 const app = new Spikard();
 
@@ -132,7 +134,7 @@ self.addEventListener("message", async (event) => {
 ### Routing Helpers
 
 ```typescript
-import { Spikard, get, post, put, patch, delete_, head, options } from "spikard-wasm";
+import { Spikard, get, post, put, patch, delete_, head, options } from "@spikard/wasm";
 
 const app = new Spikard();
 
@@ -187,7 +189,7 @@ get("/example", async (req) => {
 ### Response Building
 
 ```typescript
-import { Spikard, get, json, status, withHeaders } from "spikard-wasm";
+import { Spikard, get, json, status, withHeaders } from "@spikard/wasm";
 
 get("/users", async (req) => {
   return json(
@@ -247,7 +249,7 @@ post("/users", async (req) => {
 
 ```typescript
 import { describe, it, expect } from "vitest";
-import { Spikard, TestClient, get } from "spikard-wasm";
+import { Spikard, TestClient, get } from "@spikard/wasm";
 
 describe("API routes", () => {
   const app = new Spikard();
@@ -336,7 +338,7 @@ spikard generate asyncapi \
 ## Lifecycle Hooks
 
 ```typescript
-import { Spikard, HookTypes } from "spikard-wasm";
+import { Spikard, HookTypes } from "@spikard/wasm";
 
 const app = new Spikard();
 
@@ -367,7 +369,7 @@ app.onError(async (error, req) => {
 ### WebSocket Support
 
 ```typescript
-import { Spikard, ws } from "spikard-wasm";
+import { Spikard, ws } from "@spikard/wasm";
 
 const app = new Spikard();
 
@@ -387,7 +389,7 @@ ws("/chat", {
 ### Server-Sent Events (SSE)
 
 ```typescript
-import { Spikard, sse } from "spikard-wasm";
+import { Spikard, sse } from "@spikard/wasm";
 
 const app = new Spikard();
 
@@ -407,7 +409,7 @@ sse("/events", async (req, res) => {
 ## Error Handling
 
 ```typescript
-import { Spikard, HttpError } from "spikard-wasm";
+import { Spikard, HttpError } from "@spikard/wasm";
 
 const app = new Spikard();
 
@@ -541,11 +543,11 @@ Code standards:
 
 ## Related Packages
 
-- **spikard**: [npm.im/spikard](https://npm.im/spikard) - Node.js native bindings
-- **spikard**: [npm.im/spikard](https://npm.im/spikard) - Pure JavaScript/TypeScript implementation
-- **spikard-py**: [pypi.org/project/spikard](https://pypi.org/project/spikard) - Python bindings
+- **@spikard/node**: [npm.im/@spikard/node](https://npm.im/@spikard/node) - Node.js native bindings
+- **spikard**: [pypi.org/project/spikard](https://pypi.org/project/spikard) - Python bindings
 - **spikard**: [rubygems.org/gems/spikard](https://rubygems.org/gems/spikard) - Ruby bindings
-- **spikard**: [packagist.org/packages/spikard/spikard](https://packagist.org/packages/spikard/spikard) - PHP bindings
+- **spikard/spikard**: [packagist.org/packages/spikard/spikard](https://packagist.org/packages/spikard/spikard) - PHP bindings
+- **spikard**: [crates.io/crates/spikard](https://crates.io/crates/spikard) - Rust native
 
 ## License
 
