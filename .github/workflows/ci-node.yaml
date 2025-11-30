@@ -77,13 +77,13 @@ jobs:
         if: runner.os != 'Windows'
         working-directory: crates/spikard-node
         shell: bash
-        run: pnpm exec napi build --release -o ../../packages/node
+        run: pnpm exec napi build --platform --release -o ../../packages/node
 
       - name: Build NAPI bindings (Windows)
         if: runner.os == 'Windows'
         working-directory: crates/spikard-node
         shell: pwsh
-        run: pnpm exec napi build --release -o ../../packages/node
+        run: pnpm exec napi build --platform --release -o ../../packages/node
 
       - name: Upload Node bindings
         uses: actions/upload-artifact@v4

@@ -80,7 +80,7 @@ packages = [ "spikard" ]
 "spikard/py.typed" = "spikard/py.typed"
 
 [tool.maturin]
-module-name = "spikard._spikard"
+module-name = "_spikard"
 python-source = "packages/python"
 manifest-path = "crates/spikard-py/Cargo.toml"
 features = [ "extension-module" ]
