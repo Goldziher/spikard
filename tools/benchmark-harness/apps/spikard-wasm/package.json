@@ -9,7 +9,7 @@
     "dev": "node server.js 8000"
   },
   "dependencies": {
-    "spikard-wasm": "workspace:*"
+    "@spikard/wasm": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2"

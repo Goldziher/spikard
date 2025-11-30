@@ -1,6 +1,6 @@
 # WASM / Edge Binding
 
-Use `spikard-wasm` for runtimes without native modules (Deno, Cloudflare Workers, edge workers, browsers). It mirrors the Node binding but exposes fetch-style handlers.
+Use `@spikard/wasm` for runtimes without native modules (Deno, Cloudflare Workers, edge workers, browsers). It mirrors the Node binding but exposes fetch-style handlers.
 
 ## Quickstart (fetch handler)
 

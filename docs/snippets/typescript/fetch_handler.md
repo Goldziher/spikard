@@ -1,5 +1,5 @@
 ```typescript
-import { Spikard, get, createFetchHandler } from "spikard-wasm";
+import { Spikard, get, createFetchHandler } from "@spikard/wasm";
 import { z } from "zod";
 
 const app = new Spikard();

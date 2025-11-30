@@ -4,8 +4,8 @@
  */
 
 import { Buffer } from "node:buffer";
-import type { RouteMetadata, ServerConfig, SpikardApp } from "spikard-wasm/node";
-import { StreamingResponse } from "spikard-wasm/node";
+import type { RouteMetadata, ServerConfig, SpikardApp } from "@spikard/wasm/node";
+import { StreamingResponse } from "@spikard/wasm/node";
 import { z } from "zod";
 
 type HandlerResponse = {

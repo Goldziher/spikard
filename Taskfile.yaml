@@ -330,14 +330,14 @@ tasks:
   node:lint:
     desc: "Lint TypeScript code with auto-fix (biome + oxlint)"
     cmds:
-      - pnpm biome check --write packages/node/src crates/spikard-node/src e2e/node --log-level=warn
-      - pnpm oxlint packages/node/src crates/spikard-node/src e2e/node
+      - pnpm biome check --write packages/node/src packages/node/native/src e2e/node --log-level=warn
+      - pnpm oxlint packages/node/src packages/node/native/src e2e/node
 
   node:lint:check:
     desc: "Check TypeScript linting without auto-fix"
     cmds:
-      - pnpm biome check packages/node/src crates/spikard-node/src e2e/node --log-level=warn
-      - pnpm oxlint packages/node/src crates/spikard-node/src e2e/node
+      - pnpm biome check packages/node/src packages/node/native/src e2e/node --log-level=warn
+      - pnpm oxlint packages/node/src packages/node/native/src e2e/node
 
   js:lint:
     desc: "Alias for node:lint"
@@ -394,12 +394,12 @@ tasks:
   node:format:
     desc: "Format TypeScript code with biome"
     cmds:
-      - pnpm biome format --write packages/node/src crates/spikard-node/src e2e/node
+      - pnpm biome format --write packages/node/src packages/node/native/src e2e/node
 
   node:format:check:
     desc: "Check TypeScript formatting without modifying files"
     cmds:
-      - pnpm biome format --check packages/node/src crates/spikard-node/src e2e/node
+      - pnpm biome format --check packages/node/src packages/node/native/src e2e/node
 
   js:format:
     desc: "Alias for node:format"
@@ -569,7 +569,7 @@ tasks:
 
   build:node:
     desc: "Build Node.js native bindings with NAPI-RS"
-    dir: crates/spikard-node
+    dir: packages/node/native
     cmds:
       - pnpm run build
 
@@ -580,7 +580,7 @@ tasks:
 
   wasm:build:
     desc: "Build WebAssembly bindings with wasm-bindgen"
-    dir: crates/spikard-wasm
+    dir: packages/wasm
     cmds:
       - pnpm run build:all
 
@@ -748,7 +748,7 @@ tasks:
     desc: "Build all JavaScript/TypeScript packages (node, wasm)"
     cmds:
       - task: build:node
-      - pnpm --filter spikard-wasm run build
+      - pnpm --filter @spikard/wasm run build
 
   run:cli:
     desc: "Run the CLI tool"

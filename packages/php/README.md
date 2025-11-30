@@ -979,8 +979,8 @@ Spikard is available for multiple languages:
 | Language | Package | Status |
 |----------|---------|--------|
 | Python | [spikard](https://pypi.org/project/spikard/) | Stable |
-| Node.js | [spikard](https://www.npmjs.com/package/spikard) | Stable |
+| Node.js | [@spikard/node](https://www.npmjs.com/package/@spikard/node) | Stable |
 | Ruby | [spikard](https://rubygems.org/gems/spikard) | Stable |
 | PHP | [spikard/spikard](https://packagist.org/packages/spikard/spikard) | Stable |
-| WebAssembly | [spikard-wasm](https://www.npmjs.com/package/spikard-wasm) | Stable |
+| WebAssembly | [@spikard/wasm](https://www.npmjs.com/package/@spikard/wasm) | Stable |
 | Rust | [spikard](https://crates.io/crates/spikard) | Stable |

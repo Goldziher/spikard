@@ -13,9 +13,9 @@ Spikard ships a Rust core plus bindings for Python, TypeScript/Node, and Ruby. I
 === "TypeScript / Node"
 
     ```bash
-    npm install spikard
+    npm install @spikard/node
     # or
-    pnpm add spikard
+    pnpm add @spikard/node
     ```
 
 === "Ruby"
