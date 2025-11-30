@@ -3,26 +3,24 @@ name: CI CLI
 on:
   push:
     branches: [main]
-    # TODO: Re-enable path filters once CI is validated green
-    # paths:
-    #   - "crates/spikard-cli/**"
-    #   - "crates/spikard/**/*.rs"
-    #   - "crates/spikard-http/**/*.rs"
-    #   - "Cargo.toml"
-    #   - "Cargo.lock"
-    #   - ".github/workflows/ci-cli.yaml"
-    #   - ".github/actions/setup-rust/**"
+    paths:
+      - "crates/spikard-cli/**"
+      - "crates/spikard/**/*.rs"
+      - "crates/spikard-http/**/*.rs"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/ci-cli.yaml"
+      - ".github/actions/setup-rust/**"
   pull_request:
     branches: [main]
-    # TODO: Re-enable path filters once CI is validated green
-    # paths:
-    #   - "crates/spikard-cli/**"
-    #   - "crates/spikard/**/*.rs"
-    #   - "crates/spikard-http/**/*.rs"
-    #   - "Cargo.toml"
-    #   - "Cargo.lock"
-    #   - ".github/workflows/ci-cli.yaml"
-    #   - ".github/actions/setup-rust/**"
+    paths:
+      - "crates/spikard-cli/**"
+      - "crates/spikard/**/*.rs"
+      - "crates/spikard-http/**/*.rs"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/ci-cli.yaml"
+      - ".github/actions/setup-rust/**"
 
 concurrency:
   group: ci-cli-${{ github.event.pull_request.number || github.ref }}
