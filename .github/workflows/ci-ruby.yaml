@@ -48,11 +48,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Rust
+      - name: Setup Rust (Nightly for Windows)
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-rust
+        with:
+          toolchain: nightly
+          cache-key-prefix: ruby-gem-${{ matrix.os }}
+
+      - name: Setup Rust (Stable for Unix)
+        if: runner.os != 'Windows'
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: ruby-gem-${{ matrix.os }}
@@ -96,10 +104,20 @@ jobs:
             ruby-version: "3.2"
           - os: macos-latest
             ruby-version: "3.2"
+          - os: windows-latest
+            ruby-version: "3.2"
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Rust
+      - name: Setup Rust (Nightly for Windows)
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-rust
+        with:
+          toolchain: nightly
+          cache-key-prefix: ruby-tests-${{ matrix.os }}-${{ matrix.ruby-version }}
+
+      - name: Setup Rust (Stable for Unix)
+        if: runner.os != 'Windows'
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: ruby-tests-${{ matrix.os }}-${{ matrix.ruby-version }}
