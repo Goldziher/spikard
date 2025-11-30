@@ -37,8 +37,8 @@ impl TypeScriptGenerator {
 // Title: {}
 // DO NOT EDIT - regenerate from OpenAPI schema
 
-import {{ route }} from "@spikard/node";
-import type {{ Body, Path, Query, Request }} from "@spikard/node";
+import {{ route }} from "spikard";
+import type {{ Body, Path, Query, Request }} from "spikard";
 import {{ z }} from "zod";
 
 "#,

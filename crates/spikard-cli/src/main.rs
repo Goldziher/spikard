@@ -321,7 +321,7 @@ fn main() -> Result<()> {
             println!("Rust Core: ✓");
             println!("\nLanguage Bindings:");
             println!("  Python:     pip install spikard");
-            println!("  TypeScript: npm install @spikard/node");
+            println!("  TypeScript: npm install spikard");
             println!("  Ruby:       gem install spikard (coming soon)");
             println!("\nUsage:");
             println!("  Python: python server.py");

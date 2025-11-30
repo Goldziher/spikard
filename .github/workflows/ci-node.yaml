@@ -70,10 +70,19 @@ jobs:
 
       - name: Install dependencies
         working-directory: crates/spikard-node
+        shell: bash
         run: pnpm install
 
-      - name: Build NAPI bindings
+      - name: Build NAPI bindings (Unix)
+        if: runner.os != 'Windows'
         working-directory: crates/spikard-node
+        shell: bash
+        run: pnpm exec napi build --release -o ../../packages/node
+
+      - name: Build NAPI bindings (Windows)
+        if: runner.os == 'Windows'
+        working-directory: crates/spikard-node
+        shell: pwsh
         run: pnpm exec napi build --release -o ../../packages/node
 
       - name: Upload Node bindings
@@ -112,10 +121,19 @@ jobs:
 
       - name: Install dependencies
         working-directory: packages/node
+        shell: bash
         run: pnpm install
 
-      - name: Run tests
+      - name: Run tests (Unix)
+        if: runner.os != 'Windows'
         working-directory: packages/node
+        shell: bash
+        run: pnpm test
+
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        working-directory: packages/node
+        shell: pwsh
         run: pnpm test
 
   node-complete:

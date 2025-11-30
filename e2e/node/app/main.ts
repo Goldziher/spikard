@@ -6,8 +6,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, no-unused-vars */
 
 import { Buffer } from "node:buffer";
-import type { RouteMetadata, ServerConfig, SpikardApp } from "@spikard/node";
-import { Spikard, StreamingResponse } from "@spikard/node";
+import type { RouteMetadata, ServerConfig, SpikardApp } from "spikard";
+import { Spikard, StreamingResponse } from "spikard";
 import { z } from "zod";
 
 type HandlerResponse = {

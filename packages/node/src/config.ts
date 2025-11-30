@@ -337,8 +337,8 @@ export interface StaticFilesConfig {
  *
  * @example
  * ```typescript
- * import { Spikard, runServer } from '@spikard/node';
- * import type { ServerConfig } from '@spikard/node';
+ * import { Spikard, runServer } from 'spikard';
+ * import type { ServerConfig } from 'spikard';
  *
  * const config: ServerConfig = {
  *   host: "0.0.0.0",

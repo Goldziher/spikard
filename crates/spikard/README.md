@@ -14,7 +14,7 @@ High-performance HTTP framework built on Axum and Tower-HTTP with type-safe rout
 ### Multi-Language Bindings
 
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![npm](https://img.shields.io/npm/v/spikard.svg)](https://www.npmjs.com/package/spikard)
 [![RubyGems](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
 
@@ -444,7 +444,7 @@ See [spikard-py](../spikard-py/README.md) for details.
 
 ### Node.js / TypeScript
 ```bash
-npm install @spikard/node
+npm install spikard
 ```
 See [spikard-node](../spikard-node/README.md) for details.
 
@@ -462,7 +462,7 @@ See [spikard-php](../spikard-php/README.md) for details.
 
 ### WebAssembly
 ```bash
-npm install @spikard/wasm
+npm install spikard-wasm
 ```
 See [spikard-wasm](../spikard-wasm/README.md) for details.
 

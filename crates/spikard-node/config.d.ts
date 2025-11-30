@@ -214,7 +214,7 @@ export interface OpenApiConfig {
  *
  * @example
  * ```typescript
- * import { Spikard } from '@spikard/node';
+ * import { Spikard } from 'spikard';
  *
  * const config: ServerConfig = {
  *   host: "0.0.0.0",

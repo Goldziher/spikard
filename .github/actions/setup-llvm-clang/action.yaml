@@ -55,25 +55,27 @@ runs:
 
     - name: Install LLVM/Clang (Windows)
       if: runner.os == 'Windows'
-      shell: bash
+      shell: pwsh
       run: |
-        set -euo pipefail
-
-        # Check for existing LLVM installation (using MSYS path format)
-        if [ -d "/c/Program Files/LLVM" ]; then
-          echo "LLVM already installed, using existing version"
-          LLVM_LIBDIR="/c/Program Files/LLVM/bin"
-        else
-          choco install llvm --version 18.1.8 -y || {
-            echo "Failed to install LLVM 18.1.8, checking for any existing version"
-            LLVM_LIBDIR="/c/Program Files/LLVM/bin"
+        # Check for existing LLVM installation
+        $llvmPath = "C:\Program Files\LLVM"
+        if (Test-Path $llvmPath) {
+          Write-Output "LLVM already installed, using existing version"
+          $llvmLibDir = "$llvmPath\bin"
+        } else {
+          try {
+            choco install llvm --version 18.1.8 -y
+            $llvmLibDir = "$llvmPath\bin"
+          } catch {
+            Write-Output "Failed to install LLVM 18.1.8, checking for any existing version"
+            $llvmLibDir = "$llvmPath\bin"
           }
-        fi
+        }
 
         # Validate LLVM installation before proceeding
-        if [ ! -d "${LLVM_LIBDIR}" ]; then
-          echo "Error: LLVM installation failed - ${LLVM_LIBDIR} does not exist"
+        if (-not (Test-Path $llvmLibDir)) {
+          Write-Error "LLVM installation failed - $llvmLibDir does not exist"
           exit 1
-        fi
+        }
 
-        echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+        "LIBCLANG_PATH=$llvmLibDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append

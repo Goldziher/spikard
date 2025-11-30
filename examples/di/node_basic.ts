@@ -10,7 +10,7 @@
  * Run with: node --loader ts-node/esm node_basic.ts
  */
 
-import { get, Spikard } from "@spikard/node";
+import { get, Spikard } from "spikard";
 
 const app = new Spikard();
 

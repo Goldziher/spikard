@@ -5,8 +5,8 @@ WebAssembly bindings for Spikard HTTP framework via wasm-bindgen.
 ## Status & Badges
 
 [![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
-[![npm](https://img.shields.io/npm/v/@spikard/wasm.svg)](https://www.npmjs.com/package/@spikard/wasm)
-[![npm downloads](https://img.shields.io/npm/dm/@spikard/wasm.svg)](https://www.npmjs.com/package/@spikard/wasm)
+[![npm](https://img.shields.io/npm/v/spikard-wasm.svg)](https://www.npmjs.com/package/spikard-wasm)
+[![npm downloads](https://img.shields.io/npm/dm/spikard-wasm.svg)](https://www.npmjs.com/package/spikard-wasm)
 [![Crates.io](https://img.shields.io/crates/v/spikard-wasm.svg)](https://crates.io/crates/spikard-wasm)
 [![Documentation (Rust)](https://docs.rs/spikard-wasm/badge.svg)](https://docs.rs/spikard-wasm)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

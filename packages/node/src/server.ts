@@ -47,8 +47,8 @@ export interface ServerOptions {
  *
  * @example
  * ```typescript
- * import { Spikard, runServer } from '@spikard/node';
- * import type { ServerConfig } from '@spikard/node';
+ * import { Spikard, runServer } from 'spikard';
+ * import type { ServerConfig } from 'spikard';
  *
  * const app = new Spikard();
  * // Register routes...

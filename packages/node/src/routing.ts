@@ -48,7 +48,7 @@ type RouteHandler = (request: Request) => MaybePromise<HandlerResult>;
  *
  * @example
  * ```typescript
- * import { route, Spikard } from '@spikard/node';
+ * import { route, Spikard } from 'spikard';
  * import { z } from 'zod';
  *
  * const app = new Spikard();
@@ -99,7 +99,7 @@ export function route(path: string, options: RouteOptions = {}): (handler: Route
  *
  * @example
  * ```typescript
- * import { get } from '@spikard/node';
+ * import { get } from 'spikard';
  *
  * get("/users/:id")
  * function getUser(request: Request, id: Path<string>) {

@@ -20,7 +20,7 @@
 //! ## Example
 //!
 //! ```typescript
-//! import { Spikard, get } from '@spikard/node';
+//! import { Spikard, get } from 'spikard';
 //!
 //! const app = new Spikard();
 //!
@@ -268,7 +268,7 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
 /// # Example
 ///
 /// ```typescript
-/// import { Spikard, ServerConfig } from '@spikard/node';
+/// import { Spikard, ServerConfig } from 'spikard';
 ///
 /// const config: ServerConfig = {
 ///   host: '0.0.0.0',

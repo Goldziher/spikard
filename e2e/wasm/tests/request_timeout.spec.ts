@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm/node";
+import { TestClient } from "spikard-wasm/node";
 import { describe, expect, test } from "vitest";
 import {
 	createAppRequestTimeoutRequestCompletesBeforeTimeout,

@@ -11,7 +11,7 @@ High-performance Python web framework with a Rust core. Build REST APIs, WebSock
 [![CI Status](https://github.com/Goldziher/spikard/workflows/CI/badge.svg)](https://github.com/Goldziher/spikard/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Crates.io](https://img.shields.io/crates/v/spikard.svg?logo=rust)](https://crates.io/crates/spikard)
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg?logo=npm)](https://www.npmjs.com/package/@spikard/node)
+[![npm](https://img.shields.io/npm/v/spikard.svg?logo=npm)](https://www.npmjs.com/package/spikard)
 [![RubyGems](https://img.shields.io/gem/v/spikard.svg?logo=ruby&logoColor=white)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?logo=php&logoColor=white)](https://packagist.org/packages/spikard/spikard)
 [![Discord](https://img.shields.io/discord/1234567890?logo=discord&logoColor=white&label=community)](https://discord.gg/pXxagNK2zN)
@@ -608,10 +608,10 @@ See [examples/README.md](../../examples/README.md) for code generation instructi
 ## Ecosystem Links
 
 - Rust: [Crates.io](https://crates.io/crates/spikard)
-- Node.js: [npm](https://www.npmjs.com/package/@spikard/node)
+- Node.js: [npm](https://www.npmjs.com/package/spikard)
 - Ruby: [RubyGems](https://rubygems.org/gems/spikard)
 - PHP: [Packagist](https://packagist.org/packages/spikard/spikard)
-- WebAssembly: [npm (@spikard/wasm)](https://www.npmjs.com/package/@spikard/wasm)
+- WebAssembly: [npm (spikard-wasm)](https://www.npmjs.com/package/spikard-wasm)
 
 ## License
 
