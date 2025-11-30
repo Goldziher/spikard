@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 #### Python Package Distribution
-- **Critical**: Fixed PyPI package missing Python wrapper code - Added `python-source = "packages/python"` to maturin configuration in `crates/spikard-py/pyproject.toml`. Previous releases only contained the native `_spikard` binary module without the Python framework classes (Spikard, Query, Body, etc.), making the package completely unusable. Now maturin properly bundles both the Rust binary and all Python source files.
+- **Critical**: Fixed PyPI package missing Python wrapper code - Added `python-source = "../../packages/python"` to maturin configuration in `crates/spikard-py/pyproject.toml` (path must be relative to manifest, not workspace root). Previous releases only contained the native `_spikard` binary module without the Python framework classes (Spikard, Query, Body, etc.), making the package completely unusable. Now maturin properly bundles both the Rust binary and all Python source files.
 
 #### Ruby Gem Distribution
 - **Critical**: Fixed Ruby gem installation failures due to missing workspace crates - Implemented workspace crate vendoring following rb-sys best practices. Added `rake vendor:sync` task to bundle spikard-rb, spikard-core, and spikard-http source files into `packages/ruby/vendor/`. Updated `ext/spikard_rb/Cargo.toml` to reference vendored crates and gemspec to include vendor directory in gem distribution. Previous releases failed to install from RubyGems with "no such file or directory" errors for workspace path dependencies.
