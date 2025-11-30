@@ -62,6 +62,9 @@ jobs:
       - name: Setup LLVM/Clang
         uses: ./.github/actions/setup-llvm-clang
 
+      - name: Setup OpenSSL
+        uses: ./.github/actions/setup-openssl
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:

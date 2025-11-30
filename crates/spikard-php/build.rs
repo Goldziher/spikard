@@ -4,6 +4,12 @@ use std::process::Command;
 fn main() {
     let php_config = env::var("PHP_CONFIG").unwrap_or_else(|_| "php-config".to_string());
 
+    // Add OpenSSL library path from environment (set by setup-openssl action in CI)
+    if let Ok(openssl_lib_dir) = env::var("OPENSSL_LIB_DIR") {
+        println!("cargo:rustc-link-search=native={}", openssl_lib_dir);
+    }
+    println!("cargo:rerun-if-env-changed=OPENSSL_LIB_DIR");
+
     // Get PHP includes
     if let Ok(output) = Command::new(&php_config).arg("--includes").output()
         && output.status.success()
