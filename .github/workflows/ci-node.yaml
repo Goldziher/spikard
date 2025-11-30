@@ -91,6 +91,7 @@ jobs:
           name: napi-bindings-${{ matrix.os }}
           path: packages/node/*.node
           retention-days: 7
+          if-no-files-found: error
 
   test-node:
     name: Test Node (${{ matrix.os }})
@@ -118,6 +119,10 @@ jobs:
         with:
           name: napi-bindings-${{ matrix.os }}
           path: packages/node/
+
+      - name: Verify bindings downloaded
+        shell: bash
+        run: ls -la packages/node/*.node
 
       - name: Install dependencies
         working-directory: packages/node

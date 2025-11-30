@@ -80,7 +80,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ruby-gem-${{ matrix.os }}
-          path: packages/ruby/**/*.{so,bundle}
+          path: |
+            packages/ruby/**/*.so
+            packages/ruby/**/*.bundle
           retention-days: 7
 
   test-ruby:

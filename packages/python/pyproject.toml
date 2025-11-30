@@ -78,3 +78,9 @@ packages = [ "spikard" ]
 
 [tool.hatch.build.targets.wheel.force-include]
 "spikard/py.typed" = "spikard/py.typed"
+
+[tool.maturin]
+module-name = "spikard._spikard"
+python-source = "packages/python"
+manifest-path = "crates/spikard-py/Cargo.toml"
+features = [ "extension-module" ]
