@@ -224,7 +224,7 @@ class Spikard:
             pass
 
         try:
-            from _spikard import run_server  # noqa: PLC0415
+            from _spikard import run_server  # type: ignore[attr-defined] # noqa: PLC0415
         except ImportError as e:
             raise RuntimeError(
                 "Failed to import _spikard extension module.\n"

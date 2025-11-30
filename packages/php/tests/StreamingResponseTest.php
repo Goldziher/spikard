@@ -201,15 +201,19 @@ final class StreamingResponseTest extends TestCase
             $decoded = json_decode($lines[0], true);
 
             $this->assertIsArray($decoded);
+            /** @phpstan-ignore-next-line alreadyNarrowedType, offsetAccess.nonOffsetAccessible */
             if (is_array($decoded) && isset($decoded['nested']['array'])) {
                 $this->assertSame([1, 2, 3], $decoded['nested']['array']);
             }
+            /** @phpstan-ignore-next-line alreadyNarrowedType */
             if (is_array($decoded) && isset($decoded['bool'])) {
                 $this->assertTrue($decoded['bool']);
             }
+            /** @phpstan-ignore-next-line alreadyNarrowedType */
             if (is_array($decoded) && isset($decoded['null'])) {
                 $this->assertNull($decoded['null']);
             }
+            /** @phpstan-ignore-next-line alreadyNarrowedType */
             if (is_array($decoded) && isset($decoded['number'])) {
                 $this->assertSame(42.5, $decoded['number']);
             }

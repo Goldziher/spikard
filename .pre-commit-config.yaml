@@ -34,7 +34,7 @@ repos:
     hooks:
       - id: biome-check
         exclude: |
-          benchmark-harness/|benchmark-results/|results/|target/
+          benchmark-harness/|benchmark-results/|results/|target/|docs/css/
   - repo: https://github.com/oxc-project/mirrors-oxlint
     rev: v1.30.0
     hooks:
@@ -43,7 +43,7 @@ repos:
         exclude: |
           benchmark-harness/|benchmark-results/|results/|target/
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.6
+    rev: v0.14.7
     hooks:
       - id: ruff
         args: ["--fix", "--unsafe-fixes"]

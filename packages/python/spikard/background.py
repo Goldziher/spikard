@@ -5,7 +5,7 @@ import threading
 from collections.abc import Coroutine
 from typing import Any
 
-from _spikard import background_run as _background_run
+from _spikard import background_run as _background_run  # type: ignore[attr-defined]
 
 _PENDING_TASKS: set[asyncio.Task[object]] = set()
 

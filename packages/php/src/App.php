@@ -156,7 +156,7 @@ final class App
      */
     public function registerController(string|object $controller): self
     {
-        $instance = is_object($controller) ? $controller : new $controller();
+        $instance = \is_object($controller) ? $controller : new $controller();
         $reflection = new ReflectionClass($instance);
         $clone = clone $this;
 
@@ -168,7 +168,7 @@ final class App
 
             // Find route attributes
             $routeAttributes = $method->getAttributes(Route::class, \ReflectionAttribute::IS_INSTANCEOF);
-            if (count($routeAttributes) === 0) {
+            if (\count($routeAttributes) === 0) {
                 continue;
             }
 
@@ -177,9 +177,9 @@ final class App
 
             // Collect middleware from Middleware attributes
             $middlewareAttributes = $method->getAttributes(Middleware::class);
-            $middleware = array_merge(
+            $middleware = \array_merge(
                 $routeAttr->middleware,
-                array_map(static fn ($attr) => $attr->newInstance()->middleware, $middlewareAttributes)
+                \array_map(static fn ($attr) => $attr->newInstance()->middleware, $middlewareAttributes)
             );
 
             // Create handler wrapper

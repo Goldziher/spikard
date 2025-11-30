@@ -309,11 +309,17 @@ final class RequestResponseTest extends TestCase
         $response = Response::json($data);
 
         $this->assertSame($data, $response->body);
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertIsString($response->body['string']);
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertIsInt($response->body['int']);
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertIsFloat($response->body['float']);
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertTrue($response->body['bool']);
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertNull($response->body['null']);
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertIsArray($response->body['array']);
     }
 }

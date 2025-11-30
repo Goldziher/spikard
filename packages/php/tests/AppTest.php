@@ -150,6 +150,7 @@ final class AppTest extends TestCase
         $routes = $app->routes();
         $this->assertCount(1, $routes);
         $route = $routes[0];
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertIsArray($route);
         $this->assertTrue(isset($route['request_schema']));
         $this->assertTrue(isset($route['response_schema']));

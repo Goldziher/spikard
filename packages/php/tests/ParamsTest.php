@@ -49,7 +49,9 @@ final class ParamsTest extends TestCase
         $query = new Query();
 
         $this->assertFalse($query->hasDefault());
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertNull($query->getDefault());
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertNull($query());
     }
 
@@ -67,6 +69,7 @@ final class ParamsTest extends TestCase
         $path = new Path();
 
         $this->assertFalse($path->hasDefault());
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertNull($path->getDefault());
     }
 
@@ -127,6 +130,7 @@ final class ParamsTest extends TestCase
         $cookie = new Cookie(defaultFactory: fn () => bin2hex(random_bytes(16)));
 
         $this->assertTrue($cookie->hasDefault());
+        /** @phpstan-ignore-next-line method.impossibleType */
         $this->assertIsString($cookie->getDefault());
         $this->assertSame(32, strlen($cookie->getDefault())); // 16 bytes = 32 hex chars
     }
@@ -146,6 +150,7 @@ final class ParamsTest extends TestCase
         $body = new Body(defaultFactory: fn () => ['timestamp' => time()]);
 
         $this->assertTrue($body->hasDefault());
+        /** @phpstan-ignore-next-line method.impossibleType */
         $this->assertIsArray($body->getDefault());
         $this->assertArrayHasKey('timestamp', $body->getDefault());
     }
@@ -210,6 +215,7 @@ final class ParamsTest extends TestCase
 
         // null is a valid default, but hasDefault checks for non-null
         $this->assertFalse($query->hasDefault());
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
         $this->assertNull($query->getDefault());
     }
 
