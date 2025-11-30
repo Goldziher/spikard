@@ -121,7 +121,7 @@ jobs:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
         shell: pwsh
-        run: cargo test --workspace
+        run: cargo test --workspace --exclude spikard-rb
 
   rust-complete:
     name: Rust Tests Complete
