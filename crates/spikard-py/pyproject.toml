@@ -26,4 +26,4 @@ classifiers = [
 [tool.maturin]
 module-name = "_spikard"
 features = [ "extension-module" ]
-python-source = "packages/python"
+python-source = "../../packages/python"
