@@ -128,12 +128,3 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
         run: bundle exec rspec
-
-  ruby-complete:
-    name: Ruby CI Complete
-    needs: [build-ruby-gem, test-ruby]
-    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - run: echo "Ruby CI completed successfully"

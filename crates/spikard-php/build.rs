@@ -34,7 +34,7 @@ fn main() {
         }
     }
 
-    // Get PHP includes
+    // Get PHP includes (for header validation, not linking)
     if let Ok(output) = Command::new(&php_config).arg("--includes").output()
         && output.status.success()
     {
@@ -47,23 +47,43 @@ fn main() {
     }
 
     // Get PHP libs
-    // Use a whitelist approach for PHP libraries to avoid linking optional/missing extensions.
-    // Different PHP builds include different optional extensions (libsodium, aspell, tidy, sybdb, etc)
-    // that may not be available in all CI environments. We only link essential core libraries.
-    // This ensures consistent builds across different PHP installations and platforms.
-    let essential_libs = ["php", "m", "c", "pthread", "resolv", "xml2", "z", "ssl", "crypto"];
-
-    if let Ok(output) = Command::new(&php_config).arg("--libs").output()
-        && output.status.success()
+    // On macOS, PHP extensions use -undefined dynamic_lookup (set in .cargo/config.toml)
+    // to defer symbol resolution to runtime when the extension is loaded by PHP.
+    // We do NOT explicitly link against the PHP library on macOS.
+    // On other platforms, we use a whitelist approach to avoid linking optional/missing extensions.
+    #[cfg(not(target_os = "macos"))]
     {
-        let libs = String::from_utf8_lossy(&output.stdout);
-        for lib in libs.split_whitespace() {
-            if let Some(path) = lib.strip_prefix("-L") {
-                println!("cargo:rustc-link-search=native={}", path);
-            } else if let Some(name) = lib.strip_prefix("-l") {
-                // Only link essential PHP core libraries (whitelist approach)
-                if essential_libs.contains(&name) {
-                    println!("cargo:rustc-link-lib=dylib={}", name);
+        let essential_libs = ["php", "m", "c", "pthread", "resolv", "xml2", "z", "ssl", "crypto"];
+
+        if let Ok(output) = Command::new(&php_config).arg("--libs").output()
+            && output.status.success()
+        {
+            let libs = String::from_utf8_lossy(&output.stdout);
+            for lib in libs.split_whitespace() {
+                if let Some(path) = lib.strip_prefix("-L") {
+                    println!("cargo:rustc-link-search=native={}", path);
+                } else if let Some(name) = lib.strip_prefix("-l") {
+                    // Only link essential PHP core libraries (whitelist approach)
+                    if essential_libs.contains(&name) {
+                        println!("cargo:rustc-link-lib=dylib={}", name);
+                    }
+                }
+            }
+        }
+    }
+
+    // On macOS, we rely on -undefined dynamic_lookup from .cargo/config.toml
+    // PHP symbols will be resolved at runtime when the extension is loaded
+    #[cfg(target_os = "macos")]
+    {
+        // Get ldflags for library search paths only (not -l flags)
+        if let Ok(output) = Command::new(&php_config).arg("--ldflags").output()
+            && output.status.success()
+        {
+            let ldflags = String::from_utf8_lossy(&output.stdout);
+            for flag in ldflags.split_whitespace() {
+                if let Some(path) = flag.strip_prefix("-L") {
+                    println!("cargo:rustc-link-search=native={}", path);
                 }
             }
         }

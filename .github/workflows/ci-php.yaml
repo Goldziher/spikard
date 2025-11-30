@@ -50,7 +50,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v6
 
@@ -85,7 +85,13 @@ jobs:
           echo "Found PHP config at: ${PHP_CONFIG}"
           ${PHP_CONFIG} --version || true
 
-      - name: Build PHP extension
+      - name: Build PHP extension (Unix)
+        if: runner.os != 'Windows'
+        run: cargo build --release -p spikard-php --features extension-module
+
+      - name: Build PHP extension (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: cargo build --release -p spikard-php --features extension-module
 
       - name: Upload PHP extension artifact
@@ -95,6 +101,7 @@ jobs:
           path: |
             target/release/*.so
             target/release/*.dylib
+            target/release/*.dll
           retention-days: 7
 
   test-php:
@@ -105,7 +112,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         php: ["8.2", "8.3"]
     steps:
       - uses: actions/checkout@v6
@@ -145,15 +152,13 @@ jobs:
         working-directory: packages/php
         run: composer install --no-interaction --no-progress
 
-      - name: Run PHP tests
+      - name: Run PHP tests (Unix)
+        if: runner.os != 'Windows'
         working-directory: packages/php
         run: composer test
 
-  php-complete:
-    name: PHP Tests Complete
-    needs: [build-php-extension, test-php]
-    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - run: echo "PHP tests passed"
+      - name: Run PHP tests (Windows)
+        if: runner.os == 'Windows'
+        working-directory: packages/php
+        shell: pwsh
+        run: composer test

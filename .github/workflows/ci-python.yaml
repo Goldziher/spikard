@@ -157,12 +157,3 @@ jobs:
           path: target/wheels/*.tar.gz
           if-no-files-found: error
           retention-days: 7
-
-  python-complete:
-    name: Python Tests Complete
-    needs: [build-python-wheels, test-python, build-python-sdist]
-    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - run: echo "All Python tests passed"

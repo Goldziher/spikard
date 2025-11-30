@@ -36,7 +36,10 @@ git-fetch-with-cli = false
 [target.x86_64-pc-windows-msvc]
 # Windows MSVC specific settings
 
-# macOS ARM64 needs -undefined dynamic_lookup for bundled Ruby (homebrew)
+# macOS needs -undefined dynamic_lookup for dynamic language extensions (Ruby, PHP)
+# This allows Zend engine and Ruby VM symbols to be resolved at runtime when the
+# extension is loaded by the host interpreter, rather than at link time.
+# See: https://github.com/rust-lang/rust/pull/66204
 [target.'cfg(target_os = "macos")']
 rustflags = ["-C", "link-arg=-Wl,-undefined,dynamic_lookup"]
 

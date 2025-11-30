@@ -201,12 +201,3 @@ jobs:
       - name: Run PHPStan
         working-directory: packages/php
         run: composer run lint
-
-  validation-complete:
-    name: Validation Complete
-    needs: [lint-rust, lint-python, lint-typescript, lint-ruby, lint-php]
-    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - run: echo "All validation checks passed"
