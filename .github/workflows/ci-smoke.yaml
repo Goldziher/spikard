@@ -70,12 +70,12 @@ jobs:
       - name: Build Python binding (dev)
         run: |
           cd crates/spikard-py
-          cargo build --dev
+          uv run maturin develop
 
       - name: Run Python smoke test
         run: |
-          cd examples/python
-          uv run python main.py
+          cd examples/di
+          uv run python python_basic.py
 
   smoke-node:
     name: Smoke Test Node
@@ -99,8 +99,8 @@ jobs:
 
       - name: Run Node smoke test
         run: |
-          cd examples/node
-          node index.js
+          cd examples/di
+          node node_basic.ts
 
   smoke-complete:
     name: Smoke Tests Complete

@@ -97,8 +97,7 @@ final class ControllerMethodHandler implements HandlerInterface
                     if ($value === null) {
                         return $defaultValue->getDefault();
                     }
-                    /** @phpstan-ignore-next-line alreadyNarrowedType */
-                    return \is_array($value) && \count($value) === 1 ? $value[0] : $value;
+                    return \count($value) === 1 ? $value[0] : $value;
                 }
 
                 if ($defaultValue instanceof Path) {
@@ -138,8 +137,7 @@ final class ControllerMethodHandler implements HandlerInterface
         // Check if it's a query parameter by name
         if (isset($request->queryParams[$name])) {
             $value = $request->queryParams[$name];
-            /** @phpstan-ignore-next-line alreadyNarrowedType */
-            return \is_array($value) && \count($value) === 1 ? $value[0] : $value;
+            return \count($value) === 1 ? $value[0] : $value;
         }
 
         // Check if it has a default value

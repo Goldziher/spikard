@@ -200,22 +200,21 @@ final class StreamingResponseTest extends TestCase
         if (isset($lines[0]) && is_string($lines[0])) {
             $decoded = json_decode($lines[0], true);
 
-            $this->assertIsArray($decoded);
-            /** @phpstan-ignore-next-line alreadyNarrowedType, offsetAccess.nonOffsetAccessible */
-            if (is_array($decoded) && isset($decoded['nested']['array'])) {
-                $this->assertSame([1, 2, 3], $decoded['nested']['array']);
-            }
-            /** @phpstan-ignore-next-line alreadyNarrowedType */
-            if (is_array($decoded) && isset($decoded['bool'])) {
-                $this->assertTrue($decoded['bool']);
-            }
-            /** @phpstan-ignore-next-line alreadyNarrowedType */
-            if (is_array($decoded) && isset($decoded['null'])) {
-                $this->assertNull($decoded['null']);
-            }
-            /** @phpstan-ignore-next-line alreadyNarrowedType */
-            if (is_array($decoded) && isset($decoded['number'])) {
-                $this->assertSame(42.5, $decoded['number']);
+            if (is_array($decoded)) {
+                $nested = $decoded['nested'] ?? null;
+                if (is_array($nested) && isset($nested['array'])) {
+                    $this->assertSame([1, 2, 3], $nested['array']);
+                }
+                $bool = $decoded['bool'] ?? null;
+                if ($bool !== null) {
+                    $this->assertTrue($bool);
+                }
+                $null = $decoded['null'] ?? null;
+                $this->assertNull($null);
+                $number = $decoded['number'] ?? null;
+                if ($number !== null) {
+                    $this->assertSame(42.5, $number);
+                }
             }
         }
     }

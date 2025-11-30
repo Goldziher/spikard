@@ -22,6 +22,7 @@ if profiling_module.exists():
     sys.path.insert(0, str(profiling_module.parent))
     try:
         import python_metrics
+
         python_metrics.enable_profiling()
     except ImportError:
         print("⚠ Failed to import profiling module", file=sys.stderr)
@@ -188,9 +189,7 @@ async def get_path_simple(id: str = Path()) -> dict[str, Any]:
 
 
 @get("/path/multiple/{user_id}/{post_id}")
-async def get_path_multiple(
-    user_id: str = Path(), post_id: str = Path()
-) -> dict[str, Any]:
+async def get_path_multiple(user_id: str = Path(), post_id: str = Path()) -> dict[str, Any]:
     """Multiple path parameters."""
     return {"user_id": user_id, "post_id": post_id}
 

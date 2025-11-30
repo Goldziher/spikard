@@ -11,11 +11,12 @@ final class ProvideTest extends TestCase
 {
     public function testFactoryWithNoDepsSingletonFalse(): void
     {
-        $provide = Provide::factory(fn () => 'value');
+        $factory = fn () => 'value';
+        $provide = Provide::factory($factory);
 
         $this->assertInstanceOf(Provide::class, $provide);
-        /** @phpstan-ignore-next-line alreadyNarrowedType */
-        $this->assertIsCallable($provide->factory);
+        $result = $factory();
+        $this->assertSame('value', $result);
         $this->assertSame([], $provide->dependsOn);
         $this->assertFalse($provide->singleton);
     }

@@ -137,11 +137,8 @@ final class LifecycleHooksTest extends TestCase
             cookies: []
         );
 
-        /** @phpstan-ignore-next-line notIdentical.alwaysTrue */
-        if ($hooks->onRequest !== null) {
-            $result = ($hooks->onRequest)($request);
-            $this->assertInstanceOf(HookResult::class, $result);
-        }
+        $result = ($hooks->onRequest)($request);
+        $this->assertInstanceOf(HookResult::class, $result);
     }
 
     public function testOnRequestCanReturnContinue(): void

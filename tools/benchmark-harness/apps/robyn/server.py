@@ -27,6 +27,7 @@ app = Robyn(__file__)
 
 class SmallPayload(BaseModel):
     """Small JSON payload model (~100 bytes)."""
+
     name: str
     description: str
     price: float
@@ -35,6 +36,7 @@ class SmallPayload(BaseModel):
 
 class Address(BaseModel):
     """Address nested model."""
+
     street: str
     city: str
     state: str
@@ -43,6 +45,7 @@ class Address(BaseModel):
 
 class MediumPayload(BaseModel):
     """Medium JSON payload model (~1KB)."""
+
     name: str
     email: str
     age: int
@@ -52,6 +55,7 @@ class MediumPayload(BaseModel):
 
 class Item(BaseModel):
     """Item nested model."""
+
     id: str
     name: str
     price: float
@@ -60,6 +64,7 @@ class Item(BaseModel):
 
 class LargePayload(BaseModel):
     """Large JSON payload model (~10KB)."""
+
     user_id: str
     name: str
     email: str
@@ -69,6 +74,7 @@ class LargePayload(BaseModel):
 
 class VeryLargePayload(BaseModel):
     """Very large JSON payload model (~100KB)."""
+
     batch_id: str
     records: list[dict[str, Any]]
     summary: dict[str, Any]
@@ -167,22 +173,26 @@ async def get_path_simple(request: Request):
 @app.get("/path/multiple/:user_id/:post_id")
 async def get_path_multiple(request: Request):
     """Multiple path parameters."""
-    return jsonify({
-        "user_id": request.path_params["user_id"],
-        "post_id": request.path_params["post_id"],
-    })
+    return jsonify(
+        {
+            "user_id": request.path_params["user_id"],
+            "post_id": request.path_params["post_id"],
+        }
+    )
 
 
 @app.get("/path/deep/:org/:team/:project/:resource/:id")
 async def get_path_deep(request: Request):
     """Deep nested path parameters."""
-    return jsonify({
-        "org": request.path_params["org"],
-        "team": request.path_params["team"],
-        "project": request.path_params["project"],
-        "resource": request.path_params["resource"],
-        "id": request.path_params["id"],
-    })
+    return jsonify(
+        {
+            "org": request.path_params["org"],
+            "team": request.path_params["team"],
+            "project": request.path_params["project"],
+            "resource": request.path_params["resource"],
+            "id": request.path_params["id"],
+        }
+    )
 
 
 @app.get("/path/int/:id")
