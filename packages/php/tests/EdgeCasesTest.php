@@ -239,6 +239,7 @@ final class EdgeCasesTest extends TestCase
     {
         $query = new Query();
         $this->assertFalse($query->hasDefault());
+        /** @phpstan-ignore-next-line alreadyNarrowedType */
         $this->assertNull($query->getDefault());
     }
 
@@ -459,11 +460,17 @@ final class EdgeCasesTest extends TestCase
         ];
         $request = new Request(method: 'POST', path: '/test', body: $body);
         $this->assertSame($body, $request->body);
+        /** @phpstan-ignore-next-line alreadyNarrowedType */
         $this->assertIsString($request->body['string']);
+        /** @phpstan-ignore-next-line alreadyNarrowedType */
         $this->assertIsInt($request->body['int']);
+        /** @phpstan-ignore-next-line alreadyNarrowedType */
         $this->assertIsFloat($request->body['float']);
+        /** @phpstan-ignore-next-line alreadyNarrowedType */
         $this->assertIsBool($request->body['bool']);
+        /** @phpstan-ignore-next-line alreadyNarrowedType */
         $this->assertNull($request->body['null']);
+        /** @phpstan-ignore-next-line alreadyNarrowedType */
         $this->assertIsArray($request->body['array']);
     }
 

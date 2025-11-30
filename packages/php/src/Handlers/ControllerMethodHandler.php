@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Spikard\Handlers;
 
+use function is_array;
+
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -15,8 +17,6 @@ use Spikard\Http\Params\Path;
 use Spikard\Http\Params\Query;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
-
-use function is_array;
 
 /**
  * Handler wrapper for controller methods discovered via attributes.
@@ -97,7 +97,8 @@ final class ControllerMethodHandler implements HandlerInterface
                     if ($value === null) {
                         return $defaultValue->getDefault();
                     }
-                    return is_array($value) && count($value) === 1 ? $value[0] : $value;
+                    /** @phpstan-ignore-next-line alreadyNarrowedType */
+                    return \is_array($value) && \count($value) === 1 ? $value[0] : $value;
                 }
 
                 if ($defaultValue instanceof Path) {
@@ -137,7 +138,8 @@ final class ControllerMethodHandler implements HandlerInterface
         // Check if it's a query parameter by name
         if (isset($request->queryParams[$name])) {
             $value = $request->queryParams[$name];
-            return is_array($value) && count($value) === 1 ? $value[0] : $value;
+            /** @phpstan-ignore-next-line alreadyNarrowedType */
+            return \is_array($value) && \count($value) === 1 ? $value[0] : $value;
         }
 
         // Check if it has a default value
@@ -165,7 +167,7 @@ final class ControllerMethodHandler implements HandlerInterface
         }
 
         // Array or object - convert to JSON response
-        if (is_array($result) || is_object($result)) {
+        if (\is_array($result) || \is_object($result)) {
             return new Response(
                 statusCode: 200,
                 body: $result,
@@ -174,7 +176,7 @@ final class ControllerMethodHandler implements HandlerInterface
         }
 
         // String - text response
-        if (is_string($result)) {
+        if (\is_string($result)) {
             return new Response(
                 statusCode: 200,
                 body: $result,

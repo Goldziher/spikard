@@ -13215,18 +13215,14 @@ async def di_multiple_dependencies_with_cleanup_success(
     return Response(
         content={"session_id": session["id"], "active": session["active"]},
         status_code=200,
-        headers={"Content-Type": "application/json"}
+        headers={"Content-Type": "application/json"},
     )
 
 
 def di_multiple_dependencies_with_cleanup_success_background_state() -> Any:
     """Background state endpoint."""
     state = BACKGROUND_STATE.get("cleanup_events_di_multiple_dependencies_with_cleanup_success", [])
-    return Response(
-        content={"cleanup_order": state},
-        status_code=200,
-        headers={"Content-Type": "application/json"}
-    )
+    return Response(content={"cleanup_order": state}, status_code=200, headers={"Content-Type": "application/json"})
 
 
 async def di_multiple_dependencies_with_cleanup_success_cleanup_state() -> Any:
@@ -13325,26 +13321,24 @@ async def di_resource_cleanup_after_request_success(
     return Response(
         content={"session_id": db_session["id"], "active": db_session["active"]},
         status_code=200,
-        headers={"Content-Type": "application/json"}
+        headers={"Content-Type": "application/json"},
     )
 
 
 def di_resource_cleanup_after_request_success_background_state() -> Any:
     """Background state endpoint."""
     state = BACKGROUND_STATE.get("cleanup_events_di_resource_cleanup_after_request_success", [])
-    return Response(
-        content={"cleanup_events": state},
-        status_code=200,
-        headers={"Content-Type": "application/json"}
-    )
+    return Response(content={"cleanup_events": state}, status_code=200, headers={"Content-Type": "application/json"})
 
 
 async def di_resource_cleanup_after_request_success_cleanup_state() -> Any:
     """Return cleanup state for DI fixture."""
     return Response(
-        content={"cleanup_events": BACKGROUND_STATE.get("cleanup_events_di_resource_cleanup_after_request_success", [])},
+        content={
+            "cleanup_events": BACKGROUND_STATE.get("cleanup_events_di_resource_cleanup_after_request_success", [])
+        },
         status_code=200,
-        headers={"Content-Type": "application/json"}
+        headers={"Content-Type": "application/json"},
     )
 
 
@@ -13439,7 +13433,7 @@ async def di_singleton_dependency_caching_success(
     return Response(
         content={"id": app_counter["id"], "count": app_counter["count"]},
         status_code=200,
-        headers={"Content-Type": "application/json"}
+        headers={"Content-Type": "application/json"},
     )
 
 

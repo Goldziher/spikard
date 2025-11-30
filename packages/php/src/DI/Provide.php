@@ -29,10 +29,7 @@ final class Provide
     /**
      * Create a Provide instance from a callable.
      *
-     * @param callable $factory
      * @param list<string> $dependsOn
-     * @param bool $singleton
-     * @return self
      */
     public static function factory(
         callable $factory,

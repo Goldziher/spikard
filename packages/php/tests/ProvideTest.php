@@ -14,6 +14,7 @@ final class ProvideTest extends TestCase
         $provide = Provide::factory(fn () => 'value');
 
         $this->assertInstanceOf(Provide::class, $provide);
+        /** @phpstan-ignore-next-line alreadyNarrowedType */
         $this->assertIsCallable($provide->factory);
         $this->assertSame([], $provide->dependsOn);
         $this->assertFalse($provide->singleton);

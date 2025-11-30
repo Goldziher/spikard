@@ -113,7 +113,7 @@ final class StreamingResponse
         }
 
         if ($chunkSize < 1) {
-            throw new InvalidArgumentException("Chunk size must be at least 1 byte");
+            throw new InvalidArgumentException('Chunk size must be at least 1 byte');
         }
 
         $generator = function () use ($filePath, $chunkSize): Generator {

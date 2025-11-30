@@ -51,6 +51,7 @@ final class HookResultTest extends TestCase
         $this->assertTrue($result->isShortCircuit());
         $this->assertSame($response, $result->response());
         $resultResponse = $result->response();
+        /** @phpstan-ignore-next-line notIdentical.alwaysTrue */
         if ($resultResponse !== null) {
             $this->assertSame(500, $resultResponse->statusCode);
         }
