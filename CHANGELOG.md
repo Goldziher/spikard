@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### Workspace Configuration (HOTFIX)
+- **Fixed**: Added missing `spikard-http` to `[workspace.dependencies]` in root `Cargo.toml`. This was preventing all Rust compilation from succeeding.
+- **Impact**: Unblocks all build processes. This fix was applied immediately after v0.2.2 tag creation.
+
 #### Python Package Distribution (CRITICAL)
 - **Fixed**: Python binary wheels now include the `spikard` package code. v0.2.1 wheels contained only the `_spikard` Rust extension, causing `ModuleNotFoundError: No module named 'spikard'` for 60% of PyPI users.
 - **Solution**: Added maturin `include` directive in `crates/spikard-py/pyproject.toml` to bundle `packages/python/spikard` pure Python wrapper with binary wheels.
