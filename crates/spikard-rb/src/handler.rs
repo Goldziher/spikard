@@ -11,6 +11,7 @@ use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
 use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
 use serde_json::{Map as JsonMap, Value as JsonValue};
+use spikard_core::errors::StructuredError;
 use spikard_http::ParameterValidator;
 use spikard_http::SchemaValidator;
 use spikard_http::problem::ProblemDetails;
@@ -216,9 +217,10 @@ impl RubyHandler {
         };
 
         let ruby = Ruby::get().map_err(|_| {
-            (
+            structured_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "Ruby VM unavailable while invoking handler".to_string(),
+                "ruby_vm_unavailable",
+                "Ruby VM unavailable while invoking handler",
             )
         })?;
 
@@ -230,16 +232,18 @@ impl RubyHandler {
         let response_value = match handler_result {
             Ok(value) => value,
             Err(err) => {
-                return Err((
+                return Err(structured_error(
                     StatusCode::INTERNAL_SERVER_ERROR,
+                    "handler_failed",
                     format!("Handler '{}' failed: {}", self.inner.handler_name, err),
                 ));
             }
         };
 
         let handler_result = interpret_handler_response(&ruby, &self.inner, response_value).map_err(|err| {
-            (
+            structured_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
+                "response_interpret_error",
                 format!(
                     "Failed to interpret response from '{}': {}",
                     self.inner.handler_name, err
@@ -250,8 +254,9 @@ impl RubyHandler {
         let payload = match handler_result {
             RubyHandlerResult::Streaming(streaming) => {
                 let response = streaming.into_response().map_err(|err| {
-                    (
+                    structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
+                        "streaming_response_error",
                         format!("Failed to build streaming response: {}", err),
                     )
                 })?;
@@ -335,6 +340,13 @@ impl Handler for RubyHandler {
         let handler = self.clone();
         Box::pin(async move { handler.handle(request_data) })
     }
+}
+
+fn structured_error(status: StatusCode, code: &str, message: impl Into<String>) -> (StatusCode, String) {
+    let payload = StructuredError::simple(code.to_string(), message.into());
+    let body = serde_json::to_string(&payload)
+        .unwrap_or_else(|_| r#"{"error":"internal_error","code":"internal_error","details":{}}"#.to_string());
+    (status, body)
 }
 
 /// Build a Ruby Hash request object from request data.
