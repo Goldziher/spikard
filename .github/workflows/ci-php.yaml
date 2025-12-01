@@ -101,7 +101,7 @@ jobs:
         run: cargo build --release -p spikard-php --features extension-module
 
       - name: Upload PHP extension artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: php-extension-${{ matrix.os }}
           path: |
