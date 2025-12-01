@@ -828,7 +828,7 @@ jobs:
       - name: Vendor workspace crates (Unix)
         if: runner.os != 'Windows'
         working-directory: packages/ruby
-        run: rake vendor:sync
+        run: bundle exec rake vendor:sync
 
       - name: Vendor workspace crates (Windows)
         if: runner.os == 'Windows'
@@ -836,7 +836,7 @@ jobs:
         run: |
           $workspace = ridk exec bash -lc "cygpath -au '$env:GITHUB_WORKSPACE'"
           $gemdir = "$workspace/packages/ruby"
-          ridk exec bash -lc "cd $gemdir && rake vendor:sync"
+          ridk exec bash -lc "cd $gemdir && bundle exec rake vendor:sync"
 
       - name: Build gem (Unix)
         if: runner.os != 'Windows'

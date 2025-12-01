@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Solution**: Added `rake vendor:sync` steps to publish workflow for all platforms (Unix and Windows).
 - **Impact**: Ruby gem installs successfully from RubyGems without missing dependency errors.
 
+#### Ruby Gem CI Build Fix (CRITICAL)
+- **Fixed**: Ruby gem builds in CI now properly use bundler environment. Previous builds failed with `Could not find rake-13.3.1, rake-compiler-1.3.0, rb_sys-0.9.117 [...] in locally installed gems (Bundler::GemNotFound)`.
+- **Root Cause**: The `rake vendor:sync` step ran without `bundle exec`, causing bundler to lose track of installed gems. When subsequent `bundle exec rake build` ran, bundler couldn't find the gems.
+- **Solution**: Updated publish workflow lines 831 (Unix) and 839 (Windows) to use `bundle exec rake vendor:sync` instead of bare `rake vendor:sync`.
+- **Impact**: Ruby gem builds now succeed in CI for all platforms (Linux, macOS, Windows).
+
 #### PHP/Rust Package Publishing
 - **Fixed**: PHP package now publishable to Packagist. v0.2.1 was not published due to Cargo.toml version mismatches preventing crates.io publication.
 - **Fixed**: spikard-cli now publishable to crates.io. Previous hardcoded version dependencies blocked publication.
