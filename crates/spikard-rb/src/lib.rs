@@ -531,16 +531,9 @@ impl RubyHandler {
         }
 
         let validated_params = if let Some(validator) = &self.inner.parameter_validator {
-            let raw_query_strings: HashMap<String, String> = request_data
-                .raw_query_params
-                .as_ref()
-                .iter()
-                .filter_map(|(k, v)| v.first().map(|first| (k.clone(), first.clone())))
-                .collect();
-
             match validator.validate_and_extract(
                 &request_data.query_params,
-                &raw_query_strings,
+                request_data.raw_query_params.as_ref(),
                 request_data.path_params.as_ref(),
                 request_data.headers.as_ref(),
                 request_data.cookies.as_ref(),

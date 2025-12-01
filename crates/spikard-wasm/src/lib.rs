@@ -342,10 +342,9 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
             query_map.insert(key.clone(), value.clone());
         }
         let query_value = Value::Object(query_map);
-        let raw_query_single = first_query_values(&query.raw);
         match parameter_validator.validate_and_extract(
             &query_value,
-            &raw_query_single,
+            &query.raw,
             &path_params,
             &headers,
             &HashMap::new(),
@@ -748,16 +747,6 @@ fn header_value<'a>(headers: &'a HashMap<String, String>, name: &str) -> Option<
             None
         }
     })
-}
-
-fn first_query_values(raw: &HashMap<String, Vec<String>>) -> HashMap<String, String> {
-    let mut map = HashMap::new();
-    for (key, values) in raw {
-        if let Some(value) = values.first() {
-            map.insert(key.clone(), value.clone());
-        }
-    }
-    map
 }
 
 fn value_to_param_map(value: Value) -> HashMap<String, Value> {
