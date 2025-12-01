@@ -16,11 +16,11 @@ mod test_websocket;
 pub mod websocket;
 
 use pyo3::prelude::*;
-
-pub use handler::{PythonHandler, init_python_event_loop};
-use pyo3::types::PyList;
+use pyo3::types::{PyDict, PyList};
 use spikard_http::RouteMetadata;
 use spikard_http::server::Server;
+
+pub use handler::{PythonHandler, init_python_event_loop};
 
 /// Route with Python handler
 pub struct RouteWithHandler {
@@ -55,51 +55,10 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
     let handler_name: String = route.getattr("handler_name")?.extract()?;
     let is_async: bool = route.getattr("is_async")?.extract()?;
 
-    let request_schema = route.getattr("request_schema")?;
-    let request_schema_value = if request_schema.is_none() {
-        None
-    } else {
-        let json_str: String = py.import("json")?.call_method1("dumps", (request_schema,))?.extract()?;
-        Some(serde_json::from_str(&json_str).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse request schema: {}", e))
-        })?)
-    };
-
-    let response_schema = route.getattr("response_schema")?;
-    let response_schema_value = if response_schema.is_none() {
-        None
-    } else {
-        let json_str: String = py
-            .import("json")?
-            .call_method1("dumps", (response_schema,))?
-            .extract()?;
-        Some(serde_json::from_str(&json_str).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse response schema: {}", e))
-        })?)
-    };
-
-    let parameter_schema = route.getattr("parameter_schema")?;
-    let parameter_schema_value = if parameter_schema.is_none() {
-        None
-    } else {
-        let json_str: String = py
-            .import("json")?
-            .call_method1("dumps", (parameter_schema,))?
-            .extract()?;
-        Some(serde_json::from_str(&json_str).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse parameter schema: {}", e))
-        })?)
-    };
-
-    let file_params = route.getattr("file_params")?;
-    let file_params_value = if file_params.is_none() {
-        None
-    } else {
-        let json_str: String = py.import("json")?.call_method1("dumps", (file_params,))?.extract()?;
-        Some(serde_json::from_str(&json_str).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse file params: {}", e))
-        })?)
-    };
+    let request_schema_value = extract_json_field(py, route, "request_schema")?;
+    let response_schema_value = extract_json_field(py, route, "response_schema")?;
+    let parameter_schema_value = extract_json_field(py, route, "parameter_schema")?;
+    let file_params_value = extract_json_field(py, route, "file_params")?;
 
     let body_param_name = route.getattr("body_param_name")?;
     let body_param_name_value = if body_param_name.is_none() {
@@ -129,6 +88,20 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         body_param_name: body_param_name_value,
         handler_dependencies,
     })
+}
+
+fn extract_json_field(py: Python<'_>, route: &Bound<'_, PyAny>, field: &str) -> PyResult<Option<serde_json::Value>> {
+    let value = route.getattr(field)?;
+    if value.is_none() {
+        return Ok(None);
+    }
+    // Expect the field to be a mapping/sequence convertible to Python dict/list; construct JSON manually.
+    let json_module = py.import("json")?;
+    let dumps = json_module.getattr("dumps")?;
+    let json_str: String = dumps.call1((value,))?.extract()?;
+    let parsed = serde_json::from_str(&json_str)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse {field}: {e}")))?;
+    Ok(Some(parsed))
 }
 
 /// Process using spikard (legacy function)
