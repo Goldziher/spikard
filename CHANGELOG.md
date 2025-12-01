@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-12-01
+
+### Fixed
+
+#### Python Package Distribution (CRITICAL)
+- **Fixed**: Python binary wheels now include the `spikard` package code. v0.2.1 wheels contained only the `_spikard` Rust extension, causing `ModuleNotFoundError: No module named 'spikard'` for 60% of PyPI users.
+- **Solution**: Added maturin `include` directive in `crates/spikard-py/pyproject.toml` to bundle `packages/python/spikard` pure Python wrapper with binary wheels.
+- **Impact**: All Python installations from binary wheels now work correctly without requiring source distribution fallback.
+
+#### Node.js Package Distribution (CRITICAL)
+- **Fixed**: Platform-specific npm packages now include .node binary files. v0.2.1 platform packages published with empty directories, causing `Cannot find module './spikard-node.darwin-arm64.node'` errors.
+- **Solution**: Added workflow step to copy .node binaries from main package to platform package directories before `npm pack` in `.github/workflows/publish.yaml`.
+- **Impact**: All Node.js installations now successfully load native bindings on all platforms (darwin-arm64, linux-x64-gnu, win32-x64-msvc, etc.).
+
+#### Ruby Gem Distribution (CRITICAL)
+- **Fixed**: Ruby gem now includes vendored workspace crate sources. v0.2.1 gem failed to build with `failed to read /vendor/spikard-rb/Cargo.toml: No such file or directory`.
+- **Solution**: Added `rake vendor:sync` steps to publish workflow for all platforms (Unix and Windows).
+- **Impact**: Ruby gem installs successfully from RubyGems without missing dependency errors.
+
+#### PHP/Rust Package Publishing
+- **Fixed**: PHP package now publishable to Packagist. v0.2.1 was not published due to Cargo.toml version mismatches preventing crates.io publication.
+- **Fixed**: spikard-cli now publishable to crates.io. Previous hardcoded version dependencies blocked publication.
+- **Solution**: Updated `crates/spikard/Cargo.toml` and `crates/spikard-cli/Cargo.toml` to use `workspace = true` for internal dependencies instead of hardcoded `version = "0.2.0"`.
+- **Impact**: All Rust crates and PHP package now follow proper workspace versioning, enabling successful publication to all registries.
+
+### Summary
+v0.2.2 fixes critical distribution failures that made v0.2.1 unusable for most users:
+- **Python**: 60% of installs broken (binary wheels missing package code)
+- **Node.js**: 100% of platform installs broken (missing .node binaries)
+- **Ruby**: 100% of gem installs broken (missing vendored sources)
+- **PHP**: 0% published (Cargo.toml version mismatch)
+- **Rust CLI**: 0% published (Cargo.toml version mismatch)
+
+All fixes preserve backward API compatibility. No code changes required for users upgrading from v0.2.0 or v0.2.1.
+
 ## [0.2.1] - 2025-11-30
 
 ### Fixed

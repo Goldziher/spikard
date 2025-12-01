@@ -29,8 +29,8 @@ bytes = "1.11"
 schemars = { version = "1.1", features = ["derive"] }
 serde.workspace = true
 serde_json.workspace = true
-spikard-http = { version = "0.2.0", path = "../spikard-http" }
-spikard-core = { version = "0.2.0", path = "../spikard-core", optional = true }
+spikard-http = { workspace = true }
+spikard-core = { workspace = true, optional = true }
 thiserror.workspace = true
 
 [dev-dependencies]
