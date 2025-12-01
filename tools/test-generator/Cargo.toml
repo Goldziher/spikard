@@ -1,6 +1,6 @@
 [package]
 name = "test-generator"
-version = "0.2.4"
+version = "0.2.5"
 edition.workspace = true
 publish = false  # Internal tooling only
 
