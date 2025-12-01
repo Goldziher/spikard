@@ -77,7 +77,7 @@ jobs:
         run: uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }} -m packages/python/pyproject.toml
 
       - name: Upload wheels artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
           path: target/wheels/*.whl
@@ -159,7 +159,7 @@ jobs:
         run: uv tool run maturin sdist -m packages/python/pyproject.toml
 
       - name: Upload sdist artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: python-sdist
           path: target/wheels/*.tar.gz

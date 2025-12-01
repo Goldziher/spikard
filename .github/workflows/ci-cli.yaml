@@ -64,7 +64,7 @@ jobs:
         run: cargo build --release -p spikard-cli
 
       - name: Upload CLI artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: cli-${{ matrix.os }}
           path: |

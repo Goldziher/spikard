@@ -84,7 +84,7 @@ jobs:
         run: pnpm exec napi build --platform --release -o ../../packages/node
 
       - name: Upload Node bindings
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: napi-bindings-${{ matrix.os }}
           path: packages/node/*.node
