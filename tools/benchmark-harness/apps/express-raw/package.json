@@ -9,7 +9,7 @@
     "dev": "tsx watch server.ts"
   },
   "dependencies": {
-    "express": "5.1.0"
+    "express": "5.2.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
