@@ -1,8 +1,0 @@
-OUT_DIR: /Users/naamanhirschfeld/workspace/spikard/tools/benchmark-harness/apps/spikard-rust/target/release/build/utoipa-swagger-ui-bfe22724fe950d7b/out
-SWAGGER_UI_DOWNLOAD_URL: https://github.com/swagger-api/swagger-ui/archive/refs/tags/v5.17.14.zip
-cargo:rerun-if-env-changed=SWAGGER_UI_DOWNLOAD_URL
-start download to : "/Users/naamanhirschfeld/workspace/spikard/tools/benchmark-harness/apps/spikard-rust/target/release/build/utoipa-swagger-ui-bfe22724fe950d7b/out/v5.17.14.zip"
-reqwest feature: Err(NotPresent)
-trying to download using `curl` system package
-zip_top_level_folder: "swagger-ui-5.17.14"
-SWAGGER_UI_OVERWRITE_FOLDER not found: "overwrite"
