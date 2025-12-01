@@ -18,6 +18,7 @@ use once_cell::sync::OnceCell;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
 use serde_json::{Value, json};
+use spikard_core::errors::StructuredError;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use spikard_http::{ParameterValidator, ProblemDetails, SchemaValidator};
 use std::collections::HashMap;
@@ -91,6 +92,17 @@ fn is_debug_mode() -> bool {
         .unwrap_or(false)
 }
 
+fn structured_error_response(problem: ProblemDetails) -> (StatusCode, String) {
+    let payload = StructuredError::new(
+        "validation_error".to_string(),
+        problem.title.clone(),
+        serde_json::to_value(&problem).unwrap_or_else(|_| json!({})),
+    );
+    let body = serde_json::to_string(&payload)
+        .unwrap_or_else(|_| r#"{"error":"validation_error","code":"validation_error","details":{}}"#.to_string());
+    (problem.status_code(), body)
+}
+
 /// Response result from Python handler
 pub enum ResponseResult {
     /// Custom Response object with status code and headers
@@ -144,10 +156,7 @@ impl PythonHandler {
             && let Err(errors) = validator.validate(&request_data.body)
         {
             let problem = ProblemDetails::from_validation_error(&errors);
-            let error_json = problem
-                .to_json_pretty()
-                .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
-            return Err((problem.status_code(), error_json));
+            return Err(structured_error_response(problem));
         }
 
         let validated_params = if let Some(validator) = &self.parameter_validator {
@@ -166,11 +175,8 @@ impl PythonHandler {
                         errors.errors.len()
                     );
                     let problem = ProblemDetails::from_validation_error(&errors);
-                    let error_json = problem
-                        .to_json_pretty()
-                        .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
-                    debug_log_module!("handler", "Returning 422 with RFC 9457 error: {}", error_json);
-                    return Err((problem.status_code(), error_json));
+                    debug_log_module!("handler", "Returning 422 with RFC 9457 error");
+                    return Err(structured_error_response(problem));
                 }
             }
         } else {
@@ -324,22 +330,8 @@ impl PythonHandler {
                     #[allow(clippy::collapsible_if)]
                     if let Some(validator) = &response_validator {
                         if let Err(errors) = validator.validate(&json_value) {
-                            let error_msg = if is_debug_mode() {
-                                json!({
-                                    "error": "Response validation failed",
-                                    "validation_errors": format!("{:?}", errors),
-                                    "response_body": json_value,
-                                    "request_data": {
-                                        "path_params": &*request_data_for_error.path_params,
-                                        "query_params": request_data_for_error.query_params,
-                                        "body": request_data_for_error.body,
-                                    }
-                                })
-                                .to_string()
-                            } else {
-                                "Internal server error".to_string()
-                            };
-                            return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
+                            let problem = ProblemDetails::from_validation_error(&errors);
+                            return Err(structured_error_response(problem));
                         }
                     }
                 }
