@@ -109,7 +109,7 @@ jobs:
           cache-prefix: test-python-${{ matrix.os }}-${{ matrix.python-version }}
 
       - name: Download wheels artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
           path: dist/
