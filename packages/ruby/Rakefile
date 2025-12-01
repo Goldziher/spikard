@@ -40,7 +40,7 @@ end
 namespace :vendor do
   desc 'Copy workspace crates into vendor directory for gem distribution'
   task :sync do
-    vendor_dir = File.expand_path('vendor', __dir__)
+    vendor_dir = File.expand_path('vendor/crates', __dir__)
     FileUtils.rm_rf(vendor_dir)
     FileUtils.mkdir_p(vendor_dir)
 
