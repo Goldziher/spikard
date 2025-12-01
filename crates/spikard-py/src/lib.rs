@@ -95,13 +95,46 @@ fn extract_json_field(py: Python<'_>, route: &Bound<'_, PyAny>, field: &str) -> 
     if value.is_none() {
         return Ok(None);
     }
-    // Expect the field to be a mapping/sequence convertible to Python dict/list; construct JSON manually.
-    let json_module = py.import("json")?;
-    let dumps = json_module.getattr("dumps")?;
-    let json_str: String = dumps.call1((value,))?.extract()?;
-    let parsed = serde_json::from_str(&json_str)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse {field}: {e}")))?;
-    Ok(Some(parsed))
+    py_to_json_value(py, &value).map(Some)
+}
+
+fn py_to_json_value(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<serde_json::Value> {
+    if obj.is_none() {
+        return Ok(serde_json::Value::Null);
+    }
+    if let Ok(b) = obj.extract::<bool>() {
+        return Ok(serde_json::Value::Bool(b));
+    }
+    if let Ok(i) = obj.extract::<i64>() {
+        return Ok(serde_json::Value::Number(serde_json::Number::from(i)));
+    }
+    if let Ok(f) = obj.extract::<f64>() {
+        return serde_json::Number::from_f64(f)
+            .map(serde_json::Value::Number)
+            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>("NaN not supported in JSON"));
+    }
+    if let Ok(s) = obj.extract::<String>() {
+        return Ok(serde_json::Value::String(s));
+    }
+    if let Ok(seq) = obj.downcast::<PyList>() {
+        let mut items = Vec::with_capacity(seq.len());
+        for item in seq {
+            items.push(py_to_json_value(py, &item)?);
+        }
+        return Ok(serde_json::Value::Array(items));
+    }
+    if let Ok(dict) = obj.downcast::<PyDict>() {
+        let mut map = serde_json::Map::with_capacity(dict.len());
+        for (k, v) in dict {
+            let key: String = k.extract()?;
+            map.insert(key, py_to_json_value(py, &v)?);
+        }
+        return Ok(serde_json::Value::Object(map));
+    }
+
+    Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+        "Unsupported type for JSON conversion in route metadata",
+    ))
 }
 
 /// Process using spikard (legacy function)
