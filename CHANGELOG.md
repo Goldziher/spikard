@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2025-12-01
+
+### Fixed
+
+#### Python Package Distribution (CRITICAL)
+- **Fixed**: Python package now includes the `spikard/` wrapper module. v0.2.3 and earlier only contained the `_spikard` binary extension, causing `ModuleNotFoundError: No module named 'spikard'` when users tried `import spikard`.
+- **Root Cause**: Maturin `include` directive was not bundling the Python wrapper package from `packages/python/spikard/`.
+- **Solution**: Changed `crates/spikard-py/pyproject.toml` from using `include` to `python-source = "../../packages/python"`, which properly bundles both the Rust binary extension and the Python wrapper code.
+- **Impact**: Package now works as documented - users can `import spikard` and access the high-level API (Spikard app class, route decorators, config classes). Fixes 100% of Python installs.
+
+#### Node.js Package Distribution (CRITICAL)
+- **Fixed**: Node.js platform packages now include the required `.node` native binaries. v0.2.3 and earlier platform packages (@spikard/node-darwin-arm64, etc.) were published empty, causing `Cannot find module './spikard-node.darwin-arm64.node'` errors on all platforms.
+- **Root Cause**: Publish workflow was using `--ignore-scripts` flag which prevented the `prepublishOnly` hook from running. This hook executes `napi prepublish -t npm` which generates platform-specific packages with binaries.
+- **Solution**: Removed `--ignore-scripts` from the `pnpm publish` command in `.github/workflows/publish.yaml` line 1466.
+- **Impact**: Package now fully functional on all platforms (darwin-arm64, darwin-x64, linux-x64-gnu, win32-x64-msvc). Fixes 100% of Node.js installs.
+
+#### CI Workflow Fixes
+- **Fixed**: Python CI now runs pytest from repository root instead of `cd packages/python`, preventing import shadowing where local stub modules conflicted with installed wheel packages.
+- **Fixed**: PHP CI on Windows now works with ext-php-rs vectorcall ABI by adding `#![cfg_attr(windows, feature(abi_vectorcall))]` feature gate to `crates/spikard-php/src/lib.rs`.
+- **Fixed**: Ruby CI vendor directory separation - vendored Rust crates now go to `vendor/crates/` instead of `vendor/`, preventing conflict with bundler's gem cache in `vendor/bundle/`.
+
+### Summary
+v0.2.4 fixes critical packaging issues that made v0.2.3 Python and Node.js packages completely unusable:
+- **Python**: 100% broken (missing wrapper package) → Now fully functional
+- **Node.js**: 100% broken (missing .node binaries) → Now fully functional
+- **CI**: 3/9 workflows failing → All workflows now passing
+
+All fixes preserve backward API compatibility. No code changes required for users upgrading.
+
 ## [0.2.3] - 2025-12-01
 
 ### Fixed
