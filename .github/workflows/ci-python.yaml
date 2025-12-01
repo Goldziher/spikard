@@ -69,12 +69,12 @@ jobs:
       - name: Build Python wheels (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }} --manifest-path crates/spikard-py/Cargo.toml
+        run: uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }} -m packages/python/pyproject.toml
 
       - name: Build Python wheels (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }} --manifest-path crates/spikard-py/Cargo.toml
+        run: uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }} -m packages/python/pyproject.toml
 
       - name: Upload wheels artifact
         uses: actions/upload-artifact@v4
@@ -152,8 +152,11 @@ jobs:
           python-version: "3.13"
           cache-prefix: python-sdist
 
+      - name: Sync workspace deps
+        run: uv sync --all-packages --all-extras
+
       - name: Build source distribution
-        run: uv tool run maturin sdist --manifest-path crates/spikard-py/Cargo.toml
+        run: uv tool run maturin sdist -m packages/python/pyproject.toml
 
       - name: Upload sdist artifact
         uses: actions/upload-artifact@v4
