@@ -22,7 +22,7 @@ path = "src/lib.rs"
 
 [dependencies]
 spikard.workspace = true
-spikard-http = { version = "0.2.0", path = "../spikard-http" }
+spikard-http = { workspace = true }
 clap.workspace = true
 clap_complete.workspace = true
 clap_mangen.workspace = true

@@ -825,6 +825,19 @@ jobs:
           $gemdir = "$workspace/packages/ruby"
           ridk exec bash -lc "cd $gemdir && export RUSTUP_TOOLCHAIN=stable-gnu CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ && bundle install --jobs 4 --retry 3"
 
+      - name: Vendor workspace crates (Unix)
+        if: runner.os != 'Windows'
+        working-directory: packages/ruby
+        run: rake vendor:sync
+
+      - name: Vendor workspace crates (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $workspace = ridk exec bash -lc "cygpath -au '$env:GITHUB_WORKSPACE'"
+          $gemdir = "$workspace/packages/ruby"
+          ridk exec bash -lc "cd $gemdir && rake vendor:sync"
+
       - name: Build gem (Unix)
         if: runner.os != 'Windows'
         shell: bash
@@ -1411,6 +1424,26 @@ jobs:
           if [ -d typescript-defs ]; then
             cp typescript-defs/index.js typescript-defs/index.d.ts crates/spikard-node/ || true
           fi
+
+      - name: Copy .node binaries to platform packages
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for node_file in crates/spikard-node/*.node; do
+            if [ -f "$node_file" ]; then
+              filename=$(basename "$node_file")
+              # Extract platform from filename (e.g., spikard-node.darwin-arm64.node -> darwin-arm64)
+              platform="${filename#spikard-node.}"
+              platform="${platform%.node}"
+              dest_dir="crates/spikard-node/npm/$platform"
+              if [ -d "$dest_dir" ]; then
+                echo "Copying $filename to $dest_dir/"
+                cp "$node_file" "$dest_dir/"
+              else
+                echo "::warning::Platform directory $dest_dir not found for $filename"
+              fi
+            fi
+          done
 
       - name: Node artifacts summary
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}
