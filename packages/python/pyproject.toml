@@ -1,6 +1,6 @@
 [build-system]
-build-backend = "hatchling.build"
-requires = [ "hatchling" ]
+build-backend = "maturin"
+requires = [ "maturin>=1.4,<2" ]
 
 [project]
 name = "spikard"
@@ -81,6 +81,7 @@ packages = [ "spikard" ]
 
 [tool.maturin]
 module-name = "_spikard"
-python-source = "packages/python"
-manifest-path = "crates/spikard-py/Cargo.toml"
+python-source = "../../packages/python"
+python-packages = ["spikard", "_spikard"]
+manifest-path = "../../crates/spikard-py/Cargo.toml"
 features = [ "extension-module" ]
