@@ -46,6 +46,7 @@ RUBY_VERSION_PATHS = [
 
 COMPOSER_JSON_PATHS = [
     Path("composer.json"),
+    Path("packages/php/composer.json"),
 ]
 
 
