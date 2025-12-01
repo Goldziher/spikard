@@ -4,7 +4,7 @@ requires = [ "maturin>=1,<2" ]
 
 [project]
 name = "spikard"
-version = "0.2.3"
+version = "0.2.4"
 description = "Fast, type-safe web framework with Rust-powered Python bindings"
 readme = "README.md"
 license = { text = "MIT" }
@@ -26,6 +26,4 @@ classifiers = [
 [tool.maturin]
 module-name = "_spikard"
 features = [ "extension-module" ]
-include = [
-  { path = "../../packages/python/spikard", format = "wheel" },
-]
+python-source = "../../packages/python"
