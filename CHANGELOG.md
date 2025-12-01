@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5] - 2025-12-01
+
+### Fixed
+
+- **Python packaging:** maturin now builds from `packages/python/pyproject.toml` with explicit `python-packages` so wheels include both the pure `spikard/` wrapper and the `_spikard` extension. Prevents `ModuleNotFoundError: spikard` in published wheels.
+- **Python CI/Publish:** workflows now point maturin at `packages/python` and sync dependencies before sdist; `_spikard` made a namespace package for reliable imports in tests.
+- **Node publish safety:** publish workflow now fails if any platform package is missing its `.node` binary, avoiding empty platform publishes.
+
 ## [0.2.4] - 2025-12-01
 
 ### Fixed
