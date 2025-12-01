@@ -11,6 +11,7 @@ use axum::{
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use serde_json::Value;
+use spikard_core::errors::StructuredError;
 use spikard_http::{Handler, HandlerResult, RequestData};
 use std::future::Future;
 use std::pin::Pin;
@@ -80,6 +81,13 @@ fn interpret_handler_response(value: serde_json::Value) -> HandlerResponsePayloa
     }
 }
 
+fn structured_error(status: StatusCode, code: &str, message: String) -> (StatusCode, String) {
+    let payload = StructuredError::simple(code.to_string(), message);
+    let body = serde_json::to_string(&payload)
+        .unwrap_or_else(|_| r#"{"error":"internal_error","code":"internal_error","details":{}}"#.to_string());
+    (status, body)
+}
+
 unsafe impl Send for NodeHandler {}
 unsafe impl Sync for NodeHandler {}
 
@@ -146,10 +154,7 @@ impl Handler for NodeHandler {
             });
 
             let json_input = serde_json::to_string(&request_json).map_err(|e| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Failed to serialize request: {}", e),
-                )
+                structured_error(StatusCode::INTERNAL_SERVER_ERROR, "serialization_error", e.to_string())
             })?;
 
             let handler_output = self
@@ -157,23 +162,26 @@ impl Handler for NodeHandler {
                 .call_async(json_input)
                 .await
                 .map_err(|e| {
-                    (
+                    structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
+                        "handler_call_failed",
                         format!("Handler '{}' call failed: {}", self.handler_name, e),
                     )
                 })?
                 .await
                 .map_err(|e| {
-                    (
+                    structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
+                        "handler_promise_failed",
                         format!("Handler '{}' promise failed: {}", self.handler_name, e),
                     )
                 })?;
 
             if let HandlerReturnValue::Streaming(streaming) = handler_output {
                 let response = streaming.into_handler_response().map_err(|e| {
-                    (
+                    structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
+                        "streaming_response_error",
                         format!("Failed to create streaming response: {}", e),
                     )
                 })?;
@@ -186,8 +194,9 @@ impl Handler for NodeHandler {
             };
 
             let response_data: Value = serde_json::from_str(&json_body).map_err(|e| {
-                (
+                structured_error(
                     StatusCode::INTERNAL_SERVER_ERROR,
+                    "handler_response_parse_error",
                     format!("Failed to parse handler response: {}", e),
                 )
             })?;
