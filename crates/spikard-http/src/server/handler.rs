@@ -5,9 +5,11 @@ use crate::handler_trait::{Handler, HandlerResult, RequestData};
 use crate::parameters::ParameterValidator;
 use crate::validation::SchemaValidator;
 use axum::body::Body;
+use futures::FutureExt;
 use serde_json::Value;
-use std::collections::HashMap;
+use spikard_core::errors::StructuredError;
 use std::future::Future;
+use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
 
@@ -55,15 +57,9 @@ impl Handler for ValidatingHandler {
             }
 
             if let Some(validator) = parameter_validator {
-                let raw_query_strings: HashMap<String, String> = request_data
-                    .raw_query_params
-                    .iter()
-                    .filter_map(|(k, v)| v.first().map(|value| (k.clone(), value.clone())))
-                    .collect();
-
                 if let Err(errors) = validator.validate_and_extract(
                     &request_data.query_params,
-                    &raw_query_strings,
+                    &request_data.raw_query_params,
                     &request_data.path_params,
                     &request_data.headers,
                     &request_data.cookies,
@@ -74,7 +70,18 @@ impl Handler for ValidatingHandler {
                 }
             }
 
-            inner.call(req, request_data).await
+            match AssertUnwindSafe(async { inner.call(req, request_data).await })
+                .catch_unwind()
+                .await
+            {
+                Ok(result) => result,
+                Err(_) => {
+                    let panic_payload = StructuredError::simple("panic", "Unexpected panic in handler");
+                    let body = serde_json::to_string(&panic_payload)
+                        .unwrap_or_else(|_| r#"{"error":"panic","code":"panic","details":{}}"#.to_string());
+                    Err((axum::http::StatusCode::INTERNAL_SERVER_ERROR, body))
+                }
+            }
         })
     }
 }
