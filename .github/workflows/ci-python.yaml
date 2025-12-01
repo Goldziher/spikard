@@ -127,12 +127,12 @@ jobs:
       - name: Run pytest (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: cd packages/python && uv run pytest tests/ -v
+        run: uv run pytest packages/python/tests/ -v
 
       - name: Run pytest (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cd packages/python; uv run pytest tests/ -v
+        run: uv run pytest packages/python/tests/ -v
 
   build-python-sdist:
     name: Build Python Source Distribution
