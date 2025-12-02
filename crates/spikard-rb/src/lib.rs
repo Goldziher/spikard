@@ -146,6 +146,7 @@ struct NativeBuiltResponse {
     response: RefCell<Option<HandlerResponse>>,
     body_json: Option<JsonValue>,
     /// Ruby values that must be kept alive for GC (e.g., streaming enumerators)
+    #[allow(dead_code)]
     gc_handles: Vec<Opaque<Value>>,
 }
 
@@ -275,6 +276,7 @@ impl NativeBuiltResponse {
         Ok(headers_hash.as_value())
     }
 
+    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         if let Ok(ruby) = Ruby::get() {
             for handle in &self.gc_handles {
@@ -336,6 +338,7 @@ impl NativeLifecycleRegistry {
         Ok(())
     }
 
+    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         for hook in self.ruby_hooks.borrow().iter() {
             hook.mark(marker);
@@ -417,6 +420,7 @@ impl NativeDependencyRegistry {
         })?;
         Ok(container)
     }
+    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         if let Ok(ruby) = Ruby::get() {
             for handle in self.gc_handles.borrow().iter() {
