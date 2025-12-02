@@ -20,7 +20,7 @@ module Spikard
     #     request
     #   end
     def on_request(&hook)
-      @lifecycle_hooks[:on_request] << hook
+      native_hooks.add_on_request(hook)
       hook
     end
 
@@ -42,7 +42,7 @@ module Spikard
     #     end
     #   end
     def pre_validation(&hook)
-      @lifecycle_hooks[:pre_validation] << hook
+      native_hooks.add_pre_validation(hook)
       hook
     end
 
@@ -64,7 +64,7 @@ module Spikard
     #     end
     #   end
     def pre_handler(&hook)
-      @lifecycle_hooks[:pre_handler] << hook
+      native_hooks.add_pre_handler(hook)
       hook
     end
 
@@ -81,7 +81,7 @@ module Spikard
     #     response
     #   end
     def on_response(&hook)
-      @lifecycle_hooks[:on_response] << hook
+      native_hooks.add_on_response(hook)
       hook
     end
 
@@ -98,21 +98,16 @@ module Spikard
     #     response
     #   end
     def on_error(&hook)
-      @lifecycle_hooks[:on_error] << hook
+      native_hooks.add_on_error(hook)
       hook
     end
 
-    # Get all registered lifecycle hooks
-    #
-    # @return [Hash] Dictionary of hook arrays by type
-    def lifecycle_hooks
-      {
-        on_request: @lifecycle_hooks[:on_request].dup,
-        pre_validation: @lifecycle_hooks[:pre_validation].dup,
-        pre_handler: @lifecycle_hooks[:pre_handler].dup,
-        on_response: @lifecycle_hooks[:on_response].dup,
-        on_error: @lifecycle_hooks[:on_error].dup
-      }
+    private
+
+    def native_hooks
+      raise 'Spikard native lifecycle registry unavailable' unless defined?(@native_hooks) && @native_hooks
+
+      @native_hooks
     end
   end
 
@@ -123,7 +118,8 @@ module Spikard
     include ProvideSupport
 
     HTTP_METHODS = %w[GET POST PUT PATCH DELETE OPTIONS HEAD TRACE].freeze
-    SUPPORTED_OPTIONS = %i[request_schema response_schema parameter_schema file_params is_async cors].freeze
+    SUPPORTED_OPTIONS = %i[request_schema response_schema parameter_schema file_params is_async cors
+                           body_param_name].freeze
 
     attr_reader :routes
 
@@ -131,28 +127,43 @@ module Spikard
       @routes = []
       @websocket_handlers = {}
       @sse_producers = {}
-      @dependencies = {}
-      @lifecycle_hooks = {
-        on_request: [],
-        pre_validation: [],
-        pre_handler: [],
-        on_response: [],
-        on_error: []
-      }
+      @native_hooks = Spikard::Native::LifecycleRegistry.new
+      @native_dependencies = Spikard::Native::DependencyRegistry.new
     end
 
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     def register_route(method, path, handler_name: nil, **options, &block)
+      method = method.to_s
+      path = path.to_s
+      handler_name = handler_name&.to_s
       validate_route_arguments!(block, options)
-      handler_name ||= default_handler_name(method, path)
+      metadata = if defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_route_metadata)
+                   Spikard::Native.build_route_metadata(
+                     method,
+                     path,
+                     handler_name,
+                     options[:request_schema],
+                     options[:response_schema],
+                     options[:parameter_schema],
+                     options[:file_params],
+                     options.fetch(:is_async, false),
+                     options[:cors],
+                     options[:body_param_name]&.to_s,
+                     block
+                   )
+                 else
+                   handler_name ||= default_handler_name(method, path)
 
-      # Extract handler dependencies from block parameters
-      handler_dependencies = extract_handler_dependencies(block)
+                   # Extract handler dependencies from block parameters
+                   handler_dependencies = extract_handler_dependencies(block)
 
-      metadata = build_metadata(method, path, handler_name, options, handler_dependencies)
+                   build_metadata(method, path, handler_name, options, handler_dependencies)
+                 end
 
       @routes << RouteEntry.new(metadata, block)
       block
     end
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
     HTTP_METHODS.each do |verb|
       define_method(verb.downcase) do |path, handler_name: nil, **options, &block|
@@ -161,17 +172,7 @@ module Spikard
     end
 
     def route_metadata
-      # Extract handler dependencies when metadata is requested
-      # This allows dependencies to be registered after routes
-      @routes.map do |entry|
-        metadata = entry.metadata.dup
-
-        # Re-extract dependencies in case they were registered after the route
-        handler_dependencies = extract_handler_dependencies(entry.handler)
-        metadata[:handler_dependencies] = handler_dependencies unless handler_dependencies.empty?
-
-        metadata
-      end
+      @routes.map(&:metadata)
     end
 
     def handler_map
@@ -182,6 +183,15 @@ module Spikard
         map[name] = entry.handler
       end
       map
+    end
+
+    def normalized_routes_json
+      json = JSON.generate(route_metadata)
+      if defined?(Spikard::Native) && Spikard::Native.respond_to?(:normalize_route_metadata)
+        Spikard::Native.normalize_route_metadata(json)
+      else
+        json
+      end
     end
 
     def default_handler_name(method, path)
@@ -258,7 +268,7 @@ module Spikard
     #
     # @example Backward compatible (deprecated)
     #   app.run(host: '0.0.0.0', port: 8000)
-    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    # rubocop:disable Metrics/MethodLength
     def run(config: nil, host: nil, port: nil)
       require 'json'
 
@@ -274,21 +284,20 @@ module Spikard
         config = ServerConfig.new(**config)
       end
 
-      # Convert route metadata to JSON
-      routes_json = JSON.generate(route_metadata)
+      routes_json = normalized_routes_json
 
       # Get handler map
       handlers = handler_map
 
       # Get lifecycle hooks
-      hooks = lifecycle_hooks
+      hooks = @native_hooks
 
       # Get WebSocket handlers and SSE producers
       ws_handlers = websocket_handlers
       sse_prods = sse_producers
 
       # Get dependencies for DI
-      deps = dependencies
+      deps = @native_dependencies
 
       # Call the Rust extension's run_server function
       Spikard::Native.run_server(routes_json, handlers, config, hooks, ws_handlers, sse_prods, deps)
@@ -299,7 +308,7 @@ module Spikard
       raise 'Failed to load Spikard extension. ' \
             "Build it with: task build:ruby\n#{e.message}"
     end
-    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+    # rubocop:enable Metrics/MethodLength
 
     private
 

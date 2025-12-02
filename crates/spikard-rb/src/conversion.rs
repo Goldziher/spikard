@@ -43,6 +43,19 @@ pub fn ruby_value_to_json(ruby: &Ruby, json_module: Value, value: Value) -> Resu
 /// - array → array
 /// - object → hash
 pub fn json_to_ruby(ruby: &Ruby, value: &JsonValue) -> Result<Value, Error> {
+    json_to_ruby_with_uploads(ruby, value, None::<&Value>)
+}
+
+/// Convert JSON to a Ruby value, optionally materialising UploadFile objects.
+///
+/// If `upload_file_class` is provided and the JSON object contains
+/// file-metadata keys (`filename`, `content`), this will instantiate
+/// `UploadFile` instead of returning a plain Hash.
+pub fn json_to_ruby_with_uploads(
+    ruby: &Ruby,
+    value: &JsonValue,
+    upload_file_class: Option<&Value>,
+) -> Result<Value, Error> {
     match value {
         JsonValue::Null => Ok(ruby.qnil().as_value()),
         JsonValue::Bool(b) => Ok(if *b {
@@ -63,14 +76,23 @@ pub fn json_to_ruby(ruby: &Ruby, value: &JsonValue) -> Result<Value, Error> {
         JsonValue::Array(items) => {
             let array = ruby.ary_new();
             for item in items {
-                array.push(json_to_ruby(ruby, item)?)?;
+                array.push(json_to_ruby_with_uploads(ruby, item, upload_file_class)?)?;
             }
             Ok(array.as_value())
         }
         JsonValue::Object(map) => {
+            if let Some(upload_file) = upload_file_class {
+                if let Some(upload) = try_build_upload_file(ruby, upload_file, map)? {
+                    return Ok(upload);
+                }
+            }
+
             let hash = ruby.hash_new();
             for (key, item) in map {
-                hash.aset(ruby.str_new(key), json_to_ruby(ruby, item)?)?;
+                hash.aset(
+                    ruby.str_new(key),
+                    json_to_ruby_with_uploads(ruby, item, upload_file_class)?,
+                )?;
             }
             Ok(hash.as_value())
         }
@@ -97,6 +119,45 @@ pub fn multimap_to_ruby_hash(ruby: &Ruby, map: &HashMap<String, Vec<String>>) ->
         hash.aset(ruby.str_new(key), array)?;
     }
     Ok(hash.as_value())
+}
+
+fn try_build_upload_file(
+    ruby: &Ruby,
+    upload_file_class: &Value,
+    map: &serde_json::Map<String, JsonValue>,
+) -> Result<Option<Value>, Error> {
+    let filename = match map.get("filename").and_then(|v| v.as_str()) {
+        Some(name) => name,
+        None => return Ok(None),
+    };
+    let content = match map.get("content") {
+        Some(JsonValue::String(s)) => s.as_str(),
+        _ => return Ok(None),
+    };
+
+    let content_type = map.get("content_type").and_then(|v| v.as_str());
+    let size = map.get("size").and_then(|v| v.as_u64());
+    let headers_value = map
+        .get("headers")
+        .and_then(|v| v.as_object())
+        .map(|obj| {
+            obj.iter()
+                .filter_map(|(k, v)| v.as_str().map(|val| (k.clone(), val.to_string())))
+                .collect::<HashMap<String, String>>()
+        })
+        .unwrap_or_default();
+    let headers = map_to_ruby_hash(ruby, &headers_value)?;
+    let content_encoding = map.get("content_encoding").and_then(|v| v.as_str());
+
+    let kwargs = magnus::kwargs!(
+        "content_type" => content_type,
+        "size" => size,
+        "headers" => headers,
+        "content_encoding" => content_encoding
+    );
+
+    let upload = upload_file_class.funcall("new", (filename, content, kwargs))?;
+    Ok(Some(upload))
 }
 
 /// Convert a Ruby value to Bytes.

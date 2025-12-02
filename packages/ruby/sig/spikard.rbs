@@ -184,7 +184,6 @@ module Spikard
     def pre_handler: () { (untyped) -> untyped } -> Proc
     def on_response: () { (untyped) -> untyped } -> Proc
     def on_error: () { (untyped) -> untyped } -> Proc
-    def lifecycle_hooks: () -> Hash[Symbol, Array[Proc]]
   end
 
   module ProvideSupport
@@ -195,7 +194,7 @@ module Spikard
       ?singleton: bool,
       ?cacheable: bool
     ) ?{ (**untyped) -> untyped } -> self
-    def dependencies: () -> Hash[String, untyped]
+    def dependencies: () -> Spikard::Native::DependencyRegistry
   end
 
   class App
