@@ -78,8 +78,7 @@ struct ClientInner {
     http_server: Arc<TestServer>,
     transport_server: Arc<TestServer>,
     /// Keep Ruby handler closures alive for GC; accessed via the `mark` hook.
-    #[allow(dead_code)]
-    handlers: Vec<RubyHandler>,
+    _handlers: Vec<RubyHandler>,
 }
 
 struct RequestConfig {
@@ -286,16 +285,6 @@ impl NativeBuiltResponse {
     }
 }
 
-impl Default for NativeBuiltResponse {
-    fn default() -> Self {
-        let response = axum::http::Response::builder()
-            .status(StatusCode::OK)
-            .body(Body::empty())
-            .unwrap();
-        Self::new(HandlerResponse::from(response), None, Vec::new())
-    }
-}
-
 impl NativeLifecycleRegistry {
     fn add_on_request(&self, hook_value: Value) -> Result<(), Error> {
         self.add_hook("on_request", hook_value, |hooks, hook| hooks.add_on_request(hook))
@@ -323,6 +312,13 @@ impl NativeLifecycleRegistry {
         mem::take(&mut *self.hooks.borrow_mut())
     }
 
+    #[allow(dead_code)]
+    fn mark(&self, marker: &Marker) {
+        for hook in self.ruby_hooks.borrow().iter() {
+            hook.mark(marker);
+        }
+    }
+
     fn add_hook<F>(&self, kind: &str, hook_value: Value, push: F) -> Result<(), Error>
     where
         F: Fn(&mut spikard_http::LifecycleHooks, Arc<crate::lifecycle::RubyLifecycleHook>),
@@ -336,13 +332,6 @@ impl NativeLifecycleRegistry {
         push(&mut self.hooks.borrow_mut(), hook.clone());
         self.ruby_hooks.borrow_mut().push(hook);
         Ok(())
-    }
-
-    #[allow(dead_code)]
-    fn mark(&self, marker: &Marker) {
-        for hook in self.ruby_hooks.borrow().iter() {
-            hook.mark(marker);
-        }
     }
 }
 
@@ -410,6 +399,15 @@ impl NativeDependencyRegistry {
         Ok(())
     }
 
+    #[allow(dead_code)]
+    fn mark(&self, marker: &Marker) {
+        if let Ok(ruby) = Ruby::get() {
+            for handle in self.gc_handles.borrow().iter() {
+                marker.mark(handle.get_inner_with(&ruby));
+            }
+        }
+    }
+
     fn take_container(&self) -> Result<spikard_core::di::DependencyContainer, Error> {
         let mut borrow = self.container.borrow_mut();
         let container = borrow.take().ok_or_else(|| {
@@ -419,14 +417,6 @@ impl NativeDependencyRegistry {
             )
         })?;
         Ok(container)
-    }
-    #[allow(dead_code)]
-    fn mark(&self, marker: &Marker) {
-        if let Ok(ruby) = Ruby::get() {
-            for handle in self.gc_handles.borrow().iter() {
-                marker.mark(handle.get_inner_with(&ruby));
-            }
-        }
     }
 
     fn keys(&self) -> Vec<String> {
@@ -625,7 +615,7 @@ impl NativeTestClient {
         *this.inner.borrow_mut() = Some(ClientInner {
             http_server: Arc::new(http_server),
             transport_server: Arc::new(transport_server),
-            handlers: handler_refs,
+            _handlers: handler_refs,
         });
 
         Ok(())
@@ -707,8 +697,6 @@ impl NativeTestClient {
         test_sse::sse_stream_from_response(ruby, &response)
     }
 }
-
-impl ClientInner {}
 
 impl RubyHandler {
     fn new(route: &Route, handler_value: Value, json_module: Value) -> Result<Self, Error> {
@@ -1970,7 +1958,7 @@ fn fetch_handler(ruby: &Ruby, handlers: &RHash, name: &str) -> Result<Value, Err
 fn mark(client: &NativeTestClient, marker: &Marker) {
     let inner_ref = client.inner.borrow();
     if let Some(inner) = inner_ref.as_ref() {
-        for handler in &inner.handlers {
+        for handler in &inner._handlers {
             handler.mark(marker);
         }
     }
@@ -2754,7 +2742,6 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("close", method!(NativeTestClient::close, 0))?;
 
     let built_response_class = native.define_class("BuiltResponse", ruby.class_object())?;
-    built_response_class.define_alloc_func::<NativeBuiltResponse>();
     built_response_class.define_method("status_code", method!(NativeBuiltResponse::status_code, 0))?;
     built_response_class.define_method("headers", method!(NativeBuiltResponse::headers, 0))?;
 
