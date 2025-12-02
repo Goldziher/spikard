@@ -11,10 +11,10 @@ keywords = ["ruby", "bindings", "magnus", "http", "framework"]
 categories = ["api-bindings", "web-programming::http-server"]
 documentation = "https://docs.rs/spikard-rb"
 readme = "README.md"
+build = "build.rs"
 
 [lib]
 name = "spikard_rb_core"
-crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 magnus = { git = "https://github.com/matsadler/magnus", rev = "f6db11769efb517427bf7f121f9c32e18b059b38", features = ["rb-sys"] }
