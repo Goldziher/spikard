@@ -11,9 +11,7 @@ use ext_php_rs::types::{ZendHashTable, Zval};
 use spikard_http::ParameterValidator;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
-use spikard_http::{
-    Handler, HandlerResult, LifecycleHooks, Method, RequestData, Route, Router, SchemaRegistry, ServerConfig,
-};
+use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, Route, Router, SchemaRegistry, ServerConfig};
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
