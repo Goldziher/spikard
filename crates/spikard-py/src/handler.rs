@@ -26,39 +26,24 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-/// Global Python event loop for async handlers
-/// Managed by a dedicated Python thread
+/// Global Python event loop for async handlers (tokio-driven via pyo3_async_runtimes).
 pub static PYTHON_EVENT_LOOP: OnceCell<Py<PyAny>> = OnceCell::new();
 
-/// Initialize Python event loop that runs in a dedicated thread
-/// This allows proper async/await support without blocking the Rust event loop
+/// Initialize Python event loop once using pyo3_async_runtimes to avoid per-request threads.
 pub fn init_python_event_loop() -> PyResult<()> {
     Python::attach(|py| {
         if PYTHON_EVENT_LOOP.get().is_some() {
             return Ok(());
         }
 
-        // Install uvloop for better performance if available
-        if let Ok(uvloop) = py.import("uvloop") {
-            uvloop.call_method0("install")?;
-            eprintln!("[spikard] uvloop installed for enhanced async performance");
-        } else {
-            eprintln!("[spikard] uvloop not available, using standard asyncio");
-        }
-
-        // Create a new event loop that will run in a dedicated thread
         let asyncio = py.import("asyncio")?;
         let event_loop = asyncio.call_method0("new_event_loop")?;
-
-        // Store the event loop
         PYTHON_EVENT_LOOP
             .set(event_loop.into())
             .map_err(|_| pyo3::exceptions::PyRuntimeError::new_err("Event loop already initialized"))?;
 
         // Start the event loop in a dedicated Python thread
         let threading = py.import("threading")?;
-
-        // Create a Python function that runs the event loop
         let globals = pyo3::types::PyDict::new(py);
         globals.set_item("asyncio", asyncio)?;
 
@@ -68,8 +53,6 @@ pub fn init_python_event_loop() -> PyResult<()> {
         let run_loop_fn = globals.get_item("run_loop")?.unwrap();
 
         let loop_ref = PYTHON_EVENT_LOOP.get().unwrap().bind(py);
-
-        // Create thread with kwargs for Python 3.14 compatibility
         let thread_kwargs = pyo3::types::PyDict::new(py);
         thread_kwargs.set_item("target", run_loop_fn)?;
         thread_kwargs.set_item("args", (loop_ref,))?;
@@ -77,9 +60,6 @@ pub fn init_python_event_loop() -> PyResult<()> {
 
         let thread = threading.call_method("Thread", (), Some(&thread_kwargs))?;
         thread.call_method0("start")?;
-
-        eprintln!("[spikard] Started dedicated Python event loop thread for async handlers");
-        eprintln!("[spikard] Async handlers will use asyncio.run_coroutine_threadsafe()");
 
         Ok(())
     })
@@ -101,6 +81,13 @@ fn structured_error_response(problem: ProblemDetails) -> (StatusCode, String) {
     let body = serde_json::to_string(&payload)
         .unwrap_or_else(|_| r#"{"error":"validation_error","code":"validation_error","details":{}}"#.to_string());
     (problem.status_code(), body)
+}
+
+fn structured_error(code: &str, message: impl Into<String>) -> (StatusCode, String) {
+    let payload = StructuredError::simple(code.to_string(), message.into());
+    let body = serde_json::to_string(&payload)
+        .unwrap_or_else(|_| r#"{"error":"internal_error","code":"internal_error","details":{}}"#.to_string());
+    (StatusCode::INTERNAL_SERVER_ERROR, body)
 }
 
 /// Response result from Python handler
@@ -186,20 +173,15 @@ impl PythonHandler {
         let handler = self.handler.clone();
         let is_async = self.is_async;
         let response_validator = self.response_validator.clone();
-        let request_data_for_error = request_data.clone();
+        let _request_data_for_error = request_data.clone();
         let validated_params_for_task = validated_params.clone();
         let body_param_name = self.body_param_name.clone();
 
         let result = if is_async {
-            // Get the global event loop
-            let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    "Python event loop not initialized".to_string(),
-                )
-            })?;
+            let event_loop = PYTHON_EVENT_LOOP
+                .get()
+                .ok_or_else(|| structured_error("event_loop_not_initialized", "Python event loop not initialized"))?;
 
-            // Submit coroutine to the dedicated event loop thread using run_coroutine_threadsafe
             let output = tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<Py<PyAny>> {
                     let handler_obj = handler.bind(py);
@@ -224,37 +206,19 @@ impl PythonHandler {
                         ));
                     }
 
-                    // Submit to the running event loop using run_coroutine_threadsafe
                     let loop_obj = event_loop.bind(py);
                     let future = asyncio.call_method1("run_coroutine_threadsafe", (coroutine, loop_obj))?;
-
-                    // Wait for the result by calling .result() on the concurrent.futures.Future
                     let result = future.call_method0("result")?;
 
                     Ok(result.into())
                 })
             })
             .await
-            .map_err(|e| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Tokio error: {}", e),
-                )
-            })?
-            .map_err(|e: PyErr| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Python async error: {}", e),
-                )
-            })?;
+            .map_err(|e| structured_error("tokio_blocking_error", format!("Tokio error: {}", e)))?
+            .map_err(|e: PyErr| structured_error("python_async_error", format!("Python async error: {}", e)))?;
 
-            // Convert Python result to ResponseResult
-            Python::attach(|py| python_to_response_result(py, output.bind(py))).map_err(|e: PyErr| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Python error: {}", e),
-                )
-            })?
+            Python::attach(|py| python_to_response_result(py, output.bind(py)))
+                .map_err(|e: PyErr| structured_error("python_response_error", format!("Python error: {}", e)))?
         } else {
             // Use spawn_blocking for sync handlers
             // Note: block_in_place was tested but is 6% slower under load due to:

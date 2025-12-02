@@ -116,14 +116,14 @@ fn py_to_json_value(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<serde_js
     if let Ok(s) = obj.extract::<String>() {
         return Ok(serde_json::Value::String(s));
     }
-    if let Ok(seq) = obj.downcast::<PyList>() {
+    if let Ok(seq) = obj.cast::<PyList>() {
         let mut items = Vec::with_capacity(seq.len());
         for item in seq {
             items.push(py_to_json_value(py, &item)?);
         }
         return Ok(serde_json::Value::Array(items));
     }
-    if let Ok(dict) = obj.downcast::<PyDict>() {
+    if let Ok(dict) = obj.cast::<PyDict>() {
         let mut map = serde_json::Map::with_capacity(dict.len());
         for (k, v) in dict {
             let key: String = k.extract()?;
