@@ -98,6 +98,7 @@ fn extract_json_field(py: Python<'_>, route: &Bound<'_, PyAny>, field: &str) -> 
     py_to_json_value(py, &value).map(Some)
 }
 
+#[allow(clippy::only_used_in_recursion)]
 fn py_to_json_value(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<serde_json::Value> {
     if obj.is_none() {
         return Ok(serde_json::Value::Null);
