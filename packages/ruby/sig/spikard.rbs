@@ -143,7 +143,7 @@ module Spikard
   end
 
   class Response
-    attr_accessor content: untyped
+    attr_reader content: untyped
     attr_reader status_code: Integer
     attr_reader headers: Hash[String, String]
     attr_reader native_response: untyped
@@ -181,6 +181,22 @@ module Spikard
 
     def initialize: (Enumerable[untyped], ?status_code: Integer, ?headers: Hash[untyped, untyped]?) -> void
     def to_native_response: () -> untyped
+  end
+
+  module Testing
+    class Response
+      attr_reader status_code: Integer
+      attr_reader headers: Hash[String, String]
+      attr_reader body: String?
+
+      def initialize: (Hash[Symbol, untyped]) -> void
+      def status: () -> Integer
+      def body_bytes: () -> String
+      def body_text: () -> String?
+      def text: () -> String?
+      def json: () -> Hash[String, untyped]?
+      def bytes: () -> Array[Integer]
+    end
   end
 
   module LifecycleHooks
