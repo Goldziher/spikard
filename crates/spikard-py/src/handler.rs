@@ -245,18 +245,8 @@ impl PythonHandler {
                 })
             })
             .await
-            .map_err(|e| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Spawn blocking error: {}", e),
-                )
-            })?
-            .map_err(|e: PyErr| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Python error: {}", e),
-                )
-            })?
+            .map_err(|e| structured_error("spawn_blocking_error", format!("Spawn blocking error: {}", e)))?
+            .map_err(|e: PyErr| structured_error("python_error", format!("Python error: {}", e)))?
         };
 
         let (json_value, status_code, headers) = match result {
@@ -283,8 +273,8 @@ impl PythonHandler {
                     s.as_bytes().to_vec()
                 } else {
                     serde_json::to_vec(&json_value).map_err(|e| {
-                        (
-                            StatusCode::INTERNAL_SERVER_ERROR,
+                        structured_error(
+                            "response_serialize_error",
                             format!("Failed to serialize response: {}", e),
                         )
                     })?
@@ -300,16 +290,16 @@ impl PythonHandler {
                     }
                 }
                 serde_json::to_vec(&json_value).map_err(|e| {
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
+                    structured_error(
+                        "response_serialize_error",
                         format!("Failed to serialize response: {}", e),
                     )
                 })?
             }
         } else {
             serde_json::to_vec(&json_value).map_err(|e| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
+                structured_error(
+                    "response_serialize_error",
                     format!("Failed to serialize response: {}", e),
                 )
             })?
@@ -325,12 +315,9 @@ impl PythonHandler {
             }
         }
 
-        response_builder.body(Body::from(body_bytes)).map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to build response: {}", e),
-            )
-        })
+        response_builder
+            .body(Body::from(body_bytes))
+            .map_err(|e| structured_error("response_build_error", format!("Failed to build response: {}", e)))
     }
 }
 
