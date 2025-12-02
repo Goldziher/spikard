@@ -10,7 +10,6 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use spikard_http::ParameterValidator;
 use spikard_http::server::build_router_with_handlers_and_config;
-use spikard_http::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, Route, Router, SchemaRegistry, ServerConfig};
 use std::collections::HashMap;
 use std::future::Future;
@@ -606,13 +605,7 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
         return Ok(Response::builder()
             .status(StatusCode::NO_CONTENT)
             .body(Body::empty())
-            .unwrap_or_else(|e| {
-                to_problem(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Failed to build response: {}", e),
-                )
-                .expect("Failed to build error response")
-            }));
+            .unwrap_or_else(|e| structured_response(StatusCode::INTERNAL_SERVER_ERROR, "build_error", e.to_string())));
     }
 
     // Try to extract Response - check if object has our expected methods
@@ -710,39 +703,32 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
     let body_json = match zval_to_json(response) {
         Ok(val) => val,
         Err(e) => {
-            return to_problem(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to convert response: {}", e),
-            );
+            return structured_response(StatusCode::INTERNAL_SERVER_ERROR, "response_conversion_failed", e);
         }
     };
 
     let body_bytes = serde_json::to_vec(&body_json).unwrap_or_default();
     let mut builder = Response::builder().status(StatusCode::OK);
     builder = builder.header("content-type", "application/json");
-    builder
-        .body(Body::from(body_bytes))
-        .map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to build response: {}", e),
-            )
-        })
-        .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg))
+    builder.body(Body::from(body_bytes)).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to build response: {}", e),
+        )
+    })
 }
 
-/// Build a structured ProblemDetails response with application/problem+json.
-pub fn to_problem(status: StatusCode, detail: impl Into<String>) -> HandlerResult {
-    let problem = ProblemDetails::new(
-        ProblemDetails::TYPE_INTERNAL_SERVER_ERROR,
-        "Internal Server Error",
-        status,
-    )
-    .with_detail(detail);
-    let body = serde_json::to_vec(&problem).unwrap_or_else(|_| b"{}".to_vec());
+fn structured_response(status: StatusCode, code: impl Into<String>, message: impl Into<String>) -> HandlerResult {
+    let payload = spikard_core::errors::StructuredError::simple(code.into(), message.into());
+    let body = serde_json::to_vec(&payload).unwrap_or_else(|_| {
+        r#"{"error":"internal_error","code":"internal_error","details":{}}"#
+            .as_bytes()
+            .to_vec()
+    });
+
     Response::builder()
         .status(status)
-        .header("content-type", CONTENT_TYPE_PROBLEM_JSON)
+        .header("content-type", "application/json")
         .body(Body::from(body))
         .map_err(|e| {
             (
