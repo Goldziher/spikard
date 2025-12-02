@@ -7,7 +7,7 @@ RSpec.describe Spikard::Response do
     it 'normalises header keys and values to strings' do
       response = described_class.new(headers: { 'X-Number' => 1, :symbol => :value })
 
-      expect(response.headers).to eq('X-Number' => '1', 'symbol' => 'value')
+      expect(response.headers).to eq('x-number' => '1', 'symbol' => 'value')
     end
   end
 
