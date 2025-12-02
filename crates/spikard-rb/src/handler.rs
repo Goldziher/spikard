@@ -17,10 +17,13 @@ use spikard_http::SchemaValidator;
 use spikard_http::problem::ProblemDetails;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use std::collections::HashMap;
+use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::conversion::{json_to_ruby, map_to_ruby_hash, multimap_to_ruby_hash, problem_to_json, ruby_value_to_json};
+use crate::conversion::{
+    json_to_ruby, json_to_ruby_with_uploads, map_to_ruby_hash, multimap_to_ruby_hash, ruby_value_to_json,
+};
 
 /// Response payload with status, headers, and body data.
 pub struct HandlerResponsePayload {
@@ -128,6 +131,7 @@ pub struct RubyHandlerInner {
     pub request_validator: Option<Arc<SchemaValidator>>,
     pub response_validator: Option<Arc<SchemaValidator>>,
     pub parameter_validator: Option<ParameterValidator>,
+    pub upload_file_class: Option<Opaque<Value>>,
 }
 
 /// Wrapper around a Ruby Proc that implements the Handler trait.
@@ -139,6 +143,7 @@ pub struct RubyHandler {
 impl RubyHandler {
     /// Create a new RubyHandler from a route and handler Proc.
     pub fn new(route: &spikard_http::Route, handler_value: Value, json_module: Value) -> Result<Self, Error> {
+        let upload_file_class = lookup_upload_file_class()?;
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
@@ -149,6 +154,7 @@ impl RubyHandler {
                 request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
                 parameter_validator: route.parameter_validator.clone(),
+                upload_file_class,
             }),
         })
     }
@@ -165,6 +171,7 @@ impl RubyHandler {
         json_module: Value,
         route: &spikard_http::Route,
     ) -> Result<Self, Error> {
+        let upload_file_class = lookup_upload_file_class()?;
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
@@ -175,6 +182,7 @@ impl RubyHandler {
                 request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
                 parameter_validator: route.parameter_validator.clone(),
+                upload_file_class,
             }),
         })
     }
@@ -190,12 +198,24 @@ impl RubyHandler {
 
     /// Handle a request synchronously.
     pub fn handle(&self, request_data: RequestData) -> HandlerResult {
+        let cloned = request_data.clone();
+        let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(cloned)));
+        match result {
+            Ok(res) => res,
+            Err(_) => Err(structured_error(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "panic",
+                "Unexpected panic while executing Ruby handler",
+            )),
+        }
+    }
+
+    fn handle_inner(&self, request_data: RequestData) -> HandlerResult {
         if let Some(validator) = &self.inner.request_validator
             && let Err(errors) = validator.validate(&request_data.body)
         {
             let problem = ProblemDetails::from_validation_error(&errors);
-            let error_json = problem_to_json(&problem);
-            return Err((problem.status_code(), error_json));
+            return Err(validation_error_response(&problem));
         }
 
         let validated_params = if let Some(validator) = &self.inner.parameter_validator {
@@ -209,7 +229,7 @@ impl RubyHandler {
                 Ok(value) => Some(value),
                 Err(errors) => {
                     let problem = ProblemDetails::from_validation_error(&errors);
-                    return Err((problem.status_code(), problem_to_json(&problem)));
+                    return Err(validation_error_response(&problem));
                 }
             }
         } else {
@@ -265,11 +285,36 @@ impl RubyHandler {
             RubyHandlerResult::Payload(payload) => payload,
         };
 
-        if let (Some(validator), Some(body)) = (&self.inner.response_validator, payload.body.as_ref())
-            && let Err(errors) = validator.validate(body)
-        {
-            let problem = ProblemDetails::from_validation_error(&errors);
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, problem_to_json(&problem)));
+        if let Some(validator) = &self.inner.response_validator {
+            let candidate_body = match payload.body.clone() {
+                Some(body) => Some(body),
+                None => match try_parse_raw_body(&payload.raw_body) {
+                    Ok(parsed) => parsed,
+                    Err(err) => {
+                        return Err(structured_error(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "response_body_decode_error",
+                            err,
+                        ));
+                    }
+                },
+            };
+
+            match candidate_body {
+                Some(json_body) => {
+                    if let Err(errors) = validator.validate(&json_body) {
+                        let problem = ProblemDetails::from_validation_error(&errors);
+                        return Err(validation_error_response(&problem));
+                    }
+                }
+                None => {
+                    return Err(structured_error(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "response_validation_failed",
+                        "Response validator requires JSON body but handler returned raw bytes",
+                    ));
+                }
+            }
         }
 
         let HandlerResponsePayload {
@@ -349,6 +394,40 @@ fn structured_error(status: StatusCode, code: &str, message: impl Into<String>) 
     (status, body)
 }
 
+fn validation_error_response(problem: &ProblemDetails) -> (StatusCode, String) {
+    let payload = StructuredError::new(
+        "validation_error".to_string(),
+        problem.title.clone(),
+        serde_json::to_value(problem).unwrap_or_else(|_| serde_json::json!({})),
+    );
+    let body = serde_json::to_string(&payload)
+        .unwrap_or_else(|_| r#"{"error":"validation_error","code":"validation_error","details":{}}"#.to_string());
+    (problem.status_code(), body)
+}
+
+fn try_parse_raw_body(raw_body: &Option<Vec<u8>>) -> Result<Option<JsonValue>, String> {
+    let Some(bytes) = raw_body else {
+        return Ok(None);
+    };
+    let text = String::from_utf8(bytes.clone()).map_err(|e| format!("Invalid UTF-8 in response body: {e}"))?;
+    if text.is_empty() {
+        return Ok(None);
+    }
+    serde_json::from_str(&text)
+        .map(Some)
+        .map_err(|e| format!("Failed to parse response body as JSON: {e}"))
+}
+
+fn lookup_upload_file_class() -> Result<Option<Opaque<Value>>, Error> {
+    let ruby = match Ruby::get() {
+        Ok(ruby) => ruby,
+        Err(_) => return Ok(None),
+    };
+
+    let upload_file = ruby.eval::<Value>("Spikard::UploadFile").ok();
+    Ok(upload_file.map(Opaque::from))
+}
+
 /// Build a Ruby Hash request object from request data.
 fn build_ruby_request(
     ruby: &Ruby,
@@ -376,8 +455,15 @@ fn build_ruby_request(
     let cookies = map_to_ruby_hash(ruby, request_data.cookies.as_ref())?;
     hash.aset(ruby.intern("cookies"), cookies)?;
 
-    let body_value = json_to_ruby(ruby, &request_data.body)?;
+    let upload_class_value = handler.upload_file_class.as_ref().map(|cls| cls.get_inner_with(ruby));
+    let body_value = json_to_ruby_with_uploads(ruby, &request_data.body, upload_class_value.as_ref())?;
     hash.aset(ruby.intern("body"), body_value)?;
+    if let Some(raw) = &request_data.raw_body {
+        let raw_str = ruby.str_from_slice(raw);
+        hash.aset(ruby.intern("raw_body"), raw_str)?;
+    } else {
+        hash.aset(ruby.intern("raw_body"), ruby.qnil())?;
+    }
 
     let params_value = if let Some(validated) = validated_params {
         json_to_ruby(ruby, validated)?

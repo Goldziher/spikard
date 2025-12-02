@@ -56,6 +56,7 @@ use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io;
+use std::mem;
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
@@ -123,15 +124,43 @@ struct HandlerResponsePayload {
     raw_body: Option<Vec<u8>>,
 }
 
+struct NativeResponseParts {
+    response: HandlerResponse,
+    body_json: Option<JsonValue>,
+}
+
 enum RubyHandlerResult {
     Payload(HandlerResponsePayload),
     Streaming(StreamingResponsePayload),
+    Native(NativeResponseParts),
 }
 
 struct StreamingResponsePayload {
     enumerator: Arc<Opaque<Value>>,
     status: u16,
     headers: HashMap<String, String>,
+}
+
+#[magnus::wrap(class = "Spikard::Native::BuiltResponse", free_immediately, mark)]
+struct NativeBuiltResponse {
+    response: RefCell<Option<HandlerResponse>>,
+    body_json: Option<JsonValue>,
+    /// Ruby values that must be kept alive for GC (e.g., streaming enumerators)
+    gc_handles: Vec<Opaque<Value>>,
+}
+
+#[derive(Default)]
+#[magnus::wrap(class = "Spikard::Native::LifecycleRegistry", free_immediately, mark)]
+struct NativeLifecycleRegistry {
+    hooks: RefCell<spikard_http::LifecycleHooks>,
+    ruby_hooks: RefCell<Vec<Arc<crate::lifecycle::RubyLifecycleHook>>>,
+}
+
+#[magnus::wrap(class = "Spikard::Native::DependencyRegistry", free_immediately, mark)]
+struct NativeDependencyRegistry {
+    container: RefCell<Option<spikard_core::di::DependencyContainer>>,
+    gc_handles: RefCell<Vec<Opaque<Value>>>,
+    registered_keys: RefCell<Vec<String>>,
 }
 
 impl StreamingResponsePayload {
@@ -189,6 +218,215 @@ impl StreamingResponsePayload {
             response = response.with_header(name, value);
         }
         Ok(response)
+    }
+}
+
+impl NativeBuiltResponse {
+    fn new(response: HandlerResponse, body_json: Option<JsonValue>, gc_handles: Vec<Opaque<Value>>) -> Self {
+        Self {
+            response: RefCell::new(Some(response)),
+            body_json,
+            gc_handles,
+        }
+    }
+
+    fn into_parts(&self) -> Result<(HandlerResponse, Option<JsonValue>), Error> {
+        let mut borrow = self.response.borrow_mut();
+        let response = borrow
+            .take()
+            .ok_or_else(|| Error::new(magnus::exception::runtime_error(), "Native response already consumed"))?;
+        Ok((response, self.body_json.clone()))
+    }
+
+    fn status_code(&self) -> u16 {
+        let borrow = self.response.borrow();
+        let Some(response) = borrow.as_ref() else {
+            return StatusCode::OK.as_u16();
+        };
+
+        match response {
+            HandlerResponse::Response(resp) => resp.status().as_u16(),
+            HandlerResponse::Stream { status, .. } => status.as_u16(),
+        }
+    }
+
+    fn headers(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
+        let headers_hash = ruby.hash_new();
+        if let Some(response) = this.response.borrow().as_ref() {
+            match response {
+                HandlerResponse::Response(resp) => {
+                    for (header_name, value) in resp.headers() {
+                        let name = header_name.as_str();
+                        if let Ok(value_str) = value.to_str() {
+                            headers_hash.aset(ruby.str_new(name), ruby.str_new(value_str))?;
+                        }
+                    }
+                }
+                HandlerResponse::Stream { headers, .. } => {
+                    for (header_name, value) in headers.iter() {
+                        let name = header_name.as_str();
+                        if let Ok(value_str) = value.to_str() {
+                            headers_hash.aset(ruby.str_new(name), ruby.str_new(value_str))?;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(headers_hash.as_value())
+    }
+
+    fn mark(&self, marker: &Marker) {
+        if let Ok(ruby) = Ruby::get() {
+            for handle in &self.gc_handles {
+                marker.mark(handle.get_inner_with(&ruby));
+            }
+        }
+    }
+}
+
+impl Default for NativeBuiltResponse {
+    fn default() -> Self {
+        let response = axum::http::Response::builder()
+            .status(StatusCode::OK)
+            .body(Body::empty())
+            .unwrap();
+        Self::new(HandlerResponse::from(response), None, Vec::new())
+    }
+}
+
+impl NativeLifecycleRegistry {
+    fn add_on_request(&self, hook_value: Value) -> Result<(), Error> {
+        self.add_hook("on_request", hook_value, |hooks, hook| hooks.add_on_request(hook))
+    }
+
+    fn add_pre_validation(&self, hook_value: Value) -> Result<(), Error> {
+        self.add_hook("pre_validation", hook_value, |hooks, hook| {
+            hooks.add_pre_validation(hook)
+        })
+    }
+
+    fn add_pre_handler(&self, hook_value: Value) -> Result<(), Error> {
+        self.add_hook("pre_handler", hook_value, |hooks, hook| hooks.add_pre_handler(hook))
+    }
+
+    fn add_on_response(&self, hook_value: Value) -> Result<(), Error> {
+        self.add_hook("on_response", hook_value, |hooks, hook| hooks.add_on_response(hook))
+    }
+
+    fn add_on_error(&self, hook_value: Value) -> Result<(), Error> {
+        self.add_hook("on_error", hook_value, |hooks, hook| hooks.add_on_error(hook))
+    }
+
+    fn take_hooks(&self) -> spikard_http::LifecycleHooks {
+        mem::take(&mut *self.hooks.borrow_mut())
+    }
+
+    fn add_hook<F>(&self, kind: &str, hook_value: Value, push: F) -> Result<(), Error>
+    where
+        F: Fn(&mut spikard_http::LifecycleHooks, Arc<crate::lifecycle::RubyLifecycleHook>),
+    {
+        let idx = self.ruby_hooks.borrow().len();
+        let hook = Arc::new(crate::lifecycle::RubyLifecycleHook::new(
+            format!("{kind}_{idx}"),
+            hook_value,
+        ));
+
+        push(&mut self.hooks.borrow_mut(), hook.clone());
+        self.ruby_hooks.borrow_mut().push(hook);
+        Ok(())
+    }
+
+    fn mark(&self, marker: &Marker) {
+        for hook in self.ruby_hooks.borrow().iter() {
+            hook.mark(marker);
+        }
+    }
+}
+
+impl Default for NativeDependencyRegistry {
+    fn default() -> Self {
+        Self {
+            container: RefCell::new(Some(spikard_core::di::DependencyContainer::new())),
+            gc_handles: RefCell::new(Vec::new()),
+            registered_keys: RefCell::new(Vec::new()),
+        }
+    }
+}
+
+impl NativeDependencyRegistry {
+    fn register_value(ruby: &Ruby, this: &Self, key: String, value: Value) -> Result<(), Error> {
+        let dependency = crate::di::RubyValueDependency::new(key.clone(), value);
+        this.register_dependency(ruby, key, Arc::new(dependency), Some(value))
+    }
+
+    fn register_factory(
+        ruby: &Ruby,
+        this: &Self,
+        key: String,
+        factory: Value,
+        depends_on: Value,
+        singleton: bool,
+        cacheable: bool,
+    ) -> Result<(), Error> {
+        let depends_on_vec = if depends_on.is_nil() {
+            Vec::new()
+        } else {
+            Vec::<String>::try_convert(depends_on)?
+        };
+
+        let dependency =
+            crate::di::RubyFactoryDependency::new(key.clone(), factory, depends_on_vec, singleton, cacheable);
+        this.register_dependency(ruby, key, Arc::new(dependency), Some(factory))
+    }
+
+    fn register_dependency(
+        &self,
+        ruby: &Ruby,
+        key: String,
+        dependency: Arc<dyn spikard_core::di::Dependency>,
+        gc_value: Option<Value>,
+    ) -> Result<(), Error> {
+        let mut container_ref = self.container.borrow_mut();
+        let container = container_ref
+            .as_mut()
+            .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "Dependency container already consumed"))?;
+
+        container.register(key.clone(), dependency).map_err(|err| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                format!("Failed to register dependency '{key}': {err}"),
+            )
+        })?;
+
+        if let Some(val) = gc_value {
+            self.gc_handles.borrow_mut().push(Opaque::from(val));
+        }
+
+        self.registered_keys.borrow_mut().push(key);
+
+        Ok(())
+    }
+
+    fn take_container(&self) -> Result<spikard_core::di::DependencyContainer, Error> {
+        let mut borrow = self.container.borrow_mut();
+        let container = borrow.take().ok_or_else(|| {
+            Error::new(
+                magnus::exception::runtime_error(),
+                "Dependency container already consumed",
+            )
+        })?;
+        Ok(container)
+    }
+    fn mark(&self, marker: &Marker) {
+        if let Ok(ruby) = Ruby::get() {
+            for handle in self.gc_handles.borrow().iter() {
+                marker.mark(handle.get_inner_with(&ruby));
+            }
+        }
+    }
+
+    fn keys(&self) -> Vec<String> {
+        self.registered_keys.borrow().clone()
     }
 }
 
@@ -261,7 +499,9 @@ impl NativeTestClient {
         // Extract and register dependencies
         #[cfg(feature = "di")]
         {
-            if !dependencies.is_nil() {
+            if let Ok(registry) = <&NativeDependencyRegistry>::try_convert(dependencies) {
+                server_config.di_container = Some(Arc::new(registry.take_container()?));
+            } else if !dependencies.is_nil() {
                 match build_dependency_container(ruby, dependencies) {
                     Ok(container) => {
                         server_config.di_container = Some(Arc::new(container));
@@ -678,6 +918,16 @@ impl RubyHandler {
         })?;
 
         let payload = match handler_result {
+            RubyHandlerResult::Native(native) => {
+                if let (Some(validator), Some(body)) = (&self.inner.response_validator, native.body_json.as_ref())
+                    && let Err(errors) = validator.validate(body)
+                {
+                    let problem = ProblemDetails::from_validation_error(&errors);
+                    return Err((StatusCode::INTERNAL_SERVER_ERROR, problem_to_json(&problem)));
+                }
+
+                return Ok(native.response.into_response());
+            }
             RubyHandlerResult::Streaming(streaming) => {
                 let response = streaming.into_response().map_err(|err| {
                     (
@@ -1024,6 +1274,19 @@ fn interpret_handler_response(
     handler: &RubyHandlerInner,
     value: Value,
 ) -> Result<RubyHandlerResult, Error> {
+    // Prefer native-built responses to avoid Ruby-side normalization overhead
+    let native_method = ruby.intern("to_native_response");
+    if value.respond_to(native_method, false)? {
+        let native_value: Value = value.funcall("to_native_response", ())?;
+        if let Ok(native_resp) = <&NativeBuiltResponse>::try_convert(native_value) {
+            let (response, body_json) = native_resp.into_parts()?;
+            return Ok(RubyHandlerResult::Native(NativeResponseParts { response, body_json }));
+        }
+    } else if let Ok(native_resp) = <&NativeBuiltResponse>::try_convert(value) {
+        let (response, body_json) = native_resp.into_parts()?;
+        return Ok(RubyHandlerResult::Native(NativeResponseParts { response, body_json }));
+    }
+
     if value.is_nil() {
         return Ok(RubyHandlerResult::Payload(HandlerResponsePayload {
             status: 200,
@@ -1125,6 +1388,28 @@ fn value_to_string_map(ruby: &Ruby, value: Value) -> Result<HashMap<String, Stri
     })
 }
 
+fn header_pairs_from_map(headers: HashMap<String, String>) -> Result<Vec<(HeaderName, HeaderValue)>, Error> {
+    let ruby = Ruby::get().map_err(|err| Error::new(magnus::exception::runtime_error(), err.to_string()))?;
+    headers
+        .into_iter()
+        .map(|(name, value)| {
+            let header_name = HeaderName::from_bytes(name.as_bytes()).map_err(|err| {
+                Error::new(
+                    ruby.exception_arg_error(),
+                    format!("Invalid header name '{name}': {err}"),
+                )
+            })?;
+            let header_value = HeaderValue::from_str(&value).map_err(|err| {
+                Error::new(
+                    ruby.exception_arg_error(),
+                    format!("Invalid header value for '{name}': {err}"),
+                )
+            })?;
+            Ok((header_name, header_value))
+        })
+        .collect()
+}
+
 fn is_streaming_response(ruby: &Ruby, value: Value) -> Result<bool, Error> {
     let stream_sym = ruby.intern("stream");
     let status_sym = ruby.intern("status_code");
@@ -1206,6 +1491,113 @@ fn json_to_ruby(ruby: &Ruby, value: &JsonValue) -> Result<Value, Error> {
     }
 }
 
+fn build_response(
+    ruby: &Ruby,
+    content: Value,
+    status_code: i64,
+    headers_value: Value,
+    content_type: Option<String>,
+) -> Result<NativeBuiltResponse, Error> {
+    let status_u16 = u16::try_from(status_code)
+        .map_err(|_| Error::new(ruby.exception_arg_error(), "status_code must be between 0 and 65535"))?;
+
+    let headers = value_to_string_map(ruby, headers_value)?;
+    let mut header_pairs = header_pairs_from_map(headers)?;
+
+    let has_content_type = header_pairs
+        .iter()
+        .any(|(name, _)| name == &HeaderName::from_static("content-type"));
+
+    let json_module = ruby
+        .class_object()
+        .const_get("JSON")
+        .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
+
+    let mut body_json = None;
+    let body_bytes = if content.is_nil() {
+        Vec::new()
+    } else if let Ok(str_value) = RString::try_convert(content) {
+        let slice = unsafe { str_value.as_slice() };
+        slice.to_vec()
+    } else {
+        let json = ruby_value_to_json(ruby, json_module, content)?;
+        body_json = Some(json.clone());
+        serde_json::to_vec(&json).map_err(|err| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                format!("Failed to serialise response body: {err}"),
+            )
+        })?
+    };
+
+    let mut response_builder = axum::http::Response::builder().status(status_u16);
+
+    for (name, value) in &header_pairs {
+        response_builder = response_builder.header(name, value);
+    }
+
+    if let Some(content_type) = content_type {
+        let header_value = HeaderValue::from_str(&content_type).map_err(|err| {
+            Error::new(
+                ruby.exception_arg_error(),
+                format!("Invalid content type '{content_type}': {err}"),
+            )
+        })?;
+        response_builder = response_builder.header(HeaderName::from_static("content-type"), header_value.clone());
+        header_pairs.push((HeaderName::from_static("content-type"), header_value));
+    } else if !has_content_type && body_json.is_some() {
+        response_builder = response_builder.header(
+            HeaderName::from_static("content-type"),
+            HeaderValue::from_static("application/json"),
+        );
+    }
+
+    let response = response_builder.body(Body::from(body_bytes)).map_err(|err| {
+        Error::new(
+            ruby.exception_runtime_error(),
+            format!("Failed to build response: {err}"),
+        )
+    })?;
+
+    Ok(NativeBuiltResponse::new(
+        HandlerResponse::from(response),
+        body_json,
+        Vec::new(),
+    ))
+}
+
+fn build_streaming_response(
+    ruby: &Ruby,
+    stream_value: Value,
+    status_code: i64,
+    headers_value: Value,
+) -> Result<NativeBuiltResponse, Error> {
+    let status_u16 = u16::try_from(status_code)
+        .map_err(|_| Error::new(ruby.exception_arg_error(), "status_code must be between 0 and 65535"))?;
+
+    if !stream_value.respond_to(ruby.intern("next"), false)? && !stream_value.respond_to(ruby.intern("each"), false)? {
+        return Err(Error::new(
+            ruby.exception_arg_error(),
+            "StreamingResponse requires an object responding to #next or #each",
+        ));
+    }
+
+    let headers = value_to_string_map(ruby, headers_value)?;
+    let enumerator = Arc::new(Opaque::from(stream_value));
+    let payload = StreamingResponsePayload {
+        enumerator: enumerator.clone(),
+        status: status_u16,
+        headers,
+    };
+
+    let handler_response = payload.into_response()?;
+    Ok(NativeBuiltResponse::new(
+        handler_response,
+        None,
+        vec![(*enumerator).clone()],
+    ))
+}
+
 fn map_to_ruby_hash(ruby: &Ruby, map: &HashMap<String, String>) -> Result<Value, Error> {
     let hash = ruby.hash_new();
     for (key, value) in map {
@@ -1230,6 +1622,321 @@ fn problem_to_json(problem: &ProblemDetails) -> String {
     problem
         .to_json_pretty()
         .unwrap_or_else(|err| format!("Failed to serialise problem details: {err}"))
+}
+
+fn normalize_path_for_route(path: &str) -> String {
+    let has_trailing_slash = path.ends_with('/');
+    let segments = path.split('/').map(|segment| {
+        if let Some(stripped) = segment.strip_prefix(':') {
+            format!("{{{}}}", stripped)
+        } else {
+            segment.to_string()
+        }
+    });
+
+    let normalized = segments.collect::<Vec<_>>().join("/");
+    if has_trailing_slash && !normalized.ends_with('/') {
+        format!("{normalized}/")
+    } else {
+        normalized
+    }
+}
+
+fn default_handler_name(method: &str, path: &str) -> String {
+    let normalized_path: String = path
+        .chars()
+        .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { '_' })
+        .collect();
+    let trimmed = normalized_path.trim_matches('_');
+    let final_segment = if trimmed.is_empty() { "root" } else { trimmed };
+    format!("{}_{}", method.to_ascii_lowercase(), final_segment)
+}
+
+fn extract_handler_dependencies_from_ruby(_ruby: &Ruby, handler_value: Value) -> Result<Vec<String>, Error> {
+    if handler_value.is_nil() {
+        return Ok(Vec::new());
+    }
+
+    let params_value: Value = handler_value.funcall("parameters", ())?;
+    let params = RArray::try_convert(params_value)?;
+
+    let mut dependencies = Vec::new();
+    for i in 0..params.len() {
+        let entry: Value = params.entry(i as isize)?;
+        if let Some(pair) = RArray::from_value(entry) {
+            if pair.len() < 2 {
+                continue;
+            }
+
+            let kind_val: Value = pair.entry(0)?;
+            let name_val: Value = pair.entry(1)?;
+
+            let kind_symbol: magnus::Symbol = magnus::Symbol::try_convert(kind_val)?;
+            let kind_name = kind_symbol.name().unwrap_or_default();
+
+            if kind_name == "key" || kind_name == "keyreq" {
+                if let Ok(sym) = magnus::Symbol::try_convert(name_val) {
+                    if let Ok(name) = sym.name() {
+                        dependencies.push(name.to_string());
+                    }
+                } else {
+                    dependencies.push(String::try_convert(name_val)?);
+                }
+            }
+        }
+    }
+
+    Ok(dependencies)
+}
+
+fn option_json_to_ruby(ruby: &Ruby, value: &Option<JsonValue>) -> Result<Value, Error> {
+    if let Some(json) = value {
+        json_to_ruby(ruby, json)
+    } else {
+        Ok(ruby.qnil().as_value())
+    }
+}
+
+fn cors_to_ruby(ruby: &Ruby, cors: &Option<spikard_http::CorsConfig>) -> Result<Value, Error> {
+    if let Some(cors_config) = cors {
+        let hash = ruby.hash_new();
+        let origins = cors_config
+            .allowed_origins
+            .iter()
+            .map(|s| JsonValue::String(s.clone()))
+            .collect();
+        hash.aset(
+            ruby.to_symbol("allowed_origins"),
+            json_to_ruby(ruby, &JsonValue::Array(origins))?,
+        )?;
+        let methods = cors_config
+            .allowed_methods
+            .iter()
+            .map(|s| JsonValue::String(s.clone()))
+            .collect();
+        hash.aset(
+            ruby.to_symbol("allowed_methods"),
+            json_to_ruby(ruby, &JsonValue::Array(methods))?,
+        )?;
+
+        if !cors_config.allowed_headers.is_empty() {
+            let headers = cors_config
+                .allowed_headers
+                .iter()
+                .map(|s| JsonValue::String(s.clone()))
+                .collect();
+            hash.aset(
+                ruby.to_symbol("allowed_headers"),
+                json_to_ruby(ruby, &JsonValue::Array(headers))?,
+            )?;
+        }
+
+        if let Some(expose_headers) = &cors_config.expose_headers {
+            let exposed = expose_headers.iter().map(|s| JsonValue::String(s.clone())).collect();
+            hash.aset(
+                ruby.to_symbol("expose_headers"),
+                json_to_ruby(ruby, &JsonValue::Array(exposed))?,
+            )?;
+        }
+
+        if let Some(max_age) = cors_config.max_age {
+            hash.aset(ruby.to_symbol("max_age"), ruby.integer_from_i64(max_age as i64))?;
+        }
+
+        if let Some(allow_credentials) = cors_config.allow_credentials {
+            let bool_value: Value = if allow_credentials {
+                ruby.qtrue().as_value()
+            } else {
+                ruby.qfalse().as_value()
+            };
+            hash.aset(ruby.to_symbol("allow_credentials"), bool_value)?;
+        }
+
+        Ok(hash.as_value())
+    } else {
+        Ok(ruby.qnil().as_value())
+    }
+}
+
+fn route_metadata_to_ruby(ruby: &Ruby, metadata: &RouteMetadata) -> Result<Value, Error> {
+    let hash = ruby.hash_new();
+
+    hash.aset(ruby.to_symbol("method"), ruby.str_new(&metadata.method))?;
+    hash.aset(ruby.to_symbol("path"), ruby.str_new(&metadata.path))?;
+    hash.aset(ruby.to_symbol("handler_name"), ruby.str_new(&metadata.handler_name))?;
+    let is_async_val: Value = if metadata.is_async {
+        ruby.qtrue().as_value()
+    } else {
+        ruby.qfalse().as_value()
+    };
+    hash.aset(ruby.to_symbol("is_async"), is_async_val)?;
+
+    hash.aset(
+        ruby.to_symbol("request_schema"),
+        option_json_to_ruby(ruby, &metadata.request_schema)?,
+    )?;
+    hash.aset(
+        ruby.to_symbol("response_schema"),
+        option_json_to_ruby(ruby, &metadata.response_schema)?,
+    )?;
+    hash.aset(
+        ruby.to_symbol("parameter_schema"),
+        option_json_to_ruby(ruby, &metadata.parameter_schema)?,
+    )?;
+    hash.aset(
+        ruby.to_symbol("file_params"),
+        option_json_to_ruby(ruby, &metadata.file_params)?,
+    )?;
+    hash.aset(
+        ruby.to_symbol("body_param_name"),
+        metadata
+            .body_param_name
+            .as_ref()
+            .map(|s| ruby.str_new(s).as_value())
+            .unwrap_or_else(|| ruby.qnil().as_value()),
+    )?;
+
+    hash.aset(ruby.to_symbol("cors"), cors_to_ruby(ruby, &metadata.cors)?)?;
+
+    #[cfg(feature = "di")]
+    {
+        if let Some(deps) = &metadata.handler_dependencies {
+            let array = ruby.ary_new();
+            for dep in deps {
+                array.push(ruby.str_new(dep))?;
+            }
+            hash.aset(ruby.to_symbol("handler_dependencies"), array)?;
+        } else {
+            hash.aset(ruby.to_symbol("handler_dependencies"), ruby.qnil())?;
+        }
+    }
+
+    Ok(hash.as_value())
+}
+
+fn parse_cors_config(ruby: &Ruby, value: Value) -> Result<Option<spikard_http::CorsConfig>, Error> {
+    if value.is_nil() {
+        return Ok(None);
+    }
+
+    let hash = RHash::try_convert(value)?;
+
+    let allowed_origins = hash
+        .get(ruby.to_symbol("allowed_origins"))
+        .and_then(|v| Vec::<String>::try_convert(v).ok())
+        .unwrap_or_default();
+    let allowed_methods = hash
+        .get(ruby.to_symbol("allowed_methods"))
+        .and_then(|v| Vec::<String>::try_convert(v).ok())
+        .unwrap_or_default();
+    let allowed_headers = hash
+        .get(ruby.to_symbol("allowed_headers"))
+        .and_then(|v| Vec::<String>::try_convert(v).ok())
+        .unwrap_or_default();
+    let expose_headers = hash
+        .get(ruby.to_symbol("expose_headers"))
+        .and_then(|v| Vec::<String>::try_convert(v).ok());
+    let max_age = hash
+        .get(ruby.to_symbol("max_age"))
+        .and_then(|v| i64::try_convert(v).ok())
+        .map(|v| v as u32);
+    let allow_credentials = hash
+        .get(ruby.to_symbol("allow_credentials"))
+        .and_then(|v| bool::try_convert(v).ok());
+
+    Ok(Some(spikard_http::CorsConfig {
+        allowed_origins,
+        allowed_methods,
+        allowed_headers,
+        expose_headers,
+        max_age,
+        allow_credentials,
+    }))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_route_metadata(
+    ruby: &Ruby,
+    method: String,
+    path: String,
+    handler_name: Option<String>,
+    request_schema_value: Value,
+    response_schema_value: Value,
+    parameter_schema_value: Value,
+    file_params_value: Value,
+    is_async: bool,
+    cors_value: Value,
+    body_param_name: Option<String>,
+    handler_value: Value,
+) -> Result<Value, Error> {
+    let normalized_path = normalize_path_for_route(&path);
+    let final_handler_name = handler_name.unwrap_or_else(|| default_handler_name(&method, &normalized_path));
+
+    let json_module = ruby
+        .class_object()
+        .const_get("JSON")
+        .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
+
+    let request_schema = if request_schema_value.is_nil() {
+        None
+    } else {
+        Some(ruby_value_to_json(ruby, json_module, request_schema_value)?)
+    };
+    let response_schema = if response_schema_value.is_nil() {
+        None
+    } else {
+        Some(ruby_value_to_json(ruby, json_module, response_schema_value)?)
+    };
+    let parameter_schema = if parameter_schema_value.is_nil() {
+        None
+    } else {
+        Some(ruby_value_to_json(ruby, json_module, parameter_schema_value)?)
+    };
+    let file_params = if file_params_value.is_nil() {
+        None
+    } else {
+        Some(ruby_value_to_json(ruby, json_module, file_params_value)?)
+    };
+
+    let cors = parse_cors_config(ruby, cors_value)?;
+    let handler_dependencies = extract_handler_dependencies_from_ruby(ruby, handler_value)?;
+
+    #[cfg(feature = "di")]
+    let handler_deps_option = if handler_dependencies.is_empty() {
+        None
+    } else {
+        Some(handler_dependencies.clone())
+    };
+
+    let mut metadata = RouteMetadata {
+        method,
+        path: normalized_path,
+        handler_name: final_handler_name,
+        request_schema,
+        response_schema,
+        parameter_schema,
+        file_params,
+        is_async,
+        cors,
+        body_param_name,
+        #[cfg(feature = "di")]
+        handler_dependencies: handler_deps_option,
+    };
+
+    // Validate schemas and parameter validator during build to fail fast
+    let registry = spikard_http::SchemaRegistry::new();
+    let route = Route::from_metadata(metadata.clone(), &registry).map_err(|err| {
+        Error::new(
+            ruby.exception_runtime_error(),
+            format!("Failed to build route metadata: {err}"),
+        )
+    })?;
+
+    if let Some(validator) = route.parameter_validator.as_ref() {
+        metadata.parameter_schema = Some(validator.schema().clone());
+    }
+
+    route_metadata_to_ruby(ruby, &metadata)
 }
 
 fn get_kw(ruby: &Ruby, hash: RHash, name: &str) -> Option<Value> {
@@ -1796,7 +2503,9 @@ fn run_server(
         routes_with_handlers.push((route, Arc::new(ruby_handler) as Arc<dyn spikard_http::Handler>));
     }
 
-    let lifecycle_hooks = if !hooks_value.is_nil() {
+    let lifecycle_hooks = if let Ok(registry) = <&NativeLifecycleRegistry>::try_convert(hooks_value) {
+        Some(registry.take_hooks())
+    } else if !hooks_value.is_nil() {
         let hooks_hash = RHash::from_value(hooks_value)
             .ok_or_else(|| Error::new(ruby.exception_arg_error(), "lifecycle_hooks parameter must be a Hash"))?;
 
@@ -1857,7 +2566,9 @@ fn run_server(
     // Extract and register dependencies
     #[cfg(feature = "di")]
     {
-        if !dependencies.is_nil() {
+        if let Ok(registry) = <&NativeDependencyRegistry>::try_convert(dependencies) {
+            config.di_container = Some(Arc::new(registry.take_container()?));
+        } else if !dependencies.is_nil() {
             match build_dependency_container(ruby, dependencies) {
                 Ok(container) => {
                     config.di_container = Some(Arc::new(container));
@@ -1985,6 +2696,35 @@ fn run_server(
     Ok(())
 }
 
+/// Validate and normalize route metadata using the Rust RouteMetadata schema.
+///
+/// Parses the provided JSON, compiles schemas/parameter validators to ensure
+/// correctness, and returns a canonical JSON string. This keeps Ruby-sourced
+/// metadata aligned with the Rust core types.
+fn normalize_route_metadata(_ruby: &Ruby, routes_json: String) -> Result<String, Error> {
+    use spikard_http::SchemaRegistry;
+
+    let registry = SchemaRegistry::new();
+    let routes: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
+        .map_err(|err| Error::new(magnus::exception::arg_error(), format!("Invalid routes JSON: {err}")))?;
+
+    for route in &routes {
+        Route::from_metadata(route.clone(), &registry).map_err(|err| {
+            Error::new(
+                magnus::exception::runtime_error(),
+                format!("Invalid route {} {}: {err}", route.method, route.path),
+            )
+        })?;
+    }
+
+    serde_json::to_string(&routes).map_err(|err| {
+        Error::new(
+            magnus::exception::runtime_error(),
+            format!("Failed to serialise routes: {err}"),
+        )
+    })
+}
+
 #[magnus::init]
 pub fn init(ruby: &Ruby) -> Result<(), Error> {
     let spikard = ruby.define_module("Spikard")?;
@@ -1995,7 +2735,11 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     };
 
     native.define_singleton_method("run_server", function!(run_server, 7))?;
+    native.define_singleton_method("normalize_route_metadata", function!(normalize_route_metadata, 1))?;
     native.define_singleton_method("background_run", function!(background::background_run, 1))?;
+    native.define_singleton_method("build_route_metadata", function!(build_route_metadata, 11))?;
+    native.define_singleton_method("build_response", function!(build_response, 4))?;
+    native.define_singleton_method("build_streaming_response", function!(build_streaming_response, 3))?;
 
     let class = native.define_class("TestClient", ruby.class_object())?;
     class.define_alloc_func::<NativeTestClient>();
@@ -2004,6 +2748,31 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("websocket", method!(NativeTestClient::websocket, 1))?;
     class.define_method("sse", method!(NativeTestClient::sse, 1))?;
     class.define_method("close", method!(NativeTestClient::close, 0))?;
+
+    let built_response_class = native.define_class("BuiltResponse", ruby.class_object())?;
+    built_response_class.define_alloc_func::<NativeBuiltResponse>();
+    built_response_class.define_method("status_code", method!(NativeBuiltResponse::status_code, 0))?;
+    built_response_class.define_method("headers", method!(NativeBuiltResponse::headers, 0))?;
+
+    let lifecycle_registry_class = native.define_class("LifecycleRegistry", ruby.class_object())?;
+    lifecycle_registry_class.define_alloc_func::<NativeLifecycleRegistry>();
+    lifecycle_registry_class.define_method("add_on_request", method!(NativeLifecycleRegistry::add_on_request, 1))?;
+    lifecycle_registry_class.define_method(
+        "pre_validation",
+        method!(NativeLifecycleRegistry::add_pre_validation, 1),
+    )?;
+    lifecycle_registry_class.define_method("pre_handler", method!(NativeLifecycleRegistry::add_pre_handler, 1))?;
+    lifecycle_registry_class.define_method("on_response", method!(NativeLifecycleRegistry::add_on_response, 1))?;
+    lifecycle_registry_class.define_method("on_error", method!(NativeLifecycleRegistry::add_on_error, 1))?;
+
+    let dependency_registry_class = native.define_class("DependencyRegistry", ruby.class_object())?;
+    dependency_registry_class.define_alloc_func::<NativeDependencyRegistry>();
+    dependency_registry_class.define_method("register_value", method!(NativeDependencyRegistry::register_value, 2))?;
+    dependency_registry_class.define_method(
+        "register_factory",
+        method!(NativeDependencyRegistry::register_factory, 5),
+    )?;
+    dependency_registry_class.define_method("keys", method!(NativeDependencyRegistry::keys, 0))?;
 
     let spikard_module = ruby.define_module("Spikard")?;
     test_websocket::init(ruby, &spikard_module)?;

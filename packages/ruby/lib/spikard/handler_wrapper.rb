@@ -3,10 +3,10 @@
 require_relative 'converters'
 
 module Spikard
-  # Handler wrapper utilities for automatic file metadata conversion
+  # Handler wrapper utilities.
   #
-  # Provides ergonomic handler patterns that automatically convert
-  # file metadata to UploadFile instances, eliminating boilerplate.
+  # UploadFile conversion now happens in the Rust binding, so these wrappers
+  # simply forward the already-converted body/params.
   #
   # @example Basic usage with body only
   #   app.post('/upload', &wrap_body_handler do |body|
@@ -46,8 +46,7 @@ module Spikard
       # Return a proc that matches the signature expected by Spikard::App
       # The actual handler receives path params, query params, and body from Rust
       lambda do |_params, _query, body|
-        converted_body = Converters.convert_handler_body(body)
-        handler.call(converted_body)
+        handler.call(body)
       end
     end
 
@@ -74,8 +73,7 @@ module Spikard
       raise ArgumentError, 'block required for wrap_handler' unless handler
 
       lambda do |params, query, body|
-        converted_body = Converters.convert_handler_body(body)
-        handler.call(params, query, converted_body)
+        handler.call(params, query, body)
       end
     end
 
@@ -103,11 +101,10 @@ module Spikard
       raise ArgumentError, 'block required for wrap_handler_with_context' unless handler
 
       lambda do |params, query, body|
-        converted_body = Converters.convert_handler_body(body)
         context = {
           params: params,
           query: query,
-          body: converted_body
+          body: body
         }
         handler.call(context)
       end

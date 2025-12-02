@@ -7,7 +7,7 @@ use axum::{
     body::Body,
     http::{Request, Response, StatusCode},
 };
-use magnus::{RHash, Value, prelude::*, value::Opaque};
+use magnus::{RHash, Value, gc::Marker, prelude::*, value::InnerValue, value::Opaque};
 use serde_json::Value as JsonValue;
 use spikard_http::lifecycle::{HookResult, LifecycleHook};
 use std::future::Future;
@@ -29,6 +29,13 @@ impl RubyLifecycleHook {
         Self {
             name,
             func: func.into(),
+        }
+    }
+
+    /// Mark Ruby values for GC
+    pub fn mark(&self, marker: &Marker) {
+        if let Ok(ruby) = magnus::Ruby::get() {
+            marker.mark(self.func.get_inner_with(&ruby));
         }
     }
 }

@@ -6,13 +6,17 @@ module Spikard
   # can extract status, headers, and JSON-serialisable content.
   class Response
     attr_accessor :content
-    attr_reader :status_code, :headers
+    attr_reader :status_code, :headers, :native_response
 
     def initialize(content: nil, body: nil, status_code: 200, headers: nil, content_type: nil)
       @content = content.nil? ? body : content
       self.status_code = status_code
       self.headers = headers
       set_header('content-type', content_type) if content_type
+
+      return unless defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_response)
+
+      @native_response = Spikard::Native.build_response(@content, @status_code, @headers, content_type)
     end
 
     def status
@@ -38,6 +42,10 @@ module Spikard
 
       header_value = ["#{name}=#{value}", *cookie_parts(options)].join('; ')
       set_header('set-cookie', header_value)
+    end
+
+    def to_native_response
+      @native_response
     end
 
     private
