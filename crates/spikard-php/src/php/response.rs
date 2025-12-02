@@ -20,7 +20,8 @@ impl PhpResponse {
     /// Create a new response.
     pub fn new(body: Option<String>, status: Option<i64>, headers: Option<HashMap<String, String>>) -> Self {
         let body_value = body
-            .map(|b| serde_json::from_str(&b).unwrap_or(Value::String(b)))
+            .as_ref()
+            .map(|b| serde_json::from_str(b).unwrap_or(Value::String(b.clone())))
             .unwrap_or(Value::Null);
         Self {
             status: status.unwrap_or(200),
@@ -44,7 +45,7 @@ impl PhpResponse {
     /// Get the body as JSON string.
     #[php(name = "getBody")]
     pub fn get_body(&self) -> String {
-        serde_json::to_string(&self.body).unwrap_or_default()
+        serde_json::to_string(&self.body).unwrap_or_else(|_| "{}".to_string())
     }
 
     /// Get headers as a PHP array.
