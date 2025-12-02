@@ -17,13 +17,28 @@ module Spikard
         memo[String(key)] = String(value)
       end
 
-      return unless defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_streaming_response)
-
-      @native_response = Spikard::Native.build_streaming_response(@stream, @status_code, @headers)
+      rebuild_native!
     end
 
     def to_native_response
       @native_response
+    end
+
+    private
+
+    def rebuild_native!
+      ensure_native!
+      @native_response = Spikard::Native.build_streaming_response(@stream, @status_code, @headers)
+      return unless @native_response
+
+      @status_code = @native_response.status_code
+      @headers = @native_response.headers
+    end
+
+    def ensure_native!
+      return if defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_streaming_response)
+
+      raise 'Spikard native extension is not loaded'
     end
   end
 end

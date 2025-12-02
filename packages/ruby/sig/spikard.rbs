@@ -146,6 +146,7 @@ module Spikard
     attr_accessor content: untyped
     attr_reader status_code: Integer
     attr_reader headers: Hash[String, String]
+    attr_reader native_response: untyped
 
     def initialize: (
       ?content: untyped,
@@ -157,6 +158,7 @@ module Spikard
     def status: () -> Integer
     def status_code=: (Integer) -> Integer
     def headers=: (Hash[untyped, untyped]?) -> Hash[String, String]
+    def content=: (untyped) -> untyped
     def set_header: (String, String) -> String
     def set_cookie: (
       String,
@@ -168,14 +170,17 @@ module Spikard
       ?httponly: bool?,
       ?samesite: String?
     ) -> String
+    def to_native_response: () -> untyped
   end
 
   class StreamingResponse
     attr_reader stream: Enumerable[untyped]
     attr_reader status_code: Integer
     attr_reader headers: Hash[String, String]
+    attr_reader native_response: untyped
 
     def initialize: (Enumerable[untyped], ?status_code: Integer, ?headers: Hash[untyped, untyped]?) -> void
+    def to_native_response: () -> untyped
   end
 
   module LifecycleHooks

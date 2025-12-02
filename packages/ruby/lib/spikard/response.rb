@@ -2,21 +2,15 @@
 
 module Spikard
   # Response object returned from route handlers.
-  # Mirrors the Python/Node response helpers so the native layer
-  # can extract status, headers, and JSON-serialisable content.
   class Response
-    attr_accessor :content
-    attr_reader :status_code, :headers, :native_response
+    attr_reader :content, :status_code, :headers, :native_response
 
     def initialize(content: nil, body: nil, status_code: 200, headers: nil, content_type: nil)
       @content = content.nil? ? body : content
       self.status_code = status_code
       self.headers = headers
       set_header('content-type', content_type) if content_type
-
-      return unless defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_response)
-
-      @native_response = Spikard::Native.build_response(@content, @status_code, @headers, content_type)
+      rebuild_native!(content_type)
     end
 
     def status
@@ -31,10 +25,17 @@ module Spikard
 
     def headers=(value)
       @headers = normalize_headers(value)
+      rebuild_native!
+    end
+
+    def content=(value)
+      @content = value
+      rebuild_native!
     end
 
     def set_header(name, value)
       @headers[name.to_s] = value.to_s
+      rebuild_native!
     end
 
     def set_cookie(name, value, **options)
@@ -49,6 +50,23 @@ module Spikard
     end
 
     private
+
+    def rebuild_native!(content_type = nil)
+      ensure_native!
+      @native_response = Spikard::Native.build_response(@content, @status_code, @headers,
+                                                        content_type || @headers['content-type'])
+      # Normalise exposed attributes to the canonical values returned by Rust
+      return unless @native_response
+
+      @status_code = @native_response.status_code
+      @headers = @native_response.headers
+    end
+
+    def ensure_native!
+      return if defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_response)
+
+      raise 'Spikard native extension is not loaded'
+    end
 
     def cookie_parts(options)
       [
