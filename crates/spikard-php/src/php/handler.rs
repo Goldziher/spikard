@@ -67,7 +67,9 @@ pub struct PhpHandler {
 // NOTE: This is thread_local because Zval is not Send/Sync (contains raw pointers
 // to PHP's internal structures which are single-threaded).
 thread_local! {
-    static PHP_HANDLER_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = const { std::cell::RefCell::new(Vec::new()) };
+    static PHP_HANDLER_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = const {
+        std::cell::RefCell::new(Vec::new())
+    };
 }
 
 impl PhpHandler {
@@ -88,15 +90,19 @@ impl PhpHandler {
             return Err(format!("Handler '{}' is not callable", handler_name));
         }
 
-        let idx = PHP_HANDLER_REGISTRY.with(|registry| {
+        let idx = PHP_HANDLER_REGISTRY.with(|registry| -> Result<usize, String> {
             let mut registry = registry.borrow_mut();
             let idx = registry.len();
+
+            if idx > 10_000 {
+                return Err("Handler registry is full; refusing to register more handlers".to_string());
+            }
 
             // Clone the Zval for storage
             let zval_copy = callable_zval.shallow_clone();
             registry.push(zval_copy);
-            idx
-        });
+            Ok(idx)
+        })?;
 
         Ok(Self {
             inner: Arc::new(PhpHandlerInner {
@@ -128,7 +134,7 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
         // Build PhpRequest from RequestData and convert to Zval
         let php_request = crate::php::request::PhpRequest::from_request_data(request_data);
         let request_zval = php_request.into_zval(false).map_err(|e| {
-            structured_error(
+            structured_error_from_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "request_conversion_failed",
                 format!("Failed to convert request for PHP handler: {:?}", e),
@@ -139,17 +145,17 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
         let response_zval =
             PHP_HANDLER_REGISTRY.with(|registry| -> Result<ext_php_rs::types::Zval, (StatusCode, String)> {
                 let registry = registry.borrow();
-                let callable_zval = registry.get(handler_index).ok_or_else(|| {
-                    structured_error(
+                let Some(callable_zval) = registry.get(handler_index) else {
+                    return Err(structured_error_from_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "handler_not_found",
                         format!("PHP handler not found: index {}", handler_index),
-                    )
-                })?;
+                    ));
+                };
 
                 // Reconstruct ZendCallable from stored Zval
                 let callable = ZendCallable::new(callable_zval).map_err(|e| {
-                    structured_error(
+                    structured_error_from_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "callable_reconstruct_failed",
                         format!("Failed to reconstruct PHP callable: {:?}", e),
@@ -157,7 +163,7 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
                 })?;
 
                 callable.try_call(vec![&request_zval]).map_err(|e| {
-                    structured_error(
+                    structured_error_from_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "handler_failed",
                         format!("PHP handler '{handler_name}' failed: {:?}", e),
@@ -184,4 +190,8 @@ fn structured_error(status: StatusCode, code: &str, message: impl Into<String>) 
     let body = serde_json::to_string(&payload)
         .unwrap_or_else(|_| r#"{"error":"internal_error","code":"internal_error","details":{}}"#.to_string());
     (status, body)
+}
+
+fn structured_error_from_error(status: StatusCode, code: &str, message: impl Into<String>) -> (StatusCode, String) {
+    structured_error(status, code, message)
 }
