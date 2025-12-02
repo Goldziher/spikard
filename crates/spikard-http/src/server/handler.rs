@@ -56,18 +56,18 @@ impl Handler for ValidatingHandler {
                 }
             }
 
-            if let Some(validator) = parameter_validator {
-                if let Err(errors) = validator.validate_and_extract(
+            if let Some(validator) = parameter_validator
+                && let Err(errors) = validator.validate_and_extract(
                     &request_data.query_params,
                     &request_data.raw_query_params,
                     &request_data.path_params,
                     &request_data.headers,
                     &request_data.cookies,
-                ) {
-                    let problem = ProblemDetails::from_validation_error(&errors);
-                    let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                    return Err((problem.status_code(), body));
-                }
+                )
+            {
+                let problem = ProblemDetails::from_validation_error(&errors);
+                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                return Err((problem.status_code(), body));
             }
 
             match AssertUnwindSafe(async { inner.call(req, request_data).await })
