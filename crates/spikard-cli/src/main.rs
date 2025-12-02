@@ -332,7 +332,7 @@ fn main() -> Result<()> {
             let spec = codegen::parse_asyncapi_schema(&schema).context("Failed to parse AsyncAPI schema")?;
 
             println!("✓ AsyncAPI schema is valid");
-            println!("  Version: 3.0.0");
+            println!("  Spec Version: 3.0.0");
             println!("  Title: {}", spec.info.title);
             println!("  API Version: {}", spec.info.version);
 
