@@ -147,18 +147,7 @@ impl CodegenEngine {
             }
         };
 
-        if let Some(parent) = output.parent()
-            && !parent.as_os_str().is_empty()
-        {
-            fs::create_dir_all(parent).with_context(|| format!("Failed to create {}", parent.display()))?;
-        }
-
-        fs::write(output, &code).with_context(|| format!("Failed to write {} test app", language_name(language)))?;
-
-        Ok(GeneratedAsset {
-            path: output.to_path_buf(),
-            description: format!("{} AsyncAPI test app", language_name(language)),
-        })
+        Self::write_asset(output, format!("{} AsyncAPI test app", language_name(language)), code)
     }
 
     fn generate_asyncapi_handler(
@@ -175,18 +164,7 @@ impl CodegenEngine {
             TargetLanguage::Php => generate_php_handler_app(spec, protocol)?,
         };
 
-        if let Some(parent) = output.parent()
-            && !parent.as_os_str().is_empty()
-        {
-            fs::create_dir_all(parent).with_context(|| format!("Failed to create {}", parent.display()))?;
-        }
-
-        fs::write(output, &code).with_context(|| format!("Failed to write handler file {}", output.display()))?;
-
-        Ok(GeneratedAsset {
-            path: output.to_path_buf(),
-            description: format!("{} AsyncAPI handler", language_name(language)),
-        })
+        Self::write_asset(output, format!("{} AsyncAPI handler", language_name(language)), code)
     }
 
     fn generate_asyncapi_bundle(
@@ -228,6 +206,21 @@ impl CodegenEngine {
         assets.push(ruby_asset);
 
         Ok(assets)
+    }
+
+    fn write_asset(path: &Path, description: impl Into<String>, content: impl AsRef<[u8]>) -> Result<GeneratedAsset> {
+        if let Some(parent) = path.parent()
+            && !parent.as_os_str().is_empty()
+        {
+            fs::create_dir_all(parent).with_context(|| format!("Failed to create {}", parent.display()))?;
+        }
+
+        fs::write(path, content).with_context(|| format!("Failed to write {}", path.display()))?;
+
+        Ok(GeneratedAsset {
+            path: path.to_path_buf(),
+            description: description.into(),
+        })
     }
 }
 
