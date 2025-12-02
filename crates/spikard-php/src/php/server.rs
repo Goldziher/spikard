@@ -720,18 +720,17 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
     };
 
     let body_bytes = serde_json::to_vec(&body_json).unwrap_or_default();
-
-    Ok(Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
+    let mut builder = Response::builder().status(StatusCode::OK);
+    builder = builder.header("content-type", "application/json");
+    builder
         .body(Body::from(body_bytes))
-        .unwrap_or_else(|e| {
-            to_problem(
+        .map_err(|e| {
+            (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("Failed to build response: {}", e),
             )
-            .expect("Failed to build error response")
-        }))
+        })
+        .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg))
 }
 
 /// Build a structured ProblemDetails response with application/problem+json.
