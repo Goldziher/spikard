@@ -6,8 +6,9 @@
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use ext_php_rs::convert::IntoZval;
+use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendCallable;
-use once_cell::sync::Lazy;
+use once_cell::sync::OnceLock;
 use spikard_core::errors::StructuredError;
 use spikard_http::{Handler, HandlerResult, RequestData};
 use std::panic::AssertUnwindSafe;
@@ -20,12 +21,20 @@ use tokio::runtime::{Builder, Runtime};
 /// Initialized once and reused for all async operations throughout the lifetime
 /// of the PHP process. Uses single-threaded runtime to avoid Send/Sync requirements
 /// for PHP Zval types.
-pub static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Builder::new_current_thread().enable_all().build().unwrap_or_else(|e| {
-        eprintln!("Failed to initialise global Tokio runtime: {}", e);
-        panic!("Cannot continue without Tokio runtime");
-    })
-});
+static GLOBAL_RUNTIME: OnceLock<Result<Runtime, StructuredError>> = OnceLock::new();
+
+pub fn get_runtime() -> PhpResult<&'static Runtime> {
+    let runtime_result = GLOBAL_RUNTIME.get_or_init(|| {
+        Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .map_err(|e| StructuredError::simple("runtime_init_failed".to_string(), e.to_string()))
+    });
+
+    runtime_result
+        .as_ref()
+        .map_err(|err| PhpException::default(serde_json::to_string(err).unwrap_or_else(|_| err.code.clone())).into())
+}
 
 /// Inner state of a PHP handler.
 #[allow(dead_code)]
