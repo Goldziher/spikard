@@ -145,7 +145,6 @@ struct NativeBuiltResponse {
     response: RefCell<Option<HandlerResponse>>,
     body_json: Option<JsonValue>,
     /// Ruby values that must be kept alive for GC (e.g., streaming enumerators)
-    #[allow(dead_code)]
     gc_handles: Vec<Opaque<Value>>,
 }
 
@@ -275,7 +274,6 @@ impl NativeBuiltResponse {
         Ok(headers_hash.as_value())
     }
 
-    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         if let Ok(ruby) = Ruby::get() {
             for handle in &self.gc_handles {
@@ -312,7 +310,6 @@ impl NativeLifecycleRegistry {
         mem::take(&mut *self.hooks.borrow_mut())
     }
 
-    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         for hook in self.ruby_hooks.borrow().iter() {
             hook.mark(marker);
@@ -399,7 +396,6 @@ impl NativeDependencyRegistry {
         Ok(())
     }
 
-    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         if let Ok(ruby) = Ruby::get() {
             for handle in self.gc_handles.borrow().iter() {
@@ -745,7 +741,6 @@ impl RubyHandler {
     }
 
     /// Required by Ruby GC; invoked through the magnus mark hook.
-    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         if let Ok(ruby) = Ruby::get() {
             let proc_val = self.inner.handler_proc.get_inner_with(&ruby);
@@ -1439,13 +1434,53 @@ fn ruby_value_to_json(ruby: &Ruby, json_module: Value, value: Value) -> Result<J
         return Ok(JsonValue::Null);
     }
 
-    let json_string: String = json_module.funcall("generate", (value,))?;
-    serde_json::from_str(&json_string).map_err(|err| {
-        Error::new(
-            ruby.exception_runtime_error(),
-            format!("Failed to convert Ruby value to JSON: {err}"),
-        )
-    })
+    if let Ok(boolean) = bool::try_convert(value) {
+        return Ok(JsonValue::Bool(boolean));
+    }
+
+    if let Ok(int_val) = i64::try_convert(value) {
+        return Ok(JsonValue::Number(int_val.into()));
+    }
+
+    if let Ok(float_val) = f64::try_convert(value) {
+        if let Some(num) = serde_json::Number::from_f64(float_val) {
+            return Ok(JsonValue::Number(num));
+        }
+    }
+
+    if let Ok(str_val) = RString::try_convert(value) {
+        let slice = str_val.to_string()?;
+        return Ok(JsonValue::String(slice));
+    }
+
+    if let Some(array) = RArray::from_value(value) {
+        let mut items = Vec::with_capacity(array.len());
+        let slice = unsafe { array.as_slice() };
+        for elem in slice {
+            items.push(ruby_value_to_json(ruby, json_module, *elem)?);
+        }
+        return Ok(JsonValue::Array(items));
+    }
+
+    if let Some(hash) = RHash::from_value(value) {
+        let mut map = JsonMap::new();
+        hash.foreach(|key: Value, val: Value| -> Result<ForEach, Error> {
+            let key_str: String = if let Ok(sym) = magnus::Symbol::try_convert(key) {
+                sym.name().map(|c| c.to_string()).unwrap_or_default()
+            } else {
+                String::try_convert(key)?
+            };
+            let json_val = ruby_value_to_json(ruby, json_module, val)?;
+            map.insert(key_str, json_val);
+            Ok(ForEach::Continue)
+        })?;
+        return Ok(JsonValue::Object(map));
+    }
+
+    Err(Error::new(
+        ruby.exception_arg_error(),
+        "Unsupported Ruby value type for JSON conversion",
+    ))
 }
 
 fn json_to_ruby(ruby: &Ruby, value: &JsonValue) -> Result<Value, Error> {
@@ -1954,7 +1989,6 @@ fn fetch_handler(ruby: &Ruby, handlers: &RHash, name: &str) -> Result<Value, Err
 }
 
 /// GC mark hook so Ruby keeps handler closures alive.
-#[allow(dead_code)]
 fn mark(client: &NativeTestClient, marker: &Marker) {
     let inner_ref = client.inner.borrow();
     if let Some(inner) = inner_ref.as_ref() {
@@ -2768,6 +2802,13 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     let spikard_module = ruby.define_module("Spikard")?;
     test_websocket::init(ruby, &spikard_module)?;
     test_sse::init(ruby, &spikard_module)?;
+
+    // Touch GC mark hooks so the compiler keeps them and silence unused warnings.
+    let _ = NativeBuiltResponse::mark as fn(&NativeBuiltResponse, &Marker);
+    let _ = NativeLifecycleRegistry::mark as fn(&NativeLifecycleRegistry, &Marker);
+    let _ = NativeDependencyRegistry::mark as fn(&NativeDependencyRegistry, &Marker);
+    let _ = RubyHandler::mark as fn(&RubyHandler, &Marker);
+    let _ = mark as fn(&NativeTestClient, &Marker);
 
     Ok(())
 }
