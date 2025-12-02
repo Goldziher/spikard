@@ -66,9 +66,6 @@ Purpose: track the systematic refactor of Rust core and language bindings for DR
 - Streaming: streaming enumerator handling builds custom async_stream loops; consolidate with core HandlerResponse/RawResponse to share header/status/compression logic.
 
 ## spikard-php (PHP)
-- Runtime safety: GLOBAL_RUNTIME uses unwrap_or_else+panic; switch to fallible init that surfaces structured errors to PHP instead of panicking.
-- Handler registry: thread_local RefCell Vec<Zval> with manual indices—add bounds checks, cleanup hooks, and avoid leaks; consider a typed registry in Rust core to share across bindings.
-- Error payloads: handler invocation returns ad-hoc strings; route through shared `{error, code, details}` payload and avoid leaking Debug of Zval errors.
 - Request/response conversion: PhpRequest/interpret_php_response likely duplicate parsing logic; centralize in core and ensure zero-copy where possible.
 - Coverage: ensure PSR/middleware parity tests exist in packages/php; add binding-level tests for handler errors and streaming to maintain fixture alignment.
 - Panic shielding: add centralized panic catch/convert layer for all PHP entrypoints so Rust panics surface as structured errors rather than unwinding into PHP.
