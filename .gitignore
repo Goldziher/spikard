@@ -76,3 +76,22 @@ target/
 tools/benchmark-harness/apps/spikard-rust/target/
 temp-test-*
 todo.md
+
+# Build artifacts and caches
+packages/php/var/
+packages/php/.php-cs-fixer.cache
+packages/php/.phpunit.result.cache
+packages/node/node_modules/
+packages/node/dist/
+packages/node/*.tsbuildinfo
+packages/node/*.node
+packages/node/index.d.ts
+packages/node/index.js
+crates/*/node_modules/
+crates/*/.venv/
+crates/*/dist/
+crates/*/dist-*/
+crates/*/*.node
+crates/*/index.d.ts
+crates/*/index.js
+crates/*/Cargo.lock
