@@ -19,6 +19,7 @@ use crate::matching::match_route;
 use crate::types::{BodyPayload, HandlerResponsePayload, RequestPayload, RouteDefinition, ServerConfig, build_params};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use futures::FutureExt;
 use http::StatusCode;
 use js_sys::{Date as JsDate, Function, JSON, Object, Promise, Reflect, Symbol, Uint8Array};
 use serde_json::{Map as JsonMap, Value};
@@ -80,39 +81,41 @@ impl Default for RouteValidators {
 
 #[wasm_bindgen]
 impl TestClient {
-    /// Build a [`TestClient`] from serialized route metadata, handler map, server config, and lifecycle hooks.
+    /// Build a [`TestClient`] from route metadata, handler map, server config, and lifecycle hooks.
     #[wasm_bindgen(constructor)]
     pub fn new(
-        routes_json: &str,
+        routes_val: JsValue,
         handlers: JsValue,
         config: JsValue,
         lifecycle_hooks: Option<JsValue>,
     ) -> Result<TestClient, JsValue> {
-        let routes: Vec<RouteDefinition> = serde_json::from_str(routes_json)
-            .map_err(|err| JsValue::from_str(&format!("Invalid routes JSON: {err}")))?;
+        let routes: Vec<RouteDefinition> = if let Some(s) = routes_val.as_string() {
+            serde_json::from_str(&s).map_err(|err| js_error_structured("invalid_routes", err))?
+        } else {
+            serde_wasm_bindgen::from_value(routes_val).map_err(|err| js_error_structured("invalid_routes", err))?
+        };
 
         let config: ServerConfig = if config.is_undefined() || config.is_null() {
             ServerConfig::default()
+        } else if let Some(s) = config.as_string() {
+            serde_json::from_str(&s).map_err(|err| js_error_structured("invalid_config", err))?
         } else {
-            let config_str = config
-                .as_string()
-                .ok_or_else(|| JsValue::from_str("Config must be a JSON string"))?;
-            serde_json::from_str(&config_str).map_err(|err| JsValue::from_str(&err.to_string()))?
+            serde_wasm_bindgen::from_value(config).map_err(|err| js_error_structured("invalid_config", err))?
         };
 
         let handlers_object: Object = handlers
             .dyn_into()
-            .map_err(|_| JsValue::from_str("Handlers must be an object map"))?;
+            .map_err(|_| js_error_structured("invalid_handlers", "Handlers must be an object map"))?;
 
         let handler_names = js_sys::Object::keys(&handlers_object);
         let mut handler_map = HashMap::new();
         for idx in 0..handler_names.length() {
             let name = handler_names.get(idx).as_string().unwrap_or_default();
             let value = js_sys::Reflect::get(&handlers_object, &JsValue::from(&name))
-                .map_err(|_| JsValue::from_str("Failed to read handler function"))?;
+                .map_err(|_| js_error_structured("invalid_handlers", "Failed to read handler function"))?;
             let func: Function = value
                 .dyn_into()
-                .map_err(|_| JsValue::from_str("Handler must be a function"))?;
+                .map_err(|_| js_error_structured("invalid_handlers", "Handler must be a function"))?;
             handler_map.insert(name, func);
         }
 
@@ -121,7 +124,7 @@ impl TestClient {
         for route in &routes {
             let metadata = route_metadata_from_definition(route);
             let compiled = CompiledRoute::from_metadata(metadata, &schema_registry)
-                .map_err(|err| JsValue::from_str(&format!("Invalid route {}: {}", route.handler_name, err)))?;
+                .map_err(|err| js_error_structured("route_compile_failed", err))?;
             validator_map.insert(
                 route.handler_name.clone(),
                 RouteValidators {
@@ -200,10 +203,18 @@ impl TestClient {
         };
 
         future_to_promise(async move {
-            exec_request(context)
+            match futures::future::AssertUnwindSafe(exec_request(context))
+                .catch_unwind()
                 .await
-                .and_then(|response| serde_wasm_bindgen::to_value(&response).map_err(js_error_from_serde))
-                .map_err(|err| js_error_structured("execution_failed", err))
+            {
+                Ok(result) => result
+                    .and_then(|response| serde_wasm_bindgen::to_value(&response).map_err(js_error_from_serde))
+                    .map_err(|err| js_error_structured("execution_failed", err)),
+                Err(_) => Err(js_error_structured(
+                    "panic",
+                    "Unexpected panic during request execution",
+                )),
+            }
         })
     }
 }
@@ -240,16 +251,18 @@ impl LifecycleRunner {
             return Ok(LifecycleRequestOutcome::Continue(payload));
         };
 
-        let mut request = request_from_payload(payload).map_err(|err| JsValue::from_str(&err))?;
+        let mut request =
+            request_from_payload(payload).map_err(|err| js_error_structured("request_decode_failed", err))?;
 
         request = match hooks
             .execute_on_request(request)
             .await
-            .map_err(|err| JsValue::from_str(&format!("onRequest hook failed: {err}")))?
+            .map_err(|err| js_error_structured("on_request_hook_failed", err))?
         {
             HookResult::Continue(req) => req,
             HookResult::ShortCircuit(resp) => {
-                let value = response_into_value(resp).map_err(|err| JsValue::from_str(&err))?;
+                let value =
+                    response_into_value(resp).map_err(|err| js_error_structured("response_encode_failed", err))?;
                 return Ok(LifecycleRequestOutcome::Respond(value));
             }
         };
@@ -257,11 +270,12 @@ impl LifecycleRunner {
         request = match hooks
             .execute_pre_validation(request)
             .await
-            .map_err(|err| JsValue::from_str(&format!("preValidation hook failed: {err}")))?
+            .map_err(|err| js_error_structured("pre_validation_hook_failed", err))?
         {
             HookResult::Continue(req) => req,
             HookResult::ShortCircuit(resp) => {
-                let value = response_into_value(resp).map_err(|err| JsValue::from_str(&err))?;
+                let value =
+                    response_into_value(resp).map_err(|err| js_error_structured("response_encode_failed", err))?;
                 return Ok(LifecycleRequestOutcome::Respond(value));
             }
         };

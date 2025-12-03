@@ -48,8 +48,15 @@ fn parse_query(query: &str) -> QueryParams {
     for (key, value) in form_urlencoded::parse(query.as_bytes()) {
         let key = key.into_owned();
         let value = value.into_owned();
-        normalized.insert(key.clone(), Value::String(value.clone()));
-        raw.entry(key).or_insert_with(Vec::new).push(value);
+        raw.entry(key.clone()).or_insert_with(Vec::new).push(value.clone());
+        normalized
+            .entry(key)
+            .and_modify(|v| {
+                if let Value::Array(arr) = v {
+                    arr.push(Value::String(value.clone()));
+                }
+            })
+            .or_insert_with(|| Value::Array(vec![Value::String(value)]));
     }
     QueryParams { normalized, raw }
 }

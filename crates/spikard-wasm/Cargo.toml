@@ -32,6 +32,7 @@ base64 = "0.22"
 thiserror.workspace = true
 serde_qs = "0.15"
 time = { version = "0.3", default-features = false, features = ["formatting", "parsing", "macros", "std"] }
+futures = "0.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
