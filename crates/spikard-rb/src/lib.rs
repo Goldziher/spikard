@@ -1,4 +1,5 @@
 #![allow(deprecated)]
+#![deny(clippy::unwrap_used)]
 
 //! Spikard Ruby bindings using Magnus FFI.
 //!
@@ -164,12 +165,16 @@ struct NativeDependencyRegistry {
 
 impl StreamingResponsePayload {
     fn into_response(self) -> Result<HandlerResponse, Error> {
-        let ruby = Ruby::get().map_err(|_| {
-            Error::new(
-                Ruby::get().unwrap().exception_runtime_error(),
-                "Ruby VM unavailable while building streaming response",
-            )
-        })?;
+        // Get Ruby VM reference. In FFI, Ruby must be available during this callback.
+        // If Ruby becomes unavailable, this is a fatal error condition.
+        let ruby = match Ruby::get() {
+            Ok(r) => r,
+            Err(_) => {
+                // Ruby VM is unavailable. This should never happen during active FFI.
+                // We panic because continuing without a Ruby VM is unsafe.
+                panic!("Ruby VM became unavailable during streaming response construction");
+            }
+        };
 
         let status = StatusCode::from_u16(self.status).map_err(|err| {
             Error::new(
@@ -1128,10 +1133,15 @@ fn parse_request_config(ruby: &Ruby, options: Value) -> Result<RequestConfig, Er
     };
 
     let files_opt = get_kw(ruby, hash, "files");
-    let has_files = files_opt.is_some() && !files_opt.unwrap().is_nil();
+    let has_files = files_opt.as_ref().is_some_and(|f| !f.is_nil());
 
     let body = if has_files {
-        let files_value = files_opt.unwrap();
+        let files_value = files_opt.ok_or_else(|| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                "Files option should be Some if has_files is true",
+            )
+        })?;
         let files = extract_files(ruby, files_value)?;
 
         let mut form_data = Vec::new();

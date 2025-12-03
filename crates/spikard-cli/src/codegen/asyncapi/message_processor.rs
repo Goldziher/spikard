@@ -7,9 +7,9 @@
 //! - Building intermediate message representations
 
 use anyhow::{Context, Result};
-use asyncapiv3::spec::message::Message as AsyncApiMessage;
+use asyncapiv3::spec::AsyncApiV3Spec;
 use asyncapiv3::spec::common::Either;
-use asyncapiv3::spec::{AsyncApiV3Spec};
+use asyncapiv3::spec::message::Message as AsyncApiMessage;
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -73,10 +73,7 @@ pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, 
 }
 
 /// Build a message definition from AsyncAPI message object
-fn build_message_definition(
-    message: &AsyncApiMessage,
-    message_name: &str,
-) -> Result<Option<MessageDefinition>> {
+fn build_message_definition(message: &AsyncApiMessage, message_name: &str) -> Result<Option<MessageDefinition>> {
     let schema = match extract_schema_from_message(message, message_name)? {
         Some(schema) => schema,
         None => return Ok(None),
@@ -99,10 +96,7 @@ fn build_message_definition(
 }
 
 /// Extract JSON Schema from an AsyncAPI Message object
-fn extract_schema_from_message(
-    message: &AsyncApiMessage,
-    message_name: &str,
-) -> Result<Option<Value>> {
+fn extract_schema_from_message(message: &AsyncApiMessage, message_name: &str) -> Result<Option<Value>> {
     let payload = match &message.payload {
         Some(payload_ref_or) => payload_ref_or,
         None => {

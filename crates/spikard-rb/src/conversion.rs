@@ -4,6 +4,7 @@
 //! including JSON conversion, string conversion, and request/response building.
 
 #![allow(dead_code)]
+#![deny(clippy::unwrap_used)]
 
 use bytes::Bytes;
 use magnus::prelude::*;
@@ -296,10 +297,15 @@ pub fn parse_request_config(ruby: &Ruby, options: Value) -> Result<RequestConfig
     };
 
     let files_opt = get_kw(ruby, hash, "files");
-    let has_files = files_opt.is_some() && !files_opt.unwrap().is_nil();
+    let has_files = files_opt.as_ref().is_some_and(|f| !f.is_nil());
 
     let body = if has_files {
-        let files_value = files_opt.unwrap();
+        let files_value = files_opt.ok_or_else(|| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                "Files option should be Some if has_files is true",
+            )
+        })?;
         let files = extract_files(ruby, files_value)?;
 
         let mut form_data = Vec::new();

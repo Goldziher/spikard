@@ -3,9 +3,10 @@
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use spikard_cli::codegen::{
-    self, CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, DtoConfig, NodeDtoStyle, PythonDtoStyle,
-    RubyDtoStyle, SchemaKind,
+    self, CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, DtoConfig, NodeDtoStyle, PhpDtoGenerator,
+    PythonDtoStyle, RubyDtoStyle, SchemaKind,
 };
+use std::fs;
 use std::path::PathBuf;
 
 /// Spikard - High-performance HTTP framework with Rust core
@@ -43,6 +44,8 @@ enum GenerateCommand {
     Openapi(OpenapiArgs),
     /// Generate AsyncAPI handler scaffolding (SSE/WebSocket)
     Asyncapi(AsyncapiHandlerArgs),
+    /// Generate PHP DTO classes (Request/Response) for Spikard integration
+    PhpDto(PhpDtoArgs),
 }
 
 #[derive(Args, Debug)]
@@ -130,6 +133,13 @@ struct AsyncAllArgs {
     output: PathBuf,
 }
 
+#[derive(Args, Debug)]
+struct PhpDtoArgs {
+    /// Output directory for generated DTO classes (default: src/Generated)
+    #[arg(long, short = 'o', default_value = "src/Generated")]
+    output: PathBuf,
+}
+
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum GenerateLanguage {
     #[value(name = "python")]
@@ -198,6 +208,25 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::Generate { target } => match target {
+            GenerateCommand::PhpDto(args) => {
+                println!("Generating PHP DTO classes for Spikard...");
+                println!("  Output directory: {}", args.output.display());
+
+                let generator = PhpDtoGenerator::new();
+                let generated = generator.generate_all().context("Failed to generate PHP DTOs")?;
+
+                // Create output directory if it doesn't exist
+                fs::create_dir_all(&args.output)
+                    .context(format!("Failed to create output directory: {}", args.output.display()))?;
+
+                // Write each generated file
+                for (filename, code) in generated {
+                    let file_path = args.output.join(&filename);
+                    fs::write(&file_path, code)
+                        .context(format!("Failed to write DTO file: {}", file_path.display()))?;
+                    println!("✓ Generated {} at {}", filename, file_path.display());
+                }
+            }
             GenerateCommand::Openapi(args) => {
                 let mut dto_config = DtoConfig::default();
                 if let Some(arg) = args.dto {
