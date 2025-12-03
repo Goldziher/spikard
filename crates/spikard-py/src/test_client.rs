@@ -3,6 +3,7 @@
 //! This module bridges the language-agnostic test client from spikard_http
 //! to Python, providing a Pythonic API surface using PyO3.
 
+use crate::conversion::{json_to_python, python_to_json};
 use crate::test_sse;
 use crate::test_websocket;
 use axum::Router as AxumRouter;
@@ -112,7 +113,7 @@ impl TestClient {
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
         let json_value = if let Some(j) = json {
-            Some(python_to_json_value(py, j)?)
+            Some(python_to_json(py, j)?)
         } else {
             None
         };
@@ -186,7 +187,7 @@ impl TestClient {
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
         let json_value = if let Some(j) = json {
-            Some(python_to_json_value(py, j)?)
+            Some(python_to_json(py, j)?)
         } else {
             None
         };
@@ -226,7 +227,7 @@ impl TestClient {
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
         let json_value = if let Some(j) = json {
-            Some(python_to_json_value(py, j)?)
+            Some(python_to_json(py, j)?)
         } else {
             None
         };
@@ -457,7 +458,7 @@ impl TestResponse {
             .json()
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON: {}", e)))?;
 
-        json_value_to_python(py, &json_value)
+        json_to_python(py, &json_value)
     }
 
     /// Assert that the status code matches
@@ -526,24 +527,6 @@ fn extract_dict_to_vec(dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<(String
     } else {
         Ok(Vec::new())
     }
-}
-
-/// Convert Python object to serde_json::Value
-fn python_to_json_value(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-    let json_module = py.import("json")?;
-    let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
-
-    serde_json::from_str(&json_str)
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to parse JSON: {}", e)))
-}
-
-/// Convert serde_json::Value to Python object
-fn json_value_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, PyAny>> {
-    let json_module = py.import("json")?;
-    let json_str = serde_json::to_string(value)
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to serialize JSON: {}", e)))?;
-    let result = json_module.call_method1("loads", (json_str,))?;
-    Ok(result)
 }
 
 /// Extract files from Python dict

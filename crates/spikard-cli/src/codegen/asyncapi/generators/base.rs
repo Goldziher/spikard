@@ -41,13 +41,14 @@ pub fn sanitize_identifier(name: &str) -> String {
 }
 
 /// Sanitize identifier for Ruby (handle special naming conventions)
+#[allow(dead_code)]
 pub fn sanitize_ruby_identifier(name: &str) -> String {
-    let ident = sanitize_identifier(name);
     // Ruby uses snake_case, already handled by sanitize_identifier
-    ident
+    sanitize_identifier(name)
 }
 
 /// Sanitize identifier for PHP (handle special naming conventions)
+#[allow(dead_code)]
 pub fn sanitize_php_identifier(name: &str) -> String {
     let mut ident = sanitize_identifier(name);
     // PHP class/function names should start with underscore or letter
@@ -79,6 +80,7 @@ pub fn sanitize_typescript_identifier(name: &str) -> String {
 }
 
 /// Build TypeScript DTOs from message schemas
+#[allow(dead_code)]
 pub fn build_typescript_dtos(messages: &HashMap<String, super::Message>) -> Result<HashMap<String, TypeScriptDto>> {
     let mut map = HashMap::new();
     for (name, message) in messages {

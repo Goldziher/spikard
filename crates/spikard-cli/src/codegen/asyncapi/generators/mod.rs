@@ -32,6 +32,7 @@ pub struct Message {
 
 /// Result of message handler generation
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct HandlerGenerationResult {
     /// Generated code
     pub code: String,
@@ -59,6 +60,7 @@ pub trait AsyncApiGenerator {
     fn generate_handler_app(&self, channels: &[ChannelInfo], messages: &[Message], protocol: &str) -> Result<String>;
 
     /// Language identifier (e.g., "python", "rust")
+    #[allow(dead_code)]
     fn language_name(&self) -> &'static str;
 }
 

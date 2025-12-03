@@ -27,6 +27,7 @@ pub struct MessageOperationMetadata {
 
 /// Channel operation metadata from AsyncAPI spec
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ChannelOperation {
     pub name: String,
     pub action: String,
@@ -232,7 +233,8 @@ pub fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
                         }
                     }
                     "number" => Value::Number(
-                        serde_json::Number::from_f64(3.14).unwrap_or_else(|| serde_json::Number::from(314)),
+                        serde_json::Number::from_f64(std::f64::consts::PI)
+                            .unwrap_or_else(|| serde_json::Number::from(314)),
                     ),
                     "integer" => Value::Number(serde_json::Number::from(42)),
                     "boolean" => Value::Bool(true),

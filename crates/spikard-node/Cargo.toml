@@ -23,6 +23,7 @@ di = ["spikard/di", "spikard-http/di"]
 spikard.workspace = true
 spikard-http = { path = "../spikard-http" }
 spikard-core = { path = "../spikard-core" }
+spikard-bindings-shared = { path = "../spikard-bindings-shared" }
 napi = { version = "3.5", default-features = false, features = ["napi8", "async", "serde-json"] }
 napi-derive = "3.3"
 tokio = { workspace = true }

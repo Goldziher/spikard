@@ -17,6 +17,7 @@ use super::generators::Message;
 
 /// Internal representation of a message definition
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub(crate) struct MessageDefinition {
     pub(crate) schema: Value,
     pub(crate) examples: Vec<Value>,
@@ -25,6 +26,7 @@ pub(crate) struct MessageDefinition {
 /// Extract message schemas from AsyncAPI spec
 ///
 /// Returns a map of message name -> JSON Schema for generating test fixtures
+#[allow(dead_code)]
 pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, MessageDefinition>> {
     let mut schemas = HashMap::new();
 
@@ -73,6 +75,7 @@ pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, 
 }
 
 /// Build a message definition from AsyncAPI message object
+#[allow(dead_code)]
 fn build_message_definition(message: &AsyncApiMessage, message_name: &str) -> Result<Option<MessageDefinition>> {
     let schema = match extract_schema_from_message(message, message_name)? {
         Some(schema) => schema,
@@ -96,6 +99,7 @@ fn build_message_definition(message: &AsyncApiMessage, message_name: &str) -> Re
 }
 
 /// Extract JSON Schema from an AsyncAPI Message object
+#[allow(dead_code)]
 fn extract_schema_from_message(message: &AsyncApiMessage, message_name: &str) -> Result<Option<Value>> {
     let payload = match &message.payload {
         Some(payload_ref_or) => payload_ref_or,
@@ -130,6 +134,7 @@ fn extract_schema_from_message(message: &AsyncApiMessage, message_name: &str) ->
 ///
 /// Creates a simple valid example based on the schema properties.
 /// This is used when AsyncAPI message doesn't define explicit examples.
+#[allow(dead_code)]
 pub fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
     let mut examples = Vec::new();
 
@@ -214,6 +219,7 @@ pub fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
 }
 
 /// Convert internal MessageDefinition to public Message
+#[allow(dead_code)]
 pub fn to_public_message(name: String, definition: MessageDefinition) -> Message {
     Message {
         name,

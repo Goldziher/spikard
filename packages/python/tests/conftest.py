@@ -59,7 +59,10 @@ def load_fixture(fixture_path: Path) -> dict[str, Any]:
         Parsed fixture data as dictionary
     """
     with fixture_path.open() as f:
-        return json.load(f)
+        data = json.load(f)
+        if isinstance(data, dict):
+            return data
+        return {}
 
 
 def load_fixture_schema(category: str) -> dict[str, Any] | None:
@@ -96,7 +99,7 @@ def fixture_categories() -> dict[str, list[dict[str, Any]]]:
     Returns:
         Dictionary mapping category names to lists of fixture data
     """
-    categories = {
+    categories: dict[str, list[dict[str, Any]]] = {
         "headers": [],
         "cookies": [],
         "json_bodies": [],
@@ -121,14 +124,14 @@ def fixture_categories() -> dict[str, list[dict[str, Any]]]:
         "background": [],
     }
 
-    for category in categories:
-        fixtures = discover_fixture_files(category)
-        for fixture_path in fixtures:
-            try:
+    try:
+        for category in categories:
+            fixtures = discover_fixture_files(category)
+            for fixture_path in fixtures:
                 data = load_fixture(fixture_path)
                 categories[category].append(data)
-            except (json.JSONDecodeError, OSError) as e:
-                pytest.fail(f"Failed to load fixture {fixture_path}: {e}")
+    except (json.JSONDecodeError, OSError) as e:
+        pytest.fail(f"Failed to load fixture {fixture_path}: {e}")
 
     return categories
 

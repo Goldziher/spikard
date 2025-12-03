@@ -9,6 +9,7 @@ macro_rules! debug_log_module {
     };
 }
 
+use crate::conversion::{json_to_python, python_to_json};
 use crate::response::StreamingResponse;
 use axum::{
     body::Body,
@@ -178,46 +179,51 @@ impl PythonHandler {
         let body_param_name = self.body_param_name.clone();
 
         let result = if is_async {
-            let event_loop = PYTHON_EVENT_LOOP
-                .get()
-                .ok_or_else(|| structured_error("event_loop_not_initialized", "Python event loop not initialized"))?;
+            let output = Python::attach(|py| -> PyResult<Py<PyAny>> {
+                let handler_obj = handler.bind(py);
 
-            let output = tokio::task::spawn_blocking(move || {
-                Python::attach(|py| -> PyResult<Py<PyAny>> {
-                    let handler_obj = handler.bind(py);
-                    let asyncio = py.import("asyncio")?;
+                let kwargs = if let Some(ref validated) = validated_params_for_task {
+                    validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
+                } else {
+                    request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
+                };
 
-                    let kwargs = if let Some(ref validated) = validated_params_for_task {
-                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
-                    } else {
-                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
-                    };
+                let coroutine = if kwargs.is_empty() {
+                    handler_obj.call0()?
+                } else {
+                    let empty_args = PyTuple::empty(py);
+                    handler_obj.call(empty_args, Some(&kwargs))?
+                };
 
-                    let coroutine = if kwargs.is_empty() {
-                        handler_obj.call0()?
-                    } else {
-                        let empty_args = PyTuple::empty(py);
-                        handler_obj.call(empty_args, Some(&kwargs))?
-                    };
+                if !coroutine.hasattr("__await__")? {
+                    return Err(pyo3::exceptions::PyTypeError::new_err(
+                        "Handler marked as async but did not return a coroutine",
+                    ));
+                }
 
-                    if !coroutine.hasattr("__await__")? {
-                        return Err(pyo3::exceptions::PyTypeError::new_err(
-                            "Handler marked as async but did not return a coroutine",
-                        ));
-                    }
-
-                    let loop_obj = event_loop.bind(py);
-                    let future = asyncio.call_method1("run_coroutine_threadsafe", (coroutine, loop_obj))?;
-                    let result = future.call_method0("result")?;
-
-                    Ok(result.into())
-                })
+                Ok(coroutine.into())
             })
-            .await
-            .map_err(|e| structured_error("tokio_blocking_error", format!("Tokio error: {}", e)))?
+            .map_err(|e: PyErr| {
+                structured_error("python_call_error", format!("Python error calling handler: {}", e))
+            })?;
+
+            // Use run_coroutine_threadsafe for async handlers since into_future requires
+            // the event loop to be properly integrated with the tokio runtime, which may not
+            // be available in all contexts (e.g., during testing)
+            let coroutine_result = Python::attach(|py| -> PyResult<Py<PyAny>> {
+                let asyncio = py.import("asyncio")?;
+                let event_loop = PYTHON_EVENT_LOOP
+                    .get()
+                    .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Python event loop not initialized"))?;
+
+                let loop_obj = event_loop.bind(py);
+                let future = asyncio.call_method1("run_coroutine_threadsafe", (output.bind(py), loop_obj))?;
+                let result = future.call_method0("result")?;
+                Ok(result.into())
+            })
             .map_err(|e: PyErr| structured_error("python_async_error", format!("Python async error: {}", e)))?;
 
-            Python::attach(|py| python_to_response_result(py, output.bind(py)))
+            Python::attach(|py| python_to_response_result(py, coroutine_result.bind(py)))
                 .map_err(|e: PyErr| structured_error("python_response_error", format!("Python error: {}", e)))?
         } else {
             // Use spawn_blocking for sync handlers
@@ -376,75 +382,6 @@ fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult
     }
 }
 
-/// Convert Python object to JSON Value (optimized zero-copy conversion)
-///
-/// This function converts Python objects directly to serde_json::Value using PyO3,
-/// avoiding the serialize-to-string → parse-from-string overhead of json.dumps/loads.
-///
-/// For DTOs (msgspec.Struct, dataclass, Pydantic), it first converts to builtins using
-/// msgspec.to_builtins() which is much faster than json.dumps().
-///
-/// Performance improvement: ~40-60% faster than json.dumps() → serde_json::from_str()
-fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-    use pyo3::types::{PyDict, PyList};
-
-    // Fast path: already a builtin type, convert directly
-    if obj.is_none() {
-        return Ok(Value::Null);
-    }
-
-    if let Ok(b) = obj.extract::<bool>() {
-        return Ok(Value::Bool(b));
-    }
-
-    if let Ok(i) = obj.extract::<i64>() {
-        return Ok(Value::Number(i.into()));
-    }
-
-    if let Ok(f) = obj.extract::<f64>() {
-        if let Some(num) = serde_json::Number::from_f64(f) {
-            return Ok(Value::Number(num));
-        }
-        return Err(pyo3::exceptions::PyValueError::new_err("Invalid float value"));
-    }
-
-    if let Ok(s) = obj.extract::<String>() {
-        return Ok(Value::String(s));
-    }
-
-    // Handle dict
-    #[allow(deprecated)]
-    if let Ok(dict) = obj.downcast::<PyDict>() {
-        let mut map = serde_json::Map::new();
-        for (key, value) in dict.iter() {
-            let key_str: String = key.extract()?;
-            let json_value = python_to_json(py, &value)?;
-            map.insert(key_str, json_value);
-        }
-        return Ok(Value::Object(map));
-    }
-
-    // Handle list
-    #[allow(deprecated)]
-    if let Ok(list) = obj.downcast::<PyList>() {
-        let mut arr = Vec::new();
-        for item in list.iter() {
-            let json_value = python_to_json(py, &item)?;
-            arr.push(json_value);
-        }
-        return Ok(Value::Array(arr));
-    }
-
-    // Not a builtin type - could be DTO (msgspec.Struct, dataclass, Pydantic model)
-    // Use msgspec.to_builtins() to convert to dict, then convert to JSON
-    let serialization_module = py.import("spikard._internal.serialization")?;
-    let to_builtins_func = serialization_module.getattr("to_builtins")?;
-    let builtin_obj = to_builtins_func.call1((obj,))?;
-
-    // Now convert the builtin object to JSON (recursive call will hit fast path)
-    python_to_json(py, &builtin_obj)
-}
-
 /// Inject DI dependencies into kwargs dict
 ///
 /// Extracts resolved dependencies from request_data and adds them to the kwargs
@@ -581,49 +518,6 @@ fn request_data_to_py_kwargs<'py>(
     let convert_params_func = converter_module.getattr("convert_params")?;
     let converted = convert_params_func.call1((kwargs, handler))?;
     Ok(converted.cast_into::<PyDict>()?)
-}
-
-/// Convert JSON Value to Python object (optimized zero-copy conversion)
-///
-/// This function converts serde_json::Value directly to Python objects using PyO3,
-/// avoiding the serialize-to-string → parse-from-string overhead of json.loads.
-///
-/// Performance improvement: ~30-40% faster than the json.loads approach
-fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, PyAny>> {
-    use pyo3::types::{PyBool, PyDict, PyFloat, PyList, PyNone, PyString};
-
-    match value {
-        Value::Null => Ok(PyNone::get(py).as_any().clone()),
-        Value::Bool(b) => Ok(PyBool::new(py, *b).as_any().clone()),
-        Value::Number(n) => {
-            if let Some(i) = n.as_i64() {
-                Ok(i.into_pyobject(py)?.into_any())
-            } else if let Some(u) = n.as_u64() {
-                Ok(u.into_pyobject(py)?.into_any())
-            } else if let Some(f) = n.as_f64() {
-                Ok(PyFloat::new(py, f).into_any())
-            } else {
-                Ok(PyString::new(py, &n.to_string()).into_any())
-            }
-        }
-        Value::String(s) => Ok(PyString::new(py, s).into_any()),
-        Value::Array(arr) => {
-            let py_list = PyList::empty(py);
-            for item in arr {
-                let py_item = json_to_python(py, item)?;
-                py_list.append(py_item)?;
-            }
-            Ok(py_list.into_any())
-        }
-        Value::Object(obj) => {
-            let py_dict = PyDict::new(py);
-            for (key, value) in obj {
-                let py_value = json_to_python(py, value)?;
-                py_dict.set_item(key, py_value)?;
-            }
-            Ok(py_dict.into_any())
-        }
-    }
 }
 
 /// Extract Python traceback from exception

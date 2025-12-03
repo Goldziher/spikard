@@ -48,19 +48,22 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
         let name = self.name.clone();
 
         Box::pin(async move {
-            let name_for_spawn = name.clone();
-            let result = tokio::task::spawn_blocking(move || {
-                Python::attach(|py| -> PyResult<HookResult<Request<Body>, Response<Body>>> {
-                    let py_req = Py::new(py, PyRequest::from_request(req, py)?)?;
-                    let result = func.call1(py, (py_req.as_ref(),))?;
-                    execute_python_hook_request(py, result, &name_for_spawn)
-                })
+            let result = Python::attach(|py| -> PyResult<Py<PyAny>> {
+                let py_req = Py::new(py, PyRequest::from_request(req, py)?)?;
+                let result = func.call1(py, (py_req.as_ref(),))?;
+                Ok(result)
             })
-            .await
-            .map_err(|e| error::task_error(&name, e))?
-            .map_err(|e: PyErr| error::python_error(&name, e))?;
+            .map_err(|e| error::python_error(&name, e))?;
 
-            Ok(result)
+            let future = Python::attach(|py| pyo3_async_runtimes::tokio::into_future(result.bind(py).clone()))
+                .map_err(|e| error::python_error(&name, e))?;
+
+            let hook_result = future.await.map_err(|e| error::python_error(&name, e))?;
+
+            let processed = Python::attach(|py| execute_python_hook_request(py, hook_result, &name))
+                .map_err(|e| error::python_error(&name, e))?;
+
+            Ok(processed)
         })
     }
 
@@ -75,19 +78,22 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
             let (parts, body) = resp.into_parts();
             let body_bytes = spikard_http::lifecycle::adapter::serial::extract_body(body).await?;
 
-            let name_for_spawn = name.clone();
-            let result = tokio::task::spawn_blocking(move || {
-                Python::attach(|py| -> PyResult<HookResult<Response<Body>, Response<Body>>> {
-                    let py_resp = Py::new(py, PyResponse::from_response_parts(parts, body_bytes.clone(), py)?)?;
-                    let result = func.call1(py, (py_resp.as_ref(),))?;
-                    execute_python_hook_response(py, result, &name_for_spawn)
-                })
+            let result = Python::attach(|py| -> PyResult<Py<PyAny>> {
+                let py_resp = Py::new(py, PyResponse::from_response_parts(parts, body_bytes.clone(), py)?)?;
+                let result = func.call1(py, (py_resp.as_ref(),))?;
+                Ok(result)
             })
-            .await
-            .map_err(|e| error::task_error(&name, e))?
-            .map_err(|e: PyErr| error::python_error(&name, e))?;
+            .map_err(|e| error::python_error(&name, e))?;
 
-            Ok(result)
+            let future = Python::attach(|py| pyo3_async_runtimes::tokio::into_future(result.bind(py).clone()))
+                .map_err(|e| error::python_error(&name, e))?;
+
+            let hook_result = future.await.map_err(|e| error::python_error(&name, e))?;
+
+            let processed = Python::attach(|py| execute_python_hook_response(py, hook_result, &name))
+                .map_err(|e| error::python_error(&name, e))?;
+
+            Ok(processed)
         })
     }
 }

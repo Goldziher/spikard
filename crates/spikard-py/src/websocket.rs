@@ -1,5 +1,6 @@
 //! Python WebSocket handler bindings
 
+use crate::conversion::{json_to_python, python_to_json};
 use pyo3::prelude::*;
 use serde_json::Value;
 use spikard_http::WebSocketHandler;
@@ -19,50 +20,6 @@ impl PythonWebSocketHandler {
             handler: Arc::new(handler),
         }
     }
-
-    /// Convert JSON Value to Python dict (zero-copy approach)
-    fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, pyo3::PyAny>> {
-        use pyo3::types::{PyBool, PyDict, PyFloat, PyList, PyNone, PyString};
-
-        match value {
-            Value::Null => Ok(PyNone::get(py).as_any().clone()),
-            Value::Bool(b) => Ok(PyBool::new(py, *b).as_any().clone()),
-            Value::Number(n) => {
-                if let Some(i) = n.as_i64() {
-                    Ok(i.into_pyobject(py)?.into_any())
-                } else if let Some(u) = n.as_u64() {
-                    Ok(u.into_pyobject(py)?.into_any())
-                } else if let Some(f) = n.as_f64() {
-                    Ok(PyFloat::new(py, f).into_any())
-                } else {
-                    Ok(PyNone::get(py).as_any().clone())
-                }
-            }
-            Value::String(s) => Ok(PyString::new(py, s).into_any()),
-            Value::Array(arr) => {
-                let list = PyList::empty(py);
-                for item in arr {
-                    list.append(Self::json_to_python(py, item)?)?;
-                }
-                Ok(list.into_any())
-            }
-            Value::Object(obj) => {
-                let dict = PyDict::new(py);
-                for (key, val) in obj {
-                    dict.set_item(key, Self::json_to_python(py, val)?)?;
-                }
-                Ok(dict.into_any())
-            }
-        }
-    }
-
-    /// Convert Python object to JSON Value
-    fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-        let json_module = py.import("json")?;
-        let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
-        serde_json::from_str(&json_str)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to convert to JSON: {}", e)))
-    }
 }
 
 impl WebSocketHandler for PythonWebSocketHandler {
@@ -72,47 +29,62 @@ impl WebSocketHandler for PythonWebSocketHandler {
         let handler = Arc::clone(&self.handler);
         let message = message.clone();
 
-        let result = tokio::task::spawn_blocking(move || {
-            Python::attach(|py| -> PyResult<Option<Value>> {
-                let py_message = Self::json_to_python(py, &message)?;
+        // First, call the handler and get the result (sync or coroutine)
+        let result_py = Python::attach(|py| -> PyResult<Py<PyAny>> {
+            let py_message = json_to_python(py, &message)?;
+            let result_or_coroutine = handler.bind(py).call_method1("handle_message", (py_message,))?;
+            debug!("Python WebSocket handler: called handle_message method");
+            Ok(result_or_coroutine.unbind())
+        });
 
-                let result_or_coroutine = handler.bind(py).call_method1("handle_message", (py_message,))?;
-                debug!("Python WebSocket handler: called handle_message method");
+        match result_py {
+            Ok(result_py) => {
+                // Check if it's a coroutine and handle accordingly
+                let is_coroutine = Python::attach(|py| -> PyResult<bool> {
+                    let asyncio = py.import("asyncio")?;
+                    asyncio.call_method1("iscoroutine", (result_py.bind(py),))?.extract()
+                })
+                .unwrap_or(false);
 
-                let asyncio = py.import("asyncio")?;
-                let is_coroutine: bool = asyncio
-                    .call_method1("iscoroutine", (result_or_coroutine.as_any(),))?
-                    .extract()?;
+                if is_coroutine {
+                    debug!("Python WebSocket handler: result is a coroutine, awaiting...");
+                    let future_result =
+                        Python::attach(|py| pyo3_async_runtimes::tokio::into_future(result_py.bind(py).clone()));
 
-                let result = if is_coroutine {
-                    debug!("Python WebSocket handler: result is a coroutine, running with asyncio.run");
-                    asyncio.call_method1("run", (result_or_coroutine,))?
+                    match future_result {
+                        Ok(future) => match future.await {
+                            Ok(result) => {
+                                debug!("Python WebSocket handler: coroutine completed");
+                                let is_none = Python::attach(|py| result.bind(py).is_none());
+                                if is_none {
+                                    debug!("Python WebSocket handler: received None response");
+                                    return None;
+                                }
+                                Python::attach(|py| python_to_json(py, result.bind(py)).ok())
+                            }
+                            Err(e) => {
+                                error!("Python error in coroutine: {}", e);
+                                None
+                            }
+                        },
+                        Err(e) => {
+                            error!("Failed to convert coroutine to future: {}", e);
+                            None
+                        }
+                    }
                 } else {
-                    debug!("Python WebSocket handler: result is synchronous");
-                    result_or_coroutine
-                };
-
-                debug!("Python WebSocket handler: handler completed");
-
-                if result.is_none() {
-                    debug!("Python WebSocket handler: received None response");
-                    return Ok(None);
+                    // Synchronous result
+                    debug!("Python WebSocket handler: synchronous result");
+                    let is_none = Python::attach(|py| result_py.bind(py).is_none());
+                    if is_none {
+                        debug!("Python WebSocket handler: received None response");
+                        return None;
+                    }
+                    Python::attach(|py| python_to_json(py, result_py.bind(py)).ok())
                 }
-
-                let json_val = Self::python_to_json(py, &result)?;
-                Ok(Some(json_val))
-            })
-        })
-        .await;
-
-        match result {
-            Ok(Ok(value)) => value,
-            Ok(Err(e)) => {
-                error!("Python error in handle_message: {}", e);
-                None
             }
             Err(e) => {
-                error!("Tokio error in handle_message: {}", e);
+                error!("Python error in handle_message: {}", e);
                 None
             }
         }
@@ -123,17 +95,25 @@ impl WebSocketHandler for PythonWebSocketHandler {
 
         let handler = Arc::clone(&self.handler);
 
-        let _ = tokio::task::spawn_blocking(move || {
-            Python::attach(|py| -> PyResult<()> {
-                debug!("Python WebSocket handler: on_connect acquired GIL");
-                let coroutine = handler.bind(py).call_method0("on_connect")?;
-                let asyncio = py.import("asyncio")?;
-                asyncio.call_method1("run", (coroutine,))?;
+        let coroutine_py = Python::attach(|py| -> PyResult<Py<PyAny>> {
+            debug!("Python WebSocket handler: on_connect acquired GIL");
+            let coroutine = handler.bind(py).call_method0("on_connect")?;
+            Ok(coroutine.unbind())
+        });
+
+        if let Ok(coroutine) = coroutine_py {
+            let future_result =
+                Python::attach(|py| pyo3_async_runtimes::tokio::into_future(coroutine.bind(py).clone()));
+
+            if let Ok(future) = future_result {
+                let _ = future.await;
                 debug!("Python WebSocket handler: on_connect completed");
-                Ok(())
-            })
-        })
-        .await;
+            } else {
+                error!("Failed to convert on_connect coroutine to future");
+            }
+        } else {
+            error!("Failed to call on_connect");
+        }
     }
 
     async fn on_disconnect(&self) {
@@ -141,16 +121,24 @@ impl WebSocketHandler for PythonWebSocketHandler {
 
         let handler = Arc::clone(&self.handler);
 
-        let _ = tokio::task::spawn_blocking(move || {
-            Python::attach(|py| -> PyResult<()> {
-                let coroutine = handler.bind(py).call_method0("on_disconnect")?;
-                let asyncio = py.import("asyncio")?;
-                asyncio.call_method1("run", (coroutine,))?;
+        let coroutine_py = Python::attach(|py| -> PyResult<Py<PyAny>> {
+            let coroutine = handler.bind(py).call_method0("on_disconnect")?;
+            Ok(coroutine.unbind())
+        });
+
+        if let Ok(coroutine) = coroutine_py {
+            let future_result =
+                Python::attach(|py| pyo3_async_runtimes::tokio::into_future(coroutine.bind(py).clone()));
+
+            if let Ok(future) = future_result {
+                let _ = future.await;
                 debug!("Python WebSocket handler: on_disconnect completed");
-                Ok(())
-            })
-        })
-        .await;
+            } else {
+                error!("Failed to convert on_disconnect coroutine to future");
+            }
+        } else {
+            error!("Failed to call on_disconnect");
+        }
     }
 }
 

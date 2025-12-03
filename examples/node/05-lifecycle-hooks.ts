@@ -5,13 +5,7 @@
  * authentication, error handling, and response transformation.
  */
 
-import {
-	get,
-	type LifecycleHooks,
-	post,
-	type Request,
-	Spikard,
-} from "@spikard/node";
+import { get, type LifecycleHooks, post, type Request, Spikard } from "@spikard/node";
 
 const app = new Spikard({
 	port: 8000,
@@ -39,9 +33,7 @@ const hooks: LifecycleHooks = {
 		console.log(`[REQUEST] ${req.method} ${req.path} from ${req.ip}`);
 
 		// Add request ID to context
-		const requestId =
-			req.headers?.["x-request-id"] ||
-			Math.random().toString(36).substring(7);
+		const requestId = req.headers?.["x-request-id"] || Math.random().toString(36).substring(7);
 
 		// Store in request context for later use (implementation-specific)
 		return {
@@ -77,7 +69,7 @@ const hooks: LifecycleHooks = {
 	 */
 	pre_handler: async (req) => {
 		// Extract token from Authorization header
-		const authHeader = req.headers?.["authorization"];
+		const authHeader = req.headers?.authorization;
 		if (authHeader) {
 			const [scheme, token] = authHeader.split(" ");
 
@@ -113,9 +105,7 @@ const hooks: LifecycleHooks = {
 	on_response: async (req, res) => {
 		// Log successful response
 		const status = res.status || 200;
-		console.log(
-			`[RESPONSE] ${status} for ${req.method} ${req.path} (${req._request_id || "no-id"})`
-		);
+		console.log(`[RESPONSE] ${status} for ${req.method} ${req.path} (${req._request_id || "no-id"})`);
 
 		// Add custom headers
 		const headers = res.headers || {};
@@ -133,9 +123,7 @@ const hooks: LifecycleHooks = {
 	 * Useful for error logging, custom error responses
 	 */
 	on_error: async (req, error) => {
-		console.error(
-			`[ERROR] ${error.code} on ${req.method} ${req.path}: ${error.error}`
-		);
+		console.error(`[ERROR] ${error.code} on ${req.method} ${req.path}: ${error.error}`);
 
 		// Could transform error response here
 		return {
@@ -156,20 +144,18 @@ app.registerHooks(hooks);
 /**
  * Public endpoint (no authentication required)
  */
-@get("/public")
-async function publicEndpoint(req: Request) {
+get("/public")(async function publicEndpoint(_req: Request) {
 	return {
 		message: "This is a public endpoint",
 		timestamp: new Date().toISOString(),
 	};
-}
+});
 
 /**
  * Protected endpoint (requires Bearer token)
  * Expected format: Authorization: Bearer alice:secret
  */
-@get("/protected")
-async function protectedEndpoint(req: Request) {
+get("/protected")(async function protectedEndpoint(req: Request) {
 	const user = req._user;
 
 	if (!user) {
@@ -187,13 +173,12 @@ async function protectedEndpoint(req: Request) {
 		user,
 		timestamp: new Date().toISOString(),
 	};
-}
+});
 
 /**
  * POST endpoint with request body transformation
  */
-@post("/echo")
-async function echoEndpoint(req: Request) {
+post("/echo")(async function echoEndpoint(req: Request) {
 	const body = req.body;
 
 	if (!body || typeof body !== "object") {
@@ -211,13 +196,12 @@ async function echoEndpoint(req: Request) {
 		received_at: new Date().toISOString(),
 		user: req._user?.username || "anonymous",
 	};
-}
+});
 
 /**
  * Admin endpoint with extra authorization
  */
-@get("/admin/stats")
-async function adminStats(req: Request) {
+get("/admin/stats")(async function adminStats(req: Request) {
 	const user = req._user;
 
 	if (!user || user.username !== "alice") {
@@ -238,13 +222,12 @@ async function adminStats(req: Request) {
 		},
 		timestamp: new Date().toISOString(),
 	};
-}
+});
 
 /**
  * Serve demo page
  */
-@get("/")
-async function servePage() {
+get("/")(async function servePage() {
 	return {
 		status: 200,
 		body: `
@@ -361,14 +344,7 @@ async function servePage() {
 			"Content-Type": "text/html; charset=utf-8",
 		},
 	};
-}
-
-// Register handlers
-app.registerHandler(servePage);
-app.registerHandler(publicEndpoint);
-app.registerHandler(protectedEndpoint);
-app.registerHandler(echoEndpoint);
-app.registerHandler(adminStats);
+});
 
 console.log("Starting Lifecycle Hooks Example on http://127.0.0.1:8000");
 console.log("Open http://127.0.0.1:8000 in your browser");

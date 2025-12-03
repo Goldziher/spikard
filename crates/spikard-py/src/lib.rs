@@ -3,6 +3,7 @@
 //! This crate provides Python bindings using PyO3
 
 mod background;
+pub mod conversion;
 #[cfg(feature = "di")]
 pub mod di;
 pub mod handler;

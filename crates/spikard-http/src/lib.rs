@@ -16,17 +16,11 @@ pub mod handler_trait;
 pub mod lifecycle;
 pub mod middleware;
 pub mod openapi;
-pub mod parameters;
-pub mod problem;
 pub mod query_parser;
 pub mod response;
-pub mod router;
-pub mod schema_registry;
 pub mod server;
 pub mod sse;
 pub mod testing;
-pub mod type_hints;
-pub mod validation;
 pub mod websocket;
 
 use serde::{Deserialize, Serialize};
@@ -46,17 +40,18 @@ pub use handler_response::HandlerResponse;
 pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
 pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
 pub use openapi::{ContactInfo, LicenseInfo, OpenApiConfig, SecuritySchemeInfo, ServerInfo};
-pub use parameters::ParameterValidator;
-pub use problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 pub use response::Response;
-pub use router::{Route, RouteHandler, Router};
-pub use schema_registry::SchemaRegistry;
 pub use server::Server;
-pub use spikard_core::{CompressionConfig, CorsConfig, Method, RateLimitConfig, RouteMetadata};
+pub use spikard_core::{
+    CompressionConfig, CorsConfig, Method, ParameterValidator, ProblemDetails, RateLimitConfig, Route, RouteHandler,
+    RouteMetadata, Router, SchemaRegistry, SchemaValidator,
+};
 pub use sse::{SseEvent, SseEventProducer, SseState, sse_handler};
 pub use testing::{ResponseSnapshot, SnapshotError, snapshot_response};
-pub use validation::SchemaValidator;
 pub use websocket::{WebSocketHandler, WebSocketState, websocket_handler};
+
+/// Reexport from spikard_core for convenience
+pub use spikard_core::problem::CONTENT_TYPE_PROBLEM_JSON;
 
 /// JWT authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

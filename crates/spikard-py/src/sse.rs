@@ -1,7 +1,7 @@
 //! Python SSE producer bindings
 
+use crate::conversion::python_to_json;
 use pyo3::prelude::*;
-use serde_json::Value;
 use spikard_http::{SseEvent, SseEventProducer};
 use std::sync::Arc;
 use tracing::{debug, error};
@@ -19,14 +19,6 @@ impl PythonSseEventProducer {
             producer: Arc::new(producer),
         }
     }
-
-    /// Convert Python object to JSON Value
-    fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-        let json_module = py.import("json")?;
-        let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
-        serde_json::from_str(&json_str)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to convert to JSON: {}", e)))
-    }
 }
 
 impl SseEventProducer for PythonSseEventProducer {
@@ -35,63 +27,59 @@ impl SseEventProducer for PythonSseEventProducer {
 
         let producer = Arc::clone(&self.producer);
 
-        let result = tokio::task::spawn_blocking(move || {
-            Python::attach(|py| -> PyResult<Option<SseEvent>> {
-                debug!("Python SSE producer: acquired GIL");
+        // Call the Python method to get event or coroutine
+        let result_py = Python::attach(|py| -> PyResult<Py<PyAny>> {
+            debug!("Python SSE producer: acquired GIL");
+            let result = producer.bind(py).call_method0("next_event")?;
+            Ok(result.unbind())
+        });
 
-                let result = producer.bind(py).call_method0("next_event")?;
-                debug!("Python SSE producer: called next_event method");
+        match result_py {
+            Ok(result_py) => {
+                // Check if it's a coroutine
+                let is_coroutine = Python::attach(|py| -> PyResult<bool> {
+                    let asyncio = py.import("asyncio")?;
+                    asyncio.call_method1("iscoroutine", (result_py.bind(py),))?.extract()
+                })
+                .unwrap_or(false);
 
-                if result.is_none() {
-                    debug!("Python SSE producer: received None, ending stream");
-                    return Ok(None);
-                }
+                if is_coroutine {
+                    debug!("Python SSE producer: result is coroutine, awaiting...");
+                    let future_result =
+                        Python::attach(|py| pyo3_async_runtimes::tokio::into_future(result_py.bind(py).clone()));
 
-                let data = result.getattr("data")?;
-                let data_json = Self::python_to_json(py, &data)?;
-
-                let event_type: Option<String> = result
-                    .getattr("event_type")
-                    .ok()
-                    .and_then(|v| if v.is_none() { None } else { v.extract().ok() });
-
-                let id: Option<String> = result
-                    .getattr("id")
-                    .ok()
-                    .and_then(|v| if v.is_none() { None } else { v.extract().ok() });
-
-                let retry: Option<u64> = result
-                    .getattr("retry")
-                    .ok()
-                    .and_then(|v| if v.is_none() { None } else { v.extract().ok() });
-
-                let mut event = if let Some(et) = event_type {
-                    SseEvent::with_type(et, data_json)
+                    match future_result {
+                        Ok(future) => match future.await {
+                            Ok(result) => {
+                                let is_none = Python::attach(|py| result.bind(py).is_none());
+                                if is_none {
+                                    debug!("Python SSE producer: received None, ending stream");
+                                    return None;
+                                }
+                                Python::attach(|py| convert_py_to_sse_event(result.bind(py)))
+                            }
+                            Err(e) => {
+                                error!("Python error in coroutine: {}", e);
+                                None
+                            }
+                        },
+                        Err(e) => {
+                            error!("Failed to convert coroutine to future: {}", e);
+                            None
+                        }
+                    }
                 } else {
-                    SseEvent::new(data_json)
-                };
-
-                if let Some(id_str) = id {
-                    event = event.with_id(id_str);
+                    // Synchronous result
+                    let is_none = Python::attach(|py| result_py.bind(py).is_none());
+                    if is_none {
+                        debug!("Python SSE producer: received None, ending stream");
+                        return None;
+                    }
+                    Python::attach(|py| convert_py_to_sse_event(result_py.bind(py)))
                 }
-
-                if let Some(retry_ms) = retry {
-                    event = event.with_retry(retry_ms);
-                }
-
-                Ok(Some(event))
-            })
-        })
-        .await;
-
-        match result {
-            Ok(Ok(event)) => event,
-            Ok(Err(e)) => {
-                error!("Python error in next_event: {}", e);
-                None
             }
             Err(e) => {
-                error!("Tokio error in next_event: {}", e);
+                error!("Python error in next_event: {}", e);
                 None
             }
         }
@@ -102,17 +90,25 @@ impl SseEventProducer for PythonSseEventProducer {
 
         let producer = Arc::clone(&self.producer);
 
-        let _ = tokio::task::spawn_blocking(move || {
-            Python::attach(|py| -> PyResult<()> {
-                debug!("Python SSE producer: on_connect acquired GIL");
-                let coroutine = producer.bind(py).call_method0("on_connect")?;
-                let asyncio = py.import("asyncio")?;
-                asyncio.call_method1("run", (coroutine,))?;
+        let coroutine_py = Python::attach(|py| -> PyResult<Py<PyAny>> {
+            debug!("Python SSE producer: on_connect acquired GIL");
+            let coroutine = producer.bind(py).call_method0("on_connect")?;
+            Ok(coroutine.unbind())
+        });
+
+        if let Ok(coroutine) = coroutine_py {
+            let future_result =
+                Python::attach(|py| pyo3_async_runtimes::tokio::into_future(coroutine.bind(py).clone()));
+
+            if let Ok(future) = future_result {
+                let _ = future.await;
                 debug!("Python SSE producer: on_connect completed");
-                Ok(())
-            })
-        })
-        .await;
+            } else {
+                error!("Failed to convert on_connect coroutine to future");
+            }
+        } else {
+            error!("Failed to call on_connect");
+        }
     }
 
     async fn on_disconnect(&self) {
@@ -120,17 +116,62 @@ impl SseEventProducer for PythonSseEventProducer {
 
         let producer = Arc::clone(&self.producer);
 
-        let _ = tokio::task::spawn_blocking(move || {
-            Python::attach(|py| -> PyResult<()> {
-                let coroutine = producer.bind(py).call_method0("on_disconnect")?;
-                let asyncio = py.import("asyncio")?;
-                asyncio.call_method1("run", (coroutine,))?;
+        let coroutine_py = Python::attach(|py| -> PyResult<Py<PyAny>> {
+            let coroutine = producer.bind(py).call_method0("on_disconnect")?;
+            Ok(coroutine.unbind())
+        });
+
+        if let Ok(coroutine) = coroutine_py {
+            let future_result =
+                Python::attach(|py| pyo3_async_runtimes::tokio::into_future(coroutine.bind(py).clone()));
+
+            if let Ok(future) = future_result {
+                let _ = future.await;
                 debug!("Python SSE producer: on_disconnect completed");
-                Ok(())
-            })
-        })
-        .await;
+            } else {
+                error!("Failed to convert on_disconnect coroutine to future");
+            }
+        } else {
+            error!("Failed to call on_disconnect");
+        }
     }
+}
+
+/// Convert Python object to SseEvent
+fn convert_py_to_sse_event(result: &Bound<'_, PyAny>) -> Option<SseEvent> {
+    let data = result.getattr("data").ok()?;
+    let data_json = Python::attach(|py| python_to_json(py, &data)).ok()?;
+
+    let event_type: Option<String> = result
+        .getattr("event_type")
+        .ok()
+        .and_then(|v| if v.is_none() { None } else { v.extract().ok() });
+
+    let id: Option<String> = result
+        .getattr("id")
+        .ok()
+        .and_then(|v| if v.is_none() { None } else { v.extract().ok() });
+
+    let retry: Option<u64> = result
+        .getattr("retry")
+        .ok()
+        .and_then(|v| if v.is_none() { None } else { v.extract().ok() });
+
+    let mut event = if let Some(et) = event_type {
+        SseEvent::with_type(et, data_json)
+    } else {
+        SseEvent::new(data_json)
+    };
+
+    if let Some(id_str) = id {
+        event = event.with_id(id_str);
+    }
+
+    if let Some(retry_ms) = retry {
+        event = event.with_retry(retry_ms);
+    }
+
+    Some(event)
 }
 
 /// Create SseState from Python producer factory

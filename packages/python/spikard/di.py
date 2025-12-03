@@ -11,7 +11,7 @@ The `Provide` class is a simple metadata wrapper that captures:
 All actual DI graph resolution, cycle detection, and parallel resolution happens
 in Rust via the FFI bridge in crates/spikard-py/src/di.rs.
 
-Examples
+Examples:
 --------
 Value dependency::
 
@@ -19,6 +19,7 @@ Value dependency::
 
     app = Spikard()
     app.provide("app_name", "MyApp")
+
 
     @app.get("/info")
     async def get_info(app_name: str):
@@ -31,9 +32,11 @@ Factory dependency::
 
     app = Spikard()
 
+
     async def create_db_pool(config: dict):
         pool = await connect_to_db(config["db_url"])
         return pool
+
 
     app.provide("config", {"db_url": "postgresql://localhost/mydb"})
     app.provide("db", Provide(create_db_pool, depends_on=["config"], singleton=True))
@@ -44,6 +47,7 @@ Async generator cleanup::
         session = await db.create_session()
         yield session
         await session.close()
+
 
     app.provide("session", Provide(create_session, depends_on=["db"]))
 """
@@ -84,7 +88,7 @@ class Provide(Generic[T]):
     singleton : bool
         Cache globally across all requests. Takes precedence over use_cache.
 
-    Attributes
+    Attributes:
     ----------
     dependency : Callable
         The factory function
@@ -105,11 +109,11 @@ class Provide(Generic[T]):
     __slots__ = (
         "dependency",
         "depends_on",
-        "use_cache",
-        "singleton",
         "is_async",
-        "is_generator",
         "is_async_generator",
+        "is_generator",
+        "singleton",
+        "use_cache",
     )
 
     def __init__(

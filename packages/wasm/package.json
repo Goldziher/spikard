@@ -1,76 +1,76 @@
 {
-  "name": "@spikard/wasm",
-  "version": "0.2.5",
-  "description": "Spikard HTTP framework for WebAssembly and edge runtimes with full TypeScript support, targeting browsers, Deno, Cloudflare Workers, and Node.js.",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    },
-    "./node": {
-      "types": "./dist/node.d.ts",
-      "import": "./dist/node.mjs",
-      "require": "./dist/node.js"
-    }
-  },
-  "scripts": {
-    "prepare:wasm": "rm -rf runtime && mkdir -p runtime && cp ../../crates/spikard-wasm/dist-node/* runtime/ && node scripts/patch-wasm-loader.cjs",
-    "build": "pnpm run prepare:wasm && tsup",
-    "typecheck": "tsc --noEmit",
-    "lint": "biome check src",
-    "lint:fix": "biome check --write src",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "clean": "rm -rf dist node_modules"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "package.json"
-  ],
-  "keywords": [
-    "http",
-    "framework",
-    "wasm",
-    "webassembly",
-    "edge",
-    "typescript",
-    "cloudflare-workers",
-    "deno",
-    "fetch-api",
-    "async",
-    "router"
-  ],
-  "author": {
-    "name": "Na'aman Hirschfeld",
-    "email": "nhirschfeld@gmail.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Goldziher/spikard.git",
-    "directory": "packages/wasm"
-  },
-  "homepage": "https://github.com/Goldziher/spikard/tree/main/packages/wasm",
-  "bugs": {
-    "url": "https://github.com/Goldziher/spikard/issues"
-  },
-  "license": "MIT",
-  "devDependencies": {
-    "@biomejs/biome": "^2.3.8",
-    "@types/node": "^24.10.1",
-    "@vitest/coverage-v8": "^4.0.14",
-    "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.14"
-  },
-  "dependencies": {
-    "zod": "^4.1.13"
-  },
-  "engines": {
-    "node": ">=18"
-  }
+	"name": "@spikard/wasm",
+	"version": "0.2.5",
+	"description": "Spikard HTTP framework for WebAssembly and edge runtimes with full TypeScript support, targeting browsers, Deno, Cloudflare Workers, and Node.js.",
+	"main": "dist/index.js",
+	"module": "dist/index.mjs",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.mjs",
+			"require": "./dist/index.js"
+		},
+		"./node": {
+			"types": "./dist/node.d.ts",
+			"import": "./dist/node.mjs",
+			"require": "./dist/node.js"
+		}
+	},
+	"scripts": {
+		"prepare:wasm": "rm -rf runtime && mkdir -p runtime && cp ../../crates/spikard-wasm/dist-node/* runtime/ && node scripts/patch-wasm-loader.cjs",
+		"build": "pnpm run prepare:wasm && tsup",
+		"typecheck": "tsc --noEmit",
+		"lint": "biome check src",
+		"lint:fix": "biome check --write src",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"clean": "rm -rf dist node_modules"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"package.json"
+	],
+	"keywords": [
+		"http",
+		"framework",
+		"wasm",
+		"webassembly",
+		"edge",
+		"typescript",
+		"cloudflare-workers",
+		"deno",
+		"fetch-api",
+		"async",
+		"router"
+	],
+	"author": {
+		"name": "Na'aman Hirschfeld",
+		"email": "nhirschfeld@gmail.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Goldziher/spikard.git",
+		"directory": "packages/wasm"
+	},
+	"homepage": "https://github.com/Goldziher/spikard/tree/main/packages/wasm",
+	"bugs": {
+		"url": "https://github.com/Goldziher/spikard/issues"
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.8",
+		"@types/node": "^24.10.1",
+		"@vitest/coverage-v8": "^4.0.14",
+		"tsup": "^8.5.1",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.14"
+	},
+	"dependencies": {
+		"zod": "^4.1.13"
+	},
+	"engines": {
+		"node": ">=18"
+	}
 }

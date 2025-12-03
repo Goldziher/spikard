@@ -20,7 +20,7 @@ use serde_json::{Map as JsonMap, Value, json};
 // TODO: Update to use current handler trait API
 use crate::test_sse;
 use crate::test_websocket;
-use spikard_http::problem::ProblemDetails;
+use spikard_core::problem::ProblemDetails;
 use spikard_http::testing::{
     MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
 };
