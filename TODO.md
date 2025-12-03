@@ -8,7 +8,7 @@ Purpose: track the systematic refactor of Rust core and language bindings for DR
 - [ ] spikard-py (Python/PyO3)
 - [ ] spikard-node (TypeScript/napi-rs)
 - [ ] spikard-rb (Ruby/magnus)
-- [ ] spikard-php (ext-php-rs)
+- [x] spikard-php (ext-php-rs)
 - [ ] spikard-wasm (wasm-bindgen)
 
 ## spikard-core (Rust)
@@ -45,19 +45,19 @@ Purpose: track the systematic refactor of Rust core and language bindings for DR
 - Lifecycle hooks duplication: Python app collects lifecycle hooks in Python and passes them to Rust; should delegate hook registration to the Rust core to avoid divergent semantics and ensure zero-cost hook design.
 
 ## spikard-node (TypeScript)
-- Request marshalling: NodeHandler serializes RequestData to JSON string then parses response JSON back; replace with zero-copy Value passthrough (or shared struct) to avoid double encode/decode and keep parity with fixtures.
-- Query params: flattens `raw_query_params` to first value; reuse shared multi-value converter so validation and handlers see the full set.
-- Error contract: binding wraps internal failures in ad-hoc strings (`Handler ... failed`); surface shared `{error, code, details}` payloads and avoid panic-y `unwrap_or`.
-- Dependency injection: DI block assumes values are JSON strings; provide typed schema-aware decoding or structured map to avoid runtime parse errors and “stringly-typed” dependencies.
-- Streaming responses: HandlerReturnValue routing is manual; unify with core RawResponse/HandlerResponse to reduce duplication and ensure compression/headers behavior matches Rust/other bindings.
-- Panic shielding: wrap handler invocation with catch_unwind + StructuredError mapping to prevent panics from crossing the napi boundary.
-- Missing validation: runtime `NodeHandler` never invokes request/response/parameter validators (only test client does), so HTTP paths bypass schema enforcement; thread the validators into the handler wrapper.
-- Content-type defaults: `NodeHandler` builds responses without guaranteeing `content-type`, producing bare JSON strings that don’t match fixture expectations—default to application/json when body exists.
-- TypeScript bridge losses: `wrapHandler`/`wrapBodyHandler` in `packages/node` parse and stringify JSON strings and assume `Record<string,string>` query params, dropping multi-values and adding double-serialization overhead; move to structured Value inputs and multi-map support.
-- Native loader drift: `packages/node/server.ts` hardcodes Darwin/Generic `.node` names and falls back to throwing; misses Linux/Windows targets and bypasses Rust server when missing—align loader to platform detection or reuse Rust CLI startup path.
-- Package-level request model: `packages/node/src/request.ts` redefines Request with string-only query/headers/cookies and local parsing; should be derived from Rust RequestData (multi-map, raw body) to keep behavior in sync and reduce JS-side logic.
-- Config/types duplication: `packages/node/src/config.ts` and `index.ts` hand-maintain ServerConfig/RouteMetadata/Schema types; generate from Rust schema registry or share types emitted from core to prevent drift and reduce JS-only logic.
-- Test client abstraction: `packages/node/testing.ts` constructs a JS-only mock WebSocket and stringifies routes/handlers before handing to native; use Rust test client directly and drop JS-side multipart/form encoding logic to avoid divergent behavior.
+ - Request marshalling: NodeHandler serializes RequestData to JSON string then parses response JSON back; replace with zero-copy Value passthrough (or shared struct) to avoid double encode/decode and keep parity with fixtures.
+ - Query params: flattens `raw_query_params` to first value; reuse shared multi-value converter so validation and handlers see the full set.
+ - Error contract: binding wraps internal failures in ad-hoc strings (`Handler ... failed`); surface shared `{error, code, details}` payloads and avoid panic-y `unwrap_or`.
+ - Dependency injection: DI block assumes values are JSON strings; provide typed schema-aware decoding or structured map to avoid runtime parse errors and “stringly-typed” dependencies.
+ - Streaming responses: HandlerReturnValue routing is manual; unify with core RawResponse/HandlerResponse to reduce duplication and ensure compression/headers behavior matches Rust/other bindings.
+ - Panic shielding: wrap handler invocation with catch_unwind + StructuredError mapping to prevent panics from crossing the napi boundary. ✅ handler invocation uses core shield for ThreadsafeFunction (Node/PHP/Ruby/WASM/HTTP wired).
+ - Missing validation: runtime `NodeHandler` never invokes request/response/parameter validators (only test client does), so HTTP paths bypass schema enforcement; thread the validators into the handler wrapper.
+ - Content-type defaults: `NodeHandler` builds responses without guaranteeing `content-type`, producing bare JSON strings that don’t match fixture expectations—default to application/json when body exists.
+ - TypeScript bridge losses: `wrapHandler`/`wrapBodyHandler` in `packages/node` parse and stringify JSON strings and assume `Record<string,string>` query params, dropping multi-values and adding double-serialization overhead; move to structured Value inputs and multi-map support.
+ - Native loader drift: `packages/node/server.ts` hardcodes Darwin/Generic `.node` names and falls back to throwing; misses Linux/Windows targets and bypasses Rust server when missing—align loader to platform detection or reuse Rust CLI startup path.
+ - Package-level request model: `packages/node/src/request.ts` redefines Request with string-only query/headers/cookies and local parsing; should be derived from Rust RequestData (multi-map, raw body) to keep behavior in sync and reduce JS-side logic.
+ - Config/types duplication: `packages/node/src/config.ts` and `index.ts` hand-maintain ServerConfig/RouteMetadata/Schema types; generate from Rust schema registry or share types emitted from core to prevent drift and reduce JS-only logic.
+ - Test client abstraction: `packages/node/testing.ts` constructed a JS-only mock WebSocket and stringified routes/handlers before handing to native. ✅ always uses native WebSocket, passes structured routes, and sends form/multipart bodies without sentinel markers (native client now detects structured form/multipart).
 
 ## spikard-rb (Ruby)
 - Request/response conversions: multiple ad-hoc JSON/Ruby conversions (json_to_ruby, map_to_ruby_hash, multimap) duplicating core logic; move shared conversions to core and ensure zero-copy where possible.
@@ -65,30 +65,18 @@ Purpose: track the systematic refactor of Rust core and language bindings for DR
 - Error payloads: internal errors return ad-hoc strings (e.g., “Handler X failed”), not the shared structured payload; align with `{error, code, details}` contract and ProblemDetails adapter.
 - Streaming: streaming enumerator handling builds custom async_stream loops; consolidate with core HandlerResponse/RawResponse to share header/status/compression logic.
 
-## spikard-php (PHP)
-- Request/response conversion: PhpRequest/interpret_php_response likely duplicate parsing logic; centralize in core and ensure zero-copy where possible.
-- Coverage: ensure PSR/middleware parity tests exist in packages/php; add binding-level tests for handler errors and streaming to maintain fixture alignment.
-- Panic shielding: add centralized panic catch/convert layer for all PHP entrypoints so Rust panics surface as structured errors rather than unwinding into PHP.
-- Callable registration: register_from_zval currently returns plain string errors; convert to StructuredError and enforce bounds checks on registry lookups/cleanup.
-- Lifecycle hooks inert: `PhpServer` stores lifecycle hooks but never wires them into router construction, so PHP onRequest/onResponse hooks are dead code; plumb hooks through `build_router_with_handlers_and_config`.
-- Config JSON handling: `PhpRequest::new` and handler bridging still parse bodies/schemas via JSON strings with silent fallback, adding double-serialization and inconsistent error surfaces; switch to structured Value passing in line with zero-copy rules.
-- PHP package controllers: `packages/php` ControllerMethodHandler/HandlerInterface duplicate routing/parameter extraction/response building in PHP (reflection defaults, attribute matching) instead of using Rust ParameterValidator/schema validation; shift to Rust-driven extraction to avoid drift and enforce fixtures/PSR constraints.
-- PHP package Request/Response: PHP-layer request classes and response conversion logic reimplement content-type/status defaults and multi-value query handling, risking divergence; consolidate with Rust-generated DTOs or thin proxies over the native extension.
-- PHP lifecycle hooks: package-level lifecycle hooks/live server wiring live only in PHP classes and are not enforced by Rust; move hook registration/execution into Rust to match ADR zero-cost design and remove PHP-only control flow.
-- PHP route/config duplication: `packages/php` App/Config classes rebuild route metadata, middleware config, and DI wiring in PHP, creating a second source of truth from Rust manifests; generate PHP facades from Rust schema/metadata to keep parity.
-
 ## spikard-wasm (WebAssembly)
-- Serialization: TestClient new() expects routes/config as JSON strings and re-parses; consider passing structured Value to avoid double parse and ensure parity with other bindings.
+ - Serialization: TestClient new() expects routes/config as JSON strings and re-parses; consider passing structured Value to avoid double parse and ensure parity with other bindings. ✅ accepts structured JsValue or JSON string.
 - Error contract: wasm path surfaces JsValue strings for errors; adapt shared structured error payloads for JS side to keep fixtures consistent.
 - Rate limiting/state: local Rc<RefCell> rate state in TestClient duplicates server logic; centralize in core or share implementation with native to avoid behavior drift.
 - Query params/body: ensure ParameterValidator uses full multi-value inputs; audit matching/matching.rs build_params for flattening.
 - Lifecycle hooks: parse_hooks wiring should mirror core zero-cost design; confirm HookResult ShortCircuit/Continue semantics match native and bindings.
-- Panic shielding: wrap dispatch/handler execution with catch_unwind and convert to structured JS errors; unify error shape helper with core StructuredError mapping.
+- Panic shielding: wrap dispatch/handler execution with catch_unwind and convert to structured JS errors; unify error shape helper with core StructuredError mapping. ✅ TestClient dispatch shields panics to structured errors.
 - Query fidelity: `matching::parse_query` overwrites duplicate keys in `normalized`, and parameter validation uses that lossy map, dropping multi-valued params compared to fixtures—keep raw multi-map through validation and handler payloads.
-- Config shape: WASM TestClient requires config as a JSON string and ignores plain JS objects, forcing extra serialization and diverging from other bindings; accept structured objects for config/hooks.
+- Config shape: WASM TestClient requires config as a JSON string and ignores plain JS objects, forcing extra serialization and diverging from other bindings; accept structured objects for config/hooks. ✅ TestClient accepts structured JsValue config/routes.
 
 ## Cross-binding consistency
-- Implement centralized panic shielding and error surfacing: add a shared wrapper in core that catches panics/FFI boundary failures and converts them into the structured `{error, code, details}` payload for all bindings (Python/Node/Ruby/PHP/WASM), eliminating ad-hoc `panic!`/`unwrap` paths and ensuring consistent host-language exceptions/errors.
+- Implement centralized panic shielding and error surfacing: add a shared wrapper in core that catches panics/FFI boundary failures and converts them into the structured `{error, code, details}` payload for all bindings (Python/Node/Ruby/PHP/WASM), eliminating ad-hoc `panic!`/`unwrap` paths and ensuring consistent host-language exceptions/errors. ✅ Core panic shield in spikard-core::panic and spikard-http handler panic mapping to StructuredError.
 
 ## spikard-cli (Rust CLI)
 - DTO/style selection duplication: main.rs and apply_dto_selection hand-map DTO variants per language; centralize in a data table to avoid diverging defaults when languages add new DTO styles.
