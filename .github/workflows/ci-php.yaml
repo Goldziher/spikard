@@ -154,6 +154,48 @@ jobs:
           name: php-extension-${{ matrix.os }}
           path: target/release
 
+      - name: Enable PHP extension (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          set -euo pipefail
+          EXT="$(ls target/release/*spikard_php*.so target/release/*spikard_php*.dylib 2>/dev/null | head -n1)"
+          if [ -z "${EXT}" ]; then
+            echo "PHP extension artifact not found in target/release"
+            ls -la target/release
+            exit 1
+          fi
+          echo "Using PHP extension at ${EXT}"
+          mkdir -p "${RUNNER_TEMP}/php.d"
+          echo "extension=${EXT}" > "${RUNNER_TEMP}/php.d/spikard.ini"
+          SCAN_DIR="$(php --ini | awk -F': ' '/Scan for additional .ini files in:/{print $2}')"
+          if [ -n "${SCAN_DIR:-}" ]; then
+            echo "PHP_INI_SCAN_DIR=${RUNNER_TEMP}/php.d:${SCAN_DIR}" >> "${GITHUB_ENV}"
+          else
+            echo "PHP_INI_SCAN_DIR=${RUNNER_TEMP}/php.d" >> "${GITHUB_ENV}"
+          fi
+
+      - name: Enable PHP extension (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ext = Get-ChildItem target/release/*spikard_php*.dll | Select-Object -First 1
+          if (-not $ext) {
+            Write-Host "PHP extension artifact not found in target/release"
+            Get-ChildItem target/release | Format-List
+            exit 1
+          }
+          Write-Host "Using PHP extension at $($ext.FullName)"
+          $scan = php --ini | Select-String "Scan for additional .ini files in:" | ForEach-Object { $_.ToString().Split(':')[1].Trim() }
+          $dir = Join-Path $env:RUNNER_TEMP "php.d"
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Set-Content -Path (Join-Path $dir "spikard.ini") -Value "extension=$($ext.FullName)"
+          if ([string]::IsNullOrEmpty($scan)) {
+            $scan = $dir
+          } else {
+            $scan = "$dir;$scan"
+          }
+          Add-Content -Path $env:GITHUB_ENV -Value "PHP_INI_SCAN_DIR=$scan"
+
       - name: Install PHP dependencies
         working-directory: packages/php
         run: composer install --no-interaction --no-progress
