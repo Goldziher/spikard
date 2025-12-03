@@ -52,6 +52,14 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
         code.push_str("    with open(fixture_path) as f:\n");
         code.push_str("        return json.load(f)\n\n\n");
 
+        if protocol == "websocket" {
+            code.push_str("async def handle_websocket(websocket: WebSocketClientProtocol) -> None:\n");
+            code.push_str("    \"\"\"Handle WebSocket connection\"\"\"\n");
+            code.push_str("    async for message in websocket:\n");
+            code.push_str("        data = json.loads(message)\n");
+            code.push_str("        print(f\"Received: {data}\")\n\n\n");
+        }
+
         code.push_str("async def main() -> None:\n");
         code.push_str("    \"\"\"Main entry point\"\"\"\n");
         code.push_str("    # Default URI - override with environment variable\n");

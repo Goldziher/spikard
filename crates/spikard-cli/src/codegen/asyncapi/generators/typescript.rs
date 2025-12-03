@@ -36,6 +36,16 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
 
         code.push_str("const __filename = fileURLToPath(import.meta.url);\n\n");
 
+        if protocol == "websocket" {
+            code.push_str("async function handleWebSocket(ws: WebSocket): Promise<void> {\n");
+            code.push_str("  // Handle WebSocket messages\n");
+            code.push_str("  ws.on('message', (data: string) => {\n");
+            code.push_str("    const parsed = JSON.parse(data);\n");
+            code.push_str("    console.log('Received:', parsed);\n");
+            code.push_str("  });\n");
+            code.push_str("}\n\n");
+        }
+
         code.push_str("async function main(): Promise<void> {\n");
         code.push_str("  const uri = process.env.URI || 'ws://localhost:8000");
 
