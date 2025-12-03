@@ -18,11 +18,7 @@ use super::generators::Message;
 ///
 /// Creates JSON fixture files in the output directory for each message type.
 /// Fixtures are organized by protocol (WebSocket, SSE, etc.).
-pub fn generate_fixtures(
-    messages: &[Message],
-    output_dir: &Path,
-    protocol: &str,
-) -> Result<Vec<PathBuf>> {
+pub fn generate_fixtures(messages: &[Message], output_dir: &Path, protocol: &str) -> Result<Vec<PathBuf>> {
     let subdir = match protocol {
         "websocket" => "websockets",
         "sse" => "sse",
@@ -46,8 +42,7 @@ pub fn generate_fixtures(
             "examples": message.examples,
         });
 
-        let fixture_json = serde_json::to_string_pretty(&fixture)
-            .context("Failed to serialize fixture to JSON")?;
+        let fixture_json = serde_json::to_string_pretty(&fixture).context("Failed to serialize fixture to JSON")?;
 
         fs::write(&fixture_path, fixture_json)
             .with_context(|| format!("Failed to write fixture: {}", fixture_path.display()))?;
@@ -82,19 +77,14 @@ pub fn generate_fixture_with_metadata(
 /// Write fixtures to file system
 ///
 /// Takes a map of fixture names to fixture values and writes them to disk.
-pub fn write_fixtures_to_disk(
-    fixtures: HashMap<String, Value>,
-    output_dir: &Path,
-) -> Result<Vec<PathBuf>> {
+pub fn write_fixtures_to_disk(fixtures: HashMap<String, Value>, output_dir: &Path) -> Result<Vec<PathBuf>> {
     let mut generated_paths = Vec::new();
 
-    fs::create_dir_all(output_dir)
-        .with_context(|| format!("Failed to create directory: {}", output_dir.display()))?;
+    fs::create_dir_all(output_dir).with_context(|| format!("Failed to create directory: {}", output_dir.display()))?;
 
     for (name, fixture) in fixtures {
         let fixture_path = output_dir.join(format!("{}.json", name));
-        let fixture_json = serde_json::to_string_pretty(&fixture)
-            .context("Failed to serialize fixture to JSON")?;
+        let fixture_json = serde_json::to_string_pretty(&fixture).context("Failed to serialize fixture to JSON")?;
 
         fs::write(&fixture_path, fixture_json)
             .with_context(|| format!("Failed to write fixture: {}", fixture_path.display()))?;
@@ -118,12 +108,7 @@ mod tests {
             examples: vec![serde_json::json!({ "test": "data" })],
         };
 
-        let fixture = generate_fixture_with_metadata(
-            &msg,
-            Some("/test".to_string()),
-            vec![],
-            "websocket",
-        );
+        let fixture = generate_fixture_with_metadata(&msg, Some("/test".to_string()), vec![], "websocket");
 
         assert_eq!(fixture["name"], "test_msg");
         assert_eq!(fixture["protocol"], "websocket");

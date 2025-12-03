@@ -4,6 +4,7 @@
 //! and implements Spikard's `Handler` trait for async request processing.
 
 #![allow(dead_code)]
+#![deny(clippy::unwrap_used)]
 
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Request, StatusCode};
@@ -49,12 +50,16 @@ pub enum RubyHandlerResult {
 impl StreamingResponsePayload {
     /// Convert streaming response into a `HandlerResponse`.
     pub fn into_response(self) -> Result<HandlerResponse, Error> {
-        let ruby = Ruby::get().map_err(|_| {
-            Error::new(
-                Ruby::get().unwrap().exception_runtime_error(),
-                "Ruby VM unavailable while building streaming response",
-            )
-        })?;
+        // Get Ruby VM reference. In FFI, Ruby must be available during this callback.
+        // If Ruby becomes unavailable, this is a fatal error condition.
+        let ruby = match Ruby::get() {
+            Ok(r) => r,
+            Err(_) => {
+                // Ruby VM is unavailable. This should never happen during active FFI.
+                // We panic because continuing without a Ruby VM is unsafe.
+                panic!("Ruby VM became unavailable during streaming response construction");
+            }
+        };
 
         let status = StatusCode::from_u16(self.status).map_err(|err| {
             Error::new(

@@ -1,21 +1,15 @@
 //! Python AsyncAPI code generation.
 
-use anyhow::{bail, Result};
-use crate::codegen::asyncapi::message_processor::extract_message_schemas;
-use asyncapiv3::spec::AsyncApiV3Spec;
+use anyhow::{Result, bail};
 
+use super::base::sanitize_identifier;
 use super::{AsyncApiGenerator, ChannelInfo, Message};
 
 /// Python AsyncAPI code generator
 pub struct PythonAsyncApiGenerator;
 
 impl AsyncApiGenerator for PythonAsyncApiGenerator {
-    fn generate_test_app(
-        &self,
-        channels: &[ChannelInfo],
-        _messages: &[Message],
-        protocol: &str,
-    ) -> Result<String> {
+    fn generate_test_app(&self, channels: &[ChannelInfo], _messages: &[Message], protocol: &str) -> Result<String> {
         let mut code = String::new();
 
         code.push_str("#!/usr/bin/env python3\n");
@@ -77,12 +71,7 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
         Ok(code)
     }
 
-    fn generate_handler_app(
-        &self,
-        channels: &[ChannelInfo],
-        _messages: &[Message],
-        protocol: &str,
-    ) -> Result<String> {
+    fn generate_handler_app(&self, channels: &[ChannelInfo], _messages: &[Message], protocol: &str) -> Result<String> {
         if channels.is_empty() {
             bail!("AsyncAPI spec does not define any channels");
         }
@@ -153,35 +142,6 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
     }
 }
 
-fn sanitize_identifier(name: &str) -> String {
-    let mut ident: String = name
-        .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() {
-                c.to_ascii_lowercase()
-            } else {
-                '_'
-            }
-        })
-        .collect();
-
-    while ident.contains("__") {
-        ident = ident.replace("__", "_");
-    }
-
-    ident = ident.trim_matches('_').to_string();
-
-    if ident.is_empty() {
-        return "handler".to_string();
-    }
-
-    if ident.chars().next().unwrap().is_ascii_digit() {
-        ident.insert(0, '_');
-    }
-
-    ident
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -212,7 +172,9 @@ mod tests {
         }];
         let messages = vec![];
 
-        let code = generator.generate_handler_app(&channels, &messages, "websocket").unwrap();
+        let code = generator
+            .generate_handler_app(&channels, &messages, "websocket")
+            .unwrap();
         assert!(code.contains("@websocket"));
         assert!(code.contains("async def"));
     }
