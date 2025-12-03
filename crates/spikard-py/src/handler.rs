@@ -18,7 +18,7 @@ use once_cell::sync::OnceCell;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
 use serde_json::{Value, json};
-use spikard_core::errors::StructuredError;
+use spikard_core::{errors::StructuredError, panic::shield};
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use spikard_http::{ParameterValidator, ProblemDetails, SchemaValidator};
 use std::collections::HashMap;
@@ -183,34 +183,36 @@ impl PythonHandler {
                 .ok_or_else(|| structured_error("event_loop_not_initialized", "Python event loop not initialized"))?;
 
             let output = tokio::task::spawn_blocking(move || {
-                Python::attach(|py| -> PyResult<Py<PyAny>> {
-                    let handler_obj = handler.bind(py);
-                    let asyncio = py.import("asyncio")?;
+                shield(|| {
+                    Python::attach(|py| -> PyResult<Py<PyAny>> {
+                        let handler_obj = handler.bind(py);
+                        let asyncio = py.import("asyncio")?;
 
-                    let kwargs = if let Some(ref validated) = validated_params_for_task {
-                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
-                    } else {
-                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
-                    };
+                        let kwargs = if let Some(ref validated) = validated_params_for_task {
+                            validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
+                        } else {
+                            request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
+                        };
 
-                    let coroutine = if kwargs.is_empty() {
-                        handler_obj.call0()?
-                    } else {
-                        let empty_args = PyTuple::empty(py);
-                        handler_obj.call(empty_args, Some(&kwargs))?
-                    };
+                        let coroutine = if kwargs.is_empty() {
+                            handler_obj.call0()?
+                        } else {
+                            let empty_args = PyTuple::empty(py);
+                            handler_obj.call(empty_args, Some(&kwargs))?
+                        };
 
-                    if !coroutine.hasattr("__await__")? {
-                        return Err(pyo3::exceptions::PyTypeError::new_err(
-                            "Handler marked as async but did not return a coroutine",
-                        ));
-                    }
+                        if !coroutine.hasattr("__await__")? {
+                            return Err(pyo3::exceptions::PyTypeError::new_err(
+                                "Handler marked as async but did not return a coroutine",
+                            ));
+                        }
 
-                    let loop_obj = event_loop.bind(py);
-                    let future = asyncio.call_method1("run_coroutine_threadsafe", (coroutine, loop_obj))?;
-                    let result = future.call_method0("result")?;
+                        let loop_obj = event_loop.bind(py);
+                        let future = asyncio.call_method1("run_coroutine_threadsafe", (coroutine, loop_obj))?;
+                        let result = future.call_method0("result")?;
 
-                    Ok(result.into())
+                        Ok(result.into())
+                    })
                 })
             })
             .await
