@@ -9,6 +9,7 @@ use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendCallable;
 use once_cell::sync::OnceLock;
+use spikard_bindings_shared::ErrorResponseBuilder;
 use spikard_core::errors::StructuredError;
 use spikard_http::{Handler, HandlerResult, RequestData};
 use std::panic::AssertUnwindSafe;
@@ -134,7 +135,7 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
         // Build PhpRequest from RequestData and convert to Zval
         let php_request = crate::php::request::PhpRequest::from_request_data(request_data);
         let request_zval = php_request.into_zval(false).map_err(|e| {
-            structured_error_from_error(
+            ErrorResponseBuilder::structured_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "request_conversion_failed",
                 format!("Failed to convert request for PHP handler: {:?}", e),
@@ -146,7 +147,7 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
             PHP_HANDLER_REGISTRY.with(|registry| -> Result<ext_php_rs::types::Zval, (StatusCode, String)> {
                 let registry = registry.borrow();
                 let Some(callable_zval) = registry.get(handler_index) else {
-                    return Err(structured_error_from_error(
+                    return Err(ErrorResponseBuilder::structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "handler_not_found",
                         format!("PHP handler not found: index {}", handler_index),
@@ -155,7 +156,7 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
 
                 // Reconstruct ZendCallable from stored Zval
                 let callable = ZendCallable::new(callable_zval).map_err(|e| {
-                    structured_error_from_error(
+                    ErrorResponseBuilder::structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "callable_reconstruct_failed",
                         format!("Failed to reconstruct PHP callable: {:?}", e),
@@ -163,7 +164,7 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
                 })?;
 
                 callable.try_call(vec![&request_zval]).map_err(|e| {
-                    structured_error_from_error(
+                    ErrorResponseBuilder::structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "handler_failed",
                         format!("PHP handler '{handler_name}' failed: {:?}", e),
@@ -177,21 +178,10 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
 
     match result {
         Ok(inner) => inner,
-        Err(_) => structured_error(
+        Err(_) => Err(ErrorResponseBuilder::structured_error(
             StatusCode::INTERNAL_SERVER_ERROR,
             "panic",
             "Unexpected panic while executing PHP handler",
-        ),
+        )),
     }
-}
-
-fn structured_error(status: StatusCode, code: &str, message: impl Into<String>) -> (StatusCode, String) {
-    let payload = StructuredError::simple(code.to_string(), message.into());
-    let body = serde_json::to_string(&payload)
-        .unwrap_or_else(|_| r#"{"error":"internal_error","code":"internal_error","details":{}}"#.to_string());
-    (status, body)
-}
-
-fn structured_error_from_error(status: StatusCode, code: &str, message: impl Into<String>) -> (StatusCode, String) {
-    structured_error(status, code, message)
 }

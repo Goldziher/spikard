@@ -10,7 +10,7 @@ use bytes::Bytes;
 use magnus::prelude::*;
 use magnus::{Error, RArray, RHash, RString, Ruby, TryConvert, Value};
 use serde_json::Value as JsonValue;
-use spikard_http::problem::ProblemDetails;
+use spikard_core::problem::ProblemDetails;
 use spikard_http::testing::MultipartFilePart;
 use std::collections::HashMap;
 
@@ -82,10 +82,10 @@ pub fn json_to_ruby_with_uploads(
             Ok(array.as_value())
         }
         JsonValue::Object(map) => {
-            if let Some(upload_file) = upload_file_class {
-                if let Some(upload) = try_build_upload_file(ruby, upload_file, map)? {
-                    return Ok(upload);
-                }
+            if let Some(upload_file) = upload_file_class
+                && let Some(upload) = try_build_upload_file(ruby, upload_file, map)?
+            {
+                return Ok(upload);
             }
 
             let hash = ruby.hash_new();

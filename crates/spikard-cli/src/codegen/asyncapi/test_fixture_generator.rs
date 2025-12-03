@@ -18,6 +18,7 @@ use super::generators::Message;
 ///
 /// Creates JSON fixture files in the output directory for each message type.
 /// Fixtures are organized by protocol (WebSocket, SSE, etc.).
+#[allow(dead_code)]
 pub fn generate_fixtures(messages: &[Message], output_dir: &Path, protocol: &str) -> Result<Vec<PathBuf>> {
     let subdir = match protocol {
         "websocket" => "websockets",
@@ -57,6 +58,7 @@ pub fn generate_fixtures(messages: &[Message], output_dir: &Path, protocol: &str
 /// Generate fixture with channel and operation metadata
 ///
 /// Creates a more detailed fixture that includes channel path and operation information.
+#[allow(dead_code)]
 pub fn generate_fixture_with_metadata(
     message: &Message,
     channel: Option<String>,
@@ -77,6 +79,7 @@ pub fn generate_fixture_with_metadata(
 /// Write fixtures to file system
 ///
 /// Takes a map of fixture names to fixture values and writes them to disk.
+#[allow(dead_code)]
 pub fn write_fixtures_to_disk(fixtures: HashMap<String, Value>, output_dir: &Path) -> Result<Vec<PathBuf>> {
     let mut generated_paths = Vec::new();
 

@@ -112,7 +112,7 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                     code.push_str("}\n");
                     code.push_str("fclose($stream);\n\n");
 
-                    code.push_str(&format!("// Load expected fixture for validation\n"));
+                    code.push_str("// Load expected fixture for validation\n");
                     code.push_str(&format!("$expectedFixture = loadFixture('{}');\n", fixture_name));
                     code.push_str("echo \"Collected \" . count($events) . \" events\\n\\n\";\n");
                 }

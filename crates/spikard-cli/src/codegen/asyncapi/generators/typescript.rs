@@ -2,7 +2,7 @@
 
 use anyhow::{Result, bail};
 
-use super::base::{sanitize_identifier, sanitize_typescript_identifier};
+use super::base::sanitize_typescript_identifier;
 use super::{AsyncApiGenerator, ChannelInfo, Message};
 
 /// TypeScript AsyncAPI code generator
@@ -68,7 +68,7 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
             code.push_str("import { StreamingResponse } from \"spikard\";\n");
         }
         code.push_str("import { z } from \"zod\";\n");
-        code.push_str("\n");
+        code.push('\n');
 
         let mut handler_entries = Vec::new();
         let mut route_entries = Vec::new();

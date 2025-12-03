@@ -45,7 +45,10 @@ impl PhpResponse {
     /// Get the body as JSON string.
     #[php(name = "getBody")]
     pub fn get_body(&self) -> String {
-        serde_json::to_string(&self.body).unwrap_or_else(|_| "{}".to_string())
+        match &self.body {
+            Value::String(s) => s.clone(),
+            _ => serde_json::to_string(&self.body).unwrap_or_else(|_| "{}".to_string()),
+        }
     }
 
     /// Get headers as a PHP array.

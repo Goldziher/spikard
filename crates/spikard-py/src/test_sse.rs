@@ -1,8 +1,8 @@
 //! SSE test client bindings for Python
 
+use crate::conversion::json_to_python;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use serde_json::Value;
 use spikard_http::testing::{ResponseSnapshot, SseEvent as RustSseEvent, SseStream as RustSseStream};
 
 /// Python wrapper for SSE stream
@@ -97,40 +97,4 @@ pub fn sse_stream_from_response(response: &ResponseSnapshot) -> PyResult<SseStre
     let stream =
         RustSseStream::from_response(response).map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e))?;
     Ok(SseStream::new(stream))
-}
-
-/// Helper to convert JSON Value to Python object
-fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, PyAny>> {
-    use pyo3::types::{PyBool, PyDict, PyFloat, PyList, PyNone, PyString};
-
-    match value {
-        Value::Null => Ok(PyNone::get(py).as_any().clone()),
-        Value::Bool(b) => Ok(PyBool::new(py, *b).as_any().clone()),
-        Value::Number(n) => {
-            if let Some(i) = n.as_i64() {
-                Ok(i.into_pyobject(py)?.into_any())
-            } else if let Some(u) = n.as_u64() {
-                Ok(u.into_pyobject(py)?.into_any())
-            } else if let Some(f) = n.as_f64() {
-                Ok(PyFloat::new(py, f).into_any())
-            } else {
-                Ok(PyNone::get(py).as_any().clone())
-            }
-        }
-        Value::String(s) => Ok(PyString::new(py, s).into_any()),
-        Value::Array(arr) => {
-            let list = PyList::empty(py);
-            for item in arr {
-                list.append(json_to_python(py, item)?)?;
-            }
-            Ok(list.into_any())
-        }
-        Value::Object(obj) => {
-            let dict = PyDict::new(py);
-            for (key, val) in obj {
-                dict.set_item(key, json_to_python(py, val)?)?;
-            }
-            Ok(dict.into_any())
-        }
-    }
 }

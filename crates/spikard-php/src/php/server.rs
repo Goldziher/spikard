@@ -642,7 +642,7 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
                 }
             }
 
-            // Try to get body
+            // Try to get body (already a string from getBody, no re-parsing needed)
             let body_zval = obj.try_call_method("getBody", vec![]).unwrap_or_else(|_| Zval::new());
             if let Some(generator) = body_zval.object()
                 && generator.has_method("next")
@@ -665,6 +665,7 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
                 });
             }
 
+            // Body is already a string from getBody() - no need to parse/re-serialize
             let body_str = body_zval.string().map(|s| s.to_string()).unwrap_or_default();
 
             // Set content-type if not already set and we have a body

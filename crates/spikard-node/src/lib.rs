@@ -38,6 +38,8 @@ mod background;
 #[cfg(feature = "di")]
 pub mod di;
 mod handler;
+pub mod handler_input;
+pub mod handler_output;
 mod lifecycle;
 mod response;
 mod sse;
@@ -46,13 +48,15 @@ mod test_sse;
 mod test_websocket;
 mod websocket;
 
-use crate::response::HandlerReturnValue;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use spikard_http::{BackgroundRuntime, RouteMetadata, Server, ServerConfig};
 use std::io::Write;
 use std::sync::Arc;
 use tracing::{error, info, warn};
+
+pub use handler_input::HandlerInput;
+pub use handler_output::HandlerOutput;
 
 /// Extract ServerConfig from Node.js Object
 ///
@@ -373,13 +377,13 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     let mut handler_map = std::collections::HashMap::new();
 
     for route in &regular_routes {
-        let js_handler: Function<String, Promise<HandlerReturnValue>> = handlers_obj
+        let js_handler: Function<HandlerInput, Promise<HandlerOutput>> = handlers_obj
             .get_named_property(&route.handler_name)
             .map_err(|e| Error::from_reason(format!("Failed to get handler '{}': {}", route.handler_name, e)))?;
 
         let tsfn = js_handler
             .build_threadsafe_function()
-            .build_callback(|ctx| Ok(vec![ctx.value]))
+            .build_callback(|_ctx| Ok(vec![()]))
             .map_err(|e| {
                 Error::from_reason(format!(
                     "Failed to build ThreadsafeFunction for '{}': {}",

@@ -5,14 +5,7 @@
  * advanced Server-Sent Events patterns.
  */
 
-import {
-	get,
-	post,
-	type Request,
-	Spikard,
-	StreamingResponse,
-	type WebSocketHandler,
-} from "@spikard/node";
+import { get, post, type Request, Spikard, StreamingResponse, type WebSocketHandler } from "@spikard/node";
 
 const app = new Spikard({
 	port: 8000,
@@ -32,8 +25,7 @@ let messageId = 0;
 /**
  * WebSocket endpoint for real-time chat
  */
-@get("/ws/chat")
-async function chatWebSocket(): Promise<WebSocketHandler> {
+get("/ws/chat")(async function chatWebSocket(): Promise<WebSocketHandler> {
 	return {
 		// Called when a client connects
 		on_connect: async (ws) => {
@@ -75,7 +67,7 @@ async function chatWebSocket(): Promise<WebSocketHandler> {
 						data: msg,
 						totalMessages: messages.length,
 					});
-				} catch (error) {
+				} catch (_error) {
 					await ws.send_json({
 						type: "error",
 						error: "Invalid message format",
@@ -89,13 +81,12 @@ async function chatWebSocket(): Promise<WebSocketHandler> {
 			console.log("Client disconnected from chat");
 		},
 	};
-}
+});
 
 /**
  * WebSocket endpoint for real-time notifications
  */
-@get("/ws/notifications")
-async function notificationsWebSocket(): Promise<WebSocketHandler> {
+get("/ws/notifications")(async function notificationsWebSocket(): Promise<WebSocketHandler> {
 	let notificationCount = 0;
 
 	return {
@@ -137,17 +128,13 @@ async function notificationsWebSocket(): Promise<WebSocketHandler> {
 			console.log("Client disconnected from notifications");
 		},
 	};
-}
+});
 
 /**
  * POST endpoint to retrieve chat history via SSE
  */
-@post("/sse/chat-history")
-async function chatHistorySse(req: Request) {
-	const startId =
-		(req.query?.since as string | undefined) ?
-			parseInt(req.query.since as string, 10)
-		: 0;
+post("/sse/chat-history")(async function chatHistorySse(req: Request) {
+	const startId = (req.query?.since as string | undefined) ? parseInt(req.query.since as string, 10) : 0;
 
 	async function* generateHistory() {
 		// Send header
@@ -189,17 +176,13 @@ async function chatHistorySse(req: Request) {
 			"Access-Control-Allow-Origin": "*",
 		},
 	});
-}
+});
 
 /**
  * GET endpoint for metrics stream via SSE
  */
-@get("/sse/metrics")
-async function metricsStream(req: Request) {
-	const interval =
-		(req.query?.interval as string | undefined) ?
-			parseInt(req.query.interval as string, 10)
-		: 1000;
+get("/sse/metrics")(async function metricsStream(req: Request) {
+	const interval = (req.query?.interval as string | undefined) ? parseInt(req.query.interval as string, 10) : 1000;
 
 	async function* generateMetrics() {
 		let iteration = 0;
@@ -241,13 +224,12 @@ async function metricsStream(req: Request) {
 			Connection: "keep-alive",
 		},
 	});
-}
+});
 
 /**
  * Serve demo HTML page
  */
-@get("/")
-async function servePage() {
+get("/")(async function servePage() {
 	return {
 		status: 200,
 		body: `
@@ -395,14 +377,7 @@ async function servePage() {
 			"Content-Type": "text/html; charset=utf-8",
 		},
 	};
-}
-
-// Register handlers
-app.registerHandler(servePage);
-app.registerHandler(chatWebSocket);
-app.registerHandler(notificationsWebSocket);
-app.registerHandler(chatHistorySse);
-app.registerHandler(metricsStream);
+});
 
 console.log("Starting WebSocket & SSE Example on http://127.0.0.1:8000");
 console.log("Open http://127.0.0.1:8000 in your browser");

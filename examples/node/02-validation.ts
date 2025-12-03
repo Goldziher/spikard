@@ -20,29 +20,25 @@ const users: Record<number, { id: number; name: string; email: string }> = {
 /**
  * GET endpoint returning a list of users
  */
-@get("/users")
-async function listUsers(req: Request) {
+const listUsers = get("/users")(async function listUsers(req: Request) {
 	// Support optional filtering by name via query params
 	const nameFilter = req.query?.name as string | undefined;
 
 	let userList = Object.values(users);
 	if (nameFilter) {
-		userList = userList.filter((u) =>
-			u.name.toLowerCase().includes(nameFilter.toLowerCase())
-		);
+		userList = userList.filter((u) => u.name.toLowerCase().includes(nameFilter.toLowerCase()));
 	}
 
 	return {
 		users: userList,
 		count: userList.length,
 	};
-}
+});
 
 /**
  * GET endpoint returning a single user by ID
  */
-@get("/users/:id")
-async function getUser(req: Request) {
+const getUser = get("/users/:id")(async function getUser(req: Request) {
 	const userId = parseInt(req.params?.id as string, 10);
 
 	if (!Number.isInteger(userId)) {
@@ -69,13 +65,12 @@ async function getUser(req: Request) {
 	}
 
 	return user;
-}
+});
 
 /**
  * POST endpoint to create a new user
  */
-@post("/users")
-async function createUser(req: Request) {
+const createUser = post("/users")(async function createUser(req: Request) {
 	const body = req.body as {
 		name?: string;
 		email?: string;
@@ -129,7 +124,7 @@ async function createUser(req: Request) {
 		status: 201,
 		body: newUser,
 	};
-}
+});
 
 // Register handlers
 app.registerHandler(listUsers);
@@ -142,7 +137,7 @@ console.log("  curl http://127.0.0.1:8000/users");
 console.log("  curl 'http://127.0.0.1:8000/users?name=Alice'");
 console.log("  curl http://127.0.0.1:8000/users/1");
 console.log(
-	"  curl -X POST http://127.0.0.1:8000/users -H 'Content-Type: application/json' -d '{\"name\":\"Charlie\",\"email\":\"charlie@example.com\"}'"
+	'  curl -X POST http://127.0.0.1:8000/users -H \'Content-Type: application/json\' -d \'{"name":"Charlie","email":"charlie@example.com"}\'',
 );
 console.log("");
 

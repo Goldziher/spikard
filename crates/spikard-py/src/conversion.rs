@@ -24,6 +24,12 @@ use serde_json::Value;
 /// let value = serde_json::json!({"name": "Alice", "age": 30});
 /// let py_obj = json_to_python(py, &value)?;
 /// ```
+///
+/// # Implementation Notes
+///
+/// This is the canonical implementation and should be used across all modules.
+/// It provides zero-copy conversion by directly constructing Python objects
+/// from JSON values without intermediate JSON string serialization.
 pub fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, PyAny>> {
     match value {
         Value::Null => Ok(PyNone::get(py).as_any().clone()),

@@ -1,9 +1,9 @@
 //! JSON schema validation middleware
 
-use crate::problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use serde_json::json;
+use spikard_core::problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 
 /// Check if a media type is JSON or has a +json suffix
 pub fn is_json_content_type(mime: &mime::Mime) -> bool {

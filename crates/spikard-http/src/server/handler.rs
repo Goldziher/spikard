@@ -1,13 +1,11 @@
 //! ValidatingHandler wrapper that executes request/parameter validation before handler
 
-use crate::ProblemDetails;
 use crate::handler_trait::{Handler, HandlerResult, RequestData};
-use crate::parameters::ParameterValidator;
-use crate::validation::SchemaValidator;
 use axum::body::Body;
 use futures::FutureExt;
 use serde_json::Value;
 use spikard_core::errors::StructuredError;
+use spikard_core::{ParameterValidator, ProblemDetails, SchemaValidator};
 use std::future::Future;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
