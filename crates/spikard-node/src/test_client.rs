@@ -346,20 +346,38 @@ impl TestClient {
     /// Create a new test client from routes and handlers
     #[napi(constructor)]
     pub fn new(
-        routes_json: String,
-        websocket_routes_json: Option<String>,
+        routes: serde_json::Value,
+        websocket_routes: Option<serde_json::Value>,
         handlers_map: Object,
         websocket_handlers: Option<Object>,
         dependencies: Option<Object>,
         lifecycle_hooks: Option<Object>,
         config: Option<Object>,
     ) -> Result<Self> {
-        let routes_data: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
-            .map_err(|e| Error::from_reason(format!("Failed to parse routes: {}", e)))?;
+        let routes_data: Vec<RouteMetadata> = match routes {
+            serde_json::Value::String(s) => {
+                serde_json::from_str(&s).map_err(|e| Error::from_reason(format!("Failed to parse routes: {}", e)))?
+            }
+            serde_json::Value::Array(_) | serde_json::Value::Object(_) => serde_json::from_value(routes)
+                .map_err(|e| Error::from_reason(format!("Failed to parse routes: {}", e)))?,
+            _ => {
+                return Err(Error::from_reason(
+                    "routes must be an array of route metadata or a JSON string".to_string(),
+                ));
+            }
+        };
 
-        let websocket_routes_data: Vec<RouteMetadata> = websocket_routes_json
-            .as_ref()
-            .and_then(|json| serde_json::from_str(json).ok())
+        let websocket_routes_data: Vec<RouteMetadata> = websocket_routes
+            .map(|value| match value {
+                serde_json::Value::String(s) => serde_json::from_str(&s)
+                    .map_err(|e| Error::from_reason(format!("Failed to parse websocket routes: {}", e))),
+                serde_json::Value::Array(_) | serde_json::Value::Object(_) => serde_json::from_value(value)
+                    .map_err(|e| Error::from_reason(format!("Failed to parse websocket routes: {}", e))),
+                _ => Err(Error::from_reason(
+                    "websocket routes must be an array or JSON string".to_string(),
+                )),
+            })
+            .transpose()?
             .unwrap_or_default();
 
         let mut server_config = if let Some(cfg) = config {
@@ -657,6 +675,14 @@ fn determine_body_payload(value: &Value) -> BodyPayload {
     }
 
     if let Some(obj) = value.as_object() {
+        if let Some(form) = obj.get("form") {
+            return BodyPayload::Form(form.clone());
+        }
+
+        if let Some(multipart) = obj.get("multipart") {
+            return BodyPayload::Multipart(multipart.clone());
+        }
+
         if let Some(form) = obj.get("__spikard_form__") {
             return BodyPayload::Form(form.clone());
         }

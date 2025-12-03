@@ -157,25 +157,24 @@ impl Handler for NodeHandler {
                 structured_error(StatusCode::INTERNAL_SERVER_ERROR, "serialization_error", e.to_string())
             })?;
 
-            let handler_output = self
-                .handler_fn
-                .call_async(json_input)
-                .await
-                .map_err(|e| {
+            let handler_output = shield(|| {
+                self.handler_fn.call_async(json_input).map_err(|e| {
                     structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "handler_call_failed",
                         format!("Handler '{}' call failed: {}", self.handler_name, e),
                     )
-                })?
-                .await
-                .map_err(|e| {
-                    structured_error(
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        "handler_promise_failed",
-                        format!("Handler '{}' promise failed: {}", self.handler_name, e),
-                    )
-                })?;
+                })
+            })
+            .map_err(|e| structured_error(StatusCode::INTERNAL_SERVER_ERROR, "panic", e.error))?
+            .await
+            .map_err(|e| {
+                structured_error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "handler_promise_failed",
+                    format!("Handler '{}' promise failed: {}", self.handler_name, e),
+                )
+            })?;
 
             if let HandlerReturnValue::Streaming(streaming) = handler_output {
                 let response = streaming.into_handler_response().map_err(|e| {

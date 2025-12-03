@@ -65,6 +65,14 @@ class MockNativeClient {
 	async trace(path: string, headers: Record<string, string> | null) {
 		return this.get(path, headers);
 	}
+
+	async websocket(_path: string) {
+		return {
+			send_json: async () => {},
+			receive_json: async () => null,
+			close: async () => {},
+		};
+	}
 }
 
 describe("TestClient", () => {

@@ -59,53 +59,25 @@ interface NativeClient {
 	websocket(path: string): Promise<WebSocketTestConnection>;
 }
 
-class MockWebSocketConnection {
-	private readonly handler: (msg: unknown) => Promise<unknown>;
-	private readonly queue: unknown[] = [];
-
-	constructor(handler: (msg: unknown) => Promise<unknown>) {
-		this.handler = handler;
-	}
-
-	async send_json(message: unknown): Promise<void> {
-		const response = await this.handler(message);
-		this.queue.push(response);
-	}
-
-	async receive_json(): Promise<unknown> {
-		return this.queue.shift();
-	}
-
-	async close(): Promise<void> {
-		// no-op for mock
-	}
-}
-
 type NativeClientConstructor = new (
-	routesJson: string,
-	websocketRoutesJson: string | null,
+	routes: unknown,
+	websocketRoutes: unknown,
 	handlers: Record<string, NativeHandlerFunction>,
 	websocketHandlers: Record<string, Record<string, unknown>>,
 	config: ServerConfig | null,
 ) => NativeClient;
 
 type NativeClientFactory = (
-	routesJson: string,
-	websocketRoutesJson: string | null,
+	routes: unknown,
+	websocketRoutes: unknown,
 	handlers: Record<string, NativeHandlerFunction>,
 	websocketHandlers: Record<string, Record<string, unknown>>,
 	config: ServerConfig | null,
 ) => NativeClient;
 
-const defaultNativeClientFactory: NativeClientFactory = (
-	routesJson,
-	websocketRoutesJson,
-	handlers,
-	websocketHandlers,
-	config,
-) => {
+const defaultNativeClientFactory: NativeClientFactory = (routes, websocketRoutes, handlers, websocketHandlers, config) => {
 	const Ctor = NativeTestClient as NativeClientConstructor;
-	return new Ctor(routesJson, websocketRoutesJson, handlers, websocketHandlers, config);
+	return new Ctor(routes, websocketRoutes, handlers, websocketHandlers, config);
 };
 
 let nativeClientFactory: NativeClientFactory = defaultNativeClientFactory;
@@ -156,8 +128,8 @@ export class TestClient {
 			throw new Error("Invalid Spikard app: missing routes array");
 		}
 		this.app = app;
-		const routesJson = JSON.stringify(app.routes);
-		const websocketRoutesJson = JSON.stringify(app.websocketRoutes ?? []);
+		const routesPayload = app.routes;
+		const websocketRoutesPayload = app.websocketRoutes ?? [];
 		const handlersMap = Object.fromEntries(
 			Object.entries(app.handlers || {}).map(([name, handler]) => {
 				const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
@@ -167,7 +139,13 @@ export class TestClient {
 		const websocketHandlersMap = app.websocketHandlers || {};
 		const config = app.config ?? null;
 
-		this.nativeClient = nativeClientFactory(routesJson, websocketRoutesJson, handlersMap, websocketHandlersMap, config);
+		this.nativeClient = nativeClientFactory(
+			routesPayload,
+			websocketRoutesPayload,
+			handlersMap,
+			websocketHandlersMap,
+			config,
+		);
 	}
 
 	/**
@@ -272,7 +250,7 @@ export class TestClient {
 
 		if (options.multipart) {
 			return {
-				__spikard_multipart__: {
+				multipart: {
 					fields: options.multipart.fields ?? {},
 					files: options.multipart.files ?? [],
 				},
@@ -281,7 +259,7 @@ export class TestClient {
 
 		if (options.form) {
 			return {
-				__spikard_form__: options.form,
+				form: options.form,
 			};
 		}
 
@@ -301,16 +279,6 @@ export class TestClient {
 	 * @returns WebSocket test connection
 	 */
 	async websocketConnect(path: string): Promise<WebSocketTestConnection> {
-		const handlerName = this.app.websocketRoutes?.find((r) => r.path === path)?.handler_name;
-		const handlerEntry = handlerName ? this.app.websocketHandlers?.[handlerName] : undefined;
-		const handler =
-			handlerEntry && typeof handlerEntry.handleMessage === "function" ? handlerEntry.handleMessage : null;
-
-		if (handler) {
-			const mock = new MockWebSocketConnection(async (msg) => handler(msg));
-			return mock as unknown as WebSocketTestConnection;
-		}
-
 		return this.nativeClient.websocket(path);
 	}
 
