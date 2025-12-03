@@ -12,6 +12,7 @@ use magnus::value::{InnerValue, Opaque};
 use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
 use serde_json::{Map as JsonMap, Value as JsonValue};
 use spikard_core::errors::StructuredError;
+use spikard_core::panic::shield;
 use spikard_http::ParameterValidator;
 use spikard_http::SchemaValidator;
 use spikard_http::problem::ProblemDetails;
@@ -199,14 +200,14 @@ impl RubyHandler {
     /// Handle a request synchronously.
     pub fn handle(&self, request_data: RequestData) -> HandlerResult {
         let cloned = request_data.clone();
-        let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(cloned)));
+        let result = shield(|| self.handle_inner(cloned));
         match result {
             Ok(res) => res,
-            Err(_) => Err(structured_error(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "panic",
-                "Unexpected panic while executing Ruby handler",
-            )),
+            Err(err) => {
+                let body = serde_json::to_string(&err)
+                    .unwrap_or_else(|_| r#"{"error":"panic","code":"panic","details":{}}"#.to_string());
+                Err((StatusCode::INTERNAL_SERVER_ERROR, body))
+            }
         }
     }
 
