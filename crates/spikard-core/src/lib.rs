@@ -5,6 +5,7 @@ pub mod di;
 pub mod errors;
 pub mod http;
 pub mod lifecycle;
+pub mod panic;
 pub mod parameters;
 pub mod problem;
 pub mod request_data;
