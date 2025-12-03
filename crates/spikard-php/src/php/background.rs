@@ -112,6 +112,13 @@ pub fn spikard_background_run(callable: &Zval, args: &Zval) -> PhpResult<()> {
         ));
     }
 
+    // If background executor is not installed (common in tests), execute immediately.
+    let handle_installed = BACKGROUND_HANDLE
+        .lock()
+        .ok()
+        .and_then(|g| g.as_ref().cloned())
+        .is_some();
+
     // Clone the Zvals for queueing (shallow clone is cheap)
     let callable_owned = callable.shallow_clone();
     let args_owned = if args.is_null() {
@@ -120,12 +127,17 @@ pub fn spikard_background_run(callable: &Zval, args: &Zval) -> PhpResult<()> {
         Some(args.shallow_clone())
     };
 
-    // Queue the task
     let task = QueuedTask {
         callable: callable_owned,
         args: args_owned,
     };
 
+    if !handle_installed {
+        execute_queued_task(task).map_err(|e| PhpException::default(e))?;
+        return Ok(());
+    }
+
+    // Queue the task for later processing by the runtime
     TASK_QUEUE.with(|queue| queue.borrow_mut().push_back(task));
 
     Ok(())

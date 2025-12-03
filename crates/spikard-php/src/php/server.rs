@@ -8,11 +8,16 @@ use axum::http::{HeaderName, HeaderValue, Request, Response, StatusCode};
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
+use spikard_core::errors::StructuredError;
+use spikard_core::panic::shield;
 use spikard_http::ParameterValidator;
 use spikard_http::server::build_router_with_handlers_and_config;
-use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, Route, Router, SchemaRegistry, ServerConfig};
+use spikard_http::{
+    Handler, HandlerResponse, HandlerResult, Method, RequestData, Route, Router, SchemaRegistry, ServerConfig,
+};
 use std::collections::HashMap;
 use std::future::Future;
+use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
 
@@ -48,8 +53,6 @@ pub struct PhpServer {
     handlers: Vec<ext_php_rs::types::Zval>,
     /// Optional server configuration (populated via setters)
     config: ServerConfig,
-    /// Lifecycle hooks (not yet exposed to PHP; placeholder for parity)
-    lifecycle_hooks: Option<LifecycleHooks>,
     /// Global CORS configuration to apply to all routes
     global_cors: Option<spikard_core::CorsConfig>,
 }
@@ -64,7 +67,6 @@ impl PhpServer {
             port: port.map(|p| p as u16).unwrap_or(8000),
             handlers: Vec::new(),
             config: ServerConfig::default(),
-            lifecycle_hooks: None,
             global_cors: None,
         }
     }
@@ -372,7 +374,8 @@ impl PhpServer {
     /// Set lifecycle hooks (onRequest/onResponse). Short-circuit supported.
     #[php(name = "setLifecycleHooks")]
     pub fn set_lifecycle_hooks(&mut self, hooks: &PhpLifecycleHooks) {
-        self.lifecycle_hooks = Some(hooks.build());
+        let arc_hooks = Arc::new(hooks.build());
+        self.config.lifecycle_hooks = Some(arc_hooks);
     }
 
     /// Configure rate limiting
@@ -460,10 +463,12 @@ impl PhpServer {
         for route in &self.routes {
             let method = route.method.parse().unwrap_or(Method::Get);
 
-            let handler_zval = self
-                .handlers
-                .get(route.handler_index)
-                .expect("handler index should be valid");
+            let handler_zval = self.handlers.get(route.handler_index).ok_or_else(|| {
+                crate::php::handler::structured_error_body(
+                    "handler_not_found",
+                    format!("PHP handler not found at index {}", route.handler_index),
+                )
+            })?;
 
             let handler = PhpHandler::register_from_zval(
                 handler_zval,
@@ -599,25 +604,38 @@ impl Handler for ClosureHandler {
 
 /// Helper to interpret a PHP response Zval into HandlerResult.
 #[allow(dead_code)]
-pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerResult {
+pub fn interpret_php_response(response: &Zval, handler_name: &str) -> HandlerResult {
+    let response_result = shield(|| interpret_php_response_inner(response));
+    match response_result {
+        Ok(Ok(handler_response)) => Ok(handler_response.into_response()),
+        Ok(Err(err)) => Err(err),
+        Err(err) => {
+            let body = serde_json::to_string(&err)
+                .unwrap_or_else(|_| r#"{"error":"panic","code":"panic","details":{}}"#.to_string());
+            Err((StatusCode::INTERNAL_SERVER_ERROR, body))
+        }
+    }
+}
+
+fn interpret_php_response_inner(response: &Zval) -> Result<HandlerResponse, (StatusCode, String)> {
     // If it's null, return 204 No Content
     if response.is_null() {
-        return Ok(Response::builder()
+        let resp = Response::builder()
             .status(StatusCode::NO_CONTENT)
             .body(Body::empty())
-            .unwrap_or_else(|e| structured_response(StatusCode::INTERNAL_SERVER_ERROR, "build_error", e.to_string())));
+            .map_err(|e| structured_error(StatusCode::INTERNAL_SERVER_ERROR, "build_error", e.to_string()))?;
+        return Ok(HandlerResponse::from(resp));
     }
 
     // Try to extract Response - check if object has our expected methods
-    if let Some(obj) = response.object().filter(|o| o.has_method("getBody")) {
+    if let Some(obj) = response.object() {
         // Try to call getStatus method
         if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
             let status_code = status_zval.long().unwrap_or(200);
-            let status = StatusCode::from_u16(status_code as u16).unwrap_or(StatusCode::OK);
+            let status = StatusCode::from_u16(status_code as u16)
+                .map_err(|e| structured_error(StatusCode::INTERNAL_SERVER_ERROR, "invalid_status", e.to_string()))?;
 
-            let mut builder = Response::builder().status(status);
-
-            // Try to get headers
+            let mut headers = axum::http::HeaderMap::new();
             let mut has_content_type = false;
             if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
                 && let Some(arr) = headers_zval.array()
@@ -632,108 +650,148 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
                         if key_str.eq_ignore_ascii_case("content-type") {
                             has_content_type = true;
                         }
-                        if let (Ok(header_name), Ok(header_value)) = (
-                            HeaderName::from_bytes(key_str.as_bytes()),
-                            HeaderValue::from_str(&val_str),
-                        ) {
-                            builder = builder.header(header_name, header_value);
-                        }
+                        let header_name = HeaderName::from_bytes(key_str.as_bytes()).map_err(|e| {
+                            structured_error(
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                                "invalid_header_name",
+                                format!("Invalid header '{}': {}", key_str, e),
+                            )
+                        })?;
+                        let header_value = HeaderValue::from_str(&val_str).map_err(|e| {
+                            structured_error(
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                                "invalid_header_value",
+                                format!("Invalid header value '{}': {}", val_str, e),
+                            )
+                        })?;
+                        headers.insert(header_name, header_value);
                     }
                 }
             }
 
             // Try to get body
             let body_zval = obj.try_call_method("getBody", vec![]).unwrap_or_else(|_| Zval::new());
-            if let Some(generator) = body_zval.object()
-                && generator.has_method("next")
-            {
+            if let Some(_generator) = body_zval.object() {
                 // Streaming via generator
                 let status_code = status.as_u16();
-                let headers = builder
-                    .headers_ref()
-                    .map(|h| {
-                        h.iter()
-                            .filter_map(|(name, value)| value.to_str().ok().map(|v| (name.to_string(), v.to_string())))
-                            .collect::<HashMap<_, _>>()
-                    })
-                    .unwrap_or_default();
-                let cfg = crate::php::StreamingConfig { status_code, headers };
-                return crate::php::register_generator(&body_zval, Some(cfg)).and_then(|(idx, config)| {
-                    crate::php::create_streaming_response(idx, config)
-                        .map(|r| r.into_response())
-                        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
-                });
+                let header_pairs: HashMap<String, String> = headers
+                    .iter()
+                    .filter_map(|(name, value)| value.to_str().ok().map(|v| (name.to_string(), v.to_string())))
+                    .collect();
+                let cfg = crate::php::StreamingConfig {
+                    status_code,
+                    headers: header_pairs,
+                };
+                return crate::php::register_generator(&body_zval, Some(cfg))
+                    .map_err(|e| structured_error(StatusCode::INTERNAL_SERVER_ERROR, "stream_registration_failed", e))
+                    .and_then(|(idx, config)| {
+                        crate::php::create_streaming_response(idx, config).map_err(|e| {
+                            structured_error(StatusCode::INTERNAL_SERVER_ERROR, "stream_response_failed", e)
+                        })
+                    });
             }
 
-            let body_str = body_zval.string().map(|s| s.to_string()).unwrap_or_default();
-
-            // Set content-type if not already set and we have a body
-            if !has_content_type && !body_str.is_empty() {
-                builder = builder.header("content-type", "application/json");
-            }
-
-            return builder
-                .body(Body::from(body_str))
-                .map_err(|e| {
-                    (
+            // If body is string, send as-is; otherwise convert to JSON bytes
+            let (body_bytes, inferred_json) = if let Some(body_str) = body_zval.string() {
+                (body_str.to_string().into_bytes(), false)
+            } else {
+                let body_json = zval_to_json(&body_zval).map_err(|e| {
+                    structured_error(StatusCode::INTERNAL_SERVER_ERROR, "response_conversion_failed", e)
+                })?;
+                let bytes = serde_json::to_vec(&body_json).map_err(|e| {
+                    structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        format!("Failed to build response: {}", e),
+                        "response_serialization_failed",
+                        e.to_string(),
                     )
-                })
-                .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
+                })?;
+                (bytes, true)
+            };
+
+            if !has_content_type && !body_bytes.is_empty() {
+                let default = if inferred_json {
+                    "application/json"
+                } else {
+                    "text/plain"
+                };
+                headers.insert(
+                    HeaderName::from_static("content-type"),
+                    HeaderValue::from_static(default),
+                );
+            }
+
+            let mut builder = Response::builder().status(status);
+            for (name, value) in headers.iter() {
+                builder = builder.header(name, value);
+            }
+
+            let resp = builder
+                .body(Body::from(body_bytes))
+                .map_err(|e| structured_error(StatusCode::INTERNAL_SERVER_ERROR, "build_error", e.to_string()))?;
+
+            return Ok(HandlerResponse::from(resp));
         }
     }
 
     // If it's a string, return as text/plain
     if let Some(s) = response.string() {
-        return Ok(Response::builder()
+        let resp = Response::builder()
             .status(StatusCode::OK)
             .header("content-type", "text/plain")
             .body(Body::from(s.to_string()))
-            .unwrap_or_else(|e| {
-                to_problem(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Failed to build response: {}", e),
-                )
-                .expect("Failed to build error response")
-            }));
+            .map_err(|e| structured_error(StatusCode::INTERNAL_SERVER_ERROR, "build_error", e.to_string()))?;
+        return Ok(HandlerResponse::from(resp));
     }
 
     // Try to convert to JSON
-    let body_json = match zval_to_json(response) {
-        Ok(val) => val,
-        Err(e) => {
-            return structured_response(StatusCode::INTERNAL_SERVER_ERROR, "response_conversion_failed", e);
-        }
-    };
+    let body_json = zval_to_json(response)
+        .map_err(|e| structured_error(StatusCode::INTERNAL_SERVER_ERROR, "response_conversion_failed", e))?;
 
-    let body_bytes = serde_json::to_vec(&body_json).unwrap_or_default();
-    let mut builder = Response::builder().status(StatusCode::OK);
-    builder = builder.header("content-type", "application/json");
-    builder.body(Body::from(body_bytes)).map_err(|e| {
-        (
+    let body_bytes = serde_json::to_vec(&body_json).map_err(|e| {
+        structured_error(
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Failed to build response: {}", e),
+            "response_serialization_failed",
+            e.to_string(),
         )
-    })
+    })?;
+
+    let resp = Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/json")
+        .body(Body::from(body_bytes))
+        .map_err(|e| structured_error(StatusCode::INTERNAL_SERVER_ERROR, "build_error", e.to_string()))?;
+
+    Ok(HandlerResponse::from(resp))
 }
 
-fn structured_response(status: StatusCode, code: impl Into<String>, message: impl Into<String>) -> HandlerResult {
-    let payload = spikard_core::errors::StructuredError::simple(code.into(), message.into());
-    let body = serde_json::to_vec(&payload).unwrap_or_else(|_| {
-        r#"{"error":"internal_error","code":"internal_error","details":{}}"#
-            .as_bytes()
-            .to_vec()
-    });
+fn structured_error(status: StatusCode, code: impl Into<String>, message: impl Into<String>) -> (StatusCode, String) {
+    let payload = StructuredError::simple(code.into(), message.into());
+    let body = serde_json::to_string(&payload)
+        .unwrap_or_else(|_| r#"{"error":"internal_error","code":"internal_error","details":{}}"#.to_string());
+    (status, body)
+}
 
-    Response::builder()
-        .status(status)
-        .header("content-type", "application/json")
-        .body(Body::from(body))
-        .map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to build error response: {}", e),
-            )
-        })
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn interpret_string_response_sets_text_plain() {
+        let mut zval = Zval::new();
+        let _ = zval.set_string("hello", false);
+
+        let axum_resp = interpret_php_response(&zval, "test-handler").expect("string response should succeed");
+        assert_eq!(axum_resp.status(), StatusCode::OK);
+        assert_eq!(
+            axum_resp.headers().get(axum::http::header::CONTENT_TYPE),
+            Some(&HeaderValue::from_static("text/plain"))
+        );
+    }
+
+    #[test]
+    fn interpret_null_response_sets_204() {
+        let zval = Zval::new();
+        let axum_resp = interpret_php_response(&zval, "test-handler").expect("null response should succeed");
+        assert_eq!(axum_resp.status(), StatusCode::NO_CONTENT);
+    }
 }

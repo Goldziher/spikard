@@ -1,8 +1,11 @@
 //! Native entrypoints for starting/stopping the server from PHP.
 
+use axum::routing::get;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use spikard_http::server::build_router_with_handlers_and_config;
+use spikard_http::sse::sse_handler;
+use spikard_http::websocket::websocket_handler;
 use spikard_http::{LifecycleHooks, Route};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -10,44 +13,111 @@ use tokio::sync::oneshot;
 
 use crate::php::handler::PhpHandler;
 use crate::php::hooks::{PhpErrorHook, PhpRequestHook, PhpResponseHook};
+use crate::php::sse::PhpSseEventProducer;
+use crate::php::websocket::PhpWebSocketHandler;
 
 /// Registry for graceful shutdown channels.
 /// Maps server handle IDs to oneshot senders that trigger shutdown.
 static SERVER_SHUTDOWN_REGISTRY: Mutex<Option<HashMap<u64, oneshot::Sender<()>>>> = Mutex::new(None);
 
-/// Payload for a registered route coming from PHP.
-#[derive(Debug, serde::Deserialize)]
-pub struct RegisteredRoutePayload {
-    pub method: String,
-    pub path: String,
-    pub handler_name: String,
-    #[serde(skip)]
-    /// Handler stored as Zval to avoid lifetime issues
-    pub handler: Option<ext_php_rs::types::Zval>,
-    pub request_schema: Option<serde_json::Value>,
-    pub response_schema: Option<serde_json::Value>,
-    pub parameter_schema: Option<serde_json::Value>,
+struct ParsedRoute {
+    method: String,
+    path: String,
+    handler_name: String,
+    handler: ext_php_rs::types::Zval,
+    request_schema: Option<serde_json::Value>,
+    response_schema: Option<serde_json::Value>,
+    parameter_schema: Option<serde_json::Value>,
+    cors: Option<spikard_core::CorsConfig>,
+    websocket: bool,
+    sse: bool,
+    websocket_message_schema: Option<serde_json::Value>,
+    websocket_response_schema: Option<serde_json::Value>,
+    sse_event_schema: Option<serde_json::Value>,
 }
 
-impl RegisteredRoutePayload {
-    pub fn into_route(self) -> Result<Route, String> {
-        Ok(Route {
-            method: self
-                .method
-                .parse()
-                .map_err(|e| format!("Invalid method {}: {}", self.method, e))?,
-            path: self.path,
-            handler_name: self.handler_name,
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: false,
-            cors: None,
-            expects_json_body: self.request_schema.is_some(),
-            handler_dependencies: vec![],
-        })
-    }
+fn parse_route_from_zval(route_val: &Zval) -> Result<ParsedRoute, String> {
+    let route_arr = route_val
+        .array()
+        .ok_or_else(|| "Each route must be an array/object".to_string())?;
+
+    let method = route_arr
+        .get("method")
+        .and_then(|v| v.string())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "GET".to_string());
+    let path = route_arr
+        .get("path")
+        .and_then(|v| v.string())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "/".to_string());
+    let handler_name = route_arr
+        .get("handler_name")
+        .and_then(|v| v.string())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "php_handler".to_string());
+    let handler = route_arr
+        .get("handler")
+        .cloned()
+        .ok_or_else(|| "Missing handler callable".to_string())?;
+
+    let request_schema = route_arr
+        .get("request_schema")
+        .map(crate::php::zval_to_json)
+        .transpose()
+        .map_err(|e| format!("Invalid request schema: {}", e))?;
+    let response_schema = route_arr
+        .get("response_schema")
+        .map(crate::php::zval_to_json)
+        .transpose()
+        .map_err(|e| format!("Invalid response schema: {}", e))?;
+    let parameter_schema = route_arr
+        .get("parameter_schema")
+        .map(crate::php::zval_to_json)
+        .transpose()
+        .map_err(|e| format!("Invalid parameter schema: {}", e))?;
+
+    let cors_value = route_arr
+        .get("cors")
+        .map(crate::php::zval_to_json)
+        .transpose()
+        .map_err(|e| format!("Invalid CORS config: {}", e))?;
+    let cors = cors_value.and_then(|v| serde_json::from_value::<spikard_core::CorsConfig>(v).ok());
+
+    let websocket = route_arr.get("websocket").and_then(|v| v.bool()).unwrap_or(false);
+    let sse = route_arr.get("sse").and_then(|v| v.bool()).unwrap_or(false);
+
+    let websocket_message_schema = route_arr
+        .get("websocket_message_schema")
+        .map(crate::php::zval_to_json)
+        .transpose()
+        .map_err(|e| format!("Invalid websocket message schema: {}", e))?;
+    let websocket_response_schema = route_arr
+        .get("websocket_response_schema")
+        .map(crate::php::zval_to_json)
+        .transpose()
+        .map_err(|e| format!("Invalid websocket response schema: {}", e))?;
+    let sse_event_schema = route_arr
+        .get("sse_event_schema")
+        .map(crate::php::zval_to_json)
+        .transpose()
+        .map_err(|e| format!("Invalid sse event schema: {}", e))?;
+
+    Ok(ParsedRoute {
+        method,
+        path,
+        handler_name,
+        handler,
+        request_schema,
+        response_schema,
+        parameter_schema,
+        cors,
+        websocket,
+        sse,
+        websocket_message_schema,
+        websocket_response_schema,
+        sse_event_schema,
+    })
 }
 
 /// Extract ServerConfig from a PHP associative array (Zval).
@@ -426,7 +496,7 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi: openapi_config,
         lifecycle_hooks: None, // Set separately via hooks parameter
-        di_container: None,    // DI not yet supported in PHP bindings
+        di_container: None,
     })
 }
 
@@ -440,7 +510,7 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
 /// - onError: PHP callable or null
 ///
 /// Returns LifecycleHooks with registered PHP hook wrappers.
-fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<LifecycleHooks>>, String> {
+pub(crate) fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<LifecycleHooks>>, String> {
     // If hooks is null or empty array, return None
     if hooks_zval.is_null() {
         return Ok(None);
@@ -455,53 +525,63 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
     let mut has_any_hook = false;
 
     // Extract onRequest hook
-    if let Some(on_request_zval) = hooks_array.get("onRequest")
-        && on_request_zval.is_callable()
-    {
-        let hook = PhpRequestHook::new_from_zval(on_request_zval)
-            .map_err(|e| format!("Failed to create onRequest hook: {}", e))?;
-        lifecycle_hooks.add_on_request(Arc::new(hook));
-        has_any_hook = true;
+    if let Some(on_request_zval) = hooks_array.get("onRequest") {
+        if on_request_zval.is_callable() {
+            let hook = PhpRequestHook::new_from_zval(on_request_zval)
+                .map_err(|e| format!("Failed to create onRequest hook: {}", e))?;
+            lifecycle_hooks.add_on_request(Arc::new(hook));
+            has_any_hook = true;
+        } else {
+            return Err("onRequest must be callable".to_string());
+        }
     }
 
     // Extract preValidation hook
-    if let Some(pre_validation_zval) = hooks_array.get("preValidation")
-        && pre_validation_zval.is_callable()
-    {
-        let hook = PhpRequestHook::new_from_zval(pre_validation_zval)
-            .map_err(|e| format!("Failed to create preValidation hook: {}", e))?;
-        lifecycle_hooks.add_pre_validation(Arc::new(hook));
-        has_any_hook = true;
+    if let Some(pre_validation_zval) = hooks_array.get("preValidation") {
+        if pre_validation_zval.is_callable() {
+            let hook = PhpRequestHook::new_from_zval(pre_validation_zval)
+                .map_err(|e| format!("Failed to create preValidation hook: {}", e))?;
+            lifecycle_hooks.add_pre_validation(Arc::new(hook));
+            has_any_hook = true;
+        } else {
+            return Err("preValidation must be callable".to_string());
+        }
     }
 
     // Extract preHandler hook
-    if let Some(pre_handler_zval) = hooks_array.get("preHandler")
-        && pre_handler_zval.is_callable()
-    {
-        let hook = PhpRequestHook::new_from_zval(pre_handler_zval)
-            .map_err(|e| format!("Failed to create preHandler hook: {}", e))?;
-        lifecycle_hooks.add_pre_handler(Arc::new(hook));
-        has_any_hook = true;
+    if let Some(pre_handler_zval) = hooks_array.get("preHandler") {
+        if pre_handler_zval.is_callable() {
+            let hook = PhpRequestHook::new_from_zval(pre_handler_zval)
+                .map_err(|e| format!("Failed to create preHandler hook: {}", e))?;
+            lifecycle_hooks.add_pre_handler(Arc::new(hook));
+            has_any_hook = true;
+        } else {
+            return Err("preHandler must be callable".to_string());
+        }
     }
 
     // Extract onResponse hook
-    if let Some(on_response_zval) = hooks_array.get("onResponse")
-        && on_response_zval.is_callable()
-    {
-        let hook = PhpResponseHook::new_from_zval(on_response_zval)
-            .map_err(|e| format!("Failed to create onResponse hook: {}", e))?;
-        lifecycle_hooks.add_on_response(Arc::new(hook));
-        has_any_hook = true;
+    if let Some(on_response_zval) = hooks_array.get("onResponse") {
+        if on_response_zval.is_callable() {
+            let hook = PhpResponseHook::new_from_zval(on_response_zval)
+                .map_err(|e| format!("Failed to create onResponse hook: {}", e))?;
+            lifecycle_hooks.add_on_response(Arc::new(hook));
+            has_any_hook = true;
+        } else {
+            return Err("onResponse must be callable".to_string());
+        }
     }
 
     // Extract onError hook
-    if let Some(on_error_zval) = hooks_array.get("onError")
-        && on_error_zval.is_callable()
-    {
-        let hook =
-            PhpErrorHook::new_from_zval(on_error_zval).map_err(|e| format!("Failed to create onError hook: {}", e))?;
-        lifecycle_hooks.add_on_error(Arc::new(hook));
-        has_any_hook = true;
+    if let Some(on_error_zval) = hooks_array.get("onError") {
+        if on_error_zval.is_callable() {
+            let hook = PhpErrorHook::new_from_zval(on_error_zval)
+                .map_err(|e| format!("Failed to create onError hook: {}", e))?;
+            lifecycle_hooks.add_on_error(Arc::new(hook));
+            has_any_hook = true;
+        } else {
+            return Err("onError must be callable".to_string());
+        }
     }
 
     if has_any_hook {
@@ -552,33 +632,61 @@ pub fn spikard_start_server_impl(
     // Rebuild routes with handlers
     let mut route_pairs: Vec<(spikard_http::Route, Arc<dyn spikard_http::Handler>)> = Vec::new();
     let mut route_metadata: Vec<spikard_core::RouteMetadata> = Vec::new();
+    let mut websocket_routes: Vec<(String, spikard_http::WebSocketState<PhpWebSocketHandler>)> = Vec::new();
+    let mut sse_routes: Vec<(String, spikard_http::SseState<PhpSseEventProducer>)> = Vec::new();
 
     for (_idx, route_val) in routes_array.iter() {
-        // Convert Zval to JSON Value
-        let json_val = crate::php::zval_to_json(route_val)
-            .map_err(|e| PhpException::default(format!("Failed to convert route to JSON: {}", e)))?;
-
-        let reg = serde_json::from_value::<RegisteredRoutePayload>(json_val)
+        let parsed = parse_route_from_zval(route_val)
             .map_err(|e| PhpException::default(format!("Invalid route payload: {}", e)))?;
 
-        // Handler is provided via separate array in PHP (handler index not used here)
-        let handler_callable = reg
-            .handler
-            .as_ref()
-            .ok_or_else(|| PhpException::default("Missing handler callable".to_string()))?;
-        // Extract schemas before consuming reg
-        let method = reg.method.clone();
-        let path = reg.path.clone();
-        let handler_name = reg.handler_name.clone();
-        let request_schema = reg.request_schema.clone();
-        let response_schema = reg.response_schema.clone();
-        let parameter_schema = reg.parameter_schema.clone();
+        if parsed.websocket {
+            let state = crate::php::websocket::create_websocket_state(
+                &parsed.handler,
+                Some(parsed.handler_name.clone()),
+                parsed.websocket_message_schema.clone(),
+                parsed.websocket_response_schema.clone(),
+            )
+            .map_err(|e| PhpException::default(format!("Failed to register WebSocket handler: {}", e)))?;
+            websocket_routes.push((parsed.path.clone(), state));
+            continue;
+        }
+
+        if parsed.sse {
+            let state = crate::php::sse::create_sse_state(&parsed.handler, parsed.sse_event_schema.clone())
+                .map_err(|e| PhpException::default(format!("Failed to register SSE producer: {}", e)))?;
+            sse_routes.push((parsed.path.clone(), state));
+            continue;
+        }
+
+        let handler_callable = parsed.handler;
+        let method = parsed.method.clone();
+        let path = parsed.path.clone();
+        let handler_name = parsed.handler_name.clone();
+        let request_schema = parsed.request_schema.clone();
+        let response_schema = parsed.response_schema.clone();
+        let parameter_schema = parsed.parameter_schema.clone();
+        let cors = parsed.cors.clone();
 
         let handler =
-            PhpHandler::register_from_zval(handler_callable, handler_name.clone(), method.clone(), path.clone())
+            PhpHandler::register_from_zval(&handler_callable, handler_name.clone(), method.clone(), path.clone())
                 .map_err(|e| PhpException::default(format!("Failed to register handler: {}", e)))?;
 
-        let mut route = reg.into_route()?;
+        let mut route = Route {
+            method: method
+                .parse()
+                .map_err(|e| format!("Invalid method {}: {}", method, e))
+                .map_err(PhpException::default)?,
+            path: path.clone(),
+            handler_name: handler_name.clone(),
+            request_validator: None,
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: false,
+            cors: cors.clone(),
+            expects_json_body: request_schema.is_some(),
+            handler_dependencies: vec![],
+        };
 
         // Apply schemas if provided
         if let Some(schema) = request_schema.clone() {
@@ -607,7 +715,7 @@ pub fn spikard_start_server_impl(
             parameter_schema,
             file_params: None,
             is_async: true,
-            cors: None,
+            cors,
             body_param_name: None,
             handler_dependencies: Some(Vec::new()),
         });
@@ -618,8 +726,25 @@ pub fn spikard_start_server_impl(
     let mut app = build_router_with_handlers_and_config(route_pairs, server_config.clone(), route_metadata)
         .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
 
-    if let Some(hooks) = server_config.lifecycle_hooks.clone() {
-        app = hooks.into_router(app);
+    for (path, state) in websocket_routes {
+        let axum_path = if path.starts_with('/') {
+            path.clone()
+        } else {
+            format!("/{}", path)
+        };
+        app = app.route(
+            &axum_path,
+            get(websocket_handler::<PhpWebSocketHandler>).with_state(state),
+        );
+    }
+
+    for (path, state) in sse_routes {
+        let axum_path = if path.starts_with('/') {
+            path.clone()
+        } else {
+            format!("/{}", path)
+        };
+        app = app.route(&axum_path, get(sse_handler::<PhpSseEventProducer>).with_state(state));
     }
 
     // Create shutdown channel

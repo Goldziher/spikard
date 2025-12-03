@@ -309,9 +309,14 @@ impl SseEventProducer for PhpSseEventProducer {
 /// to avoid lifetime issues.
 pub fn create_sse_state(
     callable_zval: &ext_php_rs::types::Zval,
+    event_schema: Option<serde_json::Value>,
 ) -> Result<spikard_http::SseState<PhpSseEventProducer>, String> {
     let producer = PhpSseEventProducer::new_from_zval(callable_zval)?;
-    Ok(spikard_http::SseState::new(producer))
+    if let Some(schema) = event_schema {
+        spikard_http::SseState::with_schema(producer, Some(schema)).map_err(|e| e.to_string())
+    } else {
+        Ok(spikard_http::SseState::new(producer))
+    }
 }
 
 #[cfg(test)]

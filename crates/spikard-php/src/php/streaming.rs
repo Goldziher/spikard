@@ -97,7 +97,9 @@ pub fn generator_to_stream(
     stream! {
         loop {
             // Poll the generator directly (PHP is single-threaded, cannot use spawn_blocking)
-            let result = poll_generator(generator_idx);
+            let result = spikard_core::panic::shield(|| poll_generator(generator_idx))
+                .map_err(|err| err.error)
+                .and_then(|r| r);
 
             match result {
                 Ok(Some(bytes)) => {
@@ -236,5 +238,16 @@ mod tests {
         let _ = zval.set_string("test chunk", false);
         let bytes = convert_chunk_to_bytes(&zval).expect("valid chunk");
         assert_eq!(bytes, Bytes::from("test chunk"));
+    }
+
+    #[test]
+    fn test_convert_invalid_chunk_errors() {
+        let mut zval = Zval::new();
+        let _ = zval.set_long(42);
+        let err = convert_chunk_to_bytes(&zval).expect_err("numeric chunk should error");
+        assert!(
+            err.contains("StreamingResponse chunks must be strings or JSON-serializable values"),
+            "unexpected error: {err}"
+        );
     }
 }

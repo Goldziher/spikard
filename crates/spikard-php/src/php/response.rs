@@ -2,7 +2,7 @@
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::ZendHashTable;
+use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -18,16 +18,17 @@ pub struct PhpResponse {
 #[php_impl]
 impl PhpResponse {
     /// Create a new response.
-    pub fn new(body: Option<String>, status: Option<i64>, headers: Option<HashMap<String, String>>) -> Self {
+    pub fn new(body: Option<&Zval>, status: Option<i64>, headers: Option<HashMap<String, String>>) -> PhpResult<Self> {
         let body_value = body
             .as_ref()
-            .map(|b| serde_json::from_str(b).unwrap_or(Value::String(b.clone())))
+            .map(|b| crate::php::zval_to_json(b).map_err(|e| PhpException::default(format!("Invalid body: {e}"))))
+            .transpose()?
             .unwrap_or(Value::Null);
-        Self {
+        Ok(Self {
             status: status.unwrap_or(200),
             body: body_value,
             headers: headers.unwrap_or_default(),
-        }
+        })
     }
 
     /// Get the status code.

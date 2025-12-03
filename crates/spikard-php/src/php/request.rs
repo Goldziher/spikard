@@ -2,7 +2,7 @@
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::ZendHashTable;
+use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -27,18 +27,19 @@ impl PhpRequest {
     pub fn new(
         method: String,
         path: String,
-        body: Option<String>,
+        body: Option<&Zval>,
         raw_body: Option<Vec<u8>>,
         headers: Option<HashMap<String, String>>,
         cookies: Option<HashMap<String, String>>,
         raw_query: Option<HashMap<String, Vec<String>>>,
         path_params: Option<HashMap<String, String>>,
-    ) -> Self {
+    ) -> PhpResult<Self> {
         let body_value = body
             .as_ref()
-            .map(|b| serde_json::from_str(b).unwrap_or(Value::String(b.clone())))
+            .map(|b| crate::php::zval_to_json(b).map_err(|e| PhpException::default(format!("Invalid body: {e}"))))
+            .transpose()?
             .unwrap_or(Value::Null);
-        Self {
+        Ok(Self {
             method,
             path,
             path_params: path_params.unwrap_or_default(),
@@ -47,7 +48,7 @@ impl PhpRequest {
             raw_query: raw_query.unwrap_or_default(),
             headers: headers.unwrap_or_default(),
             cookies: cookies.unwrap_or_default(),
-        }
+        })
     }
 
     /// Get the HTTP method.

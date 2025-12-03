@@ -7,11 +7,13 @@ use axum::{
     body::Body,
     http::{Request, Response, StatusCode},
 };
+use bytes::Bytes;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use http_body_util::BodyExt;
 use serde_json::Value;
-use spikard_http::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder};
+use spikard_http::server::request_extraction;
+use spikard_http::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, RequestData};
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -19,6 +21,7 @@ use std::sync::Arc;
 use tracing::error as tracing_error;
 
 use crate::php::{PhpRequest, PhpResponse};
+use spikard_core::errors::StructuredError;
 
 /// Result type exposed to PHP.
 #[php_class]
@@ -141,45 +144,108 @@ thread_local! {
 }
 
 /// Convert axum Request to PhpRequest for PHP hooks (synchronous extraction).
-fn axum_request_to_php_sync(req: &Request<Body>) -> PhpRequest {
-    // Extract method and path
-    let method = req.method().to_string();
-    let path = req.uri().path().to_string();
+async fn build_php_request_from_axum(req: Request<Body>) -> Result<(PhpRequest, Request<Body>), String> {
+    let mut req = req;
+    let request_data: Option<Arc<RequestData>> = req.extensions().get::<Arc<RequestData>>().cloned();
+    let (parts, body) = req.into_parts();
 
-    // Extract headers
-    let mut headers = HashMap::new();
-    for (name, value) in req.headers() {
-        if let Ok(v) = value.to_str() {
-            headers.insert(name.to_string(), v.to_string());
-        }
-    }
+    // Extract headers (stringified)
+    let headers = request_data
+        .as_ref()
+        .map(|data| (*data.headers).clone())
+        .unwrap_or_else(|| {
+            let mut map = HashMap::new();
+            for (name, value) in &parts.headers {
+                if let Ok(v) = value.to_str() {
+                    map.insert(name.to_string(), v.to_string());
+                }
+            }
+            map
+        });
 
     // Extract query params
-    let raw_query = req
-        .uri()
-        .query()
-        .map(|q| {
-            url::form_urlencoded::parse(q.as_bytes())
-                .into_owned()
-                .fold(HashMap::new(), |mut acc, (k, v)| {
-                    acc.entry(k).or_insert_with(Vec::new).push(v);
-                    acc
+    let raw_query = request_data
+        .as_ref()
+        .map(|data| (*data.raw_query_params).clone())
+        .unwrap_or_else(|| {
+            parts
+                .uri
+                .query()
+                .map(|q| {
+                    url::form_urlencoded::parse(q.as_bytes())
+                        .into_owned()
+                        .fold(HashMap::new(), |mut acc, (k, v)| {
+                            acc.entry(k).or_insert_with(Vec::new).push(v);
+                            acc
+                        })
                 })
-        })
+                .unwrap_or_default()
+        });
+
+    // Extract cookies from headers or reuse normalized map from RequestData
+    let cookies = request_data
+        .as_ref()
+        .map(|data| (*data.cookies).clone())
+        .unwrap_or_else(|| request_extraction::extract_cookies(&parts.headers));
+
+    let path_params = request_data
+        .as_ref()
+        .map(|data| (*data.path_params).clone())
         .unwrap_or_default();
 
-    // For lifecycle hooks, we don't have the body yet (it's not consumed)
-    // So we'll pass empty body and headers
-    PhpRequest::from_parts(
-        method,
-        path,
-        Value::Null,
-        None,
+    // Buffer body and rebuild request
+    let (body_bytes, body_value) = if let Some(data) = request_data.as_ref() {
+        let raw = data.raw_body.clone().unwrap_or_else(Bytes::new);
+        let value = if !data.body.is_null() {
+            data.body.clone()
+        } else if raw.is_empty() {
+            Value::Null
+        } else {
+            serde_json::from_slice(&raw).unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&raw).to_string()))
+        };
+        (raw, value)
+    } else {
+        let collected = body
+            .collect()
+            .await
+            .map_err(|e| format!("Failed to read request body: {}", e))?;
+        let body_bytes = collected.to_bytes();
+        let body_value: Value = serde_json::from_slice(&body_bytes)
+            .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&body_bytes).to_string()));
+        (body_bytes, body_value)
+    };
+
+    let mut builder = Request::builder()
+        .method(parts.method.clone())
+        .uri(parts.uri.clone())
+        .version(parts.version);
+    for (name, value) in &parts.headers {
+        builder = builder.header(name, value);
+    }
+    let mut rebuilt = builder
+        .body(Body::from(body_bytes.clone()))
+        .map_err(|e| format!("Failed to rebuild request: {}", e))?;
+    // Preserve extensions
+    *rebuilt.extensions_mut() = parts.extensions;
+
+    let raw_body_vec = if body_bytes.is_empty() {
+        None
+    } else {
+        Some(body_bytes.to_vec())
+    };
+
+    let php_req = PhpRequest::from_parts(
+        parts.method.to_string(),
+        parts.uri.path().to_string(),
+        body_value,
+        raw_body_vec,
         headers,
-        HashMap::new(), // cookies will be parsed from headers if needed
+        cookies,
         raw_query,
-        HashMap::new(), // path_params not available in raw request
-    )
+        path_params,
+    );
+
+    Ok((php_req, rebuilt))
 }
 
 /// Convert PhpResponse to axum Response for PHP hooks.
@@ -199,6 +265,11 @@ fn php_response_to_axum(php_resp: &PhpResponse) -> Result<Response<Body>, String
     builder
         .body(Body::from(body_bytes))
         .map_err(|e| format!("Failed to build response: {}", e))
+}
+
+fn structured_error_payload(code: &str, message: impl Into<String>) -> String {
+    serde_json::to_string(&StructuredError::simple(code.to_string(), message.into()))
+        .unwrap_or_else(|_| r#"{"error":"internal_error","code":"internal_error","details":{}}"#.to_string())
 }
 
 /// Convert axum Response to PhpResponse for PHP hooks.
@@ -283,7 +354,9 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>> {
         let callback_index = self.callback_index;
         Box::pin(async move {
-            let php_req = axum_request_to_php_sync(&req);
+            let (php_req, req) = build_php_request_from_axum(req)
+                .await
+                .map_err(|e| structured_error_payload("hook_request_failed", e))?;
             let result = tokio::task::spawn_blocking(move || {
                 PHP_HOOK_REGISTRY.with(|registry| -> Option<Result<Option<PhpResponse>, String>> {
                     let registry = registry.borrow();
@@ -329,7 +402,7 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
                         }
                         Some(Ok(Some(PhpResponse { status, body, headers })))
                     } else {
-                        Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
+                        Some(Err("hook_invalid_return".to_string()))
                     }
                 })
             })
@@ -338,16 +411,13 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
                 Ok(Some(Ok(None))) => Ok(HookResult::Continue(req)),
                 Ok(Some(Ok(Some(php_resp)))) => match php_response_to_axum(&php_resp) {
                     Ok(resp) => Ok(HookResult::ShortCircuit(resp)),
-                    Err(e) => {
-                        tracing_error!("Failed to convert PHP response: {}", e);
-                        Ok(HookResult::Continue(req))
-                    }
+                    Err(e) => Err(structured_error_payload("hook_response_conversion_failed", e)),
                 },
-                Ok(Some(Err(e))) => {
-                    tracing_error!("Hook error: {}", e);
-                    Ok(HookResult::Continue(req))
-                }
-                _ => Ok(HookResult::Continue(req)),
+                Ok(Some(Err(e))) => Err(structured_error_payload("hook_execution_failed", e)),
+                _ => Err(structured_error_payload(
+                    "hook_execution_failed",
+                    "Hook returned unexpected result",
+                )),
             }
         })
     }

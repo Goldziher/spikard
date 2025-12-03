@@ -8,12 +8,12 @@ use axum::http::{Request, StatusCode};
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendCallable;
-use once_cell::sync::OnceLock;
 use spikard_core::errors::StructuredError;
+use spikard_core::panic::shield;
 use spikard_http::{Handler, HandlerResult, RequestData};
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use tokio::runtime::{Builder, Runtime};
 
 /// Global Tokio runtime for async operations.
@@ -87,7 +87,10 @@ impl PhpHandler {
     ) -> Result<Self, String> {
         // Verify it's actually callable before storing
         if !callable_zval.is_callable() {
-            return Err(format!("Handler '{}' is not callable", handler_name));
+            return Err(structured_error_body(
+                "handler_not_callable",
+                format!("Handler '{handler_name}' is not callable"),
+            ));
         }
 
         let idx = PHP_HANDLER_REGISTRY.with(|registry| -> Result<usize, String> {
@@ -95,7 +98,10 @@ impl PhpHandler {
             let idx = registry.len();
 
             if idx > 10_000 {
-                return Err("Handler registry is full; refusing to register more handlers".to_string());
+                return Err(structured_error_body(
+                    "handler_registry_full",
+                    "Handler registry is full; refusing to register more handlers".to_string(),
+                ));
             }
 
             // Clone the Zval for storage
@@ -130,7 +136,7 @@ impl Handler for PhpHandler {
 
 /// Invoke the PHP callable registered at index and return a HandlerResult.
 fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &RequestData) -> HandlerResult {
-    let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+    let result: Result<HandlerResult, _> = shield(|| {
         // Build PhpRequest from RequestData and convert to Zval
         let php_request = crate::php::request::PhpRequest::from_request_data(request_data);
         let request_zval = php_request.into_zval(false).map_err(|e| {
@@ -173,25 +179,44 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
 
         // Interpret PHP response into HandlerResult
         crate::php::server::interpret_php_response(&response_zval, handler_name)
-    }));
+    });
 
     match result {
         Ok(inner) => inner,
-        Err(_) => structured_error(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "panic",
-            "Unexpected panic while executing PHP handler",
-        ),
+        Err(err) => {
+            let payload = serde_json::to_string(&err)
+                .unwrap_or_else(|_| r#"{"error":"panic","code":"panic","details":{}}"#.to_string());
+            Err((StatusCode::INTERNAL_SERVER_ERROR, payload))
+        }
     }
 }
 
 fn structured_error(status: StatusCode, code: &str, message: impl Into<String>) -> (StatusCode, String) {
     let payload = StructuredError::simple(code.to_string(), message.into());
-    let body = serde_json::to_string(&payload)
-        .unwrap_or_else(|_| r#"{"error":"internal_error","code":"internal_error","details":{}}"#.to_string());
+    let body = serde_json::to_string(&payload).unwrap_or_else(|_| {
+        // Fall back to a minimal JSON string if serialization somehow fails
+        r#"{"error":"internal_error","code":"internal_error","details":{}}"#.to_string()
+    });
     (status, body)
+}
+
+pub(crate) fn structured_error_body(code: &str, message: impl Into<String>) -> String {
+    structured_error(StatusCode::BAD_REQUEST, code, message).1
 }
 
 fn structured_error_from_error(status: StatusCode, code: &str, message: impl Into<String>) -> (StatusCode, String) {
     structured_error(status, code, message)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn structured_error_body_contains_code_and_error() {
+        let body = structured_error_body("invalid_handler", "bad callable");
+        let value: serde_json::Value = serde_json::from_str(&body).expect("valid json");
+        assert_eq!(value.get("code").and_then(|c| c.as_str()), Some("invalid_handler"));
+        assert_eq!(value.get("error").and_then(|e| e.as_str()), Some("invalid_handler"));
+    }
 }

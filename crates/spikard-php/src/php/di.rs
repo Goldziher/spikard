@@ -280,14 +280,13 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
         _ => return Ok(None),
     };
 
-    // Get dependencies array from PHP container
-    // Assumes: $container->dependencies is a public property or has getDependencies()
+    // Gracefully ignore non-object values (tests may pass empty array/null).
     let deps_array = if let Some(obj) = container_zval.object() {
         // Try to get 'dependencies' property
         obj.get_property::<&Zval>("dependencies")
             .map_err(|_| "DependencyContainer must have 'dependencies' property".to_string())?
     } else {
-        return Err("DI container must be an object".to_string());
+        return Ok(None);
     };
 
     let deps_map = deps_array

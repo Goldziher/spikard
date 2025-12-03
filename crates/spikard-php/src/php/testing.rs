@@ -3,14 +3,28 @@
 //! This module implements `NativeTestClient`, a PHP class that provides
 //! HTTP testing capabilities against a Spikard server without network overhead.
 
+use axum::body::Body;
+use axum::http::{HeaderName, HeaderValue, Request, StatusCode};
+use axum::routing::get;
+use bytes::Bytes;
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
+use http_body_util::BodyExt;
 use serde_json::Value as JsonValue;
+use spikard_http::server::handler::ValidatingHandler;
+use spikard_http::server::lifecycle_execution::execute_with_lifecycle_hooks;
+use spikard_http::testing::{SseStream, WebSocketConnection};
+use spikard_http::validation::SchemaValidator;
+use spikard_http::websocket::websocket_handler;
+use spikard_http::{LifecycleHooks, Method, ParameterValidator, RequestData, Route};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use super::{PhpRequest, json_to_php_table, zval_to_json};
+use crate::php::sse::create_sse_state;
+use crate::php::websocket::create_websocket_state;
 
 /// Test response data exposed to PHP.
 #[php_class]
@@ -119,11 +133,11 @@ impl PhpTestClient {
     pub fn get_request(
         &self,
         path: String,
-        handler: ZendCallable,
+        handler: &Zval,
         query: Option<String>,
         headers: Option<HashMap<String, String>>,
     ) -> PhpResult<PhpTestResponse> {
-        execute_test_request("GET", &path, handler, None, query, headers)
+        execute_test_request("GET", &path, handler, None, query, headers, None, None, None)
     }
 
     /// Execute a POST request.
@@ -131,11 +145,11 @@ impl PhpTestClient {
     pub fn post_request(
         &self,
         path: String,
-        handler: ZendCallable,
-        body: Option<String>,
+        handler: &Zval,
+        body: Option<&Zval>,
         headers: Option<HashMap<String, String>>,
     ) -> PhpResult<PhpTestResponse> {
-        execute_test_request("POST", &path, handler, body, None, headers)
+        execute_test_request("POST", &path, handler, body, None, headers, None, None, None)
     }
 
     /// Execute a PUT request.
@@ -143,11 +157,11 @@ impl PhpTestClient {
     pub fn put_request(
         &self,
         path: String,
-        handler: ZendCallable,
-        body: Option<String>,
+        handler: &Zval,
+        body: Option<&Zval>,
         headers: Option<HashMap<String, String>>,
     ) -> PhpResult<PhpTestResponse> {
-        execute_test_request("PUT", &path, handler, body, None, headers)
+        execute_test_request("PUT", &path, handler, body, None, headers, None, None, None)
     }
 
     /// Execute a PATCH request.
@@ -155,11 +169,11 @@ impl PhpTestClient {
     pub fn patch_request(
         &self,
         path: String,
-        handler: ZendCallable,
-        body: Option<String>,
+        handler: &Zval,
+        body: Option<&Zval>,
         headers: Option<HashMap<String, String>>,
     ) -> PhpResult<PhpTestResponse> {
-        execute_test_request("PATCH", &path, handler, body, None, headers)
+        execute_test_request("PATCH", &path, handler, body, None, headers, None, None, None)
     }
 
     /// Execute a DELETE request.
@@ -167,10 +181,10 @@ impl PhpTestClient {
     pub fn delete_request(
         &self,
         path: String,
-        handler: ZendCallable,
+        handler: &Zval,
         headers: Option<HashMap<String, String>>,
     ) -> PhpResult<PhpTestResponse> {
-        execute_test_request("DELETE", &path, handler, None, None, headers)
+        execute_test_request("DELETE", &path, handler, None, None, headers, None, None, None)
     }
 
     /// Execute a generic request with any HTTP method.
@@ -179,12 +193,37 @@ impl PhpTestClient {
         &self,
         method: String,
         path: String,
-        handler: ZendCallable,
-        body: Option<String>,
+        handler: &Zval,
+        body: Option<&Zval>,
         query: Option<String>,
         headers: Option<HashMap<String, String>>,
+        request_schema: Option<&Zval>,
+        parameter_schema: Option<&Zval>,
+        hooks: Option<&Zval>,
+        path_template: Option<String>,
+        websocket: Option<bool>,
+        sse: Option<bool>,
+        websocket_message_schema: Option<&Zval>,
+        websocket_response_schema: Option<&Zval>,
+        sse_event_schema: Option<&Zval>,
     ) -> PhpResult<PhpTestResponse> {
-        execute_test_request(&method, &path, handler, body, query, headers)
+        execute_test_request(
+            &method,
+            &path,
+            handler,
+            body,
+            query,
+            headers,
+            request_schema,
+            parameter_schema,
+            hooks,
+            path_template,
+            websocket.unwrap_or(false),
+            sse.unwrap_or(false),
+            websocket_message_schema,
+            websocket_response_schema,
+            sse_event_schema,
+        )
     }
 }
 
@@ -195,44 +234,231 @@ impl PhpTestClient {
 fn execute_test_request(
     method: &str,
     path: &str,
-    handler: ZendCallable,
-    body: Option<String>,
+    handler: &Zval,
+    body: Option<&Zval>,
     query: Option<String>,
     headers: Option<HashMap<String, String>>,
+    request_schema: Option<&Zval>,
+    parameter_schema: Option<&Zval>,
+    hooks: Option<&Zval>,
+    path_template: Option<String>,
+    websocket: bool,
+    sse: bool,
+    websocket_message_schema: Option<&Zval>,
+    websocket_response_schema: Option<&Zval>,
+    sse_event_schema: Option<&Zval>,
 ) -> PhpResult<PhpTestResponse> {
-    // Parse body as JSON if provided
-    let body_value = body
-        .as_ref()
-        .map(|b| serde_json::from_str(b).unwrap_or(JsonValue::String(b.clone())))
-        .unwrap_or(JsonValue::Null);
+    let (body_value, raw_body) = body_to_json_and_raw(body)?;
 
-    // Parse query string into params
     let raw_query = parse_query_string(query.as_deref());
+    let query_params = raw_query_to_value(&raw_query);
+    let header_input = headers.unwrap_or_default();
+    let mut header_map = axum::http::HeaderMap::new();
+    let mut headers = HashMap::new();
+    for (key, value) in header_input {
+        let name_lower = key.to_ascii_lowercase();
+        headers.insert(name_lower.clone(), value.clone());
+        if let (Ok(name), Ok(val)) = (
+            HeaderName::from_bytes(name_lower.as_bytes()),
+            HeaderValue::from_str(&value),
+        ) {
+            header_map.insert(name, val);
+        }
+    }
 
-    // Build PHP request object
-    let php_request = PhpRequest::from_parts(
+    let mut path_params = derive_path_params(path, path_template.as_deref());
+    let cookies = spikard_http::server::request_extraction::extract_cookies(&header_map);
+
+    let method_upper = method.to_ascii_uppercase();
+
+    let request_validator = request_schema
+        .map(|schema| {
+            let value =
+                zval_to_json(schema).map_err(|e| PhpException::default(format!("Invalid request schema: {e}")))?;
+            SchemaValidator::new(value)
+                .map(Arc::new)
+                .map_err(|e| PhpException::default(format!("Failed to compile request schema: {e}")))
+        })
+        .transpose()?;
+
+    let mut parameter_schema_json: Option<JsonValue> = None;
+    let parameter_validator = parameter_schema
+        .map(|schema| {
+            let value =
+                zval_to_json(schema).map_err(|e| PhpException::default(format!("Invalid parameter schema: {e}")))?;
+            parameter_schema_json = Some(value.clone());
+            ParameterValidator::new(value)
+                .map_err(|e| PhpException::default(format!("Failed to compile parameter schema: {e}")))
+        })
+        .transpose()?;
+
+    if path_params.is_empty() {
+        if let Some(schema) = parameter_schema_json.as_ref() {
+            path_params = derive_path_params_from_schema(path, schema);
+        }
+    }
+
+    if websocket {
+        let message_schema = websocket_message_schema
+            .map(zval_to_json)
+            .transpose()
+            .map_err(|e| PhpException::default(format!("Invalid websocket message schema: {}", e)))?;
+        let response_schema = websocket_response_schema
+            .map(zval_to_json)
+            .transpose()
+            .map_err(|e| PhpException::default(format!("Invalid websocket response schema: {}", e)))?;
+        let state = create_websocket_state(
+            handler,
+            Some("php_websocket".to_string()),
+            message_schema,
+            response_schema,
+        )
+        .map_err(|e| PhpException::default(format!("Failed to register WebSocket handler: {}", e)))?;
+        let path_norm = if path.starts_with('/') {
+            path.to_string()
+        } else {
+            format!("/{}", path)
+        };
+        let router = axum::Router::new().route(
+            &path_norm,
+            get(websocket_handler::<crate::php::websocket::PhpWebSocketHandler>).with_state(state),
+        );
+        let server = spikard_http::testing::TestServer::new(router)
+            .map_err(|e| PhpException::default(format!("Failed to create test server: {}", e)))?;
+        let mut conn = spikard_http::testing::connect_websocket(&server, &path_norm).await;
+        let text = conn.receive_text().await;
+        return Ok(PhpTestResponse {
+            status: 101,
+            body: text,
+            headers: HashMap::new(),
+        });
+    }
+
+    if sse {
+        let event_schema = sse_event_schema
+            .map(zval_to_json)
+            .transpose()
+            .map_err(|e| PhpException::default(format!("Invalid SSE event schema: {}", e)))?;
+        let state = create_sse_state(handler, event_schema)
+            .map_err(|e| PhpException::default(format!("Failed to register SSE producer: {}", e)))?;
+        let path_norm = if path.starts_with('/') {
+            path.to_string()
+        } else {
+            format!("/{}", path)
+        };
+        let router = axum::Router::new().route(
+            &path_norm,
+            get(spikard_http::sse::sse_handler::<crate::php::sse::PhpSseEventProducer>).with_state(state),
+        );
+        let server = spikard_http::testing::TestServer::new(router)
+            .map_err(|e| PhpException::default(format!("Failed to create test server: {}", e)))?;
+        let response = server.get(&path_norm).await;
+        let snapshot = spikard_http::testing::snapshot_response(response)
+            .await
+            .map_err(|e| PhpException::default(format!("Failed to read SSE response: {}", e)))?;
+        return Ok(PhpTestResponse {
+            status: snapshot.status as i64,
+            body: snapshot.text().unwrap_or_default(),
+            headers: snapshot.headers,
+        });
+    }
+
+    let handler = crate::php::handler::PhpHandler::register_from_zval(
+        handler,
+        "php_handler".to_string(),
         method.to_string(),
         path.to_string(),
-        body_value,
-        body.map(|b| b.into_bytes()),
-        headers.clone().unwrap_or_default(),
-        HashMap::new(),
-        raw_query,
-        extract_path_params(path),
-    );
+    )
+    .map_err(|e| PhpException::default(e))?;
 
-    // Convert PhpRequest to Zval using IntoZval trait
-    let request_zval = php_request
-        .into_zval(false)
-        .map_err(|e| PhpException::default(format!("Failed to create request object: {:?}", e)))?;
+    let route = Route {
+        method: method_upper.parse().unwrap_or(Method::GET),
+        path: path.to_string(),
+        handler_name: "php_handler".to_string(),
+        request_validator,
+        response_validator: None,
+        parameter_validator,
+        file_params: None,
+        is_async: false,
+        cors: None,
+        expects_json_body: body_value.is_object() || body_value.is_array(),
+        handler_dependencies: vec![],
+    };
 
-    // Call the handler
-    let response_zval = handler
-        .try_call(vec![&request_zval])
-        .map_err(|e| PhpException::default(format!("Handler failed: {:?}", e)))?;
+    let handler: Arc<dyn spikard_http::Handler> = Arc::new(handler);
+    let handler: Arc<dyn spikard_http::Handler> =
+        if route.request_validator.is_some() || route.parameter_validator.is_some() {
+            Arc::new(ValidatingHandler::new(handler, &route))
+        } else {
+            handler
+        };
 
-    // Convert response to PhpTestResponse
-    zval_to_test_response(&response_zval)
+    let lifecycle_hooks: Option<Arc<LifecycleHooks>> = hooks
+        .map(crate::php::start::extract_lifecycle_hooks_from_php)
+        .transpose()
+        .map_err(|e| PhpException::default(format!("Invalid lifecycle hooks: {}", e)))?;
+
+    let request_data = RequestData {
+        path_params: Arc::new(path_params.clone()),
+        query_params,
+        raw_query_params: Arc::new(raw_query.clone()),
+        body: body_value,
+        raw_body: raw_body.map(bytes::Bytes::from),
+        headers: Arc::new(headers.clone()),
+        cookies: Arc::new(cookies.clone()),
+        method: method_upper.clone(),
+        path: path.to_string(),
+    };
+
+    let request_body_bytes = raw_body
+        .clone()
+        .map(|b| b.to_vec())
+        .or_else(|| serde_json::to_vec(&body_value).ok())
+        .unwrap_or_default();
+
+    let mut builder = Request::builder().method(&method_upper).uri(path);
+    for (name, value) in header_map.iter() {
+        builder = builder.header(name, value);
+    }
+
+    let mut request = builder
+        .body(Body::from(request_body_bytes))
+        .map_err(|e| PhpException::default(format!("Failed to build request: {e}")))?;
+    request.extensions_mut().insert(Arc::new(request_data.clone()));
+
+    let runtime = crate::php::handler::get_runtime()?;
+    let dispatch_result = runtime.block_on(async move {
+        match execute_with_lifecycle_hooks(request, request_data, handler, lifecycle_hooks).await {
+            Ok(response) => {
+                let status = response.status();
+                let headers = response
+                    .headers()
+                    .iter()
+                    .filter_map(|(name, value)| value.to_str().ok().map(|v| (name.to_string(), v.to_string())))
+                    .collect::<HashMap<_, _>>();
+                response
+                    .into_body()
+                    .collect()
+                    .await
+                    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Body read failed: {e}")))
+                    .map(|collected| (status, headers, collected.to_bytes()))
+            }
+            Err(err) => Err(err),
+        }
+    });
+
+    match dispatch_result {
+        Ok((status, headers, bytes)) => Ok(PhpTestResponse {
+            status: status.as_u16() as i64,
+            body: String::from_utf8_lossy(&bytes).to_string(),
+            headers,
+        }),
+        Err((status, body)) => Ok(PhpTestResponse {
+            status: status.as_u16() as i64,
+            body,
+            headers: HashMap::new(),
+        }),
+    }
 }
 
 /// Parse a query string into a HashMap.
@@ -240,16 +466,102 @@ fn parse_query_string(query: Option<&str>) -> HashMap<String, Vec<String>> {
     let mut result = HashMap::new();
 
     if let Some(q) = query {
-        for pair in q.split('&') {
-            if let Some((key, value)) = pair.split_once('=') {
-                let key = urlencoding::decode(key).unwrap_or_else(|_| key.into()).to_string();
-                let value = urlencoding::decode(value).unwrap_or_else(|_| value.into()).to_string();
-                result.entry(key).or_insert_with(Vec::new).push(value);
-            }
+        for (key, value) in url::form_urlencoded::parse(q.as_bytes()) {
+            result
+                .entry(key.into_owned())
+                .or_insert_with(Vec::new)
+                .push(value.into_owned());
         }
     }
 
     result
+}
+
+fn body_to_json_and_raw(body: Option<&Zval>) -> PhpResult<(JsonValue, Option<Bytes>)> {
+    match body {
+        Some(zval) => {
+            let raw_body = zval.string().map(|s| Bytes::from(s.to_string()));
+            let value = zval_to_json(zval).map_err(|e| PhpException::default(format!("Invalid body payload: {e}")))?;
+            Ok((value, raw_body))
+        }
+        None => Ok((JsonValue::Null, None)),
+    }
+}
+
+fn raw_query_to_value(raw_query: &HashMap<String, Vec<String>>) -> JsonValue {
+    let mut map = serde_json::Map::new();
+    for (key, values) in raw_query {
+        let json_values: Vec<JsonValue> = values.iter().map(|v| JsonValue::String(v.clone())).collect();
+        map.insert(key.clone(), JsonValue::Array(json_values));
+    }
+    JsonValue::Object(map)
+}
+
+pub(crate) fn derive_path_params(actual_path: &str, template: Option<&str>) -> HashMap<String, String> {
+    let mut params = HashMap::new();
+    let Some(template_path) = template else {
+        return params;
+    };
+
+    let actual_segments: Vec<&str> = actual_path.trim_start_matches('/').split('/').collect();
+    let template_segments: Vec<&str> = template_path.trim_start_matches('/').split('/').collect();
+
+    if actual_segments.len() != template_segments.len() {
+        return params;
+    }
+
+    for (actual, template_seg) in actual_segments.iter().zip(template_segments.iter()) {
+        if let Some(name) = template_seg
+            .strip_prefix('{')
+            .and_then(|s| s.strip_suffix('}'))
+            .or_else(|| template_seg.strip_prefix(':'))
+        {
+            params.insert(name.to_string(), (*actual).to_string());
+        }
+    }
+
+    params
+}
+
+/// Derive path parameters from a parameter schema when no explicit template is available.
+///
+/// Heuristic: map the right-most path segments to the declared path parameters (in schema order).
+/// This preserves typical patterns like `/users/{id}/orders/{order_id}` without requiring the template.
+fn derive_path_params_from_schema(actual_path: &str, schema: &JsonValue) -> HashMap<String, String> {
+    let mut params = HashMap::new();
+
+    let path_param_names: Vec<String> = schema
+        .get("properties")
+        .and_then(JsonValue::as_object)
+        .map(|props| {
+            props
+                .iter()
+                .filter_map(|(name, prop)| match prop.get("source").and_then(JsonValue::as_str) {
+                    Some("path") => Some(name.clone()),
+                    _ => None,
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    if path_param_names.is_empty() {
+        return params;
+    }
+
+    let segments: Vec<&str> = actual_path
+        .trim_start_matches('/')
+        .split('/')
+        .filter(|s| !s.is_empty())
+        .collect();
+    if path_param_names.len() > segments.len() {
+        return params;
+    }
+
+    for (name, segment) in path_param_names.iter().rev().zip(segments.iter().rev()) {
+        params.insert(name.clone(), (*segment).to_string());
+    }
+
+    params
 }
 
 /// Extract path parameters from a path.
@@ -360,57 +672,46 @@ impl PhpHttpTestClient {
         method: String,
         path: String,
         handler: ZendCallable,
-        body: Option<String>,
+        body: Option<&Zval>,
         headers: Option<HashMap<String, String>>,
     ) -> PhpResult<PhpTestResponse> {
-        // For full HTTP stack testing, we create a test server with a single route
-        // and execute the request through it.
-
-        // Create request data
-        let body_value = body
-            .as_ref()
-            .map(|b| serde_json::from_str(b).unwrap_or(JsonValue::String(b.clone())))
-            .unwrap_or(JsonValue::Null);
-
-        // Build the PHP request
-        let php_request = PhpRequest::from_parts(
-            method,
-            path,
-            body_value,
-            body.map(|b| b.into_bytes()),
-            headers.unwrap_or_default(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-        );
-
-        // Convert PhpRequest to Zval using IntoZval trait
-        let request_zval = php_request
-            .into_zval(false)
-            .map_err(|e| PhpException::default(format!("Failed to create request: {:?}", e)))?;
-
-        // Call handler
-        let response_zval = handler
-            .try_call(vec![&request_zval])
-            .map_err(|e| PhpException::default(format!("Handler failed: {:?}", e)))?;
-
-        zval_to_test_response(&response_zval)
+        // Reuse native test pipeline so validation/lifecycle paths match Rust behavior.
+        execute_test_request(&method, &path, &handler, body, None, headers, None, None, None, None)
     }
 
     /// Connect to a WebSocket endpoint for testing.
     ///
     /// This calls the WebSocket handler and returns a connection object.
     #[php(name = "websocket")]
-    pub fn websocket(&self, path: String, handler: ZendCallable) -> PhpResult<PhpWebSocketTestConnection> {
-        PhpWebSocketTestConnection::connect(path, handler)
+    pub fn websocket(
+        &self,
+        path: String,
+        handler: &Zval,
+        message_schema: Option<&Zval>,
+        response_schema: Option<&Zval>,
+    ) -> PhpResult<PhpWebSocketTestConnection> {
+        let message_schema = message_schema
+            .map(zval_to_json)
+            .transpose()
+            .map_err(|e| PhpException::default(format!("Invalid websocket message schema: {}", e)))?;
+        let response_schema = response_schema
+            .map(zval_to_json)
+            .transpose()
+            .map_err(|e| PhpException::default(format!("Invalid websocket response schema: {}", e)))?;
+
+        PhpWebSocketTestConnection::connect(path, handler, message_schema, response_schema)
     }
 
     /// Connect to a Server-Sent Events endpoint for testing.
     ///
     /// This calls the SSE producer and returns a stream object.
     #[php(name = "sse")]
-    pub fn sse(&self, path: String, handler: ZendCallable) -> PhpResult<PhpSseStream> {
-        PhpSseStream::connect(path, handler)
+    pub fn sse(&self, path: String, handler: &Zval, event_schema: Option<&Zval>) -> PhpResult<PhpSseStream> {
+        let event_schema = event_schema
+            .map(zval_to_json)
+            .transpose()
+            .map_err(|e| PhpException::default(format!("Invalid SSE event schema: {}", e)))?;
+        PhpSseStream::connect(path, handler, event_schema)
     }
 }
 
@@ -420,18 +721,49 @@ impl PhpHttpTestClient {
 #[php_class]
 #[php(name = "Spikard\\Testing\\WebSocketTestConnection")]
 pub struct PhpWebSocketTestConnection {
-    messages: Vec<String>,
-    closed: bool,
+    server: Option<spikard_http::testing::TestServer>,
+    connection: Option<spikard_http::testing::WebSocketConnection>,
 }
 
 impl PhpWebSocketTestConnection {
-    fn connect(_path: String, _handler: ZendCallable) -> PhpResult<Self> {
-        // For now, this is a minimal implementation that will work with the handler bridge
-        // The actual WebSocket testing will be implemented when we add the handler bridge
-        Ok(Self {
-            messages: Vec::new(),
-            closed: false,
-        })
+    fn connect(
+        path: String,
+        handler: &Zval,
+        message_schema: Option<JsonValue>,
+        response_schema: Option<JsonValue>,
+    ) -> PhpResult<Self> {
+        let runtime = crate::php::handler::get_runtime()?;
+        let path_norm = if path.starts_with('/') {
+            path.clone()
+        } else {
+            format!("/{}", path)
+        };
+
+        let handler_zval = handler.shallow_clone();
+        let state = create_websocket_state(
+            &handler_zval,
+            Some("php_websocket".to_string()),
+            message_schema,
+            response_schema,
+        )
+        .map_err(|e| PhpException::default(format!("Failed to register WebSocket handler: {}", e)))?;
+
+        runtime
+            .block_on(async move {
+                let router = axum::Router::new().route(
+                    &path_norm,
+                    get(websocket_handler::<crate::php::websocket::PhpWebSocketHandler>).with_state(state),
+                );
+                let server = spikard_http::testing::TestServer::new(router)
+                    .map_err(|e| PhpException::default(format!("Failed to create test server: {}", e)))?;
+                let mut conn = spikard_http::testing::connect_websocket(&server, &path_norm).await;
+
+                Ok(Self {
+                    server: Some(server),
+                    connection: Some(conn),
+                })
+            })
+            .map_err(|e| PhpException::default(format!("Failed to establish WebSocket: {}", e)))
     }
 }
 
@@ -440,10 +772,11 @@ impl PhpWebSocketTestConnection {
     /// Send a text message to the WebSocket.
     #[php(name = "sendText")]
     pub fn send_text(&mut self, text: String) -> PhpResult<()> {
-        if self.closed {
+        let Some(conn) = self.connection.as_mut() else {
             return Err(PhpException::default("WebSocket connection is closed".to_string()));
-        }
-        self.messages.push(text);
+        };
+        let runtime = crate::php::handler::get_runtime()?;
+        runtime.block_on(async { conn.send_text(text).await });
         Ok(())
     }
 
@@ -458,17 +791,19 @@ impl PhpWebSocketTestConnection {
 
     /// Receive a text message from the WebSocket.
     #[php(name = "receiveText")]
-    pub fn receive_text(&self) -> PhpResult<String> {
-        if self.closed {
-            return Err(PhpException::default("WebSocket connection is closed".to_string()));
-        }
-        // This will be implemented when we add the actual WebSocket handler bridge
-        Ok(String::from("test message"))
+    pub fn receive_text(&mut self) -> PhpResult<String> {
+        let conn = self
+            .connection
+            .as_mut()
+            .ok_or_else(|| PhpException::default("WebSocket connection is closed".to_string()))?;
+        let runtime = crate::php::handler::get_runtime()?;
+        let msg = runtime.block_on(async { conn.receive_text().await });
+        Ok(msg)
     }
 
     /// Receive a JSON message from the WebSocket.
     #[php(name = "receiveJson")]
-    pub fn receive_json(&self) -> PhpResult<ZBox<ZendHashTable>> {
+    pub fn receive_json(&mut self) -> PhpResult<ZBox<ZendHashTable>> {
         let text = self.receive_text()?;
         let value: JsonValue =
             serde_json::from_str(&text).map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
@@ -477,7 +812,7 @@ impl PhpWebSocketTestConnection {
 
     /// Receive raw bytes from the WebSocket.
     #[php(name = "receiveBytes")]
-    pub fn receive_bytes(&self) -> PhpResult<Vec<u8>> {
+    pub fn receive_bytes(&mut self) -> PhpResult<Vec<u8>> {
         let text = self.receive_text()?;
         Ok(text.into_bytes())
     }
@@ -485,14 +820,18 @@ impl PhpWebSocketTestConnection {
     /// Close the WebSocket connection.
     #[php(name = "close")]
     pub fn close(&mut self) -> PhpResult<()> {
-        self.closed = true;
+        if let Some(conn) = self.connection.take() {
+            let runtime = crate::php::handler::get_runtime()?;
+            runtime.block_on(async { conn.close().await });
+        }
+        self.server = None;
         Ok(())
     }
 
     /// Check if the connection is closed.
     #[php(name = "isClosed")]
     pub fn is_closed(&self) -> bool {
-        self.closed
+        self.connection.is_none()
     }
 }
 
@@ -503,13 +842,54 @@ impl PhpWebSocketTestConnection {
 #[php(name = "Spikard\\Testing\\SseStream")]
 pub struct PhpSseStream {
     events: Vec<PhpSseEvent>,
+    body: String,
 }
 
 impl PhpSseStream {
-    fn connect(_path: String, _handler: ZendCallable) -> PhpResult<Self> {
-        // For now, this is a minimal implementation that will work with the handler bridge
-        // The actual SSE testing will be implemented when we add the handler bridge
-        Ok(Self { events: Vec::new() })
+    fn connect(path: String, handler: &Zval, event_schema: Option<JsonValue>) -> PhpResult<Self> {
+        let runtime = crate::php::handler::get_runtime()?;
+        let path_norm = if path.starts_with('/') {
+            path.clone()
+        } else {
+            format!("/{}", path)
+        };
+        let handler_zval = handler.shallow_clone();
+
+        runtime
+            .block_on(async move {
+                let state = create_sse_state(&handler_zval, event_schema)
+                    .map_err(|e| PhpException::default(format!("Failed to register SSE producer: {}", e)))?;
+                let router = axum::Router::new().route(
+                    &path_norm,
+                    get(spikard_http::sse::sse_handler::<crate::php::sse::PhpSseEventProducer>).with_state(state),
+                );
+                let server = spikard_http::testing::TestServer::new(router)
+                    .map_err(|e| PhpException::default(format!("Failed to create test server: {}", e)))?;
+                let response = server.get(&path_norm).await;
+                let snapshot = spikard_http::testing::snapshot_response(response)
+                    .await
+                    .map_err(|e| PhpException::default(format!("Failed to read SSE response: {}", e)))?;
+                let stream = spikard_http::testing::SseStream::from_response(&snapshot)
+                    .map_err(|e| PhpException::default(format!("Failed to parse SSE stream: {}", e)))?;
+                let events = stream
+                    .events()
+                    .iter()
+                    .map(|evt| PhpSseEvent {
+                        data: evt.data.clone(),
+                        event_type: None,
+                        id: None,
+                    })
+                    .collect();
+
+                Ok(Self {
+                    events,
+                    body: stream.body().to_string(),
+                })
+            })
+            .map_err(|e| {
+                let msg = format!("Failed to establish SSE stream: {}", e);
+                PhpException::default(msg)
+            })
     }
 }
 
@@ -536,17 +916,20 @@ impl PhpSseStream {
     /// Get the raw body of the SSE response.
     #[php(name = "body")]
     pub fn body(&self) -> String {
-        self.events
-            .iter()
-            .map(|e| format!("data: {}\n\n", e.data))
-            .collect::<Vec<_>>()
-            .join("")
+        self.body.clone()
     }
 
     /// Get the number of events in the stream.
     #[php(name = "count")]
     pub fn count(&self) -> i64 {
         self.events.len() as i64
+    }
+
+    /// Return the captured error (if any) as JSON-like array.
+    #[php(name = "json")]
+    pub fn json(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let payload = serde_json::json!({"events": self.events.iter().map(|e| e.data.clone()).collect::<Vec<_>>()});
+        json_to_php_table(&payload)
     }
 }
 
