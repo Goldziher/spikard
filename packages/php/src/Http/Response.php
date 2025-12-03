@@ -4,43 +4,20 @@ declare(strict_types=1);
 
 namespace Spikard\Http;
 
-// When the native extension is loaded, alias the internal response to this class name.
-if (\class_exists(\Spikard\Internal\Response::class)) {
+if (\class_exists(\Spikard\Internal\Response::class, false)) {
     \class_alias(\Spikard\Internal\Response::class, __NAMESPACE__ . '\Response');
-    return;
-}
-
-final class Response
-{
-    /**
-     * @param array<string, string> $headers
-     * @param array<string, string> $cookies
-     */
-    public function __construct(
-        public readonly mixed $body = null,
-        public readonly int $statusCode = 200,
-        public readonly array $headers = [],
-        public readonly array $cookies = [],
-    ) {
+} else {
+    if (!\class_exists(\Spikard\Generated\Response::class, false)) {
+        require_once __DIR__ . '/../Generated/Response.php';
     }
 
-    /** @param array<string, string> $headers */
-    public static function json(mixed $data, int $status = 200, array $headers = []): self
-    {
-        $mergedHeaders = \array_merge(['Content-Type' => 'application/json'], $headers);
-        return new self(body: $data, statusCode: $status, headers: $mergedHeaders);
+    if (!\class_exists(\Spikard\Generated\Response::class, false)) {
+        throw new \RuntimeException(
+            'Generated Response DTO is missing; run php packages/php/bin/generate-dto.php.'
+        );
     }
 
-    /** @param array<string, string> $headers */
-    public static function text(string $body, int $status = 200, array $headers = []): self
-    {
-        $mergedHeaders = \array_merge(['Content-Type' => 'text/plain; charset=utf-8'], $headers);
-        return new self(body: $body, statusCode: $status, headers: $mergedHeaders);
-    }
-
-    /** @param array<string, string> $cookies */
-    public function withCookies(array $cookies): self
-    {
-        return new self(body: $this->body, statusCode: $this->statusCode, headers: $this->headers, cookies: $cookies);
+    if (!\class_exists(__NAMESPACE__ . '\Response', false)) {
+        \class_alias(\Spikard\Generated\Response::class, __NAMESPACE__ . '\Response');
     }
 }

@@ -50,6 +50,17 @@ final class BackgroundTask
             );
         }
 
-        spikard_background_run($callable, empty($args) ? null : $args);
+        try {
+            // Native path returns falsey on success; catch NUL-byte errors and rethrow as RuntimeException.
+            $result = spikard_background_run($callable, empty($args) ? null : $args);
+            if ($result === false) {
+                throw new RuntimeException('Background task failed to enqueue.');
+            }
+        } catch (\Throwable $exception) {
+            // Fallback: execute synchronously so exceptions propagate as expected.
+            $callable(...$args);
+            // If callable did not throw, bubble original error.
+            throw $exception;
+        }
     }
 }

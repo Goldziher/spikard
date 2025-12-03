@@ -16,7 +16,7 @@ use Spikard\Http\Response;
  */
 final class TestClient
 {
-    /** @param array<int, mixed>|null $routes */
+    /** @param array<int, array{method: string, path: string, handler?: object, handler_name?: string, request_schema?: array<mixed>|null, response_schema?: array<mixed>|null, parameter_schema?: array<mixed>|null, websocket?: bool, sse?: bool}>|null $routes */
     public function __construct(?array $routes = null)
     {
         unset($routes);

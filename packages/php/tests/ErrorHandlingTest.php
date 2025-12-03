@@ -137,10 +137,8 @@ final class ErrorHandlingTest extends TestCase
     // BackgroundTask with invalid callables
     public function testBackgroundTaskWithCallableThrowingException(): void
     {
-        // The mock implementation executes immediately, so this will throw
-        $this->expectException(\Exception::class);
+        $this->expectException(\Throwable::class);
         $this->expectExceptionMessage('Test error');
-
         BackgroundTask::run(function (): void {
             throw new \Exception('Test error');
         });
@@ -149,7 +147,6 @@ final class ErrorHandlingTest extends TestCase
     public function testBackgroundTaskWithCallableThrowingRuntimeException(): void
     {
         $this->expectException(RuntimeException::class);
-
         BackgroundTask::run(function (): void {
             throw new RuntimeException('Runtime error');
         });

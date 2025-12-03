@@ -11,7 +11,6 @@ use Spikard\Attributes\Route;
 use Spikard\Config\LifecycleHooks;
 use Spikard\Config\ServerConfig;
 use Spikard\DI\DependencyContainer;
-use Spikard\Handlers\ControllerMethodHandler;
 use Spikard\Handlers\HandlerInterface;
 use Spikard\Handlers\SseEventProducerInterface;
 use Spikard\Handlers\WebSocketHandlerInterface;
@@ -156,55 +155,7 @@ final class App
      */
     public function registerController(string|object $controller): self
     {
-        $instance = \is_object($controller) ? $controller : new $controller();
-        $reflection = new ReflectionClass($instance);
-        $clone = clone $this;
-
-        foreach ($reflection->getMethods() as $method) {
-            // Skip non-public methods
-            if (!$method->isPublic()) {
-                continue;
-            }
-
-            // Find route attributes
-            $routeAttributes = $method->getAttributes(Route::class, \ReflectionAttribute::IS_INSTANCEOF);
-            if (\count($routeAttributes) === 0) {
-                continue;
-            }
-
-            // Get the first route attribute
-            $routeAttr = $routeAttributes[0]->newInstance();
-
-            // Collect middleware from Middleware attributes
-            $middlewareAttributes = $method->getAttributes(Middleware::class);
-            $middleware = \array_merge(
-                $routeAttr->middleware,
-                \array_map(static fn ($attr) => $attr->newInstance()->middleware, $middlewareAttributes)
-            );
-
-            // Create handler wrapper
-            $handler = new ControllerMethodHandler($instance, $method);
-
-            // Register the route
-            if ($routeAttr->requestSchema !== null || $routeAttr->responseSchema !== null || $routeAttr->parameterSchema !== null) {
-                $clone = $clone->addRouteWithSchemas(
-                    $routeAttr->method,
-                    $routeAttr->path,
-                    $handler,
-                    $routeAttr->requestSchema,
-                    $routeAttr->responseSchema,
-                    $routeAttr->parameterSchema
-                );
-            } else {
-                $clone = $clone->addRoute(
-                    $routeAttr->method,
-                    $routeAttr->path,
-                    $handler
-                );
-            }
-        }
-
-        return $clone;
+        throw new RuntimeException('Controller reflection is deprecated; generate routes/config from Rust metadata instead.');
     }
 
     public function config(): ?ServerConfig
@@ -215,6 +166,12 @@ final class App
     public function lifecycleHooks(): ?LifecycleHooks
     {
         return $this->hooks;
+    }
+
+    /** @return array<string, mixed> */
+    public function lifecycleHooksPayload(): array
+    {
+        return $this->hooks ? $this->hooksToNative($this->hooks) : [];
     }
 
     public function dependencies(): ?DependencyContainer
@@ -231,9 +188,11 @@ final class App
     }
 
     /**
-     * Find a handler for the given request (method/path already set).
+     * Locate a registered route entry without PHP-side parameter matching.
+     *
+     * @return array{method: string, path: string, handler: HandlerInterface, request_schema?: array<mixed>|null, response_schema?: array<mixed>|null, parameter_schema?: array<mixed>|null}|null
      */
-    public function findHandler(Request $request): ?HandlerInterface
+    public function resolveRoute(Request $request): ?array
     {
         $needleMethod = \strtoupper($request->method);
         $path = $request->path;
@@ -241,9 +200,7 @@ final class App
             // Strip query string from registered route path for comparison
             $routePath = \explode('?', $route['path'], 2)[0];
             if (\strtoupper($route['method']) === $needleMethod && $routePath === $path) {
-                if ($route['handler']->matches($request)) {
-                    return $route['handler'];
-                }
+                return $route;
             }
         }
 
@@ -253,16 +210,21 @@ final class App
     /**
      * Routes formatted for the native (Rust) test client.
      *
-     * @return array<int, array{method: string, path: string, handler?: object, websocket?: bool, sse?: bool}>
+     * @return array<int, array{method: string, path: string, handler?: object, handler_name?: string, request_schema?: array<mixed>|null, response_schema?: array<mixed>|null, parameter_schema?: array<mixed>|null, websocket?: bool, sse?: bool}>
      */
     public function nativeRoutes(): array
     {
         $routes = [];
         foreach ($this->routes as $route) {
+            $handlerName = \is_object($route['handler']) ? $route['handler']::class : 'php_handler';
             $routes[] = [
                 'method' => \strtoupper($route['method']),
                 'path' => $route['path'],
                 'handler' => $route['handler'],
+                'handler_name' => $handlerName,
+                'request_schema' => $route['request_schema'] ?? null,
+                'response_schema' => $route['response_schema'] ?? null,
+                'parameter_schema' => $route['parameter_schema'] ?? null,
             ];
         }
         foreach ($this->websocketHandlers as $path => $handler) {
@@ -271,6 +233,7 @@ final class App
                 'path' => $path,
                 'handler' => $handler,
                 'websocket' => true,
+                'handler_name' => $handler::class,
             ];
         }
         foreach ($this->sseProducers as $path => $producer) {
@@ -279,6 +242,7 @@ final class App
                 'path' => $path,
                 'handler' => $producer,
                 'sse' => true,
+                'handler_name' => $producer::class,
             ];
         }
         return $routes;
@@ -326,7 +290,9 @@ final class App
         $dependenciesPayload = $this->dependencies ?? null;
 
         // Extension entrypoint is guaranteed by the guard above; call directly.
-        $routes = $this->nativeRoutes();
+        $routes = \function_exists('spikard_normalize_routes')
+            ? spikard_normalize_routes($this->nativeRoutes())
+            : $this->nativeRoutes();
         // Ensure handler key exists for ws/sse entries to satisfy native expectations.
         $normalizedRoutes = \array_map(
             static fn (array $route) => $route + ['handler' => $route['handler'] ?? new \stdClass()],
@@ -367,8 +333,8 @@ final class App
      */
     private function configToNative(ServerConfig $config): array
     {
-        // Basic server settings (using actual config values)
-        $payload = [
+        // Basic server settings (prefer Rust defaults when extension is present)
+        $payload = \function_exists('spikard_config_defaults') ? spikard_config_defaults() : [
             'host' => $config->host,
             'port' => $config->port,
             'workers' => $config->workers,
