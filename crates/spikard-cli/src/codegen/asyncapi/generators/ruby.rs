@@ -31,6 +31,16 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
 
         code.push_str("require 'json'\n\n");
 
+        if protocol == "websocket" {
+            code.push_str("def handle_websocket(ws)\n");
+            code.push_str("  # Handle Faye::WebSocket messages\n");
+            code.push_str("  ws.on :message do |event|\n");
+            code.push_str("    data = JSON.parse(event.data)\n");
+            code.push_str("    puts \"Received: #{data}\"\n");
+            code.push_str("  end\n");
+            code.push_str("end\n\n");
+        }
+
         code.push_str("def main\n");
         code.push_str("  uri = ENV['URI'] || 'ws://localhost:8000");
 
