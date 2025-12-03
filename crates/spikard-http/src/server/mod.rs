@@ -14,6 +14,7 @@ use axum::body::Body;
 use axum::extract::{DefaultBodyLimit, Path};
 use axum::http::StatusCode;
 use axum::routing::{MethodRouter, get};
+use bytes::Bytes;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -69,7 +70,11 @@ fn create_method_router(
                         let (parts, body) = req.into_parts();
                         let request_data =
                             request_extraction::create_request_data_with_body(&parts, path_params.0, body).await?;
-                        let req = axum::extract::Request::from_parts(parts, Body::empty());
+                        let mut req = axum::extract::Request::from_parts(
+                            parts,
+                            Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
+                        );
+                        req.extensions_mut().insert(Arc::new(request_data.clone()));
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
@@ -79,7 +84,11 @@ fn create_method_router(
                         let (parts, body) = req.into_parts();
                         let request_data =
                             request_extraction::create_request_data_with_body(&parts, path_params.0, body).await?;
-                        let req = axum::extract::Request::from_parts(parts, Body::empty());
+                        let mut req = axum::extract::Request::from_parts(
+                            parts,
+                            Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
+                        );
+                        req.extensions_mut().insert(Arc::new(request_data.clone()));
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
@@ -89,7 +98,11 @@ fn create_method_router(
                         let (parts, body) = req.into_parts();
                         let request_data =
                             request_extraction::create_request_data_with_body(&parts, path_params.0, body).await?;
-                        let req = axum::extract::Request::from_parts(parts, Body::empty());
+                        let mut req = axum::extract::Request::from_parts(
+                            parts,
+                            Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
+                        );
+                        req.extensions_mut().insert(Arc::new(request_data.clone()));
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
@@ -110,7 +123,11 @@ fn create_method_router(
                     let (parts, body) = req.into_parts();
                     let request_data =
                         request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
-                    let req = axum::extract::Request::from_parts(parts, Body::empty());
+                    let mut req = axum::extract::Request::from_parts(
+                        parts,
+                        Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
+                    );
+                    req.extensions_mut().insert(Arc::new(request_data.clone()));
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
@@ -118,7 +135,11 @@ fn create_method_router(
                     let (parts, body) = req.into_parts();
                     let request_data =
                         request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
-                    let req = axum::extract::Request::from_parts(parts, Body::empty());
+                    let mut req = axum::extract::Request::from_parts(
+                        parts,
+                        Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
+                    );
+                    req.extensions_mut().insert(Arc::new(request_data.clone()));
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
@@ -126,7 +147,11 @@ fn create_method_router(
                     let (parts, body) = req.into_parts();
                     let request_data =
                         request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
-                    let req = axum::extract::Request::from_parts(parts, Body::empty());
+                    let mut req = axum::extract::Request::from_parts(
+                        parts,
+                        Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
+                    );
+                    req.extensions_mut().insert(Arc::new(request_data.clone()));
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
@@ -153,6 +178,8 @@ fn create_method_router(
                             req.headers(),
                             path_params.0,
                         );
+                        let mut req = req;
+                        req.extensions_mut().insert(Arc::new(request_data.clone()));
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
@@ -165,6 +192,8 @@ fn create_method_router(
                             req.headers(),
                             path_params.0,
                         );
+                        let mut req = req;
+                        req.extensions_mut().insert(Arc::new(request_data.clone()));
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
@@ -177,6 +206,8 @@ fn create_method_router(
                             req.headers(),
                             path_params.0,
                         );
+                        let mut req = req;
+                        req.extensions_mut().insert(Arc::new(request_data.clone()));
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
@@ -189,6 +220,8 @@ fn create_method_router(
                             req.headers(),
                             path_params.0,
                         );
+                        let mut req = req;
+                        req.extensions_mut().insert(Arc::new(request_data.clone()));
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
@@ -201,6 +234,8 @@ fn create_method_router(
                             req.headers(),
                             path_params.0,
                         );
+                        let mut req = req;
+                        req.extensions_mut().insert(Arc::new(request_data.clone()));
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
@@ -224,6 +259,8 @@ fn create_method_router(
                         req.headers(),
                         HashMap::new(),
                     );
+                    let mut req = req;
+                    req.extensions_mut().insert(Arc::new(request_data.clone()));
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
@@ -234,6 +271,8 @@ fn create_method_router(
                         req.headers(),
                         HashMap::new(),
                     );
+                    let mut req = req;
+                    req.extensions_mut().insert(Arc::new(request_data.clone()));
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
@@ -244,6 +283,8 @@ fn create_method_router(
                         req.headers(),
                         HashMap::new(),
                     );
+                    let mut req = req;
+                    req.extensions_mut().insert(Arc::new(request_data.clone()));
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
@@ -254,6 +295,8 @@ fn create_method_router(
                         req.headers(),
                         HashMap::new(),
                     );
+                    let mut req = req;
+                    req.extensions_mut().insert(Arc::new(request_data.clone()));
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
@@ -264,6 +307,8 @@ fn create_method_router(
                         req.headers(),
                         HashMap::new(),
                     );
+                    let mut req = req;
+                    req.extensions_mut().insert(Arc::new(request_data.clone()));
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),

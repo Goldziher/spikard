@@ -3,6 +3,7 @@
 use crate::handler_trait::Handler;
 use axum::body::Body;
 use axum::http::StatusCode;
+use spikard_core::errors::StructuredError;
 use std::sync::Arc;
 
 /// Execute a handler with lifecycle hooks
@@ -21,6 +22,18 @@ pub async fn execute_with_lifecycle_hooks(
 ) -> Result<axum::http::Response<Body>, (axum::http::StatusCode, String)> {
     use crate::lifecycle::HookResult;
 
+    fn structured_hook_error(status: StatusCode, code: &str, message: impl Into<String>) -> axum::http::Response<Body> {
+        let payload = StructuredError::simple(code.to_string(), message.into());
+        let body = serde_json::to_string(&payload).unwrap_or_else(|_| {
+            r#"{"error":"hook_error","code":"hook_error","details":{"message":"serialization_failed"}}"#.to_string()
+        });
+        axum::http::Response::builder()
+            .status(status)
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .body(Body::from(body))
+            .unwrap()
+    }
+
     let Some(hooks) = hooks else {
         return handler.call(req, request_data).await;
     };
@@ -33,20 +46,16 @@ pub async fn execute_with_lifecycle_hooks(
         Ok(HookResult::Continue(r)) => r,
         Ok(HookResult::ShortCircuit(response)) => return Ok(response),
         Err(e) => {
-            let error_response = axum::http::Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::from(format!(
-                    "{{\"error\":\"preValidation hook failed: {}\"}}",
-                    e
-                )))
-                .unwrap();
+            let error_response =
+                structured_hook_error(StatusCode::INTERNAL_SERVER_ERROR, "hook_pre_validation_failed", e);
 
             return match hooks.execute_on_error(error_response).await {
                 Ok(resp) => Ok(resp),
-                Err(_) => Ok(axum::http::Response::builder()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(Body::from("{\"error\":\"Hook execution failed\"}"))
-                    .unwrap()),
+                Err(err) => Ok(structured_hook_error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "hook_on_error_failed",
+                    err,
+                )),
             };
         }
     };
@@ -55,17 +64,15 @@ pub async fn execute_with_lifecycle_hooks(
         Ok(HookResult::Continue(r)) => r,
         Ok(HookResult::ShortCircuit(response)) => return Ok(response),
         Err(e) => {
-            let error_response = axum::http::Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::from(format!("{{\"error\":\"preHandler hook failed: {}\"}}", e)))
-                .unwrap();
+            let error_response = structured_hook_error(StatusCode::INTERNAL_SERVER_ERROR, "hook_pre_handler_failed", e);
 
             return match hooks.execute_on_error(error_response).await {
                 Ok(resp) => Ok(resp),
-                Err(_) => Ok(axum::http::Response::builder()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(Body::from("{\"error\":\"Hook execution failed\"}"))
-                    .unwrap()),
+                Err(err) => Ok(structured_hook_error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "hook_on_error_failed",
+                    err,
+                )),
             };
         }
     };
@@ -80,19 +87,21 @@ pub async fn execute_with_lifecycle_hooks(
 
             return match hooks.execute_on_error(error_response).await {
                 Ok(resp) => Ok(resp),
-                Err(e) => Ok(axum::http::Response::builder()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(Body::from(format!("{{\"error\":\"onError hook failed: {}\"}}", e)))
-                    .unwrap()),
+                Err(err) => Ok(structured_hook_error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "hook_on_error_failed",
+                    err,
+                )),
             };
         }
     };
 
     match hooks.execute_on_response(response).await {
         Ok(resp) => Ok(resp),
-        Err(e) => Ok(axum::http::Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .body(Body::from(format!("{{\"error\":\"onResponse hook failed: {}\"}}", e)))
-            .unwrap()),
+        Err(e) => Ok(structured_hook_error(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "hook_on_response_failed",
+            e,
+        )),
     }
 }
