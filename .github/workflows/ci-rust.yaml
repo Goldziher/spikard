@@ -23,7 +23,7 @@ on:
       - '.github/actions/setup-rust/**'
 
 concurrency:
-  group: ci-rust-${{ github.event.pull_request.number || github.ref }}
+  group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:

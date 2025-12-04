@@ -77,6 +77,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 http = "1.4"
 jsonschema = { version = "0.37", default-features = false }
 
+[workspace.metadata.cargo-llvm-cov]
+exclude = ["spikard-node"]
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

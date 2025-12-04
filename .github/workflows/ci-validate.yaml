@@ -69,7 +69,7 @@ on:
       - '.github/actions/**'
 
 concurrency:
-  group: ci-validate-${{ github.event.pull_request.number || github.ref }}
+  group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
