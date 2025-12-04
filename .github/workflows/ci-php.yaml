@@ -13,6 +13,7 @@ on:
       - ".cargo/config.toml"
       - ".github/workflows/ci-php.yaml"
       - ".github/actions/setup-llvm-clang/**"
+      - ".github/actions/setup-openssl/**"
       - ".github/actions/setup-rust/**"
   pull_request:
     branches: [main]
@@ -26,6 +27,7 @@ on:
       - ".cargo/config.toml"
       - ".github/workflows/ci-php.yaml"
       - ".github/actions/setup-llvm-clang/**"
+      - ".github/actions/setup-openssl/**"
       - ".github/actions/setup-rust/**"
 
 concurrency:
