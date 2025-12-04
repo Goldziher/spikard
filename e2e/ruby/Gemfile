@@ -1,5 +1,10 @@
 source "https://rubygems.org"
 
+# Add spikard gem with path to packages/ruby
+# This provides the full DSL API (App, Response, Testing, etc.)
+# The native extension (spikard_rb) is provided by crates/spikard-rb
+gem "spikard", path: "../../packages/ruby"
+
 gem "rspec"
 gem "websocket-client-simple", "~> 0.8"
 gem "dry-schema", "~> 1.13"

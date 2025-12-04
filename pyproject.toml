@@ -162,8 +162,15 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
 branch = true
-omit = [ "packages/python/tests/*", "scripts/*" ]
-source = [ "crates/spikard-py" ]
+omit = [
+  "packages/python/tests/*",
+  "packages/python/spikard/tests/*",
+  "scripts/*",
+  "*/__pycache__/*",
+  "*/site-packages/*",
+]
+source = [ "packages/python/spikard" ]
+relative_files = true
 
 [tool.coverage.report]
 exclude_lines = [
@@ -176,7 +183,18 @@ exclude_lines = [
   "def __repr__",
   "class .*\\bProtocol\\):",
   "@(abc\\.)?abstractmethod",
+  "def __str__",
+  "raise AssertionError",
+  "raise NotImplementedError",
 ]
+skip_covered = false
+precision = 2
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.lcov]
+output = "coverage.lcov"
 
 [tool.mypy]
 mypy_path = "packages/python"
