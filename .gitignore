@@ -17,6 +17,7 @@
 .claude/
 .coverage
 .coverage*
+!.coveragerc
 .cursorrules
 .DS_Store
 .env

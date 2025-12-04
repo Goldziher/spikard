@@ -123,9 +123,17 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Setup Rust
+        if: runner.os != 'Windows'
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: test-php-${{ matrix.os }}-${{ matrix.php }}
+
+      - name: Setup Rust (Nightly for Windows)
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: test-php-${{ matrix.os }}-${{ matrix.php }}
+          toolchain: nightly
 
       - name: Setup LLVM/Clang
         uses: ./.github/actions/setup-llvm-clang
