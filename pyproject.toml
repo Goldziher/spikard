@@ -165,6 +165,7 @@ branch = true
 omit = [
   "packages/python/tests/*",
   "packages/python/spikard/tests/*",
+  "packages/python/spikard/_internal/*",
   "scripts/*",
   "*/__pycache__/*",
   "*/site-packages/*",
