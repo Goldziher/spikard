@@ -615,7 +615,7 @@ pub fn spikard_start_server_impl(
         route_pairs.push((route, Arc::new(handler) as Arc<dyn spikard_http::Handler>));
     }
 
-    let mut app = build_router_with_handlers_and_config(route_pairs, server_config.clone(), route_metadata)
+    let app = build_router_with_handlers_and_config(route_pairs, server_config.clone(), route_metadata)
         .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
 
     // Create shutdown channel

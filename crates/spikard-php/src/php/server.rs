@@ -9,6 +9,7 @@ use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use spikard_http::ParameterValidator;
+use spikard_http::RequestData;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, Route, Router, SchemaRegistry, ServerConfig};
 use std::collections::HashMap;
@@ -602,14 +603,20 @@ impl Handler for ClosureHandler {
 pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerResult {
     // If it's null, return 204 No Content
     if response.is_null() {
-        return Ok(Response::builder()
+        return Response::builder()
             .status(StatusCode::NO_CONTENT)
             .body(Body::empty())
-            .unwrap_or_else(|e| structured_response(StatusCode::INTERNAL_SERVER_ERROR, "build_error", e.to_string())));
+            .map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to build response: {}", e),
+                )
+            })
+            .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
     }
 
     // Try to extract Response - check if object has our expected methods
-    if let Some(obj) = response.object().filter(|o| o.has_method("getBody")) {
+    if let Some(obj) = response.object() {
         // Try to call getStatus method
         if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
             let status_code = status_zval.long().unwrap_or(200);
@@ -644,9 +651,7 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
 
             // Try to get body (already a string from getBody, no re-parsing needed)
             let body_zval = obj.try_call_method("getBody", vec![]).unwrap_or_else(|_| Zval::new());
-            if let Some(generator) = body_zval.object()
-                && generator.has_method("next")
-            {
+            if body_zval.object().is_some() {
                 // Streaming via generator
                 let status_code = status.as_u16();
                 let headers = builder
@@ -687,17 +692,17 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
 
     // If it's a string, return as text/plain
     if let Some(s) = response.string() {
-        return Ok(Response::builder()
+        return Response::builder()
             .status(StatusCode::OK)
             .header("content-type", "text/plain")
             .body(Body::from(s.to_string()))
-            .unwrap_or_else(|e| {
-                to_problem(
+            .map_err(|e| {
+                (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Failed to build response: {}", e),
                 )
-                .expect("Failed to build error response")
-            }));
+            })
+            .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
     }
 
     // Try to convert to JSON
