@@ -9,6 +9,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
+      - '.cargo/config.toml'
       # Python
       - '**/*.py'
       - 'pyproject.toml'
@@ -41,6 +42,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
+      - '.cargo/config.toml'
       # Python
       - '**/*.py'
       - 'pyproject.toml'

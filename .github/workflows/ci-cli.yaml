@@ -9,6 +9,7 @@ on:
       - "crates/spikard-http/**/*.rs"
       - "Cargo.toml"
       - "Cargo.lock"
+      - ".cargo/config.toml"
       - ".github/workflows/ci-cli.yaml"
       - ".github/actions/setup-rust/**"
   pull_request:
@@ -19,6 +20,7 @@ on:
       - "crates/spikard-http/**/*.rs"
       - "Cargo.toml"
       - "Cargo.lock"
+      - ".cargo/config.toml"
       - ".github/workflows/ci-cli.yaml"
       - ".github/actions/setup-rust/**"
 
