@@ -72,7 +72,10 @@ impl TestResponseMetadata {
     /// Get a header value by name (case-insensitive)
     pub fn get_header(&self, name: &str) -> Option<&String> {
         let lower_name = name.to_lowercase();
-        self.headers.iter().find(|(k, _)| k.to_lowercase() == lower_name).map(|(_, v)| v)
+        self.headers
+            .iter()
+            .find(|(k, _)| k.to_lowercase() == lower_name)
+            .map(|(_, v)| v)
     }
 
     /// Check if response was successful (2xx status code)
@@ -168,9 +171,18 @@ mod tests {
 
         let metadata = TestResponseMetadata::new(200, headers, 100, 50);
 
-        assert_eq!(metadata.get_header("Content-Type"), Some(&"application/json".to_string()));
-        assert_eq!(metadata.get_header("content-type"), Some(&"application/json".to_string()));
-        assert_eq!(metadata.get_header("CONTENT-TYPE"), Some(&"application/json".to_string()));
+        assert_eq!(
+            metadata.get_header("Content-Type"),
+            Some(&"application/json".to_string())
+        );
+        assert_eq!(
+            metadata.get_header("content-type"),
+            Some(&"application/json".to_string())
+        );
+        assert_eq!(
+            metadata.get_header("CONTENT-TYPE"),
+            Some(&"application/json".to_string())
+        );
         assert_eq!(metadata.get_header("Missing"), None);
     }
 

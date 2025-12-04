@@ -13,7 +13,8 @@ use spikard_core::RequestData;
 use spikard_core::di::{Dependency, DependencyError, ResolvedDependencies};
 
 /// Type alias for the common dependency resolution future type
-type DependencyFuture<'a> = Pin<Box<dyn Future<Output = Result<Arc<dyn Any + Send + Sync>, DependencyError>> + Send + 'a>>;
+type DependencyFuture<'a> =
+    Pin<Box<dyn Future<Output = Result<Arc<dyn Any + Send + Sync>, DependencyError>> + Send + 'a>>;
 
 /// Adapter trait for value dependencies across language bindings
 ///
@@ -26,9 +27,7 @@ pub trait ValueDependencyAdapter: Send + Sync {
     /// Resolve the stored value
     ///
     /// Returns an Arc<dyn Any> that can be downcast to the concrete type
-    fn resolve_value(
-        &self,
-    ) -> DependencyFuture<'_>;
+    fn resolve_value(&self) -> DependencyFuture<'_>;
 }
 
 /// Adapter trait for factory dependencies across language bindings

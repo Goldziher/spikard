@@ -2,7 +2,7 @@
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use spikard_http::testing::{ResponseSnapshot, SseEvent as RustSseEvent, SseStream as RustSseStream};
+use spikard_http::testing::{SseEvent as RustSseEvent, SseStream as RustSseStream};
 
 /// Node.js wrapper for SSE stream
 #[napi]
@@ -66,11 +66,4 @@ impl SseEvent {
     pub fn as_json(&self) -> Result<serde_json::Value> {
         self.inner.as_json().map_err(Error::from_reason)
     }
-}
-
-/// Create an SSE stream from a response snapshot
-pub fn sse_stream_from_response(response: &ResponseSnapshot) -> Result<SseStream> {
-    let stream = RustSseStream::from_response(response)
-        .map_err(|e| Error::from_reason(format!("Failed to parse SSE: {}", e)))?;
-    Ok(SseStream::new(stream))
 }
