@@ -65,24 +65,13 @@ jobs:
         uses: ./.github/actions/setup-llvm-clang
 
       - name: Install Tarpaulin
-        run: |
-          cargo install cargo-tarpaulin --locked || true
+        run: bash scripts/coverage/install-tarpaulin.sh
 
       - name: Generate Rust coverage report
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
-        run: |
-          mkdir -p target/tarpaulin
-          cargo tarpaulin \
-            --config tarpaulin.toml \
-            --workspace \
-            --timeout 300 \
-            --exclude-files "examples/**" "tools/**" \
-            --out Stdout \
-            --out Html \
-            --out Lcov \
-            --fail-under 95
+        run: bash scripts/coverage/run-rust-coverage.sh
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -119,22 +108,13 @@ jobs:
         uses: astral-sh/setup-uv@v3
 
       - name: Install dependencies
-        run: |
-          uv sync --all-extras --all-groups --no-install-workspace
+        run: bash scripts/coverage/install-python-deps.sh
 
       - name: Build Python bindings
-        run: |
-          uv run maturin develop -m packages/python/pyproject.toml
+        run: bash scripts/coverage/build-python-bindings.sh
 
       - name: Run Python tests with coverage
-        working-directory: packages/python
-        run: |
-          uv run pytest tests/ \
-            --cov=spikard \
-            --cov-report=html \
-            --cov-report=term \
-            --cov-report=lcov:coverage.lcov \
-            --cov-fail-under=80
+        run: bash scripts/coverage/run-python-coverage.sh
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -174,9 +154,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run Node.js tests with coverage
-        working-directory: packages/node
-        run: |
-          pnpm test:cov
+        run: bash scripts/coverage/run-node-coverage.sh
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -207,15 +185,5 @@ jobs:
         uses: actions/download-artifact@v4
 
       - name: Display coverage summary
-        run: |
-          echo "=== Code Coverage Report ==="
-          echo ""
-          echo "Rust Coverage: See rust-coverage-report/"
-          echo "Python Coverage: See python-coverage-report/"
-          echo "Node.js Coverage: See node-coverage-report/"
-          echo ""
-          echo "Artifacts are available for download from the Actions tab."
-          echo "Thresholds enforced:"
-          echo "  - Rust: 95% minimum"
-          echo "  - Python: 80% minimum"
+        run: bash scripts/coverage/show-summary.sh
           echo "  - Node.js: standard coverage"

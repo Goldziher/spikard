@@ -94,14 +94,9 @@ jobs:
 
       - name: Test CLI (Unix)
         if: runner.os != 'Windows'
-        run: |
-          chmod +x cli-artifact/spikard
-          cli-artifact/spikard --version
-          cli-artifact/spikard --help
+        run: bash scripts/ci/cli/test-cli-unix.sh cli-artifact
 
       - name: Test CLI (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: |
-          & cli-artifact/spikard.exe --version
-          & cli-artifact/spikard.exe --help
+        run: scripts/ci/cli/test-cli-windows.ps1 -ArtifactDir cli-artifact

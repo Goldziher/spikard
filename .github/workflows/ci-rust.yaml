@@ -69,12 +69,7 @@ jobs:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
         shell: bash
-        run: |
-          # Test all workspace crates. Note: spikard-py extension-module feature is
-          # intentionally excluded from testing as it's only for Python wheel builds
-          # and breaks test linking (PyO3 extension-module conflicts with test binaries
-          # that embed Python). The feature is enabled only in pyproject.toml for maturin.
-          cargo test --workspace
+        run: bash scripts/ci/rust/run-workspace-tests.sh
 
   test-rust-cross-platform:
     name: Test Rust Cross-Platform (${{ matrix.os }})
@@ -113,7 +108,7 @@ jobs:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
         shell: bash
-        run: cargo test --workspace
+        run: bash scripts/ci/rust/run-workspace-tests.sh
 
       - name: Run workspace tests (Windows)
         if: runner.os == 'Windows'
@@ -121,4 +116,4 @@ jobs:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
         shell: pwsh
-        run: cargo test --workspace --exclude spikard-rb
+        run: scripts/ci/rust/run-workspace-tests-windows.ps1 -ExcludeRuby

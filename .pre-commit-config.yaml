@@ -10,6 +10,16 @@ repos:
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+      - id: shellcheck
+        exclude: ^(node_modules/|target/|dist/|vendor/|\.venv/|tools/benchmark-harness/)
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.12.0-2
+    hooks:
+      - id: shfmt
+        exclude: ^(node_modules/|target/|dist/|vendor/|\\.venv/)
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:

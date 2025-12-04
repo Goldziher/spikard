@@ -4,7 +4,7 @@
 set -e
 
 echo "Starting Fastify server on port 9995..."
-pnpm start 9995 > /tmp/fastify_verify.log 2>&1 &
+pnpm start 9995 >/tmp/fastify_verify.log 2>&1 &
 SERVER_PID=$!
 sleep 2
 
@@ -15,29 +15,29 @@ PASSED=0
 FAILED=0
 
 test_endpoint() {
-    local name=$1
-    local method=$2
-    local url=$3
-    local data=$4
-    local expected=$5
+	local name=$1
+	local method=$2
+	local url=$3
+	local data=$4
+	local expected=$5
 
-    echo -n "Testing $name... "
+	echo -n "Testing $name... "
 
-    if [ "$method" = "GET" ]; then
-        response=$(curl -s "$url")
-    else
-        response=$(curl -s -X "$method" "$url" -H "Content-Type: application/json" -d "$data")
-    fi
+	if [ "$method" = "GET" ]; then
+		response=$(curl -s "$url")
+	else
+		response=$(curl -s -X "$method" "$url" -H "Content-Type: application/json" -d "$data")
+	fi
 
-    if echo "$response" | grep -q "$expected"; then
-        echo "✓ PASSED"
-        ((PASSED++))
-    else
-        echo "✗ FAILED"
-        echo "  Expected: $expected"
-        echo "  Got: $response"
-        ((FAILED++))
-    fi
+	if echo "$response" | grep -q "$expected"; then
+		echo "✓ PASSED"
+		((PASSED++))
+	else
+		echo "✗ FAILED"
+		echo "  Expected: $expected"
+		echo "  Got: $response"
+		((FAILED++))
+	fi
 }
 
 # Health checks
@@ -46,10 +46,10 @@ test_endpoint "Root" "GET" "http://localhost:9995/" "" "status"
 
 # JSON endpoints
 test_endpoint "JSON Small" "POST" "http://localhost:9995/json/small" \
-    '{"name":"test","description":"desc","price":99.99}' "test"
+	'{"name":"test","description":"desc","price":99.99}' "test"
 
 test_endpoint "JSON Medium" "POST" "http://localhost:9995/json/medium" \
-    '{"name":"John","email":"j@ex.com","age":30,"address":{"street":"123 St","city":"City","state":"ST","zip_code":"12345"},"tags":["a"]}' "John"
+	'{"name":"John","email":"j@ex.com","age":30,"address":{"street":"123 St","city":"City","state":"ST","zip_code":"12345"},"tags":["a"]}' "John"
 
 # Path parameters
 test_endpoint "Path Simple" "GET" "http://localhost:9995/path/simple/123" "" "123"
@@ -66,7 +66,7 @@ test_endpoint "Query Many" "GET" "http://localhost:9995/query/many?a=1&b=2&c=3&d
 
 # URL encoded
 test_endpoint "URL Encoded Simple" "POST" "http://localhost:9995/urlencoded/simple" \
-    '{"username":"test","password":"pass"}' "username"
+	'{"username":"test","password":"pass"}' "username"
 
 # Multipart
 test_endpoint "Multipart Small" "POST" "http://localhost:9995/multipart/small" "" "files_received"
@@ -82,9 +82,9 @@ echo "==================================="
 kill $SERVER_PID 2>/dev/null || true
 
 if [ $FAILED -eq 0 ]; then
-    echo "✓ All tests passed!"
-    exit 0
+	echo "✓ All tests passed!"
+	exit 0
 else
-    echo "✗ Some tests failed"
-    exit 1
+	echo "✗ Some tests failed"
+	exit 1
 fi
