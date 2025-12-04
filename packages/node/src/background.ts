@@ -1,4 +1,4 @@
-import { backgroundRun } from "../index.js";
+import { backgroundRun } from "../index";
 
 /** Schedule work to run after the HTTP response resolves. */
 export function run(work: () => void | Promise<void>): void {

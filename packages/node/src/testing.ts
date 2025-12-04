@@ -6,7 +6,7 @@ import {
 	TestClient as NativeTestClient,
 	type TestResponse as NativeTestResponse,
 	type WebSocketTestConnection,
-} from "../index.js";
+} from "../index";
 import type { ServerConfig } from "./config";
 import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
