@@ -84,16 +84,10 @@ jobs:
 
       - name: Install PHP development headers (Linux)
         if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y php-dev
+        run: bash scripts/ci/php/install-dev-headers-linux.sh
 
       - name: Detect PHP configuration
-        run: |
-          PHP_CONFIG=$(which php-config || echo "php-config")
-          echo "PHP_CONFIG=${PHP_CONFIG}" >> "$GITHUB_ENV"
-          echo "Found PHP config at: ${PHP_CONFIG}"
-          ${PHP_CONFIG} --version || true
+        run: bash scripts/ci/php/detect-php-config.sh
 
       - name: Build PHP extension (Unix)
         if: runner.os != 'Windows'

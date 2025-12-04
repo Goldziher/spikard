@@ -41,17 +41,13 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --group doc --no-install-workspace
+        run: bash scripts/docs/install-doc-deps.sh
 
       - name: Configure Git for mike
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        run: bash scripts/docs/configure-git-for-mike.sh
 
       - name: Build documentation with mike
-        run: |
-          uv run mike deploy --update-aliases 1.0 latest
-          uv run mike set-default latest
+        run: bash scripts/docs/build-docs.sh
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -663,11 +663,14 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
                     })
                     .unwrap_or_default();
                 let cfg = crate::php::StreamingConfig { status_code, headers };
-                return crate::php::register_generator(&body_zval, Some(cfg)).and_then(|(idx, config)| {
-                    crate::php::create_streaming_response(idx, config)
-                        .map(|r| r.into_response())
-                        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
-                });
+                return crate::php::register_generator(&body_zval, Some(cfg))
+                    .map_err(|msg| (StatusCode::INTERNAL_SERVER_ERROR, msg))
+                    .and_then(|(idx, config)| {
+                        crate::php::create_streaming_response(idx, config)
+                            .map(|r| r.into_response())
+                            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+                    })
+                    .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
             }
 
             // Body is already a string from getBody() - no need to parse/re-serialize

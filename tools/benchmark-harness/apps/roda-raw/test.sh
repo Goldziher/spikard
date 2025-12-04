@@ -7,11 +7,11 @@ PORT=8001
 SERVER_PID=""
 
 cleanup() {
-  if [ -n "$SERVER_PID" ]; then
-    echo "Stopping server (PID: $SERVER_PID)..."
-    kill $SERVER_PID 2>/dev/null || true
-    wait $SERVER_PID 2>/dev/null || true
-  fi
+	if [ -n "$SERVER_PID" ]; then
+		echo "Stopping server (PID: $SERVER_PID)..."
+		kill $SERVER_PID 2>/dev/null || true
+		wait $SERVER_PID 2>/dev/null || true
+	fi
 }
 
 trap cleanup EXIT
@@ -21,9 +21,9 @@ echo
 
 # Check if dependencies are installed
 if ! bundle check &>/dev/null; then
-  echo "Installing dependencies..."
-  bundle install
-  echo
+	echo "Installing dependencies..."
+	bundle install
+	echo
 fi
 
 # Start server in background
@@ -54,15 +54,15 @@ echo
 # Test 3: Small JSON
 echo "3. POST /json/small"
 curl -s -X POST http://localhost:$PORT/json/small \
-  -H "Content-Type: application/json" \
-  -d '{"name":"test","description":"test item","price":9.99,"tax":0.5}' | jq .
+	-H "Content-Type: application/json" \
+	-d '{"name":"test","description":"test item","price":9.99,"tax":0.5}' | jq .
 echo
 
 # Test 4: Medium JSON
 echo "4. POST /json/medium"
 curl -s -X POST http://localhost:$PORT/json/medium \
-  -H "Content-Type: application/json" \
-  -d '{"user_id":123,"username":"testuser","email":"test@example.com","is_active":true,"address":{"street":"123 Main","city":"NYC","state":"NY","zip_code":"10001"},"tags":["tag1","tag2"]}' | jq .
+	-H "Content-Type: application/json" \
+	-d '{"user_id":123,"username":"testuser","email":"test@example.com","is_active":true,"address":{"street":"123 Main","city":"NYC","state":"NY","zip_code":"10001"},"tags":["tag1","tag2"]}' | jq .
 echo
 
 # Test 5: Path parameter
@@ -83,14 +83,14 @@ echo
 # Test 8: URL-encoded form
 echo "8. POST /urlencoded/simple"
 curl -s -X POST http://localhost:$PORT/urlencoded/simple \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "name=John+Doe&email=john@example.com" | jq .
+	-H "Content-Type: application/x-www-form-urlencoded" \
+	-d "name=John+Doe&email=john@example.com" | jq .
 echo
 
 # Test 9: Multipart (static response)
 echo "9. POST /multipart/small"
 curl -s -X POST http://localhost:$PORT/multipart/small \
-  -F "file=@server.rb" | jq .
+	-F "file=@server.rb" | jq .
 echo
 
 echo "=== All tests completed! ==="
@@ -103,8 +103,8 @@ echo
 # Test with invalid data
 echo "10. POST /json/small (INVALID DATA - should still work)"
 curl -s -X POST http://localhost:$PORT/json/small \
-  -H "Content-Type: application/json" \
-  -d '{"completely":"wrong","fields":true,"price":"not-a-number"}' | jq .
+	-H "Content-Type: application/json" \
+	-d '{"completely":"wrong","fields":true,"price":"not-a-number"}' | jq .
 echo
 
 echo "Success! Invalid data was accepted (no validation)."
