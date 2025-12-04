@@ -54,6 +54,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Install MSYS2 headers (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            ucrt64-devel
+
       - name: Setup Rust (Nightly for Windows)
         if: runner.os == 'Windows'
         uses: ./.github/actions/setup-rust
@@ -115,6 +124,15 @@ jobs:
             ruby-version: "3.2"
     steps:
       - uses: actions/checkout@v6
+
+      - name: Install MSYS2 headers (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            ucrt64-devel
 
       - name: Setup Rust (Nightly for Windows)
         if: runner.os == 'Windows'
