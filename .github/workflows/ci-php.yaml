@@ -81,6 +81,7 @@ jobs:
           php-version: "8.3"
           tools: composer
           coverage: none
+          extensions: fileinfo
 
       - name: Install PHP development headers (Linux)
         if: runner.os == 'Linux'
@@ -135,6 +136,7 @@ jobs:
           php-version: ${{ matrix.php }}
           tools: composer
           coverage: none
+          extensions: fileinfo
 
       - name: Setup Composer Cache
         uses: actions/cache@v4

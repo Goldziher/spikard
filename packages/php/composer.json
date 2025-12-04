@@ -62,7 +62,7 @@
 		}
 	},
 	"scripts": {
-		"phpstan": "PHPRC=$(pwd)/packages/php/phpstan.ini PHPSTAN_MEMORY_LIMIT=1G PHP_MEMORY_LIMIT=1G php -d detect_unicode=0 -d memory_limit=1G vendor/bin/phpstan analyse src tests --configuration=phpstan.neon --memory-limit=1G --parallel 1 --process-timeout 600",
+		"phpstan": "PHPRC=$(pwd)/packages/php/phpstan.ini PHPSTAN_MEMORY_LIMIT=1G PHP_MEMORY_LIMIT=1G php -d detect_unicode=0 -d memory_limit=1G vendor/bin/phpstan analyse src tests --configuration=phpstan.neon --memory-limit=1G --no-progress",
 		"csfixer": "PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php src tests",
 		"format": "@csfixer",
 		"format:check": "PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php --dry-run src tests",
