@@ -9,6 +9,7 @@ mkdir -p target/tarpaulin
 cargo tarpaulin \
 	--config tarpaulin.toml \
 	--workspace \
+	--exclude spikard-node \
 	--timeout 300 \
 	--exclude-files "examples/**" "tools/**" \
 	--out Stdout \
