@@ -141,9 +141,9 @@ class JsNativeClient implements NativeClient {
 
 	constructor(
 		routesJson: string,
-		websocketRoutesJson: string | null,
+		_websocketRoutesJson: string | null,
 		handlers: Record<string, NativeHandlerFunction>,
-		websocketHandlers: Record<string, Record<string, unknown>>,
+		_websocketHandlers: Record<string, Record<string, unknown>>,
 		dependencies: Record<string, unknown> | null,
 		_lifecycleHooks: Record<string, unknown> | null,
 		_dependencies: ServerConfig | null,

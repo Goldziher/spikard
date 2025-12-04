@@ -90,8 +90,8 @@ final class ErrorHandlingTest extends TestCase
     public function testStreamingResponseFileThrowsForZeroChunkSize(): void
     {
         // Create a temporary file
-        $tmpFile = tempnam(sys_get_temp_dir(), 'test');
-        $this->assertTrue(file_put_contents($tmpFile, 'test content') !== false);
+        $tmpFile = \tempnam(\sys_get_temp_dir(), 'test');
+        $this->assertTrue(\file_put_contents($tmpFile, 'test content') !== false);
 
         try {
             $this->expectException(InvalidArgumentException::class);
@@ -99,15 +99,15 @@ final class ErrorHandlingTest extends TestCase
 
             StreamingResponse::file($tmpFile, chunkSize: 0);
         } finally {
-            @unlink($tmpFile);
+            @\unlink($tmpFile);
         }
     }
 
     public function testStreamingResponseFileThrowsForNegativeChunkSize(): void
     {
         // Create a temporary file
-        $tmpFile = tempnam(sys_get_temp_dir(), 'test');
-        $this->assertTrue(file_put_contents($tmpFile, 'test content') !== false);
+        $tmpFile = \tempnam(\sys_get_temp_dir(), 'test');
+        $this->assertTrue(\file_put_contents($tmpFile, 'test content') !== false);
 
         try {
             $this->expectException(InvalidArgumentException::class);
@@ -115,7 +115,7 @@ final class ErrorHandlingTest extends TestCase
 
             StreamingResponse::file($tmpFile, chunkSize: -1);
         } finally {
-            @unlink($tmpFile);
+            @\unlink($tmpFile);
         }
     }
 
@@ -315,9 +315,9 @@ final class ErrorHandlingTest extends TestCase
     // Streaming response error handling
     public function testStreamingResponseFileWithReadableFile(): void
     {
-        $tmpFile = tempnam(sys_get_temp_dir(), 'stream_test');
+        $tmpFile = \tempnam(\sys_get_temp_dir(), 'stream_test');
         $testContent = 'Test streaming content with special chars: Ñ, 中文, Emoji 🚀';
-        $this->assertTrue(file_put_contents($tmpFile, $testContent) !== false);
+        $this->assertTrue(\file_put_contents($tmpFile, $testContent) !== false);
 
         try {
             $response = StreamingResponse::file($tmpFile, chunkSize: 8192, contentType: 'text/plain');
@@ -325,7 +325,7 @@ final class ErrorHandlingTest extends TestCase
             // File size header should be set
             $this->assertArrayHasKey('Content-Length', $response->headers);
         } finally {
-            @unlink($tmpFile);
+            @\unlink($tmpFile);
         }
     }
 
