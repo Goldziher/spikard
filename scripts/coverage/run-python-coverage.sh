@@ -6,7 +6,7 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
 
 cd "${REPO_ROOT}/packages/python"
 uv run pytest tests/ \
-	--cov=spikard \
+	--cov=spikard.__init__ \
 	--cov-report=html \
 	--cov-report=term \
 	--cov-report=lcov:coverage.lcov \

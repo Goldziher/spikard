@@ -10,6 +10,7 @@ cargo tarpaulin \
 	--config tarpaulin.toml \
 	--workspace \
 	--exclude spikard-node \
+	--exclude spikard-rb \
 	--timeout 300 \
 	--exclude-files "examples/**" "tools/**" \
 	--out Stdout \
