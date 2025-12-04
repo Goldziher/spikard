@@ -1935,7 +1935,7 @@ mod tests {
     #[test]
     fn test_global_runtime_initialization() {
         // Verify that GLOBAL_RUNTIME can be accessed without panicking
-        let _ = GLOBAL_RUNTIME.deref();
+        let _ = &*GLOBAL_RUNTIME;
         assert!(true, "Global runtime initialized successfully");
     }
 

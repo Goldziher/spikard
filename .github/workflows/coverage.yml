@@ -124,7 +124,7 @@ jobs:
 
       - name: Build Python bindings
         run: |
-          uv run maturin develop
+          uv run maturin develop -m packages/python/pyproject.toml
 
       - name: Run Python tests with coverage
         working-directory: packages/python

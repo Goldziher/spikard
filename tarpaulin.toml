@@ -6,7 +6,7 @@
 # Minimum coverage threshold in percentage
 minimum = 95
 # Fail the tool if coverage falls below threshold
-fail-under = true
+fail-under = 95.0
 
 [output]
 # Output formats to generate

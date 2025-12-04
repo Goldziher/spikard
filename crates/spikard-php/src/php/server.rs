@@ -738,3 +738,7 @@ fn structured_response(status: StatusCode, code: impl Into<String>, message: imp
             )
         })
 }
+
+fn to_problem(status: StatusCode, message: impl Into<String>) -> HandlerResult {
+    structured_response(status, "internal_error", message)
+}
