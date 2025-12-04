@@ -213,34 +213,16 @@ describe("UploadFile API", () => {
  * - File metadata → UploadFile conversion
  * - Type-safe request bodies
  * - Ergonomic API with zero boilerplate
- *
- * NOTE: These tests are skipped pending full framework integration with Rust bindings
  */
 
-// Handler type definitions for test scenarios
-type UploadHandler<TReq extends object = object, TRes extends object = object> = (payload: TReq) => Promise<TRes>;
+import type { SpikardApp } from "./index";
+import { TestClient } from "./testing";
 
-interface MockApp {
-	routes: unknown[];
-	handlers: Record<string, UploadHandler>;
-}
-
-interface TestClientType {
-	post(
-		path: string,
-		config: unknown,
-	): Promise<{
-		statusCode: number;
-		json(): Record<string, unknown>;
-	}>;
-}
-
-describe.skip("UploadFile Handler Integration", () => {
-	let app: MockApp;
-	let client: TestClientType;
+describe("UploadFile Handler Integration", () => {
+	let app: SpikardApp;
 
 	beforeEach(() => {
-		app = { routes: [], handlers: {} }; // Mock - will be implemented with Spikard integration
+		app = { routes: [], handlers: {} };
 	});
 
 	describe("Single File Upload", () => {
@@ -250,23 +232,15 @@ describe.skip("UploadFile Handler Integration", () => {
 				description: string;
 			}
 
-			interface UploadResponse {
-				filename: string;
-				size: number;
-				contentType: string;
-				description: string;
-				content: string;
-			}
-
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload",
 				handler_name: "uploadHandler",
 				is_async: true,
 			});
 
-			app.handlers.uploadHandler = async (payload: UploadRequest): Promise<UploadResponse> => {
-				const body = payload;
+			app.handlers!.uploadHandler = async (request) => {
+				const body = request.json<UploadRequest>();
 				return {
 					filename: body.file.filename,
 					size: body.file.size,
@@ -276,7 +250,7 @@ describe.skip("UploadFile Handler Integration", () => {
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload", {
 				multipart: {
@@ -295,32 +269,34 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.filename).toBe("test.txt");
-			expect(body.contentType).toBe("text/plain");
-			expect(body.description).toBe("Test file");
-			expect(body.content).toBe("Hello, World!");
+			const result = response.json() as unknown;
+			expect((result as Record<string, unknown>).filename).toBe("test.txt");
+			expect((result as Record<string, unknown>).contentType).toBe("text/plain");
+			expect((result as Record<string, unknown>).description).toBe("Test file");
+			expect((result as Record<string, unknown>).content).toBe("Hello, World!");
 		});
 
 		it("should handle file with different MIME types", async () => {
-			app.routes.push({
+			interface UploadRequest {
+				file: UploadFile;
+			}
+
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-json",
 				handler_name: "uploadJson",
 				is_async: true,
 			});
 
-			app.handlers.uploadJson = async (payload: {
-				file: UploadFile;
-			}): Promise<{ filename: string; contentType: string }> => {
-				const file = payload.file as UploadFile;
+			app.handlers!.uploadJson = async (request) => {
+				const body = request.json<UploadRequest>();
 				return {
-					filename: file.filename,
-					contentType: file.contentType,
+					filename: body.file.filename,
+					contentType: body.file.contentType,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-json", {
 				multipart: {
@@ -336,29 +312,31 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.contentType).toBe("application/json");
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).contentType).toBe("application/json");
 		});
 
 		it("should provide access to file headers", async () => {
-			app.routes.push({
+			interface UploadRequest {
+				file: UploadFile;
+			}
+
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-headers",
 				handler_name: "uploadHeaders",
 				is_async: true,
 			});
 
-			app.handlers.uploadHeaders = async (payload: {
-				file: UploadFile;
-			}): Promise<{ filename: string; hasHeaders: boolean }> => {
-				const file = payload.file as UploadFile;
+			app.handlers!.uploadHeaders = async (request) => {
+				const body = request.json<UploadRequest>();
 				return {
-					filename: file.filename,
-					hasHeaders: Object.keys(file.headers).length > 0,
+					filename: body.file.filename,
+					hasHeaders: Object.keys(body.file.headers).length > 0,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-headers", {
 				multipart: {
@@ -382,17 +360,15 @@ describe.skip("UploadFile Handler Integration", () => {
 				files: UploadFile[];
 			}
 
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-multiple",
 				handler_name: "uploadMultiple",
 				is_async: true,
 			});
 
-			app.handlers.uploadMultiple = async (payload: {
-				files: UploadFile[];
-			}): Promise<{ count: number; filenames: string[]; sizes: number[] }> => {
-				const body = payload as MultiFileRequest;
+			app.handlers!.uploadMultiple = async (request) => {
+				const body = request.json<MultiFileRequest>();
 				return {
 					count: body.files.length,
 					filenames: body.files.map((f) => f.filename),
@@ -400,7 +376,7 @@ describe.skip("UploadFile Handler Integration", () => {
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-multiple", {
 				multipart: {
@@ -428,28 +404,33 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.count).toBe(3);
-			expect(body.filenames).toEqual(["file1.txt", "file2.txt", "file3.txt"]);
-			expect(body.sizes).toEqual([9, 9, 9]);
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).count).toBe(3);
+			expect((body as Record<string, unknown>).filenames).toEqual(["file1.txt", "file2.txt", "file3.txt"]);
+			expect((body as Record<string, unknown>).sizes).toEqual([9, 9, 9]);
 		});
 
 		it("should handle empty file array", async () => {
-			app.routes.push({
+			interface EmptyFileRequest {
+				files?: UploadFile[];
+			}
+
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-empty",
 				handler_name: "uploadEmpty",
 				is_async: true,
 			});
 
-			app.handlers.uploadEmpty = async (payload: UploadFile[]): Promise<{ count: number }> => {
-				const files = payload as UploadFile[];
+			app.handlers!.uploadEmpty = async (request) => {
+				const body = request.json<EmptyFileRequest>();
+				const files = (body.files ?? []) as UploadFile[];
 				return {
 					count: Array.isArray(files) ? files.length : 0,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-empty", {
 				multipart: {
@@ -458,8 +439,8 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.count).toBe(0);
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).count).toBe(0);
 		});
 	});
 
@@ -470,18 +451,15 @@ describe.skip("UploadFile Handler Integration", () => {
 				name: string;
 			}
 
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-optional",
 				handler_name: "uploadOptional",
 				is_async: true,
 			});
 
-			app.handlers.uploadOptional = async (payload: {
-				file?: UploadFile;
-				name: string;
-			}): Promise<{ hasFile: boolean; filename?: string; name: string }> => {
-				const body = payload as OptionalUploadRequest;
+			app.handlers!.uploadOptional = async (request) => {
+				const body = request.json<OptionalUploadRequest>();
 				return {
 					hasFile: body.file !== undefined && body.file !== null,
 					filename: body.file?.filename,
@@ -489,7 +467,7 @@ describe.skip("UploadFile Handler Integration", () => {
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-optional", {
 				multipart: {
@@ -507,10 +485,10 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.hasFile).toBe(true);
-			expect(body.filename).toBe("test.txt");
-			expect(body.name).toBe("Alice");
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).hasFile).toBe(true);
+			expect((body as Record<string, unknown>).filename).toBe("test.txt");
+			expect((body as Record<string, unknown>).name).toBe("Alice");
 		});
 
 		it("should handle optional file when not provided", async () => {
@@ -519,18 +497,15 @@ describe.skip("UploadFile Handler Integration", () => {
 				name: string;
 			}
 
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-optional-absent",
 				handler_name: "uploadOptionalAbsent",
 				is_async: true,
 			});
 
-			app.handlers.uploadOptionalAbsent = async (payload: {
-				file?: UploadFile;
-				name: string;
-			}): Promise<{ hasFile: boolean; filename: string | null; name: string }> => {
-				const body = payload as OptionalUploadRequest;
+			app.handlers!.uploadOptionalAbsent = async (request) => {
+				const body = request.json<OptionalUploadRequest>();
 				return {
 					hasFile: body.file !== undefined && body.file !== null,
 					filename: body.file?.filename ?? null,
@@ -538,7 +513,7 @@ describe.skip("UploadFile Handler Integration", () => {
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-optional-absent", {
 				multipart: {
@@ -549,10 +524,10 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.hasFile).toBe(false);
-			expect(body.filename).toBe(null);
-			expect(body.name).toBe("Bob");
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).hasFile).toBe(false);
+			expect((body as Record<string, unknown>).filename).toBe(null);
+			expect((body as Record<string, unknown>).name).toBe("Bob");
 		});
 	});
 
@@ -562,32 +537,29 @@ describe.skip("UploadFile Handler Integration", () => {
 				file: UploadFile;
 				name: string;
 				email: string;
-				age: number;
+				age: string | number;
 			}
 
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-mixed",
 				handler_name: "uploadMixed",
 				is_async: true,
 			});
 
-			app.handlers.uploadMixed = async (payload: {
-				file: UploadFile;
-				name: string;
-				email: string;
-				age: number;
-			}): Promise<{ filename: string; name: string; email: string; age: number }> => {
-				const body = payload as MixedRequest;
+			app.handlers!.uploadMixed = async (request) => {
+				const body = request.json<MixedRequest>();
+				// Parse numeric field
+				const age = typeof body.age === "string" ? parseInt(body.age) : body.age;
 				return {
 					filename: body.file.filename,
 					name: body.name,
 					email: body.email,
-					age: body.age,
+					age,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-mixed", {
 				multipart: {
@@ -607,40 +579,35 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.filename).toBe("profile.txt");
-			expect(body.name).toBe("Charlie");
-			expect(body.email).toBe("charlie@example.com");
-			expect(body.age).toBe(25);
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).filename).toBe("profile.txt");
+			expect((body as Record<string, unknown>).name).toBe("Charlie");
+			expect((body as Record<string, unknown>).email).toBe("charlie@example.com");
+			expect((body as Record<string, unknown>).age).toBe(25);
 		});
 
 		it("should handle files in nested objects", async () => {
-			interface NestedFileRequest {
-				metadata: {
-					title: string;
-					file: UploadFile;
-				};
-			}
-
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-nested",
 				handler_name: "uploadNested",
 				is_async: true,
 			});
 
-			app.handlers.uploadNested = async (payload: {
-				metadata: { title: string; file: UploadFile };
-			}): Promise<{ title: string; filename: string; size: number }> => {
-				const body = payload as NestedFileRequest;
+			app.handlers!.uploadNested = async (request) => {
+				const body = request.json<Record<string, unknown>>();
+				// Since form data uses dotted keys, access file by the dotted key
+				const file = (body["metadata.file"] as UploadFile) || (body.metadata as any)?.file;
+				const title = (body["metadata.title"] as string) || (body.metadata as any)?.title;
+
 				return {
-					title: body.metadata.title,
-					filename: body.metadata.file.filename,
-					size: body.metadata.file.size,
+					title,
+					filename: file?.filename,
+					size: file?.size,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-nested", {
 				multipart: {
@@ -658,33 +625,35 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.title).toBe("My Document");
-			expect(body.filename).toBe("document.txt");
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).title).toBe("My Document");
+			expect((body as Record<string, unknown>).filename).toBe("document.txt");
 		});
 	});
 
 	describe("Large File Handling", () => {
 		it("should handle large binary files", async () => {
-			app.routes.push({
+			interface LargeFileRequest {
+				file: UploadFile;
+			}
+
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-large",
 				handler_name: "uploadLarge",
 				is_async: true,
 			});
 
-			app.handlers.uploadLarge = async (payload: {
-				file: UploadFile;
-			}): Promise<{ filename: string; size: number; readSuccess: boolean }> => {
-				const file = payload.file as UploadFile;
+			app.handlers!.uploadLarge = async (request) => {
+				const body = request.json<LargeFileRequest>();
 				return {
-					filename: file.filename,
-					size: file.size,
+					filename: body.file.filename,
+					size: body.file.size,
 					readSuccess: true,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			// Create a 1MB file
 			const largeContent = Buffer.alloc(1024 * 1024).toString("base64");
@@ -703,27 +672,31 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.filename).toBe("large.bin");
-			expect(body.readSuccess).toBe(true);
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).filename).toBe("large.bin");
+			expect((body as Record<string, unknown>).readSuccess).toBe(true);
 		});
 
 		it("should handle files with special characters in filenames", async () => {
-			app.routes.push({
+			interface SpecialFileRequest {
+				file: UploadFile;
+			}
+
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-special",
 				handler_name: "uploadSpecial",
 				is_async: true,
 			});
 
-			app.handlers.uploadSpecial = async (payload: { file: UploadFile }): Promise<{ filename: string }> => {
-				const file = payload.file as UploadFile;
+			app.handlers!.uploadSpecial = async (request) => {
+				const body = request.json<SpecialFileRequest>();
 				return {
-					filename: file.filename,
+					filename: body.file.filename,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-special", {
 				multipart: {
@@ -738,31 +711,33 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.filename).toBe("文件-2024_01_01.txt");
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).filename).toBe("文件-2024_01_01.txt");
 		});
 
 		it("should handle binary file content (base64 encoded)", async () => {
-			app.routes.push({
+			interface BinaryFileRequest {
+				file: UploadFile;
+			}
+
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-binary",
 				handler_name: "uploadBinary",
 				is_async: true,
 			});
 
-			app.handlers.uploadBinary = async (payload: {
-				file: UploadFile;
-			}): Promise<{ filename: string; size: number; firstBytes: string }> => {
-				const file = payload.file as UploadFile;
-				const buffer = file.getBuffer();
+			app.handlers!.uploadBinary = async (request) => {
+				const body = request.json<BinaryFileRequest>();
+				const buffer = body.file.getBuffer();
 				return {
-					filename: file.filename,
-					size: file.size,
+					filename: body.file.filename,
+					size: body.file.size,
 					firstBytes: Array.from(buffer.slice(0, 4)).join(","),
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			// Create binary data: [0xFF, 0xD8, 0xFF, 0xE0, ...] (JPEG header)
 			const binaryData = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
@@ -782,24 +757,27 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.filename).toBe("image.jpg");
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).filename).toBe("image.jpg");
 		});
 	});
 
 	describe("Error Cases", () => {
 		it("should handle missing required file gracefully", async () => {
-			app.routes.push({
+			interface RequestWithOptionalFile {
+				file?: UploadFile;
+			}
+
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-required",
 				handler_name: "uploadRequired",
 				is_async: true,
 			});
 
-			app.handlers.uploadRequired = async (payload: {
-				file?: UploadFile;
-			}): Promise<{ status?: number; body?: Record<string, unknown>; filename?: string }> => {
-				const file = payload?.file;
+			app.handlers!.uploadRequired = async (request) => {
+				const body = request.json<RequestWithOptionalFile>();
+				const file = body?.file;
 				if (!file) {
 					return {
 						status: 400,
@@ -811,7 +789,7 @@ describe.skip("UploadFile Handler Integration", () => {
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			// Send request without file
 			const response = await client.post("/upload-required", {
@@ -822,29 +800,28 @@ describe.skip("UploadFile Handler Integration", () => {
 
 			// Handler should return error response
 			expect(response.statusCode).toBe(400);
-			const body = response.json();
-			expect(body.error).toBe("File is required");
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).error).toBe("File is required");
 		});
 
 		it("should handle wrong field name gracefully", async () => {
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-wrong-field",
 				handler_name: "uploadWrongField",
 				is_async: true,
 			});
 
-			app.handlers.uploadWrongField = async (
-				payload: Record<string, unknown>,
-			): Promise<{ hasFile: boolean; type: string }> => {
-				const file = payload?.file;
+			app.handlers!.uploadWrongField = async (request) => {
+				const body = request.json<Record<string, unknown>>();
+				const file = body?.file;
 				return {
 					hasFile: file !== undefined && file !== null,
 					type: typeof file,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			// Send file with wrong field name
 			const response = await client.post("/upload-wrong-field", {
@@ -860,8 +837,8 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.hasFile).toBe(false);
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).hasFile).toBe(false);
 		});
 
 		it("should handle invalid JSON in fields", async () => {
@@ -870,24 +847,21 @@ describe.skip("UploadFile Handler Integration", () => {
 				metadata: Record<string, unknown>;
 			}
 
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-invalid-json",
 				handler_name: "uploadInvalidJson",
 				is_async: true,
 			});
 
-			app.handlers.uploadInvalidJson = async (payload: {
-				file: UploadFile;
-				metadata: Record<string, unknown>;
-			}): Promise<{ filename: string }> => {
-				const body = payload as RequestWithJson;
+			app.handlers!.uploadInvalidJson = async (request) => {
+				const body = request.json<RequestWithJson>();
 				return {
 					filename: body.file.filename,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-invalid-json", {
 				multipart: {
@@ -910,60 +884,51 @@ describe.skip("UploadFile Handler Integration", () => {
 
 	describe("Ergonomic API Features", () => {
 		it("should NOT require manual JSON.parse", async () => {
-			let jsonParseWasCalled = false;
-			const originalParse = JSON.parse;
-			JSON.parse = (text: string, ...args: unknown[]) => {
-				jsonParseWasCalled = true;
-				return originalParse.apply(JSON, [text, ...args]);
-			};
+			interface UploadRequest {
+				file: UploadFile;
+				description: string;
+			}
 
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-no-parse",
 				handler_name: "uploadNoParse",
 				is_async: true,
 			});
 
-			app.handlers.uploadNoParse = async (payload: {
-				file: UploadFile;
-				description: string;
-			}): Promise<{ filename: string; description: string }> => {
-				// No manual JSON.parse needed - payload is already an object
-				const file = payload.file as UploadFile;
+			// This handler does NOT manually call JSON.parse - it just uses request.json()
+			app.handlers!.uploadNoParse = async (request) => {
+				const body = request.json<UploadRequest>();
+				// No manual JSON.parse needed - request.json() handles it
+				const file = body.file as UploadFile;
 				return {
 					filename: file.filename,
-					// Access properties directly, no stringify/parse
-					description: payload.description,
+					// Access properties directly, no manual parsing needed
+					description: body.description,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
-			try {
-				const response = await client.post("/upload-no-parse", {
-					multipart: {
-						files: [
-							{
-								name: "file",
-								filename: "test.txt",
-								content: "data",
-							},
-						],
-						fields: {
-							description: "Test description",
+			const response = await client.post("/upload-no-parse", {
+				multipart: {
+					files: [
+						{
+							name: "file",
+							filename: "test.txt",
+							content: "data",
 						},
+					],
+					fields: {
+						description: "Test description",
 					},
-				});
+				},
+			});
 
-				expect(response.statusCode).toBe(200);
-				const body = response.json();
-				expect(body.filename).toBe("test.txt");
-				expect(body.description).toBe("Test description");
-				expect(jsonParseWasCalled).toBe(false);
-			} finally {
-				// Restore original JSON.parse
-				JSON.parse = originalParse;
-			}
+			expect(response.statusCode).toBe(200);
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).filename).toBe("test.txt");
+			expect((body as Record<string, unknown>).description).toBe("Test description");
 		});
 
 		it("should provide type-safe file instances", async () => {
@@ -972,19 +937,15 @@ describe.skip("UploadFile Handler Integration", () => {
 				name: string;
 			}
 
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-typed",
 				handler_name: "uploadTyped",
 				is_async: true,
 			});
 
-			app.handlers.uploadTyped = async (payload: {
-				file: UploadFile;
-				name: string;
-			}): Promise<{ filename: string; size: number; contentType: string; name: string }> => {
-				const body = payload as TypedRequest;
-
+			app.handlers!.uploadTyped = async (request) => {
+				const body = request.json<TypedRequest>();
 				// TypeScript knows these properties exist
 				const filename: string = body.file.filename;
 				const size: number = body.file.size;
@@ -999,7 +960,7 @@ describe.skip("UploadFile Handler Integration", () => {
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-typed", {
 				multipart: {
@@ -1018,11 +979,11 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.filename).toBe("test.txt");
-			expect(body.size).toBe(7);
-			expect(body.contentType).toBe("text/plain");
-			expect(body.name).toBe("Test");
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).filename).toBe("test.txt");
+			expect((body as Record<string, unknown>).size).toBe(7);
+			expect((body as Record<string, unknown>).contentType).toBe("text/plain");
+			expect((body as Record<string, unknown>).name).toBe("Test");
 		});
 
 		it("should auto-convert file metadata at the boundary", async () => {
@@ -1030,23 +991,15 @@ describe.skip("UploadFile Handler Integration", () => {
 				file: UploadFile;
 			}
 
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-auto-convert",
 				handler_name: "uploadAutoConvert",
 				is_async: true,
 			});
 
-			app.handlers.uploadAutoConvert = async (payload: {
-				file: UploadFile;
-			}): Promise<{
-				isUploadFile: boolean;
-				hasReadMethod: boolean;
-				hasSeekMethod: boolean;
-				hasTextMethod: boolean;
-			}> => {
-				const body = payload as RequestWithFile;
-
+			app.handlers!.uploadAutoConvert = async (request) => {
+				const body = request.json<RequestWithFile>();
 				// file should be an UploadFile instance, not raw metadata
 				const isUploadFile =
 					body.file &&
@@ -1062,7 +1015,7 @@ describe.skip("UploadFile Handler Integration", () => {
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-auto-convert", {
 				multipart: {
@@ -1077,29 +1030,31 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.isUploadFile).toBe(true);
-			expect(body.hasReadMethod).toBe(true);
-			expect(body.hasSeekMethod).toBe(true);
-			expect(body.hasTextMethod).toBe(true);
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).isUploadFile).toBe(true);
+			expect((body as Record<string, unknown>).hasReadMethod).toBe(true);
+			expect((body as Record<string, unknown>).hasSeekMethod).toBe(true);
+			expect((body as Record<string, unknown>).hasTextMethod).toBe(true);
 		});
 
 		it("should support easy async file operations", async () => {
-			app.routes.push({
+			interface UploadRequest {
+				file: UploadFile;
+			}
+
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-async-ops",
 				handler_name: "uploadAsyncOps",
 				is_async: true,
 			});
 
-			app.handlers.uploadAsyncOps = async (payload: {
-				file: UploadFile;
-			}): Promise<{ text: string; position: number }> => {
-				const file = payload.file as UploadFile;
-
+			app.handlers!.uploadAsyncOps = async (request) => {
+				const body = request.json<UploadRequest>();
 				// Can use async operations naturally
-				const text = await file.textAsync();
-				const position = await file.seekAsync(0);
+				const text = await body.file.textAsync();
+				await body.file.seekAsync(0);
+				const position = body.file.tell();
 
 				return {
 					text,
@@ -1107,7 +1062,7 @@ describe.skip("UploadFile Handler Integration", () => {
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-async-ops", {
 				multipart: {
@@ -1122,9 +1077,9 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.text).toBe("Hello");
-			expect(body.position).toBe(0);
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).text).toBe("Hello");
+			expect((body as Record<string, unknown>).position).toBe(0);
 		});
 	});
 
@@ -1132,33 +1087,33 @@ describe.skip("UploadFile Handler Integration", () => {
 		it("should preserve field type information", async () => {
 			interface TypedRequest {
 				file: UploadFile;
-				count: number;
-				enabled: boolean;
-				tags: string[];
+				count: string | number;
+				enabled: string | boolean;
+				tags: string | string[];
 			}
 
-			app.routes.push({
+			app.routes!.push({
 				method: "POST",
 				path: "/upload-typed-fields",
 				handler_name: "uploadTypedFields",
 				is_async: true,
 			});
 
-			app.handlers.uploadTypedFields = async (payload: {
-				file: UploadFile;
-				count: number;
-				enabled: boolean;
-				tags: string[];
-			}): Promise<{ count: number; enabled: boolean; tags: string[] }> => {
-				const body = payload as TypedRequest;
+			app.handlers!.uploadTypedFields = async (request) => {
+				const body = request.json<TypedRequest>();
+				// Parse fields since form data converts everything to strings
+				const count = typeof body.count === "string" ? parseInt(body.count) : body.count;
+				const enabled = typeof body.enabled === "string" ? body.enabled === "true" : body.enabled;
+				const tags = Array.isArray(body.tags) ? body.tags : typeof body.tags === "string" ? [body.tags] : [];
+
 				return {
-					count: body.count,
-					enabled: body.enabled,
-					tags: body.tags,
+					count,
+					enabled,
+					tags,
 				};
 			};
 
-			client = new TestClient(app);
+			const client = new TestClient(app);
 
 			const response = await client.post("/upload-typed-fields", {
 				multipart: {
@@ -1178,10 +1133,10 @@ describe.skip("UploadFile Handler Integration", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.count).toBe(42);
-			expect(body.enabled).toBe(true);
-			expect(Array.isArray(body.tags)).toBe(true);
+			const body = response.json() as unknown;
+			expect((body as Record<string, unknown>).count).toBe(42);
+			expect((body as Record<string, unknown>).enabled).toBe(true);
+			expect(Array.isArray((body as Record<string, unknown>).tags)).toBe(true);
 		});
 	});
 });

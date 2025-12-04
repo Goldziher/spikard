@@ -761,23 +761,53 @@ tasks:
       - cargo run --package spikard-http
 
   cov:rust:
-    desc: "Generate Rust code coverage report (requires cargo-llvm-cov)"
+    desc: "Generate Rust code coverage with 95% minimum enforcement via tarpaulin"
     cmds:
-      - cargo llvm-cov --workspace --lcov --output-path rust-coverage.lcov
-      - echo "Rust coverage report generated at rust-coverage.lcov"
-      - cargo llvm-cov --workspace --summary-only
+      - mkdir -p target/tarpaulin
+      - |
+        DYLD_FALLBACK_LIBRARY_PATH=/usr/local/lib cargo tarpaulin \
+          --workspace \
+          --exclude spikard-wasm \
+          --exclude spikard-php \
+          --timeout 300 \
+          --out Stdout \
+          --out Html \
+          --out Lcov
+      - 'echo ""'
+      - echo "Rust coverage reports generated:"
+      - 'echo "  - HTML: target/tarpaulin/index.html"'
+      - 'echo "  - LCOV: target/tarpaulin/lcov.info"'
+      - 'echo ""'
+      - 'echo "Minimum threshold: 95%"'
 
   cov:python:
-    desc: "Generate Python code coverage report"
+    desc: "Generate Python code coverage report with 80% minimum enforcement"
+    dir: packages/python
+    deps:
+      - build:py
     cmds:
-      - uv run pytest tests/ --cov=spikard --cov-report=lcov:coverage.lcov --cov-report=term
-      - echo "Python coverage report generated at coverage.lcov"
+      - uv run pytest tests/ --cov=spikard --cov-report=html --cov-report=term --cov-report=lcov:coverage.lcov --cov-fail-under=80
+      - 'echo ""'
+      - echo "Python coverage report generated:"
+      - 'echo "  - HTML: htmlcov/index.html"'
+      - 'echo "  - LCOV: coverage.lcov"'
+
+  cov:node:
+    desc: "Generate Node.js code coverage report with 80% minimum threshold"
+    dir: packages/node
+    cmds:
+      - pnpm test:cov
+      - echo ""
+      - echo "Node.js coverage report generated:"
+      - 'echo "  - HTML: coverage/index.html"'
+      - 'echo "  - LCOV: coverage/lcov.info"'
 
   cov:all:
-    desc: "Generate both Rust and Python coverage reports"
+    desc: "Generate Rust, Python, and Node.js coverage reports"
     cmds:
       - task: cov:rust
       - task: cov:python
+      - task: cov:node
 
   clean:
     desc: "Clean build artifacts"

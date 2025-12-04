@@ -18,11 +18,12 @@
 		"build:debug": "cd ../../crates/spikard-node && napi build --platform -o ../../packages/node",
 		"test": "vitest run --passWithNoTests",
 		"test:watch": "vitest",
+		"test:cov": "vitest run --coverage --passWithNoTests",
 		"typecheck": "tsc --noEmit",
 		"lint": "biome check src",
 		"lint:fix": "biome check --write src",
 		"format": "biome format --write src",
-		"clean": "rm -rf dist node_modules spikard.*.node"
+		"clean": "rm -rf dist node_modules spikard.*.node coverage"
 	},
 	"keywords": [
 		"http",

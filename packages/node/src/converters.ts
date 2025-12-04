@@ -37,11 +37,11 @@ export function convertFileMetadataToUploadFile(fileData: FileMetadata): UploadF
 
 	// Convert content string to Buffer
 	let buffer: Buffer;
-	if (content_encoding === "base64" || /^[A-Za-z0-9+/=]+$/.test(content)) {
-		// Base64 encoded binary content
+	if (content_encoding === "base64") {
+		// Explicitly marked as base64 encoded binary content
 		buffer = Buffer.from(content, "base64");
 	} else {
-		// Plain text content
+		// Treat as plain text by default (including test payloads)
 		buffer = Buffer.from(content, "utf-8");
 	}
 
@@ -95,6 +95,48 @@ export function processUploadFileFields(value: JsonValue): unknown {
 }
 
 /**
+ * Convert __spikard_multipart__ test payload to handler body
+ * This merges files and fields into a single object with UploadFile instances
+ */
+function convertMultipartTestPayload(payload: {
+	fields?: Record<string, unknown>;
+	files?: Array<{ name: string; filename?: string; content: string; contentType?: string }>;
+}): unknown {
+	const result: Record<string, unknown> = {};
+
+	// Add fields
+	if (payload.fields) {
+		Object.assign(result, payload.fields);
+	}
+
+	// Add files, grouping by field name
+	if (payload.files && payload.files.length > 0) {
+		const filesByName: Record<string, unknown[]> = {};
+
+		for (const file of payload.files) {
+			const fileMetadata: FileMetadata = {
+				filename: file.filename || file.name,
+				content: file.content,
+				content_type: file.contentType,
+			};
+			const uploadFile = convertFileMetadataToUploadFile(fileMetadata);
+
+			if (!filesByName[file.name]) {
+				filesByName[file.name] = [];
+			}
+			filesByName[file.name].push(uploadFile);
+		}
+
+		// Flatten single files, keep arrays for multiple files with same name
+		for (const [name, files] of Object.entries(filesByName)) {
+			result[name] = files.length === 1 ? files[0] : files;
+		}
+	}
+
+	return result;
+}
+
+/**
  * Process handler body parameter, handling UploadFile conversion
  *
  * This is the main entry point for converting Rust-provided request data
@@ -103,10 +145,25 @@ export function processUploadFileFields(value: JsonValue): unknown {
  * - Arrays of UploadFile
  * - Objects with UploadFile fields
  * - Nested structures
+ * - TestClient multipart payloads
  *
  * @param body - The body parameter from Rust (already JSON-parsed)
  * @returns Processed body with UploadFile instances
  */
 export function convertHandlerBody(body: JsonValue): unknown {
+	// Handle TestClient multipart payload
+	if (
+		typeof body === "object" &&
+		body !== null &&
+		"__spikard_multipart__" in body &&
+		typeof (body as Record<string, unknown>).__spikard_multipart__ === "object"
+	) {
+		const multipart = (body as Record<string, unknown>).__spikard_multipart__ as {
+			fields?: Record<string, unknown>;
+			files?: Array<{ name: string; filename?: string; content: string; contentType?: string }>;
+		};
+		return convertMultipartTestPayload(multipart);
+	}
+
 	return processUploadFileFields(body);
 }
