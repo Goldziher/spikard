@@ -47,11 +47,11 @@ version = "3"
 optional = true
 
 [dependencies.magnus]
-version = "0.7"
+version = "0.8"
 optional = true
 
 [dependencies.ext-php-rs]
-version = "0.13"
+version = "0.15"
 optional = true
 
 [dependencies.wasm-bindgen]
