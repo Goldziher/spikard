@@ -183,10 +183,7 @@ mod tests {
         let result = serde_json::Value::from_json(nested.clone());
         assert!(result.is_ok());
         let converted = result.unwrap();
-        assert_eq!(
-            converted["level1"]["level2"]["level3"]["value"],
-            "deep"
-        );
+        assert_eq!(converted["level1"]["level2"]["level3"]["value"], "deep");
     }
 
     #[test]

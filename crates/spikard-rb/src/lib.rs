@@ -1486,9 +1486,6 @@ fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-/// Build dependency container from Ruby dependencies
-///
-
 /// Build a native response from content, status code, and headers.
 ///
 /// Called by `Spikard::Response` to construct native response objects.

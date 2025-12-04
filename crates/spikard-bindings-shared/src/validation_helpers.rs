@@ -169,10 +169,10 @@ mod tests {
             ("X-Request-Id".to_string(), "123".to_string()),
         ];
 
-        assert!(HeaderValidator::validate_required(&headers, &["Content-Type", "Authorization", "X-Request-Id"]).is_ok());
         assert!(
-            HeaderValidator::validate_required(&headers, &["Content-Type", "Authorization", "Missing"]).is_err()
+            HeaderValidator::validate_required(&headers, &["Content-Type", "Authorization", "X-Request-Id"]).is_ok()
         );
+        assert!(HeaderValidator::validate_required(&headers, &["Content-Type", "Authorization", "Missing"]).is_err());
     }
 
     #[test]
@@ -187,9 +187,7 @@ mod tests {
     fn test_header_format_bearer() {
         assert!(HeaderValidator::validate_format("Authorization", "Bearer token123", HeaderFormat::Bearer).is_ok());
         assert!(HeaderValidator::validate_format("Authorization", "token123", HeaderFormat::Bearer).is_err());
-        assert!(
-            HeaderValidator::validate_format("Authorization", "Basic dXNlcjpwYXNz", HeaderFormat::Bearer).is_err()
-        );
+        assert!(HeaderValidator::validate_format("Authorization", "Basic dXNlcjpwYXNz", HeaderFormat::Bearer).is_err());
     }
 
     #[test]
@@ -199,9 +197,7 @@ mod tests {
             HeaderValidator::validate_format("Content-Type", "application/json; charset=utf-8", HeaderFormat::Json)
                 .is_ok()
         );
-        assert!(
-            HeaderValidator::validate_format("Content-Type", "text/plain", HeaderFormat::Json).is_err()
-        );
+        assert!(HeaderValidator::validate_format("Content-Type", "text/plain", HeaderFormat::Json).is_err());
     }
 
     #[test]

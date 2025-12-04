@@ -232,14 +232,14 @@ describe("UploadFile Handler Integration", () => {
 				description: string;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload",
 				handler_name: "uploadHandler",
 				is_async: true,
 			});
 
-			app.handlers!.uploadHandler = async (request) => {
+			app.handlers.uploadHandler = async (request) => {
 				const body = request.json<UploadRequest>();
 				return {
 					filename: body.file.filename,
@@ -281,14 +281,14 @@ describe("UploadFile Handler Integration", () => {
 				file: UploadFile;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-json",
 				handler_name: "uploadJson",
 				is_async: true,
 			});
 
-			app.handlers!.uploadJson = async (request) => {
+			app.handlers.uploadJson = async (request) => {
 				const body = request.json<UploadRequest>();
 				return {
 					filename: body.file.filename,
@@ -321,14 +321,14 @@ describe("UploadFile Handler Integration", () => {
 				file: UploadFile;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-headers",
 				handler_name: "uploadHeaders",
 				is_async: true,
 			});
 
-			app.handlers!.uploadHeaders = async (request) => {
+			app.handlers.uploadHeaders = async (request) => {
 				const body = request.json<UploadRequest>();
 				return {
 					filename: body.file.filename,
@@ -360,14 +360,14 @@ describe("UploadFile Handler Integration", () => {
 				files: UploadFile[];
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-multiple",
 				handler_name: "uploadMultiple",
 				is_async: true,
 			});
 
-			app.handlers!.uploadMultiple = async (request) => {
+			app.handlers.uploadMultiple = async (request) => {
 				const body = request.json<MultiFileRequest>();
 				return {
 					count: body.files.length,
@@ -415,14 +415,14 @@ describe("UploadFile Handler Integration", () => {
 				files?: UploadFile[];
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-empty",
 				handler_name: "uploadEmpty",
 				is_async: true,
 			});
 
-			app.handlers!.uploadEmpty = async (request) => {
+			app.handlers.uploadEmpty = async (request) => {
 				const body = request.json<EmptyFileRequest>();
 				const files = (body.files ?? []) as UploadFile[];
 				return {
@@ -451,14 +451,14 @@ describe("UploadFile Handler Integration", () => {
 				name: string;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-optional",
 				handler_name: "uploadOptional",
 				is_async: true,
 			});
 
-			app.handlers!.uploadOptional = async (request) => {
+			app.handlers.uploadOptional = async (request) => {
 				const body = request.json<OptionalUploadRequest>();
 				return {
 					hasFile: body.file !== undefined && body.file !== null,
@@ -497,14 +497,14 @@ describe("UploadFile Handler Integration", () => {
 				name: string;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-optional-absent",
 				handler_name: "uploadOptionalAbsent",
 				is_async: true,
 			});
 
-			app.handlers!.uploadOptionalAbsent = async (request) => {
+			app.handlers.uploadOptionalAbsent = async (request) => {
 				const body = request.json<OptionalUploadRequest>();
 				return {
 					hasFile: body.file !== undefined && body.file !== null,
@@ -540,17 +540,17 @@ describe("UploadFile Handler Integration", () => {
 				age: string | number;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-mixed",
 				handler_name: "uploadMixed",
 				is_async: true,
 			});
 
-			app.handlers!.uploadMixed = async (request) => {
+			app.handlers.uploadMixed = async (request) => {
 				const body = request.json<MixedRequest>();
 				// Parse numeric field
-				const age = typeof body.age === "string" ? parseInt(body.age) : body.age;
+				const age = typeof body.age === "string" ? parseInt(body.age, 10) : body.age;
 				return {
 					filename: body.file.filename,
 					name: body.name,
@@ -587,14 +587,14 @@ describe("UploadFile Handler Integration", () => {
 		});
 
 		it("should handle files in nested objects", async () => {
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-nested",
 				handler_name: "uploadNested",
 				is_async: true,
 			});
 
-			app.handlers!.uploadNested = async (request) => {
+			app.handlers.uploadNested = async (request) => {
 				const body = request.json<Record<string, unknown>>();
 				// Since form data uses dotted keys, access file by the dotted key
 				const file = (body["metadata.file"] as UploadFile) || (body.metadata as any)?.file;
@@ -637,14 +637,14 @@ describe("UploadFile Handler Integration", () => {
 				file: UploadFile;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-large",
 				handler_name: "uploadLarge",
 				is_async: true,
 			});
 
-			app.handlers!.uploadLarge = async (request) => {
+			app.handlers.uploadLarge = async (request) => {
 				const body = request.json<LargeFileRequest>();
 				return {
 					filename: body.file.filename,
@@ -682,14 +682,14 @@ describe("UploadFile Handler Integration", () => {
 				file: UploadFile;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-special",
 				handler_name: "uploadSpecial",
 				is_async: true,
 			});
 
-			app.handlers!.uploadSpecial = async (request) => {
+			app.handlers.uploadSpecial = async (request) => {
 				const body = request.json<SpecialFileRequest>();
 				return {
 					filename: body.file.filename,
@@ -720,14 +720,14 @@ describe("UploadFile Handler Integration", () => {
 				file: UploadFile;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-binary",
 				handler_name: "uploadBinary",
 				is_async: true,
 			});
 
-			app.handlers!.uploadBinary = async (request) => {
+			app.handlers.uploadBinary = async (request) => {
 				const body = request.json<BinaryFileRequest>();
 				const buffer = body.file.getBuffer();
 				return {
@@ -768,14 +768,14 @@ describe("UploadFile Handler Integration", () => {
 				file?: UploadFile;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-required",
 				handler_name: "uploadRequired",
 				is_async: true,
 			});
 
-			app.handlers!.uploadRequired = async (request) => {
+			app.handlers.uploadRequired = async (request) => {
 				const body = request.json<RequestWithOptionalFile>();
 				const file = body?.file;
 				if (!file) {
@@ -805,14 +805,14 @@ describe("UploadFile Handler Integration", () => {
 		});
 
 		it("should handle wrong field name gracefully", async () => {
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-wrong-field",
 				handler_name: "uploadWrongField",
 				is_async: true,
 			});
 
-			app.handlers!.uploadWrongField = async (request) => {
+			app.handlers.uploadWrongField = async (request) => {
 				const body = request.json<Record<string, unknown>>();
 				const file = body?.file;
 				return {
@@ -847,14 +847,14 @@ describe("UploadFile Handler Integration", () => {
 				metadata: Record<string, unknown>;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-invalid-json",
 				handler_name: "uploadInvalidJson",
 				is_async: true,
 			});
 
-			app.handlers!.uploadInvalidJson = async (request) => {
+			app.handlers.uploadInvalidJson = async (request) => {
 				const body = request.json<RequestWithJson>();
 				return {
 					filename: body.file.filename,
@@ -889,7 +889,7 @@ describe("UploadFile Handler Integration", () => {
 				description: string;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-no-parse",
 				handler_name: "uploadNoParse",
@@ -897,7 +897,7 @@ describe("UploadFile Handler Integration", () => {
 			});
 
 			// This handler does NOT manually call JSON.parse - it just uses request.json()
-			app.handlers!.uploadNoParse = async (request) => {
+			app.handlers.uploadNoParse = async (request) => {
 				const body = request.json<UploadRequest>();
 				// No manual JSON.parse needed - request.json() handles it
 				const file = body.file as UploadFile;
@@ -937,14 +937,14 @@ describe("UploadFile Handler Integration", () => {
 				name: string;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-typed",
 				handler_name: "uploadTyped",
 				is_async: true,
 			});
 
-			app.handlers!.uploadTyped = async (request) => {
+			app.handlers.uploadTyped = async (request) => {
 				const body = request.json<TypedRequest>();
 				// TypeScript knows these properties exist
 				const filename: string = body.file.filename;
@@ -991,14 +991,14 @@ describe("UploadFile Handler Integration", () => {
 				file: UploadFile;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-auto-convert",
 				handler_name: "uploadAutoConvert",
 				is_async: true,
 			});
 
-			app.handlers!.uploadAutoConvert = async (request) => {
+			app.handlers.uploadAutoConvert = async (request) => {
 				const body = request.json<RequestWithFile>();
 				// file should be an UploadFile instance, not raw metadata
 				const isUploadFile =
@@ -1042,14 +1042,14 @@ describe("UploadFile Handler Integration", () => {
 				file: UploadFile;
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-async-ops",
 				handler_name: "uploadAsyncOps",
 				is_async: true,
 			});
 
-			app.handlers!.uploadAsyncOps = async (request) => {
+			app.handlers.uploadAsyncOps = async (request) => {
 				const body = request.json<UploadRequest>();
 				// Can use async operations naturally
 				const text = await body.file.textAsync();
@@ -1092,17 +1092,17 @@ describe("UploadFile Handler Integration", () => {
 				tags: string | string[];
 			}
 
-			app.routes!.push({
+			app.routes?.push({
 				method: "POST",
 				path: "/upload-typed-fields",
 				handler_name: "uploadTypedFields",
 				is_async: true,
 			});
 
-			app.handlers!.uploadTypedFields = async (request) => {
+			app.handlers.uploadTypedFields = async (request) => {
 				const body = request.json<TypedRequest>();
 				// Parse fields since form data converts everything to strings
-				const count = typeof body.count === "string" ? parseInt(body.count) : body.count;
+				const count = typeof body.count === "string" ? parseInt(body.count, 10) : body.count;
 				const enabled = typeof body.enabled === "string" ? body.enabled === "true" : body.enabled;
 				const tags = Array.isArray(body.tags) ? body.tags : typeof body.tags === "string" ? [body.tags] : [];
 

@@ -78,9 +78,7 @@ mod tests {
 
     #[test]
     fn test_response_builder_status() {
-        let (status, _, _) = ResponseBuilder::new()
-            .status(StatusCode::CREATED)
-            .build();
+        let (status, _, _) = ResponseBuilder::new().status(StatusCode::CREATED).build();
 
         assert_eq!(status, StatusCode::CREATED);
     }
@@ -99,9 +97,7 @@ mod tests {
     #[test]
     fn test_response_builder_body() {
         let body_data = json!({ "id": 123, "name": "test" });
-        let (_, _, body) = ResponseBuilder::new()
-            .body(body_data.clone())
-            .build();
+        let (_, _, body) = ResponseBuilder::new().body(body_data.clone()).build();
 
         let parsed: serde_json::Value = serde_json::from_str(&body).unwrap();
         assert_eq!(parsed["id"], 123);
@@ -113,10 +109,7 @@ mod tests {
         let first_body = json!({ "first": "value" });
         let second_body = json!({ "second": "value" });
 
-        let (_, _, body) = ResponseBuilder::new()
-            .body(first_body)
-            .body(second_body)
-            .build();
+        let (_, _, body) = ResponseBuilder::new().body(first_body).body(second_body).build();
 
         let parsed: serde_json::Value = serde_json::from_str(&body).unwrap();
         assert!(!parsed.get("first").is_some());
@@ -129,7 +122,10 @@ mod tests {
             .header("Content-Type", "application/json")
             .build();
 
-        assert_eq!(headers.get("content-type").unwrap().to_str().unwrap(), "application/json");
+        assert_eq!(
+            headers.get("content-type").unwrap().to_str().unwrap(),
+            "application/json"
+        );
     }
 
     #[test]
@@ -141,9 +137,18 @@ mod tests {
             .build();
 
         assert_eq!(headers.len(), 3);
-        assert_eq!(headers.get("content-type").unwrap().to_str().unwrap(), "application/json");
-        assert_eq!(headers.get("x-custom-header").unwrap().to_str().unwrap(), "custom-value");
-        assert_eq!(headers.get("authorization").unwrap().to_str().unwrap(), "Bearer token123");
+        assert_eq!(
+            headers.get("content-type").unwrap().to_str().unwrap(),
+            "application/json"
+        );
+        assert_eq!(
+            headers.get("x-custom-header").unwrap().to_str().unwrap(),
+            "custom-value"
+        );
+        assert_eq!(
+            headers.get("authorization").unwrap().to_str().unwrap(),
+            "Bearer token123"
+        );
     }
 
     #[test]
@@ -153,7 +158,10 @@ mod tests {
             .header("Content-Type", "application/json")
             .build();
 
-        assert_eq!(headers.get("content-type").unwrap().to_str().unwrap(), "application/json");
+        assert_eq!(
+            headers.get("content-type").unwrap().to_str().unwrap(),
+            "application/json"
+        );
     }
 
     #[test]
@@ -206,10 +214,7 @@ mod tests {
             "timestamp": "2024-01-01T00:00:00Z"
         });
 
-        let (status, _, body) = ResponseBuilder::new()
-            .status(StatusCode::OK)
-            .body(complex_body)
-            .build();
+        let (status, _, body) = ResponseBuilder::new().status(StatusCode::OK).body(complex_body).build();
 
         assert_eq!(status, StatusCode::OK);
         let parsed: serde_json::Value = serde_json::from_str(&body).unwrap();
@@ -220,9 +225,7 @@ mod tests {
 
     #[test]
     fn test_response_builder_null_body() {
-        let (_, _, body) = ResponseBuilder::new()
-            .body(serde_json::Value::Null)
-            .build();
+        let (_, _, body) = ResponseBuilder::new().body(serde_json::Value::Null).build();
 
         assert_eq!(body, "null");
     }
@@ -230,9 +233,7 @@ mod tests {
     #[test]
     fn test_response_builder_array_body() {
         let array_body = json!([1, 2, 3, 4, 5]);
-        let (_, _, body) = ResponseBuilder::new()
-            .body(array_body)
-            .build();
+        let (_, _, body) = ResponseBuilder::new().body(array_body).build();
 
         let parsed: serde_json::Value = serde_json::from_str(&body).unwrap();
         assert!(parsed.is_array());
@@ -242,9 +243,7 @@ mod tests {
 
     #[test]
     fn test_response_builder_empty_object() {
-        let (_, _, body) = ResponseBuilder::new()
-            .body(json!({}))
-            .build();
+        let (_, _, body) = ResponseBuilder::new().body(json!({})).build();
 
         let parsed: serde_json::Value = serde_json::from_str(&body).unwrap();
         assert!(parsed.is_object());
@@ -266,9 +265,7 @@ mod tests {
         ];
 
         for code in status_codes {
-            let (status, _, _) = ResponseBuilder::new()
-                .status(code)
-                .build();
+            let (status, _, _) = ResponseBuilder::new().status(code).build();
 
             assert_eq!(status, code);
         }
@@ -289,9 +286,7 @@ mod tests {
     #[test]
     fn test_response_builder_invalid_header_value() {
         // Invalid header values should be silently ignored
-        let (_, headers, _) = ResponseBuilder::new()
-            .header("Valid-Header", "valid-value")
-            .build();
+        let (_, headers, _) = ResponseBuilder::new().header("Valid-Header", "valid-value").build();
 
         assert_eq!(headers.len(), 1);
     }
@@ -305,9 +300,7 @@ mod tests {
             "newlines": "line1\nline2"
         });
 
-        let (_, _, body) = ResponseBuilder::new()
-            .body(body_with_special_chars)
-            .build();
+        let (_, _, body) = ResponseBuilder::new().body(body_with_special_chars).build();
 
         let parsed: serde_json::Value = serde_json::from_str(&body).unwrap();
         assert_eq!(parsed["message"], "Hello \"World\"");
