@@ -49,6 +49,8 @@ coverage.info
 coverage.lcov
 coverage.xml
 coverage/
+!scripts/coverage/
+!scripts/coverage/**
 crates/spikard-node/index.d.ts
 crates/spikard-node/index.js
 crates/extensions/

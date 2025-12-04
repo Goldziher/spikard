@@ -247,52 +247,19 @@ tasks:
   check:rust:
     desc: "Fast check of Rust code (no codegen)"
     cmds:
-      - |
-        if [[ "$(uname -s)" == "Darwin" ]]; then
-          if [[ -z "${LIBCLANG_PATH:-}" && -d "/opt/homebrew/opt/llvm/lib" ]]; then
-            export LIBCLANG_PATH="/opt/homebrew/opt/llvm/lib"
-            export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/llvm/lib"
-          fi
-          if [[ -z "${BINDGEN_EXTRA_CLANG_ARGS:-}" && -x "/usr/bin/xcrun" ]]; then
-            export MACOS_SDK_PATH="$(xcrun --show-sdk-path)"
-            export BINDGEN_EXTRA_CLANG_ARGS="-nostdinc -I${LIBCLANG_PATH:-/opt/homebrew/opt/llvm/lib}/clang/21/include -isysroot ${MACOS_SDK_PATH} -I${MACOS_SDK_PATH}/usr/include"
-          fi
-        fi
-        cargo check --workspace --all-features
+      - ./scripts/rust/run-with-bindgen-env.sh cargo check --workspace --all-features
 
   rust:lint:
     desc: "Run Rust linter with auto-fix (clippy + format)"
     cmds:
       - cargo fmt --all
-      - |
-        if [[ "$(uname -s)" == "Darwin" ]]; then
-          if [[ -z "${LIBCLANG_PATH:-}" && -d "/opt/homebrew/opt/llvm/lib" ]]; then
-            export LIBCLANG_PATH="/opt/homebrew/opt/llvm/lib"
-            export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/llvm/lib"
-          fi
-          if [[ -z "${BINDGEN_EXTRA_CLANG_ARGS:-}" && -x "/usr/bin/xcrun" ]]; then
-            export MACOS_SDK_PATH="$(xcrun --show-sdk-path)"
-            export BINDGEN_EXTRA_CLANG_ARGS="-nostdinc -I${LIBCLANG_PATH:-/opt/homebrew/opt/llvm/lib}/clang/21/include -isysroot ${MACOS_SDK_PATH} -I${MACOS_SDK_PATH}/usr/include"
-          fi
-        fi
-        cargo clippy --workspace --all-features -- -D warnings
+      - ./scripts/rust/run-with-bindgen-env.sh cargo clippy --workspace --all-features -- -D warnings
 
   rust:lint:check:
     desc: "Check Rust code without auto-fix (clippy + format check)"
     cmds:
       - cargo fmt --all --check
-      - |
-        if [[ "$(uname -s)" == "Darwin" ]]; then
-          if [[ -z "${LIBCLANG_PATH:-}" && -d "/opt/homebrew/opt/llvm/lib" ]]; then
-            export LIBCLANG_PATH="/opt/homebrew/opt/llvm/lib"
-            export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/llvm/lib"
-          fi
-          if [[ -z "${BINDGEN_EXTRA_CLANG_ARGS:-}" && -x "/usr/bin/xcrun" ]]; then
-            export MACOS_SDK_PATH="$(xcrun --show-sdk-path)"
-            export BINDGEN_EXTRA_CLANG_ARGS="-nostdinc -I${LIBCLANG_PATH:-/opt/homebrew/opt/llvm/lib}/clang/21/include -isysroot ${MACOS_SDK_PATH} -I${MACOS_SDK_PATH}/usr/include"
-          fi
-        fi
-        cargo clippy --workspace --all-features -- -D warnings
+      - ./scripts/rust/run-with-bindgen-env.sh cargo clippy --workspace --all-features -- -D warnings
 
   rust:format:
     desc: "Format Rust code"
@@ -502,13 +469,7 @@ tasks:
   release:php:
     desc: "Trigger PHP release workflow (requires git tag)"
     cmds:
-      - |
-        if [[ -z "{{.TAG}}" ]]; then
-          echo "Usage: task release:php -- --set TAG=v0.1.4"
-          exit 1
-        fi
-        echo "Triggering release for PHP bindings: {{.TAG}}"
-        gh workflow run release-php.yml --ref main -f tag={{.TAG}}
+      - ./scripts/php/trigger-release.sh "{{.TAG}}"
     preconditions:
       - sh: command -v gh
         msg: "GitHub CLI (gh) is required for release workflows"
@@ -763,16 +724,7 @@ tasks:
   cov:rust:
     desc: "Generate Rust code coverage with 95% minimum enforcement via tarpaulin"
     cmds:
-      - mkdir -p target/tarpaulin
-      - |
-        DYLD_FALLBACK_LIBRARY_PATH=/usr/local/lib cargo tarpaulin \
-          --workspace \
-          --exclude spikard-wasm \
-          --exclude spikard-php \
-          --timeout 300 \
-          --out Stdout \
-          --out Html \
-          --out Lcov
+      - ./scripts/coverage/run-rust-tarpaulin.sh
       - 'echo ""'
       - echo "Rust coverage reports generated:"
       - 'echo "  - HTML: target/tarpaulin/index.html"'
