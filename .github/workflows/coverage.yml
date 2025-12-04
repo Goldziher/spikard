@@ -185,5 +185,6 @@ jobs:
         uses: actions/download-artifact@v4
 
       - name: Display coverage summary
-        run: bash scripts/coverage/show-summary.sh
+        run: |
+          bash scripts/coverage/show-summary.sh
           echo "  - Node.js: standard coverage"
