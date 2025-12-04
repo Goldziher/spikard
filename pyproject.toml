@@ -166,6 +166,7 @@ omit = [
   "packages/python/tests/*",
   "packages/python/spikard/tests/*",
   "packages/python/spikard/_internal/*",
+  "packages/python/spikard/_internal.py",
   "scripts/*",
   "*/__pycache__/*",
   "*/site-packages/*",
