@@ -26,7 +26,7 @@ base64 = "0.22"
 serde_qs = "0.15"
 url = "2.5"
 jiff = "0.2"
-uuid = "1.18"
+uuid = "1.19"
 indexmap = "2.12"
 tokio = { workspace = true, optional = true }
 bytes = { version = "1.11", optional = true }

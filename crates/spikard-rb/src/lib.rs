@@ -60,7 +60,6 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io;
 use std::mem;
-use std::ops::Deref as _;
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
@@ -1536,7 +1535,7 @@ fn build_response(ruby: &Ruby, content: Value, status_code: i64, headers: Value)
                 format!("Invalid header name '{}': {}", name, err),
             )
         })?;
-        let header_value = HeaderValue::from_str(&value).map_err(|err| {
+        let header_value = HeaderValue::from_str(value).map_err(|err| {
             Error::new(
                 ruby.exception_arg_error(),
                 format!("Invalid header value for '{}': {}", name, err),

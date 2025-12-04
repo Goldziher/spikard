@@ -77,6 +77,7 @@ TO ADD BROWSER TESTS:
 #[cfg(test)]
 mod test_documentation {
     #[test]
+    #[allow(clippy::assertions_on_constants)]
     fn test_coverage_summary() {
         // This test exists only to document the comprehensive WASM FFI test suite
         // The actual tests are in wasm_bindgen_tests.rs and run via wasm-pack test

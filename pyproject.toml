@@ -1,7 +1,7 @@
 [dependency-groups]
 dev = [
   "annotated-types>=0.7.0",
-  "fastapi>=0.122.0",
+  "fastapi>=0.123.6",
   "httpx-sse>=0.4.3",
   "jsonschema>=4.23.0",
   "maturin>=1.10.2",
@@ -27,7 +27,7 @@ docs = [
   "mkdocs-material>=9.7.0",
   "mkdocs-minify-plugin>=0.8.0",
   "mkdocstrings>=1.0.0",
-  "mkdocstrings-python>=2.0.0",
+  "mkdocstrings-python>=2.0.1",
 ]
 doc = [
   "mike>=2.1.3",
