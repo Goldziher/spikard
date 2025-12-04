@@ -98,7 +98,7 @@ final class ParamsTest extends TestCase
 
     public function testHeaderWithFactory(): void
     {
-        $header = new Header(defaultFactory: fn () => 'Bearer token-' . time());
+        $header = new Header(defaultFactory: fn () => 'Bearer token-' . \time());
 
         $this->assertTrue($header->hasDefault());
         $this->assertIsString($header->getDefault());
@@ -124,13 +124,13 @@ final class ParamsTest extends TestCase
 
     public function testCookieWithFactory(): void
     {
-        $cookie = new Cookie(defaultFactory: fn () => bin2hex(random_bytes(16)));
+        $cookie = new Cookie(defaultFactory: fn () => \bin2hex(\random_bytes(16)));
 
         $this->assertTrue($cookie->hasDefault());
         // Verify the factory can be invoked and produces output
-        $factory = fn () => bin2hex(random_bytes(16));
+        $factory = fn () => \bin2hex(\random_bytes(16));
         $result = $factory();
-        $this->assertSame(32, strlen($result)); // 16 bytes = 32 hex chars
+        $this->assertSame(32, \strlen($result)); // 16 bytes = 32 hex chars
     }
 
     // Body parameter tests
@@ -145,11 +145,11 @@ final class ParamsTest extends TestCase
 
     public function testBodyWithFactory(): void
     {
-        $body = new Body(defaultFactory: fn () => ['timestamp' => time()]);
+        $body = new Body(defaultFactory: fn () => ['timestamp' => \time()]);
 
         $this->assertTrue($body->hasDefault());
         // Verify the factory can be invoked and produces expected output
-        $factory = fn () => ['timestamp' => time()];
+        $factory = fn () => ['timestamp' => \time()];
         $result = $factory();
         $this->assertArrayHasKey('timestamp', $result);
     }

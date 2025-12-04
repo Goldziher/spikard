@@ -8,13 +8,13 @@ use axum::http::{Request, StatusCode};
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendCallable;
-use once_cell::sync::OnceLock;
 use spikard_bindings_shared::ErrorResponseBuilder;
 use spikard_core::errors::StructuredError;
 use spikard_http::{Handler, HandlerResult, RequestData};
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::sync::OnceLock;
 use tokio::runtime::{Builder, Runtime};
 
 /// Global Tokio runtime for async operations.
@@ -34,7 +34,7 @@ pub fn get_runtime() -> PhpResult<&'static Runtime> {
 
     runtime_result
         .as_ref()
-        .map_err(|err| PhpException::default(serde_json::to_string(err).unwrap_or_else(|_| err.code.clone())).into())
+        .map_err(|err| PhpException::default(serde_json::to_string(err).unwrap_or_else(|_| err.code.clone())))
 }
 
 /// Inner state of a PHP handler.

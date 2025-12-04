@@ -81,13 +81,13 @@ final class StreamingResponseTest extends TestCase
             $this->assertSame('12', $response->headers['Content-Length']);
 
             // Consume generator to verify content
-            $chunks = iterator_to_array($response->generator);
-            $stringChunks = array_map(function ($chunk): string {
-                return is_string($chunk) ? $chunk : '';
+            $chunks = \iterator_to_array($response->generator);
+            $stringChunks = \array_map(function ($chunk): string {
+                return \is_string($chunk) ? $chunk : '';
             }, $chunks);
-            $this->assertSame('test content', implode('', $stringChunks));
+            $this->assertSame('test content', \implode('', $stringChunks));
         } finally {
-            @unlink($tempFile);
+            @\unlink($tempFile);
         }
     }
 
@@ -100,7 +100,7 @@ final class StreamingResponseTest extends TestCase
 
             $this->assertSame('application/octet-stream', $response->headers['Content-Type']);
         } finally {
-            @unlink($tempFile);
+            @\unlink($tempFile);
         }
     }
 
@@ -112,7 +112,7 @@ final class StreamingResponseTest extends TestCase
             // Chunk size of 3 bytes
             $response = StreamingResponse::file($tempFile, chunkSize: 3);
 
-            $chunks = iterator_to_array($response->generator);
+            $chunks = \iterator_to_array($response->generator);
             // Should produce 4 chunks: "123", "456", "789", "0"
             $this->assertCount(4, $chunks);
             $this->assertSame('123', $chunks[0]);
@@ -120,7 +120,7 @@ final class StreamingResponseTest extends TestCase
             $this->assertSame('789', $chunks[2]);
             $this->assertSame('0', $chunks[3]);
         } finally {
-            @unlink($tempFile);
+            @\unlink($tempFile);
         }
     }
 
@@ -142,7 +142,7 @@ final class StreamingResponseTest extends TestCase
 
             StreamingResponse::file($tempFile, chunkSize: 0);
         } finally {
-            @unlink($tempFile);
+            @\unlink($tempFile);
         }
     }
 
@@ -159,17 +159,17 @@ final class StreamingResponseTest extends TestCase
         $this->assertSame(200, $response->statusCode);
         $this->assertSame('application/x-ndjson', $response->headers['Content-Type']);
 
-        $lines = iterator_to_array($response->generator);
+        $lines = \iterator_to_array($response->generator);
         $this->assertCount(3, $lines);
-        if (isset($lines[0]) && is_string($lines[0])) {
+        if (isset($lines[0]) && \is_string($lines[0])) {
             $this->assertStringContainsString('"id":1', $lines[0]);
             $this->assertStringContainsString('"name":"Alice"', $lines[0]);
             $this->assertStringEndsWith("\n", $lines[0]);
         }
-        if (isset($lines[1]) && is_string($lines[1])) {
+        if (isset($lines[1]) && \is_string($lines[1])) {
             $this->assertStringEndsWith("\n", $lines[1]);
         }
-        if (isset($lines[2]) && is_string($lines[2])) {
+        if (isset($lines[2]) && \is_string($lines[2])) {
             $this->assertStringEndsWith("\n", $lines[2]);
         }
     }
@@ -179,7 +179,7 @@ final class StreamingResponseTest extends TestCase
         $dataGenerator = $this->createEmptyGenerator();
         $response = StreamingResponse::jsonLines($dataGenerator);
 
-        $lines = iterator_to_array($response->generator);
+        $lines = \iterator_to_array($response->generator);
         $this->assertCount(0, $lines);
     }
 
@@ -196,13 +196,13 @@ final class StreamingResponseTest extends TestCase
 
         $response = StreamingResponse::jsonLines($dataGenerator());
 
-        $lines = iterator_to_array($response->generator);
-        if (isset($lines[0]) && is_string($lines[0])) {
-            $decoded = json_decode($lines[0], true);
+        $lines = \iterator_to_array($response->generator);
+        if (isset($lines[0]) && \is_string($lines[0])) {
+            $decoded = \json_decode($lines[0], true);
 
-            if (is_array($decoded)) {
+            if (\is_array($decoded)) {
                 $nested = $decoded['nested'] ?? null;
-                if (is_array($nested) && isset($nested['array'])) {
+                if (\is_array($nested) && isset($nested['array'])) {
                     $this->assertSame([1, 2, 3], $nested['array']);
                 }
                 $bool = $decoded['bool'] ?? null;
@@ -259,12 +259,12 @@ final class StreamingResponseTest extends TestCase
 
     private function createTempFile(string $content): string
     {
-        $tempFile = tempnam(sys_get_temp_dir(), 'spikard_test_');
+        $tempFile = \tempnam(\sys_get_temp_dir(), 'spikard_test_');
         if ($tempFile === false) {
             throw new RuntimeException('Failed to create temp file');
         }
 
-        file_put_contents($tempFile, $content);
+        \file_put_contents($tempFile, $content);
         return $tempFile;
     }
 }
