@@ -1,4 +1,4 @@
-import { createStreamingHandle } from "../index.js";
+import { createStreamingHandle } from "./index.js";
 import type { HandlerResult, JsonValue } from "./types";
 
 const STREAM_HANDLE_PROP = "__spikard_stream_handle" as const;

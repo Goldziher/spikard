@@ -618,10 +618,6 @@ pub fn spikard_start_server_impl(
     let mut app = build_router_with_handlers_and_config(route_pairs, server_config.clone(), route_metadata)
         .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
 
-    if let Some(hooks) = server_config.lifecycle_hooks.clone() {
-        app = hooks.into_router(app);
-    }
-
     // Create shutdown channel
     let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
 

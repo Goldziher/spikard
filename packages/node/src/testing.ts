@@ -2,14 +2,14 @@
  * Testing utilities for Spikard applications
  */
 
+import type { ServerConfig } from "./config";
+import { isNativeHandler, wrapHandler } from "./handler-wrapper";
+import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
 import {
 	TestClient as NativeTestClient,
 	type TestResponse as NativeTestResponse,
 	type WebSocketTestConnection,
-} from "../index.js";
-import type { ServerConfig } from "./config";
-import { isNativeHandler, wrapHandler } from "./handler-wrapper";
-import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
+} from "./index.js";
 import type { JsonValue } from "./types";
 
 /**
