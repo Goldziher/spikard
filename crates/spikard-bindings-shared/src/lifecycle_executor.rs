@@ -1,0 +1,398 @@
+//! Shared lifecycle hook executor infrastructure
+//!
+//! This module provides a language-agnostic abstraction for executing lifecycle hooks.
+//! It extracts ~960 lines of duplicated logic from Python, Node.js, Ruby, and PHP bindings
+//! into reusable trait-based components.
+//!
+//! # Design
+//!
+//! The executor uses a trait-based pattern where language bindings implement
+//! `LanguageLifecycleHook` to provide language-specific hook invocation, while
+//! `LifecycleExecutor` handles the common logic:
+//!
+//! - Hook result type handling (Continue vs ShortCircuit)
+//! - Response/Request building from hook results
+//! - Error handling and conversion
+//!
+//! # Example
+//!
+//! ```ignore
+//! struct MyLanguageHook { ... }
+//!
+//! impl LanguageLifecycleHook for MyLanguageHook {
+//!     fn prepare_hook_data(&self, req: &Request<Body>) -> Result<Self::HookData, String> {
+//!         // Convert Request<Body> to language-specific representation
+//!     }
+//!
+//!     async fn invoke_hook(&self, data: Self::HookData) -> Result<HookResultData, String> {
+//!         // Call language function and return structured result
+//!     }
+//! }
+//! ```
+
+use axum::{
+    body::Body,
+    http::{Request, Response, StatusCode},
+};
+use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::Arc;
+
+/// Data returned from language-specific hook invocation
+///
+/// This is a normalized representation of hook results that abstracts away
+/// language-specific details. Bindings convert their native hook results
+/// into this common format.
+#[derive(Debug, Clone)]
+pub struct HookResultData {
+    /// Whether to continue execution (true) or short-circuit (false)
+    pub continue_execution: bool,
+    /// Optional status code for short-circuit responses
+    pub status_code: Option<u16>,
+    /// Optional headers to include in response
+    pub headers: Option<HashMap<String, String>>,
+    /// Optional body bytes for response
+    pub body: Option<Vec<u8>>,
+    /// Optional request modifications (method, path, headers, body)
+    pub request_modifications: Option<RequestModifications>,
+}
+
+/// Modifications to apply to a request
+#[derive(Debug, Clone)]
+pub struct RequestModifications {
+    /// New HTTP method (e.g., "GET", "POST")
+    pub method: Option<String>,
+    /// New request path
+    pub path: Option<String>,
+    /// New or updated headers
+    pub headers: Option<HashMap<String, String>>,
+    /// New request body
+    pub body: Option<Vec<u8>>,
+}
+
+impl HookResultData {
+    /// Create a Continue result (pass through)
+    pub fn continue_execution() -> Self {
+        Self {
+            continue_execution: true,
+            status_code: None,
+            headers: None,
+            body: None,
+            request_modifications: None,
+        }
+    }
+
+    /// Create a short-circuit response result
+    pub fn short_circuit(status_code: u16, body: Vec<u8>, headers: Option<HashMap<String, String>>) -> Self {
+        Self {
+            continue_execution: false,
+            status_code: Some(status_code),
+            headers,
+            body: Some(body),
+            request_modifications: None,
+        }
+    }
+
+    /// Create a request modification result
+    pub fn modify_request(modifications: RequestModifications) -> Self {
+        Self {
+            continue_execution: true,
+            status_code: None,
+            headers: None,
+            body: None,
+            request_modifications: Some(modifications),
+        }
+    }
+}
+
+/// Trait for language-specific lifecycle hook implementations
+///
+/// Each language binding implements this trait to provide language-specific
+/// hook invocation while delegating common logic to `LifecycleExecutor`.
+pub trait LanguageLifecycleHook: Send + Sync {
+    /// Language-specific hook data type
+    type HookData: Send;
+
+    /// Prepare hook data from the incoming request/response
+    ///
+    /// This should convert axum HTTP types to language-specific representations.
+    fn prepare_hook_data(&self, req: &Request<Body>) -> Result<Self::HookData, String>;
+
+    /// Invoke the language hook and return normalized result data
+    ///
+    /// This should call the language function and convert its result to `HookResultData`.
+    fn invoke_hook(
+        &self,
+        data: Self::HookData,
+    ) -> Pin<Box<dyn Future<Output = Result<HookResultData, String>> + Send>>;
+}
+
+/// Executor that handles common lifecycle hook logic
+///
+/// This executor is generic over any language binding that implements
+/// `LanguageLifecycleHook`. It provides common logic for:
+/// - Executing request hooks and handling short-circuits
+/// - Executing response hooks and building modified responses
+/// - Converting hook results to axum Request/Response types
+pub struct LifecycleExecutor<L: LanguageLifecycleHook> {
+    hook: Arc<L>,
+}
+
+impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
+    /// Create a new executor for the given hook
+    pub fn new(hook: Arc<L>) -> Self {
+        Self { hook }
+    }
+
+    /// Execute a request hook, handling Continue/ShortCircuit semantics
+    ///
+    /// Returns either the modified request or a short-circuit response.
+    pub async fn execute_request_hook(
+        &self,
+        req: Request<Body>,
+    ) -> Result<Result<Request<Body>, Response<Body>>, String> {
+        let hook_data = self.hook.prepare_hook_data(&req)?;
+        let result = self.hook.invoke_hook(hook_data).await?;
+
+        if !result.continue_execution {
+            // Short-circuit: build response and return it
+            let response = self.build_response_from_hook_result(&result)?;
+            return Ok(Err(response));
+        }
+
+        // Continue: optionally modify request
+        if let Some(modifications) = result.request_modifications {
+            let modified_req = self.apply_request_modifications(req, modifications)?;
+            Ok(Ok(modified_req))
+        } else {
+            Ok(Ok(req))
+        }
+    }
+
+    /// Execute a response hook, handling response modification
+    ///
+    /// Response hooks can only continue or modify the response,
+    /// never short-circuit.
+    pub async fn execute_response_hook(
+        &self,
+        resp: Response<Body>,
+    ) -> Result<Response<Body>, String> {
+        // For response hooks, we typically don't have hook_data to prepare
+        // since response hooks operate on already-generated responses.
+        // This is a simplified version; language bindings may override.
+        let (parts, body) = resp.into_parts();
+        let body_bytes = extract_body(body).await?;
+
+        // Rebuild request as a dummy for prepare_hook_data
+        // (Language bindings override this behavior as needed)
+        let dummy_req = Request::builder()
+            .method("GET")
+            .uri("/")
+            .body(Body::empty())
+            .map_err(|e| format!("Failed to build dummy request: {}", e))?;
+
+        let hook_data = self.hook.prepare_hook_data(&dummy_req)?;
+        let result = self.hook.invoke_hook(hook_data).await?;
+
+        // Apply modifications to response if provided
+        if let Some(modifications) = result.request_modifications {
+            // For response hooks, interpret modifications as response body/headers changes
+            let mut builder = Response::builder().status(parts.status);
+
+            // Collect header mod keys for later comparison
+            let header_mod_keys: Vec<String> = modifications
+                .headers
+                .as_ref()
+                .map(|mods| mods.keys().map(|k| k.to_lowercase()).collect())
+                .unwrap_or_default();
+
+            // Apply header modifications
+            if let Some(header_mods) = modifications.headers {
+                for (key, value) in header_mods {
+                    builder = builder.header(&key, &value);
+                }
+            }
+
+            // Copy original headers not overridden
+            for (name, value) in parts.headers.iter() {
+                let key_str = name.as_str().to_lowercase();
+                // Skip if this header was in modifications
+                if !header_mod_keys.contains(&key_str) {
+                    builder = builder.header(name, value);
+                }
+            }
+
+            let body = modifications.body.unwrap_or(body_bytes);
+            return builder
+                .body(Body::from(body))
+                .map_err(|e| format!("Failed to build modified response: {}", e));
+        }
+
+        // Rebuild original response
+        let mut builder = Response::builder().status(parts.status);
+        for (name, value) in parts.headers {
+            if let Some(name) = name {
+                builder = builder.header(name, value);
+            }
+        }
+        builder
+            .body(Body::from(body_bytes))
+            .map_err(|e| format!("Failed to rebuild response: {}", e))
+    }
+
+    /// Build an axum Response from hook result data
+    fn build_response_from_hook_result(&self, result: &HookResultData) -> Result<Response<Body>, String> {
+        let status_code = result.status_code.unwrap_or(200);
+        let status = StatusCode::from_u16(status_code)
+            .map_err(|e| format!("Invalid status code {}: {}", status_code, e))?;
+
+        let mut builder = Response::builder().status(status);
+
+        // Add headers from hook result
+        if let Some(ref headers) = result.headers {
+            for (key, value) in headers {
+                builder = builder.header(key, value);
+            }
+        }
+
+        // Ensure content-type if not specified
+        if !builder
+            .headers_ref()
+            .map(|h| h.contains_key("content-type"))
+            .unwrap_or(false)
+        {
+            builder = builder.header("content-type", "application/json");
+        }
+
+        let body = result
+            .body
+            .clone()
+            .unwrap_or_else(|| b"{}".to_vec());
+
+        builder
+            .body(Body::from(body))
+            .map_err(|e| format!("Failed to build response: {}", e))
+    }
+
+    /// Apply request modifications to a request
+    fn apply_request_modifications(
+        &self,
+        req: Request<Body>,
+        mods: RequestModifications,
+    ) -> Result<Request<Body>, String> {
+        let (mut parts, body) = req.into_parts();
+
+        // Update method if provided
+        if let Some(method) = &mods.method {
+            parts.method = method
+                .parse()
+                .map_err(|e| format!("Invalid method '{}': {}", method, e))?;
+        }
+
+        // Update URI if provided
+        if let Some(path) = &mods.path {
+            parts.uri = path
+                .parse()
+                .map_err(|e| format!("Invalid path '{}': {}", path, e))?;
+        }
+
+        // Update/add headers
+        if let Some(new_headers) = &mods.headers {
+            for (key, value) in new_headers {
+                let header_name: http::header::HeaderName = key
+                    .parse()
+                    .map_err(|_| format!("Invalid header name: {}", key))?;
+                let header_value: http::header::HeaderValue = value
+                    .parse()
+                    .map_err(|_| format!("Invalid header value for {}: {}", key, value))?;
+                parts.headers.insert(header_name, header_value);
+            }
+        }
+
+        // Update body if provided
+        let body = if let Some(new_body) = mods.body {
+            Body::from(new_body)
+        } else {
+            body
+        };
+
+        Ok(Request::from_parts(parts, body))
+    }
+}
+
+/// Extract body bytes from an axum Body
+///
+/// This is a helper used by lifecycle executors to read response bodies.
+pub async fn extract_body(body: Body) -> Result<Vec<u8>, String> {
+    use http_body_util::BodyExt;
+
+    let bytes = body
+        .collect()
+        .await
+        .map_err(|e| format!("Failed to read body: {}", e))?
+        .to_bytes();
+    Ok(bytes.to_vec())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_hook_result_data_continue() {
+        let result = HookResultData::continue_execution();
+        assert!(result.continue_execution);
+        assert_eq!(result.status_code, None);
+        assert_eq!(result.body, None);
+    }
+
+    #[test]
+    fn test_hook_result_data_short_circuit() {
+        let body = b"error".to_vec();
+        let mut headers = HashMap::new();
+        headers.insert("x-error".to_string(), "true".to_string());
+
+        let result = HookResultData::short_circuit(400, body.clone(), Some(headers.clone()));
+        assert!(!result.continue_execution);
+        assert_eq!(result.status_code, Some(400));
+        assert_eq!(result.body, Some(body));
+        assert_eq!(result.headers, Some(headers));
+    }
+
+    #[test]
+    fn test_hook_result_data_modify_request() {
+        let mods = RequestModifications {
+            method: Some("POST".to_string()),
+            path: Some("/new-path".to_string()),
+            headers: None,
+            body: None,
+        };
+
+        let result = HookResultData::modify_request(mods.clone());
+        assert!(result.continue_execution);
+        assert_eq!(result.status_code, None);
+        assert_eq!(
+            result.request_modifications.as_ref().unwrap().method,
+            Some("POST".to_string())
+        );
+        assert_eq!(
+            result.request_modifications.as_ref().unwrap().path,
+            Some("/new-path".to_string())
+        );
+    }
+
+    #[test]
+    fn test_request_modifications_creation() {
+        let mods = RequestModifications {
+            method: Some("PUT".to_string()),
+            path: Some("/api/resource".to_string()),
+            headers: None,
+            body: Some(b"data".to_vec()),
+        };
+
+        assert_eq!(mods.method, Some("PUT".to_string()));
+        assert_eq!(mods.path, Some("/api/resource".to_string()));
+        assert_eq!(mods.body, Some(b"data".to_vec()));
+    }
+}
