@@ -32,7 +32,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
     public function testConnectWebSocketThrowsWithoutNativeExtension(): void
     {
         $app = new App();
-        $wsHandler = new DummyWebSocketHandler();
+        $wsHandler = new TestClientBehavioralExtensionDummyWebSocketHandler();
         $app = $app->addWebSocket('/ws', $wsHandler);
 
         $client = TestClient::create($app);
@@ -63,7 +63,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testParseQueryParamsEmpty(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/test', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         // Test with various empty query string formats
@@ -119,7 +119,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testParseQueryParamsWithoutQuestion(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/test', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         $response = $client->request('GET', '/test');
@@ -139,7 +139,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testRequestWithEmptyOptions(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/test', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         $response = $client->request('GET', '/test', []);
@@ -204,7 +204,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testRequestWithAllOptionsAtOnce(): void
     {
-        $app = (new App())->addRoute('POST', '/combined', new DummyHandler());
+        $app = (new App())->addRoute('POST', '/combined', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         $response = $client->request('POST', '/combined?page=1', [
@@ -220,7 +220,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testGetMethod(): void
     {
-        $app = (new App())->addRoute('GET', '/users', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/users', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         $response = $client->get('/users');
@@ -229,7 +229,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testPostMethod(): void
     {
-        $app = (new App())->addRoute('POST', '/items', new DummyHandler());
+        $app = (new App())->addRoute('POST', '/items', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         $response = $client->post('/items', ['name' => 'Item']);
@@ -238,7 +238,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testPostMethodWithoutBody(): void
     {
-        $app = (new App())->addRoute('POST', '/trigger', new DummyHandler());
+        $app = (new App())->addRoute('POST', '/trigger', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         $response = $client->post('/trigger');
@@ -249,7 +249,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testRequestThrowsWhenHandlerNotFound(): void
     {
-        $app = (new App())->addRoute('GET', '/existing', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/existing', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         $this->expectException(RuntimeException::class);
@@ -259,7 +259,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testRequestThrowsForWrongMethod(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/test', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         $this->expectException(RuntimeException::class);
@@ -301,7 +301,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testRequestOptionsNonArrayHeadersIgnored(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/test', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         // Non-array headers should be treated as empty array
@@ -313,7 +313,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testRequestOptionsNonArrayCookiesIgnored(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/test', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         // Non-array cookies should be treated as empty array
@@ -325,7 +325,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testRequestOptionsNonArrayFilesIgnored(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/test', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         // Non-array files should be treated as empty array
@@ -339,24 +339,22 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
     public function testCloseMethod(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/test', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         // Should not throw
         $client->close();
-        $this->assertTrue(true);
     }
 
     public function testCloseMethodIsIdempotent(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/test', new TestClientBehavioralExtensionDummyHandler());
         $client = TestClient::create($app);
 
         // Should not throw when called multiple times
         $client->close();
         $client->close();
         $client->close();
-        $this->assertTrue(true);
     }
 
     // ======================== HTTP Methods Uppercase ========================
@@ -382,7 +380,7 @@ final class TestClientBehavioralExtensionTest extends TestCase
 
 // ======================== Test Handlers ========================
 
-final class DummyHandler implements HandlerInterface
+final class TestClientBehavioralExtensionDummyHandler implements HandlerInterface
 {
     public function matches(Request $request): bool
     {
@@ -473,14 +471,19 @@ final class MethodCaptureHandler implements HandlerInterface
     }
 }
 
-final class DummyWebSocketHandler implements WebSocketHandlerInterface
+final class TestClientBehavioralExtensionDummyWebSocketHandler implements WebSocketHandlerInterface
 {
-    public function matches(Request $request): bool
+    public function onConnect(): void
     {
-        return true;
+        // Dummy implementation
     }
 
-    public function handle(Request $request): void
+    public function onMessage(string $message): void
+    {
+        // Dummy implementation
+    }
+
+    public function onClose(int $code, ?string $reason = null): void
     {
         // Dummy implementation
     }
@@ -488,13 +491,8 @@ final class DummyWebSocketHandler implements WebSocketHandlerInterface
 
 final class DummySseEventProducer implements SseEventProducerInterface
 {
-    public function matches(Request $request): bool
+    public function __invoke(): \Generator
     {
-        return true;
-    }
-
-    public function produce(Request $request): void
-    {
-        // Dummy implementation
+        yield "data: test\n\n";
     }
 }

@@ -83,7 +83,7 @@ final class AppRegisterControllerTest extends TestCase
 
     public function testRegisterControllerMultipleMethods(): void
     {
-        $app = (new App())->registerController(MultiRouteController::class);
+        $app = (new App())->registerController(AppRegisterControllerMultiRouteController::class);
 
         $routes = $app->routes();
         $this->assertCount(3, $routes);
@@ -275,9 +275,11 @@ final class AppRegisterControllerTest extends TestCase
 // Test controller fixtures
 final class SimpleGetController
 {
+    /**
+     * @return array<string, list<mixed>>
+     */
     #[Get('/items')]
-    /** @return array<string, list<mixed>> */
-    public function list(): array
+    public function list()
     {
         return ['items' => []];
     }
@@ -285,9 +287,11 @@ final class SimpleGetController
 
 final class SimplePostController
 {
+    /**
+     * @return array<string, int>
+     */
     #[Post('/items')]
-    /** @return array<string, int> */
-    public function create(): array
+    public function create()
     {
         return ['id' => 1];
     }
@@ -295,9 +299,11 @@ final class SimplePostController
 
 final class SimplePutController
 {
+    /**
+     * @return array<string, bool>
+     */
     #[Put('/items/123')]
-    /** @return array<string, bool> */
-    public function update(): array
+    public function update()
     {
         return ['updated' => true];
     }
@@ -305,9 +311,11 @@ final class SimplePutController
 
 final class SimpleDeleteController
 {
+    /**
+     * @return array<string, bool>
+     */
     #[Delete('/items/123')]
-    /** @return array<string, bool> */
-    public function delete(): array
+    public function delete()
     {
         return ['deleted' => true];
     }
@@ -315,33 +323,41 @@ final class SimpleDeleteController
 
 final class SimplePatchController
 {
+    /**
+     * @return array<string, bool>
+     */
     #[Patch('/items/123')]
-    /** @return array<string, bool> */
-    public function patch(): array
+    public function patch()
     {
         return ['patched' => true];
     }
 }
 
-final class MultiRouteController
+final class AppRegisterControllerMultiRouteController
 {
+    /**
+     * @return array<string, list<mixed>>
+     */
     #[Get('/items')]
-    /** @return array<string, list<mixed>> */
-    public function list(): array
+    public function list()
     {
         return ['items' => []];
     }
 
+    /**
+     * @return array<string, int>
+     */
     #[Post('/items')]
-    /** @return array<string, int> */
-    public function create(): array
+    public function create()
     {
         return ['id' => 1];
     }
 
+    /**
+     * @return array<string, bool>
+     */
     #[Delete('/items/123')]
-    /** @return array<string, bool> */
-    public function delete(): array
+    public function delete()
     {
         return ['deleted' => true];
     }
@@ -349,32 +365,31 @@ final class MultiRouteController
 
 final class ControllerWithPrivateMethod
 {
+    /**
+     * @return array<string, bool>
+     */
     #[Get('/public')]
-    /** @return array<string, bool> */
-    public function publicMethod(): array
+    public function publicMethod()
     {
         return ['public' => true];
-    }
-
-    #[Get('/private')]
-    /** @return array<string, bool> */
-    private function privateMethod(): array
-    {
-        return ['private' => true];
     }
 }
 
 final class ControllerWithPlainMethods
 {
+    /**
+     * @return array<string, bool>
+     */
     #[Get('/routed')]
-    /** @return array<string, bool> */
-    public function routed(): array
+    public function routed()
     {
         return ['routed' => true];
     }
 
-    /** @return array<string, bool> */
-    public function notRouted(): array
+    /**
+     * @return array<string, bool>
+     */
+    public function notRouted()
     {
         return ['not_routed' => true];
     }
@@ -382,16 +397,20 @@ final class ControllerWithPlainMethods
 
 final class ControllerWithPathParams
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/users/:id')]
-    /** @return array<string, string> */
-    public function getUserById(string $id): array
+    public function getUserById(string $id)
     {
         return ['user_id' => $id];
     }
 
+    /**
+     * @return array<string, string>
+     */
     #[Get('/posts/:postId/comments/:commentId')]
-    /** @return array<string, string> */
-    public function getComment(string $postId, string $commentId): array
+    public function getComment(string $postId, string $commentId)
     {
         return ['post_id' => $postId, 'comment_id' => $commentId];
     }
@@ -399,92 +418,118 @@ final class ControllerWithPathParams
 
 final class ControllerWithQueryParams
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/search')]
-    /** @return array<string, string> */
     public function search(
         string $query = 'default'
-    ): array {
+    ) {
         return ['query' => $query];
     }
 }
 
 final class ControllerWithBodyParam
 {
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
     #[Post('/data')]
-    /** @param array<string, mixed> $payload */
-    /** @return array<string, mixed> */
     public function create(
         array $payload = []
-    ): array {
+    ) {
         return ['received' => $payload];
     }
 }
 
 final class ControllerWithHeaderParam
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/auth')]
-    /** @return array<string, string> */
     public function checkAuth(
         string $authorization = 'none'
-    ): array {
+    ) {
         return ['auth' => $authorization];
     }
 }
 
 final class ControllerWithCookieParam
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/session')]
-    /** @return array<string, string> */
     public function checkSession(
         string $sessionId = 'none'
-    ): array {
+    ) {
         return ['session' => $sessionId];
     }
 }
 
 final class ControllerWithSchemas
 {
+    /**
+     * @return list<mixed>
+     */
     #[Get(
         '/schema',
         requestSchema: ['type' => 'object'],
         responseSchema: ['type' => 'array'],
         parameterSchema: ['type' => 'object']
     )]
-    /** @return list<mixed> */
-    public function withSchemas(): array
+    public function withSchemas()
     {
         return [];
     }
 }
 
-#[Middleware(['auth'])]
 final class ControllerWithMiddleware
 {
+    /**
+     * @return array<string, bool>
+     */
     #[Get('/protected')]
-    /** @return array<string, bool> */
-    public function protected(): array
+    #[Middleware(DummyMiddleware::class)]
+    public function protected()
     {
         return ['protected' => true];
     }
 }
 
+/**
+ * Dummy middleware for testing purposes.
+ */
+final class DummyMiddleware
+{
+    public function handle(): void
+    {
+    }
+}
+
 final class ControllerWithMixedParams
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/items/:id')]
-    /** @return array<string, string> */
     public function getItem(
         string $id,
         string $expand = 'none'
-    ): array {
+    ) {
         return ['id' => $id, 'expand' => $expand];
     }
 
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
     #[Post('/items')]
-    /** @param array<string, mixed> $data */
-    /** @return array<string, mixed> */
     public function createItem(
         array $data = []
-    ): array {
+    ) {
         return ['item' => $data];
     }
 }

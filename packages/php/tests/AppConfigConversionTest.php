@@ -429,7 +429,6 @@ final class AppConfigConversionTest extends TestCase
         $app = (new App())->withLifecycleHooks($hooks);
         $native = $this->invokeHooksToNative($app, $hooks);
 
-        $this->assertIsArray($native);
         $this->assertCount(0, $native);
     }
 

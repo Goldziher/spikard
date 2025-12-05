@@ -499,7 +499,6 @@ final class TestClientBehavioralTest extends TestCase
         $client = TestClient::create($app);
 
         $client->close(); // Should not throw
-        $this->assertTrue(true); // Verify execution reached this point
     }
 
     /**
@@ -655,6 +654,19 @@ final class TrackingRequestHandler implements HandlerInterface
     public function handle(Request $request): Response
     {
         ($this->callback)($request);
+        return Response::json(['ok' => true], 200);
+    }
+}
+
+final class TestHandler implements HandlerInterface
+{
+    public function matches(Request $request): bool
+    {
+        return true;
+    }
+
+    public function handle(Request $request): Response
+    {
         return Response::json(['ok' => true], 200);
     }
 }

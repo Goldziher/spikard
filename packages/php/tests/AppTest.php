@@ -95,7 +95,7 @@ final class AppTest extends TestCase
 
     public function testAppAddRoute(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
         $app = (new App())->addRoute('GET', '/test', $handler);
 
         $routes = $app->routes();
@@ -107,7 +107,7 @@ final class AppTest extends TestCase
 
     public function testAppAddRouteIsImmutable(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
         $original = new App();
         $modified = $original->addRoute('GET', '/test', $handler);
 
@@ -118,8 +118,8 @@ final class AppTest extends TestCase
 
     public function testAppAddMultipleRoutes(): void
     {
-        $handler1 = new TestHandler();
-        $handler2 = new TestHandler();
+        $handler1 = new AppTestHandler();
+        $handler2 = new AppTestHandler();
 
         $app = (new App())
             ->addRoute('GET', '/users', $handler1)
@@ -133,7 +133,7 @@ final class AppTest extends TestCase
 
     public function testAppAddRouteWithSchemas(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
         $requestSchema = ['type' => 'object'];
         $responseSchema = ['type' => 'object'];
         $paramSchema = ['type' => 'object'];
@@ -158,7 +158,7 @@ final class AppTest extends TestCase
 
     public function testAppAddWebSocket(): void
     {
-        $wsHandler = new TestWebSocketHandler();
+        $wsHandler = new AppTestWebSocketHandler();
         $app = (new App())->addWebSocket('/ws', $wsHandler);
 
         $handlers = $app->websocketHandlers();
@@ -169,7 +169,7 @@ final class AppTest extends TestCase
 
     public function testAppAddSse(): void
     {
-        $sseProducer = new TestSseProducer();
+        $sseProducer = new AppTestSseProducer();
         $app = (new App())->addSse('/events', $sseProducer);
 
         $producers = $app->sseProducers();
@@ -180,7 +180,7 @@ final class AppTest extends TestCase
 
     public function testAppFindHandlerMatching(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
         $app = (new App())->addRoute('GET', '/test', $handler);
 
         $request = new Request('GET', '/test', null);
@@ -191,7 +191,7 @@ final class AppTest extends TestCase
 
     public function testAppFindHandlerNotFound(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
         $app = (new App())->addRoute('GET', '/test', $handler);
 
         $request = new Request('GET', '/other', null);
@@ -202,7 +202,7 @@ final class AppTest extends TestCase
 
     public function testAppFindHandlerDifferentMethod(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
         $app = (new App())->addRoute('GET', '/test', $handler);
 
         $request = new Request('POST', '/test', null);
@@ -213,7 +213,7 @@ final class AppTest extends TestCase
 
     public function testAppFindHandlerStripQueryString(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
         $app = (new App())->addRoute('GET', '/test?page=1', $handler);
 
         // Should match without query string
@@ -225,7 +225,7 @@ final class AppTest extends TestCase
 
     public function testAppNativeRoutes(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
         $app = (new App())->addRoute('GET', '/test', $handler);
 
         $nativeRoutes = $app->nativeRoutes();
@@ -239,7 +239,7 @@ final class AppTest extends TestCase
 
     public function testAppNativeRoutesIncludesWebSocket(): void
     {
-        $wsHandler = new TestWebSocketHandler();
+        $wsHandler = new AppTestWebSocketHandler();
         $app = (new App())->addWebSocket('/ws', $wsHandler);
 
         $nativeRoutes = $app->nativeRoutes();
@@ -253,7 +253,7 @@ final class AppTest extends TestCase
 
     public function testAppNativeRoutesIncludesSse(): void
     {
-        $sseProducer = new TestSseProducer();
+        $sseProducer = new AppTestSseProducer();
         $app = (new App())->addSse('/events', $sseProducer);
 
         $nativeRoutes = $app->nativeRoutes();
@@ -267,7 +267,7 @@ final class AppTest extends TestCase
 
     public function testAppSingleRoute(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
         $app = App::singleRoute('GET', '/hello', $handler);
 
         $routes = $app->routes();
@@ -278,7 +278,7 @@ final class AppTest extends TestCase
 
     public function testAppMethodsCaseInsensitive(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
         $app = (new App())
             ->addRoute('get', '/test1', $handler)
             ->addRoute('POST', '/test2', $handler);
@@ -295,7 +295,7 @@ final class AppTest extends TestCase
         $config = ServerConfig::builder()->build();
         $hooks = LifecycleHooks::builder()->build();
         $deps = DependencyContainer::builder()->build();
-        $handler = new TestHandler();
+        $handler = new AppTestHandler();
 
         $app = (new App())
             ->withConfig($config)
@@ -313,7 +313,7 @@ final class AppTest extends TestCase
     {
         $original = new App();
         $step1 = $original->withConfig(ServerConfig::builder()->build());
-        $step2 = $step1->addRoute('GET', '/test', new TestHandler());
+        $step2 = $step1->addRoute('GET', '/test', new AppTestHandler());
 
         $this->assertNotSame($original, $step1);
         $this->assertNotSame($step1, $step2);
@@ -324,7 +324,7 @@ final class AppTest extends TestCase
 }
 
 // Test helpers
-final class TestHandler implements HandlerInterface
+final class AppTestHandler implements HandlerInterface
 {
     public function matches(Request $request): bool
     {
@@ -337,7 +337,7 @@ final class TestHandler implements HandlerInterface
     }
 }
 
-final class TestWebSocketHandler implements WebSocketHandlerInterface
+final class AppTestWebSocketHandler implements WebSocketHandlerInterface
 {
     public function onConnect(): void
     {
@@ -352,7 +352,7 @@ final class TestWebSocketHandler implements WebSocketHandlerInterface
     }
 }
 
-final class TestSseProducer implements SseEventProducerInterface
+final class AppTestSseProducer implements SseEventProducerInterface
 {
     public function __invoke(): \Generator
     {

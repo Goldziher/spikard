@@ -5,20 +5,23 @@ declare(strict_types=1);
 namespace Spikard\Tests;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use RuntimeException;
 use Spikard\App;
-use Spikard\Config\Compression\CompressionConfig;
-use Spikard\Config\Cors\CorsConfig;
-use Spikard\Config\JwtAuth\JwtAuthConfig;
-use Spikard\Config\ApiKey\ApiKeyAuthConfig;
+use Spikard\Config\ApiKeyConfig;
+use Spikard\Config\CompressionConfig;
+use Spikard\Config\CorsConfig;
+use Spikard\Config\HookResult;
+use Spikard\Config\JwtConfig;
 use Spikard\Config\LifecycleHooks;
-use Spikard\Config\OpenApi\OpenApiConfig;
-use Spikard\Config\RateLimit\RateLimitConfig;
+use Spikard\Config\OpenApiConfig;
+use Spikard\Config\RateLimitConfig;
 use Spikard\Config\ServerConfig;
-use Spikard\Config\StaticFiles\StaticFilesConfig;
+use Spikard\Config\StaticFilesConfig;
 use Spikard\Handlers\HandlerInterface;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
+use Throwable;
 
 /**
  * Tests for App.php configuration serialization (configToNative, hooksToNative).
@@ -31,6 +34,34 @@ use Spikard\Http\Response;
  */
 final class AppConfigSerializationTest extends TestCase
 {
+    /**
+     * Helper method to invoke configToNative using reflection.
+     *
+     * @return array<string, mixed> The native array representation
+     */
+    private function invokeConfigToNative(App $app, ServerConfig $config): array
+    {
+        $method = new ReflectionMethod($app, 'configToNative');
+        $method->setAccessible(true);
+        /** @var array<string, mixed> $result */
+        $result = $method->invoke($app, $config);
+        return $result;
+    }
+
+    /**
+     * Helper method to invoke hooksToNative using reflection.
+     *
+     * @return array<string, callable> The native array representation
+     */
+    private function invokeHooksToNative(App $app, LifecycleHooks $hooks): array
+    {
+        $method = new ReflectionMethod($app, 'hooksToNative');
+        $method->setAccessible(true);
+        /** @var array<string, callable> $result */
+        $result = $method->invoke($app, $hooks);
+        return $result;
+    }
+
     // ======================== configToNative - Basic Fields ========================
 
     public function testConfigToNativeBasicServerSettings(): void
@@ -39,21 +70,16 @@ final class AppConfigSerializationTest extends TestCase
             ->withHost('0.0.0.0')
             ->withPort(9000)
             ->withWorkers(8)
-            ->withEnableRequestId(true)
+            ->withRequestId(true)
             ->withMaxBodySize(10485760)
             ->withRequestTimeout(30000)
             ->withGracefulShutdown(true)
             ->withShutdownTimeout(10000)
             ->build();
 
-        $app = (new App())->withConfig($config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
-        // Use reflection to access private method
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
-
-        $this->assertIsArray($native);
         $this->assertSame('0.0.0.0', $native['host']);
         $this->assertSame(9000, $native['port']);
         $this->assertSame(8, $native['workers']);
@@ -79,26 +105,23 @@ final class AppConfigSerializationTest extends TestCase
             ->withCompression($compressionConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayHasKey('compression', $native);
-        $this->assertTrue($native['compression']['gzip']);
-        $this->assertTrue($native['compression']['brotli']);
-        $this->assertSame(2048, $native['compression']['min_size']);
-        $this->assertSame(7, $native['compression']['quality']);
+        /** @var array<string, mixed> */
+        $compression = $native['compression'];
+        $this->assertTrue($compression['gzip']);
+        $this->assertTrue($compression['brotli']);
+        $this->assertSame(2048, $compression['min_size']);
+        $this->assertSame(7, $compression['quality']);
     }
 
     public function testConfigToNativeWithoutCompressionConfig(): void
     {
         $config = ServerConfig::builder()->build();
-        $app = (new App())->withConfig($config);
-
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayNotHasKey('compression', $native);
     }
@@ -117,25 +140,22 @@ final class AppConfigSerializationTest extends TestCase
             ->withRateLimit($rateLimitConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayHasKey('rate_limit', $native);
-        $this->assertSame(100, $native['rate_limit']['per_second']);
-        $this->assertSame(50, $native['rate_limit']['burst']);
-        $this->assertTrue($native['rate_limit']['ip_based']);
+        /** @var array<string, mixed> */
+        $rateLimit = $native['rate_limit'];
+        $this->assertSame(100, $rateLimit['per_second']);
+        $this->assertSame(50, $rateLimit['burst']);
+        $this->assertTrue($rateLimit['ip_based']);
     }
 
     public function testConfigToNativeWithoutRateLimitConfig(): void
     {
         $config = ServerConfig::builder()->build();
-        $app = (new App())->withConfig($config);
-
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayNotHasKey('rate_limit', $native);
     }
@@ -144,10 +164,10 @@ final class AppConfigSerializationTest extends TestCase
 
     public function testConfigToNativeWithJwtAuthConfig(): void
     {
-        $jwtConfig = JwtAuthConfig::builder()
+        $jwtConfig = JwtConfig::builder()
             ->withSecret('my-secret-key')
             ->withAlgorithm('HS256')
-            ->withAudience('api.example.com')
+            ->withAudience(['api.example.com'])
             ->withIssuer('example.com')
             ->withLeeway(10)
             ->build();
@@ -156,27 +176,26 @@ final class AppConfigSerializationTest extends TestCase
             ->withJwtAuth($jwtConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayHasKey('jwt_auth', $native);
-        $this->assertSame('my-secret-key', $native['jwt_auth']['secret']);
-        $this->assertSame('HS256', $native['jwt_auth']['algorithm']);
-        $this->assertSame('api.example.com', $native['jwt_auth']['audience']);
-        $this->assertSame('example.com', $native['jwt_auth']['issuer']);
-        $this->assertSame(10, $native['jwt_auth']['leeway']);
+        /** @var array<string, mixed> */
+        $jwtAuth = $native['jwt_auth'];
+        $this->assertSame('my-secret-key', $jwtAuth['secret']);
+        $this->assertSame('HS256', $jwtAuth['algorithm']);
+        /** @var list<string> */
+        $audience = $jwtAuth['audience'];
+        $this->assertSame('api.example.com', $audience[0]);
+        $this->assertSame('example.com', $jwtAuth['issuer']);
+        $this->assertSame(10, $jwtAuth['leeway']);
     }
 
     public function testConfigToNativeWithoutJwtAuthConfig(): void
     {
         $config = ServerConfig::builder()->build();
-        $app = (new App())->withConfig($config);
-
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayNotHasKey('jwt_auth', $native);
     }
@@ -185,7 +204,7 @@ final class AppConfigSerializationTest extends TestCase
 
     public function testConfigToNativeWithApiKeyAuthConfig(): void
     {
-        $apiKeyConfig = ApiKeyAuthConfig::builder()
+        $apiKeyConfig = ApiKeyConfig::builder()
             ->withKeys(['key1', 'key2', 'key3'])
             ->withHeaderName('X-API-Key')
             ->build();
@@ -194,24 +213,21 @@ final class AppConfigSerializationTest extends TestCase
             ->withApiKeyAuth($apiKeyConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayHasKey('api_key_auth', $native);
-        $this->assertSame(['key1', 'key2', 'key3'], $native['api_key_auth']['keys']);
-        $this->assertSame('X-API-Key', $native['api_key_auth']['header_name']);
+        /** @var array<string, mixed> */
+        $apiKeyAuth = $native['api_key_auth'];
+        $this->assertSame(['key1', 'key2', 'key3'], $apiKeyAuth['keys']);
+        $this->assertSame('X-API-Key', $apiKeyAuth['header_name']);
     }
 
     public function testConfigToNativeWithoutApiKeyAuthConfig(): void
     {
         $config = ServerConfig::builder()->build();
-        $app = (new App())->withConfig($config);
-
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayNotHasKey('api_key_auth', $native);
     }
@@ -234,21 +250,21 @@ final class AppConfigSerializationTest extends TestCase
             ->withCors($corsConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayHasKey('cors', $native);
+        /** @var array<string, mixed> */
+        $cors = $native['cors'];
         $this->assertSame(
             ['http://localhost:3000', 'https://example.com'],
-            $native['cors']['allowed_origins']
+            $cors['allowed_origins']
         );
-        $this->assertSame(['GET', 'POST', 'OPTIONS'], $native['cors']['allowed_methods']);
-        $this->assertSame(['Content-Type', 'Authorization'], $native['cors']['allowed_headers']);
-        $this->assertSame(['X-Total-Count'], $native['cors']['expose_headers']);
-        $this->assertSame(3600, $native['cors']['max_age']);
-        $this->assertTrue($native['cors']['allow_credentials']);
+        $this->assertSame(['GET', 'POST', 'OPTIONS'], $cors['allowed_methods']);
+        $this->assertSame(['Content-Type', 'Authorization'], $cors['allowed_headers']);
+        $this->assertSame(['X-Total-Count'], $cors['expose_headers']);
+        $this->assertSame(3600, $cors['max_age']);
+        $this->assertTrue($cors['allow_credentials']);
     }
 
     public function testConfigToNativeWithCorsConfigDisabled(): void
@@ -261,10 +277,8 @@ final class AppConfigSerializationTest extends TestCase
             ->withCors($corsConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayNotHasKey('cors', $native);
     }
@@ -272,11 +286,8 @@ final class AppConfigSerializationTest extends TestCase
     public function testConfigToNativeWithoutCorsConfig(): void
     {
         $config = ServerConfig::builder()->build();
-        $app = (new App())->withConfig($config);
-
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayNotHasKey('cors', $native);
     }
@@ -296,18 +307,19 @@ final class AppConfigSerializationTest extends TestCase
             ->withStaticFiles($staticConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayHasKey('static_files', $native);
-        $this->assertIsArray($native['static_files']);
-        $this->assertCount(1, $native['static_files']);
-        $this->assertSame('/var/www/public', $native['static_files'][0]['directory']);
-        $this->assertSame('/', $native['static_files'][0]['route_prefix']);
-        $this->assertTrue($native['static_files'][0]['index_file']);
-        $this->assertSame('public, max-age=3600', $native['static_files'][0]['cache_control']);
+        /** @var list<array<string, mixed>> */
+        $staticFiles = $native['static_files'];
+        $this->assertCount(1, $staticFiles);
+        /** @var array<string, mixed> */
+        $firstFile = $staticFiles[0];
+        $this->assertSame('/var/www/public', $firstFile['directory']);
+        $this->assertSame('/', $firstFile['route_prefix']);
+        $this->assertTrue($firstFile['index_file']);
+        $this->assertSame('public, max-age=3600', $firstFile['cache_control']);
     }
 
     public function testConfigToNativeWithStaticFilesConfigDisabled(): void
@@ -320,27 +332,25 @@ final class AppConfigSerializationTest extends TestCase
             ->withStaticFiles($staticConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayHasKey('static_files', $native);
-        $this->assertIsArray($native['static_files']);
-        $this->assertCount(0, $native['static_files']);
+        /** @var array<string, mixed> */
+        $staticFiles = $native['static_files'];
+        $this->assertCount(0, $staticFiles);
     }
 
     public function testConfigToNativeWithoutStaticFilesConfig(): void
     {
         $config = ServerConfig::builder()->build();
-        $app = (new App())->withConfig($config);
-
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayHasKey('static_files', $native);
-        $this->assertCount(0, $native['static_files']);
+        /** @var array<string, mixed> */
+        $staticFiles = $native['static_files'];
+        $this->assertCount(0, $staticFiles);
     }
 
     // ======================== configToNative - OpenAPI ========================
@@ -361,29 +371,26 @@ final class AppConfigSerializationTest extends TestCase
             ->withOpenApi($openApiConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayHasKey('openapi', $native);
-        $this->assertTrue($native['openapi']['enabled']);
-        $this->assertSame('My API', $native['openapi']['title']);
-        $this->assertSame('1.0.0', $native['openapi']['version']);
-        $this->assertSame('API description', $native['openapi']['description']);
-        $this->assertSame('/docs', $native['openapi']['swagger_ui_path']);
-        $this->assertSame('/redoc', $native['openapi']['redoc_path']);
-        $this->assertSame('/openapi.json', $native['openapi']['openapi_json_path']);
+        /** @var array<string, mixed> */
+        $openapi = $native['openapi'];
+        $this->assertTrue($openapi['enabled']);
+        $this->assertSame('My API', $openapi['title']);
+        $this->assertSame('1.0.0', $openapi['version']);
+        $this->assertSame('API description', $openapi['description']);
+        $this->assertSame('/docs', $openapi['swagger_ui_path']);
+        $this->assertSame('/redoc', $openapi['redoc_path']);
+        $this->assertSame('/openapi.json', $openapi['openapi_json_path']);
     }
 
     public function testConfigToNativeWithoutOpenApiConfig(): void
     {
         $config = ServerConfig::builder()->build();
-        $app = (new App())->withConfig($config);
-
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         $this->assertArrayNotHasKey('openapi', $native);
     }
@@ -392,11 +399,21 @@ final class AppConfigSerializationTest extends TestCase
 
     public function testHooksToNativeWithAllHooks(): void
     {
-        $onRequestHook = static function () {};
-        $preValidationHook = static function () {};
-        $preHandlerHook = static function () {};
-        $onResponseHook = static function () {};
-        $onErrorHook = static function () {};
+        $onRequestHook = static function (Request $request): HookResult {
+            return HookResult::continue();
+        };
+        $preValidationHook = static function (Request $request): HookResult {
+            return HookResult::continue();
+        };
+        $preHandlerHook = static function (Request $request): HookResult {
+            return HookResult::continue();
+        };
+        $onResponseHook = static function (Request $request, HookResult $result): HookResult {
+            return $result;
+        };
+        $onErrorHook = static function (Request $request, Throwable $error): HookResult {
+            return HookResult::continue();
+        };
 
         $hooks = LifecycleHooks::builder()
             ->withOnRequest($onRequestHook)
@@ -406,13 +423,9 @@ final class AppConfigSerializationTest extends TestCase
             ->withOnError($onErrorHook)
             ->build();
 
-        $app = (new App())->withLifecycleHooks($hooks);
+        $app = new App();
+        $native = $this->invokeHooksToNative($app, $hooks);
 
-        $method = new \ReflectionMethod($app, 'hooksToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $hooks);
-
-        $this->assertIsArray($native);
         $this->assertArrayHasKey('onRequest', $native);
         $this->assertArrayHasKey('preValidation', $native);
         $this->assertArrayHasKey('preHandler', $native);
@@ -427,19 +440,17 @@ final class AppConfigSerializationTest extends TestCase
 
     public function testHooksToNativeWithSingleHook(): void
     {
-        $onRequestHook = static function () {};
+        $onRequestHook = static function (Request $request): HookResult {
+            return HookResult::continue();
+        };
 
         $hooks = LifecycleHooks::builder()
             ->withOnRequest($onRequestHook)
             ->build();
 
-        $app = (new App())->withLifecycleHooks($hooks);
+        $app = new App();
+        $native = $this->invokeHooksToNative($app, $hooks);
 
-        $method = new \ReflectionMethod($app, 'hooksToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $hooks);
-
-        $this->assertIsArray($native);
         $this->assertArrayHasKey('onRequest', $native);
         $this->assertArrayNotHasKey('preValidation', $native);
         $this->assertArrayNotHasKey('preHandler', $native);
@@ -451,13 +462,9 @@ final class AppConfigSerializationTest extends TestCase
     {
         $hooks = LifecycleHooks::builder()->build();
 
-        $app = (new App())->withLifecycleHooks($hooks);
+        $app = new App();
+        $native = $this->invokeHooksToNative($app, $hooks);
 
-        $method = new \ReflectionMethod($app, 'hooksToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $hooks);
-
-        $this->assertIsArray($native);
         $this->assertCount(0, $native);
     }
 
@@ -478,15 +485,15 @@ final class AppConfigSerializationTest extends TestCase
             ->withIpBased(true)
             ->build();
 
-        $jwtConfig = JwtAuthConfig::builder()
+        $jwtConfig = JwtConfig::builder()
             ->withSecret('secret')
             ->withAlgorithm('HS256')
-            ->withAudience('api')
+            ->withAudience(['api'])
             ->withIssuer('issuer')
             ->withLeeway(5)
             ->build();
 
-        $apiKeyConfig = ApiKeyAuthConfig::builder()
+        $apiKeyConfig = ApiKeyConfig::builder()
             ->withKeys(['key1'])
             ->withHeaderName('X-API-Key')
             ->build();
@@ -522,7 +529,7 @@ final class AppConfigSerializationTest extends TestCase
             ->withHost('127.0.0.1')
             ->withPort(8080)
             ->withWorkers(4)
-            ->withEnableRequestId(true)
+            ->withRequestId(true)
             ->withMaxBodySize(1048576)
             ->withRequestTimeout(30000)
             ->withGracefulShutdown(true)
@@ -536,11 +543,8 @@ final class AppConfigSerializationTest extends TestCase
             ->withOpenApi($openApiConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         // Verify all major sections are present
         $this->assertSame('127.0.0.1', $native['host']);
@@ -563,32 +567,30 @@ final class AppConfigSerializationTest extends TestCase
             ->withCompression($compressionConfig)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         // Defaults should use null coalescing operator
-        $this->assertTrue($native['compression']['gzip'] ?? false);
-        $this->assertTrue($native['compression']['brotli'] ?? false);
-        $this->assertSame(1024, $native['compression']['min_size'] ?? 0);
-        $this->assertSame(6, $native['compression']['quality'] ?? 0);
+        /** @var array<string, mixed> */
+        $compression = $native['compression'];
+        $this->assertTrue($compression['gzip'] ?? false);
+        $this->assertTrue($compression['brotli'] ?? false);
+        $this->assertSame(1024, $compression['min_size'] ?? 0);
+        $this->assertSame(6, $compression['quality'] ?? 0);
     }
 
     public function testConfigToNativeSnakeCaseFieldNames(): void
     {
         $config = ServerConfig::builder()
-            ->withEnableRequestId(false)
+            ->withRequestId(false)
             ->withMaxBodySize(5242880)
             ->withRequestTimeout(60000)
             ->withGracefulShutdown(false)
             ->withShutdownTimeout(30000)
             ->build();
 
-        $app = (new App())->withConfig($config);
-        $method = new \ReflectionMethod($app, 'configToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $config);
+        $app = new App($config);
+        $native = $this->invokeConfigToNative($app, $config);
 
         // Verify snake_case conversion
         $this->assertArrayHasKey('enable_request_id', $native);
@@ -608,11 +610,21 @@ final class AppConfigSerializationTest extends TestCase
     public function testHooksToNativeCallablePreservation(): void
     {
         $callables = [
-            'onRequest' => static fn () => 'onRequest',
-            'preValidation' => static fn () => 'preValidation',
-            'preHandler' => static fn () => 'preHandler',
-            'onResponse' => static fn () => 'onResponse',
-            'onError' => static fn () => 'onError',
+            'onRequest' => static function (Request $request): HookResult {
+                return HookResult::continue();
+            },
+            'preValidation' => static function (Request $request): HookResult {
+                return HookResult::continue();
+            },
+            'preHandler' => static function (Request $request): HookResult {
+                return HookResult::continue();
+            },
+            'onResponse' => static function (Request $request, HookResult $result): HookResult {
+                return $result;
+            },
+            'onError' => static function (Request $request, Throwable $error): HookResult {
+                return HookResult::continue();
+            },
         ];
 
         $hooks = LifecycleHooks::builder()
@@ -623,16 +635,14 @@ final class AppConfigSerializationTest extends TestCase
             ->withOnError($callables['onError'])
             ->build();
 
-        $app = (new App())->withLifecycleHooks($hooks);
-
-        $method = new \ReflectionMethod($app, 'hooksToNative');
-        $method->setAccessible(true);
-        $native = $method->invoke($app, $hooks);
+        $app = new App();
+        $native = $this->invokeHooksToNative($app, $hooks);
 
         // Callables should be preserved exactly
         foreach (['onRequest', 'preValidation', 'preHandler', 'onResponse', 'onError'] as $hookName) {
-            $this->assertSame($callables[$hookName], $native[$hookName]);
-            $this->assertIsCallable($native[$hookName]);
+            /** @var callable $nativeCallable */
+            $nativeCallable = $native[$hookName];
+            $this->assertSame($callables[$hookName], $nativeCallable);
         }
     }
 }
