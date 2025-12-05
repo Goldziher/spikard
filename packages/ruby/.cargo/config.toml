@@ -1,0 +1,6 @@
+# Cargo build configuration for Ruby extension
+
+[env]
+# Windows: Add MSVC compatibility headers for rb-sys bindgen
+# Provides pid_t typedef and ieeefp.h stub needed by Ruby headers
+BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_msvc = { value = "-Iext/spikard_rb/native/include/msvc_compat", relative = true }
