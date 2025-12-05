@@ -54,20 +54,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install MSYS2 headers (Windows)
-        if: runner.os == 'Windows'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          update: true
-          install: >-
-            mingw-w64-ucrt-x86_64-toolchain
-
-      - name: Setup Rust (Nightly for Windows)
+      - name: Setup Rust (GNU target for Windows)
         if: runner.os == 'Windows'
         uses: ./.github/actions/setup-rust
         with:
-          toolchain: nightly
+          toolchain: stable-x86_64-pc-windows-gnu
           cache-key-prefix: ruby-gem-${{ matrix.os }}
 
       - name: Setup Rust (Stable for Unix)
@@ -87,10 +78,14 @@ jobs:
           bundler-cache: true
           working-directory: packages/ruby
 
-      - name: Configure bindgen for Windows (MSVC compat headers)
+      - name: Configure bindgen for Windows (GNU toolchain)
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: scripts/ci/ruby/configure-bindgen-windows.ps1 -RubyPrefix "${{ steps.setup-ruby.outputs.ruby-prefix }}"
+        shell: bash
+        run: |
+          # Extract Ruby DevKit path and configure bindgen for GNU target
+          RI_DEVKIT=$(ruby -e "puts RbConfig::CONFIG['prefix']" | tr '\\' '/')
+          MSYSTEM_PREFIX="${RI_DEVKIT}/msys64/ucrt64"
+          echo "BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_gnu=-I${MSYSTEM_PREFIX}/include --target=x86_64-pc-windows-gnu" >> $GITHUB_ENV
 
       - name: Build Ruby gem
         working-directory: packages/ruby
@@ -125,20 +120,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install MSYS2 headers (Windows)
-        if: runner.os == 'Windows'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          update: true
-          install: >-
-            mingw-w64-ucrt-x86_64-toolchain
-
-      - name: Setup Rust (Nightly for Windows)
+      - name: Setup Rust (GNU target for Windows)
         if: runner.os == 'Windows'
         uses: ./.github/actions/setup-rust
         with:
-          toolchain: nightly
+          toolchain: stable-x86_64-pc-windows-gnu
           cache-key-prefix: ruby-tests-${{ matrix.os }}-${{ matrix.ruby-version }}
 
       - name: Setup Rust (Stable for Unix)
