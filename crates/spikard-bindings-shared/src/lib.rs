@@ -20,4 +20,6 @@ pub use config_extractor::{ConfigExtractor, ConfigSource};
 pub use di_traits::{FactoryDependencyAdapter, ValueDependencyAdapter};
 pub use error_response::ErrorResponseBuilder;
 pub use handler_base::{HandlerError, HandlerExecutor, LanguageHandler};
-pub use lifecycle_executor::{extract_body, HookResultData, LanguageLifecycleHook, LifecycleExecutor, RequestModifications};
+pub use lifecycle_executor::{
+    HookResultData, LanguageLifecycleHook, LifecycleExecutor, RequestModifications, extract_body,
+};

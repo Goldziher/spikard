@@ -9,8 +9,8 @@
 //! works with any `ConfigSource` implementation.
 
 use spikard_http::{
-    ApiKeyConfig, BackgroundTaskConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo,
-    OpenApiConfig, RateLimitConfig, SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
+    ApiKeyConfig, BackgroundTaskConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig,
+    RateLimitConfig, SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
 };
 use std::collections::HashMap;
 
@@ -157,9 +157,7 @@ impl ConfigExtractor {
     pub fn extract_rate_limit_config(source: &dyn ConfigSource) -> Result<RateLimitConfig, String> {
         let per_second = source.get_u64("per_second").ok_or("Rate limit requires 'per_second'")?;
 
-        let burst = source
-            .get_u32("burst")
-            .ok_or("Rate limit requires 'burst' as u32")?;
+        let burst = source.get_u32("burst").ok_or("Rate limit requires 'burst' as u32")?;
 
         let ip_based = source.get_bool("ip_based").unwrap_or(true);
 
@@ -172,13 +170,9 @@ impl ConfigExtractor {
 
     /// Extract JwtConfig from a ConfigSource
     pub fn extract_jwt_config(source: &dyn ConfigSource) -> Result<JwtConfig, String> {
-        let secret = source
-            .get_string("secret")
-            .ok_or("JWT auth requires 'secret'")?;
+        let secret = source.get_string("secret").ok_or("JWT auth requires 'secret'")?;
 
-        let algorithm = source
-            .get_string("algorithm")
-            .unwrap_or_else(|| "HS256".to_string());
+        let algorithm = source.get_string("algorithm").unwrap_or_else(|| "HS256".to_string());
 
         let audience = source.get_vec_string("audience");
 
@@ -247,19 +241,13 @@ impl ConfigExtractor {
     /// Extract OpenApiConfig from a ConfigSource
     pub fn extract_openapi_config(source: &dyn ConfigSource) -> Result<OpenApiConfig, String> {
         let enabled = source.get_bool("enabled").unwrap_or(false);
-        let title = source
-            .get_string("title")
-            .unwrap_or_else(|| "API".to_string());
-        let version = source
-            .get_string("version")
-            .unwrap_or_else(|| "1.0.0".to_string());
+        let title = source.get_string("title").unwrap_or_else(|| "API".to_string());
+        let version = source.get_string("version").unwrap_or_else(|| "1.0.0".to_string());
         let description = source.get_string("description");
         let swagger_ui_path = source
             .get_string("swagger_ui_path")
             .unwrap_or_else(|| "/docs".to_string());
-        let redoc_path = source
-            .get_string("redoc_path")
-            .unwrap_or_else(|| "/redoc".to_string());
+        let redoc_path = source.get_string("redoc_path").unwrap_or_else(|| "/redoc".to_string());
         let openapi_json_path = source
             .get_string("openapi_json_path")
             .unwrap_or_else(|| "/openapi.json".to_string());
@@ -274,13 +262,11 @@ impl ConfigExtractor {
             })
             .filter(|c| c.name.is_some() || c.email.is_some() || c.url.is_some());
 
-        let license = source
-            .get_nested("license")
-            .and_then(|cfg| {
-                let name = cfg.get_string("name")?;
-                let url = cfg.get_string("url");
-                Some(LicenseInfo { name, url })
-            });
+        let license = source.get_nested("license").and_then(|cfg| {
+            let name = cfg.get_string("name")?;
+            let url = cfg.get_string("url");
+            Some(LicenseInfo { name, url })
+        });
 
         let servers = Self::extract_servers_config(source)?;
 
@@ -325,7 +311,9 @@ impl ConfigExtractor {
     }
 
     /// Extract security schemes from OpenAPI config
-    fn extract_security_schemes_config(_source: &dyn ConfigSource) -> Result<HashMap<String, SecuritySchemeInfo>, String> {
+    fn extract_security_schemes_config(
+        _source: &dyn ConfigSource,
+    ) -> Result<HashMap<String, SecuritySchemeInfo>, String> {
         // TODO: Implement when bindings support iterating HashMap-like structures
         // For now, return empty map as default
         Ok(HashMap::new())
@@ -342,9 +330,7 @@ mod tests {
 
     impl MockConfigSource {
         fn new() -> Self {
-            Self {
-                data: HashMap::new(),
-            }
+            Self { data: HashMap::new() }
         }
 
         fn with(mut self, key: &str, value: String) -> Self {
@@ -355,12 +341,10 @@ mod tests {
 
     impl ConfigSource for MockConfigSource {
         fn get_bool(&self, key: &str) -> Option<bool> {
-            self.data.get(key).and_then(|v| {
-                match v.as_str() {
-                    "true" => Some(true),
-                    "false" => Some(false),
-                    _ => v.parse().ok(),
-                }
+            self.data.get(key).and_then(|v| match v.as_str() {
+                "true" => Some(true),
+                "false" => Some(false),
+                _ => v.parse().ok(),
             })
         }
 
@@ -377,9 +361,9 @@ mod tests {
         }
 
         fn get_vec_string(&self, key: &str) -> Option<Vec<String>> {
-            self.data.get(key).map(|s| {
-                s.split(',').map(|t| t.trim().to_string()).collect()
-            })
+            self.data
+                .get(key)
+                .map(|s| s.split(',').map(|t| t.trim().to_string()).collect())
         }
 
         fn get_nested(&self, _key: &str) -> Option<Box<dyn ConfigSource + '_>> {
@@ -450,8 +434,7 @@ mod tests {
 
     #[test]
     fn test_api_key_config_defaults() {
-        let source = MockConfigSource::new()
-            .with("keys", "only-key".to_string());
+        let source = MockConfigSource::new().with("keys", "only-key".to_string());
 
         let config = ConfigExtractor::extract_api_key_config(&source).unwrap();
         assert_eq!(config.keys, vec!["only-key"]);
@@ -473,8 +456,7 @@ mod tests {
 
     #[test]
     fn test_rate_limit_config_missing_required() {
-        let source = MockConfigSource::new()
-            .with("per_second", "100".to_string());
+        let source = MockConfigSource::new().with("per_second", "100".to_string());
 
         let result = ConfigExtractor::extract_rate_limit_config(&source);
         assert!(result.is_err());
