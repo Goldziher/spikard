@@ -1,14 +1,5 @@
 //! Python handler implementation for spikard_http::Handler trait
 
-/// Debug logging macro for module-specific logging
-macro_rules! debug_log_module {
-    ($module:expr, $($arg:tt)*) => {
-        if is_debug_mode() {
-            eprintln!("[{}] {}", $module, format!($($arg)*));
-        }
-    };
-}
-
 use crate::conversion::{json_to_python, python_to_json};
 use crate::response::StreamingResponse;
 use axum::{
@@ -64,13 +55,6 @@ pub fn init_python_event_loop() -> PyResult<()> {
 
         Ok(())
     })
-}
-
-/// Check if DEBUG mode is enabled
-fn is_debug_mode() -> bool {
-    std::env::var("DEBUG")
-        .map(|v| v == "1" || v.to_lowercase() == "true")
-        .unwrap_or(false)
 }
 
 fn structured_error_response(problem: ProblemDetails) -> (StatusCode, String) {
@@ -157,13 +141,7 @@ impl PythonHandler {
             ) {
                 Ok(params) => Some(params),
                 Err(errors) => {
-                    debug_log_module!(
-                        "handler",
-                        "Parameter validation failed with {} errors",
-                        errors.errors.len()
-                    );
                     let problem = ProblemDetails::from_validation_error(&errors);
-                    debug_log_module!("handler", "Returning 422 with RFC 9457 error");
                     return Err(structured_error_response(problem));
                 }
             }
