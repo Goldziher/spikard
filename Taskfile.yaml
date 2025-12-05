@@ -754,12 +754,32 @@ tasks:
       - 'echo "  - HTML: coverage/index.html"'
       - 'echo "  - LCOV: coverage/lcov.info"'
 
+  cov:ruby:
+    desc: "Generate Ruby code coverage report with 80% minimum enforcement"
+    dir: packages/ruby
+    cmds:
+      - bundle exec rspec
+      - echo ""
+      - echo "Ruby coverage report generated:"
+      - 'echo "  - HTML: coverage/index.html"'
+      - 'echo "  - LCOV: coverage/lcov.info"'
+
+  cov:php:
+    desc: "Generate PHP code coverage report"
+    dir: packages/php
+    cmds:
+      - composer test -- --coverage-html build/coverage/html --coverage-text
+      - echo ""
+      - echo "PHP coverage report generated:"
+      - 'echo "  - HTML: build/coverage/html/index.html"'
+
   cov:all:
-    desc: "Generate Rust, Python, and Node.js coverage reports"
+    desc: "Generate coverage reports for all languages"
     cmds:
       - task: cov:rust
       - task: cov:python
       - task: cov:node
+      - task: cov:ruby
 
   clean:
     desc: "Clean build artifacts"
