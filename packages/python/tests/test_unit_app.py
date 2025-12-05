@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import msgspec
 import pytest
@@ -11,12 +11,18 @@ import spikard.app as app_module
 from spikard import Spikard
 from spikard.params import Cookie, Header, ParamBase, Query
 from spikard.schema import extract_json_schema, is_json_schema_dict, is_typeddict, resolve_msgspec_ref
+from spikard.sse import SseEventProducer
 from spikard.testing import PortAllocator, TestClient
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+JsonDict = dict[str, object]
 
 
 def test_param_wrappers_defaults() -> None:
     """ParamBase helpers should honor defaults and validation."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Cannot specify both 'default' and 'default_factory'"):
         ParamBase(default="value", default_factory=lambda: "other")
 
     factory_called = {"count": 0}
@@ -43,17 +49,17 @@ def test_register_route_dependency_and_defaults(monkeypatch: pytest.MonkeyPatch)
     """Routes should infer body params, handler deps, and inject ParamBase defaults."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda func: ({"request": True}, {"response": True}))
+    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"request": True}, {"response": True}))
     monkeypatch.setattr(
         app_module,
         "extract_parameter_schema",
-        lambda func, path: {"properties": {"query_value": {"source": "query"}}},
+        lambda _func, _path: {"properties": {"query_value": {"source": "query"}}},
     )
 
     app.provide("dep", "provided-dependency")
 
     @app.post("/items")
-    def create_item(body: dict, dep: str, query_value: Query[int] = Query(default=5)) -> dict[str, object]:
+    def create_item(body: JsonDict, dep: str, query_value: Query[int] = Query[int](default=5)) -> JsonDict:
         return {"body": body, "dep": dep, "query": query_value}
 
     route = app.get_routes()[-1]
@@ -64,7 +70,7 @@ def test_register_route_dependency_and_defaults(monkeypatch: pytest.MonkeyPatch)
     assert route.handler_dependencies is not None
     assert "dep" in route.handler_dependencies
 
-    result = route.handler(body={"value": 1}, dep="injected")  # type: ignore[arg-type]
+    result = route.handler(body={"value": 1}, dep="injected")
     assert result["query"] == 5
 
 
@@ -72,8 +78,8 @@ def test_register_route_respects_parameter_override(monkeypatch: pytest.MonkeyPa
     """Explicit parameter schemas should override extracted values for GET routes."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda func: ({"ignored": True}, {"resp": "ok"}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda func, path: {"properties": {"id": {}}})
+    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"ignored": True}, {"resp": "ok"}))
+    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: {"properties": {"id": {}}})
 
     @app.get("/status", parameter_schema={"properties": {"forced": {"source": "header"}}})
     def status() -> dict[str, str]:
@@ -98,7 +104,7 @@ def test_port_allocator_and_client_properties() -> None:
     client = TestClient(Spikard())
     with pytest.raises(RuntimeError):
         _ = client.base_url
-    client._port = 12345  # type: ignore[assignment]
+    client._port = 12345
     assert client.base_url.endswith(":12345")
 
 
@@ -121,7 +127,8 @@ def test_schema_helpers_cover_common_cases() -> None:
     schema = extract_json_schema(Message)
     assert schema is not None
     assert schema["type"] == "object"
-    assert "properties" in schema and "message" in schema["properties"]
+    assert "properties" in schema
+    assert "message" in schema["properties"]
 
     resolved = resolve_msgspec_ref({"$ref": "#/$defs/Message", "$defs": {"Message": {"type": "string"}}})
     assert resolved["type"] == "string"
@@ -168,8 +175,12 @@ def test_websocket_and_sse_registration() -> None:
         return "ws"
 
     @app.sse("/events")
-    def events_handler() -> str:
-        return "events"
+    def events_handler() -> SseEventProducer:
+        async def generator() -> AsyncIterator[dict[str, object]]:
+            yield {"data": "events"}
+
+        return SseEventProducer(lambda: generator())
 
     assert app.get_websocket_handlers()["/ws"]() == "ws"
-    assert app.get_sse_producers()["/events"]() == "events"
+    sse_producer = app.get_sse_producers()["/events"]()
+    assert isinstance(sse_producer, SseEventProducer)
