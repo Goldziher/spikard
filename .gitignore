@@ -14,6 +14,7 @@
 .gem
 .cache/
 .cargo/
+!packages/ruby/.cargo/config.toml
 .claude/
 .coverage
 .coverage*

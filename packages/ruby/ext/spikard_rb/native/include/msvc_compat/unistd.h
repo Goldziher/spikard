@@ -6,6 +6,7 @@
 #include <direct.h>
 
 typedef long ssize_t;
+typedef int pid_t;
 
 #define access _access
 #define dup2 _dup2
