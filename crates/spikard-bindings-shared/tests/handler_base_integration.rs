@@ -5,7 +5,6 @@
 
 use axum::body::Body;
 use axum::http::Request;
-use pretty_assertions::assert_eq;
 use serde_json::json;
 use spikard_bindings_shared::handler_base::{HandlerError, HandlerExecutor, LanguageHandler};
 use spikard_core::parameters::ParameterValidator;
