@@ -13,9 +13,7 @@ struct PyDictWrapper {
 
 impl PyDictWrapper {
     fn new() -> Self {
-        Self {
-            data: HashMap::new(),
-        }
+        Self { data: HashMap::new() }
     }
 
     fn insert(&mut self, key: &str, value: &str) {
@@ -25,12 +23,10 @@ impl PyDictWrapper {
 
 impl ConfigSource for PyDictWrapper {
     fn get_bool(&self, key: &str) -> Option<bool> {
-        self.data.get(key).and_then(|v| {
-            match v.as_str() {
-                "true" | "True" => Some(true),
-                "false" | "False" => Some(false),
-                _ => v.parse().ok(),
-            }
+        self.data.get(key).and_then(|v| match v.as_str() {
+            "true" | "True" => Some(true),
+            "false" | "False" => Some(false),
+            _ => v.parse().ok(),
         })
     }
 
@@ -47,11 +43,9 @@ impl ConfigSource for PyDictWrapper {
     }
 
     fn get_vec_string(&self, key: &str) -> Option<Vec<String>> {
-        self.data.get(key).map(|s| {
-            s.split(',')
-                .map(|item| item.trim().to_string())
-                .collect()
-        })
+        self.data
+            .get(key)
+            .map(|s| s.split(',').map(|item| item.trim().to_string()).collect())
     }
 
     fn get_nested(&self, _key: &str) -> Option<Box<dyn ConfigSource + '_>> {

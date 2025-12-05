@@ -122,10 +122,8 @@ pub trait LanguageLifecycleHook: Send + Sync {
     /// Invoke the language hook and return normalized result data
     ///
     /// This should call the language function and convert its result to `HookResultData`.
-    fn invoke_hook(
-        &self,
-        data: Self::HookData,
-    ) -> Pin<Box<dyn Future<Output = Result<HookResultData, String>> + Send>>;
+    fn invoke_hook(&self, data: Self::HookData)
+    -> Pin<Box<dyn Future<Output = Result<HookResultData, String>> + Send>>;
 }
 
 /// Executor that handles common lifecycle hook logic
@@ -174,10 +172,7 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
     ///
     /// Response hooks can only continue or modify the response,
     /// never short-circuit.
-    pub async fn execute_response_hook(
-        &self,
-        resp: Response<Body>,
-    ) -> Result<Response<Body>, String> {
+    pub async fn execute_response_hook(&self, resp: Response<Body>) -> Result<Response<Body>, String> {
         // For response hooks, we typically don't have hook_data to prepare
         // since response hooks operate on already-generated responses.
         // This is a simplified version; language bindings may override.
@@ -244,8 +239,8 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
     /// Build an axum Response from hook result data
     fn build_response_from_hook_result(&self, result: &HookResultData) -> Result<Response<Body>, String> {
         let status_code = result.status_code.unwrap_or(200);
-        let status = StatusCode::from_u16(status_code)
-            .map_err(|e| format!("Invalid status code {}: {}", status_code, e))?;
+        let status =
+            StatusCode::from_u16(status_code).map_err(|e| format!("Invalid status code {}: {}", status_code, e))?;
 
         let mut builder = Response::builder().status(status);
 
@@ -265,10 +260,7 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
             builder = builder.header("content-type", "application/json");
         }
 
-        let body = result
-            .body
-            .clone()
-            .unwrap_or_else(|| b"{}".to_vec());
+        let body = result.body.clone().unwrap_or_else(|| b"{}".to_vec());
 
         builder
             .body(Body::from(body))
@@ -292,17 +284,14 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
 
         // Update URI if provided
         if let Some(path) = &mods.path {
-            parts.uri = path
-                .parse()
-                .map_err(|e| format!("Invalid path '{}': {}", path, e))?;
+            parts.uri = path.parse().map_err(|e| format!("Invalid path '{}': {}", path, e))?;
         }
 
         // Update/add headers
         if let Some(new_headers) = &mods.headers {
             for (key, value) in new_headers {
-                let header_name: http::header::HeaderName = key
-                    .parse()
-                    .map_err(|_| format!("Invalid header name: {}", key))?;
+                let header_name: http::header::HeaderName =
+                    key.parse().map_err(|_| format!("Invalid header name: {}", key))?;
                 let header_value: http::header::HeaderValue = value
                     .parse()
                     .map_err(|_| format!("Invalid header value for {}: {}", key, value))?;
