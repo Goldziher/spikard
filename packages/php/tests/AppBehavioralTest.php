@@ -14,11 +14,11 @@ use Spikard\Config\LifecycleHooks;
 use Spikard\Config\ServerConfig;
 use Spikard\DI\DependencyContainer;
 use Spikard\Handlers\HandlerInterface;
+use Spikard\Handlers\SseEventProducerInterface;
+use Spikard\Handlers\WebSocketHandlerInterface;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 use Spikard\Testing\TestClient;
-use Spikard\WebSocket\WebSocketHandlerInterface;
-use Spikard\Sse\SseEventProducerInterface;
 
 final class AppBehavioralTest extends TestCase
 {
@@ -27,9 +27,9 @@ final class AppBehavioralTest extends TestCase
      */
     public function testFindHandlerWithMultipleRoutesReturnsCorrectOne(): void
     {
-        $handler1 = new TestHandler();
-        $handler2 = new TestHandler();
-        $handler3 = new TestHandler();
+        $handler1 = new AppBehavioralTestHandler();
+        $handler2 = new AppBehavioralTestHandler();
+        $handler3 = new AppBehavioralTestHandler();
 
         $app = (new App())
             ->addRoute('GET', '/users', $handler1)
@@ -50,7 +50,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testFindHandlerMethodCaseInsensitive(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppBehavioralTestHandler();
         $app = (new App())->addRoute('get', '/test', $handler);
 
         $requestUppercase = new Request('GET', '/test', null);
@@ -67,7 +67,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testFindHandlerStripsQueryStringFromRegisteredPath(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppBehavioralTestHandler();
         // Register with query string
         $app = (new App())->addRoute('GET', '/test?param=value', $handler);
 
@@ -136,13 +136,13 @@ final class AppBehavioralTest extends TestCase
      */
     public function testRegisterControllerWithMultipleMethods(): void
     {
-        $app = (new App())->registerController(MultiRouteController::class);
+        $app = (new App())->registerController(AppBehavioralMultiRouteController::class);
 
         $routes = $app->routes();
         $this->assertCount(2, $routes);
 
         // Verify both routes are registered
-        $paths = array_map(static fn (array $route) => $route['path'], $routes);
+        $paths = \array_map(static fn (array $route) => $route['path'], $routes);
         $this->assertContains('/items', $paths);
         $this->assertContains('/items', $paths);
     }
@@ -178,7 +178,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testRegisterControllerChains(): void
     {
-        $manualHandler = new TestHandler();
+        $manualHandler = new AppBehavioralTestHandler();
         $app = (new App())
             ->registerController(SimpleController::class)
             ->addRoute('POST', '/manual', $manualHandler);
@@ -204,7 +204,7 @@ final class AppBehavioralTest extends TestCase
     public function testRunThrowsWithoutExtension(): void
     {
         $config = ServerConfig::builder()->build();
-        $app = (new App())->addRoute('GET', '/test', new TestHandler());
+        $app = (new App())->addRoute('GET', '/test', new AppBehavioralTestHandler());
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('not loaded');
@@ -219,7 +219,7 @@ final class AppBehavioralTest extends TestCase
         $config1 = ServerConfig::builder()->withPort(8000)->build();
         $config2 = ServerConfig::builder()->withPort(9000)->build();
 
-        $app = (new App($config1))->addRoute('GET', '/test', new TestHandler());
+        $app = (new App($config1))->addRoute('GET', '/test', new AppBehavioralTestHandler());
 
         // Would normally try to run; we just verify it attempts with config2
         // (will fail due to no extension, but that proves parameter is used)
@@ -232,7 +232,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testCloseIsIdempotent(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new TestHandler());
+        $app = (new App())->addRoute('GET', '/test', new AppBehavioralTestHandler());
         $client = TestClient::create($app);
 
         // Should not throw when called multiple times
@@ -247,7 +247,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testNativeRoutesIncludesHttpRoutes(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppBehavioralTestHandler();
         $app = (new App())->addRoute('GET', '/users', $handler);
 
         $nativeRoutes = $app->nativeRoutes();
@@ -261,7 +261,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testNativeRoutesIncludesWebSocketHandlers(): void
     {
-        $wsHandler = new TestWebSocketHandler();
+        $wsHandler = new AppBehavioralTestWebSocketHandler();
         $app = (new App())->addWebSocket('/ws', $wsHandler);
 
         $nativeRoutes = $app->nativeRoutes();
@@ -274,7 +274,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testNativeRoutesIncludesSseProducers(): void
     {
-        $sseProducer = new TestSseProducer();
+        $sseProducer = new AppBehavioralTestSseProducer();
         $app = (new App())->addSse('/events', $sseProducer);
 
         $nativeRoutes = $app->nativeRoutes();
@@ -287,9 +287,9 @@ final class AppBehavioralTest extends TestCase
      */
     public function testNativeRoutesCombinesAllTypes(): void
     {
-        $httpHandler = new TestHandler();
-        $wsHandler = new TestWebSocketHandler();
-        $sseProducer = new TestSseProducer();
+        $httpHandler = new AppBehavioralTestHandler();
+        $wsHandler = new AppBehavioralTestWebSocketHandler();
+        $sseProducer = new AppBehavioralTestSseProducer();
 
         $app = (new App())
             ->addRoute('GET', '/api', $httpHandler)
@@ -305,7 +305,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testNativeRoutesUppercasesHttpMethods(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppBehavioralTestHandler();
         $app = (new App())
             ->addRoute('get', '/test1', $handler)
             ->addRoute('Post', '/test2', $handler);
@@ -320,8 +320,8 @@ final class AppBehavioralTest extends TestCase
      */
     public function testWebsocketHandlersReturnsRegistered(): void
     {
-        $ws1 = new TestWebSocketHandler();
-        $ws2 = new TestWebSocketHandler();
+        $ws1 = new AppBehavioralTestWebSocketHandler();
+        $ws2 = new AppBehavioralTestWebSocketHandler();
 
         $app = (new App())
             ->addWebSocket('/ws1', $ws1)
@@ -338,8 +338,8 @@ final class AppBehavioralTest extends TestCase
      */
     public function testSseProducersReturnsRegistered(): void
     {
-        $sse1 = new TestSseProducer();
-        $sse2 = new TestSseProducer();
+        $sse1 = new AppBehavioralTestSseProducer();
+        $sse2 = new AppBehavioralTestSseProducer();
 
         $app = (new App())
             ->addSse('/events1', $sse1)
@@ -356,7 +356,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testAddWebSocketIsImmutable(): void
     {
-        $ws = new TestWebSocketHandler();
+        $ws = new AppBehavioralTestWebSocketHandler();
         $original = new App();
         $modified = $original->addWebSocket('/ws', $ws);
 
@@ -370,7 +370,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testAddSseIsImmutable(): void
     {
-        $sse = new TestSseProducer();
+        $sse = new AppBehavioralTestSseProducer();
         $original = new App();
         $modified = $original->addSse('/events', $sse);
 
@@ -384,7 +384,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testAddRouteWithSchemasPreservesAllSchemas(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppBehavioralTestHandler();
         $requestSchema = ['type' => 'object', 'properties' => ['name' => ['type' => 'string']]];
         $responseSchema = ['type' => 'object', 'properties' => ['id' => ['type' => 'number']]];
         $paramSchema = ['type' => 'object'];
@@ -415,7 +415,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testAddRouteWithSchemasAcceptsNullSchemas(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppBehavioralTestHandler();
         $app = (new App())->addRouteWithSchemas(
             'GET',
             '/items',
@@ -442,8 +442,8 @@ final class AppBehavioralTest extends TestCase
      */
     public function testCloningPreservesIndependence(): void
     {
-        $handler1 = new TestHandler();
-        $handler2 = new TestHandler();
+        $handler1 = new AppBehavioralTestHandler();
+        $handler2 = new AppBehavioralTestHandler();
 
         $app1 = (new App())->addRoute('GET', '/test1', $handler1);
         $app2 = $app1->addRoute('GET', '/test2', $handler2);
@@ -459,7 +459,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testSingleRouteConvenience(): void
     {
-        $handler = new TestHandler();
+        $handler = new AppBehavioralTestHandler();
         $app = App::singleRoute('DELETE', '/items/42', $handler);
 
         $routes = $app->routes();
@@ -474,26 +474,32 @@ final class AppBehavioralTest extends TestCase
 
 final class SimpleController
 {
-    /** @return array<int, string> */
+    /**
+     * @return array<int, string>
+     */
     #[Get('/items')]
-    public function list(): array
+    public function list()
     {
         return ['item'];
     }
 }
 
-final class MultiRouteController
+final class AppBehavioralMultiRouteController
 {
-    /** @return array<int, string> */
+    /**
+     * @return array<int, string>
+     */
     #[Get('/items')]
-    public function list(): array
+    public function list()
     {
         return ['list'];
     }
 
-    /** @return array<string, string> */
+    /**
+     * @return array<string, string>
+     */
     #[Post('/items')]
-    public function create(): array
+    public function create()
     {
         return ['status' => 'created'];
     }
@@ -501,9 +507,11 @@ final class MultiRouteController
 
 final class ControllerWithMixedVisibility
 {
-    /** @return array<string, string> */
+    /**
+     * @return array<string, string>
+     */
     #[Get('/public')]
-    public function publicMethod(): array
+    public function publicMethod()
     {
         return ['visible' => 'public'];
     }
@@ -526,7 +534,7 @@ final class SelectiveHandler implements HandlerInterface
     }
 }
 
-final class TestHandler implements HandlerInterface
+final class AppBehavioralTestHandler implements HandlerInterface
 {
     public function matches(Request $request): bool
     {
@@ -539,7 +547,7 @@ final class TestHandler implements HandlerInterface
     }
 }
 
-final class TestWebSocketHandler implements WebSocketHandlerInterface
+final class AppBehavioralTestWebSocketHandler implements WebSocketHandlerInterface
 {
     public function onConnect(): void
     {
@@ -554,7 +562,7 @@ final class TestWebSocketHandler implements WebSocketHandlerInterface
     }
 }
 
-final class TestSseProducer implements SseEventProducerInterface
+final class AppBehavioralTestSseProducer implements SseEventProducerInterface
 {
     public function __invoke(): \Generator
     {

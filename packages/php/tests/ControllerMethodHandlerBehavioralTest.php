@@ -455,8 +455,10 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
 
 final class SimpleTestController
 {
+    /**
+     * @return array<string, bool>
+     */
     #[Get('/test')]
-    /** @return array<string, bool> */
     public function handle(): array
     {
         return ['ok' => true];
@@ -465,8 +467,10 @@ final class SimpleTestController
 
 final class QueryParamController
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/search')]
-    /** @return array<string, string> */
     public function search(string $q = 'default'): array
     {
         return ['q' => $q];
@@ -475,9 +479,11 @@ final class QueryParamController
 
 final class QueryParamMultiController
 {
+    /**
+     * @param list<string> $tags
+     * @return array<string, list<string>>
+     */
     #[Get('/filter')]
-    /** @param list<string> $tags */
-    /** @return array<string, list<string>> */
     public function filter(array $tags = []): array
     {
         return ['tags' => $tags];
@@ -486,8 +492,10 @@ final class QueryParamMultiController
 
 final class QueryParamDefaultController
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/list')]
-    /** @return array<string, string> */
     public function list(string $sort = 'name'): array
     {
         return ['sort' => $sort];
@@ -496,8 +504,10 @@ final class QueryParamDefaultController
 
 final class PathParamController
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/items/:id')]
-    /** @return array<string, string> */
     public function getById(string $id): array
     {
         return ['id' => $id];
@@ -506,8 +516,10 @@ final class PathParamController
 
 final class PathParamDefaultController
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/items/:id')]
-    /** @return array<string, string> */
     public function getByIdDefault(string $id = 'unknown'): array
     {
         return ['id' => $id];
@@ -516,8 +528,10 @@ final class PathParamDefaultController
 
 final class HeaderParamController
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/auth')]
-    /** @return array<string, string> */
     public function checkAuth(string $authorization = ''): array
     {
         return ['auth' => $authorization];
@@ -526,8 +540,10 @@ final class HeaderParamController
 
 final class HeaderParamDefaultController
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/auth')]
-    /** @return array<string, string> */
     public function checkAuthDefault(string $authorization = 'none'): array
     {
         return ['auth' => $authorization];
@@ -536,8 +552,10 @@ final class HeaderParamDefaultController
 
 final class CookieParamController
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/session')]
-    /** @return array<string, string> */
     public function getSession(string $sessionId = ''): array
     {
         return ['session' => $sessionId];
@@ -546,8 +564,10 @@ final class CookieParamController
 
 final class CookieParamDefaultController
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/session')]
-    /** @return array<string, string> */
     public function getSessionDefault(string $sessionId = 'none'): array
     {
         return ['session' => $sessionId];
@@ -556,9 +576,11 @@ final class CookieParamDefaultController
 
 final class BodyParamController
 {
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
     #[Post('/items')]
-    /** @param array<string, mixed> $payload */
-    /** @return array<string, mixed> */
     public function create(array $payload = []): array
     {
         return ['item' => $payload];
@@ -567,9 +589,11 @@ final class BodyParamController
 
 final class BodyParamDefaultController
 {
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
     #[Post('/items')]
-    /** @param array<string, mixed> $payload */
-    /** @return array<string, mixed> */
     public function createDefault(array $payload = []): array
     {
         return ['item' => $payload];
@@ -578,9 +602,11 @@ final class BodyParamDefaultController
 
 final class MultiParamController
 {
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
     #[Post('/users/:id/profile')]
-    /** @param array<string, mixed> $data */
-    /** @return array<string, mixed> */
     public function complexRoute(
         string $id,
         string $expand = 'none',
@@ -598,8 +624,10 @@ final class MultiParamController
 
 final class NullableParamController
 {
+    /**
+     * @return array<string, ?string>
+     */
     #[Get('/items')]
-    /** @return array<string, ?string> */
     public function maybeFilter(?string $filter = null): array
     {
         return ['filter' => $filter];
@@ -617,8 +645,10 @@ final class ResponseObjectController
 
 final class ArrayResponseController
 {
+    /**
+     * @return array<string, list<mixed>>
+     */
     #[Get('/array')]
-    /** @return array<string, list<mixed>> */
     public function getArray(): array
     {
         return ['items' => []];
@@ -637,7 +667,7 @@ final class StringResponseController
 final class NullResponseController
 {
     #[Get('/null')]
-    public function getNull(): ?string
+    public function getNull(): null
     {
         return null;
     }
@@ -681,6 +711,9 @@ final class ComplexTypeController
 
 final class ImplicitPathParamController
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/items/:id')]
     public function getById(string $id): array
     {
@@ -690,6 +723,9 @@ final class ImplicitPathParamController
 
 final class ImplicitQueryParamController
 {
+    /**
+     * @return array<string, string>
+     */
     #[Get('/search')]
     public function search(string $query = 'default'): array
     {

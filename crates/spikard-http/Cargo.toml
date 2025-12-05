@@ -46,7 +46,7 @@ axum-test = { version = "18", features = ["ws"] }
 anyhow = "1.0"
 cookie = "0.18"
 base64 = "0.22.1"
-flate2 = "1.1"
+flate2.workspace = true
 brotli = "8.0"
 
 [features]
