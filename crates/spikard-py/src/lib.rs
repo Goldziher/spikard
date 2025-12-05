@@ -11,9 +11,7 @@ pub mod lifecycle;
 pub mod request;
 pub mod response;
 pub mod sse;
-mod test_client;
-mod test_sse;
-mod test_websocket;
+pub mod testing;
 pub mod websocket;
 
 use pyo3::prelude::*;
@@ -153,7 +151,7 @@ fn process() -> PyResult<()> {
 /// Returns:
 ///     TestClient: A test client for making requests to the app
 #[pyfunction]
-fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_client::TestClient> {
+fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testing::client::TestClient> {
     // DEBUG: Log test client creation
     let _ = std::fs::write("/tmp/create_test_client.log", "create_test_client() called\n");
     eprintln!("[UNCONDITIONAL DEBUG] create_test_client() called");
@@ -285,7 +283,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
 
     eprintln!("[UNCONDITIONAL DEBUG] Creating TestClient from Axum router");
 
-    let client = test_client::TestClient::from_router(axum_router)?;
+    let client = testing::client::TestClient::from_router(axum_router)?;
     let _ = std::fs::write("/tmp/test_client_created.log", "TestClient created successfully\n");
 
     Ok(client)
@@ -738,12 +736,12 @@ fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<request::PyRequest>()?;
     m.add_class::<response::Response>()?;
     m.add_class::<response::StreamingResponse>()?;
-    m.add_class::<test_client::TestClient>()?;
-    m.add_class::<test_client::TestResponse>()?;
-    m.add_class::<test_websocket::WebSocketTestConnection>()?;
-    m.add_class::<test_websocket::WebSocketMessage>()?;
-    m.add_class::<test_sse::SseStream>()?;
-    m.add_class::<test_sse::SseEvent>()?;
+    m.add_class::<testing::client::TestClient>()?;
+    m.add_class::<testing::client::TestResponse>()?;
+    m.add_class::<testing::websocket::WebSocketTestConnection>()?;
+    m.add_class::<testing::websocket::WebSocketMessage>()?;
+    m.add_class::<testing::sse::SseStream>()?;
+    m.add_class::<testing::sse::SseEvent>()?;
     m.add_function(wrap_pyfunction!(background::background_run, m)?)?;
     m.add_function(wrap_pyfunction!(create_test_client, m)?)?;
     m.add_function(wrap_pyfunction!(process, m)?)?;

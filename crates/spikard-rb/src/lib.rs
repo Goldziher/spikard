@@ -8,7 +8,7 @@
 //!
 //! ## Modules
 //!
-//! - `test_client`: TestClient wrapper for integration testing
+//! - `testing`: Testing utilities (client, SSE, WebSocket)
 //! - `handler`: RubyHandler trait implementation
 //! - `di`: Dependency injection bridge for Ruby types
 //! - `config`: ServerConfig extraction from Ruby objects
@@ -17,9 +17,7 @@
 //! - `background`: Background task management
 //! - `lifecycle`: Lifecycle hook implementations
 //! - `sse`: Server-Sent Events support
-//! - `test_sse`: SSE testing utilities
 //! - `websocket`: WebSocket support
-//! - `test_websocket`: WebSocket testing utilities
 
 mod background;
 mod config;
@@ -32,9 +30,7 @@ mod metadata;
 mod runtime;
 mod server;
 mod sse;
-mod test_client;
-mod test_sse;
-mod test_websocket;
+mod testing;
 mod websocket;
 
 use async_stream::stream;
@@ -687,7 +683,7 @@ impl NativeTestClient {
                 .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("WebSocket task failed: {}", e)))
         })?;
 
-        let ws_conn = test_websocket::WebSocketTestConnection::new(ws);
+        let ws_conn = testing::websocket::WebSocketTestConnection::new(ws);
         Ok(ruby.obj_wrap(ws_conn).as_value())
     }
 
@@ -704,7 +700,7 @@ impl NativeTestClient {
             })
             .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", e)))?;
 
-        test_sse::sse_stream_from_response(ruby, &response)
+        testing::sse::sse_stream_from_response(ruby, &response)
     }
 }
 
@@ -1647,8 +1643,8 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     dependency_registry_class.define_method("keys", method!(NativeDependencyRegistry::keys, 0))?;
 
     let spikard_module = ruby.define_module("Spikard")?;
-    test_websocket::init(ruby, &spikard_module)?;
-    test_sse::init(ruby, &spikard_module)?;
+    testing::websocket::init(ruby, &spikard_module)?;
+    testing::sse::init(ruby, &spikard_module)?;
 
     // Touch GC mark hooks so the compiler keeps them and silence unused warnings.
     let _ = NativeBuiltResponse::mark as fn(&NativeBuiltResponse, &Marker);

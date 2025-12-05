@@ -5,7 +5,7 @@
 
 use crate::RubyHandler;
 use crate::config::server_config::extract_server_config;
-use crate::integration::di_builder::build_dependency_container;
+use crate::di::build_dependency_container;
 use axum::routing::get;
 use magnus::prelude::*;
 use magnus::{Error, RHash, Ruby, TryConvert, Value, r_hash::ForEach};

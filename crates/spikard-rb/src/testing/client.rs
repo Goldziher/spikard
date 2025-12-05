@@ -294,7 +294,7 @@ impl NativeTestClient {
                 .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("WebSocket task failed: {}", e)))
         })?;
 
-        let ws_conn = crate::test_websocket::WebSocketTestConnection::new(ws);
+        let ws_conn = crate::testing::websocket::WebSocketTestConnection::new(ws);
         Ok(ruby.obj_wrap(ws_conn).as_value())
     }
 
@@ -312,7 +312,7 @@ impl NativeTestClient {
             })
             .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", e)))?;
 
-        crate::test_sse::sse_stream_from_response(ruby, &response)
+        crate::testing::sse::sse_stream_from_response(ruby, &response)
     }
 
     /// GC mark hook so Ruby keeps handler closures alive.

@@ -14,7 +14,7 @@ use spikard_core::problem::ProblemDetails;
 use spikard_http::testing::MultipartFilePart;
 use std::collections::HashMap;
 
-use crate::test_client::{RequestBody, RequestConfig, TestResponseData};
+use crate::testing::client::{RequestBody, RequestConfig, TestResponseData};
 
 /// Convert a Ruby value to JSON.
 ///
