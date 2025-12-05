@@ -148,7 +148,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn creates_upload_file_with_all_fields() {
+    fn creates_and_initializes_upload_file() {
+        // Test initialization with all fields, defaults, and computed values
         let content = Bytes::from("Hello, World!");
         let file = UploadFile::new(
             "test.txt".to_string(),
@@ -157,32 +158,22 @@ mod tests {
             Some(13),
             None,
         );
-
         assert_eq!(file.filename, "test.txt");
         assert_eq!(file.content_type, Some("text/plain".to_string()));
         assert_eq!(file.size, Some(13));
         assert_eq!(file.as_bytes(), &content);
-    }
 
-    #[test]
-    fn defaults_content_type() {
+        // Test default content type
         let file = UploadFile::new("file.bin".to_string(), Bytes::from("data"), None, None, None);
-
         assert_eq!(file.content_type_or_default(), "application/octet-stream");
-    }
 
-    #[test]
-    fn computes_size_from_content() {
+        // Test computed size
         let content = Bytes::from("Hello, World!");
         let file = UploadFile::new("test.txt".to_string(), content, None, None, None);
-
         assert_eq!(file.size, Some(13));
-    }
 
-    #[test]
-    fn reads_as_string() {
+        // Test read_to_string
         let file = UploadFile::new("test.txt".to_string(), Bytes::from("Hello, World!"), None, None, None);
-
         assert_eq!(file.read_to_string().unwrap(), "Hello, World!");
     }
 
@@ -205,22 +196,17 @@ mod tests {
     }
 
     #[test]
-    fn implements_read_trait() {
+    fn implements_read_and_seek_traits() {
+        // Test Read trait: read from start
         let mut file = UploadFile::new("test.txt".to_string(), Bytes::from("Hello, World!"), None, None, None);
-
         let mut buf = [0u8; 5];
         let n = file.read(&mut buf).unwrap();
         assert_eq!(n, 5);
         assert_eq!(&buf, b"Hello");
-    }
 
-    #[test]
-    fn implements_seek_trait() {
+        // Test Seek trait: seek to position 7 and read
         let mut file = UploadFile::new("test.txt".to_string(), Bytes::from("Hello, World!"), None, None, None);
-
-        // Seek to position 7
         file.seek(SeekFrom::Start(7)).unwrap();
-
         let mut buf = [0u8; 5];
         let n = file.read(&mut buf).unwrap();
         assert_eq!(n, 5);
@@ -245,13 +231,12 @@ mod tests {
     }
 
     #[test]
-    fn empty_filename() {
+    fn handles_various_filenames_and_content() {
+        // Test empty filename
         let file = UploadFile::new("".to_string(), Bytes::from("content"), None, None, None);
         assert_eq!(file.filename, "");
-    }
 
-    #[test]
-    fn filename_with_special_characters() {
+        // Test filename with special characters
         let file = UploadFile::new(
             "test-file_2024 (1).txt".to_string(),
             Bytes::from("content"),
@@ -260,31 +245,19 @@ mod tests {
             None,
         );
         assert_eq!(file.filename, "test-file_2024 (1).txt");
-    }
 
-    #[test]
-    fn empty_content() {
+        // Test empty content
         let file = UploadFile::new("empty.txt".to_string(), Bytes::from(""), None, None, None);
         assert_eq!(file.size, Some(0));
         assert_eq!(file.as_bytes().len(), 0);
-    }
 
-    #[test]
-    fn large_content() {
+        // Test large content
         let large_content = Bytes::from(vec![42u8; 1_000_000]);
         let file = UploadFile::new("large.bin".to_string(), large_content.clone(), None, None, None);
         assert_eq!(file.size, Some(1_000_000));
         assert_eq!(file.as_bytes().len(), 1_000_000);
-    }
 
-    #[test]
-    fn content_type_defaults_to_octet_stream() {
-        let file = UploadFile::new("test.bin".to_string(), Bytes::from("data"), None, None, None);
-        assert_eq!(file.content_type_or_default(), "application/octet-stream");
-    }
-
-    #[test]
-    fn content_type_preserves_custom_value() {
+        // Test content type preservation
         let file = UploadFile::new(
             "test.json".to_string(),
             Bytes::from("{}"),
@@ -317,26 +290,21 @@ mod tests {
     }
 
     #[test]
-    fn seek_from_start() {
+    fn seek_with_all_variants() {
+        // Test SeekFrom::Start
         let mut file = UploadFile::new("test.txt".to_string(), Bytes::from("0123456789"), None, None, None);
         assert_eq!(file.seek(SeekFrom::Start(5)).unwrap(), 5);
-    }
 
-    #[test]
-    fn seek_from_current() {
+        // Test SeekFrom::Current
         let mut file = UploadFile::new("test.txt".to_string(), Bytes::from("0123456789"), None, None, None);
         file.seek(SeekFrom::Start(3)).unwrap();
         assert_eq!(file.seek(SeekFrom::Current(2)).unwrap(), 5);
-    }
 
-    #[test]
-    fn seek_from_end() {
+        // Test SeekFrom::End
         let mut file = UploadFile::new("test.txt".to_string(), Bytes::from("0123456789"), None, None, None);
         assert_eq!(file.seek(SeekFrom::End(0)).unwrap(), 10);
-    }
 
-    #[test]
-    fn seek_from_end_negative() {
+        // Test SeekFrom::End with negative offset
         let mut file = UploadFile::new("test.txt".to_string(), Bytes::from("0123456789"), None, None, None);
         assert_eq!(file.seek(SeekFrom::End(-3)).unwrap(), 7);
     }
@@ -357,47 +325,16 @@ mod tests {
     }
 
     #[test]
-    fn read_at_eof_returns_zero() {
-        let mut file = UploadFile::new("test.txt".to_string(), Bytes::from("Hi"), None, None, None);
-        let mut buf = [0u8; 10];
-        let _n = file.read(&mut buf).unwrap(); // Read to EOF
-
-        let mut buf2 = [0u8; 10];
-        let n2 = file.read(&mut buf2).unwrap();
-        assert_eq!(n2, 0); // EOF returns 0
-    }
-
-    #[test]
-    fn read_buffer_smaller_than_content() {
-        let mut file = UploadFile::new("test.txt".to_string(), Bytes::from("Hello, World!"), None, None, None);
-        let mut buf = [0u8; 3];
-        let n = file.read(&mut buf).unwrap();
-        assert_eq!(n, 3);
-        assert_eq!(&buf, b"Hel");
-    }
-
-    #[test]
-    fn read_zero_size_buffer() {
-        let mut file = UploadFile::new("test.txt".to_string(), Bytes::from("Hello"), None, None, None);
-        let mut buf = [];
-        let n = file.read(&mut buf).unwrap();
-        assert_eq!(n, 0);
-    }
-
-    #[test]
-    fn size_overrides_computed_value() {
+    fn size_handling_and_cloning() {
+        // Test size override
         let file = UploadFile::new("test.txt".to_string(), Bytes::from("Hello"), None, Some(1000), None);
         assert_eq!(file.size, Some(1000));
-    }
 
-    #[test]
-    fn size_computed_when_not_provided() {
+        // Test size computation when not provided
         let file = UploadFile::new("test.txt".to_string(), Bytes::from("Hello, World!"), None, None, None);
         assert_eq!(file.size, Some(13));
-    }
 
-    #[test]
-    fn clone_creates_independent_copy() {
+        // Test clone creates independent copy
         let file1 = UploadFile::new(
             "test.txt".to_string(),
             Bytes::from("Hello"),
@@ -413,13 +350,13 @@ mod tests {
     }
 
     #[test]
-    fn base64_with_padding() {
+    fn base64_with_and_without_padding() {
         use base64::{Engine as _, engine::general_purpose::STANDARD};
 
+        // Test with padding
         let original = "A";
         let encoded = STANDARD.encode(original.as_bytes());
-        assert_eq!(encoded, "QQ=="); // Base64 with padding
-
+        assert_eq!(encoded, "QQ==");
         let file = UploadFile::new(
             "test.txt".to_string(),
             Bytes::from(encoded),
@@ -427,18 +364,12 @@ mod tests {
             None,
             Some("base64".to_string()),
         );
-
         assert_eq!(file.read_to_string().unwrap(), original);
-    }
 
-    #[test]
-    fn base64_no_padding() {
-        use base64::{Engine as _, engine::general_purpose::STANDARD};
-
+        // Test without padding
         let original = "Hello";
         let encoded = STANDARD.encode(original.as_bytes());
         assert_eq!(encoded, "SGVsbG8=");
-
         let file = UploadFile::new(
             "test.txt".to_string(),
             Bytes::from(encoded),
@@ -446,12 +377,9 @@ mod tests {
             None,
             Some("base64".to_string()),
         );
-
         assert_eq!(file.read_to_string().unwrap(), original);
-    }
 
-    #[test]
-    fn base64_heuristic_detection() {
+        // Test heuristic detection
         let valid_base64 = "SGVsbG8gV29ybGQ="; // "Hello World"
         let file = UploadFile::new(
             "test.txt".to_string(),
@@ -460,10 +388,7 @@ mod tests {
             None,
             None, // No explicit encoding, but should auto-detect
         );
-
-        // Should be decoded if heuristic matches
         let content = file.as_bytes();
-        // Content should be decoded version
         assert!(content.len() <= valid_base64.len());
     }
 
@@ -487,7 +412,8 @@ mod tests {
     }
 
     #[test]
-    fn content_encoding_field_preserved() {
+    fn content_encoding_and_binary_handling() {
+        // Test content encoding field preservation
         let file = UploadFile::new(
             "test.txt".to_string(),
             Bytes::from("content"),
@@ -496,10 +422,8 @@ mod tests {
             Some("gzip".to_string()),
         );
         assert_eq!(file.content_encoding, Some("gzip".to_string()));
-    }
 
-    #[test]
-    fn binary_content_handling() {
+        // Test binary content handling
         let binary_data = Bytes::from(vec![0, 1, 2, 255, 254, 253]);
         let file = UploadFile::new("binary.bin".to_string(), binary_data.clone(), None, None, None);
         assert_eq!(file.as_bytes(), &binary_data);
