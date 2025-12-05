@@ -61,7 +61,7 @@ jobs:
           msystem: UCRT64
           update: true
           install: >-
-            ucrt64-devel
+            mingw-w64-ucrt-x86_64-toolchain
 
       - name: Setup Rust (Nightly for Windows)
         if: runner.os == 'Windows'
@@ -132,7 +132,7 @@ jobs:
           msystem: UCRT64
           update: true
           install: >-
-            ucrt64-devel
+            mingw-w64-ucrt-x86_64-toolchain
 
       - name: Setup Rust (Nightly for Windows)
         if: runner.os == 'Windows'
