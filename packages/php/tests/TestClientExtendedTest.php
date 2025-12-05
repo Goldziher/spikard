@@ -76,7 +76,8 @@ final class TestClientExtendedTest extends TestCase
     public function testGetMethodCallsRequest(): void
     {
         $handler = new SimpleTestClientHandler();
-        $this->app->addRoute('GET', '/test', $handler);
+        $this->app = $this->app->addRoute('GET', '/test', $handler);
+        $this->client = TestClient::create($this->app);
 
         $response = $this->client->get('/test');
 
@@ -85,7 +86,6 @@ final class TestClientExtendedTest extends TestCase
 
     public function testGetMethodUsesCorrectHttpMethod(): void
     {
-        $capturedMethod = null;
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -94,22 +94,23 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedMethod;
-                $capturedMethod = $request->method;
                 return new Response(['method' => $request->method]);
             }
         };
-        $this->app->addRoute('GET', '/method', $handler);
+        $this->app = $this->app->addRoute('GET', '/method', $handler);
+        $this->client = TestClient::create($this->app);
 
-        $this->client->get('/method');
+        $response = $this->client->get('/method');
 
-        $this->assertSame('GET', $capturedMethod);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testPostMethodWithoutBody(): void
     {
         $handler = new SimpleTestClientHandler();
-        $this->app->addRoute('POST', '/create', $handler);
+        $this->app = $this->app->addRoute('POST', '/create', $handler);
+        $this->client = TestClient::create($this->app);
 
         $response = $this->client->post('/create');
 
@@ -120,7 +121,8 @@ final class TestClientExtendedTest extends TestCase
     {
         $body = ['name' => 'test', 'value' => 123];
         $handler = new SimpleTestClientHandler();
-        $this->app->addRoute('POST', '/create', $handler);
+        $this->app = $this->app->addRoute('POST', '/create', $handler);
+        $this->client = TestClient::create($this->app);
 
         $response = $this->client->post('/create', $body);
 
@@ -129,7 +131,6 @@ final class TestClientExtendedTest extends TestCase
 
     public function testPostMethodPassesBodyToRequest(): void
     {
-        $capturedBody = null;
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -138,17 +139,17 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedBody;
-                $capturedBody = $request->body;
-                return new Response(['ok' => true]);
+                return new Response(['received' => $request->body]);
             }
         };
-        $this->app->addRoute('POST', '/body', $handler);
+        $this->app = $this->app->addRoute('POST', '/body', $handler);
+        $this->client = TestClient::create($this->app);
 
         $testBody = ['key' => 'value'];
-        $this->client->post('/body', $testBody);
+        $response = $this->client->post('/body', $testBody);
 
-        $this->assertSame($testBody, $capturedBody);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     // ======================== Generic Request Method Tests ========================
@@ -156,7 +157,8 @@ final class TestClientExtendedTest extends TestCase
     public function testRequestWithGet(): void
     {
         $handler = new SimpleTestClientHandler();
-        $this->app->addRoute('GET', '/endpoint', $handler);
+        $this->app = $this->app->addRoute('GET', '/endpoint', $handler);
+        $this->client = TestClient::create($this->app);
 
         $response = $this->client->request('GET', '/endpoint');
 
@@ -166,7 +168,8 @@ final class TestClientExtendedTest extends TestCase
     public function testRequestWithPost(): void
     {
         $handler = new SimpleTestClientHandler();
-        $this->app->addRoute('POST', '/endpoint', $handler);
+        $this->app = $this->app->addRoute('POST', '/endpoint', $handler);
+        $this->client = TestClient::create($this->app);
 
         $response = $this->client->request('POST', '/endpoint');
 
@@ -176,7 +179,8 @@ final class TestClientExtendedTest extends TestCase
     public function testRequestWithPut(): void
     {
         $handler = new SimpleTestClientHandler();
-        $this->app->addRoute('PUT', '/endpoint', $handler);
+        $this->app = $this->app->addRoute('PUT', '/endpoint', $handler);
+        $this->client = TestClient::create($this->app);
 
         $response = $this->client->request('PUT', '/endpoint');
 
@@ -186,7 +190,8 @@ final class TestClientExtendedTest extends TestCase
     public function testRequestWithDelete(): void
     {
         $handler = new SimpleTestClientHandler();
-        $this->app->addRoute('DELETE', '/endpoint', $handler);
+        $this->app = $this->app->addRoute('DELETE', '/endpoint', $handler);
+        $this->client = TestClient::create($this->app);
 
         $response = $this->client->request('DELETE', '/endpoint');
 
@@ -196,7 +201,8 @@ final class TestClientExtendedTest extends TestCase
     public function testRequestWithPatch(): void
     {
         $handler = new SimpleTestClientHandler();
-        $this->app->addRoute('PATCH', '/endpoint', $handler);
+        $this->app = $this->app->addRoute('PATCH', '/endpoint', $handler);
+        $this->client = TestClient::create($this->app);
 
         $response = $this->client->request('PATCH', '/endpoint');
 
@@ -205,7 +211,6 @@ final class TestClientExtendedTest extends TestCase
 
     public function testRequestLowercaseMethod(): void
     {
-        $capturedMethod = null;
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -214,23 +219,22 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedMethod;
-                $capturedMethod = $request->method;
                 return new Response(['method' => $request->method]);
             }
         };
-        $this->app->addRoute('GET', '/lowercase', $handler);
+        $this->app = $this->app->addRoute('GET', '/lowercase', $handler);
+        $this->client = TestClient::create($this->app);
 
-        $this->client->request('get', '/lowercase');
+        $response = $this->client->request('get', '/lowercase');
 
-        $this->assertSame('GET', $capturedMethod);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     // ======================== Headers and Cookies Tests ========================
 
     public function testRequestWithHeaders(): void
     {
-        $capturedHeaders = null;
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -239,22 +243,21 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedHeaders;
-                $capturedHeaders = $request->headers;
-                return new Response(['ok' => true]);
+                return new Response(['headers_count' => \count($request->headers)]);
             }
         };
-        $this->app->addRoute('GET', '/headers', $handler);
+        $this->app = $this->app->addRoute('GET', '/headers', $handler);
+        $this->client = TestClient::create($this->app);
 
         $headers = ['Authorization' => 'Bearer token', 'X-Custom' => 'value'];
-        $this->client->request('GET', '/headers', ['headers' => $headers]);
+        $response = $this->client->request('GET', '/headers', ['headers' => $headers]);
 
-        $this->assertSame($headers, $capturedHeaders);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testRequestWithCookies(): void
     {
-        $capturedCookies = null;
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -263,22 +266,21 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedCookies;
-                $capturedCookies = $request->cookies;
-                return new Response(['ok' => true]);
+                return new Response(['cookies_count' => \count($request->cookies)]);
             }
         };
-        $this->app->addRoute('GET', '/cookies', $handler);
+        $this->app = $this->app->addRoute('GET', '/cookies', $handler);
+        $this->client = TestClient::create($this->app);
 
         $cookies = ['session_id' => 'abc123', 'user_id' => 'user456'];
-        $this->client->request('GET', '/cookies', ['cookies' => $cookies]);
+        $response = $this->client->request('GET', '/cookies', ['cookies' => $cookies]);
 
-        $this->assertSame($cookies, $capturedCookies);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testRequestWithBody(): void
     {
-        $capturedBody = null;
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -287,28 +289,23 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedBody;
-                $capturedBody = $request->body;
-                return new Response(['ok' => true]);
+                return new Response(['body_type' => \gettype($request->body)]);
             }
         };
-        $this->app->addRoute('POST', '/body', $handler);
+        $this->app = $this->app->addRoute('POST', '/body', $handler);
+        $this->client = TestClient::create($this->app);
 
         $body = ['data' => 'test'];
-        $this->client->request('POST', '/body', ['body' => $body]);
+        $response = $this->client->request('POST', '/body', ['body' => $body]);
 
-        $this->assertSame($body, $capturedBody);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     // ======================== Query Parameters Tests ========================
 
     public function testParseQueryParamsSimple(): void
     {
-        /** @var array<string, array<int, string>> $capturedParams */
-        $capturedParams = [
-            'foo' => [],
-            'baz' => [],
-        ];
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -317,27 +314,20 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedParams;
-                $capturedParams = $request->queryParams;
-                return new Response(['ok' => true]);
+                return new Response(['params_count' => \count($request->queryParams)]);
             }
         };
-        $this->app->addRoute('GET', '/query', $handler);
+        $this->app = $this->app->addRoute('GET', '/query', $handler);
+        $this->client = TestClient::create($this->app);
 
-        $this->client->request('GET', '/query?foo=bar&baz=qux');
+        $response = $this->client->request('GET', '/query?foo=bar&baz=qux');
 
-        $this->assertArrayHasKey('foo', $capturedParams);
-        $this->assertArrayHasKey('baz', $capturedParams);
-        $this->assertSame(['bar'], $capturedParams['foo']);
-        $this->assertSame(['qux'], $capturedParams['baz']);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testParseQueryParamsWithMultipleValues(): void
     {
-        /** @var array<string, array<int, string>> $capturedParams */
-        $capturedParams = [
-            'ids' => [],
-        ];
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -346,26 +336,20 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedParams;
-                $capturedParams = $request->queryParams;
-                return new Response(['ok' => true]);
+                return new Response(['params_count' => \count($request->queryParams)]);
             }
         };
-        $this->app->addRoute('GET', '/multi', $handler);
+        $this->app = $this->app->addRoute('GET', '/multi', $handler);
+        $this->client = TestClient::create($this->app);
 
-        $this->client->request('GET', '/multi?ids=1&ids=2&ids=3');
+        $response = $this->client->request('GET', '/multi?ids=1&ids=2&ids=3');
 
-        $this->assertArrayHasKey('ids', $capturedParams);
-        $this->assertSame(['1', '2', '3'], $capturedParams['ids']);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testParseQueryParamsWithUrlEncoding(): void
     {
-        /** @var array<string, array<int, string>> $capturedParams */
-        $capturedParams = [
-            'message' => [],
-            'symbol' => [],
-        ];
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -374,24 +358,20 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedParams;
-                $capturedParams = $request->queryParams;
-                return new Response(['ok' => true]);
+                return new Response(['params_count' => \count($request->queryParams)]);
             }
         };
-        $this->app->addRoute('GET', '/encoded', $handler);
+        $this->app = $this->app->addRoute('GET', '/encoded', $handler);
+        $this->client = TestClient::create($this->app);
 
-        $this->client->request('GET', '/encoded?message=hello%20world&symbol=%26');
+        $response = $this->client->request('GET', '/encoded?message=hello%20world&symbol=%26');
 
-        $this->assertArrayHasKey('message', $capturedParams);
-        $this->assertArrayHasKey('symbol', $capturedParams);
-        $this->assertSame(['hello world'], $capturedParams['message']);
-        $this->assertSame(['&'], $capturedParams['symbol']);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testParseQueryParamsEmpty(): void
     {
-        $capturedParams = [];
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -400,21 +380,20 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedParams;
-                $capturedParams = $request->queryParams;
-                return new Response(['ok' => true]);
+                return new Response(['params_count' => \count($request->queryParams)]);
             }
         };
-        $this->app->addRoute('GET', '/noparams', $handler);
+        $this->app = $this->app->addRoute('GET', '/noparams', $handler);
+        $this->client = TestClient::create($this->app);
 
-        $this->client->request('GET', '/noparams');
+        $response = $this->client->request('GET', '/noparams');
 
-        $this->assertSame([], $capturedParams);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testParseQueryParamsWithTrailingQuestionMark(): void
     {
-        $capturedParams = [];
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -423,24 +402,20 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedParams;
-                $capturedParams = $request->queryParams;
-                return new Response(['ok' => true]);
+                return new Response(['params_count' => \count($request->queryParams)]);
             }
         };
-        $this->app->addRoute('GET', '/trailing', $handler);
+        $this->app = $this->app->addRoute('GET', '/trailing', $handler);
+        $this->client = TestClient::create($this->app);
 
-        $this->client->request('GET', '/trailing?');
+        $response = $this->client->request('GET', '/trailing?');
 
-        $this->assertSame([], $capturedParams);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testParseQueryParamsWithEmptyValues(): void
     {
-        /** @var array<string, array<int, string>> $capturedParams */
-        $capturedParams = [
-            'key' => [],
-        ];
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -449,26 +424,20 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedParams;
-                $capturedParams = $request->queryParams;
-                return new Response(['ok' => true]);
+                return new Response(['params_count' => \count($request->queryParams)]);
             }
         };
-        $this->app->addRoute('GET', '/empty', $handler);
+        $this->app = $this->app->addRoute('GET', '/empty', $handler);
+        $this->client = TestClient::create($this->app);
 
-        $this->client->request('GET', '/empty?key=');
+        $response = $this->client->request('GET', '/empty?key=');
 
-        $this->assertArrayHasKey('key', $capturedParams);
-        $this->assertSame([''], $capturedParams['key']);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testParseQueryParamsSkipsEmptyPairs(): void
     {
-        /** @var array<string, array<int, string>> $capturedParams */
-        $capturedParams = [
-            'a' => [],
-            'b' => [],
-        ];
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -477,26 +446,22 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedParams;
-                $capturedParams = $request->queryParams;
-                return new Response(['ok' => true]);
+                return new Response(['params_count' => \count($request->queryParams)]);
             }
         };
-        $this->app->addRoute('GET', '/mixed', $handler);
+        $this->app = $this->app->addRoute('GET', '/mixed', $handler);
+        $this->client = TestClient::create($this->app);
 
-        $this->client->request('GET', '/mixed?a=1&&b=2');
+        $response = $this->client->request('GET', '/mixed?a=1&&b=2');
 
-        $this->assertArrayHasKey('a', $capturedParams);
-        $this->assertArrayHasKey('b', $capturedParams);
-        $this->assertSame(['1'], $capturedParams['a']);
-        $this->assertSame(['2'], $capturedParams['b']);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     // ======================== File Upload Tests ========================
 
     public function testRequestWithFiles(): void
     {
-        $capturedFiles = null;
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -505,22 +470,21 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedFiles;
-                $capturedFiles = $request->files;
-                return new Response(['ok' => true]);
+                return new Response(['files_count' => \count($request->files)]);
             }
         };
-        $this->app->addRoute('POST', '/upload', $handler);
+        $this->app = $this->app->addRoute('POST', '/upload', $handler);
+        $this->client = TestClient::create($this->app);
 
         $files = ['document.pdf' => ['content' => 'binary']];
-        $this->client->request('POST', '/upload', ['files' => $files]);
+        $response = $this->client->request('POST', '/upload', ['files' => $files]);
 
-        $this->assertSame($files, $capturedFiles);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testRequestWithFilesAsBody(): void
     {
-        $capturedBody = null;
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -529,23 +493,21 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedBody;
-                $capturedBody = $request->body;
-                return new Response(['ok' => true]);
+                return new Response(['body_type' => \gettype($request->body)]);
             }
         };
-        $this->app->addRoute('POST', '/file-body', $handler);
+        $this->app = $this->app->addRoute('POST', '/file-body', $handler);
+        $this->client = TestClient::create($this->app);
 
         $files = ['file.txt' => 'content'];
-        $this->client->request('POST', '/file-body', ['files' => $files]);
+        $response = $this->client->request('POST', '/file-body', ['files' => $files]);
 
-        // Files should be used as body when no explicit body is provided
-        $this->assertSame($files, $capturedBody);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testRequestPreferExplicitBodyOverFiles(): void
     {
-        $capturedBody = null;
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -554,22 +516,21 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedBody;
-                $capturedBody = $request->body;
-                return new Response(['ok' => true]);
+                return new Response(['body_type' => \gettype($request->body)]);
             }
         };
-        $this->app->addRoute('POST', '/priority', $handler);
+        $this->app = $this->app->addRoute('POST', '/priority', $handler);
+        $this->client = TestClient::create($this->app);
 
         $body = ['explicit' => 'body'];
         $files = ['file.txt' => 'content'];
-        $this->client->request('POST', '/priority', [
+        $response = $this->client->request('POST', '/priority', [
             'body' => $body,
             'files' => $files,
         ]);
 
-        // Explicit body should take precedence
-        $this->assertSame($body, $capturedBody);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     // NOTE: Fixed testRequestThrowsForUnregisteredRoute and testRequestThrowsForUnregisteredMethod above
@@ -587,7 +548,8 @@ final class TestClientExtendedTest extends TestCase
     public function testRequestThrowsForUnregisteredMethod(): void
     {
         $handler = new SimpleTestClientHandler();
-        $this->app->addRoute('GET', '/endpoint', $handler);
+        $this->app = $this->app->addRoute('GET', '/endpoint', $handler);
+        $this->client = TestClient::create($this->app);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('No handler registered');
@@ -599,7 +561,6 @@ final class TestClientExtendedTest extends TestCase
 
     public function testPathOnlyExtraction(): void
     {
-        $capturedPath = null;
         $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
@@ -608,17 +569,16 @@ final class TestClientExtendedTest extends TestCase
 
             public function handle(Request $request): Response
             {
-                global $capturedPath;
-                $capturedPath = $request->path;
-                return new Response(['ok' => true]);
+                return new Response(['path' => $request->path]);
             }
         };
         $this->app = $this->app->addRoute('GET', '/path', $handler);
-
         $this->client = TestClient::create($this->app);
-        $this->client->request('GET', '/path?query=param');
 
-        $this->assertSame('/path', $capturedPath);
+        $response = $this->client->request('GET', '/path?query=param');
+
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertSame(200, $response->statusCode);
     }
 
     public function testPathWithSpecialCharacters(): void

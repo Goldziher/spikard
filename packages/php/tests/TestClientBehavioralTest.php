@@ -499,6 +499,7 @@ final class TestClientBehavioralTest extends TestCase
         $client = TestClient::create($app);
 
         $client->close(); // Should not throw
+        $this->assertTrue(true); // Verify execution reached this point
     }
 
     /**
