@@ -33,6 +33,9 @@
 .phpunit.cache
 **/.phpunit.result.cache
 **/.phpunit.cache
+.php-cs-fixer.cache
+coverage.json
+packages/ruby/.simplecov
 .dSYM/
 .task/
 .venv/
