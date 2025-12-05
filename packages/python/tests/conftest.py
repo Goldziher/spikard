@@ -58,7 +58,7 @@ def load_fixture(fixture_path: Path) -> dict[str, Any]:
     Returns:
         Parsed fixture data as dictionary
     """
-    with fixture_path.open() as f:
+    with fixture_path.open(encoding="utf-8") as f:
         data = json.load(f)
         if isinstance(data, dict):
             return data
