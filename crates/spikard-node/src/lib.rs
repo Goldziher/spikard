@@ -43,8 +43,7 @@ pub mod handler_output;
 mod lifecycle;
 mod response;
 mod sse;
-mod test_sse;
-mod test_websocket;
+pub mod testing;
 mod websocket;
 
 use napi::bindgen_prelude::*;

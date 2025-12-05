@@ -12,6 +12,7 @@ pub struct WebSocketTestConnection {
 }
 
 impl WebSocketTestConnection {
+    /// Create a new WebSocket test connection wrapper from a Rust connection
     pub fn new(inner: RustWebSocketConnection) -> Self {
         Self {
             inner: Arc::new(Mutex::new(inner)),
@@ -85,6 +86,7 @@ pub struct WebSocketMessage {
 }
 
 impl WebSocketMessage {
+    /// Create a new WebSocket message wrapper from a Rust message
     pub fn from_rust(msg: RustWebSocketMessage) -> Self {
         Self { inner: msg }
     }

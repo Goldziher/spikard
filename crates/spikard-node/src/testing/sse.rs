@@ -11,6 +11,7 @@ pub struct SseStream {
 }
 
 impl SseStream {
+    /// Create a new SSE stream wrapper from a Rust SSE stream
     pub fn new(inner: RustSseStream) -> Self {
         Self { inner }
     }
@@ -48,6 +49,7 @@ pub struct SseEvent {
 }
 
 impl SseEvent {
+    /// Create a new SSE event wrapper from a Rust SSE event
     pub fn from_rust(event: RustSseEvent) -> Self {
         Self { inner: event }
     }

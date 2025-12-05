@@ -4,8 +4,8 @@
 //! to Python, providing a Pythonic API surface using PyO3.
 
 use crate::conversion::{json_to_python, python_to_json};
-use crate::test_sse;
-use crate::test_websocket;
+use crate::testing::sse;
+use crate::testing::websocket;
 use axum::Router as AxumRouter;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
@@ -392,7 +392,7 @@ impl TestClient {
         let path = path.to_string();
         let client = Arc::clone(&self.client);
 
-        let fut = async move { test_websocket::connect_websocket_for_test(client.server(), &path).await };
+        let fut = async move { websocket::connect_websocket_for_test(client.server(), &path).await };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
     }
@@ -408,7 +408,7 @@ impl TestClient {
                 .await
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
 
-            test_sse::sse_stream_from_response(&snapshot)
+            sse::sse_stream_from_response(&snapshot)
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)

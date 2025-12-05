@@ -5,6 +5,10 @@
 
 #![allow(dead_code)]
 
+pub mod builder;
+
+pub use builder::build_dependency_container;
+
 use http::Request;
 use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
