@@ -47,7 +47,21 @@ final class LifecycleHooksBuilder
     }
 
     /** @param Closure(Request): HookResult $callback */
+    public function withOnRequest(Closure $callback): self
+    {
+        $this->onRequest = $callback;
+        return $this;
+    }
+
+    /** @param Closure(Request): HookResult $callback */
     public function preValidation(Closure $callback): self
+    {
+        $this->preValidation = $callback;
+        return $this;
+    }
+
+    /** @param Closure(Request): HookResult $callback */
+    public function withPreValidation(Closure $callback): self
     {
         $this->preValidation = $callback;
         return $this;
@@ -60,6 +74,13 @@ final class LifecycleHooksBuilder
         return $this;
     }
 
+    /** @param Closure(Request): HookResult $callback */
+    public function withPreHandler(Closure $callback): self
+    {
+        $this->preHandler = $callback;
+        return $this;
+    }
+
     /** @param Closure(Request, \Throwable): HookResult $callback */
     public function onError(Closure $callback): self
     {
@@ -67,8 +88,22 @@ final class LifecycleHooksBuilder
         return $this;
     }
 
+    /** @param Closure(Request, \Throwable): HookResult $callback */
+    public function withOnError(Closure $callback): self
+    {
+        $this->onError = $callback;
+        return $this;
+    }
+
     /** @param Closure(Request, HookResult): HookResult $callback */
     public function onResponse(Closure $callback): self
+    {
+        $this->onResponse = $callback;
+        return $this;
+    }
+
+    /** @param Closure(Request, HookResult): HookResult $callback */
+    public function withOnResponse(Closure $callback): self
     {
         $this->onResponse = $callback;
         return $this;

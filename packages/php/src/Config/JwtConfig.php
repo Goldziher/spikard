@@ -26,4 +26,68 @@ final class JwtConfig
         public readonly int $leeway = 0,
     ) {
     }
+
+    public static function builder(): JwtConfigBuilder
+    {
+        return new JwtConfigBuilder();
+    }
+}
+
+/**
+ * Builder for JwtConfig.
+ *
+ * Provides a fluent interface for constructing JwtConfig instances.
+ */
+final class JwtConfigBuilder
+{
+    private string $secret = '';
+    private string $algorithm = 'HS256';
+    /** @var list<string>|null */
+    private ?array $audience = null;
+    private ?string $issuer = null;
+    private int $leeway = 0;
+
+    public function withSecret(string $secret): self
+    {
+        $this->secret = $secret;
+        return $this;
+    }
+
+    public function withAlgorithm(string $algorithm): self
+    {
+        $this->algorithm = $algorithm;
+        return $this;
+    }
+
+    /**
+     * @param list<string>|null $audience
+     */
+    public function withAudience(?array $audience): self
+    {
+        $this->audience = $audience;
+        return $this;
+    }
+
+    public function withIssuer(?string $issuer): self
+    {
+        $this->issuer = $issuer;
+        return $this;
+    }
+
+    public function withLeeway(int $leeway): self
+    {
+        $this->leeway = $leeway;
+        return $this;
+    }
+
+    public function build(): JwtConfig
+    {
+        return new JwtConfig(
+            secret: $this->secret,
+            algorithm: $this->algorithm,
+            audience: $this->audience,
+            issuer: $this->issuer,
+            leeway: $this->leeway,
+        );
+    }
 }
