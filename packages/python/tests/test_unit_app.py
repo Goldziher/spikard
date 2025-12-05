@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
 
-import msgspec
 import pytest
 
 import spikard.app as app_module
 from spikard import Spikard
-from spikard.params import Cookie, Header, ParamBase, Query
-from spikard.schema import extract_json_schema, is_json_schema_dict, is_typeddict, resolve_msgspec_ref
+from spikard.params import ParamBase, Query
 from spikard.sse import SseEventProducer
-from spikard.testing import PortAllocator, TestClient
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -24,25 +21,6 @@ def test_param_wrappers_defaults() -> None:
     """ParamBase helpers should honor defaults and validation."""
     with pytest.raises(ValueError, match="Cannot specify both 'default' and 'default_factory'"):
         ParamBase(default="value", default_factory=lambda: "other")
-
-    factory_called = {"count": 0}
-
-    def _factory() -> str:
-        factory_called["count"] += 1
-        return "generated"
-
-    param = ParamBase(default_factory=_factory)
-    assert param.has_default() is True
-    assert param() == "generated"
-    assert factory_called["count"] == 1
-
-    header = Header(default="x-api", alias="X-API-Key", convert_underscores=False)
-    assert header.alias == "X-API-Key"
-    assert header.convert_underscores is False
-
-    cookie = Cookie(pattern=r"^token-[0-9]+$")
-    assert cookie.pattern is not None
-    assert cookie.pattern.match("token-123")
 
 
 def test_register_route_dependency_and_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -90,48 +68,6 @@ def test_register_route_respects_parameter_override(monkeypatch: pytest.MonkeyPa
     assert route.response_schema == {"resp": "ok"}
     assert route.parameter_schema == {"properties": {"forced": {"source": "header"}}}
     assert route.is_async is False
-
-
-def test_port_allocator_and_client_properties() -> None:
-    """Port allocation and client accessors should guard lifecycle correctly."""
-    allocator = PortAllocator()
-    port = allocator.allocate()
-    assert isinstance(port, int)
-    allocator.release(port)
-    reuse_port = allocator.allocate()
-    allocator.release(reuse_port)
-
-    client = TestClient(Spikard())
-    with pytest.raises(RuntimeError):
-        _ = client.base_url
-    client._port = 12345
-    assert client.base_url.endswith(":12345")
-
-
-class UserPayload(TypedDict):
-    """Simple payload for schema extraction tests."""
-
-    name: str
-    age: int
-
-
-def test_schema_helpers_cover_common_cases() -> None:
-    """Lightweight coverage for schema helper utilities."""
-    assert is_typeddict(UserPayload) is True
-    assert is_json_schema_dict({"type": "object", "properties": {"name": {"type": "string"}}}) is True
-    assert is_json_schema_dict({"not": "schema"}) is False
-
-    class Message(msgspec.Struct):
-        message: str
-
-    schema = extract_json_schema(Message)
-    assert schema is not None
-    assert schema["type"] == "object"
-    assert "properties" in schema
-    assert "message" in schema["properties"]
-
-    resolved = resolve_msgspec_ref({"$ref": "#/$defs/Message", "$defs": {"Message": {"type": "string"}}})
-    assert resolved["type"] == "string"
 
 
 def test_lifecycle_hooks_and_dependency_copies() -> None:

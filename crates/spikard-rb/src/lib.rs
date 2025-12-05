@@ -1665,61 +1665,6 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    /// Test that HandlerResponsePayload can be created successfully
-    #[test]
-    fn test_handler_response_payload_creation() {
-        let payload = HandlerResponsePayload {
-            status: 200,
-            headers: std::collections::HashMap::new(),
-            body: Some(json!({"message": "test"})),
-            raw_body: None,
-        };
-
-        assert_eq!(payload.status, 200);
-        assert!(payload.body.is_some());
-        assert!(payload.raw_body.is_none());
-    }
-
-    /// Test that HandlerResponsePayload with various status codes can be created
-    #[test]
-    fn test_handler_response_payload_various_statuses() {
-        let statuses = vec![200, 201, 204, 301, 400, 404, 500];
-        for status in statuses {
-            let payload = HandlerResponsePayload {
-                status,
-                headers: std::collections::HashMap::new(),
-                body: None,
-                raw_body: None,
-            };
-            assert_eq!(payload.status, status);
-        }
-    }
-
-    /// Test that HandlerResponsePayload with headers can be created
-    #[test]
-    fn test_handler_response_payload_with_headers() {
-        let mut headers = std::collections::HashMap::new();
-        headers.insert("X-Custom".to_string(), "value".to_string());
-        headers.insert("Content-Type".to_string(), "application/json".to_string());
-
-        let payload = HandlerResponsePayload {
-            status: 200,
-            headers: headers.clone(),
-            body: None,
-            raw_body: None,
-        };
-
-        assert_eq!(payload.headers.len(), 2);
-        assert_eq!(payload.headers.get("X-Custom"), Some(&"value".to_string()));
-    }
-
-    /// Test that StreamingResponsePayload can be created
-    #[test]
-    fn test_streaming_response_payload_creation() {
-        // We can't fully test streaming without Ruby VM, but we can verify structure
-        assert!(true, "StreamingResponsePayload structure is valid");
-    }
-
     /// Test that NativeBuiltResponse can extract parts safely
     #[test]
     fn test_native_built_response_status_extraction() {
@@ -1803,136 +1748,11 @@ mod tests {
         assert!(!bytes.is_empty(), "Serialized JSON should not be empty");
     }
 
-    /// Test NativeResponseParts structure
-    #[test]
-    fn test_native_response_parts_creation() {
-        // Structure validation - just verify we can create the pattern
-        // Full testing requires Ruby VM
-        assert!(true, "NativeResponseParts can be logically constructed");
-    }
-
-    /// Test RubyHandlerResult enum variants
-    #[test]
-    fn test_ruby_handler_result_variants() {
-        // We can't construct all variants without Ruby VM,
-        // but we verify the enum is correctly defined
-        assert!(true, "RubyHandlerResult enum is properly defined");
-    }
-
-    /// Test request config parsing structure
-    #[test]
-    fn test_request_config_structure() {
-        let config = RequestConfig {
-            query: None,
-            headers: std::collections::HashMap::new(),
-            cookies: std::collections::HashMap::new(),
-            body: None,
-        };
-
-        assert!(config.query.is_none());
-        assert!(config.headers.is_empty());
-        assert!(config.cookies.is_empty());
-        assert!(config.body.is_none());
-    }
-
-    /// Test request config with all fields set
-    #[test]
-    fn test_request_config_with_all_fields() {
-        let mut headers = std::collections::HashMap::new();
-        headers.insert("X-Test".to_string(), "value".to_string());
-
-        let mut cookies = std::collections::HashMap::new();
-        cookies.insert("session".to_string(), "abc123".to_string());
-
-        let config = RequestConfig {
-            query: Some(json!({"page": 1})),
-            headers,
-            cookies,
-            body: Some(RequestBody::Json(json!({"data": "test"}))),
-        };
-
-        assert!(config.query.is_some());
-        assert_eq!(config.headers.len(), 1);
-        assert_eq!(config.cookies.len(), 1);
-        assert!(config.body.is_some());
-    }
-
-    /// Test RequestBody enum variants
-    #[test]
-    fn test_request_body_json_variant() {
-        let body = RequestBody::Json(json!({"key": "value"}));
-        match body {
-            RequestBody::Json(_) => assert!(true),
-            _ => panic!("Should be Json variant"),
-        }
-    }
-
-    #[test]
-    fn test_request_body_form_variant() {
-        let body = RequestBody::Form(json!({"field": "value"}));
-        match body {
-            RequestBody::Form(_) => assert!(true),
-            _ => panic!("Should be Form variant"),
-        }
-    }
-
-    #[test]
-    fn test_request_body_raw_variant() {
-        let body = RequestBody::Raw("raw data".to_string());
-        match body {
-            RequestBody::Raw(data) => assert_eq!(data, "raw data"),
-            _ => panic!("Should be Raw variant"),
-        }
-    }
-
-    /// Test TestResponseData structure
-    #[test]
-    fn test_test_response_data_creation() {
-        let response = TestResponseData {
-            status: 200,
-            headers: std::collections::HashMap::new(),
-            body_text: Some("response body".to_string()),
-        };
-
-        assert_eq!(response.status, 200);
-        assert!(response.headers.is_empty());
-        assert_eq!(response.body_text, Some("response body".to_string()));
-    }
-
-    /// Test TestResponseData with various status codes
-    #[test]
-    fn test_test_response_data_various_statuses() {
-        let statuses = vec![200u16, 201, 204, 400, 404, 500];
-        for status in statuses {
-            let response = TestResponseData {
-                status,
-                headers: std::collections::HashMap::new(),
-                body_text: None,
-            };
-            assert_eq!(response.status, status);
-        }
-    }
-
-    /// Test that NativeTestClient structure is valid
-    #[test]
-    fn test_native_test_client_structure() {
-        // Structure validation only - full testing requires Ruby VM
-        assert!(true, "NativeTestClient structure is valid");
-    }
-
-    /// Test that NativeBuiltResponse structure is valid
-    #[test]
-    fn test_native_built_response_structure() {
-        // Structure validation only - full testing requires Ruby VM
-        assert!(true, "NativeBuiltResponse structure is valid");
-    }
-
     /// Test global runtime initialization
     #[test]
     fn test_global_runtime_initialization() {
         // Verify that GLOBAL_RUNTIME can be accessed without panicking
         let _ = &*GLOBAL_RUNTIME;
-        assert!(true, "Global runtime initialized successfully");
     }
 
     /// Test path normalization logic for routes
@@ -1983,109 +1803,6 @@ mod tests {
         }
     }
 
-    /// Test response status codes range
-    #[test]
-    fn test_status_code_ranges() {
-        // 1xx Informational
-        let informational = vec![100, 101, 102];
-        for code in informational {
-            assert!(code >= 100 && code < 200);
-        }
-
-        // 2xx Success
-        let success = vec![200, 201, 202, 204];
-        for code in success {
-            assert!(code >= 200 && code < 300);
-        }
-
-        // 3xx Redirection
-        let redirect = vec![301, 302, 304];
-        for code in redirect {
-            assert!(code >= 300 && code < 400);
-        }
-
-        // 4xx Client Error
-        let client_error = vec![400, 401, 403, 404];
-        for code in client_error {
-            assert!(code >= 400 && code < 500);
-        }
-
-        // 5xx Server Error
-        let server_error = vec![500, 502, 503];
-        for code in server_error {
-            assert!(code >= 500 && code < 600);
-        }
-    }
-
-    /// Test that valid status codes are in valid range
-    #[test]
-    fn test_valid_status_code_bounds() {
-        let min_valid: u16 = 100;
-        let max_valid: u16 = 599;
-
-        assert!(min_valid >= 100);
-        assert!(max_valid <= 599);
-        assert!(min_valid < max_valid);
-    }
-
-    /// Test JSON value conversions
-    #[test]
-    fn test_json_value_types() {
-        let null_val = json!(null);
-        let bool_val = json!(true);
-        let num_val = json!(42);
-        let str_val = json!("test");
-        let array_val = json!([1, 2, 3]);
-        let obj_val = json!({"key": "value"});
-
-        assert!(null_val.is_null());
-        assert!(bool_val.is_boolean());
-        assert!(num_val.is_number());
-        assert!(str_val.is_string());
-        assert!(array_val.is_array());
-        assert!(obj_val.is_object());
-    }
-
-    /// Test that response building preserves status codes
-    #[test]
-    fn test_response_status_preservation() {
-        // Test the concept: status codes should be preserved through build process
-        let test_statuses = vec![
-            (200, "OK"),
-            (201, "Created"),
-            (204, "No Content"),
-            (400, "Bad Request"),
-            (404, "Not Found"),
-            (500, "Server Error"),
-        ];
-
-        for (code, _desc) in test_statuses {
-            assert!(code >= 100 && code < 600, "Status code should be in valid range");
-        }
-    }
-
-    /// Test streaming response concepts
-    #[test]
-    fn test_streaming_response_concepts() {
-        // Verify streaming response would have valid status codes
-        let streaming_codes = vec![200, 206, 304];
-
-        for code in streaming_codes {
-            assert!(code >= 200 && code < 400);
-        }
-    }
-
-    /// Test route metadata structure
-    #[test]
-    fn test_route_metadata_concepts() {
-        // Verify we understand route metadata requirements
-        let methods = vec!["GET", "POST", "PUT", "PATCH", "DELETE"];
-        let paths = vec!["/users", "/users/:id", "/posts/:id/comments"];
-
-        assert_eq!(methods.len(), 5);
-        assert_eq!(paths.len(), 3);
-    }
-
     /// Test multipart file handling structure
     #[test]
     fn test_multipart_file_part_structure() {
@@ -2103,17 +1820,6 @@ mod tests {
         assert_eq!(file_data.content_type, Some("text/plain".to_string()));
     }
 
-    /// Test that we can create handler responses with different body types
-    #[test]
-    fn test_handler_response_body_variants() {
-        // Test concept: bodies can be JSON, raw, or streaming
-        let json_body = json!({"result": "success"});
-        let raw_body = "plain text response";
-
-        assert!(json_body.is_object());
-        assert!(!raw_body.is_empty());
-    }
-
     /// Test response header case sensitivity concepts
     #[test]
     fn test_response_header_concepts() {
@@ -2128,16 +1834,6 @@ mod tests {
         }
     }
 
-    /// Test that byte counts are tracked correctly
-    #[test]
-    fn test_body_byte_handling() {
-        let raw_bytes = b"test body";
-        let vec_bytes = raw_bytes.to_vec();
-
-        assert_eq!(vec_bytes.len(), 9);
-        assert_eq!(vec_bytes[0], b't');
-    }
-
     /// Test error payload structure
     #[test]
     fn test_error_payload_structure() {
@@ -2150,13 +1846,5 @@ mod tests {
         assert_eq!(error_json["error"], "Not Found");
         assert_eq!(error_json["code"], "404");
         assert!(error_json["details"].is_object());
-    }
-
-    /// Test that all required test assertions are well-formed (20+ minimum)
-    #[test]
-    fn test_minimum_assertion_count() {
-        // Meta-test: verify we have sufficient test coverage
-        // We should have at least 20 test functions
-        assert!(true, "Test suite has comprehensive coverage");
     }
 }
