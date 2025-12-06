@@ -56,7 +56,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11", "3.13"]
+        python-version: ["3.11", "3.14"]
     steps:
       - uses: actions/checkout@v6
 
@@ -104,7 +104,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11", "3.13"]
+        python-version: ["3.11", "3.14"]
     steps:
       - uses: actions/checkout@v6
 
@@ -128,12 +128,86 @@ jobs:
       - name: Install wheel (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: uv pip install dist/*.whl
+        run: |
+          wheel=$(python - <<'PY'
+import glob
+import platform
+import sys
+
+candidates = glob.glob("dist/*.whl")
+if not candidates:
+    sys.exit("No wheels found in dist/")
+
+plat = sys.platform
+arch = platform.machine().lower()
+arch_aliases = {
+    "x86_64": ["x86_64", "amd64"],
+    "aarch64": ["aarch64", "arm64"],
+}
+arch_matches = arch_aliases.get(arch, [arch])
+
+def pick(marker: str) -> str | None:
+    for candidate in candidates:
+        cand = candidate.lower()
+        if marker in cand and any(a in cand for a in arch_matches):
+            return candidate
+    return None
+
+if plat.startswith("linux"):
+    chosen = pick("manylinux") or pick("linux")
+elif plat == "darwin":
+    chosen = pick("macosx")
+elif plat.startswith("win"):
+    chosen = pick("win")
+else:
+    chosen = None
+
+print(chosen or candidates[0])
+PY
+          )
+          uv pip install "$wheel"
 
       - name: Install wheel (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: uv pip install (Get-Item dist\*.whl).FullName
+        run: |
+          $wheel = python - <<'PY'
+import glob
+import platform
+import sys
+
+candidates = glob.glob("dist/*.whl")
+if not candidates:
+    sys.exit("No wheels found in dist/")
+
+plat = sys.platform
+arch = platform.machine().lower()
+arch_aliases = {
+    "x86_64": ["x86_64", "amd64"],
+    "aarch64": ["aarch64", "arm64"],
+}
+arch_matches = arch_aliases.get(arch, [arch])
+
+def pick(marker: str):
+    for candidate in candidates:
+        cand = candidate.lower()
+        if marker in cand and any(a in cand for a in arch_matches):
+            return candidate
+    return None
+
+if plat.startswith("linux"):
+    chosen = pick("manylinux") or pick("linux")
+elif plat == "darwin":
+    chosen = pick("macosx")
+elif plat.startswith("win"):
+    chosen = pick("win")
+else:
+    chosen = None
+
+print(chosen or candidates[0])
+PY
+          $wheel = $wheel.Trim()
+          uv pip install $wheel
 
       - name: Run pytest (Unix)
         if: runner.os != 'Windows'
@@ -160,7 +234,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           cache-prefix: python-sdist
 
       - name: Sync workspace deps
@@ -196,7 +270,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v3
