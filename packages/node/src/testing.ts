@@ -2,15 +2,28 @@
  * Testing utilities for Spikard applications
  */
 
-import {
-	TestClient as NativeTestClient,
-	type TestResponse as NativeTestResponse,
-	type WebSocketTestConnection,
-} from "../index";
 import type { ServerConfig } from "./config";
 import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
 import type { JsonValue } from "./types";
+
+interface NativeTestResponse {
+	statusCode: number;
+	headers(): Record<string, string>;
+	text(): string;
+	json<T>(): T;
+	bytes(): Buffer;
+}
+
+interface WebSocketTestConnection {
+	sendText(text: string): Promise<void>;
+	sendJson(obj: unknown): Promise<void>;
+	receiveText(): Promise<string>;
+	receiveJson(): Promise<unknown>;
+	receiveBytes(): Promise<Buffer>;
+	receiveMessage(): Promise<unknown>;
+	close(): Promise<void>;
+}
 
 /**
  * HTTP response from test client
@@ -101,7 +114,28 @@ type NativeClientFactory = (
 	config: ServerConfig | null,
 ) => NativeClient;
 
-const isNativeCtor = typeof NativeTestClient === "function";
+interface NativeBinding {
+	TestClient: NativeClientConstructor;
+}
+
+let nativeTestClient: NativeClientConstructor | null = null;
+
+const loadNativeTestClient = (): NativeClientConstructor | null => {
+	try {
+		const binding = require("../spikard-node.darwin-arm64.node") as NativeBinding;
+		return binding.TestClient;
+	} catch {
+		try {
+			const binding = require("../spikard-node.node") as NativeBinding;
+			return binding.TestClient;
+		} catch {
+			return null;
+		}
+	}
+};
+
+nativeTestClient = loadNativeTestClient();
+const isNativeCtor = nativeTestClient !== null;
 
 class JsTestResponse implements NativeTestResponse {
 	private readonly body: Buffer;
@@ -180,6 +214,10 @@ class JsNativeClient implements NativeClient {
 		for (let i = 0; i < patternParts.length; i += 1) {
 			const patternPart = patternParts[i];
 			const actualPart = actualParts[i];
+
+			if (!patternPart || !actualPart) {
+				return null;
+			}
 
 			if (patternPart.startsWith(":")) {
 				params[patternPart.slice(1)] = decodeURIComponent(actualPart);
@@ -328,9 +366,16 @@ const defaultNativeClientFactory: NativeClientFactory = (
 	lifecycleHooks,
 	config,
 ) => {
-	if (isNativeCtor) {
-		const Ctor = NativeTestClient as NativeClientConstructor;
-		return new Ctor(routesJson, websocketRoutesJson, handlers, websocketHandlers, dependencies, lifecycleHooks, config);
+	if (isNativeCtor && nativeTestClient) {
+		return new nativeTestClient(
+			routesJson,
+			websocketRoutesJson,
+			handlers,
+			websocketHandlers,
+			dependencies,
+			lifecycleHooks,
+			config,
+		);
 	}
 
 	return new JsNativeClient(
@@ -380,6 +425,7 @@ export const __setNativeClientFactory = (factory?: NativeClientFactory): void =>
  * ```
  */
 export class TestClient {
+	readonly app: SpikardApp;
 	private nativeClient: NativeClient;
 
 	/**
