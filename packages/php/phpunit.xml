@@ -14,4 +14,11 @@
             <directory>vendor</directory>
         </exclude>
     </source>
+    <coverage pathCoverage="true">
+        <report>
+            <html outputDirectory="packages/php/htmlcov" lowUpperBound="80" highLowerBound="95"/>
+            <lcov outputFile="packages/php/coverage.lcov"/>
+            <clover outputFile="target/clover.xml"/>
+        </report>
+    </coverage>
 </phpunit>
