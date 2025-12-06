@@ -48,7 +48,7 @@ exclude-files = [
 
 # Crates to exclude from coverage
 # wasm crate excluded due to dependency issues on macOS
-# php crate excluded due to OpenSSL symbol mismatch on macOS
+# php crate excluded on macOS due to OpenSSL symbol mismatch; measured on Linux via coverage-rust-php-linux
 exclude-crates = [
     "spikard-wasm",
     "spikard-php",
