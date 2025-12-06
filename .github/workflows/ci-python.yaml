@@ -176,3 +176,49 @@ jobs:
           path: target/wheels/*.tar.gz
           if-no-files-found: error
           retention-days: 7
+
+  coverage-python:
+    name: Python Code Coverage (80% minimum)
+    needs: [test-python]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: coverage-python
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Run Python tests with coverage
+        working-directory: packages/python
+        run: |
+          uv sync --all-extras
+          uv run maturin develop --release --features extension-module
+          uv run pytest --cov=_spikard --cov-report=html:htmlcov --cov-report=lcov:coverage.lcov -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./packages/python/coverage.lcov
+          flags: python
+          name: python-coverage
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage-report
+          path: packages/python/htmlcov/
+          retention-days: 30
