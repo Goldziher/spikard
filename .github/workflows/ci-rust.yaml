@@ -212,11 +212,12 @@ jobs:
           PYO3_PYTHON: python
         run: |
           cargo tarpaulin \
+            --workspace \
             --out Lcov \
             --output-dir target/tarpaulin-php \
             --timeout 300 \
             --exclude-files "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "examples/**" "tools/**" \
-            --exclude "spikard-wasm" \
+            --exclude spikard-wasm \
             --verbose
 
       - name: Upload PHP FFI coverage to Codecov

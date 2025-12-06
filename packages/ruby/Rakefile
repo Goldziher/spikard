@@ -26,7 +26,7 @@ namespace :ext do
 
       dllext = RbConfig::CONFIG['DLEXT']
       artifact = Dir.glob(File.join('target', profile, 'libspikard_rb*')).find do |path|
-        path =~ /\.(?:bundle|dylib|so)\z/i
+        path =~ /\.(?:bundle|dylib|so|dll)\z/i
       end
       raise 'Native extension artifact not found after build' unless artifact
 
