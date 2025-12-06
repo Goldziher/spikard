@@ -186,5 +186,7 @@ jobs:
 
       - name: Display coverage summary
         run: |
-          bash scripts/coverage/show-summary.sh
+          echo "Coverage reports generated and uploaded to Codecov"
+          echo "  - Rust: 95% minimum coverage"
+          echo "  - Python: 80% minimum coverage"
           echo "  - Node.js: standard coverage"
