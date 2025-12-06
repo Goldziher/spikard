@@ -14,7 +14,7 @@
             <directory>vendor</directory>
         </exclude>
     </source>
-    <coverage pathCoverage="true">
+    <coverage>
         <report>
             <html outputDirectory="packages/php/htmlcov" lowUpperBound="80" highLowerBound="95"/>
             <clover outputFile="target/clover.xml"/>

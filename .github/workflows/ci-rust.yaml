@@ -158,7 +158,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
-        run: cargo tarpaulin --workspace --out Lcov --output-dir target/tarpaulin --timeout 300 --exclude-files "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "examples/**" "tools/**" --exclude spikard-wasm --exclude spikard-php --verbose
+        run: cargo tarpaulin --workspace --out Lcov --output-dir target/tarpaulin --timeout 300 --exclude-files "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "examples/**" "tools/**" --exclude spikard-wasm --exclude spikard-php --exclude spikard-node --exclude spikard-rb --exclude spikard-py --verbose
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -221,6 +221,7 @@ jobs:
             --timeout 300 \
             --exclude-files "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "examples/**" "tools/**" \
             --exclude spikard-wasm \
+            --exclude spikard-node --exclude spikard-rb --exclude spikard-py \
             --verbose
 
       - name: Upload PHP FFI coverage to Codecov
