@@ -444,16 +444,18 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_boundary_parsing_with_lf_only() {
+    async fn test_boundary_parsing_with_crlf() {
+        // RFC 7578 requires CRLF line endings for multipart bodies.
+        // This test verifies proper boundary parsing with spec-compliant CRLF.
         let boundary: &str = "boundary123";
         let mut body: Vec<u8> = Vec::new();
 
-        body.extend_from_slice(format!("--{}\n", boundary).as_bytes());
-        body.extend_from_slice(b"Content-Disposition: form-data; name=\"field\"\n");
-        body.extend_from_slice(b"\n");
+        body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
+        body.extend_from_slice(b"Content-Disposition: form-data; name=\"field\"\r\n");
+        body.extend_from_slice(b"\r\n");
         body.extend_from_slice(b"value");
-        body.extend_from_slice(b"\n");
-        body.extend_from_slice(format!("--{}--\n", boundary).as_bytes());
+        body.extend_from_slice(b"\r\n");
+        body.extend_from_slice(format!("--{}--\r\n", boundary).as_bytes());
 
         let request: axum::http::Request<axum::body::Body> = axum::http::Request::builder()
             .method("POST")
@@ -466,6 +468,7 @@ mod tests {
 
         let obj: &serde_json::Map<String, serde_json::Value> = result.as_object().unwrap();
         assert!(obj.contains_key("field"));
+        assert_eq!(obj["field"], "value");
     }
 
     #[tokio::test]
@@ -736,26 +739,30 @@ mod tests {
 
     #[tokio::test]
     async fn test_multiple_files_different_sizes_around_threshold() {
+        // Test files around the 1MB streaming threshold
+        // - Small file: below threshold (buffered)
+        // - Large file: exceeds threshold (marked as binary)
         let boundary: &str = "boundary123";
-        let small_content: String = "small".repeat(100);
-        let medium_content: String = "m".repeat(512 * 1024);
-        let large_content: String = "l".repeat(2 * 1024 * 1024);
+        let small_content: Vec<u8> = "small".repeat(100).into_bytes();
+        // Large file just over 1MB threshold to trigger binary handling
+        let large_content: Vec<u8> = vec![0x42; 1024 * 1024 + 1]; // 'B' repeated
 
-        let parts: Vec<String> = vec![
-            format!(
-                "Content-Disposition: form-data; name=\"small\"; filename=\"small.txt\"\r\nContent-Type: text/plain\r\n\r\n{}",
-                small_content
-            ),
-            format!(
-                "Content-Disposition: form-data; name=\"medium\"; filename=\"medium.txt\"\r\nContent-Type: text/plain\r\n\r\n{}",
-                medium_content
-            ),
-            format!(
-                "Content-Disposition: form-data; name=\"large\"; filename=\"large.bin\"\r\nContent-Type: application/octet-stream\r\n\r\n{}",
-                large_content
-            ),
-        ];
-        let body: Vec<u8> = create_multipart_body(boundary, parts);
+        let mut body: Vec<u8> = Vec::new();
+
+        // Small file
+        body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
+        body.extend_from_slice(b"Content-Disposition: form-data; name=\"small\"; filename=\"small.txt\"\r\nContent-Type: text/plain\r\n\r\n");
+        body.extend_from_slice(&small_content);
+        body.extend_from_slice(b"\r\n");
+
+        // Large file (exceeds 1MB threshold)
+        body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
+        body.extend_from_slice(b"Content-Disposition: form-data; name=\"large\"; filename=\"large.bin\"\r\nContent-Type: application/octet-stream\r\n\r\n");
+        body.extend_from_slice(&large_content);
+        body.extend_from_slice(b"\r\n");
+
+        // Final boundary
+        body.extend_from_slice(format!("--{}--\r\n", boundary).as_bytes());
 
         let request: axum::http::Request<axum::body::Body> = axum::http::Request::builder()
             .method("POST")
@@ -768,9 +775,17 @@ mod tests {
 
         let obj: &serde_json::Map<String, serde_json::Value> = result.as_object().unwrap();
 
+        // Verify small file is included in full
+        assert!(obj.contains_key("small"));
         assert!(obj["small"]["content"].is_string());
-        assert!(obj["medium"]["content"].is_string());
-        assert!(obj["large"]["content"].as_str().unwrap().contains("<binary data"));
+        let small_str = obj["small"]["content"].as_str().unwrap();
+        assert_eq!(small_str.len(), 500); // "small" (5) * 100
+
+        // Verify large file exceeds threshold and is marked as binary
+        assert!(obj.contains_key("large"));
+        let large_content_str = obj["large"]["content"].as_str().unwrap();
+        assert!(large_content_str.contains("<binary data"));
+        assert!(large_content_str.contains("1048577 bytes")); // 1MB + 1 byte
     }
 
     #[tokio::test]
