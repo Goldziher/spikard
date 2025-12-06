@@ -1,4 +1,4 @@
-import initWasm, { TestClient as NativeTestClient } from "../runtime/spikard_wasm.js";
+import { init as initWasm, TestClient as NativeTestClient } from "../runtime/spikard_wasm.js";
 import type { LifecycleHookFunction, LifecycleHookPayload, LifecycleHooks } from "./app";
 import type { HandlerFunction, SpikardApp } from "./index";
 import type { Request } from "./request";
