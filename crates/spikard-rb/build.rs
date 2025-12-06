@@ -77,7 +77,7 @@ module Spikard
 
     def rebuild_native!
       ensure_native!
-      @native_response = Spikard::Native.build_response(@content, @status_code, @headers, @headers['content-type'])
+      @native_response = Spikard::Native.build_response(@content, @status_code, @headers)
       return unless @native_response
 
       @status_code = @native_response.status_code
