@@ -115,6 +115,11 @@ jobs:
         shell: bash
         run: pnpm install
 
+      - name: Prepare WASM runtime
+        working-directory: packages/wasm
+        shell: bash
+        run: pnpm run prepare:wasm
+
       - name: Run tests
         working-directory: packages/wasm
         shell: bash
@@ -122,7 +127,7 @@ jobs:
 
   coverage-wasm:
     name: WASM Code Coverage (80% minimum)
-    needs: test-wasm
+    needs: build-wasm
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -136,8 +141,18 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Download WASM bindings
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-bindings
+          path: packages/wasm/
+
       - name: Install dependencies
         run: cd packages/wasm && pnpm install --frozen-lockfile
+
+      - name: Prepare WASM runtime
+        working-directory: packages/wasm
+        run: pnpm run prepare:wasm
 
       - name: Run WASM coverage
         working-directory: packages/wasm
