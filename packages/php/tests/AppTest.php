@@ -852,6 +852,7 @@ final class AppTest extends TestCase
     public function testConfigToNativeStaticFilesWithoutCache(): void
     {
         $staticFiles = StaticFilesConfig::builder()
+            ->withEnabled(true)
             ->withRoot('/public')
             ->withCache(false)
             ->build();
@@ -863,11 +864,14 @@ final class AppTest extends TestCase
         $app = new App($config);
         $native = $this->invokeConfigToNative($app, $config);
 
-        /** @var list<array<string, mixed>> */
-        $staticFilesArray = $native['static_files'];
+        /** @var list<array<string, mixed>>|null */
+        $staticFilesArray = $native['static_files'] ?? null;
+        $this->assertIsArray($staticFilesArray);
+        $this->assertNotEmpty($staticFilesArray);
+
         /** @var array<string, mixed> */
         $staticFilesEntry = $staticFilesArray[0];
-        $this->assertNull($staticFilesEntry['cache_control']);
+        $this->assertNull($staticFilesEntry['cache_control'] ?? null);
     }
 
     // ======================== Additional Serialization Tests ========================

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Spikard\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Spikard\App;
 use Spikard\Http\Request;
@@ -32,9 +34,7 @@ final class TestClientTest extends TestClientTestCase
 {
     // ======================== Factory and Initialization Tests ========================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testCreateReturnsTestClient(): void
     {
         $app = new App();
@@ -43,9 +43,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertInstanceOf(TestClient::class, $client);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testAppMethodReturnsCorrectInstance(): void
     {
         $app = new App();
@@ -54,9 +52,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame($app, $client->app());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testCreateMultipleClients(): void
     {
         $app = new App();
@@ -70,10 +66,8 @@ final class TestClientTest extends TestClientTestCase
 
     // ======================== HTTP Methods Tests ========================
 
-    /**
-     * @test
-     * @dataProvider httpMethodsProvider
-     */
+    #[Test]
+    #[DataProvider('httpMethodsProvider')]
     public function testRequestWithAllHttpMethods(string $method, string $expectedMethod): void
     {
         $handler = $this->createBasicHandler();
@@ -84,10 +78,8 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     * @dataProvider caseInsensitiveMethodsProvider
-     */
+    #[Test]
+    #[DataProvider('caseInsensitiveMethodsProvider')]
     public function testRequestWithCaseInsensitiveMethods(string $method, string $expectedMethod): void
     {
         $handler = $this->createBasicHandler();
@@ -98,9 +90,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithAllMethodsCombined(): void
     {
         $handler = $this->createBasicHandler();
@@ -122,9 +112,7 @@ final class TestClientTest extends TestClientTestCase
 
     // ======================== Convenience Methods Tests ========================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testGetMethodCallsRequest(): void
     {
         $handler = $this->createBasicHandler();
@@ -135,9 +123,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testPostWithoutBody(): void
     {
         $handler = $this->createBasicHandler();
@@ -148,9 +134,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testPostWithBody(): void
     {
         $bodyData = ['name' => 'test'];
@@ -168,9 +152,7 @@ final class TestClientTest extends TestClientTestCase
 
     // ======================== Headers and Cookies Tests ========================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestPassesHeaders(): void
     {
         $capturedHeaders = [];
@@ -190,9 +172,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame('Bearer token', $capturedHeaders['Authorization']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestPassesCookies(): void
     {
         $capturedCookies = [];
@@ -212,9 +192,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame('42', $capturedCookies['user']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestPassesBody(): void
     {
         $capturedBody = null;
@@ -235,9 +213,7 @@ final class TestClientTest extends TestClientTestCase
 
     // ======================== Query Parameter Tests ========================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestParsesQueryParams(): void
     {
         $capturedParams = [];
@@ -256,9 +232,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(['qux'], $capturedParams['baz']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithUrlEncodedParams(): void
     {
         $capturedParams = [];
@@ -277,9 +251,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(['test@example.com'], $capturedParams['email']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithMultipleQueryValues(): void
     {
         $capturedParams = [];
@@ -297,9 +269,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(['php', 'rust', 'python'], $capturedParams['tags']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithEmptyQueryString(): void
     {
         $capturedParams = [];
@@ -317,9 +287,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame([], $capturedParams);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testQueryParamsWithEmptyValues(): void
     {
         $capturedParams = [];
@@ -339,9 +307,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame([''], $capturedParams['key3']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testQueryParamsWithEncodedSpecialChars(): void
     {
         $capturedParams = [];
@@ -360,10 +326,8 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(['<>'], $capturedParams['special']);
     }
 
-    /**
-     * @test
-     * @dataProvider queryParamEdgeCasesProvider
-     */
+    #[Test]
+    #[DataProvider('queryParamEdgeCasesProvider')]
     public function testQueryParamEdgeCases(string $url): void
     {
         $handler = $this->createBasicHandler();
@@ -374,9 +338,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testParseQueryParamsWithMultipleAmpersand(): void
     {
         $handler = $this->createBasicHandler();
@@ -387,9 +349,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testParseQueryParamsEmptyKey(): void
     {
         $handler = $this->createBasicHandler();
@@ -400,9 +360,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testParseQueryParamsWithPlus(): void
     {
         $handler = $this->createBasicHandler();
@@ -415,9 +373,7 @@ final class TestClientTest extends TestClientTestCase
 
     // ======================== Path Handling Tests ========================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestPathOnlyExtraction(): void
     {
         $capturedPath = '';
@@ -435,9 +391,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame('/users/123', $capturedPath);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithSpecialCharactersInPath(): void
     {
         $handler = $this->createBasicHandler();
@@ -448,9 +402,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testPathWithSpecialCharacters(): void
     {
         $handler = $this->createBasicHandler();
@@ -465,9 +417,7 @@ final class TestClientTest extends TestClientTestCase
 
     // ======================== File Upload Tests ========================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithFiles(): void
     {
         $capturedFiles = [];
@@ -486,9 +436,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame($files, $capturedFiles);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestPreferBodyOverFiles(): void
     {
         $capturedBody = null;
@@ -508,9 +456,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame($body, $capturedBody);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestUsesFilesAsBodyWhenNoBody(): void
     {
         $capturedBody = null;
@@ -529,9 +475,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame($files, $capturedBody);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithFilesAsBody(): void
     {
         $handler = $this->createBasicHandler();
@@ -545,9 +489,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestPreferExplicitBodyOverFiles(): void
     {
         $handler = $this->createBasicHandler();
@@ -567,9 +509,7 @@ final class TestClientTest extends TestClientTestCase
 
     // ======================== Options/Assertions Tests ========================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithEmptyOptions(): void
     {
         $handler = $this->createBasicHandler();
@@ -580,9 +520,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithNoOptions(): void
     {
         $handler = $this->createBasicHandler();
@@ -593,9 +531,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithInvalidHeadersOptionIsIgnored(): void
     {
         $capturedHeaders = [];
@@ -613,9 +549,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame([], $capturedHeaders);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithInvalidCookiesOptionIsIgnored(): void
     {
         $capturedCookies = [];
@@ -633,9 +567,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame([], $capturedCookies);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithInvalidFilesOptionIsIgnored(): void
     {
         $capturedFiles = [];
@@ -653,9 +585,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame([], $capturedFiles);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestWithAllOptionsAtOnce(): void
     {
         $handler = $this->createBasicHandler();
@@ -673,9 +603,7 @@ final class TestClientTest extends TestClientTestCase
 
     // ======================== WebSocket/SSE Tests ========================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testConnectWebSocketThrowsWithoutExtension(): void
     {
         $app = new App();
@@ -689,9 +617,7 @@ final class TestClientTest extends TestClientTestCase
         $client->connectWebSocket('/ws');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testConnectSseThrowsWithoutExtension(): void
     {
         $app = new App();
@@ -707,9 +633,7 @@ final class TestClientTest extends TestClientTestCase
 
     // ======================== Error Handling Tests ========================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestThrowsForUnregisteredRoute(): void
     {
         $handler = $this->createBasicHandler();
@@ -721,9 +645,7 @@ final class TestClientTest extends TestClientTestCase
         $client->request('GET', '/nonexistent');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestThrowsForUnregisteredMethod(): void
     {
         $handler = $this->createBasicHandler();
@@ -737,9 +659,7 @@ final class TestClientTest extends TestClientTestCase
 
     // ======================== Lifecycle Tests ========================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testCloseDoesNotThrow(): void
     {
         $app = new App();
@@ -750,9 +670,7 @@ final class TestClientTest extends TestClientTestCase
         $this->expectNotToPerformAssertions();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testCloseMethodIsIdempotent(): void
     {
         $app = new App();
@@ -765,9 +683,7 @@ final class TestClientTest extends TestClientTestCase
         $this->expectNotToPerformAssertions();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testMultipleSequentialRequests(): void
     {
         $handler1 = $this->createBasicHandler();
@@ -786,9 +702,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response2->statusCode);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testMultipleRequests(): void
     {
         $handler = $this->createBasicHandler();
@@ -804,9 +718,7 @@ final class TestClientTest extends TestClientTestCase
         $this->assertInstanceOf(Response::class, $response2);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function testRequestCallsCorrectHandler(): void
     {
         $called = [];
