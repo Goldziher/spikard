@@ -1,6 +1,6 @@
 [package]
 name = "spikard-rb"
-version = "0.2.5"
+version = "0.3.0"
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
