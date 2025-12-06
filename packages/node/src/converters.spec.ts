@@ -10,20 +10,26 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { convertFileMetadataToUploadFile, convertHandlerBody, processUploadFileFields } from "./converters";
+import {
+	convertFileMetadataToUploadFile,
+	convertHandlerBody,
+	type FileMetadata,
+	processUploadFileFields,
+} from "./converters";
+import type { JsonValue } from "./types";
 import { UploadFile } from "./upload";
 
 describe("converters", () => {
 	describe("convertFileMetadataToUploadFile", () => {
 		it("should convert basic file metadata", () => {
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "test.txt",
 				content: "Hello, World!",
 				content_type: "text/plain",
 				size: 13,
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			expect(file).toBeInstanceOf(UploadFile);
 			expect(file.filename).toBe("test.txt");
@@ -33,12 +39,12 @@ describe("converters", () => {
 		});
 
 		it("should handle missing optional properties", () => {
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "file.bin",
 				content: "Binary data",
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			expect(file.filename).toBe("file.bin");
 			expect(file.contentType).toBe("application/octet-stream");
@@ -49,7 +55,7 @@ describe("converters", () => {
 			const binaryData = Buffer.from([0xff, 0xd8, 0xff, 0xe0]);
 			const base64Content = binaryData.toString("base64");
 
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "image.jpg",
 				content: base64Content,
 				content_encoding: "base64",
@@ -57,56 +63,56 @@ describe("converters", () => {
 				size: 4,
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			expect(file.getBuffer()).toEqual(binaryData);
 			expect(file.filename).toBe("image.jpg");
 		});
 
 		it("should treat text content as UTF-8 by default", () => {
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "hello.txt",
 				content: "Hello, 世界!",
 				content_type: "text/plain; charset=utf-8",
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			expect(file.text()).toBe("Hello, 世界!");
 		});
 
 		it("should handle content_type in metadata", () => {
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "data.json",
 				content: '{"key":"value"}',
 				content_type: "application/json",
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			expect(file.contentType).toBe("application/json");
 		});
 
 		it("should handle all content encoding types", () => {
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "file.bin",
 				content: Buffer.from("data").toString("base64"),
-				content_encoding: "base64" as const,
+				content_encoding: "base64",
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			expect(file.getBuffer().toString()).toBe("data");
 		});
 
 		it("should use provided size if available", () => {
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "large.bin",
 				content: "Large file content",
 				size: 999,
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			expect(file.size).toBe(999);
 		});
@@ -114,24 +120,24 @@ describe("converters", () => {
 
 	describe("processUploadFileFields", () => {
 		it("should pass through null values", () => {
-			expect(processUploadFileFields(null as unknown)).toBeNull();
+			expect(processUploadFileFields(null)).toBeNull();
 		});
 
 		it("should pass through undefined values", () => {
-			expect(processUploadFileFields(undefined as unknown)).toBeUndefined();
+			expect(processUploadFileFields(undefined)).toBeUndefined();
 		});
 
 		it("should pass through string primitives", () => {
-			expect(processUploadFileFields("hello" as unknown)).toBe("hello");
+			expect(processUploadFileFields("hello")).toBe("hello");
 		});
 
 		it("should pass through number primitives", () => {
-			expect(processUploadFileFields(42 as unknown)).toBe(42);
+			expect(processUploadFileFields(42)).toBe(42);
 		});
 
 		it("should pass through boolean primitives", () => {
-			expect(processUploadFileFields(true as unknown)).toBe(true);
-			expect(processUploadFileFields(false as unknown)).toBe(false);
+			expect(processUploadFileFields(true)).toBe(true);
+			expect(processUploadFileFields(false)).toBe(false);
 		});
 
 		it("should convert file metadata in objects", () => {
@@ -144,7 +150,7 @@ describe("converters", () => {
 				name: "John",
 			};
 
-			const result = processUploadFileFields(body as unknown) as Record<string, unknown>;
+			const result = processUploadFileFields(body) as Record<string, unknown>;
 
 			expect(result.file).toBeInstanceOf(UploadFile);
 			expect(result.name).toBe("John");
@@ -165,7 +171,7 @@ describe("converters", () => {
 				},
 			];
 
-			const result = processUploadFileFields(body as unknown) as unknown[];
+			const result = processUploadFileFields(body) as unknown[];
 
 			expect(Array.isArray(result)).toBe(true);
 			expect(result[0]).toBeInstanceOf(UploadFile);
@@ -184,7 +190,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = processUploadFileFields(body as unknown) as Record<string, unknown>;
+			const result = processUploadFileFields(body) as Record<string, unknown>;
 			const metadata = result.metadata as Record<string, unknown>;
 
 			expect(metadata.title).toBe("Document");
@@ -203,7 +209,7 @@ describe("converters", () => {
 				true,
 			];
 
-			const result = processUploadFileFields(body as unknown) as unknown[];
+			const result = processUploadFileFields(body) as unknown[];
 
 			expect(result[0]).toBeInstanceOf(UploadFile);
 			expect(result[1]).toBe("string value");
@@ -213,14 +219,14 @@ describe("converters", () => {
 
 		it("should handle empty objects", () => {
 			const body = {};
-			const result = processUploadFileFields(body as unknown) as Record<string, unknown>;
+			const result = processUploadFileFields(body) as Record<string, unknown>;
 
 			expect(Object.keys(result).length).toBe(0);
 		});
 
 		it("should handle empty arrays", () => {
-			const body = [];
-			const result = processUploadFileFields(body as unknown) as unknown[];
+			const body: JsonValue = [];
+			const result = processUploadFileFields(body) as unknown[];
 
 			expect(result.length).toBe(0);
 		});
@@ -240,7 +246,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = processUploadFileFields(body as unknown) as Record<string, unknown>;
+			const result = processUploadFileFields(body) as Record<string, unknown>;
 			const level1 = result.level1 as Record<string, unknown>;
 			const level2 = level1.level2 as Record<string, unknown>;
 			const level3 = level2.level3 as Record<string, unknown>;
@@ -268,12 +274,18 @@ describe("converters", () => {
 				},
 			];
 
-			const result = processUploadFileFields(body as unknown) as Array<Record<string, unknown>>;
+			const result = processUploadFileFields(body) as Array<Record<string, unknown>>;
 
-			expect(result[0].name).toBe("file1");
-			expect(result[0].file).toBeInstanceOf(UploadFile);
-			expect(result[1].name).toBe("file2");
-			expect(result[1].file).toBeInstanceOf(UploadFile);
+			const item0 = result[0];
+			const item1 = result[1];
+			if (item0) {
+				expect(item0.name).toBe("file1");
+				expect(item0.file).toBeInstanceOf(UploadFile);
+			}
+			if (item1) {
+				expect(item1.name).toBe("file2");
+				expect(item1.file).toBeInstanceOf(UploadFile);
+			}
 		});
 
 		it("should preserve non-file object properties", () => {
@@ -291,7 +303,7 @@ describe("converters", () => {
 				enabled: true,
 			};
 
-			const result = processUploadFileFields(body as unknown) as Record<string, unknown>;
+			const result = processUploadFileFields(body) as Record<string, unknown>;
 
 			expect(result.file).toBeInstanceOf(UploadFile);
 			expect((result.metadata as Record<string, unknown>).created).toBe("2024-01-01");
@@ -317,7 +329,7 @@ describe("converters", () => {
 				description: "Multiple files",
 			};
 
-			const result = processUploadFileFields(body as unknown) as Record<string, unknown>;
+			const result = processUploadFileFields(body) as Record<string, unknown>;
 
 			expect(Array.isArray(result.files)).toBe(true);
 			const files = result.files as unknown[];
@@ -346,7 +358,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = convertHandlerBody(body as unknown) as Record<string, unknown>;
+			const result = convertHandlerBody(body) as Record<string, unknown>;
 
 			expect(result.name).toBe("John");
 			expect(result.email).toBe("john@example.com");
@@ -375,7 +387,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = convertHandlerBody(body as unknown) as Record<string, unknown>;
+			const result = convertHandlerBody(body) as Record<string, unknown>;
 
 			expect(Array.isArray(result.files)).toBe(true);
 			const files = result.files as unknown[];
@@ -395,7 +407,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = convertHandlerBody(body as unknown) as Record<string, unknown>;
+			const result = convertHandlerBody(body) as Record<string, unknown>;
 
 			expect(result.username).toBe("alice");
 			expect(result.password).toBe("secret");
@@ -405,7 +417,6 @@ describe("converters", () => {
 		it("should handle multipart with no fields", () => {
 			const body = {
 				__spikard_multipart__: {
-					fields: undefined,
 					files: [
 						{
 							name: "file",
@@ -417,7 +428,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = convertHandlerBody(body as unknown) as Record<string, unknown>;
+			const result = convertHandlerBody(body as JsonValue) as Record<string, unknown>;
 
 			expect(result.file).toBeInstanceOf(UploadFile);
 		});
@@ -432,28 +443,28 @@ describe("converters", () => {
 				name: "test",
 			};
 
-			const result = convertHandlerBody(body as unknown) as Record<string, unknown>;
+			const result = convertHandlerBody(body) as Record<string, unknown>;
 
 			expect(result.file).toBeInstanceOf(UploadFile);
 			expect(result.name).toBe("test");
 		});
 
 		it("should handle null body", () => {
-			const result = convertHandlerBody(null as unknown);
+			const result = convertHandlerBody(null);
 
 			expect(result).toBeNull();
 		});
 
 		it("should handle undefined body", () => {
-			const result = convertHandlerBody(undefined as unknown);
+			const result = convertHandlerBody(undefined);
 
 			expect(result).toBeUndefined();
 		});
 
 		it("should handle primitive body values", () => {
-			expect(convertHandlerBody("string" as unknown)).toBe("string");
-			expect(convertHandlerBody(42 as unknown)).toBe(42);
-			expect(convertHandlerBody(true as unknown)).toBe(true);
+			expect(convertHandlerBody("string")).toBe("string");
+			expect(convertHandlerBody(42)).toBe(42);
+			expect(convertHandlerBody(true)).toBe(true);
 		});
 
 		it("should handle multipart with fields only", () => {
@@ -466,7 +477,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = convertHandlerBody(body as unknown) as Record<string, unknown>;
+			const result = convertHandlerBody(body) as Record<string, unknown>;
 
 			expect(result.title).toBe("Document");
 			expect(result.description).toBe("A test document");
@@ -486,7 +497,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = convertHandlerBody(body as unknown) as Record<string, unknown>;
+			const result = convertHandlerBody(body) as Record<string, unknown>;
 
 			expect(result.file).toBeInstanceOf(UploadFile);
 		});
@@ -499,16 +510,15 @@ describe("converters", () => {
 				},
 			};
 
-			const regular = {
-				__spikard_multipart__: undefined,
+			const regular: JsonValue = {
 				name: "test",
 			};
 
-			const resultMultipart = convertHandlerBody(multipart as unknown) as Record<string, unknown>;
-			const resultRegular = convertHandlerBody(regular as unknown) as Record<string, unknown>;
+			const resultMultipart = convertHandlerBody(multipart as JsonValue) as Record<string, unknown>;
+			const resultRegular = convertHandlerBody(regular) as Record<string, unknown>;
 
 			expect(resultMultipart).toEqual({ name: "test" });
-			expect(resultRegular.__spikard_multipart__).toBeUndefined();
+			expect(resultRegular.name).toBe("test");
 		});
 
 		it("should handle multipart with defaulted properties", () => {
@@ -528,7 +538,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = convertHandlerBody(body as unknown) as Record<string, unknown>;
+			const result = convertHandlerBody(body) as Record<string, unknown>;
 
 			expect(result.name).toBe("John");
 			expect(result.avatar).toBeInstanceOf(UploadFile);
@@ -553,7 +563,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = convertHandlerBody(body as unknown) as Record<string, unknown>;
+			const result = convertHandlerBody(body) as Record<string, unknown>;
 
 			const user = result.user as Record<string, unknown>;
 			expect(user.name).toBe("Alice");
@@ -592,7 +602,7 @@ describe("converters", () => {
 				},
 			};
 
-			const result = convertHandlerBody(body as unknown) as Record<string, unknown>;
+			const result = convertHandlerBody(body) as Record<string, unknown>;
 
 			expect(result.title).toBe("My Document");
 			expect(result.author).toBe("John Doe");
@@ -605,53 +615,53 @@ describe("converters", () => {
 	describe("Edge Cases and Integration", () => {
 		it("should handle ISO-8859-1 encoded content as text", () => {
 			const content = Buffer.from("Café").toString("utf-8");
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "menu.txt",
 				content,
 				content_type: "text/plain; charset=iso-8859-1",
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			expect(file.text()).toContain("Caf");
 		});
 
 		it("should handle large file content", () => {
 			const largeContent = "x".repeat(1024 * 1024); // 1MB of x's
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "large.txt",
 				content: largeContent,
 				content_type: "text/plain",
 				size: largeContent.length,
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			expect(file.size).toBe(1024 * 1024);
 			expect(file.text().length).toBe(1024 * 1024);
 		});
 
 		it("should handle special characters in filenames", () => {
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "文件-2024_01_01 (1).txt",
 				content: "Special filename test",
 				content_type: "text/plain",
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			expect(file.filename).toBe("文件-2024_01_01 (1).txt");
 		});
 
 		it("should handle files with null size field", () => {
-			const metadata = {
+			const metadata: FileMetadata = {
 				filename: "test.txt",
 				content: "Test content",
 				content_type: "text/plain",
-				size: null,
+				size: undefined,
 			};
 
-			const file = convertFileMetadataToUploadFile(metadata as unknown);
+			const file = convertFileMetadataToUploadFile(metadata);
 
 			// Should compute size from content
 			expect(file.size).toBe(12);

@@ -31,7 +31,7 @@
 			"linter": {
 				"rules": {
 					"suspicious": {
-						"noExplicitAny": "off",
+						"noExplicitAny": "error",
 						"noApproximativeNumericConstant": "off"
 					},
 					"correctness": {

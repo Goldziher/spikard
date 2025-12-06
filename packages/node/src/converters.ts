@@ -11,12 +11,12 @@ import { UploadFile } from "./upload";
 /**
  * File metadata structure from Rust multipart parsing
  */
-interface FileMetadata {
+export interface FileMetadata {
 	filename: string;
 	content: string; // base64 encoded or raw string
-	size?: number;
-	content_type?: string;
-	content_encoding?: "base64" | "text";
+	size?: number | undefined;
+	content_type?: string | undefined;
+	content_encoding?: "base64" | "text" | undefined;
 }
 
 /**
@@ -57,7 +57,7 @@ export function convertFileMetadataToUploadFile(fileData: FileMetadata): UploadF
  * @param value - The value to process (can be object, array, or primitive)
  * @returns Processed value with UploadFile instances
  */
-export function processUploadFileFields(value: JsonValue): unknown {
+export function processUploadFileFields(value: JsonValue | undefined): unknown {
 	// Handle null/undefined
 	if (value === null || value === undefined) {
 		return value;
@@ -124,7 +124,10 @@ function convertMultipartTestPayload(payload: {
 			if (!filesByName[file.name]) {
 				filesByName[file.name] = [];
 			}
-			filesByName[file.name].push(uploadFile);
+			const files = filesByName[file.name];
+			if (files) {
+				files.push(uploadFile);
+			}
 		}
 
 		// Flatten single files, keep arrays for multiple files with same name
@@ -150,7 +153,7 @@ function convertMultipartTestPayload(payload: {
  * @param body - The body parameter from Rust (already JSON-parsed)
  * @returns Processed body with UploadFile instances
  */
-export function convertHandlerBody(body: JsonValue): unknown {
+export function convertHandlerBody(body: JsonValue | undefined): unknown {
 	// Handle TestClient multipart payload
 	if (
 		typeof body === "object" &&

@@ -597,8 +597,16 @@ describe("UploadFile Handler Integration", () => {
 			app.handlers.uploadNested = async (request) => {
 				const body = request.json<Record<string, unknown>>();
 				// Since form data uses dotted keys, access file by the dotted key
-				const file = (body["metadata.file"] as UploadFile) || (body.metadata as any)?.file;
-				const title = (body["metadata.title"] as string) || (body.metadata as any)?.title;
+				const file =
+					(body["metadata.file"] as UploadFile) ||
+					(typeof body.metadata === "object" && body.metadata !== null
+						? (body.metadata as Record<string, unknown>).file
+						: undefined);
+				const title =
+					(body["metadata.title"] as string) ||
+					(typeof body.metadata === "object" && body.metadata !== null
+						? (body.metadata as Record<string, unknown>).title
+						: undefined);
 
 				return {
 					title,

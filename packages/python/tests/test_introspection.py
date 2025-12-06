@@ -19,7 +19,7 @@ Coverage targets:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import NamedTuple, TypedDict, cast
+from typing import NamedTuple, TypedDict
 
 import msgspec
 import pytest
@@ -481,7 +481,8 @@ class TestIsStructuredType:
 
     def test_non_type_string_literal_not_structured(self) -> None:
         """Test string literal (not a type) is not structured."""
-        result = _is_structured_type(cast("object", "not a type"))
+        non_type: object = "not a type"
+        result = _is_structured_type(non_type)
         # String is not a type
         assert result is False
 

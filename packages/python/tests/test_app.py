@@ -10,7 +10,6 @@ Tests cover:
 from __future__ import annotations
 
 import builtins
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
@@ -19,9 +18,6 @@ import spikard.app as app_module
 from spikard import Spikard
 from spikard.config import ServerConfig
 from spikard.params import Query
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 Schema = dict[str, object]
 
@@ -194,7 +190,7 @@ class TestRunConfigMerging:
     @staticmethod
     def _mock_run_server_import(monkeypatch: pytest.MonkeyPatch, mock_run: MagicMock) -> None:
         """Patch the import of run_server inside the run() method."""
-        original_import: Callable[..., object] = builtins.__import__
+        original_import: object = builtins.__import__
 
         def custom_import(name: str, *args: object, **kwargs: object) -> object:
             if name == "_spikard":
@@ -202,7 +198,9 @@ class TestRunConfigMerging:
                 mock_module = MagicMock()
                 mock_module.run_server = mock_run
                 return mock_module
-            return original_import(name, *args, **kwargs)
+            if callable(original_import):
+                return original_import(name, *args, **kwargs)
+            return None
 
         monkeypatch.setattr(builtins, "__import__", custom_import)
 
@@ -279,12 +277,14 @@ class TestRunConfigMerging:
     def test_run_missing_spikard_import_raises_runtime_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Missing _spikard extension raises RuntimeError with helpful message."""
         app = Spikard()
-        original_import: Callable[..., object] = builtins.__import__
+        original_import: object = builtins.__import__
 
         def import_error_raiser(name: str, *args: object, **kwargs: object) -> object:
             if name == "_spikard":
                 raise ImportError("No module named '_spikard'")
-            return original_import(name, *args, **kwargs)
+            if callable(original_import):
+                return original_import(name, *args, **kwargs)
+            return None
 
         monkeypatch.setattr(builtins, "__import__", import_error_raiser)
 
