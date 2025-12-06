@@ -14,16 +14,21 @@ use Spikard\Http\Request;
 use Spikard\Http\Response;
 
 /**
- * Behavioral tests for ControllerMethodHandler.
+ * Tests for ControllerMethodHandler.
  *
  * Tests the parameter resolution and response conversion logic that handles
- * routing controller methods to HTTP requests. This covers the major gap in
- * ControllerMethodHandler.php (58/66 lines previously uncovered).
+ * routing controller methods to HTTP requests. This covers parameter resolution
+ * across multiple source types (query, path, header, cookie, body) and response
+ * conversion for various scalar and complex types.
  *
  * @internal
  */
-final class ControllerMethodHandlerBehavioralTest extends TestCase
+final class ControllerMethodHandlerTest extends TestCase
 {
+    /**
+     * Handler Basic Behavior Tests.
+     */
+
     public function testHandlerAlwaysMatches(): void
     {
         $controller = new SimpleTestController();
@@ -50,7 +55,9 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    // Query Parameter Tests
+    /**
+     * Query Parameter Resolution Tests.
+     */
 
     public function testResolveParameterFromQueryParam(): void
     {
@@ -92,7 +99,6 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'list');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        // Request without the query param (should use default)
         $request = new Request(
             'GET',
             '/list',
@@ -104,7 +110,9 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    // Path Parameter Tests
+    /**
+     * Path Parameter Resolution Tests.
+     */
 
     public function testResolveParameterFromPathParam(): void
     {
@@ -140,7 +148,9 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    // Header Parameter Tests
+    /**
+     * Header Parameter Resolution Tests.
+     */
 
     public function testResolveParameterFromHeaderParam(): void
     {
@@ -176,7 +186,9 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    // Cookie Parameter Tests
+    /**
+     * Cookie Parameter Resolution Tests.
+     */
 
     public function testResolveParameterFromCookieParam(): void
     {
@@ -212,7 +224,9 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    // Body Parameter Tests
+    /**
+     * Body Parameter Resolution Tests.
+     */
 
     public function testResolveParameterFromBodyParam(): void
     {
@@ -243,7 +257,9 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    // Multiple Parameter Types
+    /**
+     * Multiple Parameter Type Resolution Tests.
+     */
 
     public function testResolveMultipleParameterTypes(): void
     {
@@ -281,7 +297,9 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
         $this->assertSame(200, $response->statusCode);
     }
 
-    // Response Conversion Tests
+    /**
+     * Response Conversion Tests.
+     */
 
     public function testConvertResponseObject(): void
     {
@@ -364,7 +382,9 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
         $this->assertSame('application/json', $response->headers['Content-Type']);
     }
 
-    // Error Handling Tests
+    /**
+     * Error Handling Tests.
+     */
 
     public function testMissingRequiredParameterThrowsException(): void
     {
@@ -397,7 +417,9 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
         $handler->handle($request);
     }
 
-    // Implicit Parameter Resolution
+    /**
+     * Implicit Parameter Resolution Tests.
+     */
 
     public function testImplicitPathParameterResolution(): void
     {
@@ -451,11 +473,20 @@ final class ControllerMethodHandlerBehavioralTest extends TestCase
     }
 }
 
-// Test Controller Fixtures
+/**
+ * Test Controller Fixtures.
+ */
 
+/**
+ * Simple test controller for basic handler behavior.
+ *
+ * @internal
+ */
 final class SimpleTestController
 {
     /**
+     * Handle basic request.
+     *
      * @return array<string, bool>
      */
     #[Get('/test')]
@@ -465,9 +496,16 @@ final class SimpleTestController
     }
 }
 
+/**
+ * Controller for testing single query parameter resolution.
+ *
+ * @internal
+ */
 final class QueryParamController
 {
     /**
+     * Search with query parameter.
+     *
      * @return array<string, string>
      */
     #[Get('/search')]
@@ -477,9 +515,16 @@ final class QueryParamController
     }
 }
 
+/**
+ * Controller for testing multiple query parameter values.
+ *
+ * @internal
+ */
 final class QueryParamMultiController
 {
     /**
+     * Filter with multiple tag values.
+     *
      * @param list<string> $tags
      * @return array<string, list<string>>
      */
@@ -490,9 +535,16 @@ final class QueryParamMultiController
     }
 }
 
+/**
+ * Controller for testing query parameter with default value.
+ *
+ * @internal
+ */
 final class QueryParamDefaultController
 {
     /**
+     * List items with optional sort parameter.
+     *
      * @return array<string, string>
      */
     #[Get('/list')]
@@ -502,9 +554,16 @@ final class QueryParamDefaultController
     }
 }
 
+/**
+ * Controller for testing path parameter resolution.
+ *
+ * @internal
+ */
 final class PathParamController
 {
     /**
+     * Get item by ID.
+     *
      * @return array<string, string>
      */
     #[Get('/items/:id')]
@@ -514,9 +573,16 @@ final class PathParamController
     }
 }
 
+/**
+ * Controller for testing path parameter with default value.
+ *
+ * @internal
+ */
 final class PathParamDefaultController
 {
     /**
+     * Get item by ID with default.
+     *
      * @return array<string, string>
      */
     #[Get('/items/:id')]
@@ -526,9 +592,16 @@ final class PathParamDefaultController
     }
 }
 
+/**
+ * Controller for testing header parameter resolution.
+ *
+ * @internal
+ */
 final class HeaderParamController
 {
     /**
+     * Check authorization header.
+     *
      * @return array<string, string>
      */
     #[Get('/auth')]
@@ -538,9 +611,16 @@ final class HeaderParamController
     }
 }
 
+/**
+ * Controller for testing header parameter with default value.
+ *
+ * @internal
+ */
 final class HeaderParamDefaultController
 {
     /**
+     * Check authorization with default.
+     *
      * @return array<string, string>
      */
     #[Get('/auth')]
@@ -550,9 +630,16 @@ final class HeaderParamDefaultController
     }
 }
 
+/**
+ * Controller for testing cookie parameter resolution.
+ *
+ * @internal
+ */
 final class CookieParamController
 {
     /**
+     * Get session from cookie.
+     *
      * @return array<string, string>
      */
     #[Get('/session')]
@@ -562,9 +649,16 @@ final class CookieParamController
     }
 }
 
+/**
+ * Controller for testing cookie parameter with default value.
+ *
+ * @internal
+ */
 final class CookieParamDefaultController
 {
     /**
+     * Get session with default.
+     *
      * @return array<string, string>
      */
     #[Get('/session')]
@@ -574,9 +668,16 @@ final class CookieParamDefaultController
     }
 }
 
+/**
+ * Controller for testing body parameter resolution.
+ *
+ * @internal
+ */
 final class BodyParamController
 {
     /**
+     * Create item from body.
+     *
      * @param array<string, mixed> $payload
      * @return array<string, mixed>
      */
@@ -587,9 +688,16 @@ final class BodyParamController
     }
 }
 
+/**
+ * Controller for testing body parameter with default value.
+ *
+ * @internal
+ */
 final class BodyParamDefaultController
 {
     /**
+     * Create item with default body.
+     *
      * @param array<string, mixed> $payload
      * @return array<string, mixed>
      */
@@ -600,9 +708,16 @@ final class BodyParamDefaultController
     }
 }
 
+/**
+ * Controller for testing multiple parameter types together.
+ *
+ * @internal
+ */
 final class MultiParamController
 {
     /**
+     * Complex route with path, header, query, and body parameters.
+     *
      * @param array<string, mixed> $data
      * @return array<string, mixed>
      */
@@ -622,9 +737,16 @@ final class MultiParamController
     }
 }
 
+/**
+ * Controller for testing nullable parameter resolution.
+ *
+ * @internal
+ */
 final class NullableParamController
 {
     /**
+     * Get items with optional filter.
+     *
      * @return array<string, ?string>
      */
     #[Get('/items')]
@@ -634,8 +756,16 @@ final class NullableParamController
     }
 }
 
+/**
+ * Controller for testing custom Response object conversion.
+ *
+ * @internal
+ */
 final class ResponseObjectController
 {
+    /**
+     * Return custom Response object.
+     */
     #[Get('/custom')]
     public function customResponse(): Response
     {
@@ -643,9 +773,16 @@ final class ResponseObjectController
     }
 }
 
+/**
+ * Controller for testing array response conversion.
+ *
+ * @internal
+ */
 final class ArrayResponseController
 {
     /**
+     * Return array response.
+     *
      * @return array<string, list<mixed>>
      */
     #[Get('/array')]
@@ -655,8 +792,16 @@ final class ArrayResponseController
     }
 }
 
+/**
+ * Controller for testing string response conversion.
+ *
+ * @internal
+ */
 final class StringResponseController
 {
+    /**
+     * Return string response.
+     */
     #[Get('/string')]
     public function getString(): string
     {
@@ -664,8 +809,16 @@ final class StringResponseController
     }
 }
 
+/**
+ * Controller for testing null response conversion.
+ *
+ * @internal
+ */
 final class NullResponseController
 {
+    /**
+     * Return null response.
+     */
     #[Get('/null')]
     public function getNull(): null
     {
@@ -673,8 +826,16 @@ final class NullResponseController
     }
 }
 
+/**
+ * Controller for testing scalar response conversion.
+ *
+ * @internal
+ */
 final class ScalarResponseController
 {
+    /**
+     * Return integer response.
+     */
     #[Get('/number')]
     public function getNumber(): int
     {
@@ -682,8 +843,16 @@ final class ScalarResponseController
     }
 }
 
+/**
+ * Controller for testing object response conversion.
+ *
+ * @internal
+ */
 final class ObjectResponseController
 {
+    /**
+     * Return object response.
+     */
     #[Get('/object')]
     public function getObject(): object
     {
@@ -691,8 +860,16 @@ final class ObjectResponseController
     }
 }
 
+/**
+ * Controller for testing required parameter validation.
+ *
+ * @internal
+ */
 final class RequiredParamController
 {
+    /**
+     * Method requiring a parameter.
+     */
     #[Get('/test')]
     public function needsParam(string $required): string
     {
@@ -700,8 +877,16 @@ final class RequiredParamController
     }
 }
 
+/**
+ * Controller for testing complex type parameter resolution.
+ *
+ * @internal
+ */
 final class ComplexTypeController
 {
+    /**
+     * Method requiring complex type.
+     */
     #[Get('/test')]
     public function needsService(SomeService $service): string
     {
@@ -709,9 +894,16 @@ final class ComplexTypeController
     }
 }
 
+/**
+ * Controller for testing implicit path parameter resolution.
+ *
+ * @internal
+ */
 final class ImplicitPathParamController
 {
     /**
+     * Get item by ID implicitly.
+     *
      * @return array<string, string>
      */
     #[Get('/items/:id')]
@@ -721,9 +913,16 @@ final class ImplicitPathParamController
     }
 }
 
+/**
+ * Controller for testing implicit query parameter resolution.
+ *
+ * @internal
+ */
 final class ImplicitQueryParamController
 {
     /**
+     * Search with implicit query parameter.
+     *
      * @return array<string, string>
      */
     #[Get('/search')]
@@ -733,7 +932,11 @@ final class ImplicitQueryParamController
     }
 }
 
-// Dummy service for complex type testing
+/**
+ * Dummy service for complex type testing.
+ *
+ * @internal
+ */
 final class SomeService
 {
 }
