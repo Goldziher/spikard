@@ -74,7 +74,7 @@ jobs:
       - name: Build WASM bindings
         working-directory: crates/spikard-wasm
         shell: bash
-        run: pnpm run build
+        run: pnpm run build:all
 
       - name: Upload WASM bindings
         uses: actions/upload-artifact@v4
