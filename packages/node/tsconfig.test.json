@@ -1,0 +1,13 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"strict": true,
+		"noImplicitAny": true,
+		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": false,
+		"skipLibCheck": true
+	},
+	"include": ["src/**/*.spec.ts"],
+	"exclude": ["node_modules", "dist"]
+}

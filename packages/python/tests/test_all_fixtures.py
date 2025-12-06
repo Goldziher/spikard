@@ -31,9 +31,16 @@ Test Coverage:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Protocol
 
 import pytest
+
+
+class FixtureValidator(Protocol):
+    """Protocol for fixture validator callable."""
+
+    def __call__(self, category: str, fixture_data: dict[str, object]) -> tuple[bool, list[str]]:
+        """Validate fixture data against schema."""
 
 
 def create_fixture_test(category: str) -> type:
@@ -51,7 +58,9 @@ def create_fixture_test(category: str) -> type:
         """Generic fixture category test."""
 
         @pytest.mark.fixture_category(category)
-        def test_fixtures(self, fixture_categories: dict[str, list[dict[str, Any]]], fixture_validator: Any) -> None:
+        def test_fixtures(
+            self, fixture_categories: dict[str, list[dict[str, object]]], fixture_validator: FixtureValidator
+        ) -> None:
             """Test all fixtures in this category.
 
             Args:
@@ -64,9 +73,11 @@ def create_fixture_test(category: str) -> type:
                 pytest.skip(f"No fixtures found for category '{category}'")
 
             for fixture in fixtures:
-                fixture_name = fixture.get("name", "unknown")
+                fixture_name_value: object = fixture.get("name", "unknown")
+                fixture_name = str(fixture_name_value) if fixture_name_value else "unknown"
 
-                if fixture.get("skip"):
+                skip_value: object = fixture.get("skip", False)
+                if isinstance(skip_value, bool) and skip_value:
                     continue
 
                 is_valid, errors = fixture_validator(category, fixture)
@@ -81,22 +92,27 @@ def create_fixture_test(category: str) -> type:
                     f"Fixture '{fixture_name}' in {category} must have an 'expected_response' field"
                 )
 
-                request = fixture["request"]
-                assert "method" in request, (
-                    f"Request in fixture '{fixture_name}' ({category}) must have a 'method' field"
-                )
-                assert "path" in request, f"Request in fixture '{fixture_name}' ({category}) must have a 'path' field"
+                request_value: object = fixture["request"]
+                if isinstance(request_value, dict):
+                    assert "method" in request_value, (
+                        f"Request in fixture '{fixture_name}' ({category}) must have a 'method' field"
+                    )
+                    assert "path" in request_value, (
+                        f"Request in fixture '{fixture_name}' ({category}) must have a 'path' field"
+                    )
 
-                response = fixture["expected_response"]
-                assert "status_code" in response, (
-                    f"Response in fixture '{fixture_name}' ({category}) must have a 'status_code' field"
-                )
-                assert isinstance(response["status_code"], int), (
-                    f"Status code in fixture '{fixture_name}' ({category}) must be an integer"
-                )
-                assert 100 <= response["status_code"] <= 599, (
-                    f"Status code in fixture '{fixture_name}' ({category}) must be between 100 and 599"
-                )
+                response_value: object = fixture["expected_response"]
+                if isinstance(response_value, dict):
+                    assert "status_code" in response_value, (
+                        f"Response in fixture '{fixture_name}' ({category}) must have a 'status_code' field"
+                    )
+                    status_code = response_value.get("status_code")
+                    assert isinstance(status_code, int), (
+                        f"Status code in fixture '{fixture_name}' ({category}) must be an integer"
+                    )
+                    assert 100 <= status_code <= 599, (
+                        f"Status code in fixture '{fixture_name}' ({category}) must be between 100 and 599"
+                    )
 
     FixtureCategoryTest.__name__ = f"Test{category.capitalize()}Fixtures"
     FixtureCategoryTest.__qualname__ = f"Test{category.capitalize()}Fixtures"

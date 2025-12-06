@@ -8,7 +8,7 @@ const SNIPPET_PATH = path.resolve(__dirname, "../../../docs/snippets/typescript/
 const extractSnippet = (): string => {
 	const content = fs.readFileSync(SNIPPET_PATH, "utf8");
 	const match = content.match(/```typescript\s*([\s\S]*?)```/);
-	if (!match) {
+	if (!match || !match[1]) {
 		throw new Error("DI snippet not found in docs/snippets/typescript/dependency_injection.md");
 	}
 	return match[1].trim();

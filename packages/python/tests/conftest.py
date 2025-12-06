@@ -12,15 +12,36 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Protocol, TypedDict
 
 import pytest
 
 
-def pytest_configure(config: Any) -> None:
+class FixtureData(TypedDict, total=False):
+    """Type structure for fixture dictionary."""
+
+    name: str
+    description: str
+    skip: bool
+    skip_reason: str
+    request: dict[str, object]
+    expected_response: dict[str, object]
+
+
+class PytestConfig(Protocol):
+    """Protocol for pytest config object."""
+
+    def addinivalue_line(self, name: str, line: str) -> None:
+        """Add an ini value line."""
+
+
+def pytest_configure(config: object) -> None:
     """Configure pytest with custom markers."""
-    config.addinivalue_line("markers", "fixture_category(category): Mark test with fixture category")
-    config.addinivalue_line("markers", "fixture_skip(reason): Mark fixture that should be skipped")
+    # Type narrowing: config is a pytest.Config-like object
+    addinivalue_line: object = getattr(config, "addinivalue_line", None)
+    if callable(addinivalue_line):
+        addinivalue_line("markers", "fixture_category(category): Mark test with fixture category")
+        addinivalue_line("markers", "fixture_skip(reason): Mark fixture that should be skipped")
 
 
 def discover_fixture_files(category: str, exclude_schema: bool = True) -> list[Path]:
@@ -48,7 +69,7 @@ def discover_fixture_files(category: str, exclude_schema: bool = True) -> list[P
     return sorted(fixtures)
 
 
-def load_fixture(fixture_path: Path) -> dict[str, Any]:
+def load_fixture(fixture_path: Path) -> dict[str, object]:
     """
     Load a single fixture JSON file.
 
@@ -59,13 +80,13 @@ def load_fixture(fixture_path: Path) -> dict[str, Any]:
         Parsed fixture data as dictionary
     """
     with fixture_path.open(encoding="utf-8") as f:
-        data = json.load(f)
+        data: object = json.load(f)
         if isinstance(data, dict):
             return data
         return {}
 
 
-def load_fixture_schema(category: str) -> dict[str, Any] | None:
+def load_fixture_schema(category: str) -> dict[str, object] | None:
     """
     Load the schema.json for a fixture category.
 
@@ -92,14 +113,14 @@ def testing_data_root() -> Path:
 
 
 @pytest.fixture(scope="session")
-def fixture_categories() -> dict[str, list[dict[str, Any]]]:
+def fixture_categories() -> dict[str, list[dict[str, object]]]:
     """
     Load all fixtures organized by category.
 
     Returns:
         Dictionary mapping category names to lists of fixture data
     """
-    categories: dict[str, list[dict[str, Any]]] = {
+    categories: dict[str, list[dict[str, object]]] = {
         "headers": [],
         "cookies": [],
         "json_bodies": [],
@@ -137,138 +158,138 @@ def fixture_categories() -> dict[str, list[dict[str, Any]]]:
 
 
 @pytest.fixture
-def headers_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def headers_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for header tests."""
     return fixture_categories["headers"]
 
 
 @pytest.fixture
-def cookies_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def cookies_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for cookie tests."""
     return fixture_categories["cookies"]
 
 
 @pytest.fixture
-def json_bodies_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def json_bodies_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for JSON body tests."""
     return fixture_categories["json_bodies"]
 
 
 @pytest.fixture
-def validation_errors_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def validation_errors_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for validation error tests."""
     return fixture_categories["validation_errors"]
 
 
 @pytest.fixture
-def status_codes_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def status_codes_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for status code tests."""
     return fixture_categories["status_codes"]
 
 
 @pytest.fixture
-def query_params_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def query_params_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for query parameter tests."""
     return fixture_categories["query_params"]
 
 
 @pytest.fixture
-def path_params_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def path_params_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for path parameter tests."""
     return fixture_categories["path_params"]
 
 
 @pytest.fixture
-def http_methods_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def http_methods_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for HTTP method tests."""
     return fixture_categories["http_methods"]
 
 
 @pytest.fixture
-def content_types_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def content_types_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for content type tests."""
     return fixture_categories["content_types"]
 
 
 @pytest.fixture
-def edge_cases_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def edge_cases_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for edge case tests."""
     return fixture_categories["edge_cases"]
 
 
 @pytest.fixture
-def auth_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def auth_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for authentication tests."""
     return fixture_categories["auth"]
 
 
 @pytest.fixture
-def cors_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def cors_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for CORS tests."""
     return fixture_categories["cors"]
 
 
 @pytest.fixture
-def streaming_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def streaming_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for streaming tests."""
     return fixture_categories["streaming"]
 
 
 @pytest.fixture
-def url_encoded_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def url_encoded_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for URL-encoded form data tests."""
     return fixture_categories["url_encoded"]
 
 
 @pytest.fixture
-def multipart_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def multipart_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for multipart form data tests."""
     return fixture_categories["multipart"]
 
 
 @pytest.fixture
-def lifecycle_hooks_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def lifecycle_hooks_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for lifecycle hook tests."""
     return fixture_categories["lifecycle_hooks"]
 
 
 @pytest.fixture
-def rate_limit_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def rate_limit_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for rate limiting tests."""
     return fixture_categories["rate_limit"]
 
 
 @pytest.fixture
-def request_timeout_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def request_timeout_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for request timeout tests."""
     return fixture_categories["request_timeout"]
 
 
 @pytest.fixture
-def request_id_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def request_id_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for request ID tests."""
     return fixture_categories["request_id"]
 
 
 @pytest.fixture
-def compression_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def compression_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for compression tests."""
     return fixture_categories["compression"]
 
 
 @pytest.fixture
-def body_limits_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def body_limits_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for body limit tests."""
     return fixture_categories["body_limits"]
 
 
 @pytest.fixture
-def background_fixtures(fixture_categories: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def background_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for background task tests."""
     return fixture_categories["background"]
 
 
-def get_fixture_ids(fixtures: list[dict[str, Any]]) -> list[str]:
+def get_fixture_ids(fixtures: list[dict[str, object]]) -> list[str]:
     """
     Generate test IDs from fixture names.
 
@@ -280,9 +301,13 @@ def get_fixture_ids(fixtures: list[dict[str, Any]]) -> list[str]:
     """
     ids = []
     for fixture in fixtures:
-        skip = fixture.get("skip", False)
-        skip_reason = fixture.get("skip_reason", "")
-        name = fixture.get("name", "unknown")
+        skip_value: object = fixture.get("skip", False)
+        skip_reason_value: object = fixture.get("skip_reason", "")
+        name_value: object = fixture.get("name", "unknown")
+
+        skip = isinstance(skip_value, bool) and skip_value
+        skip_reason = str(skip_reason_value) if skip_reason_value else ""
+        name = str(name_value) if name_value else "unknown"
 
         if skip and skip_reason:
             test_id = f"{name} [SKIP: {skip_reason}]"
@@ -296,8 +321,15 @@ def get_fixture_ids(fixtures: list[dict[str, Any]]) -> list[str]:
     return ids
 
 
+class FixtureValidator(Protocol):
+    """Protocol for fixture validator callable."""
+
+    def __call__(self, category: str, fixture_data: dict[str, object]) -> tuple[bool, list[str]]:
+        """Validate fixture data against schema."""
+
+
 @pytest.fixture
-def fixture_validator(testing_data_root: Path) -> Any:
+def fixture_validator(testing_data_root: Path) -> FixtureValidator:
     """
     Create a fixture validator that checks fixtures against schemas.
 
@@ -308,7 +340,7 @@ def fixture_validator(testing_data_root: Path) -> Any:
         Callable validator function
     """
 
-    def validate_fixture(category: str, fixture_data: dict[str, Any]) -> tuple[bool, list[str]]:
+    def validate_fixture(category: str, fixture_data: dict[str, object]) -> tuple[bool, list[str]]:
         """
         Validate a fixture against its category schema.
 
@@ -332,7 +364,7 @@ def fixture_validator(testing_data_root: Path) -> Any:
             errors = list(validator.iter_errors(fixture_data))
 
             if errors:
-                error_messages = [e.message for e in errors]
+                error_messages = [str(e.message) for e in errors]
                 return False, error_messages
 
             return True, []
