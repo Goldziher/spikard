@@ -25,6 +25,7 @@
 		"lint:fix": "biome check --write src",
 		"test": "vitest run",
 		"test:watch": "vitest",
+		"test:cov": "vitest run --coverage",
 		"clean": "rm -rf dist node_modules"
 	},
 	"files": [

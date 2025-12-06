@@ -79,7 +79,7 @@ jobs:
           files: ./target/tarpaulin/lcov.info
           flags: rust
           name: rust-coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -122,7 +122,7 @@ jobs:
           files: ./packages/python/coverage.lcov
           flags: python
           name: python-coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -162,7 +162,7 @@ jobs:
           files: ./packages/node/coverage/lcov.info
           flags: node
           name: node-coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -174,11 +174,143 @@ jobs:
           path: packages/node/coverage/
           retention-days: 30
 
+  # Ruby coverage enforcement (separate job)
+  coverage-ruby:
+    name: Ruby Code Coverage (80% minimum)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Run Ruby coverage
+        run: bash scripts/coverage/run-ruby-coverage.sh
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: packages/ruby/coverage/lcov.info
+          flags: ruby
+          name: ruby-coverage
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruby-coverage-report
+          path: packages/ruby/coverage/
+          retention-days: 30
+
+  # PHP coverage enforcement (separate job)
+  coverage-php:
+    name: PHP Code Coverage (80% minimum)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: php-actions/setup-php@v6
+        with:
+          php-version: "8.2"
+          extensions: pcov
+          coverage: pcov
+
+      - name: Setup Composer dependencies
+        uses: php-actions/composer@v6
+        with:
+          working_dir: packages/php
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: coverage-php
+
+      - name: Install LLVM/Clang (for ext-php-rs bindgen)
+        uses: ./.github/actions/setup-llvm-clang
+
+      - name: Build PHP extension
+        run: cargo build --release -p spikard-php
+
+      - name: Run PHP coverage
+        run: bash scripts/coverage/run-php-coverage.sh
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: packages/php/coverage.lcov
+          flags: php
+          name: php-coverage
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-coverage-report
+          path: packages/php/htmlcov/
+          retention-days: 30
+
+  # WASM coverage enforcement (separate job)
+  coverage-wasm:
+    name: WASM Code Coverage (80% minimum)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: packages/wasm/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: cd packages/wasm && pnpm install --frozen-lockfile
+
+      - name: Run WASM coverage
+        run: bash scripts/coverage/run-wasm-coverage.sh
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: packages/wasm/coverage/lcov.info
+          flags: wasm
+          name: wasm-coverage
+          fail_ci_if_error: false  # TODO: Enable after fixing test imports and reaching 80% coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-coverage-report
+          path: packages/wasm/coverage/
+          retention-days: 30
+
   # Summary report
   coverage-summary:
     name: Coverage Summary
     runs-on: ubuntu-latest
-    needs: [coverage-rust, coverage-python, coverage-node]
+    needs: [coverage-rust, coverage-python, coverage-node, coverage-ruby, coverage-php, coverage-wasm]
     if: always()
     steps:
       - name: Download all coverage reports
@@ -186,7 +318,12 @@ jobs:
 
       - name: Display coverage summary
         run: |
-          echo "Coverage reports generated and uploaded to Codecov"
-          echo "  - Rust: 95% minimum coverage"
-          echo "  - Python: 80% minimum coverage"
-          echo "  - Node.js: standard coverage"
+          echo "Coverage enforcement summary (80%+ minimum):"
+          echo "  - Rust: 95% minimum (tarpaulin)"
+          echo "  - Python: 80% minimum (pytest-cov)"
+          echo "  - Node.js: 80% minimum (vitest)"
+          echo "  - Ruby: 80% minimum (simplecov)"
+          echo "  - PHP: 80% minimum (phpunit)"
+          echo "  - WASM: 80% minimum (vitest)"
+          echo ""
+          echo "All coverage reports uploaded to Codecov"
