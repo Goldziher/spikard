@@ -32,6 +32,9 @@ concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   RUST_BACKTRACE: short
   CARGO_TERM_COLOR: always
