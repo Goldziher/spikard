@@ -132,7 +132,7 @@ jobs:
             --output-dir target/tarpaulin-php \
             --timeout 300 \
             --exclude-files "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "examples/**" "tools/**" \
-            --exclude-crates "spikard-wasm" \
+            --exclude "spikard-wasm" \
             --verbose
 
       - name: Upload PHP FFI coverage to Codecov
