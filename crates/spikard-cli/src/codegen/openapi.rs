@@ -10,7 +10,7 @@ pub fn parse_openapi_schema(path: &Path) -> Result<OpenAPI> {
         .with_context(|| format!("Failed to read OpenAPI schema from {}", path.display()))?;
 
     let spec: OpenAPI = serde_json::from_str(&content)
-        .or_else(|_| serde_yaml::from_str(&content).context("Failed to parse as JSON or YAML"))
+        .or_else(|_| serde_saphyr::from_str(&content).context("Failed to parse as JSON or YAML"))
         .with_context(|| format!("Failed to parse OpenAPI schema from {}", path.display()))?;
 
     Ok(spec)

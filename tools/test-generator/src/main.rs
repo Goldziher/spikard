@@ -102,7 +102,7 @@ fn generate_openapi(fixtures_dir: PathBuf, output: PathBuf, title: String, versi
 
     let spec = fixtures_to_openapi(fixtures, options).context("Failed to generate OpenAPI spec")?;
 
-    let yaml = serde_yaml::to_string(&spec).context("Failed to serialize OpenAPI spec")?;
+    let yaml = serde_saphyr::to_string(&spec).context("Failed to serialize OpenAPI spec")?;
 
     std::fs::write(&output, yaml).context("Failed to write OpenAPI spec")?;
 

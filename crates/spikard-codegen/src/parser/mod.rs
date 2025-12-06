@@ -23,7 +23,7 @@ pub fn load_config(path: &Path) -> Result<Config> {
     let config = if path.extension().and_then(|s| s.to_str()) == Some("json") {
         serde_json::from_str(&content)?
     } else {
-        serde_yaml::from_str(&content)?
+        serde_saphyr::from_str(&content)?
     };
 
     Ok(config)
