@@ -203,7 +203,7 @@ impl TestClient {
             exec_request(context)
                 .await
                 .and_then(|response| serde_wasm_bindgen::to_value(&response).map_err(js_error_from_serde))
-                .map_err(|err| js_error_structured("execution_failed", err))
+                .map_err(|err| js_error_from_jsvalue("execution_failed", err))
         })
     }
 }
@@ -313,9 +313,9 @@ impl LifecycleRunner {
 }
 
 async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsValue> {
-    let mut headers = read_headers(context.headers_val).map_err(|e| js_error_structured("header_parse_failed", e))?;
+    let mut headers = read_headers(context.headers_val).map_err(|e| js_error_from_jsvalue("header_parse_failed", e))?;
     let request_options = types::RequestOptions::from_js(context.options)
-        .map_err(|e| js_error_structured("request_options_invalid", e))?;
+        .map_err(|e| js_error_from_jsvalue("request_options_invalid", e))?;
     if !request_options.headers.is_empty() {
         headers.extend(request_options.headers.clone());
     }
@@ -325,7 +325,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
     }
 
     let (route, path_params, path_without_query, query) = match_route(&context.routes, &context.method, &context.path)
-        .map_err(|e| js_error_structured("route_match_failed", e))?;
+        .map_err(|e| js_error_from_jsvalue("route_match_failed", e))?;
 
     let rate_limit_id = headers
         .get("x-forwarded-for")
@@ -770,6 +770,15 @@ fn js_error_structured(code: &str, details: impl ToString) -> JsValue {
         Ok(js) => js,
         Err(_) => JsValue::from_str(&format!(r#"{{"error":"{}","code":"{}","details":{{}}}}"#, code, code)),
     }
+}
+
+fn js_error_from_jsvalue(code: &str, js_err: JsValue) -> JsValue {
+    let details = if let Some(s) = js_err.as_string() {
+        s
+    } else {
+        format!("{:?}", js_err)
+    };
+    js_error_structured(code, details)
 }
 
 fn js_error_from_serde(err: impl std::fmt::Display) -> JsValue {
