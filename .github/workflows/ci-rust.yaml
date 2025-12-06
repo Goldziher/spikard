@@ -57,7 +57,7 @@ jobs:
       - name: Setup Python for PyO3
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Setup Ruby for rb-sys
         id: setup-ruby
@@ -95,7 +95,7 @@ jobs:
       - name: Setup Python for PyO3
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Setup Ruby for rb-sys
         id: setup-ruby
@@ -139,7 +139,7 @@ jobs:
       - name: Setup Python for PyO3
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Setup Ruby for rb-sys
         id: setup-ruby
@@ -194,7 +194,7 @@ jobs:
       - name: Setup Python for PyO3
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Setup Ruby for rb-sys
         id: setup-ruby

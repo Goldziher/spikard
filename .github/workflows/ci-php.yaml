@@ -146,8 +146,9 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           tools: composer
-          coverage: none
-          extensions: fileinfo
+          coverage: xdebug
+          ini-values: xdebug.mode=coverage
+          extensions: fileinfo, xdebug
 
       - name: Setup Composer Cache
         uses: actions/cache@v4

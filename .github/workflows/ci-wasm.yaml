@@ -80,7 +80,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wasm-bindings
-          path: packages/wasm/
+          path: |
+            crates/spikard-wasm/dist-node/
+            crates/spikard-wasm/dist-web/
+            crates/spikard-wasm/dist-bundler/
           retention-days: 7
           if-no-files-found: error
 
@@ -104,7 +107,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: wasm-bindings
-          path: packages/wasm/
+          path: crates/spikard-wasm/
 
       - name: Verify bindings downloaded
         shell: bash
@@ -145,7 +148,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: wasm-bindings
-          path: packages/wasm/
+          path: crates/spikard-wasm/
 
       - name: Install dependencies
         run: cd packages/wasm && pnpm install --frozen-lockfile

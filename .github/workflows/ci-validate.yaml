@@ -114,7 +114,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           cache-prefix: lint-python
 
       - name: Check Ruff linting
