@@ -10,6 +10,11 @@ use RuntimeException;
 use Spikard\Attributes\Get;
 use Spikard\Attributes\Post;
 use Spikard\Handlers\ControllerMethodHandler;
+use Spikard\Http\Params\Body;
+use Spikard\Http\Params\Cookie;
+use Spikard\Http\Params\Header;
+use Spikard\Http\Params\Path;
+use Spikard\Http\Params\Query;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
@@ -471,6 +476,335 @@ final class ControllerMethodHandlerTest extends TestCase
 
         $this->assertSame(200, $response->statusCode);
     }
+
+    /**
+     * Type Coercion and Conversion Tests.
+     */
+
+    public function testResolveParameterStringToIntCoercion(): void
+    {
+        $controller = new IntParamController();
+        $reflectionMethod = new ReflectionMethod($controller, 'getInt');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/items/123',
+            null,
+            pathParams: ['id' => '123']
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['id' => 123], $response->body);
+    }
+
+    public function testResolveParameterStringToFloatCoercion(): void
+    {
+        $controller = new FloatParamController();
+        $reflectionMethod = new ReflectionMethod($controller, 'getPrice');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/price/123.45',
+            null,
+            pathParams: ['price' => '123.45']
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['price' => 123.45], $response->body);
+    }
+
+    public function testConvertToResponseEmptyArray(): void
+    {
+        $controller = new EmptyArrayResponseController();
+        $reflectionMethod = new ReflectionMethod($controller, 'getEmpty');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request('GET', '/empty', null);
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame([], $response->body);
+        $this->assertSame('application/json', $response->headers['Content-Type']);
+    }
+
+    public function testConvertToResponseFalsyValues(): void
+    {
+        $controller = new FalsyValueResponseController();
+        $reflectionMethod = new ReflectionMethod($controller, 'getFalsy');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request('GET', '/falsy', null);
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['result' => 0], $response->body);
+        $this->assertSame('application/json', $response->headers['Content-Type']);
+    }
+
+    public function testConvertToResponseBooleanFalse(): void
+    {
+        $controller = new BooleanResponseController();
+        $reflectionMethod = new ReflectionMethod($controller, 'getBool');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request('GET', '/bool', null);
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['result' => false], $response->body);
+        $this->assertSame('application/json', $response->headers['Content-Type']);
+    }
+
+    public function testResolveQueryParameterSingleValueExtraction(): void
+    {
+        $controller = new QueryParamController();
+        $reflectionMethod = new ReflectionMethod($controller, 'search');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/search',
+            null,
+            queryParams: ['q' => ['exactValue']]
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['q' => 'exactValue'], $response->body);
+    }
+
+    public function testResolveQueryParameterMultipleValueReturnsArray(): void
+    {
+        $controller = new QueryParamMultiController();
+        $reflectionMethod = new ReflectionMethod($controller, 'filter');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/filter',
+            null,
+            queryParams: ['tags' => ['a', 'b']]
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['tags' => ['a', 'b']], $response->body);
+    }
+
+    /**
+     * Param Attribute Extraction Tests.
+     */
+
+    public function testResolveBodyParamAttribute(): void
+    {
+        $controller = new BodyParamAttributeController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handleBody');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $data = ['name' => 'Test', 'value' => 123];
+        $request = new Request('POST', '/body', $data);
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['data' => $data], $response->body);
+    }
+
+    public function testResolveBodyParamAttributeWithDefault(): void
+    {
+        $controller = new BodyParamAttributeDefaultController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handleBodyDefault');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request('POST', '/body', null);
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['data' => ['default' => true]], $response->body);
+    }
+
+    public function testResolveQueryParamAttribute(): void
+    {
+        $controller = new QueryParamAttributeController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handleQuery');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/query',
+            null,
+            queryParams: ['search' => ['test']]
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['search' => 'test'], $response->body);
+    }
+
+    public function testResolveQueryParamAttributeWithDefault(): void
+    {
+        $controller = new QueryParamAttributeDefaultController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handleQueryDefault');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/query',
+            null,
+            queryParams: []
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['search' => 'fallback'], $response->body);
+    }
+
+    public function testResolvePathParamAttribute(): void
+    {
+        $controller = new PathParamAttributeController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handlePath');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/path/abc',
+            null,
+            pathParams: ['id' => 'abc']
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['id' => 'abc'], $response->body);
+    }
+
+    public function testResolvePathParamAttributeWithDefault(): void
+    {
+        $controller = new PathParamAttributeDefaultController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handlePathDefault');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/path',
+            null,
+            pathParams: []
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['id' => 'default-id'], $response->body);
+    }
+
+    public function testResolveHeaderParamAttribute(): void
+    {
+        $controller = new HeaderParamAttributeController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handleHeader');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/header',
+            null,
+            headers: ['x_token' => 'secret123']
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['token' => 'secret123'], $response->body);
+    }
+
+    public function testResolveHeaderParamAttributeWithDefault(): void
+    {
+        $controller = new HeaderParamAttributeDefaultController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handleHeaderDefault');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/header',
+            null,
+            headers: []
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['token' => 'none'], $response->body);
+    }
+
+    public function testResolveCookieParamAttribute(): void
+    {
+        $controller = new CookieParamAttributeController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handleCookie');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/cookie',
+            null,
+            cookies: ['sessionId' => 'sess_123']
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['session' => 'sess_123'], $response->body);
+    }
+
+    public function testResolveCookieParamAttributeWithDefault(): void
+    {
+        $controller = new CookieParamAttributeDefaultController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handleCookieDefault');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/cookie',
+            null,
+            cookies: []
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['session' => 'default-session'], $response->body);
+    }
+
+    public function testResolveQueryParamAttributeMultipleValues(): void
+    {
+        $controller = new QueryParamAttributeMultiController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handleQueryMulti');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/query-multi',
+            null,
+            queryParams: ['tags' => ['a', 'b', 'c']]
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['tags' => ['a', 'b', 'c']], $response->body);
+    }
+
+    public function testResolveQueryParamAttributeNullWhenMissing(): void
+    {
+        $controller = new QueryParamAttributeNullController();
+        $reflectionMethod = new ReflectionMethod($controller, 'handleQueryNull');
+        $handler = new ControllerMethodHandler($controller, $reflectionMethod);
+
+        $request = new Request(
+            'GET',
+            '/query-null',
+            null,
+            queryParams: []
+        );
+        $response = $handler->handle($request);
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertSame(['filter' => null], $response->body);
+    }
 }
 
 /**
@@ -929,6 +1263,334 @@ final class ImplicitQueryParamController
     public function search(string $query = 'default'): array
     {
         return ['query' => $query];
+    }
+}
+
+/**
+ * Controller for testing Body parameter attribute.
+ *
+ * @internal
+ */
+final class BodyParamAttributeController
+{
+    /**
+     * Handle POST with Body attribute.
+     *
+     * @return array<string, mixed>
+     */
+    #[Post('/body')]
+    public function handleBody(mixed $payload = new Body()): array
+    {
+        return ['data' => $payload];
+    }
+}
+
+/**
+ * Controller for testing Body parameter attribute with default.
+ *
+ * @internal
+ */
+final class BodyParamAttributeDefaultController
+{
+    /**
+     * Handle POST with Body attribute with default factory.
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, array<string, mixed>>
+     */
+    #[Post('/body')]
+    public function handleBodyDefault(array $payload = ['default' => true]): array
+    {
+        return ['data' => $payload];
+    }
+}
+
+/**
+ * Controller for testing Query parameter attribute.
+ *
+ * @internal
+ */
+final class QueryParamAttributeController
+{
+    /**
+     * Handle GET with Query attribute.
+     *
+     * @param string|array<int, string>|null $search
+     * @return array<string, string|array<int, string>|null>
+     */
+    #[Get('/query')]
+    public function handleQuery(string|array|null $search = null): array
+    {
+        return ['search' => $search];
+    }
+}
+
+/**
+ * Controller for testing Query parameter attribute with default.
+ *
+ * @internal
+ */
+final class QueryParamAttributeDefaultController
+{
+    /**
+     * Handle GET with Query attribute with default.
+     *
+     * @param string|array<int, string> $search
+     * @return array<string, string|array<int, string>>
+     */
+    #[Get('/query')]
+    public function handleQueryDefault(string|array $search = 'fallback'): array
+    {
+        return ['search' => $search];
+    }
+}
+
+/**
+ * Controller for testing Path parameter attribute.
+ *
+ * @internal
+ */
+final class PathParamAttributeController
+{
+    /**
+     * Handle GET with Path attribute.
+     *
+     * @param string|array<int, string>|null $id
+     * @return array<string, string|array<int, string>|null>
+     */
+    #[Get('/path/:id')]
+    public function handlePath(string|array|null $id = null): array
+    {
+        return ['id' => $id];
+    }
+}
+
+/**
+ * Controller for testing Path parameter attribute with default.
+ *
+ * @internal
+ */
+final class PathParamAttributeDefaultController
+{
+    /**
+     * Handle GET with Path attribute with default.
+     *
+     * @param string|array<int, string> $id
+     * @return array<string, string|array<int, string>>
+     */
+    #[Get('/path/:id')]
+    public function handlePathDefault(string|array $id = 'default-id'): array
+    {
+        return ['id' => $id];
+    }
+}
+
+/**
+ * Controller for testing Header parameter attribute.
+ *
+ * @internal
+ */
+final class HeaderParamAttributeController
+{
+    /**
+     * Handle GET with Header attribute.
+     *
+     * @return array<string, mixed>
+     */
+    #[Get('/header')]
+    public function handleHeader(mixed $x_token = new Header()): array
+    {
+        return ['token' => $x_token];
+    }
+}
+
+/**
+ * Controller for testing Header parameter attribute with default.
+ *
+ * @internal
+ */
+final class HeaderParamAttributeDefaultController
+{
+    /**
+     * Handle GET with Header attribute with default.
+     *
+     * @param string|array<int, string> $x_token
+     * @return array<string, string|array<int, string>>
+     */
+    #[Get('/header')]
+    public function handleHeaderDefault(string|array $x_token = 'none'): array
+    {
+        return ['token' => $x_token];
+    }
+}
+
+/**
+ * Controller for testing Cookie parameter attribute.
+ *
+ * @internal
+ */
+final class CookieParamAttributeController
+{
+    /**
+     * Handle GET with Cookie attribute.
+     *
+     * @return array<string, mixed>
+     */
+    #[Get('/cookie')]
+    public function handleCookie(mixed $sessionId = new Cookie()): array
+    {
+        return ['session' => $sessionId];
+    }
+}
+
+/**
+ * Controller for testing Cookie parameter attribute with default.
+ *
+ * @internal
+ */
+final class CookieParamAttributeDefaultController
+{
+    /**
+     * Handle GET with Cookie attribute with default.
+     *
+     * @param string|array<int, string> $sessionId
+     * @return array<string, string|array<int, string>>
+     */
+    #[Get('/cookie')]
+    public function handleCookieDefault(string|array $sessionId = 'default-session'): array
+    {
+        return ['session' => $sessionId];
+    }
+}
+
+/**
+ * Controller for testing Query parameter attribute with multiple values.
+ *
+ * @internal
+ */
+final class QueryParamAttributeMultiController
+{
+    /**
+     * Handle GET with Query attribute multiple values.
+     *
+     * @param array<int, string> $tags
+     * @return array<string, array<int, string>|list<never>>
+     */
+    #[Get('/query-multi')]
+    public function handleQueryMulti(array $tags = []): array
+    {
+        return ['tags' => $tags];
+    }
+}
+
+/**
+ * Controller for testing Query parameter attribute nullable.
+ *
+ * @internal
+ */
+final class QueryParamAttributeNullController
+{
+    /**
+     * Handle GET with Query attribute nullable.
+     *
+     * @param string|array<int, string>|null $filter
+     * @return array<string, string|array<int, string>|null>
+     */
+    #[Get('/query-null')]
+    public function handleQueryNull(string|array|null $filter = null): array
+    {
+        return ['filter' => $filter];
+    }
+}
+
+/**
+ * Controller for testing integer parameter resolution.
+ *
+ * @internal
+ */
+final class IntParamController
+{
+    /**
+     * Get item by integer ID.
+     *
+     * @return array<string, int>
+     */
+    #[Get('/items/:id')]
+    public function getInt(int $id): array
+    {
+        return ['id' => $id];
+    }
+}
+
+/**
+ * Controller for testing float parameter resolution.
+ *
+ * @internal
+ */
+final class FloatParamController
+{
+    /**
+     * Get price as float.
+     *
+     * @return array<string, float>
+     */
+    #[Get('/price/:price')]
+    public function getPrice(float $price): array
+    {
+        return ['price' => $price];
+    }
+}
+
+/**
+ * Controller for testing empty array response conversion.
+ *
+ * @internal
+ */
+final class EmptyArrayResponseController
+{
+    /**
+     * Return empty array.
+     *
+     * @return array<never, never>
+     */
+    #[Get('/empty')]
+    public function getEmpty(): array
+    {
+        return [];
+    }
+}
+
+/**
+ * Controller for testing falsy scalar response conversion.
+ *
+ * @internal
+ */
+final class FalsyValueResponseController
+{
+    /**
+     * Return zero (falsy value).
+     */
+    #[Get('/falsy')]
+    public function getFalsy(): int
+    {
+        return 0;
+    }
+}
+
+/**
+ * Controller for testing boolean response conversion.
+ *
+ * @internal
+ */
+final class BooleanResponseController
+{
+    /**
+     * Return boolean false.
+     */
+    #[Get('/bool')]
+    public function getBool(): bool
+    {
+        return false;
     }
 }
 
