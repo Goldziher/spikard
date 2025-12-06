@@ -35,6 +35,8 @@
 #![warn(missing_docs)]
 
 mod background;
+#[cfg(test)]
+mod conversion_tests;
 #[cfg(feature = "di")]
 pub mod di;
 mod handler;
