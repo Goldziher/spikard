@@ -342,9 +342,8 @@ final class StreamingResponseBehavioralTest extends TestCase
         $this->assertCount(6, $lines);
         // Verify each line is valid JSON
         foreach ($lines as $line) {
-            $decoded = \json_decode($line, false);
-            $this->assertSame(JSON_ERROR_NONE, \json_last_error());
-            $this->assertTrue($decoded !== false);
+            \json_decode($line, false);
+            $this->assertSame(JSON_ERROR_NONE, \json_last_error(), "Line is not valid JSON: {$line}");
         }
     }
 
@@ -412,7 +411,11 @@ final class StreamingResponseBehavioralTest extends TestCase
     }
 
     /**
-     * Test streaming response generator can be consumed multiple times (if not consumed).
+     * Test streaming response generator behavior: single consumption only.
+     *
+     * PHP generators are one-shot iterators. Once exhausted, attempting to
+     * traverse them again throws an exception. This test verifies both the
+     * successful first iteration and the expected exception on re-traversal.
      */
     public function testStreamingGeneratorBehavior(): void
     {
@@ -425,13 +428,14 @@ final class StreamingResponseBehavioralTest extends TestCase
 
         $response = new StreamingResponse($generator());
 
-        // First consumption
+        // First consumption succeeds
         $chunks1 = \iterator_to_array($response->generator);
         $this->assertCount(3, $chunks1);
 
-        // Generator is exhausted, second iteration yields nothing
-        $chunks2 = \iterator_to_array($response->generator);
-        $this->assertCount(0, $chunks2);
+        // Generator is exhausted; attempting to traverse again throws exception
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Cannot traverse an already closed generator');
+        \iterator_to_array($response->generator);
     }
 
     /**
