@@ -88,7 +88,7 @@ fn main() {
 
     match ConfigExtractor::extract_jwt_config(&jwt_config) {
         Ok(config) => {
-            println!("   secret: {}", config.secret);
+            println!("   secret: [REDACTED]");
             println!("   algorithm: {}", config.algorithm);
             println!("   leeway: {}\n", config.leeway);
         }
