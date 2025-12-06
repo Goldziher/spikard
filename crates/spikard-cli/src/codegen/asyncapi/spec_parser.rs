@@ -46,7 +46,7 @@ pub fn parse_asyncapi_schema(path: &Path) -> Result<AsyncApiV3Spec> {
         serde_json::from_str(&content)
             .with_context(|| format!("Failed to parse AsyncAPI JSON from {}", path.display()))?
     } else {
-        serde_yaml::from_str(&content)
+        serde_saphyr::from_str(&content)
             .with_context(|| format!("Failed to parse AsyncAPI YAML from {}", path.display()))?
     };
 
