@@ -461,4 +461,101 @@ mod tests {
         let result = ConfigExtractor::extract_rate_limit_config(&source);
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_openapi_config_extraction() {
+        let source = MockConfigSource::new()
+            .with("enabled", "true".to_string())
+            .with("title", "Test API".to_string())
+            .with("version", "2.0.0".to_string())
+            .with("description", "A test API".to_string())
+            .with("swagger_ui_path", "/api-docs".to_string())
+            .with("redoc_path", "/api-redoc".to_string())
+            .with("openapi_json_path", "/api.json".to_string());
+
+        let config = ConfigExtractor::extract_openapi_config(&source).unwrap();
+        assert!(config.enabled);
+        assert_eq!(config.title, "Test API");
+        assert_eq!(config.version, "2.0.0");
+        assert_eq!(config.description, Some("A test API".to_string()));
+        assert_eq!(config.swagger_ui_path, "/api-docs");
+        assert_eq!(config.redoc_path, "/api-redoc");
+        assert_eq!(config.openapi_json_path, "/api.json");
+    }
+
+    #[test]
+    fn test_openapi_config_defaults() {
+        let source = MockConfigSource::new();
+
+        let config = ConfigExtractor::extract_openapi_config(&source).unwrap();
+        assert!(!config.enabled);
+        assert_eq!(config.title, "API");
+        assert_eq!(config.version, "1.0.0");
+        assert_eq!(config.description, None);
+        assert_eq!(config.swagger_ui_path, "/docs");
+        assert_eq!(config.redoc_path, "/redoc");
+        assert_eq!(config.openapi_json_path, "/openapi.json");
+    }
+
+    #[test]
+    fn test_static_files_config_empty() {
+        let source = MockConfigSource::new();
+
+        let configs = ConfigExtractor::extract_static_files_config(&source).unwrap();
+        assert_eq!(configs.len(), 0);
+    }
+
+    #[test]
+    fn test_server_config_extraction() {
+        let source = MockConfigSource::new()
+            .with("host", "0.0.0.0".to_string())
+            .with("port", "3000".to_string())
+            .with("workers", "4".to_string())
+            .with("enable_request_id", "false".to_string())
+            .with("max_body_size", "5242880".to_string())
+            .with("request_timeout", "60".to_string())
+            .with("graceful_shutdown", "false".to_string())
+            .with("shutdown_timeout", "10".to_string());
+
+        let config = ConfigExtractor::extract_server_config(&source).unwrap();
+        assert_eq!(config.host, "0.0.0.0");
+        assert_eq!(config.port, 3000);
+        assert_eq!(config.workers, 4);
+        assert!(!config.enable_request_id);
+        assert_eq!(config.max_body_size, Some(5242880));
+        assert_eq!(config.request_timeout, Some(60));
+        assert!(!config.graceful_shutdown);
+        assert_eq!(config.shutdown_timeout, 10);
+    }
+
+    #[test]
+    fn test_server_config_defaults() {
+        let source = MockConfigSource::new();
+
+        let config = ConfigExtractor::extract_server_config(&source).unwrap();
+        assert_eq!(config.host, "127.0.0.1");
+        assert_eq!(config.port, 8000);
+        assert_eq!(config.workers, 1);
+        assert!(config.enable_request_id);
+        assert_eq!(config.max_body_size, None);
+        assert_eq!(config.request_timeout, None);
+        assert!(config.graceful_shutdown);
+        assert_eq!(config.shutdown_timeout, 30);
+    }
+
+    #[test]
+    fn test_servers_config_empty() {
+        let source = MockConfigSource::new();
+
+        let servers = ConfigExtractor::extract_servers_config(&source).unwrap();
+        assert_eq!(servers.len(), 0);
+    }
+
+    #[test]
+    fn test_security_schemes_config_empty() {
+        let source = MockConfigSource::new();
+
+        let schemes = ConfigExtractor::extract_security_schemes_config(&source).unwrap();
+        assert_eq!(schemes.len(), 0);
+    }
 }
