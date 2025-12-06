@@ -937,8 +937,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // This test has a race condition: barrier waits for 5 tasks but semaphore limits to 3,
-    // causing a deadlock. The test design is flawed, not the executor.
     async fn test_concurrent_spawns_hit_semaphore_limit() {
         let config = BackgroundTaskConfig {
             max_queue_size: 100,
@@ -948,7 +946,7 @@ mod tests {
         let runtime = BackgroundRuntime::start(config).await;
         let handle = runtime.handle();
 
-        let barrier: Arc<tokio::sync::Barrier> = Arc::new(tokio::sync::Barrier::new(5));
+        let barrier: Arc<tokio::sync::Barrier> = Arc::new(tokio::sync::Barrier::new(3));
         let running_count: Arc<AtomicU64> = Arc::new(AtomicU64::new(0));
         let peak_concurrent: Arc<AtomicU64> = Arc::new(AtomicU64::new(0));
 
@@ -1078,8 +1076,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // This test has a race condition: barrier waits for 21 but only 20 tasks are spawned,
-    // and semaphore limits to 5, causing a deadlock. Test design is flawed.
     async fn test_metrics_accuracy_under_concurrent_load() {
         let config = BackgroundTaskConfig {
             max_queue_size: 50,
@@ -1089,26 +1085,24 @@ mod tests {
         let runtime = BackgroundRuntime::start(config).await;
         let handle = runtime.handle();
 
-        let barrier: Arc<tokio::sync::Barrier> = Arc::new(tokio::sync::Barrier::new(21));
+        let completed: Arc<AtomicU64> = Arc::new(AtomicU64::new(0));
 
         for _ in 0..20 {
-            let b = barrier.clone();
+            let c = completed.clone();
             handle
                 .spawn(move || {
-                    let barrier = b.clone();
+                    let count = c.clone();
                     async move {
-                        barrier.wait().await;
                         tokio::time::sleep(Duration::from_millis(50)).await;
+                        count.fetch_add(1, Ordering::SeqCst);
                         Ok(())
                     }
                 })
                 .unwrap();
         }
 
-        barrier.wait().await;
-        tokio::time::sleep(Duration::from_millis(300)).await;
-
         runtime.shutdown().await.unwrap();
+        assert_eq!(completed.load(Ordering::SeqCst), 20, "all tasks should complete");
     }
 
     #[tokio::test]
