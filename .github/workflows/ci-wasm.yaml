@@ -1,30 +1,30 @@
-name: CI Node
+name: CI WASM
 
 on:
   push:
     branches: [main]
     paths:
-      - 'crates/spikard-node/**'
-      - 'packages/node/**'
+      - 'crates/spikard-wasm/**'
+      - 'packages/wasm/**'
       - 'pnpm-lock.yaml'
       - 'crates/spikard/**/*.rs'
       - 'crates/spikard-http/**/*.rs'
       - 'testing_data/**'
       - '.cargo/config.toml'
-      - '.github/workflows/ci-node.yaml'
+      - '.github/workflows/ci-wasm.yaml'
       - '.github/actions/setup-node-workspace/**'
       - '.github/actions/setup-rust/**'
   pull_request:
     branches: [main]
     paths:
-      - 'crates/spikard-node/**'
-      - 'packages/node/**'
+      - 'crates/spikard-wasm/**'
+      - 'packages/wasm/**'
       - 'pnpm-lock.yaml'
       - 'crates/spikard/**/*.rs'
       - 'crates/spikard-http/**/*.rs'
       - 'testing_data/**'
       - '.cargo/config.toml'
-      - '.github/workflows/ci-node.yaml'
+      - '.github/workflows/ci-wasm.yaml'
       - '.github/actions/setup-node-workspace/**'
       - '.github/actions/setup-rust/**'
 
@@ -43,133 +43,121 @@ defaults:
     shell: bash
 
 jobs:
-  build-napi-bindings:
-    name: Build Node Bindings (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+  build-wasm:
+    name: Build WASM Bindings
+    runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v6
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
         with:
-          cache-key-prefix: node-bindings-${{ matrix.os }}
+          cache-key-prefix: wasm-bindings
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "20"
           cache: pnpm
+          cache-dependency-path: packages/wasm/pnpm-lock.yaml
 
       - name: Install dependencies
-        working-directory: crates/spikard-node
+        working-directory: crates/spikard-wasm
         shell: bash
         run: pnpm install
 
-      - name: Build NAPI bindings (Unix)
-        if: runner.os != 'Windows'
-        working-directory: crates/spikard-node
+      - name: Build WASM bindings
+        working-directory: crates/spikard-wasm
         shell: bash
-        run: pnpm exec napi build --platform --release -o ../../packages/node
+        run: pnpm run build
 
-      - name: Build NAPI bindings (Windows)
-        if: runner.os == 'Windows'
-        working-directory: crates/spikard-node
-        shell: pwsh
-        run: pnpm exec napi build --platform --release -o ../../packages/node
-
-      - name: Upload Node bindings
+      - name: Upload WASM bindings
         uses: actions/upload-artifact@v4
         with:
-          name: napi-bindings-${{ matrix.os }}
-          path: packages/node/*.node
+          name: wasm-bindings
+          path: packages/wasm/
           retention-days: 7
           if-no-files-found: error
 
-  test-node:
-    name: Test Node (${{ matrix.os }})
-    needs: build-napi-bindings
-    runs-on: ${{ matrix.os }}
+  test-wasm:
+    name: Test WASM
+    needs: build-wasm
+    runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v6
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "20"
           cache: pnpm
+          cache-dependency-path: packages/wasm/pnpm-lock.yaml
 
-      - name: Download Node bindings
+      - name: Download WASM bindings
         uses: actions/download-artifact@v4
         with:
-          name: napi-bindings-${{ matrix.os }}
-          path: packages/node/
+          name: wasm-bindings
+          path: packages/wasm/
 
       - name: Verify bindings downloaded
         shell: bash
-        run: ls -la packages/node/*.node
+        run: ls -la packages/wasm/
 
       - name: Install dependencies
-        working-directory: packages/node
+        working-directory: packages/wasm
         shell: bash
         run: pnpm install
 
-      - name: Run tests (Unix)
-        if: runner.os != 'Windows'
-        working-directory: packages/node
+      - name: Run tests
+        working-directory: packages/wasm
         shell: bash
         run: pnpm test
 
-      - name: Run tests (Windows)
-        if: runner.os == 'Windows'
-        working-directory: packages/node
-        shell: pwsh
-        run: pnpm test
-
-  # Node.js coverage enforcement (separate job)
-  coverage-node:
-    name: Node.js Code Coverage
+  coverage-wasm:
+    name: WASM Code Coverage (80% minimum)
+    needs: test-wasm
     runs-on: ubuntu-latest
-    needs: [test-node]
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: packages/wasm/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: cd packages/wasm && pnpm install --frozen-lockfile
 
-      - name: Run Node.js tests with coverage
-        run: pnpm --filter @spikard/node test --coverage
+      - name: Run WASM coverage
+        working-directory: packages/wasm
+        run: pnpm test --coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./packages/node/coverage/lcov.info
-          flags: node
-          name: node-coverage
+          files: ./packages/wasm/coverage/lcov.info
+          flags: wasm
+          name: wasm-coverage
           fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -178,6 +166,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: node-coverage-report
-          path: packages/node/coverage/
+          name: wasm-coverage-report
+          path: packages/wasm/coverage/
           retention-days: 30
