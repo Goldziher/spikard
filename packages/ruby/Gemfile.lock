@@ -154,7 +154,7 @@ DEPENDENCIES
   rspec (~> 3.12)
   rubocop (~> 1.50)
   rubocop-performance (~> 1.18)
-  rubocop-rspec (~> 2.22)
+  rubocop-rspec (~> 2.31)
   simplecov (~> 0.22)
   simplecov-lcov (~> 0.8)
   steep (~> 1.10)
