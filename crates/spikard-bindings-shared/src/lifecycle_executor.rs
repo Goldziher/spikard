@@ -384,4 +384,281 @@ mod tests {
         assert_eq!(mods.path, Some("/api/resource".to_string()));
         assert_eq!(mods.body, Some(b"data".to_vec()));
     }
+
+    // Mock hook implementation for testing
+    struct MockHook {
+        result: HookResultData,
+    }
+
+    impl LanguageLifecycleHook for MockHook {
+        type HookData = ();
+
+        fn prepare_hook_data(&self, _req: &Request<Body>) -> Result<Self::HookData, String> {
+            Ok(())
+        }
+
+        fn invoke_hook(
+            &self,
+            _data: Self::HookData,
+        ) -> Pin<Box<dyn Future<Output = Result<HookResultData, String>> + Send>> {
+            let result = self.result.clone();
+            Box::pin(async move { Ok(result) })
+        }
+    }
+
+    #[tokio::test]
+    async fn test_execute_request_hook_continue() {
+        let hook = Arc::new(MockHook {
+            result: HookResultData::continue_execution(),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let req = Request::builder().body(Body::empty()).unwrap();
+        let result = executor.execute_request_hook(req).await.unwrap();
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_execute_request_hook_short_circuit() {
+        let hook = Arc::new(MockHook {
+            result: HookResultData::short_circuit(403, b"Forbidden".to_vec(), None),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let req = Request::builder().body(Body::empty()).unwrap();
+        let result = executor.execute_request_hook(req).await.unwrap();
+
+        assert!(result.is_err());
+        let response = result.unwrap_err();
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn test_execute_request_hook_modify_request() {
+        let mods = RequestModifications {
+            method: Some("POST".to_string()),
+            path: Some("/new-path".to_string()),
+            headers: None,
+            body: Some(b"new body".to_vec()),
+        };
+        let hook = Arc::new(MockHook {
+            result: HookResultData::modify_request(mods),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let req = Request::builder()
+            .method("GET")
+            .uri("/old-path")
+            .body(Body::empty())
+            .unwrap();
+        let result = executor.execute_request_hook(req).await.unwrap();
+
+        assert!(result.is_ok());
+        let modified_req = result.unwrap();
+        assert_eq!(modified_req.method(), "POST");
+        assert_eq!(modified_req.uri().path(), "/new-path");
+    }
+
+    #[tokio::test]
+    async fn test_execute_response_hook_with_modifications() {
+        let mods = RequestModifications {
+            method: None,
+            path: None,
+            headers: Some({
+                let mut h = HashMap::new();
+                h.insert("X-Modified".to_string(), "true".to_string());
+                h
+            }),
+            body: Some(b"modified response".to_vec()),
+        };
+        let hook = Arc::new(MockHook {
+            result: HookResultData::modify_request(mods),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let resp = Response::builder()
+            .status(200)
+            .body(Body::from("original"))
+            .unwrap();
+        let result = executor.execute_response_hook(resp).await.unwrap();
+
+        assert_eq!(result.status(), StatusCode::OK);
+        assert_eq!(
+            result.headers().get("X-Modified").unwrap().to_str().unwrap(),
+            "true"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_build_response_from_hook_result_with_headers() {
+        let mut headers = HashMap::new();
+        headers.insert("X-Custom".to_string(), "value".to_string());
+
+        let result = HookResultData::short_circuit(201, b"Created".to_vec(), Some(headers));
+        let hook = Arc::new(MockHook {
+            result: HookResultData::continue_execution(),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let response = executor.build_response_from_hook_result(&result).unwrap();
+        assert_eq!(response.status(), StatusCode::CREATED);
+        assert_eq!(
+            response.headers().get("X-Custom").unwrap().to_str().unwrap(),
+            "value"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_build_response_from_hook_result_default_content_type() {
+        let result = HookResultData::short_circuit(200, b"{}".to_vec(), None);
+        let hook = Arc::new(MockHook {
+            result: HookResultData::continue_execution(),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let response = executor.build_response_from_hook_result(&result).unwrap();
+        assert_eq!(
+            response
+                .headers()
+                .get("content-type")
+                .unwrap()
+                .to_str()
+                .unwrap(),
+            "application/json"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_apply_request_modifications_method() {
+        let mods = RequestModifications {
+            method: Some("PATCH".to_string()),
+            path: None,
+            headers: None,
+            body: None,
+        };
+        let hook = Arc::new(MockHook {
+            result: HookResultData::continue_execution(),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let req = Request::builder()
+            .method("GET")
+            .body(Body::empty())
+            .unwrap();
+        let modified = executor.apply_request_modifications(req, mods).unwrap();
+
+        assert_eq!(modified.method(), "PATCH");
+    }
+
+    #[tokio::test]
+    async fn test_apply_request_modifications_path() {
+        let mods = RequestModifications {
+            method: None,
+            path: Some("/api/v2/users".to_string()),
+            headers: None,
+            body: None,
+        };
+        let hook = Arc::new(MockHook {
+            result: HookResultData::continue_execution(),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let req = Request::builder()
+            .uri("/api/v1/users")
+            .body(Body::empty())
+            .unwrap();
+        let modified = executor.apply_request_modifications(req, mods).unwrap();
+
+        assert_eq!(modified.uri().path(), "/api/v2/users");
+    }
+
+    #[tokio::test]
+    async fn test_apply_request_modifications_headers() {
+        let mut new_headers = HashMap::new();
+        new_headers.insert("Authorization".to_string(), "Bearer token".to_string());
+
+        let mods = RequestModifications {
+            method: None,
+            path: None,
+            headers: Some(new_headers),
+            body: None,
+        };
+        let hook = Arc::new(MockHook {
+            result: HookResultData::continue_execution(),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let req = Request::builder().body(Body::empty()).unwrap();
+        let modified = executor.apply_request_modifications(req, mods).unwrap();
+
+        assert_eq!(
+            modified
+                .headers()
+                .get("Authorization")
+                .unwrap()
+                .to_str()
+                .unwrap(),
+            "Bearer token"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_apply_request_modifications_body() {
+        let new_body = b"modified body".to_vec();
+        let mods = RequestModifications {
+            method: None,
+            path: None,
+            headers: None,
+            body: Some(new_body.clone()),
+        };
+        let hook = Arc::new(MockHook {
+            result: HookResultData::continue_execution(),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let req = Request::builder()
+            .body(Body::from("original body"))
+            .unwrap();
+        let modified = executor.apply_request_modifications(req, mods).unwrap();
+
+        let body_bytes = extract_body(modified.into_body()).await.unwrap();
+        assert_eq!(body_bytes, new_body);
+    }
+
+    #[tokio::test]
+    async fn test_apply_request_modifications_invalid_method() {
+        let mods = RequestModifications {
+            method: Some("".to_string()),
+            path: None,
+            headers: None,
+            body: None,
+        };
+        let hook = Arc::new(MockHook {
+            result: HookResultData::continue_execution(),
+        });
+        let executor = LifecycleExecutor::new(hook);
+
+        let req = Request::builder().body(Body::empty()).unwrap();
+        let result = executor.apply_request_modifications(req, mods);
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Invalid method"));
+    }
+
+    #[tokio::test]
+    async fn test_extract_body_helper() {
+        let body = Body::from("test data");
+        let bytes = extract_body(body).await.unwrap();
+
+        assert_eq!(bytes, b"test data");
+    }
+
+    #[tokio::test]
+    async fn test_extract_body_empty() {
+        let body = Body::empty();
+        let bytes = extract_body(body).await.unwrap();
+
+        assert_eq!(bytes.len(), 0);
+    }
 }
