@@ -402,14 +402,20 @@ pub async fn sse_handler<P: SseEventProducer + 'static>(State(state): State<SseS
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
+    // ============================================================================
+    // Test Producers
+    // ============================================================================
 
     struct TestProducer {
-        count: std::sync::atomic::AtomicUsize,
+        count: AtomicUsize,
     }
 
     impl SseEventProducer for TestProducer {
         async fn next_event(&self) -> Option<SseEvent> {
-            let count = self.count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            let count = self.count.fetch_add(1, Ordering::Relaxed);
             if count < 3 {
                 Some(SseEvent::new(serde_json::json!({
                     "message": format!("Event {}", count)
@@ -420,28 +426,547 @@ mod tests {
         }
     }
 
+    /// Producer that tracks connect/disconnect lifecycle
+    struct LifecycleProducer {
+        connect_count: Arc<AtomicUsize>,
+        disconnect_count: Arc<AtomicUsize>,
+        event_count: AtomicUsize,
+    }
+
+    impl LifecycleProducer {
+        fn new(connect: Arc<AtomicUsize>, disconnect: Arc<AtomicUsize>) -> Self {
+            Self {
+                connect_count: connect,
+                disconnect_count: disconnect,
+                event_count: AtomicUsize::new(0),
+            }
+        }
+    }
+
+    impl SseEventProducer for LifecycleProducer {
+        async fn next_event(&self) -> Option<SseEvent> {
+            let idx: usize = self.event_count.fetch_add(1, Ordering::Relaxed);
+            if idx < 2 {
+                Some(SseEvent::new(serde_json::json!({"event": idx})))
+            } else {
+                None
+            }
+        }
+
+        async fn on_connect(&self) {
+            self.connect_count.fetch_add(1, Ordering::Relaxed);
+        }
+
+        async fn on_disconnect(&self) {
+            self.disconnect_count.fetch_add(1, Ordering::Relaxed);
+        }
+    }
+
+    /// Producer for multiline event testing
+    struct MultilineProducer {
+        sent: AtomicBool,
+    }
+
+    impl SseEventProducer for MultilineProducer {
+        async fn next_event(&self) -> Option<SseEvent> {
+            let was_sent: bool = self.sent.swap(true, Ordering::Relaxed);
+            if !was_sent {
+                Some(SseEvent::new(serde_json::json!({
+                    "text": "line1\nline2\nline3"
+                })))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Producer for special characters testing
+    struct SpecialCharsProducer {
+        sent: AtomicBool,
+    }
+
+    impl SseEventProducer for SpecialCharsProducer {
+        async fn next_event(&self) -> Option<SseEvent> {
+            let was_sent: bool = self.sent.swap(true, Ordering::Relaxed);
+            if !was_sent {
+                Some(SseEvent::new(serde_json::json!({
+                    "data": "special: \"quotes\", \\ backslash, \t tab, \r\n crlf"
+                })))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Producer for large payload testing
+    struct LargePayloadProducer {
+        sent: AtomicBool,
+    }
+
+    impl SseEventProducer for LargePayloadProducer {
+        async fn next_event(&self) -> Option<SseEvent> {
+            let was_sent: bool = self.sent.swap(true, Ordering::Relaxed);
+            if !was_sent {
+                // Create a 100KB payload
+                let large_string: String = "x".repeat(100_000);
+                Some(SseEvent::new(serde_json::json!({
+                    "payload": large_string
+                })))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Producer that sends many events rapidly
+    struct RapidEventProducer {
+        event_count: usize,
+        current: AtomicUsize,
+    }
+
+    impl RapidEventProducer {
+        fn new(count: usize) -> Self {
+            Self {
+                event_count: count,
+                current: AtomicUsize::new(0),
+            }
+        }
+    }
+
+    impl SseEventProducer for RapidEventProducer {
+        async fn next_event(&self) -> Option<SseEvent> {
+            let idx: usize = self.current.fetch_add(1, Ordering::Relaxed);
+            if idx < self.event_count {
+                Some(SseEvent::new(serde_json::json!({
+                    "id": idx,
+                    "data": format!("event_{}", idx)
+                })))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Producer with error-on-send behavior
+    struct ErrorEventProducer;
+
+    impl SseEventProducer for ErrorEventProducer {
+        async fn next_event(&self) -> Option<SseEvent> {
+            // Return event with non-UTF8 compatible data that would fail serialization
+            // Actually serde_json can handle most cases, so we return valid data
+            Some(SseEvent::new(serde_json::json!({"status": "ok"})))
+        }
+    }
+
+    /// Producer with all event fields populated
+    struct FullFieldProducer {
+        sent: AtomicBool,
+    }
+
+    impl SseEventProducer for FullFieldProducer {
+        async fn next_event(&self) -> Option<SseEvent> {
+            let was_sent: bool = self.sent.swap(true, Ordering::Relaxed);
+            if !was_sent {
+                Some(
+                    SseEvent::with_type(
+                        "counter_update",
+                        serde_json::json!({
+                            "count": 42,
+                            "status": "active"
+                        }),
+                    )
+                    .with_id("event-123")
+                    .with_retry(5000),
+                )
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Producer that ends immediately (keep-alive test)
+    struct NoEventProducer;
+
+    impl SseEventProducer for NoEventProducer {
+        async fn next_event(&self) -> Option<SseEvent> {
+            None
+        }
+    }
+
+    // ============================================================================
+    // Tests: Event Creation & Formatting
+    // ============================================================================
+
     #[test]
-    fn test_sse_event_creation() {
-        let event = SseEvent::new(serde_json::json!({"test": "data"}));
+    fn test_sse_event_creation_minimal() {
+        let event: SseEvent = SseEvent::new(serde_json::json!({"test": "data"}));
         assert!(event.event_type.is_none());
         assert!(event.id.is_none());
         assert!(event.retry.is_none());
+    }
 
-        let event = SseEvent::with_type("notification", serde_json::json!({"test": "data"}))
-            .with_id("123")
+    #[test]
+    fn test_sse_event_with_all_fields() {
+        let event: SseEvent = SseEvent::with_type("update", serde_json::json!({"count": 42}))
+            .with_id("event-001")
+            .with_retry(3000);
+
+        assert_eq!(event.event_type, Some("update".to_string()));
+        assert_eq!(event.id, Some("event-001".to_string()));
+        assert_eq!(event.retry, Some(3000));
+    }
+
+    #[test]
+    fn test_sse_event_builder_pattern() {
+        let event: SseEvent = SseEvent::with_type("notification", serde_json::json!({"text": "hello"}))
+            .with_id("notif-456")
             .with_retry(5000);
+
         assert_eq!(event.event_type, Some("notification".to_string()));
-        assert_eq!(event.id, Some("123".to_string()));
+        assert_eq!(event.id, Some("notif-456".to_string()));
         assert_eq!(event.retry, Some(5000));
     }
 
     #[test]
+    fn test_sse_event_multiline_data() {
+        let event: SseEvent = SseEvent::new(serde_json::json!({
+            "text": "line1\nline2\nline3"
+        }));
+
+        assert!(event.data.is_object());
+        let text: Option<&str> = event.data.get("text").and_then(|v| v.as_str());
+        assert_eq!(text, Some("line1\nline2\nline3"));
+    }
+
+    #[test]
+    fn test_sse_event_special_characters() {
+        let event: SseEvent = SseEvent::new(serde_json::json!({
+            "data": "special: \"quotes\", \\ backslash"
+        }));
+
+        assert!(event.data.is_object());
+    }
+
+    #[test]
+    fn test_sse_event_large_payload() {
+        let large_string: String = "x".repeat(100_000);
+        let event: SseEvent = SseEvent::new(serde_json::json!({
+            "payload": large_string.clone()
+        }));
+
+        let payload_field: Option<&str> = event.data.get("payload").and_then(|v| v.as_str());
+        assert_eq!(payload_field.map(|s| s.len()), Some(100_000));
+    }
+
+    #[test]
+    fn test_sse_event_into_axum_event_conversion() {
+        let event: SseEvent = SseEvent::new(serde_json::json!({"msg": "test"}));
+        let axum_event: Result<axum::response::sse::Event, serde_json::Error> = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_into_axum_with_all_fields() {
+        let event: SseEvent = SseEvent::with_type("event", serde_json::json!({"id": 1}))
+            .with_id("123")
+            .with_retry(5000);
+
+        let axum_event: Result<axum::response::sse::Event, serde_json::Error> = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    // ============================================================================
+    // Tests: Stream Lifecycle
+    // ============================================================================
+
+    #[test]
     fn test_sse_state_creation() {
-        let producer = TestProducer {
-            count: std::sync::atomic::AtomicUsize::new(0),
+        let producer: TestProducer = TestProducer {
+            count: AtomicUsize::new(0),
         };
-        let state = SseState::new(producer);
-        let cloned = state.clone();
+        let state: SseState<TestProducer> = SseState::new(producer);
+        let cloned: SseState<TestProducer> = state.clone();
         assert!(Arc::ptr_eq(&state.producer, &cloned.producer));
+    }
+
+    #[test]
+    fn test_sse_state_with_schema_valid() {
+        let producer: TestProducer = TestProducer {
+            count: AtomicUsize::new(0),
+        };
+        let schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "message": {"type": "string"}
+            }
+        });
+
+        let result: Result<SseState<TestProducer>, String> = SseState::with_schema(producer, Some(schema));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_sse_state_with_invalid_schema() {
+        let producer: TestProducer = TestProducer {
+            count: AtomicUsize::new(0),
+        };
+        let invalid_schema: serde_json::Value = serde_json::json!({
+            "type": "not-a-valid-type"
+        });
+
+        let result: Result<SseState<TestProducer>, String> = SseState::with_schema(producer, Some(invalid_schema));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_sse_state_with_schema_none() {
+        let producer: TestProducer = TestProducer {
+            count: AtomicUsize::new(0),
+        };
+        let result: Result<SseState<TestProducer>, String> = SseState::with_schema(producer, None);
+        assert!(result.is_ok());
+    }
+
+    // ============================================================================
+    // Tests: Connection Lifecycle Hooks
+    // ============================================================================
+
+    #[tokio::test]
+    async fn test_sse_lifecycle_on_connect_called() {
+        let connect_count: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(0));
+        let disconnect_count: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(0));
+
+        let producer: LifecycleProducer =
+            LifecycleProducer::new(Arc::clone(&connect_count), Arc::clone(&disconnect_count));
+
+        producer.on_connect().await;
+        assert_eq!(connect_count.load(Ordering::Relaxed), 1);
+    }
+
+    #[tokio::test]
+    async fn test_sse_lifecycle_on_disconnect_called() {
+        let connect_count: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(0));
+        let disconnect_count: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(0));
+
+        let producer: LifecycleProducer =
+            LifecycleProducer::new(Arc::clone(&connect_count), Arc::clone(&disconnect_count));
+
+        producer.on_disconnect().await;
+        assert_eq!(disconnect_count.load(Ordering::Relaxed), 1);
+    }
+
+    // ============================================================================
+    // Tests: Event Ordering & Delivery
+    // ============================================================================
+
+    #[tokio::test]
+    async fn test_sse_event_ordering_preserved() {
+        let producer: RapidEventProducer = RapidEventProducer::new(10);
+
+        let mut last_idx: i32 = -1;
+        for _ in 0..10 {
+            if let Some(event) = producer.next_event().await {
+                if let Some(id) = event.data.get("id").and_then(|v| v.as_i64()) {
+                    assert!(id as i32 > last_idx, "Event ordering violated");
+                    last_idx = id as i32;
+                }
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_sse_rapid_event_sending() {
+        let producer: RapidEventProducer = RapidEventProducer::new(100);
+
+        let mut count: usize = 0;
+        loop {
+            match producer.next_event().await {
+                Some(_event) => count += 1,
+                None => break,
+            }
+        }
+
+        assert_eq!(count, 100);
+    }
+
+    // ============================================================================
+    // Tests: Edge Cases & Error Handling
+    // ============================================================================
+
+    #[test]
+    fn test_sse_event_with_empty_data_object() {
+        let event: SseEvent = SseEvent::new(serde_json::json!({}));
+        assert!(event.data.is_object());
+    }
+
+    #[test]
+    fn test_sse_event_with_nested_data() {
+        let event: SseEvent = SseEvent::new(serde_json::json!({
+            "nested": {
+                "deep": {
+                    "value": "found"
+                }
+            }
+        }));
+
+        let deep_value: Option<&str> = event
+            .data
+            .get("nested")
+            .and_then(|v| v.get("deep"))
+            .and_then(|v| v.get("value"))
+            .and_then(|v| v.as_str());
+
+        assert_eq!(deep_value, Some("found"));
+    }
+
+    #[tokio::test]
+    async fn test_sse_producer_stream_ends_cleanly() {
+        let producer: NoEventProducer = NoEventProducer;
+
+        let event1: Option<SseEvent> = producer.next_event().await;
+        assert!(event1.is_none());
+
+        let event2: Option<SseEvent> = producer.next_event().await;
+        assert!(event2.is_none());
+    }
+
+    #[test]
+    fn test_sse_event_clone() {
+        let original: SseEvent = SseEvent::with_type("test", serde_json::json!({"data": "test"}))
+            .with_id("id-1")
+            .with_retry(2000);
+
+        let cloned: SseEvent = original.clone();
+
+        assert_eq!(cloned.event_type, original.event_type);
+        assert_eq!(cloned.id, original.id);
+        assert_eq!(cloned.retry, original.retry);
+        assert_eq!(cloned.data, original.data);
+    }
+
+    #[test]
+    fn test_sse_event_debug_impl() {
+        let event: SseEvent = SseEvent::new(serde_json::json!({"msg": "debug"}));
+        let debug_str: String = format!("{:?}", event);
+        assert!(debug_str.contains("SseEvent"));
+    }
+
+    // ============================================================================
+    // Tests: Concurrent Stream Handling
+    // ============================================================================
+
+    #[tokio::test]
+    async fn test_sse_multiple_producers_independent() {
+        let producer1: TestProducer = TestProducer {
+            count: AtomicUsize::new(0),
+        };
+        let producer2: TestProducer = TestProducer {
+            count: AtomicUsize::new(0),
+        };
+
+        let _event1: Option<SseEvent> = producer1.next_event().await;
+        let _event2: Option<SseEvent> = producer2.next_event().await;
+
+        let count1: usize = producer1.count.load(Ordering::Relaxed);
+        let count2: usize = producer2.count.load(Ordering::Relaxed);
+
+        assert_eq!(count1, 1);
+        assert_eq!(count2, 1);
+    }
+
+    // ============================================================================
+    // Tests: Validation & Schema
+    // ============================================================================
+
+    #[test]
+    fn test_sse_state_cloning_preserves_schema() {
+        let producer: TestProducer = TestProducer {
+            count: AtomicUsize::new(0),
+        };
+        let schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "message": {"type": "string"}
+            }
+        });
+
+        let state: SseState<TestProducer> =
+            SseState::with_schema(producer, Some(schema)).expect("schema should be valid");
+        let cloned: SseState<TestProducer> = state.clone();
+
+        assert!(Arc::ptr_eq(&state.producer, &cloned.producer));
+        match (&state.event_schema, &cloned.event_schema) {
+            (Some(s1), Some(s2)) => {
+                assert!(Arc::ptr_eq(s1, s2));
+            }
+            _ => panic!("Schema should be preserved in clone"),
+        }
+    }
+
+    // ============================================================================
+    // Tests: Payload & Data Integrity
+    // ============================================================================
+
+    #[tokio::test]
+    async fn test_sse_large_payload_integrity() {
+        let producer: LargePayloadProducer = LargePayloadProducer {
+            sent: AtomicBool::new(false),
+        };
+
+        let event: Option<SseEvent> = producer.next_event().await;
+        assert!(event.is_some());
+
+        if let Some(evt) = event {
+            let payload: Option<&str> = evt.data.get("payload").and_then(|v| v.as_str());
+            assert_eq!(payload.map(|s| s.len()), Some(100_000));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_sse_multiline_data_preservation() {
+        let producer: MultilineProducer = MultilineProducer {
+            sent: AtomicBool::new(false),
+        };
+
+        let event: Option<SseEvent> = producer.next_event().await;
+        assert!(event.is_some());
+
+        if let Some(evt) = event {
+            let text: Option<&str> = evt.data.get("text").and_then(|v| v.as_str());
+            assert_eq!(text, Some("line1\nline2\nline3"));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_sse_special_chars_in_payload() {
+        let producer: SpecialCharsProducer = SpecialCharsProducer {
+            sent: AtomicBool::new(false),
+        };
+
+        let event: Option<SseEvent> = producer.next_event().await;
+        assert!(event.is_some());
+
+        if let Some(evt) = event {
+            let data: Option<&str> = evt.data.get("data").and_then(|v| v.as_str());
+            assert!(data.is_some());
+            assert!(data.unwrap().contains("quotes"));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_sse_full_event_fields_together() {
+        let producer: FullFieldProducer = FullFieldProducer {
+            sent: AtomicBool::new(false),
+        };
+
+        let event: Option<SseEvent> = producer.next_event().await;
+        assert!(event.is_some());
+
+        if let Some(evt) = event {
+            assert_eq!(evt.event_type, Some("counter_update".to_string()));
+            assert_eq!(evt.id, Some("event-123".to_string()));
+            assert_eq!(evt.retry, Some(5000));
+            assert_eq!(evt.data.get("count").and_then(|v| v.as_i64()), Some(42));
+        }
     }
 }

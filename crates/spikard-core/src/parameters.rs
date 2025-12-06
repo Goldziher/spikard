@@ -61,11 +61,12 @@ impl ParameterValidator {
     fn extract_parameter_defs(schema: &Value) -> Result<Vec<ParameterDef>, String> {
         let mut defs = Vec::new();
 
-        let properties = schema.get("properties").and_then(|p| p.as_object()).ok_or_else(|| {
-            anyhow::anyhow!("Parameter schema validation failed")
-                .context("Schema must have 'properties' object")
-                .to_string()
-        })?;
+        // Allow empty schemas - if no properties exist, return empty parameter definitions
+        let properties = schema
+            .get("properties")
+            .and_then(|p| p.as_object())
+            .cloned()
+            .unwrap_or_default();
 
         let required_list = schema
             .get("required")

@@ -254,11 +254,11 @@ impl ConfigExtractor {
 
         let contact = source
             .get_nested("contact")
-            .and_then(|cfg| {
+            .map(|cfg| {
                 let name = cfg.get_string("name");
                 let email = cfg.get_string("email");
                 let url = cfg.get_string("url");
-                Some(ContactInfo { name, email, url })
+                ContactInfo { name, email, url }
             })
             .filter(|c| c.name.is_some() || c.email.is_some() || c.url.is_some());
 
