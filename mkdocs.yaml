@@ -211,6 +211,8 @@ nav:
       - ADR 0005 - Lifecycle Hooks: adr/0005-lifecycle-hooks.md
       - ADR 0006 - Streaming and Async Protocols: adr/0006-streaming-and-async-protocols.md
       - ADR 0007 - Observability and OTEL: adr/0007-observability-and-otel.md
+      - ADR 0008 - Dependency Injection System: adr/0008-dependency-injection.md
+      - ADR 0009 - Panic Shielding: adr/0009-panic-shielding.md
   - Benchmarks:
       - Overview: benchmarks/index.md
       - Methodology: benchmarks/methodology.md

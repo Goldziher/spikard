@@ -3,6 +3,7 @@
 //! This crate provides Python bindings using PyO3
 
 mod background;
+pub mod conversion;
 #[cfg(feature = "di")]
 pub mod di;
 pub mod handler;
@@ -10,17 +11,15 @@ pub mod lifecycle;
 pub mod request;
 pub mod response;
 pub mod sse;
-mod test_client;
-mod test_sse;
-mod test_websocket;
+pub mod testing;
 pub mod websocket;
 
 use pyo3::prelude::*;
-
-pub use handler::{PythonHandler, init_python_event_loop};
-use pyo3::types::PyList;
+use pyo3::types::{PyDict, PyList};
 use spikard_http::RouteMetadata;
 use spikard_http::server::Server;
+
+pub use handler::{PythonHandler, init_python_event_loop};
 
 /// Route with Python handler
 pub struct RouteWithHandler {
@@ -55,51 +54,10 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
     let handler_name: String = route.getattr("handler_name")?.extract()?;
     let is_async: bool = route.getattr("is_async")?.extract()?;
 
-    let request_schema = route.getattr("request_schema")?;
-    let request_schema_value = if request_schema.is_none() {
-        None
-    } else {
-        let json_str: String = py.import("json")?.call_method1("dumps", (request_schema,))?.extract()?;
-        Some(serde_json::from_str(&json_str).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse request schema: {}", e))
-        })?)
-    };
-
-    let response_schema = route.getattr("response_schema")?;
-    let response_schema_value = if response_schema.is_none() {
-        None
-    } else {
-        let json_str: String = py
-            .import("json")?
-            .call_method1("dumps", (response_schema,))?
-            .extract()?;
-        Some(serde_json::from_str(&json_str).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse response schema: {}", e))
-        })?)
-    };
-
-    let parameter_schema = route.getattr("parameter_schema")?;
-    let parameter_schema_value = if parameter_schema.is_none() {
-        None
-    } else {
-        let json_str: String = py
-            .import("json")?
-            .call_method1("dumps", (parameter_schema,))?
-            .extract()?;
-        Some(serde_json::from_str(&json_str).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse parameter schema: {}", e))
-        })?)
-    };
-
-    let file_params = route.getattr("file_params")?;
-    let file_params_value = if file_params.is_none() {
-        None
-    } else {
-        let json_str: String = py.import("json")?.call_method1("dumps", (file_params,))?.extract()?;
-        Some(serde_json::from_str(&json_str).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse file params: {}", e))
-        })?)
-    };
+    let request_schema_value = extract_json_field(py, route, "request_schema")?;
+    let response_schema_value = extract_json_field(py, route, "response_schema")?;
+    let parameter_schema_value = extract_json_field(py, route, "parameter_schema")?;
+    let file_params_value = extract_json_field(py, route, "file_params")?;
 
     let body_param_name = route.getattr("body_param_name")?;
     let body_param_name_value = if body_param_name.is_none() {
@@ -131,6 +89,54 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
     })
 }
 
+fn extract_json_field(py: Python<'_>, route: &Bound<'_, PyAny>, field: &str) -> PyResult<Option<serde_json::Value>> {
+    let value = route.getattr(field)?;
+    if value.is_none() {
+        return Ok(None);
+    }
+    py_to_json_value(py, &value).map(Some)
+}
+
+#[allow(clippy::only_used_in_recursion)]
+fn py_to_json_value(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<serde_json::Value> {
+    if obj.is_none() {
+        return Ok(serde_json::Value::Null);
+    }
+    if let Ok(b) = obj.extract::<bool>() {
+        return Ok(serde_json::Value::Bool(b));
+    }
+    if let Ok(i) = obj.extract::<i64>() {
+        return Ok(serde_json::Value::Number(serde_json::Number::from(i)));
+    }
+    if let Ok(f) = obj.extract::<f64>() {
+        return serde_json::Number::from_f64(f)
+            .map(serde_json::Value::Number)
+            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>("NaN not supported in JSON"));
+    }
+    if let Ok(s) = obj.extract::<String>() {
+        return Ok(serde_json::Value::String(s));
+    }
+    if let Ok(seq) = obj.cast::<PyList>() {
+        let mut items = Vec::with_capacity(seq.len());
+        for item in seq {
+            items.push(py_to_json_value(py, &item)?);
+        }
+        return Ok(serde_json::Value::Array(items));
+    }
+    if let Ok(dict) = obj.cast::<PyDict>() {
+        let mut map = serde_json::Map::with_capacity(dict.len());
+        for (k, v) in dict {
+            let key: String = k.extract()?;
+            map.insert(key, py_to_json_value(py, &v)?);
+        }
+        return Ok(serde_json::Value::Object(map));
+    }
+
+    Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+        "Unsupported type for JSON conversion in route metadata",
+    ))
+}
+
 /// Process using spikard (legacy function)
 #[pyfunction]
 fn process() -> PyResult<()> {
@@ -145,7 +151,7 @@ fn process() -> PyResult<()> {
 /// Returns:
 ///     TestClient: A test client for making requests to the app
 #[pyfunction]
-fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_client::TestClient> {
+fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testing::client::TestClient> {
     // DEBUG: Log test client creation
     let _ = std::fs::write("/tmp/create_test_client.log", "create_test_client() called\n");
     eprintln!("[UNCONDITIONAL DEBUG] create_test_client() called");
@@ -277,7 +283,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
 
     eprintln!("[UNCONDITIONAL DEBUG] Creating TestClient from Axum router");
 
-    let client = test_client::TestClient::from_router(axum_router)?;
+    let client = testing::client::TestClient::from_router(axum_router)?;
     let _ = std::fs::write("/tmp/test_client_created.log", "TestClient created successfully\n");
 
     Ok(client)
@@ -730,12 +736,12 @@ fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<request::PyRequest>()?;
     m.add_class::<response::Response>()?;
     m.add_class::<response::StreamingResponse>()?;
-    m.add_class::<test_client::TestClient>()?;
-    m.add_class::<test_client::TestResponse>()?;
-    m.add_class::<test_websocket::WebSocketTestConnection>()?;
-    m.add_class::<test_websocket::WebSocketMessage>()?;
-    m.add_class::<test_sse::SseStream>()?;
-    m.add_class::<test_sse::SseEvent>()?;
+    m.add_class::<testing::client::TestClient>()?;
+    m.add_class::<testing::client::TestResponse>()?;
+    m.add_class::<testing::websocket::WebSocketTestConnection>()?;
+    m.add_class::<testing::websocket::WebSocketMessage>()?;
+    m.add_class::<testing::sse::SseStream>()?;
+    m.add_class::<testing::sse::SseEvent>()?;
     m.add_function(wrap_pyfunction!(background::background_run, m)?)?;
     m.add_function(wrap_pyfunction!(create_test_client, m)?)?;
     m.add_function(wrap_pyfunction!(process, m)?)?;

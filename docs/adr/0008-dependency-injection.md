@@ -1,4 +1,4 @@
-# ADR-0008: Dependency Injection System
+# ADR 0008: Dependency Injection System
 
 **Status:** Proposed
 **Date:** 2025-11-23

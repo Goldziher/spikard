@@ -1,3 +1,9 @@
+PATH
+  remote: ../../packages/ruby
+  specs:
+    spikard (0.2.5)
+      websocket-client-simple (~> 0.8)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -73,6 +79,7 @@ DEPENDENCIES
   dry-struct (~> 1.6)
   dry-types (~> 1.7)
   rspec
+  spikard!
   websocket-client-simple (~> 0.8)
 
 BUNDLED WITH

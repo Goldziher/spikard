@@ -143,9 +143,10 @@ module Spikard
   end
 
   class Response
-    attr_accessor content: untyped
+    attr_reader content: untyped
     attr_reader status_code: Integer
     attr_reader headers: Hash[String, String]
+    attr_reader native_response: untyped
 
     def initialize: (
       ?content: untyped,
@@ -157,6 +158,7 @@ module Spikard
     def status: () -> Integer
     def status_code=: (Integer) -> Integer
     def headers=: (Hash[untyped, untyped]?) -> Hash[String, String]
+    def content=: (untyped) -> untyped
     def set_header: (String, String) -> String
     def set_cookie: (
       String,
@@ -168,14 +170,20 @@ module Spikard
       ?httponly: bool?,
       ?samesite: String?
     ) -> String
+    def to_native_response: () -> untyped
   end
 
   class StreamingResponse
     attr_reader stream: Enumerable[untyped]
     attr_reader status_code: Integer
     attr_reader headers: Hash[String, String]
+    attr_reader native_response: untyped
 
     def initialize: (Enumerable[untyped], ?status_code: Integer, ?headers: Hash[untyped, untyped]?) -> void
+    def to_native_response: () -> untyped
+  end
+
+  module Testing
   end
 
   module LifecycleHooks
@@ -184,7 +192,6 @@ module Spikard
     def pre_handler: () { (untyped) -> untyped } -> Proc
     def on_response: () { (untyped) -> untyped } -> Proc
     def on_error: () { (untyped) -> untyped } -> Proc
-    def lifecycle_hooks: () -> Hash[Symbol, Array[Proc]]
   end
 
   module ProvideSupport
@@ -195,7 +202,7 @@ module Spikard
       ?singleton: bool,
       ?cacheable: bool
     ) ?{ (**untyped) -> untyped } -> self
-    def dependencies: () -> Hash[String, untyped]
+    def dependencies: () -> Spikard::Native::DependencyRegistry
   end
 
   class App
@@ -257,6 +264,10 @@ module Spikard
       Hash[String, Proc],
       Hash[String, untyped]
     ) -> void
+
+    class DependencyRegistry
+      def initialize: () -> void
+    end
 
     class TestClient
       def initialize: (

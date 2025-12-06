@@ -14,6 +14,7 @@ from spikard._internal.constraints import extract_constraints_from_field
 from spikard._internal.field_definition import FieldDefinition
 from spikard._internal.json_schema import field_definition_to_json_schema
 from spikard._internal.parsed_signature import ParsedSignature, parse_fn_signature
+from spikard._internal.serialization import to_builtins
 from spikard._internal.types import Empty
 
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     "extract_constraints_from_field",
     "field_definition_to_json_schema",
     "parse_fn_signature",
+    "to_builtins",
 ]

@@ -26,7 +26,7 @@ final class WebSocketSseTest extends TestCase
 
     public function test_websocket_route_is_exposed_to_native_routes(): void
     {
-        $app = (new App())->addWebSocket('/ws', new DummyWebSocketHandler());
+        $app = (new App())->addWebSocket('/ws', new WebSocketSseDummyWebSocketHandler());
         $routes = $app->nativeRoutes();
 
         $wsRoute = \array_filter($routes, fn ($r) => ($r['path'] === '/ws'));
@@ -44,7 +44,7 @@ final class DummySseProducer implements SseEventProducerInterface
     }
 }
 
-final class DummyWebSocketHandler implements WebSocketHandlerInterface
+final class WebSocketSseDummyWebSocketHandler implements WebSocketHandlerInterface
 {
     public function onConnect(): void
     {

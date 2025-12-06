@@ -22,8 +22,7 @@ RSpec.describe 'DI doc snippet' do
     eval(code, binding) # rubocop:disable Security/Eval
 
     expect(defined?(app)).to eq('local-variable')
-    deps = app.instance_variable_get(:@dependencies) || {}
-    expect(deps).to have_key('db_pool')
-    expect(deps).to have_key('config')
+    deps = app.dependencies
+    expect(deps.keys).to include('db_pool', 'config')
   end
 end

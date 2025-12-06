@@ -1,6 +1,8 @@
 #![deny(clippy::unwrap_used)]
-#![cfg_attr(windows, feature(abi_vectorcall))]
-
+#![cfg_attr(
+    all(windows, target_env = "msvc", feature = "extension-module"),
+    feature(abi_vectorcall)
+)]
 #[cfg(feature = "extension-module")]
 mod php;
 

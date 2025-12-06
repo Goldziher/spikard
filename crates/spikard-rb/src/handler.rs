@@ -4,6 +4,7 @@
 //! and implements Spikard's `Handler` trait for async request processing.
 
 #![allow(dead_code)]
+#![deny(clippy::unwrap_used)]
 
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Request, StatusCode};
@@ -11,15 +12,19 @@ use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
 use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
 use serde_json::{Map as JsonMap, Value as JsonValue};
+use spikard_bindings_shared::ErrorResponseBuilder;
+use spikard_core::problem::ProblemDetails;
 use spikard_http::ParameterValidator;
 use spikard_http::SchemaValidator;
-use spikard_http::problem::ProblemDetails;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use std::collections::HashMap;
+use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::conversion::{json_to_ruby, map_to_ruby_hash, multimap_to_ruby_hash, problem_to_json, ruby_value_to_json};
+use crate::conversion::{
+    json_to_ruby, json_to_ruby_with_uploads, map_to_ruby_hash, multimap_to_ruby_hash, ruby_value_to_json,
+};
 
 /// Response payload with status, headers, and body data.
 pub struct HandlerResponsePayload {
@@ -45,12 +50,16 @@ pub enum RubyHandlerResult {
 impl StreamingResponsePayload {
     /// Convert streaming response into a `HandlerResponse`.
     pub fn into_response(self) -> Result<HandlerResponse, Error> {
-        let ruby = Ruby::get().map_err(|_| {
-            Error::new(
-                Ruby::get().unwrap().exception_runtime_error(),
-                "Ruby VM unavailable while building streaming response",
-            )
-        })?;
+        // Get Ruby VM reference. In FFI, Ruby must be available during this callback.
+        // If Ruby becomes unavailable, this is a fatal error condition.
+        let ruby = match Ruby::get() {
+            Ok(r) => r,
+            Err(_) => {
+                // Ruby VM is unavailable. This should never happen during active FFI.
+                // We panic because continuing without a Ruby VM is unsafe.
+                panic!("Ruby VM became unavailable during streaming response construction");
+            }
+        };
 
         let status = StatusCode::from_u16(self.status).map_err(|err| {
             Error::new(
@@ -127,6 +136,7 @@ pub struct RubyHandlerInner {
     pub request_validator: Option<Arc<SchemaValidator>>,
     pub response_validator: Option<Arc<SchemaValidator>>,
     pub parameter_validator: Option<ParameterValidator>,
+    pub upload_file_class: Option<Opaque<Value>>,
 }
 
 /// Wrapper around a Ruby Proc that implements the Handler trait.
@@ -138,6 +148,7 @@ pub struct RubyHandler {
 impl RubyHandler {
     /// Create a new RubyHandler from a route and handler Proc.
     pub fn new(route: &spikard_http::Route, handler_value: Value, json_module: Value) -> Result<Self, Error> {
+        let upload_file_class = lookup_upload_file_class()?;
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
@@ -148,6 +159,7 @@ impl RubyHandler {
                 request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
                 parameter_validator: route.parameter_validator.clone(),
+                upload_file_class,
             }),
         })
     }
@@ -164,6 +176,7 @@ impl RubyHandler {
         json_module: Value,
         route: &spikard_http::Route,
     ) -> Result<Self, Error> {
+        let upload_file_class = lookup_upload_file_class()?;
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
@@ -174,6 +187,7 @@ impl RubyHandler {
                 request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
                 parameter_validator: route.parameter_validator.clone(),
+                upload_file_class,
             }),
         })
     }
@@ -189,25 +203,30 @@ impl RubyHandler {
 
     /// Handle a request synchronously.
     pub fn handle(&self, request_data: RequestData) -> HandlerResult {
+        let cloned = request_data.clone();
+        let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(cloned)));
+        match result {
+            Ok(res) => res,
+            Err(_) => Err(ErrorResponseBuilder::structured_error(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "panic",
+                "Unexpected panic while executing Ruby handler",
+            )),
+        }
+    }
+
+    fn handle_inner(&self, request_data: RequestData) -> HandlerResult {
         if let Some(validator) = &self.inner.request_validator
             && let Err(errors) = validator.validate(&request_data.body)
         {
             let problem = ProblemDetails::from_validation_error(&errors);
-            let error_json = problem_to_json(&problem);
-            return Err((problem.status_code(), error_json));
+            return Err(ErrorResponseBuilder::problem_details_response(&problem));
         }
 
         let validated_params = if let Some(validator) = &self.inner.parameter_validator {
-            let raw_query_strings: HashMap<String, String> = request_data
-                .raw_query_params
-                .as_ref()
-                .iter()
-                .filter_map(|(k, v)| v.first().map(|first| (k.clone(), first.clone())))
-                .collect();
-
             match validator.validate_and_extract(
                 &request_data.query_params,
-                &raw_query_strings,
+                request_data.raw_query_params.as_ref(),
                 request_data.path_params.as_ref(),
                 request_data.headers.as_ref(),
                 request_data.cookies.as_ref(),
@@ -215,7 +234,7 @@ impl RubyHandler {
                 Ok(value) => Some(value),
                 Err(errors) => {
                     let problem = ProblemDetails::from_validation_error(&errors);
-                    return Err((problem.status_code(), problem_to_json(&problem)));
+                    return Err(ErrorResponseBuilder::problem_details_response(&problem));
                 }
             }
         } else {
@@ -223,9 +242,10 @@ impl RubyHandler {
         };
 
         let ruby = Ruby::get().map_err(|_| {
-            (
+            ErrorResponseBuilder::structured_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "Ruby VM unavailable while invoking handler".to_string(),
+                "ruby_vm_unavailable",
+                "Ruby VM unavailable while invoking handler",
             )
         })?;
 
@@ -237,16 +257,18 @@ impl RubyHandler {
         let response_value = match handler_result {
             Ok(value) => value,
             Err(err) => {
-                return Err((
+                return Err(ErrorResponseBuilder::structured_error(
                     StatusCode::INTERNAL_SERVER_ERROR,
+                    "handler_failed",
                     format!("Handler '{}' failed: {}", self.inner.handler_name, err),
                 ));
             }
         };
 
         let handler_result = interpret_handler_response(&ruby, &self.inner, response_value).map_err(|err| {
-            (
+            ErrorResponseBuilder::structured_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
+                "response_interpret_error",
                 format!(
                     "Failed to interpret response from '{}': {}",
                     self.inner.handler_name, err
@@ -257,8 +279,9 @@ impl RubyHandler {
         let payload = match handler_result {
             RubyHandlerResult::Streaming(streaming) => {
                 let response = streaming.into_response().map_err(|err| {
-                    (
+                    ErrorResponseBuilder::structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
+                        "streaming_response_error",
                         format!("Failed to build streaming response: {}", err),
                     )
                 })?;
@@ -267,11 +290,36 @@ impl RubyHandler {
             RubyHandlerResult::Payload(payload) => payload,
         };
 
-        if let (Some(validator), Some(body)) = (&self.inner.response_validator, payload.body.as_ref())
-            && let Err(errors) = validator.validate(body)
-        {
-            let problem = ProblemDetails::from_validation_error(&errors);
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, problem_to_json(&problem)));
+        if let Some(validator) = &self.inner.response_validator {
+            let candidate_body = match payload.body.clone() {
+                Some(body) => Some(body),
+                None => match try_parse_raw_body(&payload.raw_body) {
+                    Ok(parsed) => parsed,
+                    Err(err) => {
+                        return Err(ErrorResponseBuilder::structured_error(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "response_body_decode_error",
+                            err,
+                        ));
+                    }
+                },
+            };
+
+            match candidate_body {
+                Some(json_body) => {
+                    if let Err(errors) = validator.validate(&json_body) {
+                        let problem = ProblemDetails::from_validation_error(&errors);
+                        return Err(ErrorResponseBuilder::problem_details_response(&problem));
+                    }
+                }
+                None => {
+                    return Err(ErrorResponseBuilder::structured_error(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "response_validation_failed",
+                        "Response validator requires JSON body but handler returned raw bytes",
+                    ));
+                }
+            }
         }
 
         let HandlerResponsePayload {
@@ -344,6 +392,29 @@ impl Handler for RubyHandler {
     }
 }
 
+fn try_parse_raw_body(raw_body: &Option<Vec<u8>>) -> Result<Option<JsonValue>, String> {
+    let Some(bytes) = raw_body else {
+        return Ok(None);
+    };
+    let text = String::from_utf8(bytes.clone()).map_err(|e| format!("Invalid UTF-8 in response body: {e}"))?;
+    if text.is_empty() {
+        return Ok(None);
+    }
+    serde_json::from_str(&text)
+        .map(Some)
+        .map_err(|e| format!("Failed to parse response body as JSON: {e}"))
+}
+
+fn lookup_upload_file_class() -> Result<Option<Opaque<Value>>, Error> {
+    let ruby = match Ruby::get() {
+        Ok(ruby) => ruby,
+        Err(_) => return Ok(None),
+    };
+
+    let upload_file = ruby.eval::<Value>("Spikard::UploadFile").ok();
+    Ok(upload_file.map(Opaque::from))
+}
+
 /// Build a Ruby Hash request object from request data.
 fn build_ruby_request(
     ruby: &Ruby,
@@ -371,8 +442,15 @@ fn build_ruby_request(
     let cookies = map_to_ruby_hash(ruby, request_data.cookies.as_ref())?;
     hash.aset(ruby.intern("cookies"), cookies)?;
 
-    let body_value = json_to_ruby(ruby, &request_data.body)?;
+    let upload_class_value = handler.upload_file_class.as_ref().map(|cls| cls.get_inner_with(ruby));
+    let body_value = json_to_ruby_with_uploads(ruby, &request_data.body, upload_class_value.as_ref())?;
     hash.aset(ruby.intern("body"), body_value)?;
+    if let Some(raw) = &request_data.raw_body {
+        let raw_str = ruby.str_from_slice(raw);
+        hash.aset(ruby.intern("raw_body"), raw_str)?;
+    } else {
+        hash.aset(ruby.intern("raw_body"), ruby.qnil())?;
+    }
 
     let params_value = if let Some(validated) = validated_params {
         json_to_ruby(ruby, validated)?

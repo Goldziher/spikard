@@ -14,6 +14,6 @@ async def make_pool(config: dict[str, str]):
 app.provide("db_pool", Provide(make_pool, depends_on=["config"], singleton=True))
 
 @app.get("/stats")
-async def stats(config: dict[str, str], db_pool):
+async def stats(config: dict[str, str], db_pool: dict[str, str]):
     return {"db": db_pool["url"], "env": config["db_url"]}
 ```

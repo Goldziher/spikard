@@ -1,9 +1,11 @@
 //! Code generation from OpenAPI and AsyncAPI schemas
 
 mod asyncapi;
+mod base;
 mod engine;
 mod openapi;
 mod php;
+mod php_dto;
 mod python;
 mod ruby;
 mod rust;
@@ -16,9 +18,11 @@ pub use asyncapi::{
     generate_php_handler_app, generate_python_handler_app, generate_python_test_app, generate_ruby_handler_app,
     generate_ruby_test_app, generate_rust_handler_app, parse_asyncapi_schema,
 };
+pub use base::OpenApiGenerator;
 pub use engine::{CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, GeneratedAsset, SchemaKind};
 pub use openapi::parse_openapi_schema;
 pub use php::PhpGenerator;
+pub use php_dto::PhpDtoGenerator;
 pub use python::PythonGenerator;
 pub use ruby::RubyGenerator;
 pub use rust::RustGenerator;

@@ -20,7 +20,7 @@ module Spikard
       # Use default config if none provided
       config ||= Spikard::ServerConfig.new
 
-      routes_json = JSON.generate(app.route_metadata)
+      routes_json = app.normalized_routes_json
       handlers = app.handler_map.transform_keys(&:to_sym)
       ws_handlers = app.websocket_handlers || {}
       sse_producers = app.sse_producers || {}

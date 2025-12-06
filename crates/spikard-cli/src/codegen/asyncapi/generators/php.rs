@@ -1,19 +1,15 @@
 //! PHP AsyncAPI code generation.
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
+use super::base::sanitize_identifier;
 use super::{AsyncApiGenerator, ChannelInfo, Message};
 
 /// PHP AsyncAPI code generator
 pub struct PhpAsyncApiGenerator;
 
 impl AsyncApiGenerator for PhpAsyncApiGenerator {
-    fn generate_test_app(
-        &self,
-        channels: &[ChannelInfo],
-        _messages: &[Message],
-        protocol: &str,
-    ) -> Result<String> {
+    fn generate_test_app(&self, channels: &[ChannelInfo], _messages: &[Message], protocol: &str) -> Result<String> {
         let mut code = String::new();
 
         // PHP header with strict types
@@ -58,7 +54,10 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                 for channel in channels {
                     let fixture_name = sanitize_identifier(&channel.name);
                     code.push_str(&format!("// Test channel: {}\n", channel.path));
-                    code.push_str(&format!("$wsUri = str_replace('http://', 'ws://', $baseUri) . '{}';\n", channel.path));
+                    code.push_str(&format!(
+                        "$wsUri = str_replace('http://', 'ws://', $baseUri) . '{}';\n",
+                        channel.path
+                    ));
                     code.push_str("echo \"Connecting to {$wsUri}...\\n\";\n\n");
 
                     code.push_str("// TODO: Add WebSocket client library (e.g., ratchet/pawl)\n");
@@ -113,7 +112,7 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                     code.push_str("}\n");
                     code.push_str("fclose($stream);\n\n");
 
-                    code.push_str(&format!("// Load expected fixture for validation\n"));
+                    code.push_str("// Load expected fixture for validation\n");
                     code.push_str(&format!("$expectedFixture = loadFixture('{}');\n", fixture_name));
                     code.push_str("echo \"Collected \" . count($events) . \" events\\n\\n\";\n");
                 }
@@ -129,12 +128,7 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
         Ok(code)
     }
 
-    fn generate_handler_app(
-        &self,
-        channels: &[ChannelInfo],
-        _messages: &[Message],
-        protocol: &str,
-    ) -> Result<String> {
+    fn generate_handler_app(&self, channels: &[ChannelInfo], _messages: &[Message], protocol: &str) -> Result<String> {
         if channels.is_empty() {
             bail!("AsyncAPI spec does not define any channels");
         }
@@ -171,7 +165,10 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
 
                     code.push_str(&format!("/**\n * WebSocket handler for {}\n", channel.path));
                     code.push_str(&format!(" * Handles: {}\n */\n", message_description));
-                    code.push_str(&format!("final class {}Handler implements WebSocketHandlerInterface\n", class_name));
+                    code.push_str(&format!(
+                        "final class {}Handler implements WebSocketHandlerInterface\n",
+                        class_name
+                    ));
                     code.push_str("{\n");
 
                     // onConnect method
@@ -192,12 +189,15 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                     code.push_str("     */\n");
                     code.push_str("    public function onMessage(array $message): array\n");
                     code.push_str("    {\n");
-                    code.push_str(&format!("        // TODO: Handle {} received on {}\n", message_description, channel.path));
+                    code.push_str(&format!(
+                        "        // TODO: Handle {} received on {}\n",
+                        message_description, channel.path
+                    ));
                     code.push_str("        // Example: Echo back with timestamp\n");
                     code.push_str("        return [\n");
                     code.push_str("            'echo' => $message,\n");
                     code.push_str("            'timestamp' => time(),\n");
-                    code.push_str("            'channel' => '{}',\n".replace("{}", &channel.path));
+                    code.push_str(&format!("            'channel' => '{}',\n", &channel.path));
                     code.push_str("        ];\n");
                     code.push_str("    }\n\n");
 
@@ -227,7 +227,10 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
 
                     code.push_str(&format!("/**\n * SSE event producer for {}\n", channel.path));
                     code.push_str(&format!(" * Produces: {}\n */\n", message_description));
-                    code.push_str(&format!("final class {}Producer implements SseEventProducerInterface\n", class_name));
+                    code.push_str(&format!(
+                        "final class {}Producer implements SseEventProducerInterface\n",
+                        class_name
+                    ));
                     code.push_str("{\n");
 
                     // produce method
@@ -237,7 +240,10 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                     code.push_str("     */\n");
                     code.push_str("    public function produce(): Generator\n");
                     code.push_str("    {\n");
-                    code.push_str(&format!("        // TODO: Implement event generation logic for {}\n", channel.path));
+                    code.push_str(&format!(
+                        "        // TODO: Implement event generation logic for {}\n",
+                        channel.path
+                    ));
                     code.push_str("        // Example: Generate 10 events with 1 second interval\n");
                     code.push_str("        for ($i = 0; $i < 10; $i++) {\n");
                     code.push_str("            yield [\n");
@@ -245,7 +251,7 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                     code.push_str("                'data' => [\n");
                     code.push_str("                    'sequence' => $i,\n");
                     code.push_str("                    'timestamp' => time(),\n");
-                    code.push_str("                    'channel' => '{}',\n".replace("{}", &channel.path));
+                    code.push_str(&format!("                    'channel' => '{}',\n", &channel.path));
                     code.push_str(&format!("                    'type' => '{}',\n", message_description));
                     code.push_str("                ],\n");
                     code.push_str("            ];\n");
@@ -328,35 +334,6 @@ fn camel_identifier(name: &str) -> String {
     }
 }
 
-fn sanitize_identifier(name: &str) -> String {
-    let mut ident: String = name
-        .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() {
-                c.to_ascii_lowercase()
-            } else {
-                '_'
-            }
-        })
-        .collect();
-
-    while ident.contains("__") {
-        ident = ident.replace("__", "_");
-    }
-
-    ident = ident.trim_matches('_').to_string();
-
-    if ident.is_empty() {
-        return "handler".to_string();
-    }
-
-    if ident.chars().next().unwrap().is_ascii_digit() {
-        ident.insert(0, '_');
-    }
-
-    ident
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -387,7 +364,9 @@ mod tests {
         }];
         let messages = vec![];
 
-        let code = generator.generate_handler_app(&channels, &messages, "websocket").unwrap();
+        let code = generator
+            .generate_handler_app(&channels, &messages, "websocket")
+            .unwrap();
         assert!(code.contains("AsyncApiHandlers"));
         assert!(code.contains("public static function"));
     }

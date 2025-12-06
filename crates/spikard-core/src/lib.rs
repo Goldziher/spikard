@@ -2,6 +2,7 @@ pub mod bindings;
 pub mod debug;
 #[cfg(feature = "di")]
 pub mod di;
+pub mod errors;
 pub mod http;
 pub mod lifecycle;
 pub mod parameters;

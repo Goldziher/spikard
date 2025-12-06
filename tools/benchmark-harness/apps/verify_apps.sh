@@ -19,10 +19,10 @@ RESPONSE=$(curl -s http://127.0.0.1:8201/health || echo "FAILED")
 kill $PID 2>/dev/null || true
 wait $PID 2>/dev/null || true
 if [[ "$RESPONSE" == *"ok"* ]]; then
-    echo "✓ FastAPI OK"
+	echo "✓ FastAPI OK"
 else
-    echo "✗ FastAPI FAILED: $RESPONSE"
-    exit 1
+	echo "✗ FastAPI FAILED: $RESPONSE"
+	exit 1
 fi
 cd ..
 
@@ -36,10 +36,10 @@ RESPONSE=$(curl -s http://127.0.0.1:8207/health || echo "FAILED")
 kill $PID 2>/dev/null || true
 wait $PID 2>/dev/null || true
 if [[ "$RESPONSE" == *"ok"* ]]; then
-    echo "✓ Litestar OK"
+	echo "✓ Litestar OK"
 else
-    echo "✗ Litestar FAILED: $RESPONSE"
-    exit 1
+	echo "✗ Litestar FAILED: $RESPONSE"
+	exit 1
 fi
 cd ..
 
@@ -53,10 +53,10 @@ RESPONSE=$(curl -s http://127.0.0.1:8202/health || echo "FAILED")
 kill $PID 2>/dev/null || true
 wait $PID 2>/dev/null || true
 if [[ "$RESPONSE" == *"ok"* ]]; then
-    echo "✓ Fastify OK"
+	echo "✓ Fastify OK"
 else
-    echo "✗ Fastify FAILED: $RESPONSE"
-    exit 1
+	echo "✗ Fastify FAILED: $RESPONSE"
+	exit 1
 fi
 cd ..
 
@@ -70,10 +70,10 @@ RESPONSE=$(curl -s http://127.0.0.1:8203/health || echo "FAILED")
 kill $PID 2>/dev/null || true
 wait $PID 2>/dev/null || true
 if [[ "$RESPONSE" == *"ok"* ]]; then
-    echo "✓ Express OK"
+	echo "✓ Express OK"
 else
-    echo "✗ Express FAILED: $RESPONSE"
-    exit 1
+	echo "✗ Express FAILED: $RESPONSE"
+	exit 1
 fi
 cd ..
 
@@ -87,10 +87,10 @@ RESPONSE=$(curl -s http://127.0.0.1:8204/health || echo "FAILED")
 kill $PID 2>/dev/null || true
 wait $PID 2>/dev/null || true
 if [[ "$RESPONSE" == *"ok"* ]]; then
-    echo "✓ Hono OK"
+	echo "✓ Hono OK"
 else
-    echo "✗ Hono FAILED: $RESPONSE"
-    exit 1
+	echo "✗ Hono FAILED: $RESPONSE"
+	exit 1
 fi
 cd ..
 
@@ -104,10 +104,10 @@ RESPONSE=$(curl -s http://127.0.0.1:8205/health || echo "FAILED")
 kill $PID 2>/dev/null || true
 wait $PID 2>/dev/null || true
 if [[ "$RESPONSE" == *"ok"* ]]; then
-    echo "✓ Roda OK"
+	echo "✓ Roda OK"
 else
-    echo "✗ Roda FAILED: $RESPONSE"
-    exit 1
+	echo "✗ Roda FAILED: $RESPONSE"
+	exit 1
 fi
 cd ..
 
@@ -121,10 +121,10 @@ RESPONSE=$(curl -s http://127.0.0.1:8206/health || echo "FAILED")
 kill $PID 2>/dev/null || true
 wait $PID 2>/dev/null || true
 if [[ "$RESPONSE" == *"ok"* ]]; then
-    echo "✓ Hanami API OK"
+	echo "✓ Hanami API OK"
 else
-    echo "✗ Hanami API FAILED: $RESPONSE"
-    exit 1
+	echo "✗ Hanami API FAILED: $RESPONSE"
+	exit 1
 fi
 cd ..
 

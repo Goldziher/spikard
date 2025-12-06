@@ -35,7 +35,8 @@ impl PhpRequest {
         path_params: Option<HashMap<String, String>>,
     ) -> Self {
         let body_value = body
-            .map(|b| serde_json::from_str(&b).unwrap_or(Value::String(b)))
+            .as_ref()
+            .map(|b| serde_json::from_str(b).unwrap_or(Value::String(b.clone())))
             .unwrap_or(Value::Null);
         Self {
             method,
@@ -64,7 +65,10 @@ impl PhpRequest {
     /// Get the body as a JSON string.
     #[php(name = "getBody")]
     pub fn get_body(&self) -> String {
-        serde_json::to_string(&self.body).unwrap_or_default()
+        match &self.body {
+            Value::String(s) => s.clone(),
+            _ => serde_json::to_string(&self.body).unwrap_or_else(|_| "{}".to_string()),
+        }
     }
 
     /// Get raw body bytes.

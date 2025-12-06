@@ -1,6 +1,31 @@
 # frozen_string_literal: true
 
+require 'simplecov'
+require 'simplecov-lcov'
+
+SimpleCov::Formatter::LcovFormatter.config do |c|
+  c.report_with_single_file = true
+  c.single_report_path = 'coverage/lcov.info'
+end
+
+SimpleCov.formatters = [
+  SimpleCov::Formatter::HTMLFormatter,
+  SimpleCov::Formatter::LcovFormatter
+]
+
+SimpleCov.start do
+  minimum_coverage 80
+  minimum_coverage_by_file 75
+
+  add_filter '/spec/'
+  add_filter '/vendor/'
+  add_filter '/lib/spikard/version.rb'
+
+  add_group 'Main Logic', '/lib/'
+end
+
 require 'bundler/setup'
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 require 'spikard'
 
 RSpec.configure do |config|

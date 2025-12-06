@@ -47,6 +47,39 @@ bundle exec rake ext:build
 - Bundler
 - Rust toolchain (for building from source)
 
+## Windows Development
+
+On Windows, Spikard uses the GNU toolchain (not MSVC) to match Ruby's official RubyInstaller distribution.
+
+### Prerequisites
+
+1. **Install RubyInstaller with DevKit:**
+   - Download from [RubyInstaller.org](https://rubyinstaller.org/downloads/)
+   - Choose Ruby+Devkit 3.2.x (x64)
+   - During installation, select "MSYS2 development toolchain"
+
+2. **Install Rust with GNU target:**
+   ```powershell
+   rustup toolchain install stable-x86_64-pc-windows-gnu
+   rustup default stable-x86_64-pc-windows-gnu
+   ```
+
+3. **Verify setup:**
+   ```powershell
+   ruby --version  # Should show 3.2.x
+   rustup show     # Should show *-pc-windows-gnu
+   ```
+
+### Building on Windows
+
+```bash
+cd packages/ruby
+bundle install
+bundle exec rake compile
+```
+
+The build uses the GNU toolchain automatically via RubyInstaller's MSYS2 DevKit. No MSVC configuration needed.
+
 ## Quick Start
 
 ```ruby

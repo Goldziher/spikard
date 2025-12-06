@@ -6,14 +6,12 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 // Mock the Spikard PHP extension if not loaded
 // This allows us to test the PHP side of the code without requiring the extension
-if (!function_exists('spikard_background_run')) {
+if (!\function_exists('spikard_background_run')) {
     /**
      * Mock implementation of spikard_background_run for testing.
      * In production, this is provided by the ext-php-rs binding.
      *
-     * @param callable $callable
      * @param array<mixed>|null $args
-     * @return void
      */
     function spikard_background_run(callable $callable, ?array $args = null): void
     {
@@ -27,5 +25,5 @@ if (!function_exists('spikard_background_run')) {
     }
 
     // Mark that we're using the mock
-    define('SPIKARD_EXTENSION_MOCKED', true);
+    \define('SPIKARD_EXTENSION_MOCKED', true);
 }

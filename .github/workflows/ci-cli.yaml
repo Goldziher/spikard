@@ -9,6 +9,7 @@ on:
       - "crates/spikard-http/**/*.rs"
       - "Cargo.toml"
       - "Cargo.lock"
+      - ".cargo/config.toml"
       - ".github/workflows/ci-cli.yaml"
       - ".github/actions/setup-rust/**"
   pull_request:
@@ -19,11 +20,12 @@ on:
       - "crates/spikard-http/**/*.rs"
       - "Cargo.toml"
       - "Cargo.lock"
+      - ".cargo/config.toml"
       - ".github/workflows/ci-cli.yaml"
       - ".github/actions/setup-rust/**"
 
 concurrency:
-  group: ci-cli-${{ github.event.pull_request.number || github.ref }}
+  group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -92,14 +94,9 @@ jobs:
 
       - name: Test CLI (Unix)
         if: runner.os != 'Windows'
-        run: |
-          chmod +x cli-artifact/spikard
-          cli-artifact/spikard --version
-          cli-artifact/spikard --help
+        run: bash scripts/ci/cli/test-cli-unix.sh cli-artifact
 
       - name: Test CLI (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: |
-          & cli-artifact/spikard.exe --version
-          & cli-artifact/spikard.exe --help
+        run: scripts/ci/cli/test-cli-windows.ps1 -ArtifactDir cli-artifact

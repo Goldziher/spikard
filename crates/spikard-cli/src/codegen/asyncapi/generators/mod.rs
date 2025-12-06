@@ -6,17 +6,18 @@
 use anyhow::Result;
 use serde_json::Value;
 
-pub mod python;
-pub mod rust;
-pub mod ruby;
-pub mod typescript;
+pub mod base;
 pub mod php;
+pub mod python;
+pub mod ruby;
+pub mod rust;
+pub mod typescript;
 
-pub use python::PythonAsyncApiGenerator;
-pub use rust::RustAsyncApiGenerator;
-pub use ruby::RubyAsyncApiGenerator;
-pub use typescript::TypeScriptAsyncApiGenerator;
 pub use php::PhpAsyncApiGenerator;
+pub use python::PythonAsyncApiGenerator;
+pub use ruby::RubyAsyncApiGenerator;
+pub use rust::RustAsyncApiGenerator;
+pub use typescript::TypeScriptAsyncApiGenerator;
 
 /// Message structure extracted from AsyncAPI spec
 #[derive(Debug, Clone)]
@@ -31,6 +32,7 @@ pub struct Message {
 
 /// Result of message handler generation
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct HandlerGenerationResult {
     /// Generated code
     pub code: String,
@@ -49,25 +51,16 @@ pub trait AsyncApiGenerator {
     ///
     /// Creates a runnable application that connects to a WebSocket/SSE endpoint
     /// and sends/receives messages according to the AsyncAPI spec.
-    fn generate_test_app(
-        &self,
-        channels: &[ChannelInfo],
-        messages: &[Message],
-        protocol: &str,
-    ) -> Result<String>;
+    fn generate_test_app(&self, channels: &[ChannelInfo], messages: &[Message], protocol: &str) -> Result<String>;
 
     /// Generate handler scaffolding for a server implementation
     ///
     /// Creates skeleton code with route definitions and placeholder handlers
     /// that users can fill in with their business logic.
-    fn generate_handler_app(
-        &self,
-        channels: &[ChannelInfo],
-        messages: &[Message],
-        protocol: &str,
-    ) -> Result<String>;
+    fn generate_handler_app(&self, channels: &[ChannelInfo], messages: &[Message], protocol: &str) -> Result<String>;
 
     /// Language identifier (e.g., "python", "rust")
+    #[allow(dead_code)]
     fn language_name(&self) -> &'static str;
 }
 

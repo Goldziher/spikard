@@ -14,6 +14,7 @@ use axum::body::Body;
 use axum::extract::{DefaultBodyLimit, Path};
 use axum::http::StatusCode;
 use axum::routing::{MethodRouter, get};
+use spikard_core::type_hints;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -346,7 +347,7 @@ fn build_router_with_handlers_inner(
 
     let mut registry = HashMap::new();
     for (route, _) in &routes {
-        let axum_path = crate::type_hints::strip_type_hints(&route.path);
+        let axum_path = type_hints::strip_type_hints(&route.path);
         let axum_path = if axum_path.starts_with('/') {
             axum_path
         } else {
@@ -453,7 +454,7 @@ fn build_router_with_handlers_inner(
         }
 
         if let Some(router) = combined_router {
-            let mut axum_path = crate::type_hints::strip_type_hints(&path);
+            let mut axum_path = type_hints::strip_type_hints(&path);
             if !axum_path.starts_with('/') {
                 axum_path = format!("/{}", axum_path);
             }

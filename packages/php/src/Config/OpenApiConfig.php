@@ -30,4 +30,80 @@ final class OpenApiConfig
         public readonly string $openapiJsonPath = '/openapi.json',
     ) {
     }
+
+    public static function builder(): OpenApiConfigBuilder
+    {
+        return new OpenApiConfigBuilder();
+    }
+}
+
+/**
+ * Builder for OpenApiConfig.
+ *
+ * Provides a fluent interface for constructing OpenApiConfig instances.
+ */
+final class OpenApiConfigBuilder
+{
+    private bool $enabled = false;
+    private string $title = 'API Documentation';
+    private string $version = '1.0.0';
+    private ?string $description = null;
+    private string $swaggerUiPath = '/docs';
+    private string $redocPath = '/redoc';
+    private string $openapiJsonPath = '/openapi.json';
+
+    public function withEnabled(bool $enabled): self
+    {
+        $this->enabled = $enabled;
+        return $this;
+    }
+
+    public function withTitle(string $title): self
+    {
+        $this->title = $title;
+        return $this;
+    }
+
+    public function withVersion(string $version): self
+    {
+        $this->version = $version;
+        return $this;
+    }
+
+    public function withDescription(?string $description): self
+    {
+        $this->description = $description;
+        return $this;
+    }
+
+    public function withSwaggerUiPath(string $path): self
+    {
+        $this->swaggerUiPath = $path;
+        return $this;
+    }
+
+    public function withRedocPath(string $path): self
+    {
+        $this->redocPath = $path;
+        return $this;
+    }
+
+    public function withOpenApiJsonPath(string $path): self
+    {
+        $this->openapiJsonPath = $path;
+        return $this;
+    }
+
+    public function build(): OpenApiConfig
+    {
+        return new OpenApiConfig(
+            enabled: $this->enabled,
+            title: $this->title,
+            version: $this->version,
+            description: $this->description,
+            swaggerUiPath: $this->swaggerUiPath,
+            redocPath: $this->redocPath,
+            openapiJsonPath: $this->openapiJsonPath,
+        );
+    }
 }

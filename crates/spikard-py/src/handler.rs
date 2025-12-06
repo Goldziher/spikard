@@ -1,14 +1,6 @@
 //! Python handler implementation for spikard_http::Handler trait
 
-/// Debug logging macro for module-specific logging
-macro_rules! debug_log_module {
-    ($module:expr, $($arg:tt)*) => {
-        if is_debug_mode() {
-            eprintln!("[{}] {}", $module, format!($($arg)*));
-        }
-    };
-}
-
+use crate::conversion::{json_to_python, python_to_json};
 use crate::response::StreamingResponse;
 use axum::{
     body::Body,
@@ -18,6 +10,7 @@ use once_cell::sync::OnceCell;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
 use serde_json::{Value, json};
+use spikard_core::errors::StructuredError;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use spikard_http::{ParameterValidator, ProblemDetails, SchemaValidator};
 use std::collections::HashMap;
@@ -25,39 +18,24 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-/// Global Python event loop for async handlers
-/// Managed by a dedicated Python thread
+/// Global Python event loop for async handlers (tokio-driven via pyo3_async_runtimes).
 pub static PYTHON_EVENT_LOOP: OnceCell<Py<PyAny>> = OnceCell::new();
 
-/// Initialize Python event loop that runs in a dedicated thread
-/// This allows proper async/await support without blocking the Rust event loop
+/// Initialize Python event loop once using pyo3_async_runtimes to avoid per-request threads.
 pub fn init_python_event_loop() -> PyResult<()> {
     Python::attach(|py| {
         if PYTHON_EVENT_LOOP.get().is_some() {
             return Ok(());
         }
 
-        // Install uvloop for better performance if available
-        if let Ok(uvloop) = py.import("uvloop") {
-            uvloop.call_method0("install")?;
-            eprintln!("[spikard] uvloop installed for enhanced async performance");
-        } else {
-            eprintln!("[spikard] uvloop not available, using standard asyncio");
-        }
-
-        // Create a new event loop that will run in a dedicated thread
         let asyncio = py.import("asyncio")?;
         let event_loop = asyncio.call_method0("new_event_loop")?;
-
-        // Store the event loop
         PYTHON_EVENT_LOOP
             .set(event_loop.into())
             .map_err(|_| pyo3::exceptions::PyRuntimeError::new_err("Event loop already initialized"))?;
 
         // Start the event loop in a dedicated Python thread
         let threading = py.import("threading")?;
-
-        // Create a Python function that runs the event loop
         let globals = pyo3::types::PyDict::new(py);
         globals.set_item("asyncio", asyncio)?;
 
@@ -67,8 +45,6 @@ pub fn init_python_event_loop() -> PyResult<()> {
         let run_loop_fn = globals.get_item("run_loop")?.unwrap();
 
         let loop_ref = PYTHON_EVENT_LOOP.get().unwrap().bind(py);
-
-        // Create thread with kwargs for Python 3.14 compatibility
         let thread_kwargs = pyo3::types::PyDict::new(py);
         thread_kwargs.set_item("target", run_loop_fn)?;
         thread_kwargs.set_item("args", (loop_ref,))?;
@@ -77,18 +53,26 @@ pub fn init_python_event_loop() -> PyResult<()> {
         let thread = threading.call_method("Thread", (), Some(&thread_kwargs))?;
         thread.call_method0("start")?;
 
-        eprintln!("[spikard] Started dedicated Python event loop thread for async handlers");
-        eprintln!("[spikard] Async handlers will use asyncio.run_coroutine_threadsafe()");
-
         Ok(())
     })
 }
 
-/// Check if DEBUG mode is enabled
-fn is_debug_mode() -> bool {
-    std::env::var("DEBUG")
-        .map(|v| v == "1" || v.to_lowercase() == "true")
-        .unwrap_or(false)
+fn structured_error_response(problem: ProblemDetails) -> (StatusCode, String) {
+    let payload = StructuredError::new(
+        "validation_error".to_string(),
+        problem.title.clone(),
+        serde_json::to_value(&problem).unwrap_or_else(|_| json!({})),
+    );
+    let body = serde_json::to_string(&payload)
+        .unwrap_or_else(|_| r#"{"error":"validation_error","code":"validation_error","details":{}}"#.to_string());
+    (problem.status_code(), body)
+}
+
+fn structured_error(code: &str, message: impl Into<String>) -> (StatusCode, String) {
+    let payload = StructuredError::simple(code.to_string(), message.into());
+    let body = serde_json::to_string(&payload)
+        .unwrap_or_else(|_| r#"{"error":"internal_error","code":"internal_error","details":{}}"#.to_string());
+    (StatusCode::INTERNAL_SERVER_ERROR, body)
 }
 
 /// Response result from Python handler
@@ -144,39 +128,21 @@ impl PythonHandler {
             && let Err(errors) = validator.validate(&request_data.body)
         {
             let problem = ProblemDetails::from_validation_error(&errors);
-            let error_json = problem
-                .to_json_pretty()
-                .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
-            return Err((problem.status_code(), error_json));
+            return Err(structured_error_response(problem));
         }
 
         let validated_params = if let Some(validator) = &self.parameter_validator {
-            let raw_query_strings: HashMap<String, String> = request_data
-                .raw_query_params
-                .iter()
-                .filter_map(|(k, v)| v.first().map(|first| (k.clone(), first.clone())))
-                .collect();
-
             match validator.validate_and_extract(
                 &request_data.query_params,
-                &raw_query_strings,
+                &request_data.raw_query_params,
                 &request_data.path_params,
                 &request_data.headers,
                 &request_data.cookies,
             ) {
                 Ok(params) => Some(params),
                 Err(errors) => {
-                    debug_log_module!(
-                        "handler",
-                        "Parameter validation failed with {} errors",
-                        errors.errors.len()
-                    );
                     let problem = ProblemDetails::from_validation_error(&errors);
-                    let error_json = problem
-                        .to_json_pretty()
-                        .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
-                    debug_log_module!("handler", "Returning 422 with RFC 9457 error: {}", error_json);
-                    return Err((problem.status_code(), error_json));
+                    return Err(structured_error_response(problem));
                 }
             }
         } else {
@@ -186,75 +152,57 @@ impl PythonHandler {
         let handler = self.handler.clone();
         let is_async = self.is_async;
         let response_validator = self.response_validator.clone();
-        let request_data_for_error = request_data.clone();
+        let _request_data_for_error = request_data.clone();
         let validated_params_for_task = validated_params.clone();
         let body_param_name = self.body_param_name.clone();
 
         let result = if is_async {
-            // Get the global event loop
-            let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    "Python event loop not initialized".to_string(),
-                )
-            })?;
+            let output = Python::attach(|py| -> PyResult<Py<PyAny>> {
+                let handler_obj = handler.bind(py);
 
-            // Submit coroutine to the dedicated event loop thread using run_coroutine_threadsafe
-            let output = tokio::task::spawn_blocking(move || {
-                Python::attach(|py| -> PyResult<Py<PyAny>> {
-                    let handler_obj = handler.bind(py);
-                    let asyncio = py.import("asyncio")?;
+                let kwargs = if let Some(ref validated) = validated_params_for_task {
+                    validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
+                } else {
+                    request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
+                };
 
-                    let kwargs = if let Some(ref validated) = validated_params_for_task {
-                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
-                    } else {
-                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
-                    };
+                let coroutine = if kwargs.is_empty() {
+                    handler_obj.call0()?
+                } else {
+                    let empty_args = PyTuple::empty(py);
+                    handler_obj.call(empty_args, Some(&kwargs))?
+                };
 
-                    let coroutine = if kwargs.is_empty() {
-                        handler_obj.call0()?
-                    } else {
-                        let empty_args = PyTuple::empty(py);
-                        handler_obj.call(empty_args, Some(&kwargs))?
-                    };
+                if !coroutine.hasattr("__await__")? {
+                    return Err(pyo3::exceptions::PyTypeError::new_err(
+                        "Handler marked as async but did not return a coroutine",
+                    ));
+                }
 
-                    if !coroutine.hasattr("__await__")? {
-                        return Err(pyo3::exceptions::PyTypeError::new_err(
-                            "Handler marked as async but did not return a coroutine",
-                        ));
-                    }
-
-                    // Submit to the running event loop using run_coroutine_threadsafe
-                    let loop_obj = event_loop.bind(py);
-                    let future = asyncio.call_method1("run_coroutine_threadsafe", (coroutine, loop_obj))?;
-
-                    // Wait for the result by calling .result() on the concurrent.futures.Future
-                    let result = future.call_method0("result")?;
-
-                    Ok(result.into())
-                })
+                Ok(coroutine.into())
             })
-            .await
-            .map_err(|e| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Tokio error: {}", e),
-                )
-            })?
             .map_err(|e: PyErr| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Python async error: {}", e),
-                )
+                structured_error("python_call_error", format!("Python error calling handler: {}", e))
             })?;
 
-            // Convert Python result to ResponseResult
-            Python::attach(|py| python_to_response_result(py, output.bind(py))).map_err(|e: PyErr| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Python error: {}", e),
-                )
-            })?
+            // Use run_coroutine_threadsafe for async handlers since into_future requires
+            // the event loop to be properly integrated with the tokio runtime, which may not
+            // be available in all contexts (e.g., during testing)
+            let coroutine_result = Python::attach(|py| -> PyResult<Py<PyAny>> {
+                let asyncio = py.import("asyncio")?;
+                let event_loop = PYTHON_EVENT_LOOP
+                    .get()
+                    .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Python event loop not initialized"))?;
+
+                let loop_obj = event_loop.bind(py);
+                let future = asyncio.call_method1("run_coroutine_threadsafe", (output.bind(py), loop_obj))?;
+                let result = future.call_method0("result")?;
+                Ok(result.into())
+            })
+            .map_err(|e: PyErr| structured_error("python_async_error", format!("Python async error: {}", e)))?;
+
+            Python::attach(|py| python_to_response_result(py, coroutine_result.bind(py)))
+                .map_err(|e: PyErr| structured_error("python_response_error", format!("Python error: {}", e)))?
         } else {
             // Use spawn_blocking for sync handlers
             // Note: block_in_place was tested but is 6% slower under load due to:
@@ -281,18 +229,8 @@ impl PythonHandler {
                 })
             })
             .await
-            .map_err(|e| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Spawn blocking error: {}", e),
-                )
-            })?
-            .map_err(|e: PyErr| {
-                (
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Python error: {}", e),
-                )
-            })?
+            .map_err(|e| structured_error("spawn_blocking_error", format!("Spawn blocking error: {}", e)))?
+            .map_err(|e: PyErr| structured_error("python_error", format!("Python error: {}", e)))?
         };
 
         let (json_value, status_code, headers) = match result {
@@ -319,8 +257,8 @@ impl PythonHandler {
                     s.as_bytes().to_vec()
                 } else {
                     serde_json::to_vec(&json_value).map_err(|e| {
-                        (
-                            StatusCode::INTERNAL_SERVER_ERROR,
+                        structured_error(
+                            "response_serialize_error",
                             format!("Failed to serialize response: {}", e),
                         )
                     })?
@@ -330,36 +268,22 @@ impl PythonHandler {
                     #[allow(clippy::collapsible_if)]
                     if let Some(validator) = &response_validator {
                         if let Err(errors) = validator.validate(&json_value) {
-                            let error_msg = if is_debug_mode() {
-                                json!({
-                                    "error": "Response validation failed",
-                                    "validation_errors": format!("{:?}", errors),
-                                    "response_body": json_value,
-                                    "request_data": {
-                                        "path_params": &*request_data_for_error.path_params,
-                                        "query_params": request_data_for_error.query_params,
-                                        "body": request_data_for_error.body,
-                                    }
-                                })
-                                .to_string()
-                            } else {
-                                "Internal server error".to_string()
-                            };
-                            return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
+                            let problem = ProblemDetails::from_validation_error(&errors);
+                            return Err(structured_error_response(problem));
                         }
                     }
                 }
                 serde_json::to_vec(&json_value).map_err(|e| {
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
+                    structured_error(
+                        "response_serialize_error",
                         format!("Failed to serialize response: {}", e),
                     )
                 })?
             }
         } else {
             serde_json::to_vec(&json_value).map_err(|e| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
+                structured_error(
+                    "response_serialize_error",
                     format!("Failed to serialize response: {}", e),
                 )
             })?
@@ -375,12 +299,9 @@ impl PythonHandler {
             }
         }
 
-        response_builder.body(Body::from(body_bytes)).map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to build response: {}", e),
-            )
-        })
+        response_builder
+            .body(Body::from(body_bytes))
+            .map_err(|e| structured_error("response_build_error", format!("Failed to build response: {}", e)))
     }
 }
 
@@ -437,75 +358,6 @@ fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult
         let json_value = python_to_json(py, obj)?;
         Ok(ResponseResult::Json(json_value))
     }
-}
-
-/// Convert Python object to JSON Value (optimized zero-copy conversion)
-///
-/// This function converts Python objects directly to serde_json::Value using PyO3,
-/// avoiding the serialize-to-string → parse-from-string overhead of json.dumps/loads.
-///
-/// For DTOs (msgspec.Struct, dataclass, Pydantic), it first converts to builtins using
-/// msgspec.to_builtins() which is much faster than json.dumps().
-///
-/// Performance improvement: ~40-60% faster than json.dumps() → serde_json::from_str()
-fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-    use pyo3::types::{PyDict, PyList};
-
-    // Fast path: already a builtin type, convert directly
-    if obj.is_none() {
-        return Ok(Value::Null);
-    }
-
-    if let Ok(b) = obj.extract::<bool>() {
-        return Ok(Value::Bool(b));
-    }
-
-    if let Ok(i) = obj.extract::<i64>() {
-        return Ok(Value::Number(i.into()));
-    }
-
-    if let Ok(f) = obj.extract::<f64>() {
-        if let Some(num) = serde_json::Number::from_f64(f) {
-            return Ok(Value::Number(num));
-        }
-        return Err(pyo3::exceptions::PyValueError::new_err("Invalid float value"));
-    }
-
-    if let Ok(s) = obj.extract::<String>() {
-        return Ok(Value::String(s));
-    }
-
-    // Handle dict
-    #[allow(deprecated)]
-    if let Ok(dict) = obj.downcast::<PyDict>() {
-        let mut map = serde_json::Map::new();
-        for (key, value) in dict.iter() {
-            let key_str: String = key.extract()?;
-            let json_value = python_to_json(py, &value)?;
-            map.insert(key_str, json_value);
-        }
-        return Ok(Value::Object(map));
-    }
-
-    // Handle list
-    #[allow(deprecated)]
-    if let Ok(list) = obj.downcast::<PyList>() {
-        let mut arr = Vec::new();
-        for item in list.iter() {
-            let json_value = python_to_json(py, &item)?;
-            arr.push(json_value);
-        }
-        return Ok(Value::Array(arr));
-    }
-
-    // Not a builtin type - could be DTO (msgspec.Struct, dataclass, Pydantic model)
-    // Use msgspec.to_builtins() to convert to dict, then convert to JSON
-    let serialization_module = py.import("spikard._internal.serialization")?;
-    let to_builtins_func = serialization_module.getattr("to_builtins")?;
-    let builtin_obj = to_builtins_func.call1((obj,))?;
-
-    // Now convert the builtin object to JSON (recursive call will hit fast path)
-    python_to_json(py, &builtin_obj)
 }
 
 /// Inject DI dependencies into kwargs dict
@@ -644,49 +496,6 @@ fn request_data_to_py_kwargs<'py>(
     let convert_params_func = converter_module.getattr("convert_params")?;
     let converted = convert_params_func.call1((kwargs, handler))?;
     Ok(converted.cast_into::<PyDict>()?)
-}
-
-/// Convert JSON Value to Python object (optimized zero-copy conversion)
-///
-/// This function converts serde_json::Value directly to Python objects using PyO3,
-/// avoiding the serialize-to-string → parse-from-string overhead of json.loads.
-///
-/// Performance improvement: ~30-40% faster than the json.loads approach
-fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, PyAny>> {
-    use pyo3::types::{PyBool, PyDict, PyFloat, PyList, PyNone, PyString};
-
-    match value {
-        Value::Null => Ok(PyNone::get(py).as_any().clone()),
-        Value::Bool(b) => Ok(PyBool::new(py, *b).as_any().clone()),
-        Value::Number(n) => {
-            if let Some(i) = n.as_i64() {
-                Ok(i.into_pyobject(py)?.into_any())
-            } else if let Some(u) = n.as_u64() {
-                Ok(u.into_pyobject(py)?.into_any())
-            } else if let Some(f) = n.as_f64() {
-                Ok(PyFloat::new(py, f).into_any())
-            } else {
-                Ok(PyString::new(py, &n.to_string()).into_any())
-            }
-        }
-        Value::String(s) => Ok(PyString::new(py, s).into_any()),
-        Value::Array(arr) => {
-            let py_list = PyList::empty(py);
-            for item in arr {
-                let py_item = json_to_python(py, item)?;
-                py_list.append(py_item)?;
-            }
-            Ok(py_list.into_any())
-        }
-        Value::Object(obj) => {
-            let py_dict = PyDict::new(py);
-            for (key, value) in obj {
-                let py_value = json_to_python(py, value)?;
-                py_dict.set_item(key, py_value)?;
-            }
-            Ok(py_dict.into_any())
-        }
-    }
 }
 
 /// Extract Python traceback from exception

@@ -4,7 +4,7 @@
  * Type-safe routing, validation, and testing powered by Rust core.
  */
 
-import type { HandlerFunction, JsonValue } from "./types";
+import type { HandlerFunction, JsonValue, NativeHandlerFunction } from "./types";
 
 export {
 	type DependencyFactory,
@@ -97,17 +97,17 @@ export interface RouteMetadata {
 	/** Name of the handler function */
 	handler_name: string;
 	/** JSON schema for request body validation */
-	request_schema?: JsonSchema;
+	request_schema?: JsonSchema | undefined;
 	/** JSON schema for response validation */
-	response_schema?: JsonSchema;
+	response_schema?: JsonSchema | undefined;
 	/** JSON schema for path/query parameter validation */
-	parameter_schema?: JsonSchema;
+	parameter_schema?: JsonSchema | undefined;
 	/** File upload parameter configurations */
-	file_params?: FileParam[];
+	file_params?: FileParam[] | undefined;
 	/** Whether the handler is async (almost always true for Node.js) */
 	is_async: boolean;
 	/** CORS configuration for this route */
-	cors?: CorsConfig;
+	cors?: CorsConfig | undefined;
 }
 
 /**

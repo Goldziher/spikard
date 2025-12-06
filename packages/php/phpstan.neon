@@ -9,3 +9,4 @@ parameters:
         - tests/bootstrap.php
     scanFiles:
         - stubs/ext.php
+    treatPhpDocTypesAsCertain: true

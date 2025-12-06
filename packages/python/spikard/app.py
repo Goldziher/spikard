@@ -220,7 +220,7 @@ class Spikard:
             app.run(host="0.0.0.0", port=8080)
             ```
         """
-        if reload:
+        if reload:  # pragma: no cover - feature not yet implemented
             pass
 
         try:

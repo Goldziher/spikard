@@ -34,8 +34,8 @@ export interface DependencyOptions {
  */
 interface DependencyDescriptor {
 	isFactory: boolean;
-	value?: DependencyValue;
-	factory?: DependencyFactory;
+	value?: DependencyValue | undefined;
+	factory?: DependencyFactory | undefined;
 	dependsOn: string[];
 	singleton: boolean;
 	cacheable: boolean;
@@ -320,20 +320,4 @@ export class Spikard implements SpikardApp {
 			onError: [...this.lifecycleHooks.onError],
 		};
 	}
-}
-
-function _wrapWebSocketHandler(handler: WebSocketHandler, options: WebSocketOptions): Record<string, unknown> {
-	return {
-		handleMessage: async (message: unknown): Promise<string> => {
-			const result = await handler(message);
-			if (result === undefined) {
-				return "null";
-			}
-			return JSON.stringify(result);
-		},
-		onConnect: options.onConnect,
-		onDisconnect: options.onDisconnect,
-		_messageSchema: options.messageSchema,
-		_responseSchema: options.responseSchema,
-	};
 }

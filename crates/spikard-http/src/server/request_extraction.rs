@@ -117,3 +117,514 @@ pub async fn create_request_data_with_body(
         dependencies: None,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::http::{HeaderMap, HeaderValue, Method, Uri};
+    use serde_json::json;
+
+    // ============================================================================
+    // Tests for extract_query_params
+    // ============================================================================
+
+    #[test]
+    fn test_extract_query_params_empty() {
+        let uri: Uri = "/path".parse().unwrap();
+        let result = extract_query_params(&uri);
+        assert_eq!(result, json!({}));
+    }
+
+    #[test]
+    fn test_extract_query_params_single_param() {
+        let uri: Uri = "/path?name=value".parse().unwrap();
+        let result = extract_query_params(&uri);
+        assert_eq!(result, json!({"name": "value"}));
+    }
+
+    #[test]
+    fn test_extract_query_params_multiple_params() {
+        let uri: Uri = "/path?foo=1&bar=2".parse().unwrap();
+        let result = extract_query_params(&uri);
+        assert_eq!(result, json!({"foo": 1, "bar": 2}));
+    }
+
+    #[test]
+    fn test_extract_query_params_array_params() {
+        let uri: Uri = "/path?tags=rust&tags=http".parse().unwrap();
+        let result = extract_query_params(&uri);
+        assert_eq!(result, json!({"tags": ["rust", "http"]}));
+    }
+
+    #[test]
+    fn test_extract_query_params_mixed_array_and_single() {
+        let uri: Uri = "/path?tags=rust&tags=web&id=123".parse().unwrap();
+        let result = extract_query_params(&uri);
+        assert_eq!(result, json!({"tags": ["rust", "web"], "id": 123}));
+    }
+
+    #[test]
+    fn test_extract_query_params_url_encoded() {
+        let uri: Uri = "/path?email=test%40example.com&name=john+doe".parse().unwrap();
+        let result = extract_query_params(&uri);
+        assert_eq!(result, json!({"email": "test@example.com", "name": "john doe"}));
+    }
+
+    #[test]
+    fn test_extract_query_params_boolean_values() {
+        let uri: Uri = "/path?active=true&enabled=false".parse().unwrap();
+        let result = extract_query_params(&uri);
+        assert_eq!(result, json!({"active": true, "enabled": false}));
+    }
+
+    #[test]
+    fn test_extract_query_params_null_value() {
+        let uri: Uri = "/path?value=null".parse().unwrap();
+        let result = extract_query_params(&uri);
+        assert_eq!(result, json!({"value": null}));
+    }
+
+    #[test]
+    fn test_extract_query_params_empty_string_value() {
+        let uri: Uri = "/path?key=".parse().unwrap();
+        let result = extract_query_params(&uri);
+        assert_eq!(result, json!({"key": ""}));
+    }
+
+    // ============================================================================
+    // Tests for extract_raw_query_params
+    // ============================================================================
+
+    #[test]
+    fn test_extract_raw_query_params_empty() {
+        let uri: Uri = "/path".parse().unwrap();
+        let result = extract_raw_query_params(&uri);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_extract_raw_query_params_single() {
+        let uri: Uri = "/path?name=value".parse().unwrap();
+        let result = extract_raw_query_params(&uri);
+        assert_eq!(result.get("name"), Some(&vec!["value".to_string()]));
+    }
+
+    #[test]
+    fn test_extract_raw_query_params_multiple_values() {
+        let uri: Uri = "/path?tag=rust&tag=http".parse().unwrap();
+        let result = extract_raw_query_params(&uri);
+        assert_eq!(result.get("tag"), Some(&vec!["rust".to_string(), "http".to_string()]));
+    }
+
+    #[test]
+    fn test_extract_raw_query_params_mixed() {
+        let uri: Uri = "/path?id=123&tags=rust&tags=web&active=true".parse().unwrap();
+        let result = extract_raw_query_params(&uri);
+        assert_eq!(result.get("id"), Some(&vec!["123".to_string()]));
+        assert_eq!(result.get("tags"), Some(&vec!["rust".to_string(), "web".to_string()]));
+        assert_eq!(result.get("active"), Some(&vec!["true".to_string()]));
+    }
+
+    #[test]
+    fn test_extract_raw_query_params_url_encoded() {
+        let uri: Uri = "/path?email=test%40example.com".parse().unwrap();
+        let result = extract_raw_query_params(&uri);
+        assert_eq!(result.get("email"), Some(&vec!["test@example.com".to_string()]));
+    }
+
+    // ============================================================================
+    // Tests for extract_headers
+    // ============================================================================
+
+    #[test]
+    fn test_extract_headers_empty() {
+        let headers = HeaderMap::new();
+        let result = extract_headers(&headers);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_extract_headers_single() {
+        let mut headers = HeaderMap::new();
+        headers.insert("content-type", HeaderValue::from_static("application/json"));
+        let result = extract_headers(&headers);
+        assert_eq!(result.get("content-type"), Some(&"application/json".to_string()));
+    }
+
+    #[test]
+    fn test_extract_headers_multiple() {
+        let mut headers = HeaderMap::new();
+        headers.insert("content-type", HeaderValue::from_static("application/json"));
+        headers.insert("user-agent", HeaderValue::from_static("test-agent"));
+        headers.insert("authorization", HeaderValue::from_static("Bearer token123"));
+
+        let result = extract_headers(&headers);
+        assert_eq!(result.len(), 3);
+        assert_eq!(result.get("content-type"), Some(&"application/json".to_string()));
+        assert_eq!(result.get("user-agent"), Some(&"test-agent".to_string()));
+        assert_eq!(result.get("authorization"), Some(&"Bearer token123".to_string()));
+    }
+
+    #[test]
+    fn test_extract_headers_case_insensitive() {
+        let mut headers = HeaderMap::new();
+        headers.insert("Content-Type", HeaderValue::from_static("text/html"));
+        headers.insert("USER-Agent", HeaderValue::from_static("chrome"));
+
+        let result = extract_headers(&headers);
+        assert_eq!(result.get("content-type"), Some(&"text/html".to_string()));
+        assert_eq!(result.get("user-agent"), Some(&"chrome".to_string()));
+    }
+
+    #[test]
+    fn test_extract_headers_with_dashes() {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-custom-header", HeaderValue::from_static("custom-value"));
+        headers.insert("x-request-id", HeaderValue::from_static("req-12345"));
+
+        let result = extract_headers(&headers);
+        assert_eq!(result.get("x-custom-header"), Some(&"custom-value".to_string()));
+        assert_eq!(result.get("x-request-id"), Some(&"req-12345".to_string()));
+    }
+
+    // ============================================================================
+    // Tests for extract_cookies
+    // ============================================================================
+
+    #[test]
+    fn test_extract_cookies_no_cookie_header() {
+        let headers = HeaderMap::new();
+        let result = extract_cookies(&headers);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_extract_cookies_single() {
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::COOKIE, HeaderValue::from_static("session=abc123"));
+
+        let result = extract_cookies(&headers);
+        assert_eq!(result.get("session"), Some(&"abc123".to_string()));
+    }
+
+    #[test]
+    fn test_extract_cookies_multiple() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::COOKIE,
+            HeaderValue::from_static("session=abc123; user_id=42; theme=dark"),
+        );
+
+        let result = extract_cookies(&headers);
+        assert_eq!(result.len(), 3);
+        assert_eq!(result.get("session"), Some(&"abc123".to_string()));
+        assert_eq!(result.get("user_id"), Some(&"42".to_string()));
+        assert_eq!(result.get("theme"), Some(&"dark".to_string()));
+    }
+
+    #[test]
+    fn test_extract_cookies_with_spaces() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::COOKIE,
+            HeaderValue::from_static("session = abc123 ; theme = light"),
+        );
+
+        let result = extract_cookies(&headers);
+        assert!(result.len() >= 1); // Parser is lenient
+    }
+
+    #[test]
+    fn test_extract_cookies_empty_value() {
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::COOKIE, HeaderValue::from_static("empty="));
+
+        let result = extract_cookies(&headers);
+        assert_eq!(result.get("empty"), Some(&String::new()));
+    }
+
+    // ============================================================================
+    // Tests for create_request_data_without_body
+    // ============================================================================
+
+    #[test]
+    fn test_create_request_data_without_body_minimal() {
+        let uri: Uri = "/test".parse().unwrap();
+        let method = Method::GET;
+        let headers = HeaderMap::new();
+        let path_params = HashMap::new();
+
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params);
+
+        assert_eq!(result.method, "GET");
+        assert_eq!(result.path, "/test");
+        assert!(result.path_params.is_empty());
+        assert_eq!(result.query_params, json!({}));
+        assert!(result.raw_query_params.is_empty());
+        assert!(result.headers.is_empty());
+        assert!(result.cookies.is_empty());
+        assert_eq!(result.body, Value::Null);
+        assert!(result.raw_body.is_none());
+    }
+
+    #[test]
+    fn test_create_request_data_without_body_with_path_params() {
+        let uri: Uri = "/users/42".parse().unwrap();
+        let method = Method::GET;
+        let headers = HeaderMap::new();
+        let mut path_params = HashMap::new();
+        path_params.insert("user_id".to_string(), "42".to_string());
+
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params);
+
+        assert_eq!(result.path_params.get("user_id"), Some(&"42".to_string()));
+    }
+
+    #[test]
+    fn test_create_request_data_without_body_with_query_params() {
+        let uri: Uri = "/search?q=rust&limit=10".parse().unwrap();
+        let method = Method::GET;
+        let headers = HeaderMap::new();
+        let path_params = HashMap::new();
+
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params);
+
+        assert_eq!(result.query_params, json!({"q": "rust", "limit": 10}));
+        assert_eq!(result.raw_query_params.get("q"), Some(&vec!["rust".to_string()]));
+        assert_eq!(result.raw_query_params.get("limit"), Some(&vec!["10".to_string()]));
+    }
+
+    #[test]
+    fn test_create_request_data_without_body_with_headers() {
+        let uri: Uri = "/test".parse().unwrap();
+        let method = Method::POST;
+        let mut headers = HeaderMap::new();
+        headers.insert("content-type", HeaderValue::from_static("application/json"));
+        headers.insert("authorization", HeaderValue::from_static("Bearer token"));
+        let path_params = HashMap::new();
+
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params);
+
+        assert_eq!(
+            result.headers.get("content-type"),
+            Some(&"application/json".to_string())
+        );
+        assert_eq!(result.headers.get("authorization"), Some(&"Bearer token".to_string()));
+    }
+
+    #[test]
+    fn test_create_request_data_without_body_with_cookies() {
+        let uri: Uri = "/test".parse().unwrap();
+        let method = Method::GET;
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::COOKIE,
+            HeaderValue::from_static("session=xyz; theme=dark"),
+        );
+        let path_params = HashMap::new();
+
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params);
+
+        assert_eq!(result.cookies.get("session"), Some(&"xyz".to_string()));
+        assert_eq!(result.cookies.get("theme"), Some(&"dark".to_string()));
+    }
+
+    #[test]
+    fn test_create_request_data_without_body_different_methods() {
+        let uri: Uri = "/resource".parse().unwrap();
+        let headers = HeaderMap::new();
+        let path_params = HashMap::new();
+
+        for method in &[Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH] {
+            let result = create_request_data_without_body(&uri, method, &headers, path_params.clone());
+            assert_eq!(result.method, method.as_str());
+        }
+    }
+
+    // ============================================================================
+    // Tests for create_request_data_with_body (async)
+    // ============================================================================
+
+    #[tokio::test]
+    async fn test_create_request_data_with_body_empty() {
+        let parts = axum::http::request::Request::builder()
+            .method(Method::POST)
+            .uri("/test")
+            .body(Body::empty())
+            .unwrap()
+            .into_parts();
+
+        let body = Body::empty();
+        let path_params = HashMap::new();
+
+        let result = create_request_data_with_body(&parts.0, path_params, body)
+            .await
+            .unwrap();
+
+        assert_eq!(result.method, "POST");
+        assert_eq!(result.path, "/test");
+        assert_eq!(result.body, Value::Null);
+        assert!(result.raw_body.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_create_request_data_with_body_json() {
+        let request_body = Body::from(r#"{"key":"value"}"#);
+        let request = axum::http::request::Request::builder()
+            .method(Method::POST)
+            .uri("/test")
+            .body(Body::empty())
+            .unwrap();
+
+        let (parts, _) = request.into_parts();
+        let path_params = HashMap::new();
+
+        let result = create_request_data_with_body(&parts, path_params, request_body)
+            .await
+            .unwrap();
+
+        assert_eq!(result.method, "POST");
+        assert_eq!(result.body, Value::Null); // Body not parsed yet
+        assert!(result.raw_body.is_some());
+        assert_eq!(result.raw_body.as_ref().unwrap().as_ref(), br#"{"key":"value"}"#);
+    }
+
+    #[tokio::test]
+    async fn test_create_request_data_with_body_with_query_params() {
+        let request_body = Body::from("test");
+        let request = axum::http::request::Request::builder()
+            .method(Method::POST)
+            .uri("/test?foo=bar&baz=qux")
+            .body(Body::empty())
+            .unwrap();
+
+        let (parts, _) = request.into_parts();
+        let path_params = HashMap::new();
+
+        let result = create_request_data_with_body(&parts, path_params, request_body)
+            .await
+            .unwrap();
+
+        assert_eq!(result.query_params, json!({"foo": "bar", "baz": "qux"}));
+    }
+
+    #[tokio::test]
+    async fn test_create_request_data_with_body_with_headers() {
+        let request_body = Body::from("test");
+        let request = axum::http::request::Request::builder()
+            .method(Method::POST)
+            .uri("/test")
+            .header("content-type", "application/json")
+            .header("x-request-id", "req123")
+            .body(Body::empty())
+            .unwrap();
+
+        let (parts, _) = request.into_parts();
+        let path_params = HashMap::new();
+
+        let result = create_request_data_with_body(&parts, path_params, request_body)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            result.headers.get("content-type"),
+            Some(&"application/json".to_string())
+        );
+        assert_eq!(result.headers.get("x-request-id"), Some(&"req123".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_create_request_data_with_body_with_cookies() {
+        let request_body = Body::from("test");
+        let request = axum::http::request::Request::builder()
+            .method(Method::POST)
+            .uri("/test")
+            .header("cookie", "session=xyz; user=123")
+            .body(Body::empty())
+            .unwrap();
+
+        let (parts, _) = request.into_parts();
+        let path_params = HashMap::new();
+
+        let result = create_request_data_with_body(&parts, path_params, request_body)
+            .await
+            .unwrap();
+
+        assert_eq!(result.cookies.get("session"), Some(&"xyz".to_string()));
+        assert_eq!(result.cookies.get("user"), Some(&"123".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_create_request_data_with_body_large_payload() {
+        let large_json = json!({
+            "data": (0..100).map(|i| json!({"id": i, "value": format!("item-{}", i)})).collect::<Vec<_>>()
+        });
+        let json_str = serde_json::to_string(&large_json).unwrap();
+        let request_body = Body::from(json_str.clone());
+
+        let request = axum::http::request::Request::builder()
+            .method(Method::POST)
+            .uri("/test")
+            .body(Body::empty())
+            .unwrap();
+
+        let (parts, _) = request.into_parts();
+        let path_params = HashMap::new();
+
+        let result = create_request_data_with_body(&parts, path_params, request_body)
+            .await
+            .unwrap();
+
+        assert!(result.raw_body.is_some());
+        assert_eq!(result.raw_body.as_ref().unwrap().as_ref(), json_str.as_bytes());
+    }
+
+    #[tokio::test]
+    async fn test_create_request_data_with_body_preserves_all_fields() {
+        let request_body = Body::from("request data");
+        let request = axum::http::request::Request::builder()
+            .method(Method::PUT)
+            .uri("/users/42?action=update")
+            .header("authorization", "Bearer token")
+            .header("cookie", "session=abc")
+            .body(Body::empty())
+            .unwrap();
+
+        let (parts, _) = request.into_parts();
+        let mut path_params = HashMap::new();
+        path_params.insert("user_id".to_string(), "42".to_string());
+
+        let result = create_request_data_with_body(&parts, path_params, request_body)
+            .await
+            .unwrap();
+
+        assert_eq!(result.method, "PUT");
+        assert_eq!(result.path, "/users/42");
+        assert_eq!(result.path_params.get("user_id"), Some(&"42".to_string()));
+        assert_eq!(result.query_params, json!({"action": "update"}));
+        assert!(result.headers.contains_key("authorization"));
+        assert!(result.cookies.contains_key("session"));
+        assert!(result.raw_body.is_some());
+    }
+
+    #[test]
+    fn test_arc_wrapping_for_cheap_cloning() {
+        let uri: Uri = "/test".parse().unwrap();
+        let method = Method::GET;
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::COOKIE, HeaderValue::from_static("session=abc"));
+        let mut path_params = HashMap::new();
+        path_params.insert("id".to_string(), "1".to_string());
+
+        let request_data = create_request_data_without_body(&uri, &method, &headers, path_params.clone());
+
+        // Clone the request data - this should be cheap because Arc is used
+        let cloned = request_data.clone();
+
+        // Verify Arc pointers are the same
+        assert!(Arc::ptr_eq(&request_data.path_params, &cloned.path_params));
+        assert!(Arc::ptr_eq(&request_data.headers, &cloned.headers));
+        assert!(Arc::ptr_eq(&request_data.cookies, &cloned.cookies));
+        assert!(Arc::ptr_eq(&request_data.raw_query_params, &cloned.raw_query_params));
+    }
+}

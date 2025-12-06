@@ -187,8 +187,11 @@ fn php_response_to_axum(php_resp: &PhpResponse) -> Result<Response<Body>, String
     let status = StatusCode::from_u16(php_resp.status as u16)
         .map_err(|e| format!("Invalid status code {}: {}", php_resp.status, e))?;
 
-    let body_bytes =
-        serde_json::to_vec(&php_resp.body).map_err(|e| format!("Failed to serialize response body: {}", e))?;
+    // Serialize based on Value type - avoid double serialization
+    let body_bytes = match &php_resp.body {
+        Value::String(s) => s.as_bytes().to_vec(),
+        _ => serde_json::to_vec(&php_resp.body).map_err(|e| format!("Failed to serialize response body: {}", e))?,
+    };
 
     let mut builder = Response::builder().status(status);
 
@@ -311,7 +314,8 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
                             .and_then(|v| v.string())
                             .map(|s| s.to_string())
                             .unwrap_or_else(|| "{}".to_string());
-                        let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
+                        // Avoid re-parsing - keep as string in Value::String if it came from getBody
+                        let body: Value = serde_json::from_str(&body_str).unwrap_or_else(|_| Value::String(body_str));
                         let mut headers = HashMap::new();
                         if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
                             && let Some(arr) = headers_zval.array()
@@ -443,7 +447,8 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
                             .and_then(|v| v.string())
                             .map(|s| s.to_string())
                             .unwrap_or_else(|| "{}".to_string());
-                        let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
+                        // Avoid re-parsing - keep as string in Value::String if it came from getBody
+                        let body: Value = serde_json::from_str(&body_str).unwrap_or_else(|_| Value::String(body_str));
                         let mut headers = HashMap::new();
                         if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
                             && let Some(arr) = headers_zval.array()
@@ -568,7 +573,8 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
                             .and_then(|v| v.string())
                             .map(|s| s.to_string())
                             .unwrap_or_else(|| "{}".to_string());
-                        let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
+                        // Avoid re-parsing - keep as string in Value::String if it came from getBody
+                        let body: Value = serde_json::from_str(&body_str).unwrap_or_else(|_| Value::String(body_str));
                         let mut headers = HashMap::new();
                         if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
                             && let Some(arr) = headers_zval.array()

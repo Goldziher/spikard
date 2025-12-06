@@ -10,9 +10,6 @@ use spikard_core::request_data::RequestData;
 use std::any::Any;
 use std::sync::Arc;
 
-// Import the event loop from handler
-use crate::handler::PYTHON_EVENT_LOOP;
-
 /// Python value dependency
 ///
 /// Wraps a Python object as a static dependency value
@@ -166,88 +163,60 @@ impl Dependency for PythonFactoryDependency {
 
                         let generator_obj = Python::attach(|py| coroutine_py.clone_ref(py));
 
-                        let final_value = tokio::task::spawn_blocking(move || {
-                            Python::attach(|py| -> PyResult<Py<PyAny>> {
-                                let asyncio = py.import("asyncio")?;
-                                let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
-                                    pyo3::exceptions::PyRuntimeError::new_err("Python event loop not initialized")
-                                })?;
-
-                                // coroutine_py is the async generator object
-                                let aiter = coroutine_py.bind(py);
-                                let first_value_coro = aiter.call_method0("__anext__")?;
-
-                                // Await the __anext__ coroutine
-                                let loop_obj = event_loop.bind(py);
-                                let future =
-                                    asyncio.call_method1("run_coroutine_threadsafe", (first_value_coro, loop_obj))?;
-                                let result = future.call_method0("result")?;
-                                Ok(result.into())
-                            })
+                        let anext_coro = Python::attach(|py| -> PyResult<Py<PyAny>> {
+                            let aiter = coroutine_py.bind(py);
+                            let first_value_coro = aiter.call_method0("__anext__")?;
+                            Ok(first_value_coro.unbind())
                         })
-                        .await
                         .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
-                            message: format!("Tokio error in async generator: {}", e),
-                        })?
-                        .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
-                            message: format!("Async generator __anext__ failed: {}", e),
+                            message: format!("Failed to call __anext__: {}", e),
                         })?;
+
+                        let future =
+                            Python::attach(|py| pyo3_async_runtimes::tokio::into_future(anext_coro.bind(py).clone()))
+                                .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                                message: format!("Failed to convert __anext__ to future: {}", e),
+                            })?;
+
+                        let final_value =
+                            future
+                                .await
+                                .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                                    message: format!("Async generator __anext__ failed: {}", e),
+                                })?;
 
                         // Register cleanup task to close the generator
                         let resolved_mut = resolved_clone;
                         resolved_mut.add_cleanup_task(Box::new(move || {
                             Box::pin(async move {
-                                let _ = tokio::task::spawn_blocking(move || {
-                                    Python::attach(|py| -> PyResult<()> {
-                                        let asyncio = py.import("asyncio")?;
-                                        let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
-                                            pyo3::exceptions::PyRuntimeError::new_err(
-                                                "Python event loop not initialized",
-                                            )
-                                        })?;
+                                let close_coro = Python::attach(|py| -> PyResult<Py<PyAny>> {
+                                    let aiter = generator_obj.bind(py);
+                                    let close_coro = aiter.call_method0("aclose")?;
+                                    Ok(close_coro.unbind())
+                                });
 
-                                        // Close the async generator by calling aclose()
-                                        let aiter = generator_obj.bind(py);
-                                        let close_coro = aiter.call_method0("aclose")?;
+                                if let Ok(close_coro) = close_coro {
+                                    let future = Python::attach(|py| {
+                                        pyo3_async_runtimes::tokio::into_future(close_coro.bind(py).clone())
+                                    });
 
-                                        // Await the aclose coroutine
-                                        let loop_obj = event_loop.bind(py);
-                                        let future =
-                                            asyncio.call_method1("run_coroutine_threadsafe", (close_coro, loop_obj))?;
-                                        let _ = future.call_method0("result")?;
-                                        Ok(())
-                                    })
-                                })
-                                .await;
+                                    if let Ok(future) = future {
+                                        let _ = future.await;
+                                    }
+                                }
                             })
                         }));
 
                         Ok(Arc::new(final_value) as Arc<dyn Any + Send + Sync>)
                     } else {
                         // Regular async function - await the coroutine
-                        let result = tokio::task::spawn_blocking(move || {
-                            Python::attach(|py| -> PyResult<Py<PyAny>> {
-                                let asyncio = py.import("asyncio")?;
-                                let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
-                                    pyo3::exceptions::PyRuntimeError::new_err(
-                                        "Python event loop not initialized. Call init_python_event_loop() first.",
-                                    )
+                        let future =
+                            Python::attach(|py| pyo3_async_runtimes::tokio::into_future(coroutine_py.bind(py).clone()))
+                                .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                                    message: format!("Failed to convert coroutine to future: {}", e),
                                 })?;
 
-                                let coroutine = coroutine_py.bind(py);
-                                let loop_obj = event_loop.bind(py);
-                                let future = asyncio.call_method1("run_coroutine_threadsafe", (coroutine, loop_obj))?;
-
-                                // Wait for the result
-                                let result = future.call_method0("result")?;
-                                Ok(result.into())
-                            })
-                        })
-                        .await
-                        .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
-                            message: format!("Tokio error running async factory: {}", e),
-                        })?
-                        .map_err(|e| {
+                        let result = future.await.map_err(|e| {
                             Python::attach(|py| {
                                 e.print(py);
                             });

@@ -1,5 +1,7 @@
 //! Tests for ServerConfig builder with dependency injection
 
+mod common;
+
 #[cfg(feature = "di")]
 mod di_builder_tests {
     use spikard_core::di::ValueDependency;
@@ -236,5 +238,87 @@ mod no_di_tests {
 
         assert_eq!(config.port, 3000);
         assert_eq!(config.host, "localhost");
+    }
+}
+
+/// Integration tests for common test handlers
+///
+/// These tests verify that the mock handlers in common module work correctly
+/// and can be used for testing HTTP server components.
+mod common_handler_tests {
+    use crate::common::handlers::{EchoHandler, ErrorHandler, JsonHandler, SuccessHandler};
+    use axum::body::Body;
+    use axum::http::Request;
+    use serde_json::json;
+    use spikard_http::{Handler, RequestData};
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    fn create_test_request_data() -> RequestData {
+        RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: serde_json::Value::Null,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: json!({"test": "data"}),
+            raw_body: None,
+            headers: Arc::new(HashMap::new()),
+            cookies: Arc::new(HashMap::new()),
+            method: "GET".to_string(),
+            path: "/test".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_success_handler_integration() {
+        let handler = SuccessHandler;
+        let request = Request::builder().body(Body::empty()).unwrap();
+        let request_data = create_test_request_data();
+
+        let result = handler.call(request, request_data).await;
+        assert!(result.is_ok(), "SuccessHandler should return Ok response");
+    }
+
+    #[tokio::test]
+    async fn test_error_handler_integration() {
+        let handler = ErrorHandler;
+        let request = Request::builder().body(Body::empty()).unwrap();
+        let request_data = create_test_request_data();
+
+        let result = handler.call(request, request_data).await;
+        assert!(result.is_err(), "ErrorHandler should return Err response");
+    }
+
+    #[tokio::test]
+    async fn test_echo_handler_integration() {
+        let handler = EchoHandler;
+        let request = Request::builder().body(Body::empty()).unwrap();
+        let request_data = create_test_request_data();
+
+        let result = handler.call(request, request_data).await;
+        assert!(result.is_ok(), "EchoHandler should return Ok response");
+    }
+
+    #[tokio::test]
+    async fn test_json_handler_ok_integration() {
+        let body = json!({"status": "ok", "data": [1, 2, 3]});
+        let handler = JsonHandler::ok(body);
+        let request = Request::builder().body(Body::empty()).unwrap();
+        let request_data = create_test_request_data();
+
+        let result = handler.call(request, request_data).await;
+        assert!(result.is_ok(), "JsonHandler::ok should return Ok response");
+    }
+
+    #[tokio::test]
+    async fn test_json_handler_created_integration() {
+        let body = json!({"id": 123, "created": true});
+        let handler = JsonHandler::created(body);
+        let request = Request::builder().body(Body::empty()).unwrap();
+        let request_data = create_test_request_data();
+
+        let result = handler.call(request, request_data).await;
+        assert!(result.is_ok(), "JsonHandler::created should return Ok response");
     }
 }
