@@ -35,7 +35,7 @@ describe("Request wrapper", () => {
 
 		const payload = basePayload();
 		const responseJson = await handler(JSON.stringify(payload));
-		expect(JSON.parse(responseJson)).toEqual({ ok: true });
+		expect(JSON.parse(responseJson as string)).toEqual({ ok: true });
 
 		expect(captured).toEqual({
 			id: "42",

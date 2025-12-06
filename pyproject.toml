@@ -230,3 +230,8 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = [ "jsonschema" ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [ "tests.*" ]
+disallow_any_explicit = true
+disallow_any_expr = false

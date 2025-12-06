@@ -11,6 +11,7 @@
 import { describe, expect, it } from "vitest";
 import { isNativeHandler, wrapBodyHandler, wrapHandler } from "./handler-wrapper";
 import type { NativeRequestData } from "./request";
+import type { JsonValue } from "./types";
 
 const createRequestPayload = (overrides?: Partial<NativeRequestData>): NativeRequestData => ({
 	method: "POST",
@@ -55,15 +56,18 @@ describe("handler-wrapper", () => {
 
 	describe("wrapHandler", () => {
 		it("should wrap async handlers correctly", async () => {
-			const handler = wrapHandler(async (req) => ({
-				method: req.method,
-				path: req.path,
-				id: req.params.id,
-			}));
+			const handler = wrapHandler(async (req) => {
+				const id = req.params.id as string;
+				return {
+					method: req.method,
+					path: req.path,
+					id,
+				};
+			});
 
 			const payload = createRequestPayload();
 			const result = await handler(JSON.stringify(payload));
-			const parsed = JSON.parse(result as string);
+			const parsed = JSON.parse(result as string) as Record<string, unknown>;
 
 			expect(parsed.method).toBe("POST");
 			expect(parsed.path).toBe("/test");
@@ -150,34 +154,40 @@ describe("handler-wrapper", () => {
 		});
 
 		it("should access headers", async () => {
-			const handler = wrapHandler(async (req) => ({
-				auth: req.headers.authorization,
-			}));
+			const handler = wrapHandler(async (req) => {
+				const auth = req.headers.authorization as string | undefined;
+				return {
+					auth: auth ?? "no-auth",
+				};
+			});
 
 			const payload = createRequestPayload({
 				headers: { authorization: "Bearer token123", "content-type": "application/json" },
 			});
 			const result = await handler(JSON.stringify(payload));
-			const parsed = JSON.parse(result as string);
+			const parsed = JSON.parse(result as string) as Record<string, unknown>;
 
 			expect(parsed.auth).toBe("Bearer token123");
 		});
 
 		it("should access cookies", async () => {
-			const handler = wrapHandler(async (req) => ({
-				sessionId: req.cookies.session_id,
-			}));
+			const handler = wrapHandler(async (req) => {
+				const sessionId = req.cookies.session_id as string | undefined;
+				return {
+					sessionId: sessionId ?? "no-session",
+				};
+			});
 
 			const payload = createRequestPayload({ cookies: { session_id: "abc123xyz" } });
 			const result = await handler(JSON.stringify(payload));
-			const parsed = JSON.parse(result as string);
+			const parsed = JSON.parse(result as string) as Record<string, unknown>;
 
 			expect(parsed.sessionId).toBe("abc123xyz");
 		});
 
 		it("should parse JSON body", async () => {
 			const handler = wrapHandler(async (req) => {
-				const body = req.json();
+				const body = req.json() as JsonValue;
 				return { received: body };
 			});
 
@@ -273,8 +283,8 @@ describe("handler-wrapper", () => {
 		});
 
 		it("should serialize body handler responses", async () => {
-			const handler = wrapBodyHandler(async (body) => ({
-				echoed: body,
+			const handler = wrapBodyHandler(async (body: JsonValue) => ({
+				echoed: body as JsonValue,
 				timestamp: "2024-01-01T00:00:00Z",
 			}));
 
@@ -284,9 +294,9 @@ describe("handler-wrapper", () => {
 			});
 
 			const result = await handler(JSON.stringify(payload));
-			const parsed = JSON.parse(result as string);
+			const parsed = JSON.parse(result as string) as Record<string, unknown>;
 
-			expect(parsed.echoed.data).toBe("test");
+			expect((parsed.echoed as Record<string, unknown>).data).toBe("test");
 			expect(parsed.timestamp).toBe("2024-01-01T00:00:00Z");
 		});
 
@@ -341,14 +351,19 @@ describe("handler-wrapper", () => {
 		});
 
 		it("should provide access to request metadata in body handler", async () => {
-			const handler = wrapBodyHandler(async (body, req) => ({
-				method: req.method,
-				path: req.path,
-				userId: req.params.userId,
-				authToken: req.headers.authorization,
-				sessionCookie: req.cookies.session,
-				bodyContent: body,
-			}));
+			const handler = wrapBodyHandler(async (body: JsonValue, req) => {
+				const userId = req.params.userId as string | undefined;
+				const authToken = req.headers.authorization as string | undefined;
+				const sessionCookie = req.cookies.session as string | undefined;
+				return {
+					method: req.method,
+					path: req.path,
+					userId: userId ?? "no-user",
+					authToken: authToken ?? "no-auth",
+					sessionCookie: sessionCookie ?? "no-session",
+					bodyContent: body as JsonValue,
+				};
+			});
 
 			const payload = createRequestPayload({
 				method: "POST",
@@ -360,7 +375,7 @@ describe("handler-wrapper", () => {
 			});
 
 			const result = await handler(JSON.stringify(payload));
-			const parsed = JSON.parse(result as string);
+			const parsed = JSON.parse(result as string) as Record<string, unknown>;
 
 			expect(parsed.method).toBe("POST");
 			expect(parsed.path).toBe("/api/users/123");
