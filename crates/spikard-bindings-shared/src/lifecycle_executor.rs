@@ -477,17 +477,11 @@ mod tests {
         });
         let executor = LifecycleExecutor::new(hook);
 
-        let resp = Response::builder()
-            .status(200)
-            .body(Body::from("original"))
-            .unwrap();
+        let resp = Response::builder().status(200).body(Body::from("original")).unwrap();
         let result = executor.execute_response_hook(resp).await.unwrap();
 
         assert_eq!(result.status(), StatusCode::OK);
-        assert_eq!(
-            result.headers().get("X-Modified").unwrap().to_str().unwrap(),
-            "true"
-        );
+        assert_eq!(result.headers().get("X-Modified").unwrap().to_str().unwrap(), "true");
     }
 
     #[tokio::test]
@@ -503,10 +497,7 @@ mod tests {
 
         let response = executor.build_response_from_hook_result(&result).unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
-        assert_eq!(
-            response.headers().get("X-Custom").unwrap().to_str().unwrap(),
-            "value"
-        );
+        assert_eq!(response.headers().get("X-Custom").unwrap().to_str().unwrap(), "value");
     }
 
     #[tokio::test]
@@ -519,12 +510,7 @@ mod tests {
 
         let response = executor.build_response_from_hook_result(&result).unwrap();
         assert_eq!(
-            response
-                .headers()
-                .get("content-type")
-                .unwrap()
-                .to_str()
-                .unwrap(),
+            response.headers().get("content-type").unwrap().to_str().unwrap(),
             "application/json"
         );
     }
@@ -542,10 +528,7 @@ mod tests {
         });
         let executor = LifecycleExecutor::new(hook);
 
-        let req = Request::builder()
-            .method("GET")
-            .body(Body::empty())
-            .unwrap();
+        let req = Request::builder().method("GET").body(Body::empty()).unwrap();
         let modified = executor.apply_request_modifications(req, mods).unwrap();
 
         assert_eq!(modified.method(), "PATCH");
@@ -564,10 +547,7 @@ mod tests {
         });
         let executor = LifecycleExecutor::new(hook);
 
-        let req = Request::builder()
-            .uri("/api/v1/users")
-            .body(Body::empty())
-            .unwrap();
+        let req = Request::builder().uri("/api/v1/users").body(Body::empty()).unwrap();
         let modified = executor.apply_request_modifications(req, mods).unwrap();
 
         assert_eq!(modified.uri().path(), "/api/v2/users");
@@ -593,12 +573,7 @@ mod tests {
         let modified = executor.apply_request_modifications(req, mods).unwrap();
 
         assert_eq!(
-            modified
-                .headers()
-                .get("Authorization")
-                .unwrap()
-                .to_str()
-                .unwrap(),
+            modified.headers().get("Authorization").unwrap().to_str().unwrap(),
             "Bearer token"
         );
     }
@@ -617,9 +592,7 @@ mod tests {
         });
         let executor = LifecycleExecutor::new(hook);
 
-        let req = Request::builder()
-            .body(Body::from("original body"))
-            .unwrap();
+        let req = Request::builder().body(Body::from("original body")).unwrap();
         let modified = executor.apply_request_modifications(req, mods).unwrap();
 
         let body_bytes = extract_body(modified.into_body()).await.unwrap();
