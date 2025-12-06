@@ -83,3 +83,4 @@ target/
 tools/benchmark-harness/apps/spikard-rust/target/
 temp-test-*
 todo.md
+*.profraw

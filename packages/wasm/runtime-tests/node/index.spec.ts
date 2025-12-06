@@ -11,6 +11,15 @@ import { createFetchHandler } from "../../src/server";
 import { StreamingResponse } from "../../src/streaming";
 import { __setGunzipImplementation, TestClient } from "../../src/testing";
 
+interface ParsedRequest {
+	method?: string;
+	json?: () => unknown;
+	queryString?: string;
+	params?: Record<string, unknown>;
+	query?: Record<string, unknown>;
+	headers?: Record<string, unknown>;
+}
+
 beforeAll(() => {
 	__setGunzipImplementation((bytes) => new Uint8Array(gunzipSync(bytes)));
 });
@@ -150,11 +159,10 @@ describe("Node runtime parity", () => {
 	it("exposes Request facade with json() helper", async () => {
 		const client = buildClient([route("POST", "/users", "createUser")], {
 			createUser: async (request) => {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const req = request as any;
+				const req = parseRequest(request) as ParsedRequest;
 				return jsonResponse({
 					method: req.method,
-					body: req.json(),
+					body: req.json?.(),
 					query: req.queryString,
 				});
 			},
@@ -197,9 +205,8 @@ describe("Fetch handler bridge", () => {
 	it("handles JSON bodies via fetch handler", async () => {
 		const app = buildApp([route("POST", "/echo", "echo")], {
 			echo: async (request) => {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const req = request as any;
-				return req.json();
+				const req = parseRequest(request) as ParsedRequest;
+				return req.json?.();
 			},
 		});
 		const handler = createFetchHandler(app);
@@ -245,12 +252,12 @@ function route(method: string, path: string, handlerName: string, extra: Partial
 	};
 }
 
-function parseRequest(payload: unknown): any {
+function parseRequest(payload: unknown): ParsedRequest {
 	if (typeof payload === "string") {
-		return JSON.parse(payload);
+		return JSON.parse(payload) as ParsedRequest;
 	}
 	if (payload && typeof payload === "object") {
-		return payload as Record<string, unknown>;
+		return payload as ParsedRequest;
 	}
 	return {};
 }
