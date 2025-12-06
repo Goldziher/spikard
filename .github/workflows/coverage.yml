@@ -294,7 +294,7 @@ jobs:
           files: packages/wasm/coverage/lcov.info
           flags: wasm
           name: wasm-coverage
-          fail_ci_if_error: false  # TODO: Enable after fixing test imports and reaching 80% coverage
+          fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

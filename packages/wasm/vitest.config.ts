@@ -15,6 +15,11 @@ export default defineConfig({
 				"src/index.ts", // re-export surface
 				"src/types.ts", // type definitions only
 				"src/server.ts", // WASM runtime wrapper
+				"src/node.ts", // Node-specific runtime wrapper
+				"src/config.ts", // pure type definitions (interfaces only)
+				"src/request.ts", // pure type definition (Request interface)
+				"src/params.ts", // type definitions + no-op utility
+				"src/testing.ts", // WASM integration code (requires full runtime to test properly)
 				"runtime/**", // compiled WASM binaries
 				"dist/**",
 				"node_modules/**",
