@@ -547,17 +547,6 @@ mod tests {
         }
     }
 
-    /// Producer with error-on-send behavior
-    struct ErrorEventProducer;
-
-    impl SseEventProducer for ErrorEventProducer {
-        async fn next_event(&self) -> Option<SseEvent> {
-            // Return event with non-UTF8 compatible data that would fail serialization
-            // Actually serde_json can handle most cases, so we return valid data
-            Some(SseEvent::new(serde_json::json!({"status": "ok"})))
-        }
-    }
-
     /// Producer with all event fields populated
     struct FullFieldProducer {
         sent: AtomicBool,
