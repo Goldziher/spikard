@@ -62,81 +62,49 @@ runs:
           echo "language=unknown" >> $GITHUB_OUTPUT
         fi
 
-    - name: Setup Python environment
-      if: steps.detect.outputs.language == 'python'
+    - name: Build Python binding (if needed)
+      if: steps.detect.outputs.language == 'python' && (inputs.framework == 'spikard' || inputs.framework == 'spikard-python' || inputs.framework == 'spikard-raw')
+      uses: ./.github/actions/build-python-binding
+
+    - name: Setup Python environment for non-spikard apps
+      if: steps.detect.outputs.language == 'python' && !(inputs.framework == 'spikard' || inputs.framework == 'spikard-python' || inputs.framework == 'spikard-raw')
       uses: ./.github/actions/setup-python-env
       with:
         python-version: "3.14"
         cache-prefix: benchmark-${{ inputs.framework }}
 
-    - name: Install framework-specific dependencies
+    - name: Install Python benchmark app dependencies
       if: steps.detect.outputs.language == 'python'
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
-      run: |
-        # Install dependencies from the benchmark app's pyproject.toml
-        uv pip install -e .
+      run: uv pip install -e .
 
-    - name: Install pnpm
-      if: steps.detect.outputs.language == 'node'
-      uses: pnpm/action-setup@v4
+    - name: Build Node binding (if needed)
+      if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
+      uses: ./.github/actions/build-node-binding
 
-    - name: Setup Node environment
-      if: steps.detect.outputs.language == 'node'
-      uses: actions/setup-node@v4
+    - name: Setup Node environment for non-spikard apps
+      if: steps.detect.outputs.language == 'node' && inputs.framework != 'spikard-node'
+      uses: ./.github/actions/setup-node-workspace
       with:
-        node-version: '22'
-        cache: 'pnpm'
+        node-version: '24'
 
-    - name: Setup Ruby environment
-      if: steps.detect.outputs.language == 'ruby'
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.2'
-        bundler-cache: true
-
-    - name: Install Node dependencies
+    - name: Install Node benchmark app dependencies
       if: steps.detect.outputs.language == 'node'
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
       run: pnpm install --frozen-lockfile
 
-    - name: Build Python binding (if needed)
-      if: steps.detect.outputs.language == 'python' && (inputs.framework == 'spikard' || inputs.framework == 'spikard-python' || inputs.framework == 'spikard-raw')
-      shell: bash
-      run: |
-        # maturin is already installed via uv sync from the root pyproject.toml dev dependencies
-        # Use uv run to execute maturin from the uv-managed virtual environment
-        uv run maturin --version || { echo "maturin not found in uv environment"; exit 1; }
-        # Build and install the Python binding in development mode
-        cd crates/spikard-py && uv run maturin develop --release --features extension-module || { echo "Failed to build Python binding"; exit 1; }
-
-    - name: Build Node binding (if needed)
-      if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
-      shell: bash
-      run: |
-        # Clean old bindings in both locations to avoid platform mismatches
-        rm -f crates/spikard-node/*.node
-        rm -f packages/node/*.node
-
-        cd crates/spikard-node
-        pnpm install
-        # Build for current platform using napi --platform flag
-        pnpm exec napi build --platform --release
-
-        # Copy built binding to packages/node where the benchmark app expects it
-        cp *.node ../../packages/node/ || true
-
     - name: Build Ruby binding (if needed)
       if: steps.detect.outputs.language == 'ruby' && inputs.framework == 'spikard-ruby'
-      shell: bash
-      working-directory: crates/spikard-rb
-      run: |
-        bundle install
-        bundle exec rake compile
+      uses: ./.github/actions/build-ruby-binding
 
-        # Copy built binding to packages/ruby where the benchmark app expects it
-        cp -v lib/spikard/spikard_rb.bundle ../../packages/ruby/lib/spikard/ || true
+    - name: Setup Ruby environment for non-spikard apps
+      if: steps.detect.outputs.language == 'ruby' && inputs.framework != 'spikard-ruby'
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.4'
+        bundler-cache: false
 
     - name: Install Ruby benchmark app dependencies
       if: steps.detect.outputs.language == 'ruby'
@@ -181,7 +149,7 @@ runs:
       if: steps.detect.outputs.language == 'wasm'
       uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: '24'
         cache: 'pnpm'
 
     - name: Build WASM binding (if needed)
