@@ -148,19 +148,25 @@ runs:
       if: steps.detect.outputs.language == 'php' && inputs.framework == 'phalcon'
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: '8.4'
         extensions: phalcon5
         tools: composer
 
-    - name: Setup PHP for spikard-php binding
-      if: steps.detect.outputs.language == 'php' && inputs.framework == 'spikard-php'
+    - name: Setup PHP for Trongate
+      if: steps.detect.outputs.language == 'php' && inputs.framework == 'trongate'
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: '8.4'
         tools: composer
         coverage: none
 
-    - name: Build PHP binding (if needed)
+    - name: Build spikard-php binding
+      if: steps.detect.outputs.language == 'php' && inputs.framework == 'spikard-php'
+      uses: ./.github/actions/build-php-extension
+      with:
+        php-version: '8.4'
+
+    - name: Install PHP package dependencies
       if: steps.detect.outputs.language == 'php' && inputs.framework == 'spikard-php'
       shell: bash
       run: |
