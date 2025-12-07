@@ -289,9 +289,8 @@ function getPlatformTag() {
 const platformTag = getPlatformTag();
 const nativePath = path.join(__dirname, `../../../../packages/node/spikard-node.${platformTag}.node`);
 const native = require(nativePath);
-const port = process.argv[2] ? parseInt(process.argv[2]) : 8000;
-
-console.error(`[spikard-node] Detected platform: ${process.platform}/${process.arch}`);
-console.error(`[spikard-node] Loading native binding: ${platformTag}`);
-console.error(`[spikard-node] Starting server on port ${port}`);
-native.runServer(app, { host: '0.0.0.0', port: port });
+const port = process.argv[2]
+  ? parseInt(process.argv[2], 10)
+  : process.env.PORT
+  ? parseInt(process.env.PORT, 10)
+  : 8000;

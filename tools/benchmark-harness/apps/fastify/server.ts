@@ -269,7 +269,11 @@ fastify.get("/", async (request, reply) => {
 // Server Startup
 // ============================================================================
 
-const port = process.argv[2] ? parseInt(process.argv[2], 10) : 8000;
+const port = process.argv[2]
+  ? parseInt(process.argv[2], 10)
+  : process.env.PORT
+  ? parseInt(process.env.PORT, 10)
+  : 8000;
 
 const start = async () => {
   try {

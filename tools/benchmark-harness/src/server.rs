@@ -173,6 +173,8 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
     let mut cmd = Command::new(executable);
     cmd.args(args);
+    // Set PORT environment variable for frameworks that expect it (Node.js, etc.)
+    cmd.env("PORT", port.to_string());
 
     // Step 4: Set working directory
     let working_dir = if let Some(hint) = &framework_config.working_dir_hint {

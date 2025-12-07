@@ -189,12 +189,8 @@ app.get('/', (c) => {
 // Server Startup
 // ============================================================================
 
-const port = process.argv[2] ? parseInt(process.argv[2], 10) : 8000;
-
-console.error(`[hono] Starting server on port ${port}`);
-
-serve({
-  fetch: app.fetch,
-  port: port,
-  hostname: '0.0.0.0'
-});
+const port = process.argv[2]
+  ? parseInt(process.argv[2], 10)
+  : process.env.PORT
+  ? parseInt(process.env.PORT, 10)
+  : 8000;

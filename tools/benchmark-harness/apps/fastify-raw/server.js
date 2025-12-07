@@ -125,16 +125,8 @@ fastify.get('/', async (request, reply) => {
 // Server Startup
 // ============================================================================
 
-const port = process.argv[2] ? parseInt(process.argv[2], 10) : 8000;
-
-const start = async () => {
-  try {
-    await fastify.listen({ port, host: '0.0.0.0' });
-    console.error(`[fastify-raw] Starting server on port ${port}`);
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
-};
-
-start();
+const port = process.argv[2]
+  ? parseInt(process.argv[2], 10)
+  : process.env.PORT
+  ? parseInt(process.env.PORT, 10)
+  : 8000;
