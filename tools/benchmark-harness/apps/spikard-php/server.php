@@ -157,11 +157,12 @@ if (PHP_SAPI === 'cli' && __FILE__ === realpath($_SERVER['SCRIPT_FILENAME'])) {
     $port = (int)($argv[1] ?? 8000);
     error_log("[spikard-php] Starting server on port $port");
 
-    // Create server config
-    $config = new ServerConfig();
-    $config->host = '0.0.0.0';
-    $config->port = $port;
-    $config->workers = 1;  // Single worker for consistent benchmarking
+    // Create server config with named parameters
+    $config = new ServerConfig(
+        host: '0.0.0.0',
+        port: $port,
+        workers: 1  // Single worker for consistent benchmarking
+    );
 
     $app = $app->withConfig($config);
     $app->run();
