@@ -94,6 +94,9 @@ jobs:
       - name: Make benchmark-harness executable
         run: chmod +x ~/.cargo/bin/benchmark-harness
 
+      - name: Install oha load generator
+        run: cargo install oha
+
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
         with:
@@ -153,12 +156,15 @@ jobs:
           python-version: "3.14"
           cache-prefix: bench-python
 
+      - name: Install oha load generator
+        run: cargo install oha
+
       - name: Build spikard-python binding
         run: cd crates/spikard-py && uv run maturin develop --release --features extension-module
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-python
-        run: uv pip install -e .
+        run: uv run pip install -e .
 
       - name: Create results directory
         run: mkdir -p results/spikard-python
@@ -199,6 +205,9 @@ jobs:
       - name: Make benchmark-harness executable
         run: chmod +x ~/.cargo/bin/benchmark-harness
 
+      - name: Install oha load generator
+        run: cargo install oha
+
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
         with:
@@ -214,7 +223,7 @@ jobs:
         run: pnpm build
 
       - name: Copy Node binding to packages
-        run: cp -v crates/spikard-node/*.node packages/node/
+        run: cp -v crates/spikard-node/*.node packages/node/ || true
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-node
@@ -258,6 +267,9 @@ jobs:
 
       - name: Make benchmark-harness executable
         run: chmod +x ~/.cargo/bin/benchmark-harness
+
+      - name: Install oha load generator
+        run: cargo install oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -318,6 +330,9 @@ jobs:
 
       - name: Make benchmark-harness executable
         run: chmod +x ~/.cargo/bin/benchmark-harness
+
+      - name: Install oha load generator
+        run: cargo install oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -400,6 +415,9 @@ jobs:
 
       - name: Make benchmark-harness executable
         run: chmod +x ~/.cargo/bin/benchmark-harness
+
+      - name: Install oha load generator
+        run: cargo install oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
