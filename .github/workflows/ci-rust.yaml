@@ -172,7 +172,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: rust-coverage-report
           path: target/tarpaulin/
@@ -236,7 +236,7 @@ jobs:
 
       - name: Archive PHP FFI coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: rust-php-linux-coverage-report
           path: target/tarpaulin-php/
