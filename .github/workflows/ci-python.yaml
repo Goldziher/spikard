@@ -88,7 +88,7 @@ jobs:
           uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }}
 
       - name: Upload wheels artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
           path: target/wheels/*.whl
@@ -120,7 +120,7 @@ jobs:
           cache-prefix: test-python-${{ matrix.os }}-${{ matrix.python-version }}
 
       - name: Download wheels artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
           path: dist/
@@ -247,7 +247,7 @@ PY
           uv tool run maturin sdist
 
       - name: Upload sdist artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: python-sdist
           path: target/wheels/*.tar.gz
@@ -294,7 +294,7 @@ PY
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: python-coverage-report
           path: packages/python/htmlcov/

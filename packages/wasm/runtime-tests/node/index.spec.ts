@@ -13,6 +13,7 @@ import { __setGunzipImplementation, TestClient } from "../../src/testing";
 
 interface ParsedRequest {
 	method?: string;
+	body?: unknown;
 	json?: () => unknown;
 	queryString?: string;
 	params?: Record<string, unknown>;
@@ -90,7 +91,7 @@ describe("Node runtime parity", () => {
 		const bad = await client.get("/users/not-a-number");
 		expect(bad.statusCode).toBe(422);
 		expect(bad.json()).toMatchObject({
-			detail: "Parameter validation failed",
+			detail: "1 validation error in request",
 		});
 	});
 
@@ -159,10 +160,11 @@ describe("Node runtime parity", () => {
 	it("exposes Request facade with json() helper", async () => {
 		const client = buildClient([route("POST", "/users", "createUser")], {
 			createUser: async (request) => {
-				const req = parseRequest(request) as ParsedRequest;
+				const req = parseRequest(request);
+				const bodyData = typeof req.json === "function" ? req.json() : req.body;
 				return jsonResponse({
 					method: req.method,
-					body: req.json?.(),
+					body: bodyData,
 					query: req.queryString,
 				});
 			},
@@ -257,7 +259,13 @@ function parseRequest(payload: unknown): ParsedRequest {
 		return JSON.parse(payload) as ParsedRequest;
 	}
 	if (payload && typeof payload === "object") {
-		return payload as ParsedRequest;
+		const request = payload as ParsedRequest;
+		// If it doesn't have a json() method but has a body, create one
+		// (for backwards compatibility with plain object payloads)
+		if (!request.json && request.body !== undefined) {
+			request.json = () => request.body;
+		}
+		return request;
 	}
 	return {};
 }

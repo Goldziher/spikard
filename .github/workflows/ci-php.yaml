@@ -103,7 +103,7 @@ jobs:
         run: cargo build --release -p spikard-php --features extension-module
 
       - name: Upload PHP extension artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: php-extension-${{ matrix.os }}
           path: |
@@ -161,7 +161,7 @@ jobs:
             ${{ runner.os }}-composer-${{ matrix.php }}-
 
       - name: Download PHP extension artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: php-extension-${{ matrix.os }}
           path: target/release
@@ -222,7 +222,7 @@ jobs:
       - name: Enforce minimum coverage threshold (85%)
         run: |
           COVERAGE=$(php -r "
-            \$xml = simplexml_load_file('target/clover.xml');
+            \$xml = simplexml_load_file('packages/php/target/clover.xml');
             \$metrics = \$xml->project->metrics;
             \$lines = (int)\$metrics['coveredstatements'];
             \$total = (int)\$metrics['statements'];
@@ -247,7 +247,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: php-coverage-report
           path: packages/php/htmlcov/
