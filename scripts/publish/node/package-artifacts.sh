@@ -6,53 +6,52 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../../.." && pwd -P)"
 
 cd "${REPO_ROOT}/crates/spikard-node"
 
-# List .node files in current directory before copying
-echo "=== .node files in current directory ==="
-ls -la -- *.node 2>/dev/null || echo "No .node files in current directory"
+# napi build --platform already creates npm/platform-name/ directories with .node files
+# We just need to verify they exist and package them
 
-# Copy .node files from root into npm platform directories
-bash "${SCRIPT_DIR}/copy-node-binaries.sh"
-
-# List contents of npm directories after copying
-echo "=== Contents of npm directories after copy ==="
-shopt -s nullglob
-for dir in npm/*/; do
-	echo "Directory: $dir"
-	ls -la "$dir"
-done
-
-# napi artifacts organizes .node files from npm platform directories
-# --output-dir . tells it to look for .node files in current dir (default is ./artifacts)
-pnpm exec napi artifacts --output-dir . --npm-dir ./npm
-
-# List contents of npm directories after napi artifacts
-echo "=== Contents of npm directories after napi artifacts ==="
-for dir in npm/*/; do
-	echo "Directory: $dir"
-	ls -la "$dir"
-done
-
-# Verify npm directory was created
+# Verify npm directory was created by napi build --platform
 if [ ! -d npm ]; then
-	echo "npm artifact directory missing" >&2
+	echo "::error::npm directory not found (napi build --platform should create it)"
+	echo "Current directory: $(pwd)"
 	ls -la
 	exit 1
 fi
 
-# Verify .node files exist in npm directories
+# List and verify contents of npm directories
+echo "=== Verifying npm platform directories ==="
+shopt -s nullglob
 missing=0
+platform_count=0
+
 for dir in npm/*/; do
+	platform_count=$((platform_count + 1))
+	echo "Checking directory: $dir"
+
 	nodes=("$dir"*.node)
 	if [ ${#nodes[@]} -eq 0 ]; then
-		echo "::error::Missing .node file in $dir after packaging"
+		echo "::error::Missing .node file in $dir"
+		ls -la "$dir"
 		missing=1
+	else
+		echo "✓ Found ${#nodes[@]} .node file(s) in $dir"
+		for node in "${nodes[@]}"; do
+			ls -lh "$node"
+		done
 	fi
 done
 
-if [ "${missing}" -ne 0 ]; then
-	echo "::error::Some npm directories are missing .node files before tarball creation"
+if [ "${platform_count}" -eq 0 ]; then
+	echo "::error::No platform directories found in npm/"
+	ls -la npm/
 	exit 1
 fi
 
+if [ "${missing}" -ne 0 ]; then
+	echo "::error::Some npm directories are missing .node files"
+	exit 1
+fi
+
+echo "=== All platforms verified, creating tarball ==="
 # Package the npm directory for artifact upload
 tar -czf ../../node-bindings-"${TARGET}".tar.gz -C . npm
+echo "✓ Created tarball: node-bindings-${TARGET}.tar.gz"
