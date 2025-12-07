@@ -2,4 +2,4 @@
 
 source 'https://rubygems.org'
 
-gem 'spikard_rb', path: '../../../../crates/spikard-rb'
+gem 'spikard_rb', path: '../../../../packages/ruby'
