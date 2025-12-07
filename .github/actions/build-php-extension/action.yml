@@ -3,7 +3,7 @@ description: Builds PHP extension for specific platform and PHP version
 
 inputs:
   php-version:
-    description: PHP version (8.2, 8.3)
+    description: PHP version (8.2, 8.3, 8.4)
     required: true
   target-platform:
     description: Rust build target
