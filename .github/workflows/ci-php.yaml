@@ -191,16 +191,16 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup PHP
-        uses: php-actions/setup-php@v6
+        uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
           extensions: pcov
           coverage: pcov
+          tools: composer
 
       - name: Setup Composer dependencies
-        uses: php-actions/composer@v6
-        with:
-          working_dir: packages/php
+        working-directory: packages/php
+        run: composer install --no-interaction --no-progress
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
