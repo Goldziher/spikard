@@ -5,7 +5,7 @@
 [![Packagist Downloads](https://img.shields.io/packagist/dt/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
 [![PHP Version](https://img.shields.io/badge/php-%3E%3D%208.2-blue.svg)](https://www.php.net/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI Status](https://github.com/Goldziher/spikard/workflows/CI/badge.svg)](https://github.com/Goldziher/spikard/actions)
+[![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
 [![npm](https://img.shields.io/npm/v/spikard.svg)](https://www.npmjs.com/package/spikard)
 [![Crates.io](https://img.shields.io/crates/v/spikard.svg)](https://crates.io/crates/spikard)

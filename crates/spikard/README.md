@@ -9,7 +9,7 @@ High-performance HTTP framework built on Axum and Tower-HTTP with type-safe rout
 [![Documentation](https://docs.rs/spikard/badge.svg)](https://docs.rs/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
-[![CI](https://img.shields.io/github/actions/workflow/status/Goldziher/spikard/ci.yml?branch=main)](https://github.com/Goldziher/spikard/actions)
+[![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
 
 ### Multi-Language Bindings
 
