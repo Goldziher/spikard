@@ -4,7 +4,7 @@ Set-StrictMode -Version Latest
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot ".." ".." "..")
 Set-Location (Join-Path $RepoRoot "crates/spikard-node")
 
-$args = @('--platform', '--release', '--target', $env:TARGET)
+$args = @('--platform', '--release', '--target', $env:TARGET, '--output-dir', './artifacts')
 if ($env:USE_NAPI_CROSS -eq 'true') { $args += '--use-napi-cross' }
 if ($env:USE_CROSS -eq 'true') { $args += '--use-cross' }
 
