@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../../.." && pwd -P)"
 
 # Parse arguments
-COVERAGE_FILE="${1:-packages/php/target/clover.xml}"
+COVERAGE_FILE="${1:-target/clover.xml}"
 THRESHOLD="${2:-85}"
 
 # Validate that coverage file exists
