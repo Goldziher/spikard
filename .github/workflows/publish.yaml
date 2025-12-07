@@ -93,7 +93,7 @@ jobs:
             os: ubuntu-latest
             artifact: python-wheels-linux-x86_64
             rust_target: x86_64-unknown-linux-gnu
-            manylinux: manylinux_2_17
+            manylinux: "2_17"
             python: "3.10"
             needs_qemu: false
             extra_args: ""
@@ -838,17 +838,17 @@ jobs:
     permissions:
       id-token: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
       - name: Download Ruby gem artifacts
         uses: actions/download-artifact@v6
         with:
           pattern: rubygems-*
           path: dist
           merge-multiple: true
-
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
 
       - name: Setup Ruby (match CI toolchain)
         uses: ruby/setup-ruby@v1
