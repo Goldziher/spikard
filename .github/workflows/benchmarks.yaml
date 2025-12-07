@@ -169,7 +169,7 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Python frameworks (6 frameworks)
+  # Python frameworks (3 frameworks with DTO validation)
   bench-axum-baseline:
     name: axum-baseline
     needs: build-harness
@@ -192,8 +192,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-fastapi-uvicorn:
-    name: fastapi-uvicorn
+  bench-fastapi-uvicorn-dto:
+    name: fastapi-uvicorn-dto
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -206,13 +206,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: fastapi-uvicorn
+          framework: fastapi-uvicorn-dto
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-fastapi-granian:
-    name: fastapi-granian
+  bench-fastapi-granian-dto:
+    name: fastapi-granian-dto
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -225,13 +225,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: fastapi-granian
+          framework: fastapi-granian-dto
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-fastapi-python:
-    name: fastapi-python
+  bench-robyn-dto:
+    name: robyn-dto
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -244,69 +244,12 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: fastapi-python
+          framework: robyn-dto
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-litestar-uvicorn:
-    name: litestar-uvicorn
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v6
-        with:
-          name: benchmark-harness
-          path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: litestar-uvicorn
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-litestar-granian:
-    name: litestar-granian
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v6
-        with:
-          name: benchmark-harness
-          path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: litestar-granian
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-robyn:
-    name: robyn
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v6
-        with:
-          name: benchmark-harness
-          path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: robyn
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  # Python raw variants (6 frameworks)
+  # Python raw variants (3 frameworks - no validation/serialization)
   bench-spikard-raw:
     name: spikard-raw
     needs: build-harness
@@ -329,8 +272,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-fastapi-raw:
-    name: fastapi-raw
+  bench-fastapi-uvicorn-raw:
+    name: fastapi-uvicorn-raw
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -343,7 +286,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: fastapi-raw
+          framework: fastapi-uvicorn-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -363,44 +306,6 @@ jobs:
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: fastapi-granian-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-litestar-raw:
-    name: litestar-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v6
-        with:
-          name: benchmark-harness
-          path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: litestar-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-litestar-granian-raw:
-    name: litestar-granian-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v6
-        with:
-          name: benchmark-harness
-          path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: litestar-granian-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
