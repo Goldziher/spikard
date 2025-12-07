@@ -5,15 +5,15 @@
   "type": "commonjs",
   "main": "server.ts",
   "scripts": {
-    "start": "node server.ts",
-    "dev": "node server.ts 8000"
+    "start": "tsx server.ts",
+    "dev": "tsx server.ts 8000"
   },
   "dependencies": {
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "tsx": "^4.19.2"
+    "tsx": "^4.21.0"
   },
   "engines": {
     "node": ">=20.0.0"
