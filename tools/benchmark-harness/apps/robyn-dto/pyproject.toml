@@ -10,6 +10,6 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "pydantic>=2",
-  "robyn>=0.39",
+  "pydantic>=2.12.5",
+  "robyn>=0.72.2",
 ]

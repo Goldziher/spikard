@@ -161,7 +161,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "robyn", specifier = ">=0.39" }]
+requires-dist = [{ name = "robyn", specifier = ">=0.72.2" }]
 
 [[package]]
 name = "rustimport"

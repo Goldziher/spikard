@@ -5,7 +5,7 @@ GEM
     puma (7.1.0)
       nio4r (~> 2.0)
     rack (3.2.4)
-    rackup (2.2.1)
+    rackup (2.3.1)
       rack (>= 3)
     roda (3.98.0)
       rack
