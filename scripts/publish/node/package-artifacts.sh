@@ -6,7 +6,10 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../../.." && pwd -P)"
 
 cd "${REPO_ROOT}/crates/spikard-node"
 
-# napi artifacts organizes .node files from the current directory into npm platform directories
+# Copy .node files from root into npm platform directories
+bash "${SCRIPT_DIR}/copy-node-binaries.sh"
+
+# napi artifacts organizes .node files from npm platform directories
 # --output-dir . tells it to look for .node files in current dir (default is ./artifacts)
 pnpm exec napi artifacts --output-dir . --npm-dir ./npm
 
