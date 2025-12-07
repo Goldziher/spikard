@@ -97,7 +97,7 @@ jobs:
         run: bundle exec rake compile
 
       - name: Upload Ruby gem
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ruby-gem-${{ matrix.os }}
           path: |
@@ -148,7 +148,7 @@ jobs:
           working-directory: packages/ruby
 
       - name: Download Ruby gem artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: ruby-gem-${{ matrix.os }}
           path: packages/ruby/
@@ -175,7 +175,7 @@ jobs:
           working-directory: packages/ruby
 
       - name: Download Ruby gem artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: ruby-gem-ubuntu-latest
           path: packages/ruby/
@@ -196,7 +196,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ruby-coverage-report
           path: packages/ruby/coverage/

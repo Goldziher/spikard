@@ -795,20 +795,20 @@ jobs:
       id-token: write
     steps:
       - name: Download wheel artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           pattern: python-wheels-*
           path: dist
           merge-multiple: true
 
       - name: Download sdist artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: python-sdist
           path: dist
 
       - name: Download wrapper wheel
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: python-wrapper
           path: dist
@@ -836,7 +836,7 @@ jobs:
       id-token: write
     steps:
       - name: Download Ruby gem artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           pattern: rubygems-*
           path: dist
@@ -887,14 +887,14 @@ jobs:
           package_json_file: package.json
 
       - name: Download Node artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           pattern: node-bindings-*
           path: node-artifacts
           merge-multiple: true
 
       - name: Download TypeScript definitions
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: node-typescript-defs
           path: typescript-defs
@@ -957,7 +957,7 @@ jobs:
           ref: ${{ needs.prepare.outputs.ref }}
 
       - name: Download WASM artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: wasm-package
           path: crates/spikard-wasm/pkg
@@ -998,7 +998,7 @@ jobs:
         run: bash scripts/publish/cli/ensure-release.sh "${{ needs.prepare.outputs.tag }}"
 
       - name: Download CLI artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           pattern: cli-*
           path: dist/cli

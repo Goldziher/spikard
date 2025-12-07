@@ -538,6 +538,34 @@ RSpec.describe Spikard::App do
       name = app.send(:default_handler_name, 'POST', '/test')
       expect(name).to eq('post_test')
     end
+
+    it 'handles strings with many repetitions of underscores without catastrophic backtracking' do
+      # This test ensures the regex fix prevents ReDoS (Regular Expression Denial of Service)
+      # The old pattern /^_+|_+$/ could cause polynomial backtracking on strings with many underscores
+      # This malicious input should complete quickly without hanging
+      dangerous_input = '/' + ('_' * 1000)
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      name = app.send(:default_handler_name, 'GET', dangerous_input)
+      elapsed_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
+
+      # Should complete in less than 100ms (safe threshold for simple string operations)
+      expect(elapsed_time).to be < 0.1
+      # Should strip leading underscores and return root since all underscores
+      expect(name).to eq('get_root')
+    end
+
+    it 'handles mixed content with many underscores safely' do
+      # Another ReDoS test case: alternating pattern
+      dangerous_input = '/' + ('_a_' * 100) + ('_' * 100)
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      name = app.send(:default_handler_name, 'GET', dangerous_input)
+      elapsed_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
+
+      # Should complete quickly
+      expect(elapsed_time).to be < 0.1
+      # Should normalize the content properly
+      expect(name).to start_with('get_')
+    end
   end
 
   describe 'lifecycle hooks integration' do

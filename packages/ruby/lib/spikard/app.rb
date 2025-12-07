@@ -195,7 +195,8 @@ module Spikard
     end
 
     def default_handler_name(method, path)
-      normalized_path = path.gsub(/[^a-zA-Z0-9]+/, '_').gsub(/__+/, '_').sub(/^_+|_+$/, '')
+      normalized_path = path.gsub(/[^a-zA-Z0-9]+/, '_').gsub(/__+/, '_')
+      normalized_path = normalized_path.sub(/^_+/, '').sub(/_+$/, '')
       normalized_path = 'root' if normalized_path.empty?
       "#{method.to_s.downcase}_#{normalized_path}"
     end

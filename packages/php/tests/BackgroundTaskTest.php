@@ -42,7 +42,6 @@ final class BackgroundTaskTest extends TestCase
     /**
      * Helper to skip tests if Spikard extension is not loaded.
      *
-     * @return void
      */
     private function skipIfExtensionNotLoaded(): void
     {
@@ -493,7 +492,6 @@ final class BackgroundTaskTest extends TestCase
     /**
      * Static helper for testing static method invocation.
      *
-     * @return void
      */
     public static function staticHelper(): void
     {
@@ -504,7 +502,6 @@ final class BackgroundTaskTest extends TestCase
      * Static helper for testing static method with arguments.
      *
      * @param string $value The value to set
-     * @return void
      */
     public static function staticMethodWithArgs(string $value): void
     {
