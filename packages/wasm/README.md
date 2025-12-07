@@ -5,7 +5,7 @@
 [![npm](https://img.shields.io/npm/v/@spikard/wasm.svg)](https://www.npmjs.com/package/@spikard/wasm)
 [![npm downloads](https://img.shields.io/npm/dm/@spikard/wasm.svg)](https://www.npmjs.com/package/@spikard/wasm)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/Goldziher/spikard/actions/workflows/ci.yaml/badge.svg)](https://github.com/Goldziher/spikard/actions/workflows/ci.yaml)
+[![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
 [![Crates.io](https://img.shields.io/crates/v/spikard.svg)](https://crates.io/crates/spikard)
 [![RubyGems](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)

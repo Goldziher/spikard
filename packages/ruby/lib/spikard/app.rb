@@ -196,7 +196,9 @@ module Spikard
 
     def default_handler_name(method, path)
       normalized_path = path.gsub(/[^a-zA-Z0-9]+/, '_').gsub(/__+/, '_')
-      normalized_path = normalized_path.sub(/^_+/, '').sub(/_+$/, '')
+      # ReDoS mitigation: use bounded quantifier {1,100} instead of + to prevent
+      # polynomial time complexity with excessive trailing underscores
+      normalized_path = normalized_path.sub(/^_{1,100}/, '').sub(/_{1,100}$/, '')
       normalized_path = 'root' if normalized_path.empty?
       "#{method.to_s.downcase}_#{normalized_path}"
     end

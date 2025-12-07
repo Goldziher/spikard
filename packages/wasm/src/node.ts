@@ -78,7 +78,12 @@ function buildStaticManifest(configs: StaticFilesConfig[]): StaticManifestEntry[
 		const files = listFiles(config.directory);
 		for (const filePath of files) {
 			const relative = path.relative(config.directory, filePath).split(path.sep).join("/");
-			const route = normalizeRoute(`${config.routePrefix.replace(/\/+$/, "")}/${relative}`);
+			// Remove trailing slashes safely using string methods (avoids ReDoS vulnerability)
+			let normalizedPrefix = config.routePrefix;
+			while (normalizedPrefix.endsWith("/")) {
+				normalizedPrefix = normalizedPrefix.slice(0, -1);
+			}
+			const route = normalizeRoute(`${normalizedPrefix}/${relative}`);
 			const headers = buildStaticHeaders(filePath, config.cacheControl);
 			const body = fs.readFileSync(filePath).toString("base64");
 			manifest.push({ route, headers, body });

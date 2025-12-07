@@ -8,7 +8,7 @@ High-performance Python web framework with a Rust core. Build REST APIs, WebSock
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg?logo=python&logoColor=white)](https://pypi.org/project/spikard/)
 [![Downloads](https://img.shields.io/pypi/dm/spikard.svg)](https://pypi.org/project/spikard/)
 [![Python](https://img.shields.io/pypi/pyversions/spikard.svg?logo=python&logoColor=white)](https://pypi.org/project/spikard/)
-[![CI Status](https://github.com/Goldziher/spikard/workflows/CI/badge.svg)](https://github.com/Goldziher/spikard/actions)
+[![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Crates.io](https://img.shields.io/crates/v/spikard.svg?logo=rust)](https://crates.io/crates/spikard)
 [![npm](https://img.shields.io/npm/v/spikard.svg?logo=npm)](https://www.npmjs.com/package/spikard)
