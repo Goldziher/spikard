@@ -90,6 +90,8 @@ jobs:
     name: Lint Rust
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
 
@@ -108,6 +110,8 @@ jobs:
     name: Lint Python
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
 
@@ -130,6 +134,8 @@ jobs:
     name: Lint TypeScript
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
 
@@ -148,6 +154,8 @@ jobs:
     name: Lint Ruby
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
 
@@ -174,6 +182,8 @@ jobs:
     name: Lint PHP
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
 

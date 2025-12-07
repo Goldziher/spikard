@@ -10,7 +10,7 @@ runs:
   using: composite
   steps:
     - name: Download harness binary
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v6
       with:
         name: benchmark-harness-binary
         path: ${{ github.workspace }}/bin

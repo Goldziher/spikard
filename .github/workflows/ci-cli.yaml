@@ -82,6 +82,8 @@ jobs:
     needs: build-cli
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:

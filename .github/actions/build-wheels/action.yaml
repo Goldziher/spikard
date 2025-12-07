@@ -67,7 +67,7 @@ runs:
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ""
 
     - name: Upload wheels
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: wheels-${{ runner.os }}
         path: ./wheelhouse/*.whl
