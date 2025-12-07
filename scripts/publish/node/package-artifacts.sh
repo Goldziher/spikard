@@ -6,8 +6,10 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../../.." && pwd -P)"
 
 cd "${REPO_ROOT}/crates/spikard-node"
 
-# napi artifacts moves .node files into npm platform directories
-pnpm exec napi artifacts
+# napi artifacts moves .node files from build output into npm platform directories
+# --output-dir: where napi build placed the .node files
+# --npm-dir: where to create platform-specific npm packages
+pnpm exec napi artifacts --output-dir ./artifacts --npm-dir ./npm
 
 # Verify npm directory was created
 if [ ! -d npm ]; then
