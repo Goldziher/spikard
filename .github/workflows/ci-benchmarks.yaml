@@ -427,6 +427,11 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: latest
+
       - name: Build spikard-wasm binding
         run: |
           cd crates/spikard-wasm

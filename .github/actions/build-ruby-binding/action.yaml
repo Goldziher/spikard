@@ -20,7 +20,7 @@ runs:
       shell: bash
       working-directory: packages/ruby
       env:
-        RUBY: /opt/hostedtoolcache/Ruby/3.3.*/x64/bin/ruby
+        RUBY: /opt/hostedtoolcache/Ruby/3.4.*/x64/bin/ruby
       run: |
         bundle install
         bundle exec rake build
