@@ -294,3 +294,9 @@ const port = process.argv[2]
   : process.env.PORT
   ? parseInt(process.env.PORT, 10)
   : 8000;
+
+// Start the server
+if (require.main === module) {
+  console.error(`[spikard-node] Starting server on port ${port}`);
+  native.runServer(app, '0.0.0.0', port);
+}
