@@ -83,6 +83,13 @@ runs:
       if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
       uses: ./.github/actions/build-node-binding
 
+    - name: Copy Node binding to packages
+      if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
+      shell: bash
+      run: |
+        cd crates/spikard-node
+        cp -v *.node ../../packages/node/ || true
+
     - name: Setup Node environment for non-spikard apps
       if: steps.detect.outputs.language == 'node' && inputs.framework != 'spikard-node'
       uses: ./.github/actions/setup-node-workspace
@@ -98,6 +105,13 @@ runs:
     - name: Build Ruby binding (if needed)
       if: steps.detect.outputs.language == 'ruby' && inputs.framework == 'spikard-ruby'
       uses: ./.github/actions/build-ruby-binding
+
+    - name: Copy Ruby binding to packages
+      if: steps.detect.outputs.language == 'ruby' && inputs.framework == 'spikard-ruby'
+      shell: bash
+      run: |
+        mkdir -p packages/ruby/lib/spikard
+        cp -v packages/ruby/lib/spikard_rb.* packages/ruby/lib/spikard/ || true
 
     - name: Setup Ruby environment for non-spikard apps
       if: steps.detect.outputs.language == 'ruby' && inputs.framework != 'spikard-ruby'
@@ -133,6 +147,18 @@ runs:
       uses: ./.github/actions/build-php-extension
       with:
         php-version: '8.4'
+
+    - name: Enable PHP extension
+      if: steps.detect.outputs.language == 'php' && inputs.framework == 'spikard-php'
+      shell: bash
+      run: |
+        EXT_FILE=$(find target/release -name "libspikard_php.*" -o -name "spikard_php.*" | head -1)
+        if [ -n "$EXT_FILE" ]; then
+          EXT_DIR=$(php-config --extension-dir)
+          sudo cp "$EXT_FILE" "$EXT_DIR/spikard_php.so"
+          echo "extension=spikard_php.so" | sudo tee /etc/php/8.4/cli/conf.d/99-spikard.ini
+          php -m | grep spikard
+        fi
 
     - name: Install PHP package dependencies
       if: steps.detect.outputs.language == 'php' && inputs.framework == 'spikard-php'
