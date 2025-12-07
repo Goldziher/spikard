@@ -2,8 +2,8 @@
 set -euo pipefail
 
 if [[ $# -lt 2 ]]; then
-  echo "Usage: $0 <version> <output-dir>" >&2
-  exit 1
+	echo "Usage: $0 <version> <output-dir>" >&2
+	exit 1
 fi
 
 VERSION="$1"
@@ -12,7 +12,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STAGING="$(mktemp -d "${ROOT}/.pie-src.XXXXXX")"
 
 cleanup() {
-  rm -rf "$STAGING"
+	rm -rf "$STAGING"
 }
 trap cleanup EXIT
 
@@ -30,12 +30,12 @@ rsync -a "$ROOT/crates/spikard-php/" "$STAGING/php-ext/"
 # PHP package wrapper
 mkdir -p "$STAGING/packages/php"
 rsync -a --exclude 'vendor' --exclude '.phpunit.result.cache' \
-  "$ROOT/packages/php/" "$STAGING/packages/php/"
+	"$ROOT/packages/php/" "$STAGING/packages/php/"
 
 # Metadata
 cp "$ROOT/LICENSE" "$STAGING/"
 cp "$ROOT/README.md" "$STAGING/" 2>/dev/null || true
-echo "$VERSION" > "$STAGING/VERSION"
+echo "$VERSION" >"$STAGING/VERSION"
 
 # Create archive
 ARCHIVE_NAME="spikard-php-${VERSION}-src.tgz"

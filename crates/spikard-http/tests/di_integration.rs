@@ -5,6 +5,8 @@
 
 #![cfg(feature = "di")]
 
+mod common;
+
 use axum::body::Body;
 use axum::http::{Request, Response, StatusCode};
 use spikard_core::di::{DependencyContainer, ValueDependency};

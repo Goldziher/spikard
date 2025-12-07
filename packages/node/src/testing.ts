@@ -2,15 +2,28 @@
  * Testing utilities for Spikard applications
  */
 
-import {
-	TestClient as NativeTestClient,
-	type TestResponse as NativeTestResponse,
-	type WebSocketTestConnection,
-} from "../index.js";
 import type { ServerConfig } from "./config";
 import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
 import type { JsonValue } from "./types";
+
+interface NativeTestResponse {
+	statusCode: number;
+	headers(): Record<string, string>;
+	text(): string;
+	json<T>(): T;
+	bytes(): Buffer;
+}
+
+interface WebSocketTestConnection {
+	sendText(text: string): Promise<void>;
+	sendJson(obj: unknown): Promise<void>;
+	receiveText(): Promise<string>;
+	receiveJson(): Promise<unknown>;
+	receiveBytes(): Promise<Buffer>;
+	receiveMessage(): Promise<unknown>;
+	close(): Promise<void>;
+}
 
 /**
  * HTTP response from test client
@@ -86,6 +99,8 @@ type NativeClientConstructor = new (
 	websocketRoutesJson: string | null,
 	handlers: Record<string, NativeHandlerFunction>,
 	websocketHandlers: Record<string, Record<string, unknown>>,
+	dependencies: Record<string, unknown> | null,
+	lifecycleHooks: Record<string, unknown> | null,
 	config: ServerConfig | null,
 ) => NativeClient;
 
@@ -94,18 +109,284 @@ type NativeClientFactory = (
 	websocketRoutesJson: string | null,
 	handlers: Record<string, NativeHandlerFunction>,
 	websocketHandlers: Record<string, Record<string, unknown>>,
+	dependencies: Record<string, unknown> | null,
+	lifecycleHooks: Record<string, unknown> | null,
 	config: ServerConfig | null,
 ) => NativeClient;
+
+interface NativeBinding {
+	TestClient: NativeClientConstructor;
+}
+
+let nativeTestClient: NativeClientConstructor | null = null;
+
+const loadNativeTestClient = (): NativeClientConstructor | null => {
+	try {
+		const binding = require("../spikard-node.darwin-arm64.node") as NativeBinding;
+		return binding.TestClient;
+	} catch {
+		try {
+			const binding = require("../spikard-node.node") as NativeBinding;
+			return binding.TestClient;
+		} catch {
+			return null;
+		}
+	}
+};
+
+nativeTestClient = loadNativeTestClient();
+const isNativeCtor = nativeTestClient !== null;
+
+class JsTestResponse implements NativeTestResponse {
+	private readonly body: Buffer;
+	private readonly headerBag: Record<string, string>;
+
+	constructor(
+		public readonly statusCode: number,
+		headers: Record<string, string>,
+		body: Buffer,
+	) {
+		this.headerBag = headers;
+		this.body = body;
+	}
+
+	headers(): Record<string, string> {
+		return this.headerBag;
+	}
+
+	text(): string {
+		return this.body.toString("utf-8");
+	}
+
+	json<T>(): T {
+		const raw = this.text();
+		return raw.length === 0 ? (undefined as unknown as T) : (JSON.parse(raw) as T);
+	}
+
+	bytes(): Buffer {
+		return this.body;
+	}
+}
+
+class JsNativeClient implements NativeClient {
+	private readonly routes: SpikardApp["routes"];
+	private readonly handlers: Record<string, NativeHandlerFunction>;
+	private readonly dependencies: Record<string, unknown> | null;
+
+	constructor(
+		routesJson: string,
+		_websocketRoutesJson: string | null,
+		handlers: Record<string, NativeHandlerFunction>,
+		_websocketHandlers: Record<string, Record<string, unknown>>,
+		dependencies: Record<string, unknown> | null,
+		_lifecycleHooks: Record<string, unknown> | null,
+		_dependencies: ServerConfig | null,
+	) {
+		this.routes = JSON.parse(routesJson) as SpikardApp["routes"];
+		this.handlers = handlers;
+		this.dependencies = dependencies;
+	}
+
+	private matchRoute(method: string, path: string): { handlerName: string; params: Record<string, string> } {
+		const cleanedPath = path.split("?")[0] ?? path;
+		for (const route of this.routes) {
+			if (route.method.toUpperCase() !== method.toUpperCase()) {
+				continue;
+			}
+
+			const params = this.extractParams(route.path, cleanedPath);
+			if (params) {
+				return { handlerName: route.handler_name, params };
+			}
+		}
+
+		throw new Error(`No route matched ${method} ${path}`);
+	}
+
+	private extractParams(pattern: string, actual: string): Record<string, string> | null {
+		const patternParts = pattern.split("/").filter(Boolean);
+		const actualParts = actual.split("/").filter(Boolean);
+		if (patternParts.length !== actualParts.length) {
+			return null;
+		}
+
+		const params: Record<string, string> = {};
+		for (let i = 0; i < patternParts.length; i += 1) {
+			const patternPart = patternParts[i];
+			const actualPart = actualParts[i];
+
+			if (!patternPart || !actualPart) {
+				return null;
+			}
+
+			if (patternPart.startsWith(":")) {
+				params[patternPart.slice(1)] = decodeURIComponent(actualPart);
+				continue;
+			}
+
+			if (patternPart !== actualPart) {
+				return null;
+			}
+		}
+
+		return params;
+	}
+
+	private buildQuery(path: string): Record<string, string> {
+		const query: Record<string, string> = {};
+		const url = new URL(path, "http://localhost");
+		url.searchParams.forEach((value, key) => {
+			if (!(key in query)) {
+				query[key] = value;
+			}
+		});
+		return query;
+	}
+
+	private async invoke(
+		method: string,
+		path: string,
+		headers: Record<string, string> | null,
+		body: NativeBody,
+	): Promise<NativeTestResponse> {
+		const { handlerName, params } = this.matchRoute(method, path);
+		const handler = this.handlers[handlerName];
+		if (!handler) {
+			throw new Error(`Handler not found for ${handlerName}`);
+		}
+
+		const requestPayload = {
+			method,
+			path,
+			params,
+			query: this.buildQuery(path),
+			headers: headers ?? {},
+			cookies: {},
+			body: body === null ? null : Array.from(Buffer.from(JSON.stringify(body))),
+			dependencies: this.dependencies ?? undefined,
+		};
+
+		const result = await handler(JSON.stringify(requestPayload));
+		return this.toResponse(result);
+	}
+
+	private toResponse(result: unknown): NativeTestResponse {
+		if (typeof result === "string") {
+			try {
+				const parsed = JSON.parse(result) as {
+					status?: number;
+					statusCode?: number;
+					headers?: Record<string, string>;
+					body?: unknown;
+				};
+				if (
+					parsed &&
+					typeof parsed === "object" &&
+					("status" in parsed || "statusCode" in parsed || "body" in parsed)
+				) {
+					const statusCode = parsed.status ?? parsed.statusCode ?? 200;
+					const textBody =
+						typeof parsed.body === "string" || parsed.body === undefined
+							? (parsed.body ?? "")
+							: JSON.stringify(parsed.body);
+					return new JsTestResponse(statusCode, parsed.headers ?? {}, Buffer.from(textBody));
+				}
+			} catch {
+				// fall through to treat as plain text
+			}
+			return new JsTestResponse(200, {}, Buffer.from(result));
+		}
+
+		if (
+			result &&
+			typeof result === "object" &&
+			("status" in (result as Record<string, unknown>) || "statusCode" in (result as Record<string, unknown>))
+		) {
+			const payload = result as {
+				status?: number;
+				statusCode?: number;
+				headers?: Record<string, string>;
+				body?: unknown;
+			};
+			const statusCode = payload.status ?? payload.statusCode ?? 200;
+			const textBody =
+				typeof payload.body === "string" || payload.body === undefined
+					? (payload.body ?? "")
+					: JSON.stringify(payload.body);
+			return new JsTestResponse(statusCode, payload.headers ?? {}, Buffer.from(textBody));
+		}
+
+		const text = JSON.stringify(result);
+		return new JsTestResponse(200, {}, Buffer.from(text));
+	}
+
+	async get(path: string, headers: Record<string, string> | null): Promise<NativeTestResponse> {
+		return this.invoke("GET", path, headers, null);
+	}
+
+	async post(path: string, headers: Record<string, string> | null, body: NativeBody): Promise<NativeTestResponse> {
+		return this.invoke("POST", path, headers, body);
+	}
+
+	async put(path: string, headers: Record<string, string> | null, body: NativeBody): Promise<NativeTestResponse> {
+		return this.invoke("PUT", path, headers, body);
+	}
+
+	async delete(path: string, headers: Record<string, string> | null): Promise<NativeTestResponse> {
+		return this.invoke("DELETE", path, headers, null);
+	}
+
+	async patch(path: string, headers: Record<string, string> | null, body: NativeBody): Promise<NativeTestResponse> {
+		return this.invoke("PATCH", path, headers, body);
+	}
+
+	async head(path: string, headers: Record<string, string> | null): Promise<NativeTestResponse> {
+		return this.invoke("HEAD", path, headers, null);
+	}
+
+	async options(path: string, headers: Record<string, string> | null): Promise<NativeTestResponse> {
+		return this.invoke("OPTIONS", path, headers, null);
+	}
+
+	async trace(path: string, headers: Record<string, string> | null): Promise<NativeTestResponse> {
+		return this.invoke("TRACE", path, headers, null);
+	}
+
+	async websocket(_path: string): Promise<WebSocketTestConnection> {
+		throw new Error("WebSocket testing is not available in the JS fallback client");
+	}
+}
 
 const defaultNativeClientFactory: NativeClientFactory = (
 	routesJson,
 	websocketRoutesJson,
 	handlers,
 	websocketHandlers,
+	dependencies,
+	lifecycleHooks,
 	config,
 ) => {
-	const Ctor = NativeTestClient as NativeClientConstructor;
-	return new Ctor(routesJson, websocketRoutesJson, handlers, websocketHandlers, config);
+	if (isNativeCtor && nativeTestClient) {
+		return new nativeTestClient(
+			routesJson,
+			websocketRoutesJson,
+			handlers,
+			websocketHandlers,
+			dependencies,
+			lifecycleHooks,
+			config,
+		);
+	}
+
+	return new JsNativeClient(
+		routesJson,
+		websocketRoutesJson,
+		handlers,
+		websocketHandlers,
+		dependencies,
+		lifecycleHooks,
+		config,
+	);
 };
 
 let nativeClientFactory: NativeClientFactory = defaultNativeClientFactory;
@@ -144,6 +425,7 @@ export const __setNativeClientFactory = (factory?: NativeClientFactory): void =>
  * ```
  */
 export class TestClient {
+	readonly app: SpikardApp;
 	private nativeClient: NativeClient;
 
 	/**
@@ -166,8 +448,18 @@ export class TestClient {
 		);
 		const websocketHandlersMap = app.websocketHandlers || {};
 		const config = app.config ?? null;
+		const dependencies = (app as SpikardApp & { dependencies?: Record<string, unknown> }).dependencies ?? null;
+		const lifecycleHooks = (app as { getLifecycleHooks?: () => Record<string, unknown> }).getLifecycleHooks?.() ?? null;
 
-		this.nativeClient = nativeClientFactory(routesJson, websocketRoutesJson, handlersMap, websocketHandlersMap, config);
+		this.nativeClient = nativeClientFactory(
+			routesJson,
+			websocketRoutesJson,
+			handlersMap,
+			websocketHandlersMap,
+			dependencies,
+			lifecycleHooks,
+			config,
+		);
 	}
 
 	/**

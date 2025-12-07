@@ -107,53 +107,39 @@ module Spikard
     #
     # @example Using Provide wrapper
     #   app.provide("db", Spikard::Provide.new(method("create_db"), cacheable: true))
-    # rubocop:disable Metrics/MethodLength
     def provide(key, value = nil, depends_on: [], singleton: false, cacheable: true, &block)
       key_str = key.to_s
-      @dependencies ||= {}
+      registry = ensure_native_dependencies!
 
       # Handle Provide wrapper instances
       if value.is_a?(Provide)
-        provider = value
-        @dependencies[key_str] = {
-          type: :factory,
-          factory: provider.factory,
-          depends_on: provider.depends_on,
-          singleton: provider.singleton,
-          cacheable: provider.cacheable
-        }
+        registry.register_factory(key_str, value.factory, value.depends_on, value.singleton, value.cacheable)
       elsif block
-        # Factory dependency (block form)
-        @dependencies[key_str] = {
-          type: :factory,
-          factory: block,
-          depends_on: Array(depends_on).map(&:to_s),
-          singleton: singleton,
-          cacheable: cacheable
-        }
+        registry.register_factory(key_str, block, Array(depends_on).map(&:to_s), singleton, cacheable)
       else
-        # Value dependency
         raise ArgumentError, 'Either provide a value or a block, not both' if value.nil?
 
-        @dependencies[key_str] = {
-          type: :value,
-          value: value,
-          singleton: true, # Values are always singleton
-          cacheable: true
-        }
+        registry.register_value(key_str, value)
       end
 
       self
     end
-    # rubocop:enable Metrics/MethodLength
 
     # Get all registered dependencies
     #
     # @return [Hash] Dictionary mapping dependency keys to their definitions
     # @api private
     def dependencies
-      @dependencies ||= {}
-      @dependencies.dup
+      ensure_native_dependencies!
+    end
+
+    private
+
+    def ensure_native_dependencies!
+      registry = (@native_dependencies if instance_variable_defined?(:@native_dependencies) && @native_dependencies)
+      raise 'Spikard native dependency registry unavailable' unless registry
+
+      registry
     end
   end
 

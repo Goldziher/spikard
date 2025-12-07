@@ -9,11 +9,9 @@ use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use spikard_http::ParameterValidator;
+use spikard_http::RequestData;
 use spikard_http::server::build_router_with_handlers_and_config;
-use spikard_http::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
-use spikard_http::{
-    Handler, HandlerResult, LifecycleHooks, Method, RequestData, Route, Router, SchemaRegistry, ServerConfig,
-};
+use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, Route, Router, SchemaRegistry, ServerConfig};
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -605,181 +603,141 @@ impl Handler for ClosureHandler {
 pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerResult {
     // If it's null, return 204 No Content
     if response.is_null() {
-        return Ok(Response::builder()
+        return Response::builder()
             .status(StatusCode::NO_CONTENT)
             .body(Body::empty())
-            .unwrap_or_else(|e| {
-                to_problem(
+            .map_err(|e| {
+                (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Failed to build response: {}", e),
                 )
-                .expect("Failed to build error response")
-            }));
+            })
+            .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
     }
 
     // Try to extract Response - check if object has our expected methods
-    if let Some(obj) = response.object()
-        && let Ok(class_name) = obj.get_class_name()
-    {
-        // Check for StreamingResponse first (before Response)
-        if class_name.contains("StreamingResponse") {
-            // Extract generator property
-            if let Ok(generator_zval) = obj.get_property::<&Zval>("generator") {
-                // Extract status code
-                let status_code = if let Ok(status_zval) = obj.get_property::<&Zval>("statusCode") {
-                    status_zval.long().unwrap_or(200) as u16
-                } else {
-                    200
-                };
+    if let Some(obj) = response.object() {
+        // Try to call getStatus method
+        if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
+            let status_code = status_zval.long().unwrap_or(200);
+            let status = StatusCode::from_u16(status_code as u16).unwrap_or(StatusCode::OK);
 
-                // Extract headers
-                let headers = if let Ok(headers_zval) = obj.get_property::<&Zval>("headers") {
-                    if let Some(arr) = headers_zval.array() {
-                        arr.iter()
-                            .filter_map(|(key, val)| {
-                                let key_str = match key {
-                                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                                    _ => return None,
-                                };
-                                val.string().map(|v| (key_str, v.to_string()))
-                            })
-                            .collect()
-                    } else {
-                        HashMap::new()
-                    }
-                } else {
-                    HashMap::new()
-                };
+            let mut builder = Response::builder().status(status);
 
-                let config = crate::php::StreamingConfig { status_code, headers };
-
-                // Register generator and create streaming response
-                match crate::php::register_generator(generator_zval, Some(config)) {
-                    Ok((idx, cfg)) => {
-                        return crate::php::create_streaming_response(idx, cfg)
-                            .map(|r| r.into_response())
-                            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e));
-                    }
-                    Err(e) => {
-                        return Err((
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            format!("Failed to register generator: {}", e),
-                        ));
-                    }
-                }
-            }
-        } else if class_name.contains("Response") {
-            // Try to call getStatus method
-            if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
-                let status_code = status_zval.long().unwrap_or(200);
-                let status = StatusCode::from_u16(status_code as u16).unwrap_or(StatusCode::OK);
-
-                let mut builder = Response::builder().status(status);
-
-                // Try to get headers
-                let mut has_content_type = false;
-                if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
-                    && let Some(arr) = headers_zval.array()
-                {
-                    for (key, val) in arr.iter() {
-                        let key_str = match key {
-                            ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                            ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                            ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                        };
-                        if let Some(val_str) = val.string() {
-                            if key_str.eq_ignore_ascii_case("content-type") {
-                                has_content_type = true;
-                            }
-                            if let (Ok(header_name), Ok(header_value)) = (
-                                HeaderName::from_bytes(key_str.as_bytes()),
-                                HeaderValue::from_str(&val_str),
-                            ) {
-                                builder = builder.header(header_name, header_value);
-                            }
+            // Try to get headers
+            let mut has_content_type = false;
+            if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
+                && let Some(arr) = headers_zval.array()
+            {
+                for (key, val) in arr.iter() {
+                    let key_str = match key {
+                        ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                        ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                        ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                    };
+                    if let Some(val_str) = val.string() {
+                        if key_str.eq_ignore_ascii_case("content-type") {
+                            has_content_type = true;
+                        }
+                        if let (Ok(header_name), Ok(header_value)) = (
+                            HeaderName::from_bytes(key_str.as_bytes()),
+                            HeaderValue::from_str(&val_str),
+                        ) {
+                            builder = builder.header(header_name, header_value);
                         }
                     }
                 }
+            }
 
-                // Try to get body
-                let body_str = if let Ok(body_zval) = obj.try_call_method("getBody", vec![]) {
-                    body_zval.string().map(|s| s.to_string()).unwrap_or_default()
-                } else {
-                    String::new()
-                };
-
-                // Set content-type if not already set and we have a body
-                if !has_content_type && !body_str.is_empty() {
-                    builder = builder.header("content-type", "application/json");
-                }
-
-                return builder
-                    .body(Body::from(body_str))
-                    .map_err(|e| {
-                        (
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            format!("Failed to build response: {}", e),
-                        )
+            // Try to get body (already a string from getBody, no re-parsing needed)
+            let body_zval = obj.try_call_method("getBody", vec![]).unwrap_or_else(|_| Zval::new());
+            if body_zval.object().is_some() {
+                // Streaming via generator
+                let status_code = status.as_u16();
+                let headers = builder
+                    .headers_ref()
+                    .map(|h| {
+                        h.iter()
+                            .filter_map(|(name, value)| value.to_str().ok().map(|v| (name.to_string(), v.to_string())))
+                            .collect::<HashMap<_, _>>()
+                    })
+                    .unwrap_or_default();
+                let cfg = crate::php::StreamingConfig { status_code, headers };
+                return crate::php::register_generator(&body_zval, Some(cfg))
+                    .map_err(|msg| (StatusCode::INTERNAL_SERVER_ERROR, msg))
+                    .and_then(|(idx, config)| {
+                        crate::php::create_streaming_response(idx, config)
+                            .map(|r| r.into_response())
+                            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
                     })
                     .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
             }
+
+            // Body is already a string from getBody() - no need to parse/re-serialize
+            let body_str = body_zval.string().map(|s| s.to_string()).unwrap_or_default();
+
+            // Set content-type if not already set and we have a body
+            if !has_content_type && !body_str.is_empty() {
+                builder = builder.header("content-type", "application/json");
+            }
+
+            return builder
+                .body(Body::from(body_str))
+                .map_err(|e| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        format!("Failed to build response: {}", e),
+                    )
+                })
+                .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
         }
     }
 
     // If it's a string, return as text/plain
     if let Some(s) = response.string() {
-        return Ok(Response::builder()
+        return Response::builder()
             .status(StatusCode::OK)
             .header("content-type", "text/plain")
             .body(Body::from(s.to_string()))
-            .unwrap_or_else(|e| {
-                to_problem(
+            .map_err(|e| {
+                (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Failed to build response: {}", e),
                 )
-                .expect("Failed to build error response")
-            }));
+            })
+            .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
     }
 
     // Try to convert to JSON
     let body_json = match zval_to_json(response) {
         Ok(val) => val,
         Err(e) => {
-            return to_problem(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to convert response: {}", e),
-            );
+            return structured_response(StatusCode::INTERNAL_SERVER_ERROR, "response_conversion_failed", e);
         }
     };
 
     let body_bytes = serde_json::to_vec(&body_json).unwrap_or_default();
-
-    Ok(Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(body_bytes))
-        .unwrap_or_else(|e| {
-            to_problem(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to build response: {}", e),
-            )
-            .expect("Failed to build error response")
-        }))
+    let mut builder = Response::builder().status(StatusCode::OK);
+    builder = builder.header("content-type", "application/json");
+    builder.body(Body::from(body_bytes)).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to build response: {}", e),
+        )
+    })
 }
 
-/// Build a structured ProblemDetails response with application/problem+json.
-pub fn to_problem(status: StatusCode, detail: impl Into<String>) -> HandlerResult {
-    let problem = ProblemDetails::new(
-        ProblemDetails::TYPE_INTERNAL_SERVER_ERROR,
-        "Internal Server Error",
-        status,
-    )
-    .with_detail(detail);
-    let body = serde_json::to_vec(&problem).unwrap_or_else(|_| b"{}".to_vec());
+fn structured_response(status: StatusCode, code: impl Into<String>, message: impl Into<String>) -> HandlerResult {
+    let payload = spikard_core::errors::StructuredError::simple(code.into(), message.into());
+    let body = serde_json::to_vec(&payload).unwrap_or_else(|_| {
+        r#"{"error":"internal_error","code":"internal_error","details":{}}"#
+            .as_bytes()
+            .to_vec()
+    });
+
     Response::builder()
         .status(status)
-        .header("content-type", CONTENT_TYPE_PROBLEM_JSON)
+        .header("content-type", "application/json")
         .body(Body::from(body))
         .map_err(|e| {
             (
@@ -787,4 +745,8 @@ pub fn to_problem(status: StatusCode, detail: impl Into<String>) -> HandlerResul
                 format!("Failed to build error response: {}", e),
             )
         })
+}
+
+fn to_problem(status: StatusCode, message: impl Into<String>) -> HandlerResult {
+    structured_response(status, "internal_error", message)
 }

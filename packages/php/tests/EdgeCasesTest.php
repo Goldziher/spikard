@@ -27,10 +27,10 @@ final class EdgeCasesTest extends TestCase
 
     public function testRequestWithVeryLongPath(): void
     {
-        $longPath = '/' . str_repeat('a', 2000);
+        $longPath = '/' . \str_repeat('a', 2000);
         $request = new Request(method: 'GET', path: $longPath, body: null);
         $this->assertSame($longPath, $request->path);
-        $this->assertGreaterThan(2000, strlen($request->path));
+        $this->assertGreaterThan(2000, \strlen($request->path));
     }
 
     public function testRequestWithEmptyHeaders(): void
@@ -41,7 +41,7 @@ final class EdgeCasesTest extends TestCase
 
     public function testRequestWithVeryLongHeaderValue(): void
     {
-        $longValue = str_repeat('x', 8000);
+        $longValue = \str_repeat('x', 8000);
         $headers = ['X-Custom' => $longValue];
         $request = new Request(method: 'GET', path: '/test', body: null, headers: $headers);
         $this->assertSame($longValue, $request->headers['X-Custom']);
@@ -92,11 +92,11 @@ final class EdgeCasesTest extends TestCase
             $largeBody['item_' . $i] = [
                 'id' => $i,
                 'name' => 'Item ' . $i,
-                'description' => str_repeat('text', 100),
+                'description' => \str_repeat('text', 100),
             ];
         }
         $request = new Request(method: 'POST', path: '/test', body: $largeBody);
-        if (is_array($request->body)) {
+        if (\is_array($request->body)) {
             $this->assertCount(1000, $request->body);
         }
     }
@@ -142,7 +142,7 @@ final class EdgeCasesTest extends TestCase
 
     public function testResponseWithVeryLongBody(): void
     {
-        $longBody = str_repeat('a', 10000);
+        $longBody = \str_repeat('a', 10000);
         $response = new Response(body: $longBody, statusCode: 200);
         $this->assertSame($longBody, $response->body);
     }
@@ -171,7 +171,7 @@ final class EdgeCasesTest extends TestCase
 
     public function testResponseWithVeryLongHeaderValue(): void
     {
-        $longValue = str_repeat('x', 10000);
+        $longValue = \str_repeat('x', 10000);
         $response = new Response(
             body: 'text',
             statusCode: 200,
@@ -272,21 +272,21 @@ final class EdgeCasesTest extends TestCase
 
     public function testPathParamWithVeryLongDefault(): void
     {
-        $longString = str_repeat('a', 5000);
+        $longString = \str_repeat('a', 5000);
         $path = new Path(default: $longString);
         $this->assertSame($longString, $path->getDefault());
     }
 
     public function testHeaderParamWithVeryLongValue(): void
     {
-        $longValue = str_repeat('x', 8000);
+        $longValue = \str_repeat('x', 8000);
         $header = new Header(default: $longValue);
         $this->assertSame($longValue, $header->getDefault());
     }
 
     public function testCookieParamWithSpecialChars(): void
     {
-        $specialValue = "value; path=/; secure; httponly";
+        $specialValue = 'value; path=/; secure; httponly';
         $cookie = new Cookie(default: $specialValue);
         $this->assertSame($specialValue, $cookie->getDefault());
     }

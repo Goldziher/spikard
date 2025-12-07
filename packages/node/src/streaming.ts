@@ -1,5 +1,9 @@
-import { createStreamingHandle } from "../index.js";
 import type { HandlerResult, JsonValue } from "./types";
+
+export interface StreamingResponseInit {
+	statusCode?: number;
+	headers?: Record<string, string>;
+}
 
 const STREAM_HANDLE_PROP = "__spikard_stream_handle" as const;
 
@@ -9,12 +13,32 @@ type ChunkIterator = AsyncIterator<StreamChunk>;
 
 type StreamingHandleFactory = (iterator: ChunkIterator, init: StreamingResponseInit) => number;
 
-const createHandle: StreamingHandleFactory = createStreamingHandle as StreamingHandleFactory;
-
-export interface StreamingResponseInit {
-	statusCode?: number;
-	headers?: Record<string, string>;
+interface NativeStreamingBinding {
+	createStreamingHandle(iterator: ChunkIterator, init: StreamingResponseInit): number;
 }
+
+let nativeBinding: NativeStreamingBinding;
+
+const loadBinding = (): NativeStreamingBinding => {
+	try {
+		return require("../spikard-node.darwin-arm64.node") as NativeStreamingBinding;
+	} catch {
+		try {
+			return require("../spikard-node.node") as NativeStreamingBinding;
+		} catch {
+			console.warn("[spikard-node] Native binding not found. Please run: pnpm build:native");
+			return {
+				createStreamingHandle: () => {
+					throw new Error("Native binding not built. Run: pnpm build:native");
+				},
+			};
+		}
+	}
+};
+
+nativeBinding = loadBinding();
+
+const createHandle: StreamingHandleFactory = (iterator, init) => nativeBinding.createStreamingHandle(iterator, init);
 
 export class StreamingResponse {
 	public readonly [STREAM_HANDLE_PROP]: number;

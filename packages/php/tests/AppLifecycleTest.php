@@ -17,7 +17,7 @@ final class AppLifecycleTest extends TestCase
 {
     public function test_run_without_extension_throws(): void
     {
-        $app = (new App())->addRoute('GET', '/hello', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/hello', new AppLifecycleDummyHandler());
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Spikard PHP extension is not loaded');
         $app->run(ServerConfig::builder()->build());
@@ -25,7 +25,7 @@ final class AppLifecycleTest extends TestCase
 
     public function test_close_is_noop_without_extension(): void
     {
-        $app = (new App())->addRoute('GET', '/hello', new DummyHandler());
+        $app = (new App())->addRoute('GET', '/hello', new AppLifecycleDummyHandler());
         $client = TestClient::create($app);
         $response = $client->get('/hello');
 
@@ -34,7 +34,7 @@ final class AppLifecycleTest extends TestCase
     }
 }
 
-final class DummyHandler implements HandlerInterface
+final class AppLifecycleDummyHandler implements HandlerInterface
 {
     public function matches(Request $request): bool
     {

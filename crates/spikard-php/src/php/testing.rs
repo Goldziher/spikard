@@ -279,7 +279,7 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
         if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
             let status = status_zval.long().unwrap_or(200);
 
-            // Try to get body
+            // Try to get body (already a string from getBody, no re-parsing needed)
             let body = if let Ok(body_zval) = obj.try_call_method("getBody", vec![]) {
                 body_zval.string().map(|s| s.to_string()).unwrap_or_default()
             } else {

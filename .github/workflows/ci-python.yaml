@@ -11,6 +11,7 @@ on:
       - 'crates/spikard/**/*.rs'
       - 'crates/spikard-http/**/*.rs'
       - 'testing_data/**'
+      - '.cargo/config.toml'
       - '.github/workflows/ci-python.yaml'
       - '.github/actions/setup-python-env/**'
       - '.github/actions/setup-rust/**'
@@ -24,13 +25,17 @@ on:
       - 'crates/spikard/**/*.rs'
       - 'crates/spikard-http/**/*.rs'
       - 'testing_data/**'
+      - '.cargo/config.toml'
       - '.github/workflows/ci-python.yaml'
       - '.github/actions/setup-python-env/**'
       - '.github/actions/setup-rust/**'
 
 concurrency:
-  group: ci-python-${{ github.event.pull_request.number || github.ref }}
+  group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
   RUST_BACKTRACE: short
@@ -51,7 +56,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11", "3.13"]
+        python-version: ["3.11", "3.14"]
     steps:
       - uses: actions/checkout@v6
 
@@ -69,15 +74,21 @@ jobs:
       - name: Build Python wheels (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }} -m packages/python/pyproject.toml
+        working-directory: packages/python
+        run: |
+          rm -f _spikard/_spikard.*
+          uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }}
 
       - name: Build Python wheels (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }} -m packages/python/pyproject.toml
+        working-directory: packages/python
+        run: |
+          Remove-Item _spikard/_spikard.* -ErrorAction SilentlyContinue
+          uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }}
 
       - name: Upload wheels artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
           path: target/wheels/*.whl
@@ -93,7 +104,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11", "3.13"]
+        python-version: ["3.11", "3.14"]
     steps:
       - uses: actions/checkout@v6
 
@@ -109,7 +120,7 @@ jobs:
           cache-prefix: test-python-${{ matrix.os }}-${{ matrix.python-version }}
 
       - name: Download wheels artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
           path: dist/
@@ -117,12 +128,86 @@ jobs:
       - name: Install wheel (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: uv pip install dist/*.whl
+        run: |
+          wheel=$(python - <<'PY'
+import glob
+import platform
+import sys
+
+candidates = glob.glob("dist/*.whl")
+if not candidates:
+    sys.exit("No wheels found in dist/")
+
+plat = sys.platform
+arch = platform.machine().lower()
+arch_aliases = {
+    "x86_64": ["x86_64", "amd64"],
+    "aarch64": ["aarch64", "arm64"],
+}
+arch_matches = arch_aliases.get(arch, [arch])
+
+def pick(marker: str) -> str | None:
+    for candidate in candidates:
+        cand = candidate.lower()
+        if marker in cand and any(a in cand for a in arch_matches):
+            return candidate
+    return None
+
+if plat.startswith("linux"):
+    chosen = pick("manylinux") or pick("linux")
+elif plat == "darwin":
+    chosen = pick("macosx")
+elif plat.startswith("win"):
+    chosen = pick("win")
+else:
+    chosen = None
+
+print(chosen or candidates[0])
+PY
+          )
+          uv pip install "$wheel"
 
       - name: Install wheel (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: uv pip install (Get-Item dist\*.whl).FullName
+        run: |
+          $wheel = python - <<'PY'
+import glob
+import platform
+import sys
+
+candidates = glob.glob("dist/*.whl")
+if not candidates:
+    sys.exit("No wheels found in dist/")
+
+plat = sys.platform
+arch = platform.machine().lower()
+arch_aliases = {
+    "x86_64": ["x86_64", "amd64"],
+    "aarch64": ["aarch64", "arm64"],
+}
+arch_matches = arch_aliases.get(arch, [arch])
+
+def pick(marker: str):
+    for candidate in candidates:
+        cand = candidate.lower()
+        if marker in cand and any(a in cand for a in arch_matches):
+            return candidate
+    return None
+
+if plat.startswith("linux"):
+    chosen = pick("manylinux") or pick("linux")
+elif plat == "darwin":
+    chosen = pick("macosx")
+elif plat.startswith("win"):
+    chosen = pick("win")
+else:
+    chosen = None
+
+print(chosen or candidates[0])
+PY
+          $wheel = $wheel.Trim()
+          uv pip install $wheel
 
       - name: Run pytest (Unix)
         if: runner.os != 'Windows'
@@ -149,19 +234,68 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           cache-prefix: python-sdist
 
       - name: Sync workspace deps
         run: uv sync --all-packages --all-extras
 
       - name: Build source distribution
-        run: uv tool run maturin sdist -m packages/python/pyproject.toml
+        working-directory: packages/python
+        run: |
+          rm -f _spikard/_spikard.*
+          uv tool run maturin sdist
 
       - name: Upload sdist artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: python-sdist
           path: target/wheels/*.tar.gz
           if-no-files-found: error
           retention-days: 7
+
+  coverage-python:
+    name: Python Code Coverage (80% minimum)
+    needs: [test-python]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: coverage-python
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Run Python tests with coverage
+        working-directory: packages/python
+        run: |
+          uv sync --all-extras
+          uv run maturin develop --release --features extension-module
+          uv run pytest --cov=_spikard --cov-report=html:htmlcov --cov-report=lcov:coverage.lcov -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./packages/python/coverage.lcov
+          flags: python
+          name: python-coverage
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-coverage-report
+          path: packages/python/htmlcov/
+          retention-days: 30

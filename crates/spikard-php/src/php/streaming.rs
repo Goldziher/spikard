@@ -183,8 +183,8 @@ fn convert_chunk_to_bytes(chunk: &Zval) -> Result<Bytes, String> {
     if chunk.is_array() || chunk.is_object() {
         let json_val =
             crate::php::zval_to_json(chunk).map_err(|e| format!("Failed to convert chunk to JSON: {}", e))?;
-        let json_str = serde_json::to_string(&json_val).map_err(|e| format!("Failed to serialize JSON: {}", e))?;
-        return Ok(Bytes::from(json_str));
+        let json_bytes = serde_json::to_vec(&json_val).map_err(|e| format!("Failed to serialize JSON: {}", e))?;
+        return Ok(Bytes::from(json_bytes));
     }
 
     Err("StreamingResponse chunks must be strings or JSON-serializable values".to_string())

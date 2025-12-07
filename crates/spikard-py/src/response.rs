@@ -307,39 +307,81 @@ impl StreamingResponse {
             loop {
                 let stream_clone = Python::attach(|py| stream_object.clone_ref(py));
 
-                let result = tokio::task::spawn_blocking(move || {
-                    Python::attach(|py| -> PyResult<Option<Bytes>> {
-                        let bound = stream_clone.bind(py);
-
-                        match bound.call_method0("__next__") {
-                            Ok(value) => {
-                                convert_chunk_to_bytes(&value).map(Some)
+                // Call __next__ to get the next item
+                let next_result_py = Python::attach(|py| -> PyResult<Py<PyAny>> {
+                    let bound = stream_clone.bind(py);
+                    match bound.call_method0("__next__") {
+                        Ok(value) => Ok(value.unbind()),
+                        Err(err) => {
+                            if err.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
+                                // Use a sentinel value to indicate end of stream
+                                Ok(Python::None(py))
+                            } else {
+                                Err(err)
                             }
-                            Err(err) => {
-                                if err.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
-                                    Ok(None)
-                                } else {
-                                    Err(err)
+                        }
+                    }
+                });
+
+                match next_result_py {
+                    Ok(value_py) => {
+                        // Check if this is the sentinel None value indicating end of stream
+                        let is_none = Python::attach(|py| value_py.bind(py).is_none());
+                        if is_none {
+                            break;
+                        }
+
+                        // Check if the value is a coroutine
+                        let is_coro = Python::attach(|py| -> PyResult<bool> {
+                            let asyncio = py.import("asyncio")?;
+                            asyncio
+                                .call_method1("iscoroutine", (value_py.bind(py),))?
+                                .extract()
+                        }).unwrap_or(false);
+
+                        let final_value = if is_coro {
+                            // Await the coroutine
+                            let future_result = Python::attach(|py| {
+                                pyo3_async_runtimes::tokio::into_future(value_py.bind(py).clone())
+                            });
+
+                            match future_result {
+                                Ok(future) => {
+                                    match future.await {
+                                        Ok(result) => Some(result),
+                                        Err(err) => {
+                                            let message = format_pyerr(err);
+                                            yield Err(Box::new(io::Error::other(message)));
+                                            break;
+                                        }
+                                    }
+                                }
+                                Err(err) => {
+                                    let message = format_pyerr(err);
+                                    yield Err(Box::new(io::Error::other(message)));
+                                    break;
+                                }
+                            }
+                        } else {
+                            Some(value_py)
+                        };
+
+                        if let Some(final_val) = final_value {
+                            match Python::attach(|py| convert_chunk_to_bytes(final_val.bind(py))) {
+                                Ok(bytes) => {
+                                    yield Ok(bytes);
+                                }
+                                Err(err) => {
+                                    let message = format_pyerr(err);
+                                    yield Err(Box::new(io::Error::other(message)));
+                                    break;
                                 }
                             }
                         }
-                    })
-                }).await;
-
-                match result {
-                    Ok(Ok(Some(bytes))) => {
-                        yield Ok(bytes);
-                    }
-                    Ok(Ok(None)) => {
-                        break;
-                    }
-                    Ok(Err(err)) => {
-                        let message = format_pyerr(err);
-                        yield Err(Box::new(io::Error::other(message)));
-                        break;
                     }
                     Err(err) => {
-                        yield Err(Box::new(io::Error::other(format!("Task error: {}", err))));
+                        let message = format_pyerr(err);
+                        yield Err(Box::new(io::Error::other(message)));
                         break;
                     }
                 }

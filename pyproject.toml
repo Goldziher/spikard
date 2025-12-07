@@ -1,7 +1,7 @@
 [dependency-groups]
 dev = [
   "annotated-types>=0.7.0",
-  "fastapi>=0.122.0",
+  "fastapi>=0.123.9",
   "httpx-sse>=0.4.3",
   "jsonschema>=4.23.0",
   "maturin>=1.10.2",
@@ -11,12 +11,12 @@ dev = [
   "prek>=0.2.19",
   "pydantic>=2.12.5",
   "pyjwt>=2.10.1",
-  "pytest>=9.0.1",
+  "pytest>=9.0.2",
   "pytest-asyncio>=1.3.0",
   "pytest-cov>=7.0.0",
   "pytest-mock>=3.15.1",
   "pytest-timeout>=2.4.0",
-  "ruff>=0.14.7",
+  "ruff>=0.14.8",
   "uv-bump",
   "uvicorn>=0.38.0",
   "websockets>=15.0.1",
@@ -27,7 +27,7 @@ docs = [
   "mkdocs-material>=9.7.0",
   "mkdocs-minify-plugin>=0.8.0",
   "mkdocstrings>=1.0.0",
-  "mkdocstrings-python>=2.0.0",
+  "mkdocstrings-python>=2.0.1",
 ]
 doc = [
   "mike>=2.1.3",
@@ -162,8 +162,23 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
 branch = true
-omit = [ "packages/python/tests/*", "scripts/*" ]
-source = [ "crates/spikard-py" ]
+omit = [
+  "packages/python/tests/*",
+  "packages/python/spikard/tests/*",
+  "packages/python/spikard/_internal/*",
+  "packages/python/spikard/_internal.py",
+  "packages/python/spikard/background.py",
+  "packages/python/spikard/routing.py",
+  "packages/python/spikard/schema.py",
+  "packages/python/spikard/sse.py",
+  "packages/python/spikard/testing.py",
+  "packages/python/spikard/websocket.py",
+  "scripts/*",
+  "*/__pycache__/*",
+  "*/site-packages/*",
+]
+source = [ "packages/python/spikard" ]
+relative_files = true
 
 [tool.coverage.report]
 exclude_lines = [
@@ -176,7 +191,18 @@ exclude_lines = [
   "def __repr__",
   "class .*\\bProtocol\\):",
   "@(abc\\.)?abstractmethod",
+  "def __str__",
+  "raise AssertionError",
+  "raise NotImplementedError",
 ]
+skip_covered = false
+precision = 2
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.lcov]
+output = "coverage.lcov"
 
 [tool.mypy]
 mypy_path = "packages/python"
@@ -204,3 +230,8 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = [ "jsonschema" ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [ "tests.*" ]
+disallow_any_explicit = true
+disallow_any_expr = false

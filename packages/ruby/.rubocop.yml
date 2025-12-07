@@ -10,6 +10,19 @@ AllCops:
 Metrics/BlockLength:
   Exclude:
     - 'Rakefile'
+    - 'spec/**/*.rb'
+
+Lint/UnusedBlockArgument:
+  Exclude:
+    - 'spec/**/*.rb'
+
+Lint/MissingSuper:
+  Exclude:
+    - 'spec/**/*.rb'
+
+Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - 'spec/**/*.rb'
 
 # TODO: Refactor to reduce complexity
 Metrics/AbcSize:

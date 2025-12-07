@@ -1,19 +1,15 @@
 //! TypeScript AsyncAPI code generation.
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
+use super::base::sanitize_typescript_identifier;
 use super::{AsyncApiGenerator, ChannelInfo, Message};
 
 /// TypeScript AsyncAPI code generator
 pub struct TypeScriptAsyncApiGenerator;
 
 impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
-    fn generate_test_app(
-        &self,
-        channels: &[ChannelInfo],
-        _messages: &[Message],
-        protocol: &str,
-    ) -> Result<String> {
+    fn generate_test_app(&self, channels: &[ChannelInfo], _messages: &[Message], protocol: &str) -> Result<String> {
         let mut code = String::new();
 
         code.push_str("#!/usr/bin/env node\n");
@@ -40,6 +36,16 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
 
         code.push_str("const __filename = fileURLToPath(import.meta.url);\n\n");
 
+        if protocol == "websocket" {
+            code.push_str("async function handleWebSocket(ws: WebSocket): Promise<void> {\n");
+            code.push_str("  // Handle WebSocket messages\n");
+            code.push_str("  ws.on('message', (data: string) => {\n");
+            code.push_str("    const parsed = JSON.parse(data);\n");
+            code.push_str("    console.log('Received:', parsed);\n");
+            code.push_str("  });\n");
+            code.push_str("}\n\n");
+        }
+
         code.push_str("async function main(): Promise<void> {\n");
         code.push_str("  const uri = process.env.URI || 'ws://localhost:8000");
 
@@ -55,12 +61,7 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
         Ok(code)
     }
 
-    fn generate_handler_app(
-        &self,
-        channels: &[ChannelInfo],
-        _messages: &[Message],
-        protocol: &str,
-    ) -> Result<String> {
+    fn generate_handler_app(&self, channels: &[ChannelInfo], _messages: &[Message], protocol: &str) -> Result<String> {
         if channels.is_empty() {
             bail!("AsyncAPI spec does not define any channels");
         }
@@ -77,7 +78,7 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
             code.push_str("import { StreamingResponse } from \"spikard\";\n");
         }
         code.push_str("import { z } from \"zod\";\n");
-        code.push_str("\n");
+        code.push('\n');
 
         let mut handler_entries = Vec::new();
         let mut route_entries = Vec::new();
@@ -145,49 +146,7 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
 }
 
 fn camel_identifier(name: &str) -> String {
-    let base = sanitize_identifier(name);
-    let mut result = String::new();
-    for part in base.split('_').filter(|segment| !segment.is_empty()) {
-        let mut chars = part.chars();
-        if let Some(first) = chars.next() {
-            result.push(first.to_ascii_uppercase());
-            result.push_str(chars.as_str());
-        }
-    }
-    if result.is_empty() {
-        "Handler".to_string()
-    } else {
-        result
-    }
-}
-
-fn sanitize_identifier(name: &str) -> String {
-    let mut ident: String = name
-        .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() {
-                c.to_ascii_lowercase()
-            } else {
-                '_'
-            }
-        })
-        .collect();
-
-    while ident.contains("__") {
-        ident = ident.replace("__", "_");
-    }
-
-    ident = ident.trim_matches('_').to_string();
-
-    if ident.is_empty() {
-        return "handler".to_string();
-    }
-
-    if ident.chars().next().unwrap().is_ascii_digit() {
-        ident.insert(0, '_');
-    }
-
-    ident
+    sanitize_typescript_identifier(name)
 }
 
 #[cfg(test)]
@@ -220,7 +179,9 @@ mod tests {
         }];
         let messages = vec![];
 
-        let code = generator.generate_handler_app(&channels, &messages, "websocket").unwrap();
+        let code = generator
+            .generate_handler_app(&channels, &messages, "websocket")
+            .unwrap();
         assert!(code.contains("async function"));
         assert!(code.contains("routes"));
     }

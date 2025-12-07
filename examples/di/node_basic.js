@@ -60,7 +60,7 @@ async function runSmokeTest() {
 	 *
 	 * Dependencies are passed as the second parameter and can be destructured
 	 */
-	get("/config")(async function getConfig(request, { app_name, version }) {
+	get("/config")(async function getConfig(_request, { app_name, version }) {
 		return {
 			app: app_name,
 			version: version,
@@ -70,7 +70,7 @@ async function runSmokeTest() {
 	/**
 	 * Handler with integer dependency
 	 */
-	get("/stats")(async function getStats(request, { max_connections }) {
+	get("/stats")(async function getStats(_request, { max_connections }) {
 		return {
 			max_connections: max_connections,
 			current_connections: 42,
@@ -81,7 +81,7 @@ async function runSmokeTest() {
 	/**
 	 * Handler with multiple dependencies including factory
 	 */
-	get("/db-info")(async function getDbInfo(request, { app_name, db_pool }) {
+	get("/db-info")(async function getDbInfo(_request, { app_name, db_pool }) {
 		return {
 			app: app_name,
 			database: {
@@ -95,7 +95,7 @@ async function runSmokeTest() {
 	/**
 	 * Handler with all dependencies
 	 */
-	get("/all")(async function getAll(request, { app_name, version, max_connections, database_url }) {
+	get("/all")(async function getAll(_request, { app_name, version, max_connections, database_url }) {
 		return {
 			app: app_name,
 			version: version,

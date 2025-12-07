@@ -583,7 +583,7 @@ install-so: $(DLLIB) $(TIMESTAMP_DIR)/.sitearchdir.time
 	$(Q) $(MAKEDIRS) $(RUBYARCHDIR)
 	$(INSTALL_PROG) $(DLLIB) $(RUBYARCHDIR)
 
-gemclean:
+gemclean: install-so
 	$(ECHO) Cleaning gem artifacts
 	-$(Q)$(RM_RF) $(RUBYGEMS_CLEAN_DIRS) 2> /dev/null || true
 

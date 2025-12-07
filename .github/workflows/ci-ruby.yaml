@@ -10,6 +10,7 @@ on:
       - 'crates/spikard/**/*.rs'
       - 'crates/spikard-http/**/*.rs'
       - 'testing_data/**'
+      - '.cargo/config.toml'
       - '.github/workflows/ci-ruby.yaml'
       - '.github/actions/setup-llvm-clang/**'
       - '.github/actions/setup-rust/**'
@@ -22,13 +23,17 @@ on:
       - 'crates/spikard/**/*.rs'
       - 'crates/spikard-http/**/*.rs'
       - 'testing_data/**'
+      - '.cargo/config.toml'
       - '.github/workflows/ci-ruby.yaml'
       - '.github/actions/setup-llvm-clang/**'
       - '.github/actions/setup-rust/**'
 
 concurrency:
-  group: ci-ruby-${{ github.event.pull_request.number || github.ref }}
+  group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
   RUST_BACKTRACE: short
@@ -52,11 +57,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Rust (Nightly for Windows)
+      - name: Setup Rust (GNU target for Windows)
         if: runner.os == 'Windows'
         uses: ./.github/actions/setup-rust
         with:
-          toolchain: nightly
+          toolchain: stable-x86_64-pc-windows-gnu
           cache-key-prefix: ruby-gem-${{ matrix.os }}
 
       - name: Setup Rust (Stable for Unix)
@@ -76,19 +81,14 @@ jobs:
           bundler-cache: true
           working-directory: packages/ruby
 
-      - name: Configure bindgen for Windows (MSVC compat headers)
+      - name: Configure bindgen for Windows (GNU toolchain)
         if: runner.os == 'Windows'
-        shell: pwsh
+        shell: bash
         run: |
-          $rubyPrefix = "${{ steps.setup-ruby.outputs.ruby-prefix }}"
-          $includeRoot = "$rubyPrefix\include\ruby-3.2.0"
-          $compat = "${{ github.workspace }}\packages\ruby\ext\spikard_rb\native\include\msvc_compat"
-          $includeRoot = $includeRoot -replace '\\','/'
-          $compatForward = $compat -replace '\\','/'
-          $extra = "-I$includeRoot -I$compatForward -fms-extensions -fstack-protector-strong -fno-omit-frame-pointer -fno-fast-math"
-          Add-Content -Path $env:GITHUB_ENV -Value "BINDGEN_EXTRA_CLANG_ARGS=$extra"
-          Add-Content -Path $env:GITHUB_ENV -Value "BINDGEN_EXTRA_CLANG_ARGS_x86_64-pc-windows-msvc=$extra"
-          Add-Content -Path $env:GITHUB_ENV -Value "BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_msvc=$extra"
+          # Extract Ruby DevKit path and configure bindgen for GNU target
+          RI_DEVKIT=$(ruby -e "puts RbConfig::CONFIG['prefix']" | tr '\\' '/')
+          MSYSTEM_PREFIX="${RI_DEVKIT}/msys64/ucrt64"
+          echo "BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_gnu=-I${MSYSTEM_PREFIX}/include --target=x86_64-pc-windows-gnu" >> $GITHUB_ENV
 
       - name: Build Ruby gem
         working-directory: packages/ruby
@@ -97,7 +97,7 @@ jobs:
         run: bundle exec rake compile
 
       - name: Upload Ruby gem
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ruby-gem-${{ matrix.os }}
           path: |
@@ -123,11 +123,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Rust (Nightly for Windows)
+      - name: Setup Rust (GNU target for Windows)
         if: runner.os == 'Windows'
         uses: ./.github/actions/setup-rust
         with:
-          toolchain: nightly
+          toolchain: stable-x86_64-pc-windows-gnu
           cache-key-prefix: ruby-tests-${{ matrix.os }}-${{ matrix.ruby-version }}
 
       - name: Setup Rust (Stable for Unix)
@@ -148,7 +148,7 @@ jobs:
           working-directory: packages/ruby
 
       - name: Download Ruby gem artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: ruby-gem-${{ matrix.os }}
           path: packages/ruby/
@@ -158,3 +158,46 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
         run: bundle exec rspec
+
+  coverage-ruby:
+    name: Ruby Code Coverage (80% minimum)
+    runs-on: ubuntu-latest
+    needs: [build-ruby-gem]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Download Ruby gem artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: ruby-gem-ubuntu-latest
+          path: packages/ruby/
+
+      - name: Run Ruby coverage
+        working-directory: packages/ruby
+        run: bundle exec rspec
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: packages/ruby/coverage/lcov.info
+          flags: ruby
+          name: ruby-coverage
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: ruby-coverage-report
+          path: packages/ruby/coverage/
+          retention-days: 30

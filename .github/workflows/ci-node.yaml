@@ -10,6 +10,7 @@ on:
       - 'crates/spikard/**/*.rs'
       - 'crates/spikard-http/**/*.rs'
       - 'testing_data/**'
+      - '.cargo/config.toml'
       - '.github/workflows/ci-node.yaml'
       - '.github/actions/setup-node-workspace/**'
       - '.github/actions/setup-rust/**'
@@ -22,13 +23,17 @@ on:
       - 'crates/spikard/**/*.rs'
       - 'crates/spikard-http/**/*.rs'
       - 'testing_data/**'
+      - '.cargo/config.toml'
       - '.github/workflows/ci-node.yaml'
       - '.github/actions/setup-node-workspace/**'
       - '.github/actions/setup-rust/**'
 
 concurrency:
-  group: ci-node-${{ github.event.pull_request.number || github.ref }}
+  group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
   RUST_BACKTRACE: short
@@ -61,7 +66,7 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: pnpm
@@ -84,7 +89,7 @@ jobs:
         run: pnpm exec napi build --platform --release -o ../../packages/node
 
       - name: Upload Node bindings
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: napi-bindings-${{ matrix.os }}
           path: packages/node/*.node
@@ -107,13 +112,13 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: pnpm
 
       - name: Download Node bindings
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: napi-bindings-${{ matrix.os }}
           path: packages/node/
@@ -138,3 +143,44 @@ jobs:
         working-directory: packages/node
         shell: pwsh
         run: pnpm test
+
+  # Node.js coverage enforcement (separate job)
+  coverage-node:
+    name: Node.js Code Coverage
+    runs-on: ubuntu-latest
+    needs: [test-node]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20.x"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Node.js tests with coverage
+        run: pnpm --filter @spikard/node test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./packages/node/coverage/lcov.info
+          flags: node
+          name: node-coverage
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: node-coverage-report
+          path: packages/node/coverage/
+          retention-days: 30

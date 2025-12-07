@@ -14,9 +14,11 @@
 .gem
 .cache/
 .cargo/
+!packages/ruby/.cargo/config.toml
 .claude/
 .coverage
 .coverage*
+!.coveragerc
 .cursorrules
 .DS_Store
 .env
@@ -32,6 +34,9 @@
 .phpunit.cache
 **/.phpunit.result.cache
 **/.phpunit.cache
+.php-cs-fixer.cache
+coverage.json
+packages/ruby/.simplecov
 .dSYM/
 .task/
 .venv/
@@ -49,6 +54,8 @@ coverage.info
 coverage.lcov
 coverage.xml
 coverage/
+!scripts/coverage/
+!scripts/coverage/**
 crates/spikard-node/index.d.ts
 crates/spikard-node/index.js
 crates/extensions/
@@ -76,3 +83,4 @@ target/
 tools/benchmark-harness/apps/spikard-rust/target/
 temp-test-*
 todo.md
+*.profraw

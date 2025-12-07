@@ -1,0 +1,63 @@
+[package]
+name = "spikard-bindings-shared"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json.workspace = true
+axum.workspace = true
+tokio.workspace = true
+thiserror.workspace = true
+spikard-core = { workspace = true, features = ["di"] }
+spikard-http = { workspace = true, features = ["di"] }
+tracing.workspace = true
+http.workspace = true
+http-body-util = "0.1"
+
+[features]
+default = []
+python-support = ["pyo3", "pyo3-async-runtimes"]
+node-support = ["napi", "napi-derive"]
+ruby-support = ["magnus"]
+php-support = ["ext-php-rs"]
+wasm-support = ["wasm-bindgen"]
+
+[dependencies.pyo3]
+version = "0.27"
+optional = true
+features = ["abi3-py310"]
+
+[dependencies.pyo3-async-runtimes]
+version = "0.27"
+optional = true
+features = ["tokio-runtime"]
+
+[dependencies.napi]
+version = "3"
+optional = true
+default-features = false
+features = ["napi9", "async"]
+
+[dependencies.napi-derive]
+version = "3"
+optional = true
+
+[dependencies.magnus]
+version = "0.8"
+optional = true
+
+[dependencies.ext-php-rs]
+version = "0.15"
+optional = true
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true
+
+[dev-dependencies]
+pretty_assertions = "1.4"
