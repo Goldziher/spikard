@@ -161,6 +161,10 @@ runs:
         pnpm install
         pnpm run build:node
 
+        # Copy built WASM files to benchmark app directory
+        cp -v dist-node/spikard_wasm.js dist-node/spikard_wasm_bg.wasm dist-node/spikard_wasm.d.ts \
+          ../../tools/benchmark-harness/apps/spikard-wasm/ || true
+
         # Install framework benchmark app dependencies
         # Use --force to ensure workspace dependencies are properly linked
         cd ../../tools/benchmark-harness/apps/spikard-wasm
