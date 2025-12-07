@@ -543,7 +543,7 @@ RSpec.describe Spikard::App do
       # This test ensures the regex fix prevents ReDoS (Regular Expression Denial of Service)
       # The old pattern /^_+|_+$/ could cause polynomial backtracking on strings with many underscores
       # This malicious input should complete quickly without hanging
-      dangerous_input = '/' + ('_' * 1000)
+      dangerous_input = "/#{'_' * 1000}"
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       name = app.send(:default_handler_name, 'GET', dangerous_input)
       elapsed_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
@@ -556,7 +556,7 @@ RSpec.describe Spikard::App do
 
     it 'handles mixed content with many underscores safely' do
       # Another ReDoS test case: alternating pattern
-      dangerous_input = '/' + ('_a_' * 100) + ('_' * 100)
+      dangerous_input = "/#{'_a_' * 100}#{'_' * 100}"
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       name = app.send(:default_handler_name, 'GET', dangerous_input)
       elapsed_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
