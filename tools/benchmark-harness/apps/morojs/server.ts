@@ -234,8 +234,8 @@ app.get('/', {
 // Server Startup
 // ============================================================================
 
-const port = process.argv[2] ? parseInt(process.argv[2], 10) : 8000;
-
-app.listen(port, () => {
-  console.error(`[morojs] Starting server on port ${port}`);
-});
+const port = process.argv[2]
+  ? parseInt(process.argv[2], 10)
+  : process.env.PORT
+  ? parseInt(process.env.PORT, 10)
+  : 8000;

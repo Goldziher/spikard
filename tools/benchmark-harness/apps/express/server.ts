@@ -213,7 +213,11 @@ app.get('/', (_req: Request, res: Response): void => {
 // Server Startup
 // ============================================================================
 
-const port = process.argv[2] ? Number.parseInt(process.argv[2], 10) : 8000;
+const port = process.argv[2]
+  ? Number.parseInt(process.argv[2], 10)
+  : process.env.PORT
+  ? Number.parseInt(process.env.PORT, 10)
+  : 8000;
 
 app.listen(port, '0.0.0.0', (): void => {
   console.error(`[express] Starting server on port ${port}`);

@@ -122,6 +122,8 @@ app.get("/", async () => {
 });
 
 // Start server
-const port = process.argv[2] ? parseInt(process.argv[2], 10) : 8000;
-app.listen(port, "0.0.0.0");
-console.error(`[spikard-wasm-workloads] Server listening on port ${port}`);
+const port = process.argv[2]
+  ? parseInt(process.argv[2], 10)
+  : process.env.PORT
+  ? parseInt(process.env.PORT, 10)
+  : 8000;
