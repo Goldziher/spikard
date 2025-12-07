@@ -288,7 +288,11 @@ jobs:
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-ruby
-        run: bundle install
+        run: |
+          bundle install
+          cd ../../..
+          cd packages/ruby && bundle exec rake build || true
+          cd ../../tools/benchmark-harness/apps/spikard-ruby
 
       - name: Create results directory
         run: mkdir -p results/spikard-ruby
@@ -437,8 +441,9 @@ jobs:
           cd crates/spikard-wasm
           pnpm install
           pnpm run build:node
+          mkdir -p ../../tools/benchmark-harness/apps/spikard-wasm/pkg
           cp -v dist-node/spikard_wasm.js dist-node/spikard_wasm_bg.wasm dist-node/spikard_wasm.d.ts \
-            ../../tools/benchmark-harness/apps/spikard-wasm/
+            ../../tools/benchmark-harness/apps/spikard-wasm/pkg/
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-wasm
