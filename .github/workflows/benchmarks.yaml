@@ -75,9 +75,6 @@ jobs:
           name: benchmark-harness
           path: ~/.cargo/bin
       - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: bench-spikard-rust
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-rust
@@ -99,9 +96,6 @@ jobs:
           name: benchmark-harness
           path: ~/.cargo/bin
       - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: bench-spikard-python
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-python
@@ -123,9 +117,6 @@ jobs:
           name: benchmark-harness
           path: ~/.cargo/bin
       - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: bench-spikard-node
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-node
@@ -147,9 +138,6 @@ jobs:
           name: benchmark-harness
           path: ~/.cargo/bin
       - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: bench-spikard-ruby
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-ruby
@@ -171,9 +159,6 @@ jobs:
           name: benchmark-harness
           path: ~/.cargo/bin
       - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: bench-spikard-wasm
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-wasm
@@ -196,9 +181,6 @@ jobs:
           name: benchmark-harness
           path: ~/.cargo/bin
       - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: bench-axum
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: axum-baseline
@@ -284,9 +266,6 @@ jobs:
           name: benchmark-harness
           path: ~/.cargo/bin
       - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: bench-spikard-raw
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-raw
@@ -647,9 +626,6 @@ jobs:
           name: benchmark-harness
           path: ~/.cargo/bin
       - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: bench-spikard-php
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-php
