@@ -34,8 +34,8 @@ if (-Not (Test-Path $PlatformPath)) {
   throw "Platform directory not found"
 }
 
-$NodeBinaries = Get-ChildItem -Path $PlatformPath -Filter "*.node" -ErrorAction SilentlyContinue
-if (-Not $NodeBinaries) {
+$NodeBinaries = @(Get-ChildItem -Path $PlatformPath -Filter "*.node" -ErrorAction SilentlyContinue)
+if ($NodeBinaries.Count -eq 0) {
   Write-Host "::error::No .node file found in $PlatformPath"
   Get-ChildItem -Path $PlatformPath -Force
   throw "No .node file found"
