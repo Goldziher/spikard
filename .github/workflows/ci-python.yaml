@@ -71,21 +71,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache-prefix: build-wheels-${{ matrix.os }}-py${{ matrix.python-version }}
 
-      - name: Build Python wheels (Unix)
-        if: runner.os != 'Windows'
+      - name: Build Python wheels
         shell: bash
-        working-directory: packages/python
-        run: |
-          rm -f _spikard/_spikard.*
-          uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }}
-
-      - name: Build Python wheels (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        working-directory: packages/python
-        run: |
-          Remove-Item _spikard/_spikard.* -ErrorAction SilentlyContinue
-          uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }}
+        run: bash scripts/ci/python/build-wheels.sh "${{ matrix.python-version }}"
 
       - name: Upload wheels artifact
         uses: actions/upload-artifact@v5
@@ -100,6 +88,8 @@ jobs:
     needs: build-python-wheels
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -125,87 +115,18 @@ jobs:
           name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
           path: dist/
 
-      - name: Install wheel (Unix)
+      - name: Select and install wheel (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          wheel=$(python - <<'PY'
-          import glob
-          import platform
-          import sys
-
-          candidates = glob.glob("dist/*.whl")
-          if not candidates:
-              sys.exit("No wheels found in dist/")
-
-          plat = sys.platform
-          arch = platform.machine().lower()
-          arch_aliases = {
-              "x86_64": ["x86_64", "amd64"],
-              "aarch64": ["aarch64", "arm64"],
-          }
-          arch_matches = arch_aliases.get(arch, [arch])
-
-          def pick(marker: str) -> str | None:
-              for candidate in candidates:
-                  cand = candidate.lower()
-                  if marker in cand and any(a in cand for a in arch_matches):
-                      return candidate
-              return None
-
-          if plat.startswith("linux"):
-              chosen = pick("manylinux") or pick("linux")
-          elif plat == "darwin":
-              chosen = pick("macosx")
-          elif plat.startswith("win"):
-              chosen = pick("win")
-          else:
-              chosen = None
-
-          print(chosen or candidates[0])
-          PY
-          )
+          wheel=$(python scripts/ci/python/select-and-install-wheel.py --dist-dir dist/)
           uv pip install "$wheel"
 
-      - name: Install wheel (Windows)
+      - name: Select and install wheel (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $wheel = python - <<'PY'
-          import glob
-          import platform
-          import sys
-
-          candidates = glob.glob("dist/*.whl")
-          if not candidates:
-              sys.exit("No wheels found in dist/")
-
-          plat = sys.platform
-          arch = platform.machine().lower()
-          arch_aliases = {
-              "x86_64": ["x86_64", "amd64"],
-              "aarch64": ["aarch64", "arm64"],
-          }
-          arch_matches = arch_aliases.get(arch, [arch])
-
-          def pick(marker: str):
-              for candidate in candidates:
-                  cand = candidate.lower()
-                  if marker in cand and any(a in cand for a in arch_matches):
-                      return candidate
-              return None
-
-          if plat.startswith("linux"):
-              chosen = pick("manylinux") or pick("linux")
-          elif plat == "darwin":
-              chosen = pick("macosx")
-          elif plat.startswith("win"):
-              chosen = pick("win")
-          else:
-              chosen = None
-
-          print(chosen or candidates[0])
-          PY
+          $wheel = python scripts/ci/python/select-and-install-wheel.py --dist-dir dist/
           $wheel = $wheel.Trim()
           uv pip install $wheel
 
@@ -241,10 +162,7 @@ jobs:
         run: uv sync --all-packages --all-extras
 
       - name: Build source distribution
-        working-directory: packages/python
-        run: |
-          rm -f _spikard/_spikard.*
-          uv tool run maturin sdist
+        run: bash scripts/ci/python/build-sdist.sh
 
       - name: Upload sdist artifact
         uses: actions/upload-artifact@v5
@@ -276,11 +194,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
 
       - name: Run Python tests with coverage
-        working-directory: packages/python
-        run: |
-          uv sync --all-extras
-          uv run maturin develop --release --features extension-module
-          uv run pytest --cov=_spikard --cov-report=html:htmlcov --cov-report=lcov:coverage.lcov -v
+        run: bash scripts/ci/python/run-coverage.sh
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

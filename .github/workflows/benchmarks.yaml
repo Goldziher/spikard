@@ -410,6 +410,8 @@ jobs:
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
@@ -487,6 +489,8 @@ jobs:
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
@@ -563,6 +567,8 @@ jobs:
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
@@ -640,6 +646,8 @@ jobs:
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
@@ -660,6 +668,8 @@ jobs:
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
@@ -679,6 +689,8 @@ jobs:
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
@@ -701,6 +713,8 @@ jobs:
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6

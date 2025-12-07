@@ -101,6 +101,8 @@ jobs:
     needs: build-napi-bindings
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:

@@ -117,6 +117,8 @@ jobs:
     needs: build-php-extension
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -220,20 +222,7 @@ jobs:
         run: vendor/bin/phpunit --coverage-html htmlcov --coverage-clover ../target/clover.xml
 
       - name: Enforce minimum coverage threshold (85%)
-        run: |
-          COVERAGE=$(php -r "
-            \$xml = simplexml_load_file('packages/php/target/clover.xml');
-            \$metrics = \$xml->project->metrics;
-            \$lines = (int)\$metrics['coveredstatements'];
-            \$total = (int)\$metrics['statements'];
-            echo round((\$lines / \$total) * 100, 2);
-          ")
-          echo "Coverage: ${COVERAGE}%"
-          if (( $(echo "$COVERAGE < 85" | bc -l) )); then
-            echo "Error: Coverage ${COVERAGE}% is below minimum 85%"
-            exit 1
-          fi
-          echo "Coverage ${COVERAGE}% meets minimum threshold"
+        run: bash scripts/ci/php/enforce-coverage-threshold.sh
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
