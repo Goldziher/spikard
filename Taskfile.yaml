@@ -135,7 +135,7 @@ tasks:
     desc: "Update Ruby dependencies"
     dir: packages/ruby
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ update
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ update --all
 
   ruby:build:
     desc: "Build Ruby native extension"
