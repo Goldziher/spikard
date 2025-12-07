@@ -130,40 +130,40 @@ jobs:
         shell: bash
         run: |
           wheel=$(python - <<'PY'
-import glob
-import platform
-import sys
+          import glob
+          import platform
+          import sys
 
-candidates = glob.glob("dist/*.whl")
-if not candidates:
-    sys.exit("No wheels found in dist/")
+          candidates = glob.glob("dist/*.whl")
+          if not candidates:
+              sys.exit("No wheels found in dist/")
 
-plat = sys.platform
-arch = platform.machine().lower()
-arch_aliases = {
-    "x86_64": ["x86_64", "amd64"],
-    "aarch64": ["aarch64", "arm64"],
-}
-arch_matches = arch_aliases.get(arch, [arch])
+          plat = sys.platform
+          arch = platform.machine().lower()
+          arch_aliases = {
+              "x86_64": ["x86_64", "amd64"],
+              "aarch64": ["aarch64", "arm64"],
+          }
+          arch_matches = arch_aliases.get(arch, [arch])
 
-def pick(marker: str) -> str | None:
-    for candidate in candidates:
-        cand = candidate.lower()
-        if marker in cand and any(a in cand for a in arch_matches):
-            return candidate
-    return None
+          def pick(marker: str) -> str | None:
+              for candidate in candidates:
+                  cand = candidate.lower()
+                  if marker in cand and any(a in cand for a in arch_matches):
+                      return candidate
+              return None
 
-if plat.startswith("linux"):
-    chosen = pick("manylinux") or pick("linux")
-elif plat == "darwin":
-    chosen = pick("macosx")
-elif plat.startswith("win"):
-    chosen = pick("win")
-else:
-    chosen = None
+          if plat.startswith("linux"):
+              chosen = pick("manylinux") or pick("linux")
+          elif plat == "darwin":
+              chosen = pick("macosx")
+          elif plat.startswith("win"):
+              chosen = pick("win")
+          else:
+              chosen = None
 
-print(chosen or candidates[0])
-PY
+          print(chosen or candidates[0])
+          PY
           )
           uv pip install "$wheel"
 
@@ -172,40 +172,40 @@ PY
         shell: pwsh
         run: |
           $wheel = python - <<'PY'
-import glob
-import platform
-import sys
+          import glob
+          import platform
+          import sys
 
-candidates = glob.glob("dist/*.whl")
-if not candidates:
-    sys.exit("No wheels found in dist/")
+          candidates = glob.glob("dist/*.whl")
+          if not candidates:
+              sys.exit("No wheels found in dist/")
 
-plat = sys.platform
-arch = platform.machine().lower()
-arch_aliases = {
-    "x86_64": ["x86_64", "amd64"],
-    "aarch64": ["aarch64", "arm64"],
-}
-arch_matches = arch_aliases.get(arch, [arch])
+          plat = sys.platform
+          arch = platform.machine().lower()
+          arch_aliases = {
+              "x86_64": ["x86_64", "amd64"],
+              "aarch64": ["aarch64", "arm64"],
+          }
+          arch_matches = arch_aliases.get(arch, [arch])
 
-def pick(marker: str):
-    for candidate in candidates:
-        cand = candidate.lower()
-        if marker in cand and any(a in cand for a in arch_matches):
-            return candidate
-    return None
+          def pick(marker: str):
+              for candidate in candidates:
+                  cand = candidate.lower()
+                  if marker in cand and any(a in cand for a in arch_matches):
+                      return candidate
+              return None
 
-if plat.startswith("linux"):
-    chosen = pick("manylinux") or pick("linux")
-elif plat == "darwin":
-    chosen = pick("macosx")
-elif plat.startswith("win"):
-    chosen = pick("win")
-else:
-    chosen = None
+          if plat.startswith("linux"):
+              chosen = pick("manylinux") or pick("linux")
+          elif plat == "darwin":
+              chosen = pick("macosx")
+          elif plat.startswith("win"):
+              chosen = pick("win")
+          else:
+              chosen = None
 
-print(chosen or candidates[0])
-PY
+          print(chosen or candidates[0])
+          PY
           $wheel = $wheel.Trim()
           uv pip install $wheel
 
