@@ -30,21 +30,14 @@ tasks:
   update:
     desc: "Update all dependencies to latest versions"
     cmds:
-      - echo "Updating Rust dependencies..."
       - task: rust:update
-      - echo "Updating Python dependencies..."
       - task: python:update
-      - echo "Updating JavaScript packages..."
       - task: js:update
-      - echo "Updating Ruby gems..."
       - task: ruby:update
-      - echo "Updating PHP dependencies..."
       - task: php:update
-      - echo "Refreshing Python bindings..."
       - task: python:build
-      - echo "Updating pre-commit hooks..."
       - task: pre-commit:update
-      - echo "All dependencies updated"
+      - task: bench:update
   version:sync:
     desc: "Sync all package versions to the workspace version"
     cmds:
@@ -1129,6 +1122,34 @@ tasks:
       - task: bench:build:all
       - task: bench:run:all
       - echo "Benchmark results in tools/benchmark-harness/results/"
+
+  bench:update:
+    desc: "Update all benchmark app dependencies"
+    cmds:
+      - task: bench:update:python
+      - task: bench:update:node
+      - task: bench:update:ruby
+      - task: bench:update:php
+
+  bench:update:python:
+    desc: "Update Python benchmark apps to latest dependencies"
+    cmds:
+      - scripts/bench/update-python.sh
+
+  bench:update:node:
+    desc: "Update Node.js benchmark apps to latest dependencies"
+    cmds:
+      - scripts/bench/update-node.sh
+
+  bench:update:ruby:
+    desc: "Update Ruby benchmark apps to latest dependencies"
+    cmds:
+      - RBENV_VERSION={{.RBENV_VERSION}} RBENV_BIN={{.RBENV_BIN}} BUNDLER_VERSION={{.BUNDLER_VERSION}} scripts/bench/update-ruby.sh
+
+  bench:update:php:
+    desc: "Update PHP benchmark apps to latest dependencies"
+    cmds:
+      - scripts/bench/update-php.sh
 
   codegen:python:
     desc: "Generate Python server code from OpenAPI schema"
