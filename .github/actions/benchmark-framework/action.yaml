@@ -33,6 +33,7 @@ runs:
       run: |
         if ! command -v oha &> /dev/null; then
           cargo install oha
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         fi
 
     - name: Detect framework language
@@ -163,38 +164,31 @@ runs:
     - name: Install PHP package dependencies
       if: steps.detect.outputs.language == 'php' && inputs.framework == 'spikard-php'
       shell: bash
-      run: |
-        cd packages/php
-        composer install
+      working-directory: packages/php
+      run: composer install
 
-    - name: Install pnpm for WASM builds
+    - name: Setup Deno for WASM
       if: steps.detect.outputs.language == 'wasm'
-      uses: pnpm/action-setup@v4
-
-    - name: Setup Node for WASM
-      if: steps.detect.outputs.language == 'wasm'
-      uses: actions/setup-node@v4
+      uses: denoland/setup-deno@v2
       with:
-        node-version: '24'
-        cache: 'pnpm'
+        deno-version: v2.x
 
     - name: Build WASM binding (if needed)
       if: steps.detect.outputs.language == 'wasm' && inputs.framework == 'spikard-wasm'
       shell: bash
       run: |
-        # Build the WASM module using wasm-pack
+        # Build the WASM module using wasm-pack for Deno
         cd crates/spikard-wasm
-        pnpm install
-        pnpm run build:node
+        cargo install wasm-pack || true
+        wasm-pack build --target deno --out-dir ../../tools/benchmark-harness/apps/spikard-wasm/pkg
 
-        # Copy built WASM files to benchmark app directory
-        cp -v dist-node/spikard_wasm.js dist-node/spikard_wasm_bg.wasm dist-node/spikard_wasm.d.ts \
-          ../../tools/benchmark-harness/apps/spikard-wasm/ || true
-
-        # Install framework benchmark app dependencies
-        # Use --force to ensure workspace dependencies are properly linked
-        cd ../../tools/benchmark-harness/apps/spikard-wasm
-        pnpm install --force
+    - name: Install WASM benchmark app dependencies
+      if: steps.detect.outputs.language == 'wasm'
+      shell: bash
+      working-directory: tools/benchmark-harness/apps/spikard-wasm
+      run: |
+        # Deno doesn't need explicit install, dependencies are cached on first run
+        echo "Deno will fetch dependencies on first run"
 
     - name: Create results directory
       shell: bash

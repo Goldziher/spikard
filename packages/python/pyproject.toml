@@ -85,4 +85,3 @@ python-source = "../../packages/python"
 python-packages = [ "spikard", "_spikard" ]
 manifest-path = "../../crates/spikard-py/Cargo.toml"
 features = [ "extension-module" ]
-compatibility = "manylinux_2_34"
