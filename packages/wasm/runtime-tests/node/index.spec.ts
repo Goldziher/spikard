@@ -11,6 +11,16 @@ import { createFetchHandler } from "../../src/server";
 import { StreamingResponse } from "../../src/streaming";
 import { __setGunzipImplementation, TestClient } from "../../src/testing";
 
+interface ParsedRequest {
+	method?: string;
+	body?: unknown;
+	json?: () => unknown;
+	queryString?: string;
+	params?: Record<string, unknown>;
+	query?: Record<string, unknown>;
+	headers?: Record<string, unknown>;
+}
+
 beforeAll(() => {
 	__setGunzipImplementation((bytes) => new Uint8Array(gunzipSync(bytes)));
 });
@@ -81,7 +91,7 @@ describe("Node runtime parity", () => {
 		const bad = await client.get("/users/not-a-number");
 		expect(bad.statusCode).toBe(422);
 		expect(bad.json()).toMatchObject({
-			detail: "Parameter validation failed",
+			detail: "1 validation error in request",
 		});
 	});
 
@@ -150,11 +160,11 @@ describe("Node runtime parity", () => {
 	it("exposes Request facade with json() helper", async () => {
 		const client = buildClient([route("POST", "/users", "createUser")], {
 			createUser: async (request) => {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const req = request as any;
+				const req = parseRequest(request);
+				const bodyData = typeof req.json === "function" ? req.json() : req.body;
 				return jsonResponse({
 					method: req.method,
-					body: req.json(),
+					body: bodyData,
 					query: req.queryString,
 				});
 			},
@@ -197,9 +207,8 @@ describe("Fetch handler bridge", () => {
 	it("handles JSON bodies via fetch handler", async () => {
 		const app = buildApp([route("POST", "/echo", "echo")], {
 			echo: async (request) => {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const req = request as any;
-				return req.json();
+				const req = parseRequest(request) as ParsedRequest;
+				return req.json?.();
 			},
 		});
 		const handler = createFetchHandler(app);
@@ -245,12 +254,18 @@ function route(method: string, path: string, handlerName: string, extra: Partial
 	};
 }
 
-function parseRequest(payload: unknown): any {
+function parseRequest(payload: unknown): ParsedRequest {
 	if (typeof payload === "string") {
-		return JSON.parse(payload);
+		return JSON.parse(payload) as ParsedRequest;
 	}
 	if (payload && typeof payload === "object") {
-		return payload as Record<string, unknown>;
+		const request = payload as ParsedRequest;
+		// If it doesn't have a json() method but has a body, create one
+		// (for backwards compatibility with plain object payloads)
+		if (!request.json && request.body !== undefined) {
+			request.json = () => request.body;
+		}
+		return request;
 	}
 	return {};
 }

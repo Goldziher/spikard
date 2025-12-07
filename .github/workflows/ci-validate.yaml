@@ -9,6 +9,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
+      - '.cargo/config.toml'
       # Python
       - '**/*.py'
       - 'pyproject.toml'
@@ -41,6 +42,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
+      - '.cargo/config.toml'
       # Python
       - '**/*.py'
       - 'pyproject.toml'
@@ -67,8 +69,11 @@ on:
       - '.github/actions/**'
 
 concurrency:
-  group: ci-validate-${{ github.event.pull_request.number || github.ref }}
+  group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
   RUST_BACKTRACE: short
@@ -109,7 +114,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           cache-prefix: lint-python
 
       - name: Check Ruff linting

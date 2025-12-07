@@ -1,19 +1,15 @@
 //! Rust AsyncAPI code generation.
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
+use super::base::sanitize_identifier;
 use super::{AsyncApiGenerator, ChannelInfo, Message};
 
 /// Rust AsyncAPI code generator
 pub struct RustAsyncApiGenerator;
 
 impl AsyncApiGenerator for RustAsyncApiGenerator {
-    fn generate_test_app(
-        &self,
-        channels: &[ChannelInfo],
-        _messages: &[Message],
-        protocol: &str,
-    ) -> Result<String> {
+    fn generate_test_app(&self, channels: &[ChannelInfo], _messages: &[Message], protocol: &str) -> Result<String> {
         let mut code = String::new();
 
         code.push_str("//! Test application generated from AsyncAPI specification\n\n");
@@ -26,10 +22,7 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
                 code.push_str("use reqwest::Client;\n\n");
             }
             _ => {
-                return Err(anyhow::anyhow!(
-                    "Unsupported protocol for Rust test app: {}",
-                    protocol
-                ));
+                return Err(anyhow::anyhow!("Unsupported protocol for Rust test app: {}", protocol));
             }
         }
 
@@ -50,12 +43,7 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
         Ok(code)
     }
 
-    fn generate_handler_app(
-        &self,
-        channels: &[ChannelInfo],
-        _messages: &[Message],
-        protocol: &str,
-    ) -> Result<String> {
+    fn generate_handler_app(&self, channels: &[ChannelInfo], _messages: &[Message], protocol: &str) -> Result<String> {
         if channels.is_empty() {
             bail!("AsyncAPI spec does not define any channels");
         }
@@ -160,35 +148,6 @@ fn camel_identifier(name: &str) -> String {
     }
 }
 
-fn sanitize_identifier(name: &str) -> String {
-    let mut ident: String = name
-        .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() {
-                c.to_ascii_lowercase()
-            } else {
-                '_'
-            }
-        })
-        .collect();
-
-    while ident.contains("__") {
-        ident = ident.replace("__", "_");
-    }
-
-    ident = ident.trim_matches('_').to_string();
-
-    if ident.is_empty() {
-        return "handler".to_string();
-    }
-
-    if ident.chars().next().unwrap().is_ascii_digit() {
-        ident.insert(0, '_');
-    }
-
-    ident
-}
-
 fn escape_rust_string(input: &str) -> String {
     input.escape_default().to_string()
 }
@@ -223,7 +182,9 @@ mod tests {
         }];
         let messages = vec![];
 
-        let code = generator.generate_handler_app(&channels, &messages, "websocket").unwrap();
+        let code = generator
+            .generate_handler_app(&channels, &messages, "websocket")
+            .unwrap();
         assert!(code.contains("WebSocketHandler"));
         assert!(code.contains("impl"));
     }

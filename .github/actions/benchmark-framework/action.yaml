@@ -66,7 +66,7 @@ runs:
       if: steps.detect.outputs.language == 'python'
       uses: ./.github/actions/setup-python-env
       with:
-        python-version: "3.13"
+        python-version: "3.14"
         cache-prefix: benchmark-${{ inputs.framework }}
 
     - name: Install framework-specific dependencies

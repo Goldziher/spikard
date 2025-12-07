@@ -84,6 +84,7 @@ pub trait WebSocketHandler: Send + Sync {
 /// Contains the message handler and optional JSON schemas for validating
 /// incoming and outgoing messages. This state is shared among all connections
 /// to the same WebSocket endpoint.
+#[derive(Debug)]
 pub struct WebSocketState<H: WebSocketHandler> {
     /// The message handler implementation
     handler: Arc<H>,
@@ -305,7 +306,10 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
+    #[derive(Debug)]
     struct EchoHandler;
 
     impl WebSocketHandler for EchoHandler {
@@ -314,11 +318,514 @@ mod tests {
         }
     }
 
+    #[derive(Debug)]
+    struct TrackingHandler {
+        connect_count: Arc<AtomicUsize>,
+        disconnect_count: Arc<AtomicUsize>,
+        message_count: Arc<AtomicUsize>,
+        messages: Arc<Mutex<Vec<Value>>>,
+    }
+
+    impl TrackingHandler {
+        fn new() -> Self {
+            Self {
+                connect_count: Arc::new(AtomicUsize::new(0)),
+                disconnect_count: Arc::new(AtomicUsize::new(0)),
+                message_count: Arc::new(AtomicUsize::new(0)),
+                messages: Arc::new(Mutex::new(Vec::new())),
+            }
+        }
+    }
+
+    impl WebSocketHandler for TrackingHandler {
+        async fn handle_message(&self, message: Value) -> Option<Value> {
+            self.message_count.fetch_add(1, Ordering::SeqCst);
+            self.messages.lock().unwrap().push(message.clone());
+            Some(message)
+        }
+
+        async fn on_connect(&self) {
+            self.connect_count.fetch_add(1, Ordering::SeqCst);
+        }
+
+        async fn on_disconnect(&self) {
+            self.disconnect_count.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    #[derive(Debug)]
+    struct SelectiveHandler;
+
+    impl WebSocketHandler for SelectiveHandler {
+        async fn handle_message(&self, message: Value) -> Option<Value> {
+            if message.get("respond").map_or(false, |v| v.as_bool().unwrap_or(false)) {
+                Some(serde_json::json!({"response": "acknowledged"}))
+            } else {
+                None
+            }
+        }
+    }
+
+    #[derive(Debug)]
+    struct TransformHandler;
+
+    impl WebSocketHandler for TransformHandler {
+        async fn handle_message(&self, message: Value) -> Option<Value> {
+            if let Some(obj) = message.as_object() {
+                let mut resp = obj.clone();
+                resp.insert("processed".to_string(), Value::Bool(true));
+                Some(Value::Object(resp))
+            } else {
+                None
+            }
+        }
+    }
+
     #[test]
     fn test_websocket_state_creation() {
-        let handler = EchoHandler;
-        let state = WebSocketState::new(handler);
-        let cloned = state.clone();
+        let handler: EchoHandler = EchoHandler;
+        let state: WebSocketState<EchoHandler> = WebSocketState::new(handler);
+        let cloned: WebSocketState<EchoHandler> = state.clone();
         assert!(Arc::ptr_eq(&state.handler, &cloned.handler));
+    }
+
+    #[test]
+    fn test_websocket_state_with_valid_schema() {
+        let handler: EchoHandler = EchoHandler;
+        let schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "type": {"type": "string"}
+            }
+        });
+
+        let result: Result<WebSocketState<EchoHandler>, String> =
+            WebSocketState::with_schemas(handler, Some(schema), None);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_websocket_state_with_invalid_schema() {
+        let handler: EchoHandler = EchoHandler;
+        let invalid_schema: serde_json::Value = serde_json::json!({
+            "type": "not_a_real_type",
+            "invalid": "schema"
+        });
+
+        let result: Result<WebSocketState<EchoHandler>, String> =
+            WebSocketState::with_schemas(handler, Some(invalid_schema), None);
+        assert!(result.is_err());
+        if let Err(error_msg) = result {
+            assert!(error_msg.contains("Invalid message schema"));
+        }
+    }
+
+    #[test]
+    fn test_websocket_state_with_both_schemas() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {"action": {"type": "string"}}
+        });
+        let response_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {"result": {"type": "string"}}
+        });
+
+        let result: Result<WebSocketState<EchoHandler>, String> =
+            WebSocketState::with_schemas(handler, Some(message_schema), Some(response_schema));
+        assert!(result.is_ok());
+        let state: WebSocketState<EchoHandler> = result.unwrap();
+        assert!(state.message_schema.is_some());
+        assert!(state.response_schema.is_some());
+    }
+
+    #[test]
+    fn test_websocket_state_cloning_preserves_schemas() {
+        let handler: EchoHandler = EchoHandler;
+        let schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {"id": {"type": "integer"}}
+        });
+
+        let state: WebSocketState<EchoHandler> = WebSocketState::with_schemas(handler, Some(schema), None).unwrap();
+        let cloned: WebSocketState<EchoHandler> = state.clone();
+
+        assert!(cloned.message_schema.is_some());
+        assert!(cloned.response_schema.is_none());
+        assert!(Arc::ptr_eq(&state.handler, &cloned.handler));
+    }
+
+    #[tokio::test]
+    async fn test_tracking_handler_lifecycle() {
+        let handler: TrackingHandler = TrackingHandler::new();
+        handler.on_connect().await;
+        assert_eq!(handler.connect_count.load(Ordering::SeqCst), 1);
+
+        let msg: Value = serde_json::json!({"test": "data"});
+        let _response: Option<Value> = handler.handle_message(msg).await;
+        assert_eq!(handler.message_count.load(Ordering::SeqCst), 1);
+
+        handler.on_disconnect().await;
+        assert_eq!(handler.disconnect_count.load(Ordering::SeqCst), 1);
+    }
+
+    #[tokio::test]
+    async fn test_selective_handler_responds_conditionally() {
+        let handler: SelectiveHandler = SelectiveHandler;
+
+        let respond_msg: Value = serde_json::json!({"respond": true});
+        let response1: Option<Value> = handler.handle_message(respond_msg).await;
+        assert!(response1.is_some());
+        assert_eq!(response1.unwrap(), serde_json::json!({"response": "acknowledged"}));
+
+        let no_respond_msg: Value = serde_json::json!({"respond": false});
+        let response2: Option<Value> = handler.handle_message(no_respond_msg).await;
+        assert!(response2.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_transform_handler_modifies_message() {
+        let handler: TransformHandler = TransformHandler;
+        let original: Value = serde_json::json!({"name": "test"});
+        let transformed: Option<Value> = handler.handle_message(original).await;
+
+        assert!(transformed.is_some());
+        let resp: Value = transformed.unwrap();
+        assert_eq!(resp.get("name").unwrap(), "test");
+        assert_eq!(resp.get("processed").unwrap(), true);
+    }
+
+    #[tokio::test]
+    async fn test_echo_handler_preserves_json_types() {
+        let handler: EchoHandler = EchoHandler;
+
+        let messages: Vec<Value> = vec![
+            serde_json::json!({"string": "value"}),
+            serde_json::json!({"number": 42}),
+            serde_json::json!({"float": 3.14}),
+            serde_json::json!({"bool": true}),
+            serde_json::json!({"null": null}),
+            serde_json::json!({"array": [1, 2, 3]}),
+        ];
+
+        for msg in messages {
+            let response: Option<Value> = handler.handle_message(msg.clone()).await;
+            assert!(response.is_some());
+            assert_eq!(response.unwrap(), msg);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_tracking_handler_accumulates_messages() {
+        let handler: TrackingHandler = TrackingHandler::new();
+
+        let messages: Vec<Value> = vec![
+            serde_json::json!({"id": 1}),
+            serde_json::json!({"id": 2}),
+            serde_json::json!({"id": 3}),
+        ];
+
+        for msg in messages {
+            let _: Option<Value> = handler.handle_message(msg).await;
+        }
+
+        assert_eq!(handler.message_count.load(Ordering::SeqCst), 3);
+        let stored: Vec<Value> = handler.messages.lock().unwrap().clone();
+        assert_eq!(stored.len(), 3);
+        assert_eq!(stored[0].get("id").unwrap(), 1);
+        assert_eq!(stored[1].get("id").unwrap(), 2);
+        assert_eq!(stored[2].get("id").unwrap(), 3);
+    }
+
+    #[tokio::test]
+    async fn test_echo_handler_with_nested_json() {
+        let handler: EchoHandler = EchoHandler;
+        let nested: Value = serde_json::json!({
+            "level1": {
+                "level2": {
+                    "level3": {
+                        "value": "deeply nested"
+                    }
+                }
+            }
+        });
+
+        let response: Option<Value> = handler.handle_message(nested.clone()).await;
+        assert!(response.is_some());
+        assert_eq!(response.unwrap(), nested);
+    }
+
+    #[tokio::test]
+    async fn test_echo_handler_with_large_array() {
+        let handler: EchoHandler = EchoHandler;
+        let large_array: Value = serde_json::json!({
+            "items": (0..1000).collect::<Vec<i32>>()
+        });
+
+        let response: Option<Value> = handler.handle_message(large_array.clone()).await;
+        assert!(response.is_some());
+        assert_eq!(response.unwrap(), large_array);
+    }
+
+    #[tokio::test]
+    async fn test_echo_handler_with_unicode() {
+        let handler: EchoHandler = EchoHandler;
+        let unicode_msg: Value = serde_json::json!({
+            "emoji": "🚀",
+            "chinese": "你好",
+            "arabic": "مرحبا",
+            "mixed": "Hello 世界 🌍"
+        });
+
+        let response: Option<Value> = handler.handle_message(unicode_msg.clone()).await;
+        assert!(response.is_some());
+        assert_eq!(response.unwrap(), unicode_msg);
+    }
+
+    #[test]
+    fn test_websocket_state_schemas_are_independent() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({"type": "object"});
+        let response_schema: serde_json::Value = serde_json::json!({"type": "array"});
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), Some(response_schema)).unwrap();
+
+        let cloned: WebSocketState<EchoHandler> = state.clone();
+
+        // Both schemas should exist independently
+        assert!(state.message_schema.is_some());
+        assert!(state.response_schema.is_some());
+        assert!(cloned.message_schema.is_some());
+        assert!(cloned.response_schema.is_some());
+    }
+
+    #[test]
+    fn test_message_schema_validation_with_required_field() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {"type": {"type": "string"}},
+            "required": ["type"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        // Verify state was created successfully with message schema
+        assert!(state.message_schema.is_some());
+        assert!(state.response_schema.is_none());
+
+        // Test that valid message would pass
+        let valid_msg: Value = serde_json::json!({"type": "test"});
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+        assert!(validator.is_valid(&valid_msg));
+
+        // Test that invalid message would fail
+        let invalid_msg: Value = serde_json::json!({"other": "field"});
+        assert!(!validator.is_valid(&invalid_msg));
+    }
+
+    #[test]
+    fn test_response_schema_validation_with_required_field() {
+        let handler: EchoHandler = EchoHandler;
+        let response_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {"status": {"type": "string"}},
+            "required": ["status"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, None, Some(response_schema)).unwrap();
+
+        // Verify state was created successfully with response schema
+        assert!(state.message_schema.is_none());
+        assert!(state.response_schema.is_some());
+
+        // Test that valid response would pass
+        let valid_response: Value = serde_json::json!({"status": "ok"});
+        let validator: &jsonschema::Validator = state.response_schema.as_ref().unwrap();
+        assert!(validator.is_valid(&valid_response));
+
+        // Test that invalid response would fail
+        let invalid_response: Value = serde_json::json!({"other": "field"});
+        assert!(!validator.is_valid(&invalid_response));
+    }
+
+    #[test]
+    fn test_invalid_message_schema_returns_error() {
+        let handler: EchoHandler = EchoHandler;
+        let invalid_schema: serde_json::Value = serde_json::json!({
+            "type": "invalid_type_value",
+            "properties": {}
+        });
+
+        let result: Result<WebSocketState<EchoHandler>, String> =
+            WebSocketState::with_schemas(handler, Some(invalid_schema), None);
+
+        assert!(result.is_err());
+        match result {
+            Err(error_msg) => assert!(error_msg.contains("Invalid message schema")),
+            Ok(_) => panic!("Expected error but got Ok"),
+        }
+    }
+
+    #[test]
+    fn test_invalid_response_schema_returns_error() {
+        let handler: EchoHandler = EchoHandler;
+        let invalid_schema: serde_json::Value = serde_json::json!({
+            "type": "definitely_not_valid"
+        });
+
+        let result: Result<WebSocketState<EchoHandler>, String> =
+            WebSocketState::with_schemas(handler, None, Some(invalid_schema));
+
+        assert!(result.is_err());
+        match result {
+            Err(error_msg) => assert!(error_msg.contains("Invalid response schema")),
+            Ok(_) => panic!("Expected error but got Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_handler_returning_none_response() {
+        let handler: SelectiveHandler = SelectiveHandler;
+
+        let no_response_msg: Value = serde_json::json!({"respond": false});
+        let result: Option<Value> = handler.handle_message(no_response_msg).await;
+
+        // Handler explicitly returns None
+        assert!(result.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_handler_with_complex_schema_validation() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "user": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "name": {"type": "string"}
+                    },
+                    "required": ["id", "name"]
+                },
+                "action": {"type": "string"}
+            },
+            "required": ["user", "action"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let valid_msg: Value = serde_json::json!({
+            "user": {"id": 123, "name": "Alice"},
+            "action": "create"
+        });
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+        assert!(validator.is_valid(&valid_msg));
+
+        let invalid_msg: Value = serde_json::json!({
+            "user": {"id": "not_an_int", "name": "Bob"},
+            "action": "create"
+        });
+        assert!(!validator.is_valid(&invalid_msg));
+    }
+
+    #[tokio::test]
+    async fn test_tracking_handler_with_multiple_message_types() {
+        let handler: TrackingHandler = TrackingHandler::new();
+
+        let messages: Vec<Value> = vec![
+            serde_json::json!({"type": "text", "content": "hello"}),
+            serde_json::json!({"type": "image", "url": "http://example.com/image.png"}),
+            serde_json::json!({"type": "video", "duration": 120}),
+        ];
+
+        for msg in messages {
+            let _: Option<Value> = handler.handle_message(msg).await;
+        }
+
+        assert_eq!(handler.message_count.load(Ordering::SeqCst), 3);
+        let stored: Vec<Value> = handler.messages.lock().unwrap().clone();
+        assert_eq!(stored.len(), 3);
+        assert_eq!(stored[0].get("type").unwrap(), "text");
+        assert_eq!(stored[1].get("type").unwrap(), "image");
+        assert_eq!(stored[2].get("type").unwrap(), "video");
+    }
+
+    #[tokio::test]
+    async fn test_selective_handler_with_explicit_false() {
+        let handler: SelectiveHandler = SelectiveHandler;
+
+        // Test with respond field explicitly set to false
+        let msg: Value = serde_json::json!({"respond": false, "data": "test"});
+        let response: Option<Value> = handler.handle_message(msg).await;
+
+        assert!(response.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_selective_handler_without_respond_field() {
+        let handler: SelectiveHandler = SelectiveHandler;
+
+        // Test with missing respond field (should default to false)
+        let msg: Value = serde_json::json!({"data": "test"});
+        let response: Option<Value> = handler.handle_message(msg).await;
+
+        // Should not respond when respond field is missing
+        assert!(response.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_transform_handler_with_empty_object() {
+        let handler: TransformHandler = TransformHandler;
+        let original: Value = serde_json::json!({});
+        let transformed: Option<Value> = handler.handle_message(original).await;
+
+        assert!(transformed.is_some());
+        let resp: Value = transformed.unwrap();
+        assert_eq!(resp.get("processed").unwrap(), true);
+        assert_eq!(resp.as_object().unwrap().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_transform_handler_preserves_all_fields() {
+        let handler: TransformHandler = TransformHandler;
+        let original: Value = serde_json::json!({
+            "field1": "value1",
+            "field2": 42,
+            "field3": true,
+            "nested": {"key": "value"}
+        });
+        let transformed: Option<Value> = handler.handle_message(original.clone()).await;
+
+        assert!(transformed.is_some());
+        let resp: Value = transformed.unwrap();
+        assert_eq!(resp.get("field1").unwrap(), "value1");
+        assert_eq!(resp.get("field2").unwrap(), 42);
+        assert_eq!(resp.get("field3").unwrap(), true);
+        assert_eq!(resp.get("nested").unwrap(), &serde_json::json!({"key": "value"}));
+        assert_eq!(resp.get("processed").unwrap(), true);
+    }
+
+    #[tokio::test]
+    async fn test_transform_handler_with_non_object_input() {
+        let handler: TransformHandler = TransformHandler;
+
+        let array: Value = serde_json::json!([1, 2, 3]);
+        let response1: Option<Value> = handler.handle_message(array).await;
+        assert!(response1.is_none());
+
+        let string: Value = serde_json::json!("not an object");
+        let response2: Option<Value> = handler.handle_message(string).await;
+        assert!(response2.is_none());
+
+        let number: Value = serde_json::json!(42);
+        let response3: Option<Value> = handler.handle_message(number).await;
+        assert!(response3.is_none());
     }
 }

@@ -24,6 +24,7 @@ use js_sys::{Date as JsDate, Function, JSON, Object, Promise, Reflect, Symbol, U
 use serde_json::{Map as JsonMap, Value};
 use spikard_core::RouteMetadata;
 use spikard_core::bindings::response::{RawResponse, StaticAsset};
+use spikard_core::errors::StructuredError;
 use spikard_core::lifecycle::HookResult;
 use spikard_core::parameters::ParameterValidator;
 use spikard_core::problem::ProblemDetails;
@@ -199,8 +200,10 @@ impl TestClient {
         };
 
         future_to_promise(async move {
-            let response = exec_request(context).await?;
-            serde_wasm_bindgen::to_value(&response).map_err(|err| JsValue::from_str(&err.to_string()))
+            exec_request(context)
+                .await
+                .and_then(|response| serde_wasm_bindgen::to_value(&response).map_err(js_error_from_serde))
+                .map_err(|err| js_error_from_jsvalue("execution_failed", err))
         })
     }
 }
@@ -266,16 +269,17 @@ impl LifecycleRunner {
         request = match hooks
             .execute_pre_handler(request)
             .await
-            .map_err(|err| JsValue::from_str(&format!("preHandler hook failed: {err}")))?
+            .map_err(|err| js_error_structured("pre_handler_hook_failed", err))?
         {
             HookResult::Continue(req) => req,
             HookResult::ShortCircuit(resp) => {
-                let value = response_into_value(resp).map_err(|err| JsValue::from_str(&err))?;
+                let value =
+                    response_into_value(resp).map_err(|err| js_error_structured("response_encode_failed", err))?;
                 return Ok(LifecycleRequestOutcome::Respond(value));
             }
         };
 
-        let payload = request_into_payload(request).map_err(|err| JsValue::from_str(&err))?;
+        let payload = request_into_payload(request).map_err(|err| js_error_structured("request_encode_failed", err))?;
         Ok(LifecycleRequestOutcome::Continue(payload))
     }
 
@@ -284,12 +288,13 @@ impl LifecycleRunner {
             return Ok(response);
         };
 
-        let mut response = response_from_value(response).map_err(|err| JsValue::from_str(&err))?;
+        let mut response =
+            response_from_value(response).map_err(|err| js_error_structured("response_decode_failed", err))?;
         response = hooks
             .execute_on_response(response)
             .await
-            .map_err(|err| JsValue::from_str(&format!("onResponse hook failed: {err}")))?;
-        response_into_value(response).map_err(|err| JsValue::from_str(&err))
+            .map_err(|err| js_error_structured("on_response_hook_failed", err))?;
+        response_into_value(response).map_err(|err| js_error_structured("response_encode_failed", err))
     }
 
     async fn run_error_hooks(&self, response: Value) -> Result<Value, JsValue> {
@@ -297,18 +302,20 @@ impl LifecycleRunner {
             return Ok(response);
         };
 
-        let mut response = response_from_value(response).map_err(|err| JsValue::from_str(&err))?;
+        let mut response =
+            response_from_value(response).map_err(|err| js_error_structured("response_decode_failed", err))?;
         response = hooks
             .execute_on_error(response)
             .await
-            .map_err(|err| JsValue::from_str(&format!("onError hook failed: {err}")))?;
-        response_into_value(response).map_err(|err| JsValue::from_str(&err))
+            .map_err(|err| js_error_structured("on_error_hook_failed", err))?;
+        response_into_value(response).map_err(|err| js_error_structured("response_encode_failed", err))
     }
 }
 
 async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsValue> {
-    let mut headers = read_headers(context.headers_val)?;
-    let request_options = types::RequestOptions::from_js(context.options)?;
+    let mut headers = read_headers(context.headers_val).map_err(|e| js_error_from_jsvalue("header_parse_failed", e))?;
+    let request_options = types::RequestOptions::from_js(context.options)
+        .map_err(|e| js_error_from_jsvalue("request_options_invalid", e))?;
     if !request_options.headers.is_empty() {
         headers.extend(request_options.headers.clone());
     }
@@ -317,7 +324,8 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         return Ok(snapshot);
     }
 
-    let (route, path_params, path_without_query, query) = match_route(&context.routes, &context.method, &context.path)?;
+    let (route, path_params, path_without_query, query) = match_route(&context.routes, &context.method, &context.path)
+        .map_err(|e| js_error_from_jsvalue("route_match_failed", e))?;
 
     let rate_limit_id = headers
         .get("x-forwarded-for")
@@ -342,10 +350,9 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
             query_map.insert(key.clone(), value.clone());
         }
         let query_value = Value::Object(query_map);
-        let raw_query_single = first_query_values(&query.raw);
         match parameter_validator.validate_and_extract(
             &query_value,
-            &raw_query_single,
+            &query.raw,
             &path_params,
             &headers,
             &HashMap::new(),
@@ -750,21 +757,32 @@ fn header_value<'a>(headers: &'a HashMap<String, String>, name: &str) -> Option<
     })
 }
 
-fn first_query_values(raw: &HashMap<String, Vec<String>>) -> HashMap<String, String> {
-    let mut map = HashMap::new();
-    for (key, values) in raw {
-        if let Some(value) = values.first() {
-            map.insert(key.clone(), value.clone());
-        }
-    }
-    map
-}
-
 fn value_to_param_map(value: Value) -> HashMap<String, Value> {
     match value {
         Value::Object(map) => map.into_iter().collect(),
         _ => HashMap::new(),
     }
+}
+
+fn js_error_structured(code: &str, details: impl ToString) -> JsValue {
+    let payload = StructuredError::new(code.to_string(), code.to_string(), Value::String(details.to_string()));
+    match serde_wasm_bindgen::to_value(&payload) {
+        Ok(js) => js,
+        Err(_) => JsValue::from_str(&format!(r#"{{"error":"{}","code":"{}","details":{{}}}}"#, code, code)),
+    }
+}
+
+fn js_error_from_jsvalue(code: &str, js_err: JsValue) -> JsValue {
+    let details = if let Some(s) = js_err.as_string() {
+        s
+    } else {
+        format!("{:?}", js_err)
+    };
+    js_error_structured(code, details)
+}
+
+fn js_error_from_serde(err: impl std::fmt::Display) -> JsValue {
+    js_error_structured("serde_error", err.to_string())
 }
 
 fn route_metadata_from_definition(def: &RouteDefinition) -> RouteMetadata {

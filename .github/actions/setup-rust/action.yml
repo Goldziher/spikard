@@ -44,26 +44,28 @@ runs:
       run: |
         set -euo pipefail
         if ! command -v sccache &> /dev/null; then
-          echo "ERROR: sccache is not available on PATH after mozilla-actions/sccache-action"
-          echo "This indicates a problem with the sccache-action setup"
-          exit 1
+          echo "WARNING: sccache is not available on PATH after mozilla-actions/sccache-action; continuing without cache"
+          echo "SCCACHE_GHA_ENABLED=false" >> "$GITHUB_ENV"
+          echo "RUSTC_WRAPPER=" >> "$GITHUB_ENV"
+        else
+          echo "sccache version:"
+          sccache --version
+          echo "sccache location: $(which sccache)"
         fi
-        echo "sccache version:"
-        sccache --version
-        echo "sccache location: $(which sccache)"
 
     - name: Verify sccache installation (Windows)
       if: inputs.use-sccache == 'true' && runner.os == 'Windows'
       shell: pwsh
       run: |
         if (-not (Get-Command sccache -ErrorAction SilentlyContinue)) {
-          Write-Error "ERROR: sccache is not available on PATH after mozilla-actions/sccache-action"
-          Write-Error "This indicates a problem with the sccache-action setup"
-          exit 1
+          Write-Output "WARNING: sccache is not available on PATH after mozilla-actions/sccache-action; continuing without cache"
+          "SCCACHE_GHA_ENABLED=false" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RUSTC_WRAPPER=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        } else {
+          Write-Output "sccache version:"
+          sccache --version
+          Write-Output "sccache location: $(Get-Command sccache | Select-Object -ExpandProperty Source)"
         }
-        Write-Output "sccache version:"
-        sccache --version
-        Write-Output "sccache location: $(Get-Command sccache | Select-Object -ExpandProperty Source)"
 
     - name: Configure Rust flags (Unix)
       if: runner.os != 'Windows'

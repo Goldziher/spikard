@@ -1,4 +1,4 @@
-import initWasm, { TestClient as NativeTestClient } from "../runtime/spikard_wasm.js";
+import { init as initWasm, TestClient as NativeTestClient } from "../runtime/spikard_wasm.js";
 import type { LifecycleHookFunction, LifecycleHookPayload, LifecycleHooks } from "./app";
 import type { HandlerFunction, SpikardApp } from "./index";
 import type { Request } from "./request";
@@ -78,7 +78,7 @@ interface NativeSnapshot {
 const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
 const RAW_REQUEST_KEY = "__spikard_raw_request__";
-const wasmInitPromise = initWasm();
+const wasmInitPromise = Promise.resolve(initWasm());
 const EMPTY_HOOKS: LifecycleHooks = {
 	onRequest: [],
 	preValidation: [],
@@ -605,17 +605,20 @@ class WasmRequest implements Request {
 	}
 
 	json<T extends JsonValue = JsonValue>(): T {
+		let value: unknown;
 		if (this.bodyKind === "json" && this.bodyJson !== undefined) {
-			return this.bodyJson as T;
-		}
-		if (this.bodyKind === "text" && this.textBody !== undefined) {
+			value = this.bodyJson;
+		} else if (this.bodyKind === "text" && this.textBody !== undefined) {
 			try {
-				return JSON.parse(this.textBody) as T;
+				value = JSON.parse(this.textBody);
 			} catch {
 				throw new Error("Request body is not valid JSON");
 			}
+		} else {
+			throw new Error("Request body is not JSON");
 		}
-		throw new Error("Request body is not JSON");
+		// Normalize Maps to plain objects (from serde_wasm_bindgen conversion)
+		return normalizeJsonValue(value) as T;
 	}
 
 	form(): Record<string, string> {

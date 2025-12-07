@@ -1,0 +1,70 @@
+# Tarpaulin Code Coverage Configuration
+# Enforces 95% minimum coverage threshold per CLAUDE.md
+# Generated for Spikard Rust workspace
+
+[coverage]
+# Minimum coverage threshold in percentage
+minimum = 95
+# Fail the tool if coverage falls below threshold
+fail-under = 95.0
+
+[output]
+# Output formats to generate
+out = ["Stdout", "Html", "Lcov"]
+# HTML report destination
+html-dir = "target/tarpaulin"
+# LCOV report file
+lcov-file = "target/tarpaulin/lcov.info"
+
+[run]
+# Timeout for each test in seconds
+timeout = "300s"
+# Run tests with verbose output to catch issues early
+verbose = false
+
+# Exclude patterns for generated code, tests, and FFI bindings
+exclude-files = [
+    # Test files and test directories
+    "**/tests/**",
+    "**/*_test.rs",
+    "**/benches/**",
+    "**/*_bench.rs",
+
+    # Generated code
+    "**/generated/**",
+    "**/codegen/**",
+
+    # FFI and binding-specific code (already tested via bindings)
+    "crates/spikard-py/src/**",
+    "crates/spikard-node/src/**",
+    "crates/spikard-rb/src/**",
+    "crates/spikard-php/src/**",
+    "crates/spikard-wasm/src/**",
+
+    # Exclude examples (not part of core library)
+    "examples/**",
+    "tools/**",
+]
+
+# Crates to exclude from coverage
+# wasm crate excluded due to dependency issues on macOS
+# php crate excluded on macOS due to OpenSSL symbol mismatch; measured on Linux via coverage-rust-php-linux
+exclude-crates = [
+    "spikard-wasm",
+    "spikard-php",
+]
+
+# Examples and benchmarks are in the workspace but not tested for coverage
+# as they demonstrate usage patterns and are tested separately
+
+# Include all workspace crates
+# Coverage runs on:
+# - crates/spikard (core library - PRIMARY TARGET for 95%)
+# - crates/spikard-core (core abstractions)
+# - crates/spikard-http (HTTP server/middleware)
+# - crates/spikard-cli (CLI application)
+# - crates/spikard-codegen (code generation)
+# - crates/spikard-bindings-shared (shared utilities)
+#
+# Note: Bindings (py/node/rb/php/wasm) are FFI wrappers and their Rust code
+# is minimal; coverage is enforced through integration testing in each language.

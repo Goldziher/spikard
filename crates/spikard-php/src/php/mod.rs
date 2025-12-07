@@ -26,8 +26,8 @@ mod websocket;
 
 pub use background::{clear_handle, install_handle, process_pending_tasks};
 pub use di::{PhpFactoryDependency, PhpValueDependency, extract_di_container_from_php};
-pub use handler::GLOBAL_RUNTIME;
 pub use handler::PhpHandler;
+pub use handler::get_runtime;
 pub use hooks::{PhpHookResult, PhpLifecycleHooks};
 pub use request::PhpRequest;
 pub use response::PhpResponse;

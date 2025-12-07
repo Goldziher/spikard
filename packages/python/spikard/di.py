@@ -1,8 +1,15 @@
 """Dependency injection module for Spikard.
 
-This module provides dependency injection capabilities similar to Litestar's
-Provide pattern, allowing for automatic injection of dependencies into handlers
-based on parameter names and type annotations.
+This module provides a thin wrapper for dependency injection, delegating all
+complex resolution logic to the Rust-based DI engine in spikard-core.
+
+The `Provide` class is a simple metadata wrapper that captures:
+- The factory function
+- Its dependencies
+- Caching strategy (singleton vs per-request)
+
+All actual DI graph resolution, cycle detection, and parallel resolution happens
+in Rust via the FFI bridge in crates/spikard-py/src/di.rs.
 
 Examples:
 --------
@@ -34,7 +41,7 @@ Factory dependency::
     app.provide("config", {"db_url": "postgresql://localhost/mydb"})
     app.provide("db", Provide(create_db_pool, depends_on=["config"], singleton=True))
 
-Generator pattern for cleanup::
+Async generator cleanup::
 
     async def create_session(db):
         session = await db.create_session()
@@ -48,7 +55,7 @@ Generator pattern for cleanup::
 import asyncio
 import inspect
 from collections.abc import AsyncGenerator, Callable, Generator
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
@@ -57,29 +64,36 @@ class Provide(Generic[T]):
     """Wrapper for dependency factories.
 
     This class wraps a factory function that will be called to create a dependency
-    value when needed. The factory can depend on other dependencies, which will be
-    resolved first.
+    value when needed. The factory can depend on other dependencies, which are passed
+    as keyword arguments to the factory.
+
+    The Rust DI engine handles:
+    - Topological sorting of dependencies
+    - Parallel resolution of independent dependencies
+    - Singleton and per-request caching
+    - Cycle detection
+    - Cleanup task registration for generators
 
     Parameters
     ----------
-    dependency : Callable[..., T] | Callable[..., AsyncGenerator[T, None]] | Callable[..., Generator[T, None, None]]
-        The factory function to create the dependency. Can be sync or async,
-        and can be a generator for cleanup support.
-    depends_on : list[str] | None, optional
-        List of dependency keys this factory depends on, by default None.
-        Dependencies will be passed as keyword arguments to the factory.
-    use_cache : bool, optional
-        Whether to cache the resolved value within a single request, by default False.
-    singleton : bool, optional
-        Whether to cache the resolved value globally across all requests, by default False.
-        Takes precedence over use_cache.
+    dependency : Callable
+        The factory function. Can be sync, async, or async generator.
+    depends_on : list[str] | None
+        Dependency keys this factory needs. If None, auto-detected from function
+        signature by excluding 'self', 'cls', 'request', 'response'.
+    use_cache : bool
+        Whether to cache within a request. Overridden by singleton=True.
+    cacheable : bool | None
+        Alias for use_cache (for backwards compatibility).
+    singleton : bool
+        Cache globally across all requests. Takes precedence over use_cache.
 
     Attributes:
     ----------
     dependency : Callable
         The factory function
     depends_on : list[str]
-        List of dependency names this factory needs
+        List of dependency keys this factory needs
     use_cache : bool
         Whether to cache per-request
     singleton : bool
@@ -90,27 +104,17 @@ class Provide(Generic[T]):
         Whether the factory is a sync generator
     is_async_generator : bool
         Whether the factory is an async generator
-
-    Examples:
-    --------
-    Async factory with dependencies::
-
-        async def create_db_pool(config: dict) -> DatabasePool:
-            return await connect_to_db(config["db_url"])
-
-
-        app.provide("db", Provide(create_db_pool, depends_on=["config"], singleton=True))
-
-    Generator for cleanup::
-
-        async def create_session(db: DatabasePool):
-            session = await db.create_session()
-            yield session
-            await session.close()
-
-
-        app.provide("session", Provide(create_session, depends_on=["db"]))
     """
+
+    __slots__ = (
+        "dependency",
+        "depends_on",
+        "is_async",
+        "is_async_generator",
+        "is_generator",
+        "singleton",
+        "use_cache",
+    )
 
     def __init__(
         self,
@@ -118,34 +122,17 @@ class Provide(Generic[T]):
         *,
         depends_on: list[str] | None = None,
         use_cache: bool = False,
-        cacheable: bool | None = None,  # Alias for use_cache
+        cacheable: bool | None = None,
         singleton: bool = False,
     ) -> None:
-        """Initialize a dependency factory.
-
-        Parameters
-        ----------
-        dependency : Callable
-            The factory function to create the dependency
-        depends_on : list[str] | None
-            List of dependency keys this factory depends on
-        use_cache : bool
-            Whether to cache within a request
-        cacheable : bool | None
-            Alias for use_cache (for compatibility with fixtures)
-        singleton : bool
-            Whether to cache globally
-        """
         self.dependency = dependency
         self.depends_on = depends_on or []
-        # If cacheable is provided, use it; otherwise use use_cache
         self.use_cache = cacheable if cacheable is not None else use_cache
         self.singleton = singleton
         self.is_async = asyncio.iscoroutinefunction(dependency)
         self.is_generator = inspect.isgeneratorfunction(dependency)
         self.is_async_generator = inspect.isasyncgenfunction(dependency)
 
-        # Extract parameter names from function signature if depends_on not provided
         if not self.depends_on:
             sig = inspect.signature(dependency)
             self.depends_on = [
@@ -155,13 +142,7 @@ class Provide(Generic[T]):
             ]
 
     def __repr__(self) -> str:
-        """Return a string representation of the Provide instance.
-
-        Returns:
-        -------
-        str
-            String representation showing factory name and attributes
-        """
+        """Return a string representation of the Provide instance."""
         factory_name = getattr(self.dependency, "__name__", repr(self.dependency))
         return (
             f"Provide({factory_name}, "
@@ -171,59 +152,4 @@ class Provide(Generic[T]):
         )
 
 
-def inject_dependencies(
-    handler: Callable[..., Any],
-    resolved: dict[str, Any],
-) -> dict[str, Any]:
-    """Match dependencies to handler parameters by name and type.
-
-    This function introspects a handler's parameters and matches them against
-    resolved dependencies. It tries to match by parameter name first, then by
-    type annotation.
-
-    Parameters
-    ----------
-    handler : Callable
-        The handler function to introspect
-    resolved : dict[str, Any]
-        Dictionary of resolved dependencies
-
-    Returns:
-    -------
-    dict[str, Any]
-        Keyword arguments to pass to the handler
-
-    Examples:
-    --------
-    ::
-
-        @app.get("/users")
-        async def get_users(db: Database) -> list[User]:
-            # 'db' is auto-injected by matching parameter name
-            return await db.query(User).all()
-    """
-    sig = inspect.signature(handler)
-    kwargs: dict[str, Any] = {}
-
-    for param_name, param in sig.parameters.items():
-        # Skip special parameters
-        if param_name in ("self", "cls", "request", "response"):
-            continue
-
-        # Try name match first
-        if param_name in resolved:
-            kwargs[param_name] = resolved[param_name]
-        # Try type match
-        elif param.annotation != inspect.Parameter.empty:
-            for dep_value in resolved.values():
-                if isinstance(dep_value, param.annotation):
-                    kwargs[param_name] = dep_value
-                    break
-
-    return kwargs
-
-
-__all__ = [
-    "Provide",
-    "inject_dependencies",
-]
+__all__ = ["Provide"]

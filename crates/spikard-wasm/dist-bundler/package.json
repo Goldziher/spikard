@@ -1,0 +1,32 @@
+{
+  "name": "@spikard/wasm",
+  "type": "module",
+  "collaborators": [
+    "Na'aman Hirschfeld <nhirschfeld@gmail.com>"
+  ],
+  "description": "WebAssembly bindings for Spikard HTTP framework via wasm-bindgen",
+  "version": "0.3.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Goldziher/spikard"
+  },
+  "files": [
+    "spikard_wasm_bg.wasm",
+    "spikard_wasm.js",
+    "spikard_wasm_bg.js",
+    "spikard_wasm.d.ts",
+    "spikard_wasm_bg.wasm.d.ts"
+  ],
+  "module": "spikard_wasm.js",
+  "types": "spikard_wasm.d.ts",
+  "homepage": "https://github.com/Goldziher/spikard",
+  "keywords": [
+    "wasm",
+    "webassembly",
+    "bindings",
+    "http",
+    "framework"
+  ],
+  "sideEffects": false
+}

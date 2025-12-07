@@ -4,7 +4,7 @@ requires = [ "maturin>=1.4,<2" ]
 
 [project]
 name = "spikard"
-version = "0.2.5"
+version = "0.3.0"
 description = "High-performance Python web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with FastAPI/Litestar-style decorators backed by Axum and Tower-HTTP. 2.8x faster than FastAPI."
 readme = "README.md"
 keywords = [
@@ -82,6 +82,6 @@ packages = [ "spikard" ]
 [tool.maturin]
 module-name = "_spikard"
 python-source = "../../packages/python"
-python-packages = ["spikard", "_spikard"]
+python-packages = [ "spikard", "_spikard" ]
 manifest-path = "../../crates/spikard-py/Cargo.toml"
 features = [ "extension-module" ]

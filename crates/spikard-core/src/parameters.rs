@@ -61,11 +61,12 @@ impl ParameterValidator {
     fn extract_parameter_defs(schema: &Value) -> Result<Vec<ParameterDef>, String> {
         let mut defs = Vec::new();
 
-        let properties = schema.get("properties").and_then(|p| p.as_object()).ok_or_else(|| {
-            anyhow::anyhow!("Parameter schema validation failed")
-                .context("Schema must have 'properties' object")
-                .to_string()
-        })?;
+        // Allow empty schemas - if no properties exist, return empty parameter definitions
+        let properties = schema
+            .get("properties")
+            .and_then(|p| p.as_object())
+            .cloned()
+            .unwrap_or_default();
 
         let required_list = schema
             .get("required")
@@ -121,7 +122,7 @@ impl ParameterValidator {
     pub fn validate_and_extract(
         &self,
         query_params: &Value,
-        raw_query_params: &HashMap<String, String>,
+        raw_query_params: &HashMap<String, Vec<String>>,
         path_params: &HashMap<String, String>,
         headers: &HashMap<String, String>,
         cookies: &HashMap<String, String>,
@@ -174,13 +175,16 @@ impl ParameterValidator {
             }
 
             let raw_value_string = match param_def.source {
-                ParameterSource::Query => raw_query_params.get(&param_def.name),
-                ParameterSource::Path => path_params.get(&param_def.name),
+                ParameterSource::Query => raw_query_params
+                    .get(&param_def.name)
+                    .and_then(|values| values.first())
+                    .map(String::as_str),
+                ParameterSource::Path => path_params.get(&param_def.name).map(String::as_str),
                 ParameterSource::Header => {
                     let header_name = param_def.name.replace('_', "-").to_lowercase();
-                    headers.get(&header_name)
+                    headers.get(&header_name).map(String::as_str)
                 }
-                ParameterSource::Cookie => cookies.get(&param_def.name),
+                ParameterSource::Cookie => cookies.get(&param_def.name).map(String::as_str),
             };
 
             tracing::debug!("raw_value_string for {}: {:?}", param_def.name, raw_value_string);
@@ -222,7 +226,7 @@ impl ParameterValidator {
                     Ok(coerced) => {
                         tracing::debug!("Coerced to: {:?}", coerced);
                         params_map.insert(param_def.name.clone(), coerced);
-                        raw_values_map.insert(param_def.name.clone(), value_str.clone());
+                        raw_values_map.insert(param_def.name.clone(), value_str.to_string());
                     }
                     Err(e) => {
                         tracing::debug!("Coercion failed: {}", e);
@@ -272,7 +276,7 @@ impl ParameterValidator {
                             error_type: error_type.to_string(),
                             loc: vec![source_str.to_string(), param_name_for_error],
                             msg: error_msg,
-                            input: Value::String(value_str.clone()),
+                            input: Value::String(value_str.to_string()),
                             ctx: None,
                         });
                     }
@@ -509,7 +513,7 @@ mod tests {
         let query_params = json!({
             "device_ids": [1, 2]
         });
-        let raw_query_params = HashMap::new();
+        let raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
         let path_params = HashMap::new();
 
         let result = validator.validate_and_extract(
@@ -547,7 +551,7 @@ mod tests {
         let mut path_params = HashMap::new();
         path_params.insert("item_id".to_string(), "foobar".to_string());
         let query_params = json!({});
-        let raw_query_params = HashMap::new();
+        let raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
 
         let result = validator.validate_and_extract(
             &query_params,
@@ -580,7 +584,7 @@ mod tests {
         let mut path_params = HashMap::new();
         path_params.insert("value".to_string(), "True".to_string());
         let query_params = json!({});
-        let raw_query_params = HashMap::new();
+        let raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
 
         let result = validator.validate_and_extract(
             &query_params,
@@ -652,8 +656,8 @@ mod tests {
         let validator = ParameterValidator::new(schema).expect("Failed to create validator");
         let path_params = HashMap::new();
 
-        let mut raw_query_params = HashMap::new();
-        raw_query_params.insert("flag".to_string(), "1".to_string());
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("flag".to_string(), vec!["1".to_string()]);
         let query_params = json!({"flag": 1});
         let result = validator.validate_and_extract(
             &query_params,
@@ -666,8 +670,8 @@ mod tests {
         let params = result.unwrap();
         assert_eq!(params, json!({"flag": true}));
 
-        let mut raw_query_params = HashMap::new();
-        raw_query_params.insert("flag".to_string(), "0".to_string());
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("flag".to_string(), vec!["0".to_string()]);
         let query_params = json!({"flag": 0});
         let result = validator.validate_and_extract(
             &query_params,
@@ -680,8 +684,8 @@ mod tests {
         let params = result.unwrap();
         assert_eq!(params, json!({"flag": false}));
 
-        let mut raw_query_params = HashMap::new();
-        raw_query_params.insert("flag".to_string(), "true".to_string());
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("flag".to_string(), vec!["true".to_string()]);
         let query_params = json!({"flag": true});
         let result = validator.validate_and_extract(
             &query_params,
@@ -698,8 +702,8 @@ mod tests {
         let params = result.unwrap();
         assert_eq!(params, json!({"flag": true}));
 
-        let mut raw_query_params = HashMap::new();
-        raw_query_params.insert("flag".to_string(), "false".to_string());
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("flag".to_string(), vec!["false".to_string()]);
         let query_params = json!({"flag": false});
         let result = validator.validate_and_extract(
             &query_params,

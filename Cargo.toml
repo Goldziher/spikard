@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/spikard",
+    "crates/spikard-bindings-shared",
     "crates/spikard-cli",
     "crates/spikard-codegen",
     "crates/spikard-core",
@@ -20,7 +21,7 @@ exclude = [
 ]
 
 [workspace.package]
-version = "0.2.5"
+version = "0.3.0"
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
@@ -29,9 +30,9 @@ homepage = "https://github.com/Goldziher/spikard"
 
 [workspace.dependencies]
 # Core library
-spikard = { version = "0.2.5", path = "crates/spikard" }
-spikard-core = { version = "0.2.5", path = "crates/spikard-core" }
-spikard-http = { version = "0.2.5", path = "crates/spikard-http" }
+spikard = { version = "0.3.0", path = "crates/spikard" }
+spikard-core = { version = "0.3.0", path = "crates/spikard-core" }
+spikard-http = { version = "0.3.0", path = "crates/spikard-http" }
 
 # Python bindings
 pyo3 = { version = "0.27", features = ["abi3-py310"] }
@@ -75,6 +76,10 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 http = "1.4"
 jsonschema = { version = "0.37", default-features = false }
+flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }
+
+[workspace.metadata.cargo-llvm-cov]
+exclude = ["spikard-node"]
 
 [profile.release]
 lto = "thin"
