@@ -1,7 +1,5 @@
 # Spikard
 
-> **Note:** As of v0.2.1, npm packages have moved to the `@spikard` scope. Install with `npm install @spikard/node` instead of `npm install spikard`. See [MIGRATION-0.2.1.md](MIGRATION-0.2.1.md) for details.
-
 [![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
 [![PyPI](https://badge.fury.io/py/spikard.svg)](https://badge.fury.io/py/spikard)
