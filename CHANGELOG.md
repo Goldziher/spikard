@@ -5,6 +5,84 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-12-07
+
+### Added
+
+#### Coverage Enforcement & Testing Infrastructure
+- **Coverage thresholds**: Enforced 95% minimum for Rust core, 80%+ for all language bindings (Python, Node, Ruby, PHP, WASM) with CI job failures when below threshold
+- **Comprehensive test coverage**: Expanded test suites across all bindings achieving 97.96% coverage in shared infrastructure (`crates/spikard-bindings-shared`)
+- **WASM test coverage**: Added 96% test coverage for WebAssembly bindings with dedicated test modules
+- **Behavioral tests**: 78 new tests for HTTP handlers covering WebSocket, SSE, background tasks, and multipart uploads; 19 behavioral tests for PHP ControllerMethodHandler; FFI and dependency injection coverage improvements
+- **Test infrastructure**: Reorganized test modules into dedicated testing directories; created shared infrastructure for lifecycle hook and config extraction testing across all bindings
+
+#### CI/CD Improvements
+- **Workflow stabilization**: Fixed all CI test failures across Rust, Python, Node, Ruby, PHP, and WASM workflows with dedicated language-specific coverage jobs
+- **Windows compatibility**: Resolved Windows CI matrix issues; migrated Ruby builds from MSVC to MinGW/GNU toolchain for cross-platform consistency
+- **Build optimization**: Externalized workflow logic to scripts; added concurrency guards to prevent job conflicts; improved caching strategy for all language targets
+- **WASM CI/CD**: Added runtime preparation step for WASM test and coverage jobs; resolved TypeScript strict mode type errors in test fixtures
+
+### Changed
+
+#### Testing & Quality
+- **Strict typing enforcement**: Applied strict TypeScript and Python type checking across all test suites; enforced mypy --strict and TypeScript strictest flags
+- **Test organization**: Consolidated test files across PHP and Ruby; reorganized test modules into language-specific testing directories for better maintainability
+- **Fixture handling**: Hardened Python fixture loading and validation; improved error messages for fixture-driven tests
+- **Coverage reporting**: Removed obsolete `.coveragerc` reference from Python coverage scripts; standardized coverage configuration across all languages
+
+#### Dependencies
+- **Rust ecosystem**: Replaced deprecated `serde_yaml` with `serde-saphyr` for YAML parsing
+- **Cross-language updates**: Updated PHP (PHPUnit), Ruby (gems), and Python dependencies to latest compatible versions
+- **Build system**: Upgraded CI tooling including GitHub Actions for improved stability and performance
+
+#### Build & Configuration
+- **Path hardening**: Externalized CI workflows to dedicated shell scripts with explicit path handling for Windows/Unix compatibility
+- **PHP setup**: Added OpenSSL setup in workflow paths for consistent PHP extension building on all platforms
+- **Ruby toolchain**: Installed full UCRT toolchain for Windows Ruby builds; fixed bindgen configuration for MSVC compatibility
+- **Linting tools**: Stabilized lint tooling configuration across all bindings; added comprehensive lint ignores for platform-specific files
+
+#### Code Quality
+- **Deprecation removals**: Eliminated PHPUnit deprecation warnings (use of deprecated methods)
+- **Lint compliance**: Fixed all Biome, clippy, and PHPStan warnings across codebase; applied `rustfmt` to all modules
+- **Dead code cleanup**: Removed unused `ErrorEventProducer` and unused imports; eliminated AI-generated analysis files and temporary scripts
+
+### Fixed
+
+#### Critical Security & Stability
+- **Sensitive information logging**: Fixed cleartext logging of sensitive information (code scanning alert #193)
+- **Error handling**: Improved error conversion across FFI boundaries (WASM JsValue, PHP handler results, Node imports)
+- **Windows stability**: Fixed Windows CI matrix configuration; resolved Ruby Windows MSVC compatibility for rb-sys bindgen
+- **Coverage measurement**: Corrected tarpaulin timeout format from seconds to duration string; added missing `--workspace` flag to tarpaulin command
+
+#### Bug Fixes
+- **CLI**: Added missing WebSocket handlers to AsyncAPI test app generation
+- **Ruby**: Resolved native extension loading in tests; removed calls to non-existent Native methods; fixed Response FFI signature
+- **Node**: Fixed module imports and handler result type mismatches
+- **PHP**: Resolved PHPStan level max array type specification errors in test fixtures; fixed generator tests to match PHP semantics; eliminated PHPUnit deprecations
+- **Python**: Applied lint fixes and hardened fixture loading for reliability
+- **HTTP handlers**: Corrected multipart tests; added WebSocket Debug trait; fixed SSE and background task test design
+- **WASM**: Fixed JsValue error conversion; corrected TypeScript type definitions for generated runtime; implemented named init export for proper initialization
+- **Build**: Fixed PHP OpenSSL linking; corrected Node cache configuration to prevent pnpm conflicts
+- **CI**: Fixed PHP and Ruby coverage jobs (incorrect GitHub Actions, missing build artifacts)
+
+#### Cleanup
+- **Detritus removal**: Removed AI-generated documentation, backup files, and disabled test modules
+- **Dead code**: Eliminated low-value tests across all bindings and core; removed unused test implementations
+- **Configuration**: Cleaned up lint configuration and ignores for all platforms
+
+### Removed
+
+- **Files**: AI-generated analysis documents, backup files, disabled test modules
+- **Code**: Low-value tests; unused ErrorEventProducer; non-existent Native method calls in Ruby tests
+- **Build artifacts**: Obsolete `.coveragerc` Python configuration reference
+- **Dependencies**: Removed deprecated `serde_yaml` crate
+
+### Security
+
+- Fixed cleartext logging vulnerability that exposed sensitive request/response information in logs (code scanning alert #193)
+- Enhanced error boundary validation across all FFI implementations (Python/PyO3, Node/napi-rs, Ruby/magnus, PHP/ext-php-rs, WASM/wasm-bindgen)
+- Improved error propagation to prevent panic leakage across language boundaries
+
 ## [0.2.5] - 2025-12-01
 
 ### Fixed
