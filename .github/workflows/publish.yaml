@@ -177,7 +177,19 @@ jobs:
 
       - name: List built wheels
         shell: bash
-        run: ls -lh packages/python/target/wheels
+        run: |
+          echo "=== Checking for wheels directory ==="
+          if [ -d "packages/python/target/wheels" ]; then
+            echo "Wheels directory exists"
+            ls -lh packages/python/target/wheels
+          else
+            echo "::error::Wheels directory not found at packages/python/target/wheels"
+            echo "Current directory: $(pwd)"
+            echo "Looking for target directory:"
+            find packages/python -type d -name "target" 2>/dev/null || echo "No target directory found"
+            find packages/python -type d -name "wheels" 2>/dev/null || echo "No wheels directory found"
+            exit 1
+          fi
 
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v5
