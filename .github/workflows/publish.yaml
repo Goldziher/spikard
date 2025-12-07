@@ -527,6 +527,7 @@ jobs:
       - name: Configure bindgen sysroot (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
+        working-directory: packages/ruby
         run: ../../scripts/publish/ruby/configure-bindgen-windows.ps1
 
       - name: Install Ruby dependencies (Unix)
@@ -549,6 +550,7 @@ jobs:
       - name: Build gem (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
+        working-directory: packages/ruby
         run: ../../scripts/publish/ruby/build-gem-windows.ps1
 
       - name: Upload gem artifacts
@@ -909,9 +911,6 @@ jobs:
 
       - name: Prepare artifact directory
         run: bash scripts/publish/node/prepare-artifact-directory.sh
-
-      - name: Copy .node binaries to platform packages
-        run: bash scripts/publish/node/copy-node-binaries.sh
 
       - name: Verify platform packages contain native binaries
         run: bash scripts/publish/node/verify-platform-packages.sh
