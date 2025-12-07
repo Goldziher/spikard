@@ -177,7 +177,7 @@ jobs:
 
       - name: List built wheels
         shell: bash
-        run: ls -lh target/wheels
+        run: ls -lh packages/python/target/wheels
 
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v5
@@ -926,7 +926,7 @@ jobs:
         with:
           name: node-typescript-defs
           path: typescript-defs
-          if-no-files-found: ignore
+        continue-on-error: true
 
       - name: Setup Node
         uses: actions/setup-node@v6
