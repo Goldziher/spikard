@@ -18,6 +18,6 @@ fi
 
 for app in hanami-api hanami-api-raw roda roda-raw; do
 	echo "Updating $app..."
-	cd "tools/benchmark-harness/apps/$app" && RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle "_${BUNDLER_VERSION}_" update
+	cd "tools/benchmark-harness/apps/$app" && RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle "_${BUNDLER_VERSION}_" update --all
 	cd - >/dev/null
 done
