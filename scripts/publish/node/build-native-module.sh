@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../../.." && pwd -P)"
 
 cd "${REPO_ROOT}/crates/spikard-node"
-args=(--platform --release --target "${TARGET}" -o .)
+args=(--platform --release --target "${TARGET}")
 if [[ "${USE_NAPI_CROSS:-false}" == "true" ]]; then
 	args+=("--use-napi-cross")
 fi

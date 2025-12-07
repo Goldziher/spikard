@@ -44,7 +44,11 @@ if [ ! -d "npm/${PLATFORM_DIR}" ]; then
 fi
 
 shopt -s nullglob
-mapfile -t nodes < <(find "npm/${PLATFORM_DIR}" -maxdepth 1 -name "*.node")
+nodes=()
+while IFS= read -r -d '' file; do
+	nodes+=("$file")
+done < <(find "npm/${PLATFORM_DIR}" -maxdepth 1 -name "*.node" -print0)
+
 if [ ${#nodes[@]} -eq 0 ]; then
 	echo "::error::No .node file found in npm/${PLATFORM_DIR}"
 	ls -la "npm/${PLATFORM_DIR}/"
