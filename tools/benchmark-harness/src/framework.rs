@@ -110,7 +110,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "fastapi-uvicorn",
+            "fastapi-uvicorn-dto",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
@@ -124,14 +124,14 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "fastapi-granian",
+            "fastapi-granian-dto",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(
-            "robyn",
+            "robyn-dto",
             vec!["server.py".to_string()],
             None,
             "uv run server.py {port}",
@@ -435,12 +435,12 @@ mod tests {
 
         // Python validated (7)
         assert!(names.contains(&"axum-baseline"));
-        assert!(names.contains(&"fastapi-uvicorn"));
+        assert!(names.contains(&"fastapi-uvicorn-dto"));
         assert!(names.contains(&"fastapi-python"));
-        assert!(names.contains(&"fastapi-granian"));
+        assert!(names.contains(&"fastapi-granian-dto"));
         assert!(names.contains(&"litestar-uvicorn"));
         assert!(names.contains(&"litestar-granian"));
-        assert!(names.contains(&"robyn"));
+        assert!(names.contains(&"robyn-dto"));
 
         // Python raw (6)
         assert!(names.contains(&"spikard-raw"));
