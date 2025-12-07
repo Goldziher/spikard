@@ -22,6 +22,7 @@ pub struct RegisteredRoutePayload {
     pub path: String,
     pub handler_name: String,
     #[serde(skip)]
+    #[allow(dead_code)]
     /// Handler stored as Zval to avoid lifetime issues
     pub handler: Option<ext_php_rs::types::Zval>,
     pub request_schema: Option<serde_json::Value>,
@@ -561,7 +562,6 @@ pub fn spikard_start_server_impl(
             .ok_or_else(|| PhpException::default("Route must be an array".to_string()))?;
         let handler_callable = route_array
             .get("handler")
-            .cloned()
             .ok_or_else(|| PhpException::default("Missing handler callable".to_string()))?;
 
         // Convert Zval to JSON Value (excluding handler which can't be serialized)
