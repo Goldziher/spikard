@@ -250,16 +250,18 @@ tasks:
       - ./scripts/rust/run-with-bindgen-env.sh cargo check --workspace --all-features
 
   rust:lint:
-    desc: "Run Rust linter with auto-fix (clippy + format)"
+    desc: "Run Rust linter with auto-fix (clippy + format + deny)"
     cmds:
       - cargo fmt --all
       - ./scripts/rust/run-with-bindgen-env.sh cargo clippy --workspace --all-features -- -D warnings
+      - cargo deny check licenses
 
   rust:lint:check:
-    desc: "Check Rust code without auto-fix (clippy + format check)"
+    desc: "Check Rust code without auto-fix (clippy + format check + deny)"
     cmds:
       - cargo fmt --all --check
       - ./scripts/rust/run-with-bindgen-env.sh cargo clippy --workspace --all-features -- -D warnings
+      - cargo deny check licenses
 
   rust:format:
     desc: "Format Rust code"
