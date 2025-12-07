@@ -4,7 +4,7 @@ Set-StrictMode -Version Latest
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot ".." ".." "..")
 Set-Location (Join-Path $RepoRoot "crates/spikard-node")
 
-pnpm exec napi artifacts --cwd ./artifacts --npm-dir ./npm
+pnpm exec napi artifacts --npm-dir ./npm
 if (-Not (Test-Path npm)) {
   throw "npm artifact directory missing"
 }
