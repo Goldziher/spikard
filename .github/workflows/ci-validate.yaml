@@ -106,6 +106,12 @@ jobs:
       - name: Run Clippy
         run: cargo clippy --workspace --all-features -- -D warnings
 
+      - name: Install cargo-deny
+        run: cargo install --locked cargo-deny
+
+      - name: Check licenses
+        run: cargo deny check licenses
+
   lint-python:
     name: Lint Python
     runs-on: ubuntu-latest
