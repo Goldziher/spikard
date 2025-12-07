@@ -237,7 +237,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: python-sdist
-          path: target/wheels/*.tar.gz
+          path: packages/python/target/wheels/*.tar.gz
           retention-days: 14
 
   python-wrapper:
@@ -277,7 +277,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: python-wrapper
-          path: target/wheels/*.whl
+          path: packages/python/target/wheels/*.whl
           retention-days: 14
 
   node-bindings:
