@@ -154,16 +154,12 @@ jobs:
         shell: bash
         run: rustup target add aarch64-apple-darwin
 
-      - name: Prepare wheel output directory
-        shell: bash
-        run: mkdir -p target/wheels
-
       - name: Build Linux wheels
         if: matrix.os == 'ubuntu-latest'
         uses: PyO3/maturin-action@v1
         with:
           command: build
-          args: --release -i python${{ matrix.python }} --out ../../target/wheels ${{ matrix.extra_args }}
+          args: --release -i python${{ matrix.python }}
           target: ${{ matrix.rust_target }}
           manylinux: ${{ matrix.manylinux }}
           working-directory: packages/python
@@ -174,20 +170,21 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           command: build
-          args: --release -i python${{ matrix.python }} --out ../../target/wheels ${{ matrix.extra_args }}
+          args: --release -i python${{ matrix.python }}
           target: ${{ matrix.rust_target }}
           working-directory: packages/python
           sccache: true
 
       - name: List built wheels
         shell: bash
+        working-directory: packages/python
         run: ls -lh target/wheels
 
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact }}
-          path: target/wheels/*.whl
+          path: packages/python/target/wheels/*.whl
           retention-days: 14
 
   python-sdist:
@@ -230,7 +227,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: python-sdist
-          path: target/wheels/*.tar.gz
+          path: packages/python/target/wheels/*.tar.gz
           retention-days: 14
 
   python-wrapper:
@@ -270,7 +267,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: python-wrapper
-          path: target/wheels/*.whl
+          path: packages/python/target/wheels/*.whl
           retention-days: 14
 
   node-bindings:

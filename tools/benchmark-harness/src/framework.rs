@@ -77,7 +77,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-node",
             vec!["server.ts".to_string()],
             None,
-            "pnpm start {port}",
+            "pnpm exec tsx server.ts {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -96,19 +96,12 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
         FrameworkConfig::new(
             "spikard-wasm",
-            vec!["server.js".to_string()],
+            vec!["server.ts".to_string()],
             None,
-            "node server.js {port}",
+            "deno run --allow-net --allow-read server.ts {port}",
             None,
         ),
         // Baseline and alternative frameworks
-        FrameworkConfig::new(
-            "axum-baseline",
-            vec!["Cargo.toml".to_string()],
-            Some("cargo build --release".to_string()),
-            "cargo run --release -- {port}",
-            None,
-        ),
         FrameworkConfig::new(
             "fastapi-uvicorn-dto",
             vec!["server.py".to_string()],
@@ -182,7 +175,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
         // TypeScript frameworks
         FrameworkConfig::new(
-            "fastify",
+            "fastify-dto",
             vec!["server.ts".to_string()],
             None,
             "pnpm run start -- {port}",
@@ -196,7 +189,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "hono",
+            "hono-dto",
             vec!["server.ts".to_string()],
             None,
             "pnpm run start -- {port}",
@@ -210,21 +203,21 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "elysia",
+            "elysia-dto",
             vec!["server.ts".to_string()],
             None,
             "bun run server.ts {port}",
             None,
         ),
         FrameworkConfig::new(
-            "morojs",
+            "morojs-dto",
             vec!["server.ts".to_string()],
             None,
             "pnpm run start -- {port}",
             None,
         ),
         FrameworkConfig::new(
-            "express",
+            "express-dto",
             vec!["server.ts".to_string()],
             None,
             "pnpm run start:ts -- {port}",
@@ -253,7 +246,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
         // Ruby frameworks
         FrameworkConfig::new(
-            "hanami-api",
+            "hanami-api-dto",
             vec!["server.rb".to_string()],
             None,
             "ruby server.rb {port}",
@@ -267,7 +260,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "roda",
+            "roda-dto",
             vec!["server.rb".to_string()],
             None,
             "ruby server.rb {port}",
@@ -282,14 +275,14 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
         // PHP frameworks
         FrameworkConfig::new(
-            "trongate",
+            "trongate-raw",
             vec!["server.php".to_string()],
             None,
             "php server.php {port}",
             None,
         ),
         FrameworkConfig::new(
-            "phalcon",
+            "phalcon-raw",
             vec!["server.php".to_string(), "composer.json".to_string()],
             Some("composer install --no-dev --optimize-autoloader".to_string()),
             "php server.php {port}",
@@ -433,8 +426,7 @@ mod tests {
         assert!(names.contains(&"spikard-php"));
         assert!(names.contains(&"spikard-wasm"));
 
-        // Python validated (7)
-        assert!(names.contains(&"axum-baseline"));
+        // Python validated (6)
         assert!(names.contains(&"fastapi-uvicorn-dto"));
         assert!(names.contains(&"fastapi-python"));
         assert!(names.contains(&"fastapi-granian-dto"));
@@ -451,26 +443,26 @@ mod tests {
         assert!(names.contains(&"robyn-raw"));
 
         // TypeScript (8)
-        assert!(names.contains(&"fastify"));
+        assert!(names.contains(&"fastify-dto"));
         assert!(names.contains(&"fastify-raw"));
-        assert!(names.contains(&"hono"));
+        assert!(names.contains(&"hono-dto"));
         assert!(names.contains(&"hono-raw"));
-        assert!(names.contains(&"elysia"));
-        assert!(names.contains(&"morojs"));
-        assert!(names.contains(&"express"));
+        assert!(names.contains(&"elysia-dto"));
+        assert!(names.contains(&"morojs-dto"));
+        assert!(names.contains(&"express-dto"));
         assert!(names.contains(&"express-raw"));
 
         // Ruby (4)
-        assert!(names.contains(&"hanami-api"));
+        assert!(names.contains(&"hanami-api-dto"));
         assert!(names.contains(&"hanami-api-raw"));
-        assert!(names.contains(&"roda"));
+        assert!(names.contains(&"roda-dto"));
         assert!(names.contains(&"roda-raw"));
 
         // PHP (2)
-        assert!(names.contains(&"trongate"));
-        assert!(names.contains(&"phalcon"));
+        assert!(names.contains(&"trongate-raw"));
+        assert!(names.contains(&"phalcon-raw"));
 
-        assert_eq!(registry.len(), 33);
+        assert_eq!(registry.len(), 41);
     }
 
     #[test]
@@ -503,8 +495,7 @@ mod tests {
         fs::write(temp_dir.path().join("src").join("main.rs"), "fn main()").unwrap();
 
         let result = detect_framework(temp_dir.path());
-        // This should still succeed as axum-baseline only requires Cargo.toml
-        // and spikard-rust requires both Cargo.toml and src/main.rs
+        // spikard-rust requires both Cargo.toml and src/main.rs, making it more specific
         assert!(result.is_ok());
         assert_eq!(result.unwrap().name, "spikard-rust");
     }
@@ -529,7 +520,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 33);
+        assert_eq!(frameworks.len(), 41);
     }
 
     #[test]

@@ -1,7 +1,7 @@
 version: "3"
 
 vars:
-  BUNDLER_VERSION: "2.7.2"
+  BUNDLER_VERSION: "4.0.0"
   RBENV_BIN: "/opt/homebrew/bin/rbenv"
   RBENV_VERSION: "3.4.7"
   RBENV_RUBY:

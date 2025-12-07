@@ -15,5 +15,5 @@ dependencies = [
   "fastapi",
   "granian",
   "orjson",
-  "sniffio>=1.3",
+  "sniffio>=1.3.1",
 ]
