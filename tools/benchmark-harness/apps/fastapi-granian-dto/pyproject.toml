@@ -13,6 +13,7 @@ classifiers = [
 ]
 dependencies = [
   "fastapi",
+  "granian[standard]",
   "pydantic",
-  "uvicorn[standard]",
+  "sniffio>=1.3",
 ]
