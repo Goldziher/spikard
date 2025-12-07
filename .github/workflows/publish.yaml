@@ -818,7 +818,7 @@ jobs:
 
   publish-pypi:
     name: Publish Python packages to PyPI
-    needs: [prepare, python-wheels, python-sdist, python-wrapper]
+    needs: [prepare, python-wheels, python-sdist]
     if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_python == 'true' }}
     runs-on: ubuntu-latest
     environment: pypi
@@ -836,12 +836,6 @@ jobs:
         uses: actions/download-artifact@v6
         with:
           name: python-sdist
-          path: dist
-
-      - name: Download wrapper wheel
-        uses: actions/download-artifact@v6
-        with:
-          name: python-wrapper
           path: dist
 
       - name: List artifacts
