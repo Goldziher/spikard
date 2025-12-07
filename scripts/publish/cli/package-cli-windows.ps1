@@ -1,10 +1,10 @@
-$ErrorActionPreference = "Stop"
-Set-StrictMode -Version Latest
-
 param(
     [Parameter(Mandatory = $true)]
     [string]$Target
 )
+
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
 
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot ".." ".." "..")
 
