@@ -253,7 +253,7 @@ final class App
     /**
      * Routes formatted for the native (Rust) test client.
      *
-     * @return array<int, array{method: string, path: string, handler?: object, websocket?: bool, sse?: bool}>
+     * @return array<int, array{method: string, path: string, handler_name: string, handler?: object, websocket?: bool, sse?: bool}>
      */
     public function nativeRoutes(): array
     {
@@ -262,6 +262,7 @@ final class App
             $routes[] = [
                 'method' => \strtoupper($route['method']),
                 'path' => $route['path'],
+                'handler_name' => \spl_object_hash($route['handler']),
                 'handler' => $route['handler'],
             ];
         }
@@ -269,6 +270,7 @@ final class App
             $routes[] = [
                 'method' => 'GET',
                 'path' => $path,
+                'handler_name' => \spl_object_hash($handler),
                 'handler' => $handler,
                 'websocket' => true,
             ];
@@ -277,6 +279,7 @@ final class App
             $routes[] = [
                 'method' => 'GET',
                 'path' => $path,
+                'handler_name' => \spl_object_hash($producer),
                 'handler' => $producer,
                 'sse' => true,
             ];

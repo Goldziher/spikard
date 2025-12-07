@@ -167,27 +167,6 @@ jobs:
           concurrency: ${{ inputs.concurrency || '100' }}
 
   # Python frameworks (3 frameworks with DTO validation)
-  bench-axum-baseline:
-    name: axum-baseline
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v6
-        with:
-          name: benchmark-harness
-          path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: axum-baseline
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
   bench-fastapi-uvicorn-dto:
     name: fastapi-uvicorn-dto
     needs: build-harness
@@ -337,8 +316,8 @@ jobs:
           concurrency: ${{ inputs.concurrency || '100' }}
 
   # TypeScript frameworks (6 frameworks)
-  bench-fastify:
-    name: fastify
+  bench-fastify-dto:
+    name: fastify-dto
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -353,7 +332,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: fastify
+          framework: fastify-dto
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -379,8 +358,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-hono:
-    name: hono
+  bench-hono-dto:
+    name: hono-dto
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -395,13 +374,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: hono
+          framework: hono-dto
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-elysia:
-    name: elysia
+  bench-elysia-dto:
+    name: elysia-dto
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -416,7 +395,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: elysia
+          framework: elysia-dto
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -442,8 +421,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-express:
-    name: express
+  bench-express-dto:
+    name: express-dto
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -458,7 +437,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: express
+          framework: express-dto
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -484,8 +463,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-morojs:
-    name: morojs
+  bench-morojs-dto:
+    name: morojs-dto
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -500,14 +479,14 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: morojs
+          framework: morojs-dto
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   # Ruby frameworks (4 frameworks)
-  bench-hanami-api:
-    name: hanami-api
+  bench-hanami-api-dto:
+    name: hanami-api-dto
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -522,7 +501,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: hanami-api
+          framework: hanami-api-dto
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -548,8 +527,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-roda:
-    name: roda
+  bench-roda-dto:
+    name: roda-dto
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -564,7 +543,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: roda
+          framework: roda-dto
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -591,8 +570,8 @@ jobs:
           concurrency: ${{ inputs.concurrency || '100' }}
 
   # PHP frameworks (4 frameworks)
-  bench-phalcon:
-    name: phalcon
+  bench-phalcon-raw:
+    name: phalcon-raw
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -607,7 +586,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: phalcon
+          framework: phalcon-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -633,8 +612,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-trongate:
-    name: trongate
+  bench-trongate-raw:
+    name: trongate-raw
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -649,7 +628,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: trongate
+          framework: trongate-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}

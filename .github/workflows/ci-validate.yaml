@@ -175,7 +175,9 @@ jobs:
 
       - name: Install dependencies
         working-directory: packages/ruby
-        run: bundle install --frozen
+        run: |
+          bundle config set frozen true
+          bundle install
 
       - name: Run Rubocop
         working-directory: packages/ruby

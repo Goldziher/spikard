@@ -384,8 +384,8 @@ mod tests {
             "spikard-node",
             "spikard-ruby",
             "spikard-wasm",
-            "fastapi-uvicorn",
-            "robyn",
+            "fastapi-uvicorn-dto",
+            "robyn-dto",
         ];
 
         for name in frameworks {

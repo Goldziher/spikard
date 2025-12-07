@@ -160,7 +160,7 @@ jobs:
         run: cargo install oha
 
       - name: Build spikard-python binding
-        run: cd crates/spikard-py && uv run maturin develop --release --features extension-module
+        uses: ./.github/actions/build-python-binding
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-python
@@ -284,10 +284,7 @@ jobs:
           bundler-cache: false
 
       - name: Build spikard-ruby binding
-        working-directory: packages/ruby
-        run: |
-          bundle install
-          bundle exec rake build
+        uses: ./.github/actions/build-ruby-binding
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-ruby
