@@ -540,16 +540,6 @@ jobs:
         working-directory: packages/ruby
         run: ../../scripts/publish/ruby/install-deps-windows.ps1
 
-      - name: Vendor workspace crates (Unix)
-        if: runner.os != 'Windows'
-        working-directory: packages/ruby
-        run: bundle exec rake vendor:sync
-
-      - name: Vendor workspace crates (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: ../../scripts/publish/ruby/vendor-windows.ps1
-
       - name: Build gem (Unix)
         if: runner.os != 'Windows'
         shell: bash
