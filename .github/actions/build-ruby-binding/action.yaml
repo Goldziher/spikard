@@ -7,7 +7,8 @@ runs:
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: "3.3"
+        ruby-version: "3.4"
+        bundler: "4.0.0"
         bundler-cache: false
 
     - name: Setup Rust

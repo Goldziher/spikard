@@ -77,7 +77,8 @@ jobs:
         id: setup-ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.2"
+          ruby-version: "3.4"
+          bundler: "4.0.0"
           bundler-cache: true
           working-directory: packages/ruby
 
@@ -117,11 +118,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            ruby-version: "3.2"
+            ruby-version: "3.4"
           - os: macos-latest
-            ruby-version: "3.2"
+            ruby-version: "3.4"
           - os: windows-latest
-            ruby-version: "3.2"
+            ruby-version: "3.4"
     steps:
       - uses: actions/checkout@v6
 
@@ -146,6 +147,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby-version }}
+          bundler: "4.0.0"
           bundler-cache: true
           working-directory: packages/ruby
 
@@ -172,7 +174,8 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.2"
+          ruby-version: "3.4"
+          bundler: "4.0.0"
           bundler-cache: true
           working-directory: packages/ruby
 
