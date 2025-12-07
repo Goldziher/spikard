@@ -104,13 +104,12 @@ runs:
     - name: Build Python binding (if needed)
       if: steps.detect.outputs.language == 'python' && (inputs.framework == 'spikard' || inputs.framework == 'spikard-python' || inputs.framework == 'spikard-raw')
       shell: bash
-      working-directory: crates/spikard-py
       run: |
         # maturin is already installed via uv sync from the root pyproject.toml dev dependencies
         # Use uv run to execute maturin from the uv-managed virtual environment
         uv run maturin --version || { echo "maturin not found in uv environment"; exit 1; }
         # Build and install the Python binding in development mode
-        uv run maturin develop --release --features extension-module || { echo "Failed to build Python binding"; exit 1; }
+        cd crates/spikard-py && uv run maturin develop --release --features extension-module || { echo "Failed to build Python binding"; exit 1; }
 
     - name: Build Node binding (if needed)
       if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
@@ -140,7 +139,7 @@ runs:
       if: steps.detect.outputs.language == 'ruby'
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
-      run: bundle install --local
+      run: bundle install
 
     - name: Install pnpm for WASM builds
       if: steps.detect.outputs.language == 'wasm'

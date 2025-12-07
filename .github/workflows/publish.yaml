@@ -867,7 +867,7 @@ jobs:
       - name: Publish gems
         if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.rubygems_check.outputs.exists != 'true' }}
         working-directory: dist
-        run: bash ../../scripts/publish/ruby/publish-gems.sh
+        run: bash ../scripts/publish/ruby/publish-gems.sh
 
       - name: Ruby gem already published
         if: ${{ steps.rubygems_check.outputs.exists == 'true' }}
@@ -876,7 +876,7 @@ jobs:
       - name: Dry run summary
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}
         working-directory: dist
-        run: bash ../../scripts/publish/ruby/dry-run-summary.sh
+        run: bash ../scripts/publish/ruby/dry-run-summary.sh
 
   publish-node:
     name: Publish Node packages
