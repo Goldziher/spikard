@@ -177,7 +177,6 @@ jobs:
 
       - name: List built wheels
         shell: bash
-        working-directory: packages/python
         run: ls -lh target/wheels
 
       - name: Upload wheel artifact
