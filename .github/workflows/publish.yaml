@@ -179,15 +179,14 @@ jobs:
         shell: bash
         run: |
           echo "=== Checking for wheels directory ==="
-          if [ -d "packages/python/target/wheels" ]; then
+          if [ -d "target/wheels" ]; then
             echo "Wheels directory exists"
-            ls -lh packages/python/target/wheels
+            ls -lh target/wheels
           else
-            echo "::error::Wheels directory not found at packages/python/target/wheels"
+            echo "::error::Wheels directory not found at target/wheels"
             echo "Current directory: $(pwd)"
-            echo "Looking for target directory:"
-            find packages/python -type d -name "target" 2>/dev/null || echo "No target directory found"
-            find packages/python -type d -name "wheels" 2>/dev/null || echo "No wheels directory found"
+            echo "Looking for wheels directories:"
+            find . -type d -name "wheels" 2>/dev/null || echo "No wheels directory found"
             exit 1
           fi
 
@@ -195,7 +194,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact }}
-          path: packages/python/target/wheels/*.whl
+          path: target/wheels/*.whl
           retention-days: 14
 
   python-sdist:
@@ -238,7 +237,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: python-sdist
-          path: packages/python/target/wheels/*.tar.gz
+          path: target/wheels/*.tar.gz
           retention-days: 14
 
   python-wrapper:
@@ -278,7 +277,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: python-wrapper
-          path: packages/python/target/wheels/*.whl
+          path: target/wheels/*.whl
           retention-days: 14
 
   node-bindings:
