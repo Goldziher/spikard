@@ -57,6 +57,10 @@ jobs:
       release_wasm: ${{ steps.meta.outputs.release_wasm }}
       release_homebrew: ${{ steps.meta.outputs.release_homebrew }}
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - name: Validate tag and compute version
         id: meta
         env:
