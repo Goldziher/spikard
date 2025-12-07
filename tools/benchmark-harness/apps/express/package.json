@@ -11,14 +11,14 @@
     "dev": "tsx watch server.ts"
   },
   "dependencies": {
-    "express": "5.1.0",
-    "zod": "3.24.1"
+    "express": "5.2.1",
+    "zod": "4.1.13"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.0.0",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.10.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=18.0.0"
