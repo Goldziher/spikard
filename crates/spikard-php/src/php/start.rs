@@ -554,18 +554,22 @@ pub fn spikard_start_server_impl(
     let mut route_metadata: Vec<spikard_core::RouteMetadata> = Vec::new();
 
     for (_idx, route_val) in routes_array.iter() {
-        // Convert Zval to JSON Value
+        // Extract handler from the Zval array before converting to JSON
+        // The handler is a PHP object which can't be serialized to JSON
+        let route_array = route_val
+            .array()
+            .ok_or_else(|| PhpException::default("Route must be an array".to_string()))?;
+        let handler_callable = route_array
+            .get("handler")
+            .cloned()
+            .ok_or_else(|| PhpException::default("Missing handler callable".to_string()))?;
+
+        // Convert Zval to JSON Value (excluding handler which can't be serialized)
         let json_val = crate::php::zval_to_json(route_val)
             .map_err(|e| PhpException::default(format!("Failed to convert route to JSON: {}", e)))?;
 
         let reg = serde_json::from_value::<RegisteredRoutePayload>(json_val)
             .map_err(|e| PhpException::default(format!("Invalid route payload: {}", e)))?;
-
-        // Handler is provided via separate array in PHP (handler index not used here)
-        let handler_callable = reg
-            .handler
-            .as_ref()
-            .ok_or_else(|| PhpException::default("Missing handler callable".to_string()))?;
         // Extract schemas before consuming reg
         let method = reg.method.clone();
         let path = reg.path.clone();

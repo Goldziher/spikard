@@ -17,8 +17,8 @@ runs:
 
     - name: Install maturin
       shell: bash
-      run: uv pip install maturin
+      run: pip install maturin
 
     - name: Build spikard-python
       shell: bash
-      run: cd crates/spikard-py && uv run maturin develop --release --features extension-module
+      run: cd crates/spikard-py && maturin develop --release --features extension-module
