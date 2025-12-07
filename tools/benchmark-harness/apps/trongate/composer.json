@@ -3,8 +3,7 @@
   "description": "Trongate benchmark application for spikard harness",
   "type": "project",
   "require": {
-    "php": "^8.2",
-    "trongate/framework": "*"
+    "php": "^8.2"
   },
   "autoload": {
     "psr-4": {
