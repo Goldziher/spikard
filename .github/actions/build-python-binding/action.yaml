@@ -17,5 +17,4 @@ runs:
 
     - name: Build spikard-python
       shell: bash
-      working-directory: crates/spikard-py
-      run: uv run maturin develop --release
+      run: cd crates/spikard-py && uv run maturin develop --release --features extension-module
