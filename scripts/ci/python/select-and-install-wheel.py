@@ -124,6 +124,7 @@ def main() -> int:
         chosen = candidates[0]
 
     # Print the chosen wheel (to be captured by shell)
+    print(chosen)  # noqa: T201
     return 0
 
 
