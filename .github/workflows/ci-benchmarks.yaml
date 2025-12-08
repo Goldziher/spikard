@@ -219,11 +219,8 @@ jobs:
           node-version: "24"
 
       - name: Build spikard-node binding
-        working-directory: crates/spikard-node
-        run: pnpm build
-
-      - name: Copy Node binding to packages
-        run: cp -v crates/spikard-node/*.node packages/node/ || true
+        working-directory: packages/node
+        run: pnpm build:native
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-node

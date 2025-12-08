@@ -82,14 +82,10 @@ runs:
 
     - name: Build Node binding (if needed)
       if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
-      uses: ./.github/actions/build-node-binding
-
-    - name: Copy Node binding to packages
-      if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
       shell: bash
       run: |
-        cd crates/spikard-node
-        cp -v *.node ../../packages/node/ || true
+        cd packages/node
+        pnpm build:native
 
     - name: Setup Node environment for non-spikard apps
       if: steps.detect.outputs.language == 'node' && inputs.framework != 'spikard-node'
@@ -181,7 +177,11 @@ runs:
         # Build the WASM module using wasm-pack for Deno
         cd crates/spikard-wasm
         cargo install wasm-pack || true
-        wasm-pack build --target deno --out-dir ../../tools/benchmark-harness/apps/spikard-wasm/pkg
+        # Build with deno target, which outputs to dist-deno
+        wasm-pack build --target deno --out-dir dist-deno --release
+        # Copy the deno build to the benchmark app's pkg directory
+        mkdir -p ../../tools/benchmark-harness/apps/spikard-wasm/pkg
+        cp -r dist-deno/* ../../tools/benchmark-harness/apps/spikard-wasm/pkg/
 
     - name: Install WASM benchmark app dependencies
       if: steps.detect.outputs.language == 'wasm'
