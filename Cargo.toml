@@ -21,7 +21,7 @@ exclude = [
 ]
 
 [workspace.package]
-version = "0.3.4"
+version = "0.3.5"
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
@@ -30,9 +30,9 @@ homepage = "https://github.com/Goldziher/spikard"
 
 [workspace.dependencies]
 # Core library
-spikard = { version = "0.3.4", path = "crates/spikard" }
-spikard-core = { version = "0.3.4", path = "crates/spikard-core" }
-spikard-http = { version = "0.3.4", path = "crates/spikard-http" }
+spikard = { version = "0.3.5", path = "crates/spikard" }
+spikard-core = { version = "0.3.5", path = "crates/spikard-core" }
+spikard-http = { version = "0.3.5", path = "crates/spikard-http" }
 
 # Python bindings
 pyo3 = { version = "0.27", features = ["abi3-py310"] }
