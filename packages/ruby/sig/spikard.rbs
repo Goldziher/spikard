@@ -1,6 +1,12 @@
 module Spikard
   VERSION: String
 
+  # JSON-serializable value types
+  type jsonPrimitive = String | Integer | Float | bool | nil
+  type jsonValue = jsonPrimitive | Array[jsonValue] | Hash[String, jsonValue]
+  type jsonObject = Hash[String, jsonValue]
+  type jsonArray = Array[jsonValue]
+
   module Background
     def self.run: () { () -> void } -> void
   end
@@ -143,22 +149,22 @@ module Spikard
   end
 
   class Response
-    attr_reader content: untyped
+    attr_reader content: jsonValue
     attr_reader status_code: Integer
     attr_reader headers: Hash[String, String]
-    attr_reader native_response: untyped
+    attr_reader native_response: Object
 
     def initialize: (
-      ?content: untyped,
-      ?body: untyped,
+      ?content: jsonValue,
+      ?body: jsonValue,
       ?status_code: Integer,
-      ?headers: Hash[untyped, untyped]?,
+      ?headers: Hash[String, String]?,
       ?content_type: String?
     ) -> void
     def status: () -> Integer
     def status_code=: (Integer) -> Integer
-    def headers=: (Hash[untyped, untyped]?) -> Hash[String, String]
-    def content=: (untyped) -> untyped
+    def headers=: (Hash[String, String]?) -> Hash[String, String]
+    def content=: (jsonValue) -> jsonValue
     def set_header: (String, String) -> String
     def set_cookie: (
       String,
@@ -170,38 +176,38 @@ module Spikard
       ?httponly: bool?,
       ?samesite: String?
     ) -> String
-    def to_native_response: () -> untyped
+    def to_native_response: () -> Object
   end
 
   class StreamingResponse
-    attr_reader stream: Enumerable[untyped]
+    attr_reader stream: Enumerable[String]
     attr_reader status_code: Integer
     attr_reader headers: Hash[String, String]
-    attr_reader native_response: untyped
+    attr_reader native_response: Object
 
-    def initialize: (Enumerable[untyped], ?status_code: Integer, ?headers: Hash[untyped, untyped]?) -> void
-    def to_native_response: () -> untyped
+    def initialize: (Enumerable[String], ?status_code: Integer, ?headers: Hash[String, String]?) -> void
+    def to_native_response: () -> Object
   end
 
   module Testing
   end
 
   module LifecycleHooks
-    def on_request: () { (untyped) -> untyped } -> Proc
-    def pre_validation: () { (untyped) -> untyped } -> Proc
-    def pre_handler: () { (untyped) -> untyped } -> Proc
-    def on_response: () { (untyped) -> untyped } -> Proc
-    def on_error: () { (untyped) -> untyped } -> Proc
+    def on_request: () { (Object) -> (Object | nil) } -> Proc
+    def pre_validation: () { (Object) -> (Object | nil) } -> Proc
+    def pre_handler: () { (Object) -> (Object | nil) } -> Proc
+    def on_response: () { (Response) -> (Response | nil) } -> Proc
+    def on_error: () { (Exception) -> (Response | nil) } -> Proc
   end
 
   module ProvideSupport
     def provide: (
       String | Symbol,
-      ?untyped,
+      ?Object,
       ?depends_on: Array[String | Symbol],
       ?singleton: bool,
       ?cacheable: bool
-    ) ?{ (**untyped) -> untyped } -> self
+    ) ?{ (**jsonObject) -> Object } -> self
     def dependencies: () -> Spikard::Native::DependencyRegistry
   end
 
@@ -209,39 +215,39 @@ module Spikard
     include LifecycleHooks
     include ProvideSupport
 
-    attr_reader routes: Array[untyped]
+    attr_reader routes: Array[Array[String]]
 
     def initialize: () -> void
-    def register_route: (String, String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def get: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def post: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def put: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def patch: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def delete: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def options: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def head: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def trace: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def websocket: (String, ?handler_name: String?, **untyped) { () -> WebSocketHandler } -> Proc
-    def sse: (String, ?handler_name: String?, **untyped) { () -> SseEventProducer } -> Proc
+    def register_route: (String, String, ?handler_name: String?, **jsonObject) { (Object) -> (Response | jsonValue) } -> Proc
+    def get: (String, ?handler_name: String?, **jsonObject) { (Object) -> (Response | jsonValue) } -> Proc
+    def post: (String, ?handler_name: String?, **jsonObject) { (Object) -> (Response | jsonValue) } -> Proc
+    def put: (String, ?handler_name: String?, **jsonObject) { (Object) -> (Response | jsonValue) } -> Proc
+    def patch: (String, ?handler_name: String?, **jsonObject) { (Object) -> (Response | jsonValue) } -> Proc
+    def delete: (String, ?handler_name: String?, **jsonObject) { (Object) -> (Response | jsonValue) } -> Proc
+    def options: (String, ?handler_name: String?, **jsonObject) { (Object) -> (Response | jsonValue) } -> Proc
+    def head: (String, ?handler_name: String?, **jsonObject) { (Object) -> (Response | jsonValue) } -> Proc
+    def trace: (String, ?handler_name: String?, **jsonObject) { (Object) -> (Response | jsonValue) } -> Proc
+    def websocket: (String, ?handler_name: String?, **jsonObject) { () -> WebSocketHandler } -> Proc
+    def sse: (String, ?handler_name: String?, **jsonObject) { () -> SseEventProducer } -> Proc
     def websocket_handlers: () -> Hash[String, Proc]
     def sse_producers: () -> Hash[String, Proc]
-    def run: (?config: ServerConfig | Hash[Symbol, untyped]?, ?host: String?, ?port: Integer?) -> void
+    def run: (?config: ServerConfig | Hash[Symbol, jsonValue]?, ?host: String?, ?port: Integer?) -> void
   end
 
   class WebSocketHandler
-    def handle_message: (Hash[untyped, untyped]) -> Hash[untyped, untyped]?
+    def handle_message: (jsonObject) -> jsonObject?
     def on_connect: () -> void
     def on_disconnect: () -> void
   end
 
   class SseEvent
-    attr_accessor data: Hash[untyped, untyped]
+    attr_accessor data: jsonObject
     attr_accessor event_type: String?
     attr_accessor id: String?
     attr_accessor retry_ms: Integer?
 
-    def initialize: (data: Hash[untyped, untyped], ?event_type: String?, ?id: String?, ?retry_ms: Integer?) -> void
-    def to_h: () -> Hash[Symbol, untyped]
+    def initialize: (data: jsonObject, ?event_type: String?, ?id: String?, ?retry_ms: Integer?) -> void
+    def to_h: () -> Hash[Symbol, jsonValue]
   end
 
   class SseEventProducer
@@ -251,7 +257,7 @@ module Spikard
   end
 
   module Schema
-    def self.extract_json_schema: (untyped) -> Hash[untyped, untyped]?
+    def self.extract_json_schema: (Object) -> jsonObject?
   end
 
   module Native
@@ -262,7 +268,7 @@ module Spikard
       Hash[Symbol, Array[Proc]],
       Hash[String, Proc],
       Hash[String, Proc],
-      Hash[String, untyped]
+      Hash[String, jsonObject]
     ) -> void
 
     class DependencyRegistry
@@ -277,9 +283,9 @@ module Spikard
         Hash[String, Proc],
         Hash[String, Proc]
       ) -> void
-      def request: (String, String, Hash[Symbol, untyped]) -> Hash[Symbol, untyped]
-      def websocket: (String) -> untyped
-      def sse: (String) -> untyped
+      def request: (String, String, Hash[Symbol, jsonValue]) -> Hash[Symbol, jsonValue]
+      def websocket: (String) -> Object
+      def sse: (String) -> Object
       def close: () -> void
     end
   end
@@ -292,69 +298,69 @@ module Spikard
       attr_reader headers: Hash[String, String]
       attr_reader body: String?
 
-      def initialize: (Hash[Symbol, untyped]) -> void
+      def initialize: (Hash[Symbol, jsonValue]) -> void
       def status: () -> Integer
       def body_bytes: () -> String
       def body_text: () -> String?
       def text: () -> String?
-      def json: () -> untyped
+      def json: () -> jsonValue
       def bytes: () -> Array[Integer]
     end
 
     class TestClient
       def initialize: (Spikard::Native::TestClient) -> void
       def self.new: (App | Spikard::Native::TestClient, ?config: ServerConfig?) -> TestClient
-      def request: (String, String, **Hash[Symbol, untyped]) -> Response
+      def request: (String, String, **jsonObject) -> Response
       def websocket: (String) -> WebSocketTestConnection
       def sse: (String) -> SseStream
       def close: () -> void
-      def get: (String, **Hash[Symbol, untyped]) -> Response
-      def post: (String, **Hash[Symbol, untyped]) -> Response
-      def put: (String, **Hash[Symbol, untyped]) -> Response
-      def patch: (String, **Hash[Symbol, untyped]) -> Response
-      def delete: (String, **Hash[Symbol, untyped]) -> Response
-      def head: (String, **Hash[Symbol, untyped]) -> Response
-      def options: (String, **Hash[Symbol, untyped]) -> Response
-      def trace: (String, **Hash[Symbol, untyped]) -> Response
+      def get: (String, **jsonObject) -> Response
+      def post: (String, **jsonObject) -> Response
+      def put: (String, **jsonObject) -> Response
+      def patch: (String, **jsonObject) -> Response
+      def delete: (String, **jsonObject) -> Response
+      def head: (String, **jsonObject) -> Response
+      def options: (String, **jsonObject) -> Response
+      def trace: (String, **jsonObject) -> Response
     end
 
     class WebSocketTestConnection
-      def initialize: (untyped) -> void
-      def send_text: (untyped) -> void
-      def send_json: (untyped) -> void
-      def receive_text: () -> untyped
-      def receive_json: () -> untyped
-      def receive_bytes: () -> untyped
+      def initialize: (Object) -> void
+      def send_text: (String) -> void
+      def send_json: (jsonValue) -> void
+      def receive_text: () -> String
+      def receive_json: () -> jsonValue
+      def receive_bytes: () -> String
       def receive_message: () -> WebSocketMessage
       def close: () -> void
     end
 
     class WebSocketMessage
-      def initialize: (untyped) -> void
-      def as_text: () -> untyped
-      def as_json: () -> untyped
-      def as_binary: () -> untyped
+      def initialize: (Object) -> void
+      def as_text: () -> String
+      def as_json: () -> jsonValue
+      def as_binary: () -> String
       def close?: () -> bool
     end
 
     class SseStream
-      def initialize: (untyped) -> void
+      def initialize: (Object) -> void
       def body: () -> String?
       def events: () -> Array[InlineSseEvent]
-      def events_as_json: () -> Array[untyped]
+      def events_as_json: () -> jsonArray
     end
 
     class SseEvent
-      def initialize: (untyped) -> void
-      def data: () -> untyped
-      def as_json: () -> untyped
+      def initialize: (Object) -> void
+      def data: () -> jsonValue
+      def as_json: () -> jsonValue
     end
 
     class InlineSseEvent
       attr_reader data: String
 
       def initialize: (String) -> void
-      def as_json: () -> untyped
+      def as_json: () -> jsonValue
     end
   end
 end
