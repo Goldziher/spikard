@@ -4,6 +4,7 @@ AllCops:
   Exclude:
     - "ext/**"
     - "tmp/**/*"
+    - "vendor/crates/**/*"
     - "**/Gemfile.ext"
     - "**/Gemfile.ext.lock"
 
