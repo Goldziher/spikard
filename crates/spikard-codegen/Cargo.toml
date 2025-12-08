@@ -1,6 +1,6 @@
 [package]
 name = "spikard-codegen"
-version = "0.3.6"
+version = "0.3.7"
 edition.workspace = true
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 description = "Code generation and configuration management for Spikard"

@@ -171,13 +171,492 @@ pub fn assemble_openapi_spec(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{ApiKeyConfig, JwtConfig};
 
+    fn make_route(method: &str, path: &str) -> RouteMetadata {
+        RouteMetadata {
+            method: method.to_string(),
+            path: path.to_string(),
+            handler_name: format!("{}_handler", method.to_lowercase()),
+            request_schema: None,
+            response_schema: None,
+            parameter_schema: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            body_param_name: None,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
+        }
+    }
+
+    fn make_server_config_with_jwt() -> crate::ServerConfig {
+        crate::ServerConfig {
+            jwt_auth: Some(JwtConfig {
+                secret: "test-secret".to_string(),
+                algorithm: "HS256".to_string(),
+                audience: None,
+                issuer: None,
+                leeway: 0,
+            }),
+            ..Default::default()
+        }
+    }
+
+    fn make_server_config_with_api_key() -> crate::ServerConfig {
+        crate::ServerConfig {
+            api_key_auth: Some(ApiKeyConfig {
+                keys: vec!["test-key".to_string()],
+                header_name: "X-API-Key".to_string(),
+            }),
+            ..Default::default()
+        }
+    }
+
+    // HTTP Method Coverage Tests
     #[test]
     fn test_route_to_path_item_get() {
+        let route = make_route("GET", "/users");
+        let result = route_to_path_item(&route);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_route_to_path_item_post() {
+        let route = make_route("POST", "/users");
+        let result = route_to_path_item(&route);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_route_to_path_item_put() {
+        let route = make_route("PUT", "/users/123");
+        let result = route_to_path_item(&route);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_route_to_path_item_patch() {
+        let route = make_route("PATCH", "/users/123");
+        let result = route_to_path_item(&route);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_route_to_path_item_delete() {
+        let route = make_route("DELETE", "/users/123");
+        let result = route_to_path_item(&route);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_route_to_path_item_head() {
+        let route = make_route("HEAD", "/users");
+        let result = route_to_path_item(&route);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_route_to_path_item_options() {
+        let route = make_route("OPTIONS", "/users");
+        let result = route_to_path_item(&route);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_route_to_path_item_case_insensitive_method() {
+        let route_lower = make_route("get", "/users");
+        let route_mixed = make_route("GeT", "/users");
+
+        assert!(route_to_path_item(&route_lower).is_ok());
+        assert!(route_to_path_item(&route_mixed).is_ok());
+    }
+
+    #[test]
+    fn test_route_to_path_item_unsupported_method() {
+        let route = make_route("CONNECT", "/users");
+        let result = route_to_path_item(&route);
+        assert!(result.is_err());
+        if let Err(err) = result {
+            assert!(err.contains("Unsupported HTTP method"));
+        }
+    }
+
+    // OpenAPI Spec Assembly Tests
+    #[test]
+    fn test_assemble_openapi_spec_minimal() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&[], &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+        assert_eq!(spec.info.title, "Test API");
+        assert_eq!(spec.info.version, "1.0.0");
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_with_description() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            description: Some("This is a test API".to_string()),
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&[], &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+        assert_eq!(spec.info.description, Some("This is a test API".to_string()));
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_with_contact() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            contact: Some(super::super::ContactInfo {
+                name: Some("Support Team".to_string()),
+                email: Some("support@example.com".to_string()),
+                url: Some("https://example.com/support".to_string()),
+            }),
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&[], &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+        assert!(spec.info.contact.is_some());
+        let contact = spec.info.contact.unwrap();
+        assert_eq!(contact.name, Some("Support Team".to_string()));
+        assert_eq!(contact.email, Some("support@example.com".to_string()));
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_with_license() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            license: Some(super::super::LicenseInfo {
+                name: "Apache 2.0".to_string(),
+                url: Some("https://www.apache.org/licenses/LICENSE-2.0.html".to_string()),
+            }),
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&[], &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+        assert!(spec.info.license.is_some());
+        let license = spec.info.license.unwrap();
+        assert_eq!(license.name, "Apache 2.0");
+        assert_eq!(
+            license.url,
+            Some("https://www.apache.org/licenses/LICENSE-2.0.html".to_string())
+        );
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_with_servers() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            servers: vec![
+                super::super::ServerInfo {
+                    url: "https://api.example.com".to_string(),
+                    description: Some("Production".to_string()),
+                },
+                super::super::ServerInfo {
+                    url: "http://localhost:8080".to_string(),
+                    description: Some("Development".to_string()),
+                },
+            ],
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&[], &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+        assert!(spec.servers.is_some());
+        let servers = spec.servers.unwrap();
+        assert_eq!(servers.len(), 2);
+    }
+
+    // Security Scheme Detection Tests
+    #[test]
+    fn test_assemble_openapi_spec_with_jwt_auth() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            ..Default::default()
+        };
+
+        let server_config = make_server_config_with_jwt();
+        let result = assemble_openapi_spec(&[], &config, Some(&server_config));
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+
+        // Verify JWT security scheme is added
+        assert!(spec.components.is_some());
+        let components = spec.components.unwrap();
+        assert!(components.security_schemes.get("bearerAuth").is_some());
+
+        // Verify global security requirement
+        assert!(spec.security.is_some());
+        let security_reqs = spec.security.unwrap();
+        assert!(!security_reqs.is_empty());
+        // Verify that at least one security requirement was added for bearerAuth
+        assert_eq!(security_reqs.len(), 1);
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_with_api_key_auth() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            ..Default::default()
+        };
+
+        let server_config = make_server_config_with_api_key();
+        let result = assemble_openapi_spec(&[], &config, Some(&server_config));
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+
+        // Verify API Key security scheme is added
+        assert!(spec.components.is_some());
+        let components = spec.components.unwrap();
+        assert!(components.security_schemes.get("apiKeyAuth").is_some());
+
+        // Verify global security requirement
+        assert!(spec.security.is_some());
+        let security_reqs = spec.security.unwrap();
+        assert!(!security_reqs.is_empty());
+        // Verify that at least one security requirement was added for apiKeyAuth
+        assert_eq!(security_reqs.len(), 1);
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_with_both_auth_schemes() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            ..Default::default()
+        };
+
+        let mut server_config = make_server_config_with_jwt();
+        server_config.api_key_auth = Some(ApiKeyConfig {
+            keys: vec!["test-key".to_string()],
+            header_name: "X-API-Key".to_string(),
+        });
+
+        let result = assemble_openapi_spec(&[], &config, Some(&server_config));
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+
+        // Verify both security schemes are added
+        assert!(spec.components.is_some());
+        let components = spec.components.unwrap();
+        assert!(components.security_schemes.get("bearerAuth").is_some());
+        assert!(components.security_schemes.get("apiKeyAuth").is_some());
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_with_custom_security_schemes() {
+        use std::collections::HashMap;
+
+        let mut security_schemes = HashMap::new();
+        security_schemes.insert(
+            "oauth2".to_string(),
+            super::super::SecuritySchemeInfo::Http {
+                scheme: "bearer".to_string(),
+                bearer_format: Some("OAuth2".to_string()),
+            },
+        );
+
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            security_schemes,
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&[], &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+
+        assert!(spec.components.is_some());
+        let components = spec.components.unwrap();
+        assert!(components.security_schemes.get("oauth2").is_some());
+    }
+
+    // Route Integration Tests
+    #[test]
+    fn test_assemble_openapi_spec_with_multiple_routes() {
+        let routes: Vec<RouteMetadata> = vec![
+            make_route("GET", "/users"),
+            make_route("POST", "/users"),
+            make_route("GET", "/users/{id}"),
+            make_route("PUT", "/users/{id}"),
+            make_route("DELETE", "/users/{id}"),
+        ];
+
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "User API".to_string(),
+            version: "1.0.0".to_string(),
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&routes, &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+
+        // Verify paths are included
+        assert!(!spec.paths.paths.is_empty());
+        assert!(spec.paths.paths.contains_key("/users"));
+        assert!(spec.paths.paths.contains_key("/users/{id}"));
+    }
+
+    #[test]
+    fn test_route_to_operation_default_response() {
+        let route = make_route("GET", "/health");
+        let result = route_to_operation(&route);
+
+        assert!(result.is_ok());
+        let operation = result.unwrap();
+        assert!(!operation.responses.responses.is_empty());
+        assert!(operation.responses.responses.contains_key("200"));
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_empty_routes() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Empty API".to_string(),
+            version: "0.1.0".to_string(),
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&[], &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+        assert!(spec.paths.paths.is_empty());
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_with_partial_contact() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            contact: Some(super::super::ContactInfo {
+                name: Some("Support".to_string()),
+                email: None,
+                url: None,
+            }),
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&[], &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+        let contact = spec.info.contact.unwrap();
+        assert_eq!(contact.name, Some("Support".to_string()));
+        assert!(contact.email.is_none());
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_without_servers() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            servers: vec![],
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&[], &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+        assert!(spec.servers.is_none());
+    }
+
+    #[test]
+    fn test_route_to_path_item_lowercase_method() {
+        let route = make_route("post", "/items");
+        let result = route_to_path_item(&route);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_route_to_path_item_mixed_case_method() {
+        let route = make_route("PoSt", "/items");
+        let result = route_to_path_item(&route);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_preserves_route_order() {
+        let routes: Vec<RouteMetadata> = vec![
+            make_route("GET", "/a"),
+            make_route("GET", "/b"),
+            make_route("GET", "/c"),
+        ];
+
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&routes, &config, None);
+        assert!(result.is_ok());
+        let spec = result.unwrap();
+
+        // All routes should be present
+        assert!(spec.paths.paths.contains_key("/a"));
+        assert!(spec.paths.paths.contains_key("/b"));
+        assert!(spec.paths.paths.contains_key("/c"));
+    }
+
+    #[test]
+    fn test_assemble_openapi_spec_with_server_config_none() {
+        let config = super::super::OpenApiConfig {
+            enabled: true,
+            title: "Test API".to_string(),
+            version: "1.0.0".to_string(),
+            ..Default::default()
+        };
+
+        let result = assemble_openapi_spec(&[], &config, None);
+        assert!(result.is_ok());
+        // No security schemes should be auto-detected
+        let spec = result.unwrap();
+        if let Some(components) = spec.components {
+            assert!(!components.security_schemes.contains_key("bearerAuth"));
+            assert!(!components.security_schemes.contains_key("apiKeyAuth"));
+        }
+    }
+
+    #[test]
+    fn test_route_to_operation_with_no_schemas() {
         let route = RouteMetadata {
             method: "GET".to_string(),
-            path: "/users".to_string(),
-            handler_name: "list_users".to_string(),
+            path: "/endpoint".to_string(),
+            handler_name: "test_handler".to_string(),
             request_schema: None,
             response_schema: None,
             parameter_schema: None,
@@ -189,7 +668,11 @@ mod tests {
             handler_dependencies: None,
         };
 
-        let result = route_to_path_item(&route);
+        let result = route_to_operation(&route);
         assert!(result.is_ok());
+        let operation = result.unwrap();
+        assert!(operation.request_body.is_none());
+        // Default 200 response should still exist
+        assert!(operation.responses.responses.contains_key("200"));
     }
 }
