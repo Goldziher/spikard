@@ -1,17 +1,17 @@
 {
-  "name": "benchmark/trongate",
-  "description": "Trongate benchmark application for spikard harness",
-  "type": "project",
-  "require": {
-    "php": "^8.2"
-  },
-  "autoload": {
-    "psr-4": {
-      "Modules\\": "modules/",
-      "App\\": "app/"
-    }
-  },
-  "config": {
-    "allow-plugins": true
-  }
+	"name": "benchmark/trongate",
+	"description": "Trongate benchmark application for spikard harness",
+	"type": "project",
+	"require": {
+		"php": "^8.2"
+	},
+	"autoload": {
+		"psr-4": {
+			"Modules\\": "modules/",
+			"App\\": "app/"
+		}
+	},
+	"config": {
+		"allow-plugins": true
+	}
 }

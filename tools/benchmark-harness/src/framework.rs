@@ -183,7 +183,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
         FrameworkConfig::new(
             "fastify-raw",
-            vec!["server.js".to_string()],
+            vec!["server.ts".to_string()],
             None,
             "pnpm start -- {port}",
             None,
