@@ -1,11 +1,11 @@
 [package]
 name = "spikard-core"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
+version = "0.3.4"
+edition = "2024"
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/Goldziher/spikard"
+homepage = "https://github.com/Goldziher/spikard"
 description = "Shared transport-agnostic primitives for Spikard runtimes"
 keywords = ["http", "web", "framework", "validation", "middleware"]
 categories = ["web-programming::http-server", "web-programming", "development-tools"]
