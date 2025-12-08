@@ -1130,6 +1130,7 @@ tasks:
       - task: bench:update:node
       - task: bench:update:ruby
       - task: bench:update:php
+      - task: bench:update:rust
 
   bench:update:python:
     desc: "Update Python benchmark apps to latest dependencies"
@@ -1150,6 +1151,11 @@ tasks:
     desc: "Update PHP benchmark apps to latest dependencies"
     cmds:
       - scripts/bench/update-php.sh
+
+  bench:update:rust:
+    desc: "Update Rust benchmark apps to latest dependencies"
+    cmds:
+      - scripts/bench/update-rust.sh
 
   codegen:python:
     desc: "Generate Python server code from OpenAPI schema"

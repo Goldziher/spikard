@@ -16,7 +16,7 @@ if [[ -z "$RBENV_VERSION" ]]; then
 	exit 1
 fi
 
-for app in hanami-api hanami-api-raw roda roda-raw; do
+for app in hanami-api-dto hanami-api-raw roda-dto roda-raw spikard-ruby; do
 	echo "Updating $app..."
 	cd "tools/benchmark-harness/apps/$app" && RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle "_${BUNDLER_VERSION}_" update --all
 	cd - >/dev/null

@@ -52,7 +52,7 @@ repos:
         exclude: |
           benchmark-results/|results/|target/|docs/css/
   - repo: https://github.com/oxc-project/mirrors-oxlint
-    rev: v1.31.0
+    rev: v1.32.0
     hooks:
       - id: oxlint
         args: ["--fix"]
