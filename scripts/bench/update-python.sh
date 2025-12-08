@@ -6,7 +6,7 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
 
 cd "${REPO_ROOT}"
 
-for app in fastapi-uvicorn-dto fastapi-uvicorn-raw fastapi-granian-dto fastapi-granian-raw robyn-dto robyn-raw; do
+for app in fastapi-uvicorn-dto fastapi-uvicorn-raw fastapi-granian-dto fastapi-granian-raw robyn-dto robyn-raw spikard-python; do
 	echo "Updating $app..."
 	cd "tools/benchmark-harness/apps/$app" && uv run uv-bump && uv sync --upgrade
 	cd - >/dev/null

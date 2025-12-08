@@ -6,8 +6,9 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
 
 cd "${REPO_ROOT}"
 
-for app in phalcon-raw trongate-raw spikard-php; do
+# shellcheck disable=SC2043
+for app in spikard-rust; do
 	echo "Updating $app..."
-	cd "tools/benchmark-harness/apps/$app" && composer update --no-interaction --no-progress
+	cd "tools/benchmark-harness/apps/$app" && cargo update
 	cd - >/dev/null
 done
