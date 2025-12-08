@@ -1,220 +1,278 @@
 #!/usr/bin/env node
 /**
- * Hono benchmark server for workload comparison.
+ * Hono comparison server for benchmarking
  *
- * Implements all workload types to match Python Robyn server exactly.
- * Uses Zod for validation via @hono/zod-validator (official Hono recommendation).
- * Runs on Node.js via @hono/node-server.
+ * Implements all workload types to match spikard-node server exactly.
+ * Uses zod for validation via @hono/zod-validator.
+ * Runs on Node.js via @hono/node-server (Hono is designed for edge but supports Node.js).
  */
 
-import { serve } from '@hono/node-server';
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
+import { serve } from "@hono/node-server";
+import { zValidator } from "@hono/zod-validator";
+import { Hono } from "hono";
+import { z } from "zod";
 
 const app = new Hono();
 
 // ============================================================================
-// Zod Schema Definitions (matching Python Pydantic models)
+// Zod Schema Definitions
 // ============================================================================
 
 /**
  * Small JSON payload schema (~100 bytes)
- * Matches Python SmallPayload model
  */
 const SmallPayloadSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  price: z.number(),
-  tax: z.number().nullable(),
+	name: z.string(),
+	description: z.string(),
+	price: z.number(),
+	tax: z.number().optional(),
 });
+
+type SmallPayload = z.infer<typeof SmallPayloadSchema>;
 
 /**
  * Address nested schema
- * Matches Python Address model
  */
 const AddressSchema = z.object({
-  street: z.string(),
-  city: z.string(),
-  state: z.string(),
-  zip_code: z.string(),
+	street: z.string(),
+	city: z.string(),
+	state: z.string(),
+	zip_code: z.string(),
 });
 
 /**
  * Medium JSON payload schema (~1KB)
- * Matches Python MediumPayload model
  */
 const MediumPayloadSchema = z.object({
-  name: z.string(),
-  email: z.string(),
-  age: z.number().int(),
-  address: AddressSchema,
-  tags: z.array(z.string()),
+	user_id: z.number(),
+	username: z.string(),
+	email: z.string(),
+	is_active: z.boolean(),
+	address: AddressSchema,
+	tags: z.array(z.string()),
 });
+
+type MediumPayload = z.infer<typeof MediumPayloadSchema>;
 
 /**
  * Item nested schema
- * Matches Python Item model
  */
 const ItemSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  price: z.number(),
-  quantity: z.number().int(),
+	id: z.number(),
+	name: z.string(),
+	price: z.number(),
+	in_stock: z.boolean(),
 });
 
 /**
  * Large JSON payload schema (~10KB)
- * Matches Python LargePayload model
  */
 const LargePayloadSchema = z.object({
-  user_id: z.string(),
-  name: z.string(),
-  email: z.string(),
-  items: z.array(ItemSchema),
-  metadata: z.record(z.string(), z.any()),
+	order_id: z.string(),
+	customer_name: z.string(),
+	items: z.array(ItemSchema),
+	total: z.number(),
+	notes: z.string(),
 });
+
+type LargePayload = z.infer<typeof LargePayloadSchema>;
 
 /**
  * Very large JSON payload schema (~100KB)
- * Matches Python VeryLargePayload model
  */
 const VeryLargePayloadSchema = z.object({
-  batch_id: z.string(),
-  records: z.array(z.record(z.string(), z.any())),
-  summary: z.record(z.string(), z.any()),
+	data: z.array(z.record(z.string(), z.unknown())),
+	metadata: z.record(z.string(), z.unknown()),
 });
+
+type VeryLargePayload = z.infer<typeof VeryLargePayloadSchema>;
 
 // ============================================================================
 // JSON Body Workloads
 // ============================================================================
 
-app.post('/json/small', zValidator('json', SmallPayloadSchema), (c) => {
-  const validated = c.req.valid('json');
-  return c.json(validated);
+app.post("/json/small", zValidator("json", SmallPayloadSchema), (c) => {
+	const validated: SmallPayload = c.req.valid("json");
+	return c.json(validated);
 });
 
-app.post('/json/medium', zValidator('json', MediumPayloadSchema), (c) => {
-  const validated = c.req.valid('json');
-  return c.json(validated);
+app.post("/json/medium", zValidator("json", MediumPayloadSchema), (c) => {
+	const validated: MediumPayload = c.req.valid("json");
+	return c.json(validated);
 });
 
-app.post('/json/large', zValidator('json', LargePayloadSchema), (c) => {
-  const validated = c.req.valid('json');
-  return c.json(validated);
+app.post("/json/large", zValidator("json", LargePayloadSchema), (c) => {
+	const validated: LargePayload = c.req.valid("json");
+	return c.json(validated);
 });
 
-app.post('/json/very-large', zValidator('json', VeryLargePayloadSchema), (c) => {
-  const validated = c.req.valid('json');
-  return c.json(validated);
+app.post("/json/very-large", zValidator("json", VeryLargePayloadSchema), (c) => {
+	const validated: VeryLargePayload = c.req.valid("json");
+	return c.json(validated);
 });
 
 // ============================================================================
 // Multipart Form Workloads
 // ============================================================================
 
-app.post('/multipart/small', (c) => {
-  return c.json({ files_received: 1, total_bytes: 1024 });
+interface MultipartResponse {
+	files_received: number;
+	total_bytes: number;
+}
+
+app.post("/multipart/small", (c) => {
+	const response: MultipartResponse = { files_received: 1, total_bytes: 1024 };
+	return c.json(response);
 });
 
-app.post('/multipart/medium', (c) => {
-  return c.json({ files_received: 2, total_bytes: 10240 });
+app.post("/multipart/medium", (c) => {
+	const response: MultipartResponse = { files_received: 2, total_bytes: 10240 };
+	return c.json(response);
 });
 
-app.post('/multipart/large', (c) => {
-  return c.json({ files_received: 5, total_bytes: 102400 });
+app.post("/multipart/large", (c) => {
+	const response: MultipartResponse = { files_received: 5, total_bytes: 102400 };
+	return c.json(response);
 });
 
 // ============================================================================
 // URL Encoded Form Workloads
 // ============================================================================
 
-app.post('/urlencoded/simple', async (c) => {
-  const body = await c.req.parseBody();
-  return c.json(body);
+app.post("/urlencoded/simple", async (c) => {
+	const body: Record<string, string | File> = await c.req.parseBody();
+	return c.json(body);
 });
 
-app.post('/urlencoded/complex', async (c) => {
-  const body = await c.req.parseBody();
-  return c.json(body);
+app.post("/urlencoded/complex", async (c) => {
+	const body: Record<string, string | File> = await c.req.parseBody();
+	return c.json(body);
 });
 
 // ============================================================================
 // Path Parameter Workloads
 // ============================================================================
 
-app.get('/path/simple/:id', (c) => {
-  const id = c.req.param('id');
-  return c.json({ id });
+interface SimpleIdResponse {
+	id: string;
+}
+
+app.get("/path/simple/:id", (c) => {
+	const id: string = c.req.param("id");
+	const response: SimpleIdResponse = { id };
+	return c.json(response);
 });
 
-app.get('/path/multiple/:user_id/:post_id', (c) => {
-  const user_id = c.req.param('user_id');
-  const post_id = c.req.param('post_id');
-  return c.json({ user_id, post_id });
+interface MultipleParamsResponse {
+	user_id: string;
+	post_id: string;
+}
+
+app.get("/path/multiple/:user_id/:post_id", (c) => {
+	const user_id: string = c.req.param("user_id");
+	const post_id: string = c.req.param("post_id");
+	const response: MultipleParamsResponse = { user_id, post_id };
+	return c.json(response);
 });
 
-app.get('/path/deep/:org/:team/:project/:resource/:id', (c) => {
-  const org = c.req.param('org');
-  const team = c.req.param('team');
-  const project = c.req.param('project');
-  const resource = c.req.param('resource');
-  const id = c.req.param('id');
-  return c.json({ org, team, project, resource, id });
+interface DeepPathResponse {
+	org: string;
+	team: string;
+	project: string;
+	resource: string;
+	id: string;
+}
+
+app.get("/path/deep/:org/:team/:project/:resource/:id", (c) => {
+	const org: string = c.req.param("org");
+	const team: string = c.req.param("team");
+	const project: string = c.req.param("project");
+	const resource: string = c.req.param("resource");
+	const id: string = c.req.param("id");
+	const response: DeepPathResponse = { org, team, project, resource, id };
+	return c.json(response);
 });
 
-app.get('/path/int/:id', (c) => {
-  const id = parseInt(c.req.param('id'), 10);
-  return c.json({ id });
+interface IntIdResponse {
+	id: number;
+}
+
+app.get("/path/int/:id", (c) => {
+	const id: number = Number.parseInt(c.req.param("id"), 10);
+	const response: IntIdResponse = { id };
+	return c.json(response);
 });
 
-app.get('/path/uuid/:uuid', (c) => {
-  const uuid = c.req.param('uuid');
-  return c.json({ uuid });
+interface UuidResponse {
+	uuid: string;
+}
+
+app.get("/path/uuid/:uuid", (c) => {
+	const uuid: string = c.req.param("uuid");
+	const response: UuidResponse = { uuid };
+	return c.json(response);
 });
 
-app.get('/path/date/:date', (c) => {
-  const date = c.req.param('date');
-  return c.json({ date });
+interface DateResponse {
+	date: string;
+}
+
+app.get("/path/date/:date", (c) => {
+	const date: string = c.req.param("date");
+	const response: DateResponse = { date };
+	return c.json(response);
 });
 
 // ============================================================================
 // Query Parameter Workloads
 // ============================================================================
 
-app.get('/query/few', (c) => {
-  const query = c.req.query();
-  return c.json(query);
+app.get("/query/few", (c) => {
+	const query: Record<string, string> = c.req.query();
+	return c.json(query);
 });
 
-app.get('/query/medium', (c) => {
-  const query = c.req.query();
-  return c.json(query);
+app.get("/query/medium", (c) => {
+	const query: Record<string, string> = c.req.query();
+	return c.json(query);
 });
 
-app.get('/query/many', (c) => {
-  const query = c.req.query();
-  return c.json(query);
+app.get("/query/many", (c) => {
+	const query: Record<string, string> = c.req.query();
+	return c.json(query);
 });
 
 // ============================================================================
 // Health Check
 // ============================================================================
 
-app.get('/health', (c) => {
-  return c.json({ status: 'ok' });
+interface HealthResponse {
+	status: string;
+}
+
+app.get("/health", (c) => {
+	const response: HealthResponse = { status: "ok" };
+	return c.json(response);
 });
 
-app.get('/', (c) => {
-  return c.json({ status: 'ok' });
+app.get("/", (c) => {
+	const response: HealthResponse = { status: "ok" };
+	return c.json(response);
 });
 
 // ============================================================================
 // Server Startup
 // ============================================================================
 
-const port = process.argv[2]
-  ? parseInt(process.argv[2], 10)
-  : process.env.PORT
-  ? parseInt(process.env.PORT, 10)
-  : 8000;
+const port: number = process.argv[2]
+	? Number.parseInt(process.argv[2], 10)
+	: process.env.PORT
+		? Number.parseInt(process.env.PORT, 10)
+		: 8000;
+
+console.log(`Starting Hono server on http://localhost:${port}`);
+
+serve({
+	fetch: app.fetch,
+	port,
+});

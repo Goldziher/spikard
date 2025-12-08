@@ -7,7 +7,7 @@ module Spikard
 
     def initialize(stream, status_code: 200, headers: nil)
       unless stream.respond_to?(:next) || stream.respond_to?(:each)
-        raise ArgumentError, "StreamingResponse requires an Enumerator or object responding to #next"
+        raise ArgumentError, 'StreamingResponse requires an Enumerator or object responding to #next'
       end
 
       @stream = stream.respond_to?(:to_enum) ? stream.to_enum : stream

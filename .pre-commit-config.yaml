@@ -15,7 +15,7 @@ repos:
     rev: v0.11.0
     hooks:
       - id: shellcheck
-        exclude: ^(node_modules/|target/|dist/|vendor/|\.venv/|tools/benchmark-harness/)
+        exclude: ^(node_modules/|target/|dist/|vendor/|\.venv/)
   - repo: https://github.com/scop/pre-commit-shfmt
     rev: v3.12.0-2
     hooks:
@@ -30,10 +30,10 @@ repos:
     hooks:
       - id: trailing-whitespace
         exclude: |
-          benchmark-harness/|benchmark-results/|results/|target/
+          benchmark-results/|results/|target/
       - id: end-of-file-fixer
         exclude: |
-          benchmark-harness/|benchmark-results/|results/|target/
+          benchmark-results/|results/|target/
       - id: check-toml
       - id: check-case-conflict
   - repo: https://github.com/abravalheri/validate-pyproject
@@ -50,14 +50,14 @@ repos:
       - id: biome-format
       - id: biome-lint
         exclude: |
-          benchmark-harness/|benchmark-results/|results/|target/|docs/css/
+          benchmark-results/|results/|target/|docs/css/
   - repo: https://github.com/oxc-project/mirrors-oxlint
     rev: v1.31.0
     hooks:
       - id: oxlint
         args: ["--fix"]
         exclude: |
-          benchmark-harness/|benchmark-results/|results/|target/
+          benchmark-results/|results/|target/
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.8
     hooks:
@@ -93,10 +93,10 @@ repos:
           ]
         pass_filenames: false
       - id: cargo-check
-        args: ["--workspace", "--exclude", "benchmark-harness"]
+        args: ["--workspace"]
         pass_filenames: false
       - id: clippy
-        args: ["--workspace", "--exclude", "benchmark-harness"]
+        args: ["--workspace"]
         pass_filenames: false
   - repo: https://github.com/rubocop/rubocop
     rev: v1.81.7
@@ -113,7 +113,7 @@ repos:
         require_serial: true
         language: system
         types: [python]
-        exclude: ^scripts/|^examples/|^e2e/|^tools/
+        exclude: ^scripts/|^examples/|^e2e/
       - id: phpstan
         name: PHPStan
         entry: phpstan analyse --memory-limit=2G --no-progress --configuration packages/php/phpstan.neon packages/php/src packages/php/tests
