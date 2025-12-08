@@ -96,9 +96,9 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
         FrameworkConfig::new(
             "spikard-wasm",
-            vec!["server.js".to_string()],
+            vec!["server.ts".to_string()],
             None,
-            "deno run --allow-net --allow-read server.js {port}",
+            "deno run --allow-net --allow-read server.ts {port}",
             None,
         ),
         // Baseline and alternative frameworks
@@ -335,7 +335,7 @@ pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
 
     if matches.is_empty() {
         return Err(crate::Error::InvalidInput(format!(
-            "No framework detected in {}. Expected one of: Cargo.toml, server.py, server.ts, server.rb, server.js, Gemfile",
+            "No framework detected in {}. Expected one of: Cargo.toml, server.py, server.ts, server.rb, Gemfile",
             app_dir.display()
         )));
     }
@@ -582,13 +582,12 @@ mod tests {
     #[test]
     fn test_detect_spikard_wasm_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        fs::write(temp_dir.path().join("server.js"), "// wasm server").unwrap();
+        fs::write(temp_dir.path().join("server.ts"), "// wasm server").unwrap();
 
         let result = detect_framework(temp_dir.path());
         assert!(result.is_ok());
         let name = result.unwrap().name;
-        // server.js matches both spikard-wasm and fastify-raw, but spikard-wasm comes first in registry
-        assert!(name == "spikard-wasm" || name == "fastify-raw");
+        assert_eq!(name, "spikard-wasm");
     }
 
     #[test]
