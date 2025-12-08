@@ -26,7 +26,7 @@ x86_64-pc-windows-msvc)
 	;;
 esac
 
-args=(--release --target "${TARGET}" -o "npm/${PLATFORM_DIR}")
+args=(--platform --release --target "${TARGET}" -o "npm/${PLATFORM_DIR}")
 if [[ "${USE_NAPI_CROSS:-false}" == "true" ]]; then
 	args+=("--use-napi-cross")
 fi
