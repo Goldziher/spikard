@@ -1,6 +1,6 @@
 {
 	"name": "@spikard/wasm",
-	"version": "0.3.3",
+	"version": "0.3.4",
 	"description": "WebAssembly bindings for spikard - High-performance HTTP framework",
 	"main": "dist-bundler/spikard_wasm.js",
 	"types": "dist-bundler/spikard_wasm.d.ts",
