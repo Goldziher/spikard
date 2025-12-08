@@ -2,67 +2,67 @@
 /* eslint-disable */
 /** Node.js wrapper for SSE event */
 export declare class SseEvent {
-  /** Get the data field of the event */
-  getData(): string
-  /** Parse the event data as JSON */
-  asJson(): any
+	/** Get the data field of the event */
+	getData(): string;
+	/** Parse the event data as JSON */
+	asJson(): any;
 }
 
 /** Node.js wrapper for SSE stream */
 export declare class SseStream {
-  /** Get the raw body of the SSE response */
-  body(): string
-  /** Get all events from the stream */
-  events(): Array<SseEvent>
-  /** Get events as JSON values */
-  eventsAsJson(): Array<any>
+	/** Get the raw body of the SSE response */
+	body(): string;
+	/** Get all events from the stream */
+	events(): Array<SseEvent>;
+	/** Get events as JSON values */
+	eventsAsJson(): Array<any>;
 }
 
 /** HTTP Response wrapper */
 export declare class TestResponse {
-  /** Get the HTTP status code */
-  get statusCode(): number
-  /** Get response headers as JSON */
-  headers(): any
-  /** Get response body as text */
-  text(): string
-  /** Parse response body as JSON */
-  json(): any
-  /** Get raw response body bytes */
-  bytes(): Buffer
+	/** Get the HTTP status code */
+	get statusCode(): number;
+	/** Get response headers as JSON */
+	headers(): any;
+	/** Get response body as text */
+	text(): string;
+	/** Parse response body as JSON */
+	json(): any;
+	/** Get raw response body bytes */
+	bytes(): Buffer;
 }
 
 /** Node.js wrapper for WebSocket messages */
 export declare class WebSocketMessage {
-  /** Get message as text if it's a text message */
-  asText(): string | null
-  /** Get message as JSON if it's a text message containing JSON */
-  asJson(): any | null
-  /** Get message as binary if it's a binary message */
-  asBinary(): Buffer | null
-  /** Check if this is a close message */
-  isClose(): boolean
+	/** Get message as text if it's a text message */
+	asText(): string | null;
+	/** Get message as JSON if it's a text message containing JSON */
+	asJson(): any | null;
+	/** Get message as binary if it's a binary message */
+	asBinary(): Buffer | null;
+	/** Check if this is a close message */
+	isClose(): boolean;
 }
 
 /** Node.js wrapper for WebSocket test client */
 export declare class WebSocketTestConnection {
-  /** Send a text message */
-  sendText(text: string): Promise<void>
-  /** Send a JSON message */
-  sendJson(obj: any): Promise<void>
-  /** Receive a text message */
-  receiveText(): Promise<string>
-  /** Receive and parse a JSON message */
-  receiveJson(): Promise<any>
-  /** Receive raw bytes */
-  receiveBytes(): Promise<Buffer>
-  /** Receive a message and return WebSocketMessage */
-  receiveMessage(): Promise<WebSocketMessage>
-  /** Close the WebSocket connection */
-  close(): Promise<void>
+	/** Send a text message */
+	sendText(text: string): Promise<void>;
+	/** Send a JSON message */
+	sendJson(obj: any): Promise<void>;
+	/** Receive a text message */
+	receiveText(): Promise<string>;
+	/** Receive and parse a JSON message */
+	receiveJson(): Promise<any>;
+	/** Receive raw bytes */
+	receiveBytes(): Promise<Buffer>;
+	/** Receive a message and return WebSocketMessage */
+	receiveMessage(): Promise<WebSocketMessage>;
+	/** Close the WebSocket connection */
+	close(): Promise<void>;
 }
 
-export declare function backgroundRun(task: () => Promise<undefined>): void
+export declare function backgroundRun(task: () => Promise<undefined>): void;
 
 /**
  * Structured handler input passed to JavaScript handlers
@@ -71,20 +71,20 @@ export declare function backgroundRun(task: () => Promise<undefined>): void
  * Fields are converted from `RequestData` using a direct `From` impl.
  */
 export interface HandlerInput {
-  /** HTTP method (GET, POST, etc.) */
-  method: string
-  /** Request path */
-  path: string
-  /** HTTP headers as a map */
-  headers: Record<string, string>
-  /** HTTP cookies as a map */
-  cookies: Record<string, string>
-  /** Parsed query parameters */
-  queryParams: any
-  /** Parsed request body */
-  body: any
-  /** Extracted path parameters */
-  pathParams: Record<string, string>
+	/** HTTP method (GET, POST, etc.) */
+	method: string;
+	/** Request path */
+	path: string;
+	/** HTTP headers as a map */
+	headers: Record<string, string>;
+	/** HTTP cookies as a map */
+	cookies: Record<string, string>;
+	/** Parsed query parameters */
+	queryParams: any;
+	/** Parsed request body */
+	body: any;
+	/** Extracted path parameters */
+	pathParams: Record<string, string>;
 }
 
 /**
@@ -94,12 +94,12 @@ export interface HandlerInput {
  * completing the zero-copy request/response pattern.
  */
 export interface HandlerOutput {
-  /** HTTP status code (e.g., 200, 404, 500) */
-  status: number
-  /** Response headers as a map */
-  headers?: Record<string, string>
-  /** Response body as JSON value */
-  body?: any
+	/** HTTP status code (e.g., 200, 404, 500) */
+	status: number;
+	/** Response headers as a map */
+	headers?: Record<string, string>;
+	/** Response body as JSON value */
+	body?: any;
 }
 
 /**
@@ -146,7 +146,7 @@ export interface HandlerOutput {
  * app.run(config);
  * ```
  */
-export declare function runServer(app: object, config?: object | undefined | null): void
+export declare function runServer(app: object, config?: object | undefined | null): void;
 
 /**
  * Optional configuration for a streaming response.
@@ -159,8 +159,8 @@ export declare function runServer(app: object, config?: object | undefined | nul
  * though the struct is actually exposed to and used by JavaScript code.
  */
 export interface StreamingResponseInit {
-  /** HTTP status code for the streaming response (default 200). */
-  statusCode?: number
-  /** Headers to attach to the streaming response. */
-  headers?: Record<string, string>
+	/** HTTP status code for the streaming response (default 200). */
+	statusCode?: number;
+	/** Headers to attach to the streaming response. */
+	headers?: Record<string, string>;
 }
