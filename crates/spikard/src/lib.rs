@@ -361,19 +361,36 @@ impl RouteBuilder {
     }
 
     fn into_metadata(self) -> RouteMetadata {
-        RouteMetadata {
-            method: self.method.to_string(),
-            path: self.path,
-            handler_name: self.handler_name,
-            request_schema: self.request_schema,
-            response_schema: self.response_schema,
-            parameter_schema: self.parameter_schema,
-            file_params: self.file_params,
-            is_async: self.is_async,
-            cors: self.cors,
-            body_param_name: None,
-            #[cfg(feature = "di")]
-            handler_dependencies: None,
+        #[cfg(feature = "di")]
+        {
+            RouteMetadata {
+                method: self.method.to_string(),
+                path: self.path,
+                handler_name: self.handler_name,
+                request_schema: self.request_schema,
+                response_schema: self.response_schema,
+                parameter_schema: self.parameter_schema,
+                file_params: self.file_params,
+                is_async: self.is_async,
+                cors: self.cors,
+                body_param_name: None,
+                handler_dependencies: None,
+            }
+        }
+        #[cfg(not(feature = "di"))]
+        {
+            RouteMetadata {
+                method: self.method.to_string(),
+                path: self.path,
+                handler_name: self.handler_name,
+                request_schema: self.request_schema,
+                response_schema: self.response_schema,
+                parameter_schema: self.parameter_schema,
+                file_params: self.file_params,
+                is_async: self.is_async,
+                cors: self.cors,
+                body_param_name: None,
+            }
         }
     }
 }
