@@ -9,7 +9,7 @@
 		"dev": "tsx watch server.ts"
 	},
 	"dependencies": {
-		"@hono/node-server": "1.19.6",
+		"@hono/node-server": "1.19.7",
 		"hono": "4.10.7"
 	},
 	"devDependencies": {

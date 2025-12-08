@@ -84,7 +84,7 @@ runs:
       if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
       shell: bash
       run: |
-        cd packages/node
+        cd $GITHUB_WORKSPACE/packages/node
         pnpm build:native
 
     - name: Setup Node environment for non-spikard apps
@@ -107,8 +107,8 @@ runs:
       if: steps.detect.outputs.language == 'ruby' && inputs.framework == 'spikard-ruby'
       shell: bash
       run: |
-        mkdir -p packages/ruby/lib/spikard
-        cp -v packages/ruby/lib/spikard_rb.* packages/ruby/lib/spikard/ || true
+        mkdir -p $GITHUB_WORKSPACE/packages/ruby/lib/spikard
+        cp -v $GITHUB_WORKSPACE/packages/ruby/lib/spikard_rb.* $GITHUB_WORKSPACE/packages/ruby/lib/spikard/ || true
 
     - name: Setup Ruby environment for non-spikard apps
       if: steps.detect.outputs.language == 'ruby' && inputs.framework != 'spikard-ruby'
@@ -175,13 +175,13 @@ runs:
       shell: bash
       run: |
         # Build the WASM module using wasm-pack for Deno
-        cd crates/spikard-wasm
+        cd $GITHUB_WORKSPACE/crates/spikard-wasm
         cargo install wasm-pack || true
         # Build with deno target, which outputs to dist-deno
         wasm-pack build --target deno --out-dir dist-deno --release
         # Copy the deno build to the benchmark app's pkg directory
-        mkdir -p ../../tools/benchmark-harness/apps/spikard-wasm/pkg
-        cp -r dist-deno/* ../../tools/benchmark-harness/apps/spikard-wasm/pkg/
+        mkdir -p $GITHUB_WORKSPACE/tools/benchmark-harness/apps/spikard-wasm/pkg
+        cp -r dist-deno/* $GITHUB_WORKSPACE/tools/benchmark-harness/apps/spikard-wasm/pkg/
 
     - name: Install WASM benchmark app dependencies
       if: steps.detect.outputs.language == 'wasm'

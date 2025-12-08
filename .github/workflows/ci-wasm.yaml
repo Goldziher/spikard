@@ -151,7 +151,7 @@ jobs:
           path: crates/spikard-wasm/
 
       - name: Install dependencies
-        run: cd packages/wasm && pnpm install --frozen-lockfile
+        run: cd "$GITHUB_WORKSPACE/packages/wasm" && pnpm install --frozen-lockfile
 
       - name: Prepare WASM runtime
         working-directory: packages/wasm

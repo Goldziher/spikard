@@ -161,4 +161,4 @@ DEPENDENCIES
   websocket-client-simple (~> 0.8)
 
 BUNDLED WITH
-   2.7.2
+  4.0.0
