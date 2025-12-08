@@ -87,9 +87,9 @@ jobs:
         shell: bash
         run: |
           # Extract Ruby DevKit path and configure bindgen for GNU target
-          RI_DEVKIT=$(ruby -e "puts RbConfig::CONFIG['prefix']" | tr '\\' '/')
+          RI_DEVKIT=$(ruby -e "puts RbConfig::CONFIG[\"prefix\"]" | sed 's|\\|/|g')
           MSYSTEM_PREFIX="${RI_DEVKIT}/msys64/ucrt64"
-          echo "BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_gnu=-I${MSYSTEM_PREFIX}/include --target=x86_64-pc-windows-gnu" >> $GITHUB_ENV
+          echo "BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_gnu=-I${MSYSTEM_PREFIX}/include --target=x86_64-pc-windows-gnu" >> "$GITHUB_ENV"
 
       - name: Build Ruby gem
         working-directory: packages/ruby
