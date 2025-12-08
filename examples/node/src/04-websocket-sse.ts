@@ -5,11 +5,9 @@
  * advanced Server-Sent Events patterns.
  */
 
-import { get, post, type Request, Spikard, StreamingResponse, type WebSocketHandler } from "@spikard/node";
+import { get, post, type Request, Spikard, StreamingResponse } from "@spikard/node";
 
-const app = new Spikard({
-	port: 8000,
-});
+const app = new Spikard();
 
 // Simple in-memory message store for chat simulation
 interface Message {
@@ -25,110 +23,78 @@ let messageId = 0;
 /**
  * WebSocket endpoint for real-time chat
  */
-get("/ws/chat")(async function chatWebSocket(): Promise<WebSocketHandler> {
-	return {
-		// Called when a client connects
-		on_connect: async (ws) => {
-			console.log("Client connected to chat");
-			await ws.send_json({
-				type: "connected",
-				message: `Connected to chat at ${new Date().toISOString()}`,
-				messageCount: messages.length,
-			});
-		},
+app.websocket(
+	"/ws/chat",
+	async (message: unknown) => {
+		// Handle incoming WebSocket message
+		if (typeof message === "string") {
+			try {
+				const data = JSON.parse(message);
+				const userName = data.user || "Anonymous";
+				const text = data.message || "";
 
-		// Called when the server receives a message from client
-		on_message: async (ws, message) => {
-			if (typeof message === "string") {
-				try {
-					const data = JSON.parse(message);
-					const userName = data.user || "Anonymous";
-					const text = data.message || "";
-
-					if (!text) {
-						await ws.send_json({
-							type: "error",
-							error: "Empty message",
-						});
-						return;
-					}
-
-					const msg: Message = {
-						id: ++messageId,
-						user: userName,
-						text,
-						timestamp: new Date().toISOString(),
-					};
-					messages.push(msg);
-
-					// Broadcast to all connected clients
-					await ws.send_json({
-						type: "message",
-						data: msg,
-						totalMessages: messages.length,
-					});
-				} catch (_error) {
-					await ws.send_json({
+				if (!text) {
+					return {
 						type: "error",
-						error: "Invalid message format",
-					});
+						error: "Empty message",
+					};
 				}
-			}
-		},
 
-		// Called when the connection closes
-		on_close: async () => {
+				const msg: Message = {
+					id: ++messageId,
+					user: userName,
+					text,
+					timestamp: new Date().toISOString(),
+				};
+				messages.push(msg);
+
+				return {
+					type: "message",
+					data: msg,
+					totalMessages: messages.length,
+				};
+			} catch {
+				return {
+					type: "error",
+					error: "Invalid message format",
+				};
+			}
+		}
+
+		return null;
+	},
+	{
+		onConnect: async () => {
+			console.log("Client connected to chat");
+		},
+		onDisconnect: async () => {
 			console.log("Client disconnected from chat");
 		},
-	};
-});
+	},
+);
 
 /**
  * WebSocket endpoint for real-time notifications
  */
-get("/ws/notifications")(async function notificationsWebSocket(): Promise<WebSocketHandler> {
-	let notificationCount = 0;
-
-	return {
-		on_connect: async (ws) => {
+app.websocket(
+	"/ws/notifications",
+	async (message: unknown) => {
+		// Echo received messages
+		return {
+			type: "echo",
+			received: message,
+			timestamp: new Date().toISOString(),
+		};
+	},
+	{
+		onConnect: async () => {
 			console.log("Client connected to notifications");
-			await ws.send_json({
-				type: "subscribed",
-				channel: "notifications",
-				timestamp: new Date().toISOString(),
-			});
-
-			// Send mock notifications every 2 seconds
-			const interval = setInterval(async () => {
-				notificationCount++;
-				try {
-					await ws.send_json({
-						type: "notification",
-						id: notificationCount,
-						level: notificationCount % 3 === 0 ? "warning" : "info",
-						message: `Notification #${notificationCount}`,
-						timestamp: new Date().toISOString(),
-					});
-				} catch {
-					clearInterval(interval);
-				}
-			}, 2000);
 		},
-
-		on_message: async (ws, message) => {
-			// Echo received messages
-			await ws.send_json({
-				type: "echo",
-				received: message,
-				timestamp: new Date().toISOString(),
-			});
-		},
-
-		on_close: async () => {
+		onDisconnect: async () => {
 			console.log("Client disconnected from notifications");
 		},
-	};
-});
+	},
+);
 
 /**
  * POST endpoint to retrieve chat history via SSE
@@ -169,8 +135,9 @@ post("/sse/chat-history")(async function chatHistorySse(req: Request) {
 	}
 
 	return new StreamingResponse(generateHistory(), {
-		contentType: "text/event-stream",
+		statusCode: 200,
 		headers: {
+			"Content-Type": "text/event-stream",
 			"Cache-Control": "no-cache",
 			Connection: "keep-alive",
 			"Access-Control-Allow-Origin": "*",
@@ -218,8 +185,9 @@ get("/sse/metrics")(async function metricsStream(req: Request) {
 	}
 
 	return new StreamingResponse(generateMetrics(), {
-		contentType: "text/event-stream",
+		statusCode: 200,
 		headers: {
+			"Content-Type": "text/event-stream",
 			"Cache-Control": "no-cache",
 			Connection: "keep-alive",
 		},
@@ -383,7 +351,4 @@ console.log("Starting WebSocket & SSE Example on http://127.0.0.1:8000");
 console.log("Open http://127.0.0.1:8000 in your browser");
 console.log("");
 
-app.listen().catch((error) => {
-	console.error("Server error:", error);
-	process.exit(1);
-});
+app.run({ port: 8000, host: "0.0.0.0" });

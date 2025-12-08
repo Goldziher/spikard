@@ -1,0 +1,22 @@
+{
+	"name": "@examples/node-simple",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"description": "Simple Spikard Node.js example with basic routing",
+	"scripts": {
+		"dev": "tsx src/server.ts",
+		"start": "tsx src/server.ts"
+	},
+	"dependencies": {
+		"@spikard/node": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "^24.10.1",
+		"tsx": "^4.19.2",
+		"typescript": "^5.9.3"
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}

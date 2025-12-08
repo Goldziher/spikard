@@ -5,30 +5,33 @@ This directory contains runnable examples demonstrating Spikard Node.js bindings
 ## Prerequisites
 
 1. Node.js 18+ with TypeScript support
-2. Spikard Node.js package installed:
+2. Install dependencies:
    ```bash
-   cd packages/node
+   cd examples/node
    pnpm install
    ```
 
 ## Running Examples
 
-Each example is a standalone TypeScript file that can be run with `tsx` or compiled and run with Node:
+Each example is a standalone TypeScript file in the `src/` directory.
 
-### Using tsx (recommended for development)
+### Using pnpm scripts (recommended)
 
 ```bash
-npx tsx examples/node/01-basic-server.ts
+cd examples/node
+
+# Run any example:
+pnpm basic      # Basic server
+pnpm validation # Validation
+pnpm streaming  # Streaming
+pnpm websocket  # WebSocket & SSE
+pnpm hooks      # Lifecycle hooks
 ```
 
-### Using Node directly
+### Using tsx directly
 
 ```bash
-# First compile TypeScript
-npx tsc examples/node/01-basic-server.ts
-
-# Then run
-node examples/node/01-basic-server.js
+npx tsx examples/node/src/01-basic-server.ts
 ```
 
 Then visit `http://127.0.0.1:8000` in your browser or use curl.
@@ -46,7 +49,7 @@ The simplest possible Spikard application with two routes.
 
 **Try:**
 ```bash
-npx tsx examples/node/01-basic-server.ts
+pnpm basic
 
 # In another terminal:
 curl http://127.0.0.1:8000
@@ -68,7 +71,7 @@ REST API with JSON request body validation, query parameters, and path parameter
 
 **Try:**
 ```bash
-npx tsx examples/node/02-validation.ts
+pnpm validation
 
 # In another terminal:
 # List all users
@@ -101,7 +104,7 @@ Real-time server-to-client streaming for large datasets and Server-Sent Events (
 
 **Try:**
 ```bash
-npx tsx examples/node/03-streaming.ts
+pnpm streaming
 
 # Open in browser: http://127.0.0.1:8000
 # Or use curl to see raw streams:
@@ -131,7 +134,7 @@ Bidirectional WebSocket communication and advanced SSE patterns.
 
 **Try:**
 ```bash
-npx tsx examples/node/04-websocket-sse.ts
+pnpm websocket
 
 # Open in browser: http://127.0.0.1:8000
 # Test chat, notifications, and metrics streams interactively
@@ -154,7 +157,7 @@ Demonstrate lifecycle hooks for logging, authentication, and response transforma
 
 **Try:**
 ```bash
-npx tsx examples/node/05-lifecycle-hooks.ts
+pnpm hooks
 
 # Open in browser: http://127.0.0.1:8000
 # Test public, protected, and admin endpoints

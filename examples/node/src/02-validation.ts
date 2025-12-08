@@ -7,9 +7,7 @@
 
 import { get, post, type Request, Spikard } from "@spikard/node";
 
-const app = new Spikard({
-	port: 8000,
-});
+const app = new Spikard();
 
 // Simple in-memory user store
 const users: Record<number, { id: number; name: string; email: string }> = {
@@ -20,7 +18,7 @@ const users: Record<number, { id: number; name: string; email: string }> = {
 /**
  * GET endpoint returning a list of users
  */
-const listUsers = get("/users")(async function listUsers(req: Request) {
+get("/users")(async function listUsers(req: Request) {
 	// Support optional filtering by name via query params
 	const nameFilter = req.query?.name as string | undefined;
 
@@ -38,16 +36,16 @@ const listUsers = get("/users")(async function listUsers(req: Request) {
 /**
  * GET endpoint returning a single user by ID
  */
-const getUser = get("/users/:id")(async function getUser(req: Request) {
+get("/users/:id")(async function getUser(req: Request) {
 	const userId = parseInt(req.params?.id as string, 10);
 
 	if (!Number.isInteger(userId)) {
 		return {
-			status: 400,
+			statusCode: 400,
 			body: {
 				error: "Invalid user ID",
 				code: "invalid_id",
-				details: { received: req.params?.id },
+				details: { received: req.params?.id ?? null },
 			},
 		};
 	}
@@ -55,7 +53,7 @@ const getUser = get("/users/:id")(async function getUser(req: Request) {
 	const user = users[userId];
 	if (!user) {
 		return {
-			status: 404,
+			statusCode: 404,
 			body: {
 				error: "User not found",
 				code: "not_found",
@@ -70,7 +68,7 @@ const getUser = get("/users/:id")(async function getUser(req: Request) {
 /**
  * POST endpoint to create a new user
  */
-const createUser = post("/users")(async function createUser(req: Request) {
+post("/users")(async function createUser(req: Request) {
 	const body = req.body as {
 		name?: string;
 		email?: string;
@@ -79,7 +77,7 @@ const createUser = post("/users")(async function createUser(req: Request) {
 	// Validate required fields
 	if (!body?.name || typeof body.name !== "string") {
 		return {
-			status: 400,
+			statusCode: 400,
 			body: {
 				error: "Missing or invalid required field: name",
 				code: "validation_error",
@@ -90,7 +88,7 @@ const createUser = post("/users")(async function createUser(req: Request) {
 
 	if (!body.email || typeof body.email !== "string") {
 		return {
-			status: 400,
+			statusCode: 400,
 			body: {
 				error: "Missing or invalid required field: email",
 				code: "validation_error",
@@ -102,7 +100,7 @@ const createUser = post("/users")(async function createUser(req: Request) {
 	// Validate email format (simple check)
 	if (!body.email.includes("@")) {
 		return {
-			status: 400,
+			statusCode: 400,
 			body: {
 				error: "Invalid email format",
 				code: "validation_error",
@@ -121,15 +119,10 @@ const createUser = post("/users")(async function createUser(req: Request) {
 	users[newId] = newUser;
 
 	return {
-		status: 201,
+		statusCode: 201,
 		body: newUser,
 	};
 });
-
-// Register handlers
-app.registerHandler(listUsers);
-app.registerHandler(getUser);
-app.registerHandler(createUser);
 
 console.log("Starting Validation Example on http://127.0.0.1:8000");
 console.log("Try:");
@@ -141,7 +134,4 @@ console.log(
 );
 console.log("");
 
-app.listen().catch((error) => {
-	console.error("Server error:", error);
-	process.exit(1);
-});
+app.run({ port: 8000, host: "0.0.0.0" });

@@ -10,7 +10,7 @@ export interface Request {
 	cookies: Record<string, string>;
 	body: Buffer | null;
 	dependencies: Record<string, unknown> | undefined;
-	json<T = unknown>(): T;
+	json<T = JsonValue>(): T;
 	form(): Record<string, string>;
 }
 

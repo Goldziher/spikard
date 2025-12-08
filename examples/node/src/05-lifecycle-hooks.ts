@@ -5,11 +5,9 @@
  * authentication, error handling, and response transformation.
  */
 
-import { get, type LifecycleHooks, post, type Request, Spikard } from "@spikard/node";
+import { get, post, type Request, Spikard } from "@spikard/node";
 
-const app = new Spikard({
-	port: 8000,
-});
+const app = new Spikard();
 
 // Simple user authentication store
 const authenticatedUsers = new Set(["alice", "bob"]);
@@ -18,128 +16,146 @@ const authenticatedUsers = new Set(["alice", "bob"]);
  * Lifecycle Hooks Configuration
  *
  * Hooks are executed in this order:
- * 1. on_request - Initial processing, logging
- * 2. pre_validation - Before parameter validation
- * 3. pre_handler - Before route handler execution
- * 4. on_response - After successful handler response
- * 5. on_error - On handler error or validation failure
+ * 1. onRequest - Initial processing, logging
+ * 2. preValidation - Before parameter validation
+ * 3. preHandler - Before route handler execution
+ * 4. onResponse - After successful handler response
+ * 5. onError - On handler error or validation failure
  */
-const hooks: LifecycleHooks = {
-	/**
-	 * Called at the start of request processing
-	 * Useful for logging, metrics, request tracing
-	 */
-	on_request: async (req) => {
-		console.log(`[REQUEST] ${req.method} ${req.path} from ${req.ip}`);
 
-		// Add request ID to context
-		const requestId = req.headers?.["x-request-id"] || Math.random().toString(36).substring(7);
+/**
+ * Called at the start of request processing
+ * Useful for logging, metrics, request tracing
+ */
+app.onRequest(async (req) => {
+	if (typeof req !== "object" || req === null || !("method" in req)) {
+		return req;
+	}
+	const request = req as Request & { _request_id?: string };
 
-		// Store in request context for later use (implementation-specific)
-		return {
-			...req,
-			_request_id: requestId,
-		};
-	},
+	console.log(`[REQUEST] ${request.method} ${request.path}`);
 
-	/**
-	 * Called before parameter validation
-	 * Can validate headers, cookies, etc.
-	 */
-	pre_validation: async (req) => {
-		// Check for required headers
-		if (req.method === "POST" || req.method === "PUT") {
-			if (!req.headers?.["content-type"]) {
+	// Add request ID to context
+	const requestId = request.headers?.["x-request-id"] || Math.random().toString(36).substring(7);
+
+	// Store in request context for later use
+	return {
+		...request,
+		_request_id: requestId,
+	};
+});
+
+/**
+ * Called before parameter validation
+ * Can validate headers, cookies, etc.
+ */
+app.preValidation(async (req) => {
+	if (typeof req !== "object" || req === null || !("method" in req)) {
+		return req;
+	}
+	const request = req as Request;
+
+	// Check for required headers
+	if (request.method === "POST" || request.method === "PUT") {
+		if (!request.headers?.["content-type"]) {
+			return {
+				status: 400,
+				body: {
+					error: "Missing Content-Type header",
+					code: "missing_header",
+				},
+			};
+		}
+	}
+
+	return req;
+});
+
+/**
+ * Called before the route handler is executed
+ * Useful for authentication, authorization, request transformation
+ */
+app.preHandler(async (req) => {
+	if (typeof req !== "object" || req === null || !("method" in req)) {
+		return req;
+	}
+	const request = req as Request & { _user?: { username: string } };
+
+	// Extract token from Authorization header
+	const authHeader = request.headers?.authorization;
+	if (authHeader) {
+		const parts = authHeader.split(" ");
+		const scheme = parts[0];
+		const token = parts[1];
+
+		if (scheme === "Bearer" && token) {
+			// Simulate token validation (extract username from token)
+			const username = token.split(":")[0] || "";
+
+			if (!authenticatedUsers.has(username)) {
 				return {
-					status: 400,
+					status: 401,
 					body: {
-						error: "Missing Content-Type header",
-						code: "missing_header",
+						error: "Unauthorized",
+						code: "invalid_token",
 					},
 				};
 			}
+
+			// Store user info in request
+			return {
+				...request,
+				_user: { username },
+			};
 		}
+	}
 
-		return req;
-	},
+	return req;
+});
 
-	/**
-	 * Called before the route handler is executed
-	 * Useful for authentication, authorization, request transformation
-	 */
-	pre_handler: async (req) => {
-		// Extract token from Authorization header
-		const authHeader = req.headers?.authorization;
-		if (authHeader) {
-			const [scheme, token] = authHeader.split(" ");
+/**
+ * Called after a successful response from the handler
+ * Useful for response transformation, adding headers, metrics
+ */
+app.onResponse(async (payload) => {
+	// Check if this is a response object (StructuredHandlerResponse)
+	if (typeof payload !== "object" || payload === null || !("status" in payload)) {
+		return payload;
+	}
 
-			if (scheme === "Bearer") {
-				// Simulate token validation (extract username from token)
-				const username = token.split(":")[0];
+	const res = payload as Record<string, unknown> & { headers?: Record<string, string> };
 
-				if (!authenticatedUsers.has(username)) {
-					return {
-						status: 401,
-						body: {
-							error: "Unauthorized",
-							code: "invalid_token",
-						},
-					};
-				}
+	// Log successful response
+	const status = (res.status as number | undefined) || 200;
+	console.log(`[RESPONSE] ${status}`);
 
-				// Store user info in request
-				return {
-					...req,
-					_user: { username },
-				};
-			}
-		}
+	// Add custom headers
+	const headers = (res.headers as Record<string, string> | undefined) || {};
+	headers["X-Request-ID"] = "unknown";
+	headers["X-Response-Time"] = `${Math.random() * 100}ms`;
 
-		return req;
-	},
+	return {
+		...res,
+		headers,
+	};
+});
 
-	/**
-	 * Called after a successful response from the handler
-	 * Useful for response transformation, adding headers, metrics
-	 */
-	on_response: async (req, res) => {
-		// Log successful response
-		const status = res.status || 200;
-		console.log(`[RESPONSE] ${status} for ${req.method} ${req.path} (${req._request_id || "no-id"})`);
+/**
+ * Called when an error occurs during request processing
+ * Useful for error logging, custom error responses
+ */
+app.onError(async (payload) => {
+	if (typeof payload !== "object" || payload === null) {
+		return payload;
+	}
 
-		// Add custom headers
-		const headers = res.headers || {};
-		headers["X-Request-ID"] = req._request_id || "unknown";
-		headers["X-Response-Time"] = `${Math.random() * 100}ms`;
-
-		return {
-			...res,
-			headers,
-		};
-	},
-
-	/**
-	 * Called when an error occurs during request processing
-	 * Useful for error logging, custom error responses
-	 */
-	on_error: async (req, error) => {
-		console.error(`[ERROR] ${error.code} on ${req.method} ${req.path}: ${error.error}`);
-
-		// Could transform error response here
-		return {
-			status: error.code === "unauthorized" ? 401 : 500,
-			body: {
-				error: error.error,
-				code: error.code,
-				request_id: req._request_id || "unknown",
-				timestamp: new Date().toISOString(),
-			},
-		};
-	},
-};
-
-// Register lifecycle hooks
-app.registerHooks(hooks);
+	return {
+		...payload,
+		headers: {
+			...((payload as Record<string, unknown>).headers as Record<string, string> | undefined),
+		},
+	};
+});
 
 /**
  * Public endpoint (no authentication required)
@@ -155,7 +171,7 @@ get("/public")(async function publicEndpoint(_req: Request) {
  * Protected endpoint (requires Bearer token)
  * Expected format: Authorization: Bearer alice:secret
  */
-get("/protected")(async function protectedEndpoint(req: Request) {
+get("/protected")(async function protectedEndpoint(req: Request & { _user?: { username: string } }) {
 	const user = req._user;
 
 	if (!user) {
@@ -178,7 +194,7 @@ get("/protected")(async function protectedEndpoint(req: Request) {
 /**
  * POST endpoint with request body transformation
  */
-post("/echo")(async function echoEndpoint(req: Request) {
+post("/echo")(async function echoEndpoint(req: Request & { _user?: { username: string } }) {
 	const body = req.body;
 
 	if (!body || typeof body !== "object") {
@@ -201,7 +217,7 @@ post("/echo")(async function echoEndpoint(req: Request) {
 /**
  * Admin endpoint with extra authorization
  */
-get("/admin/stats")(async function adminStats(req: Request) {
+get("/admin/stats")(async function adminStats(req: Request & { _user?: { username: string } }) {
 	const user = req._user;
 
 	if (!user || user.username !== "alice") {
@@ -354,7 +370,4 @@ console.log("  alice:secret  (admin)");
 console.log("  bob:secret    (regular user)");
 console.log("");
 
-app.listen().catch((error) => {
-	console.error("Server error:", error);
-	process.exit(1);
-});
+app.run({ port: 8000, host: "0.0.0.0" });
