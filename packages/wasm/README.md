@@ -476,21 +476,19 @@ const app = new Spikard({ debug: true });
 
 ## Examples
 
-Full examples for each platform:
+Full working examples for different runtimes:
 
-- **Cloudflare Workers**: `examples/wasm-cloudflare-worker/`
-- **Deno**: `examples/wasm-deno/`
-- **Node.js**: `examples/wasm-node/`
-- **Browser**: `examples/wasm-browser-worker/`
+- **[Rollup Bundler](https://github.com/Goldziher/spikard/tree/main/examples/wasm-rollup)** - Build with Rollup for browsers and Node.js
+- **[Deno Runtime](https://github.com/Goldziher/spikard/tree/main/examples/wasm-deno)** - Native Deno with zero build step
+- **[Cloudflare Workers](https://github.com/Goldziher/spikard/tree/main/examples/wasm-cloudflare)** - Deploy to the edge with Wrangler
 
-Run examples with `task` automation:
+Each example includes:
+- Complete TypeScript source code with strict typing
+- Configuration files (tsconfig.json, package.json)
+- Comprehensive README with usage instructions
+- Consistent API routes demonstrating core features
 
-```bash
-task examples:wasm
-task examples:wasm:cloudflare
-task examples:wasm:deno
-task examples:wasm:node
-```
+Browse all examples: [`examples/`](https://github.com/Goldziher/spikard/tree/main/examples)
 
 ## Testing
 
