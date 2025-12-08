@@ -2,10 +2,10 @@
  * Server runtime for Spikard Node
  */
 
+import { createRequire } from "node:module";
 import type { ServerConfig } from "./config";
 import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
-import { createRequire } from "module";
 
 interface NativeServerBinding {
 	runServer(app: SpikardApp, config: ServerConfig | ServerOptions): void;
