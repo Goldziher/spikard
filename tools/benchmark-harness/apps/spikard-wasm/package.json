@@ -3,16 +3,17 @@
   "version": "0.1.0",
   "description": "Spikard WASM benchmark server for workload comparison",
   "type": "module",
-  "main": "server.js",
+  "main": "server.ts",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js 8000"
+    "start": "tsx server.ts",
+    "dev": "tsx server.ts 8000"
   },
   "dependencies": {
     "@spikard/wasm": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2"
+    "@types/node": "^22.10.2",
+    "tsx": "^4.21.0"
   },
   "engines": {
     "node": ">=20.0.0"

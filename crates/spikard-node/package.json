@@ -1,78 +1,78 @@
 {
-  "name": "@spikard/node",
-  "version": "0.3.2",
-  "description": "High-performance HTTP framework for Node.js and Bun. Type-safe routing, validation, and testing powered by Rust core.",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "license": "MIT",
-  "keywords": [
-    "http",
-    "framework",
-    "typescript",
-    "nodejs",
-    "bun",
-    "rust",
-    "napi",
-    "performance",
-    "validation",
-    "testing",
-    "type-safe",
-    "axum",
-    "tower",
-    "web",
-    "api",
-    "rest"
-  ],
-  "author": {
-    "name": "Na'aman Hirschfeld",
-    "email": "nhirschfeld@gmail.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Goldziher/spikard"
-  },
-  "homepage": "https://github.com/Goldziher/spikard",
-  "bugs": {
-    "url": "https://github.com/Goldziher/spikard/issues"
-  },
-  "scripts": {
-    "artifacts": "napi artifacts",
-    "build": "napi build --platform --release",
-    "build:debug": "napi build --platform",
-    "prepublishOnly": "napi prepublish -t npm",
-    "test": "vitest run --passWithNoTests",
-    "universal": "napi universal",
-    "version": "napi version"
-  },
-  "files": [
-    "README.md",
-    "index.js",
-    "*.d.ts",
-    "*.node"
-  ],
-  "engines": {
-    "node": ">=20"
-  },
-  "devDependencies": {
-    "@napi-rs/cli": "^3.5.0",
-    "@types/node": "^24.10.1",
-    "@vitest/coverage-v8": "^4.0.15",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.15"
-  },
-  "napi": {
-    "binaryName": "spikard-node",
-    "targets": [
-      "x86_64-apple-darwin",
-      "aarch64-apple-darwin",
-      "x86_64-unknown-linux-gnu",
-      "x86_64-pc-windows-msvc"
-    ],
-    "package": {
-      "name": "@spikard/node"
-    }
-  },
-  "dependencies": {
-    "zod": "^4.1.13"
-  }
+	"name": "@spikard/node",
+	"version": "0.3.3",
+	"description": "High-performance HTTP framework for Node.js and Bun. Type-safe routing, validation, and testing powered by Rust core.",
+	"main": "index.js",
+	"types": "index.d.ts",
+	"license": "MIT",
+	"keywords": [
+		"http",
+		"framework",
+		"typescript",
+		"nodejs",
+		"bun",
+		"rust",
+		"napi",
+		"performance",
+		"validation",
+		"testing",
+		"type-safe",
+		"axum",
+		"tower",
+		"web",
+		"api",
+		"rest"
+	],
+	"author": {
+		"name": "Na'aman Hirschfeld",
+		"email": "nhirschfeld@gmail.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Goldziher/spikard"
+	},
+	"homepage": "https://github.com/Goldziher/spikard",
+	"bugs": {
+		"url": "https://github.com/Goldziher/spikard/issues"
+	},
+	"scripts": {
+		"artifacts": "napi artifacts",
+		"build": "napi build --platform --release",
+		"build:debug": "napi build --platform",
+		"prepublishOnly": "napi prepublish -t npm",
+		"test": "vitest run --passWithNoTests",
+		"universal": "napi universal",
+		"version": "napi version"
+	},
+	"files": [
+		"README.md",
+		"index.js",
+		"*.d.ts",
+		"*.node"
+	],
+	"engines": {
+		"node": ">=20"
+	},
+	"devDependencies": {
+		"@napi-rs/cli": "^3.5.0",
+		"@types/node": "^24.10.1",
+		"@vitest/coverage-v8": "^4.0.15",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.15"
+	},
+	"napi": {
+		"binaryName": "spikard-node",
+		"targets": [
+			"x86_64-apple-darwin",
+			"aarch64-apple-darwin",
+			"x86_64-unknown-linux-gnu",
+			"x86_64-pc-windows-msvc"
+		],
+		"package": {
+			"name": "@spikard/node"
+		}
+	},
+	"dependencies": {
+		"zod": "^4.1.13"
+	}
 }

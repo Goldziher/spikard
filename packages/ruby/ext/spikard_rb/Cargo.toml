@@ -1,6 +1,6 @@
 [package]
 name = "spikard-rb-ext"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2024"
 license = "MIT"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
@@ -13,5 +13,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 magnus = { git = "https://github.com/matsadler/magnus", rev = "f6db11769efb517427bf7f121f9c32e18b059b38", features = ["rb-sys"] }
-# Use workspace crate directly (no vendoring for local builds/tests)
-spikard_rb_core = { package = "spikard-rb", path = "../../../../crates/spikard-rb" }
+# Use vendored crates for packaged gem distribution
+spikard_rb_core = { package = "spikard-rb", path = "../../vendor/crates/spikard-rb" }
