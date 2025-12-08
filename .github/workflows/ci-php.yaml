@@ -225,6 +225,7 @@ jobs:
         run: bash scripts/ci/php/enforce-coverage-threshold.sh
 
       - name: Upload coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v4
         with:
           files: packages/php/coverage.lcov

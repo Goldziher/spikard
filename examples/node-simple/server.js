@@ -72,7 +72,11 @@ try {
 	const native = require("../../packages/node/spikard-node.darwin-arm64.node");
 	console.log("[spikard-node] Native module loaded");
 	console.log("[spikard-node] Starting server...");
-	native.runServer(app, "0.0.0.0", 8000);
+	const config = {
+		host: "0.0.0.0",
+		port: 8000,
+	};
+	native.runServer(app, config);
 } catch (e) {
 	console.error("[spikard-node] Failed to start server:", e.message);
 	console.error(e.stack);

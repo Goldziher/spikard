@@ -2,13 +2,14 @@ default_install_hook_types:
   - pre-commit
   - commit-msg
 exclude: |
-  ^(tools/benchmark-harness/|benchmark-results/|results/|target/)
+  ^(benchmark-results/|results/|target/)
 
 repos:
-  - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.3.0
+  - repo: https://github.com/Goldziher/gitfluff
+    rev: v0.3.3
     hooks:
-      - id: conventional-pre-commit
+      - id: gitfluff-lint
+        args: ["--write"]
         stages: [commit-msg]
   - repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.11.0
@@ -46,7 +47,8 @@ repos:
   - repo: https://github.com/biomejs/pre-commit
     rev: v2.3.8
     hooks:
-      - id: biome-check
+      - id: biome-format
+      - id: biome-lint
         exclude: |
           benchmark-harness/|benchmark-results/|results/|target/|docs/css/
   - repo: https://github.com/oxc-project/mirrors-oxlint

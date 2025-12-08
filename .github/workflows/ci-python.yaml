@@ -197,6 +197,7 @@ jobs:
         run: bash scripts/ci/python/run-coverage.sh
 
       - name: Upload coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v4
         with:
           files: ./packages/python/coverage.lcov

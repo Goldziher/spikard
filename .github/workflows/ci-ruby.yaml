@@ -190,6 +190,7 @@ jobs:
         run: bundle exec rspec
 
       - name: Upload coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v4
         with:
           files: packages/ruby/coverage/lcov.info

@@ -1104,6 +1104,11 @@ final class AppTestHandler implements HandlerInterface
     {
         return Response::json(['ok' => true], 200);
     }
+
+    public function __invoke(Request $request): Response
+    {
+        return $this->handle($request);
+    }
 }
 
 final class AppTestWebSocketHandler implements WebSocketHandlerInterface

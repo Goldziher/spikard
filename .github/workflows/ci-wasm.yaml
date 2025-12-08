@@ -162,6 +162,7 @@ jobs:
         run: pnpm test --coverage
 
       - name: Upload coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v4
         with:
           files: ./packages/wasm/coverage/lcov.info

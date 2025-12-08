@@ -55,6 +55,17 @@ final class ControllerMethodHandler implements HandlerInterface
     }
 
     /**
+     * Make handler callable for Rust FFI compatibility.
+     *
+     * Implements the __invoke magic method so that handler instances
+     * can be passed as PHP callables to the Rust extension.
+     */
+    public function __invoke(Request $request): Response
+    {
+        return $this->handle($request);
+    }
+
+    /**
      * Resolve method parameters from the request.
      *
      * @return array<int, mixed>
