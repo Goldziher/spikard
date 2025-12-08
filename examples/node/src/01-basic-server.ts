@@ -7,9 +7,7 @@
 
 import { get, Spikard } from "@spikard/node";
 
-const app = new Spikard({
-	port: 8000,
-});
+const app = new Spikard();
 
 /**
  * Simple GET handler returning plain text
@@ -32,7 +30,4 @@ console.log("Starting Spikard Node.js server on http://127.0.0.1:8000");
 console.log("Press Ctrl+C to stop\n");
 
 // Run the server
-app.listen().catch((error) => {
-	console.error("Server error:", error);
-	process.exit(1);
-});
+app.run({ port: 8000, host: "0.0.0.0" });

@@ -7,9 +7,7 @@
 
 import { get, type Request, Spikard, StreamingResponse } from "@spikard/node";
 
-const app = new Spikard({
-	port: 8000,
-});
+const app = new Spikard();
 
 /**
  * GET endpoint returning a large dataset as a streamed JSON array
@@ -31,7 +29,10 @@ get("/stream/numbers")(async function streamNumbers(req: Request) {
 	}
 
 	return new StreamingResponse(generateNumbers(), {
-		contentType: "application/x-ndjson", // Newline-delimited JSON
+		statusCode: 200,
+		headers: {
+			"Content-Type": "application/x-ndjson", // Newline-delimited JSON
+		},
 	});
 });
 
@@ -75,8 +76,9 @@ get("/stream/events")(async function streamEvents(req: Request) {
 	}
 
 	return new StreamingResponse(generateEvents(), {
-		contentType: "text/event-stream",
+		statusCode: 200,
 		headers: {
+			"Content-Type": "text/event-stream",
 			"Cache-Control": "no-cache",
 			Connection: "keep-alive",
 			"Access-Control-Allow-Origin": "*",
@@ -105,8 +107,9 @@ get("/stream/csv")(async function streamCsv(_req: Request) {
 	}
 
 	return new StreamingResponse(generateCsv(), {
-		contentType: "text/csv",
+		statusCode: 200,
 		headers: {
+			"Content-Type": "text/csv",
 			"Content-Disposition": 'attachment; filename="users.csv"',
 		},
 	});
@@ -201,7 +204,4 @@ console.log("  curl http://127.0.0.1:8000/stream/events?duration=5");
 console.log("  curl http://127.0.0.1:8000/stream/csv");
 console.log("");
 
-app.listen().catch((error) => {
-	console.error("Server error:", error);
-	process.exit(1);
-});
+app.run({ port: 8000, host: "0.0.0.0" });

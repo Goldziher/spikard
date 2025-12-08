@@ -1,0 +1,25 @@
+{
+	"name": "@examples/node",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"description": "Spikard Node.js tutorial examples demonstrating progressive features",
+	"scripts": {
+		"basic": "tsx src/01-basic-server.ts",
+		"validation": "tsx src/02-validation.ts",
+		"streaming": "tsx src/03-streaming.ts",
+		"websocket": "tsx src/04-websocket-sse.ts",
+		"hooks": "tsx src/05-lifecycle-hooks.ts"
+	},
+	"dependencies": {
+		"@spikard/node": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "^24.10.1",
+		"tsx": "^4.19.2",
+		"typescript": "^5.9.3"
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}

@@ -85,6 +85,38 @@ importers:
         specifier: ^4.0.15
         version: 4.0.15(@types/node@24.10.1)(terser@5.44.1)(tsx@4.21.0)
 
+  examples/node:
+    dependencies:
+      '@spikard/node':
+        specifier: workspace:*
+        version: link:../../packages/node
+    devDependencies:
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.10.1
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  examples/node-simple:
+    dependencies:
+      '@spikard/node':
+        specifier: workspace:*
+        version: link:../../packages/node
+    devDependencies:
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.10.1
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   examples/wasm-cloudflare:
     dependencies:
       '@spikard/wasm':
