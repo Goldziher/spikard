@@ -2095,7 +2095,7 @@ wheels = [
 
 [[package]]
 name = "spikard"
-version = "0.3.0"
+version = "0.3.5"
 source = { editable = "packages/python" }
 dependencies = [
     { name = "cloudpickle" },

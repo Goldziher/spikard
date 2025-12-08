@@ -191,7 +191,7 @@ jobs:
           python-version: "3.14"
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v7
 
       - name: Run Python tests with coverage
         run: bash scripts/ci/python/run-coverage.sh

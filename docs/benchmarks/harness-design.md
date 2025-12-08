@@ -397,7 +397,7 @@ jobs:
   profile-spikard:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build benchmark harness
         run: cargo build --release -p benchmark-harness
