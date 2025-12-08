@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2025-12-08
+
+### Fixed
+
+#### Ruby Gem
+- **Native extension build**: Fixed critical workspace inheritance issue in vendored crates by replacing `version.workspace = true`, `edition.workspace = true`, and other workspace-inherited fields with explicit hardcoded values in `packages/ruby/vendor/crates/spikard-core/Cargo.toml` and `packages/ruby/vendor/crates/spikard-http/Cargo.toml`. This ensures the gem can build successfully when installed from RubyGems.org, as published gems don't preserve the workspace root context (v0.3.3 was completely unusable due to Cargo failing to find workspace root manifest during native extension compilation).
+
 ## [0.3.3] - 2025-12-08
 
 ### Fixed
