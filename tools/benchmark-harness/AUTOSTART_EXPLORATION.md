@@ -398,4 +398,3 @@ pub struct ProfileRunnerConfig {
    - Auto-start validation
 
 5. Update CLI help text to document auto-detection
-

@@ -1,12 +1,13 @@
 #!/usr/bin/env node
+
 /**
  * Spikard Node.js HTTP server for workload benchmarking.
  *
  * This server implements all workload types to measure Node.js binding performance.
  */
 
-import { z } from "zod";
 import * as native from "@spikard/node";
+import { z } from "zod";
 
 // Route registration arrays
 const routes = [];
@@ -112,15 +113,15 @@ async function post_json_very_large(requestJson) {
 // Multipart Form Workloads
 // ============================================================================
 
-async function post_multipart_small(requestJson) {
+async function post_multipart_small(_requestJson) {
 	return JSON.stringify({ files_received: 1, total_bytes: 1024 });
 }
 
-async function post_multipart_medium(requestJson) {
+async function post_multipart_medium(_requestJson) {
 	return JSON.stringify({ files_received: 2, total_bytes: 10240 });
 }
 
-async function post_multipart_large(requestJson) {
+async function post_multipart_large(_requestJson) {
 	return JSON.stringify({ files_received: 5, total_bytes: 102400 });
 }
 
@@ -168,7 +169,7 @@ async function get_path_deep(requestJson) {
 
 async function get_path_int(requestJson) {
 	const request = JSON.parse(requestJson);
-	return JSON.stringify({ id: parseInt(request.path_params.id) });
+	return JSON.stringify({ id: parseInt(request.path_params.id, 10) });
 }
 
 async function get_path_uuid(requestJson) {
@@ -204,11 +205,11 @@ async function get_query_many(requestJson) {
 // Health Check
 // ============================================================================
 
-async function get_health(requestJson) {
+async function get_health(_requestJson) {
 	return JSON.stringify({ status: "ok" });
 }
 
-async function get_root(requestJson) {
+async function get_root(_requestJson) {
 	return JSON.stringify({ status: "ok" });
 }
 

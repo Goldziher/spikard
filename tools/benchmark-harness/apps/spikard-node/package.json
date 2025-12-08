@@ -1,22 +1,22 @@
 {
-  "name": "spikard-node-benchmark",
-  "version": "0.1.0",
-  "description": "Spikard Node.js benchmark server for workload comparison",
-  "type": "module",
-  "main": "server.ts",
-  "scripts": {
-    "start": "tsx server.ts",
-    "dev": "tsx server.ts 8000"
-  },
-  "dependencies": {
-    "@spikard/node": "workspace:*",
-    "zod": "^3.24.1"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.2",
-    "tsx": "^4.21.0"
-  },
-  "engines": {
-    "node": ">=20.0.0"
-  }
+	"name": "spikard-node-benchmark",
+	"version": "0.1.0",
+	"description": "Spikard Node.js benchmark server for workload comparison",
+	"type": "module",
+	"main": "server.ts",
+	"scripts": {
+		"start": "tsx server.ts",
+		"dev": "tsx server.ts 8000"
+	},
+	"dependencies": {
+		"@spikard/node": "workspace:*",
+		"zod": "^3.24.1"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.2",
+		"tsx": "^4.21.0"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	}
 }

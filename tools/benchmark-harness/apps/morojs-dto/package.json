@@ -1,23 +1,23 @@
 {
-  "name": "morojs-benchmark",
-  "version": "0.1.0",
-  "description": "MoroJS benchmark server for workload comparison",
-  "type": "module",
-  "main": "server.ts",
-  "scripts": {
-    "start": "tsx server.ts",
-    "dev": "tsx watch server.ts"
-  },
-  "dependencies": {
-    "@morojs/moro": "^1.7.3",
-    "zod": "^4.1.13"
-  },
-  "devDependencies": {
-    "@types/node": "^24.10.1",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
-  },
-  "engines": {
-    "node": ">=20.0.0"
-  }
+	"name": "morojs-benchmark",
+	"version": "0.1.0",
+	"description": "MoroJS benchmark server for workload comparison",
+	"type": "module",
+	"main": "server.ts",
+	"scripts": {
+		"start": "tsx server.ts",
+		"dev": "tsx watch server.ts"
+	},
+	"dependencies": {
+		"@morojs/moro": "^1.7.3",
+		"zod": "^4.1.13"
+	},
+	"devDependencies": {
+		"@types/node": "^24.10.1",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	}
 }

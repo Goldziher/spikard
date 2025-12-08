@@ -1,25 +1,25 @@
 {
-  "name": "hono-benchmark",
-  "version": "0.1.0",
-  "description": "Hono comparison server for benchmarking",
-  "type": "module",
-  "main": "server.ts",
-  "scripts": {
-    "start": "tsx server.ts",
-    "start:js": "node server.js"
-  },
-  "dependencies": {
-    "@hono/node-server": "^1.19.6",
-    "@hono/zod-validator": "^0.7.5",
-    "hono": "^4.10.7",
-    "zod": "^4.1.13"
-  },
-  "devDependencies": {
-    "@types/node": "^24.10.1",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+	"name": "hono-benchmark",
+	"version": "0.1.0",
+	"description": "Hono comparison server for benchmarking",
+	"type": "module",
+	"main": "server.ts",
+	"scripts": {
+		"start": "tsx server.ts",
+		"start:js": "node server.js"
+	},
+	"dependencies": {
+		"@hono/node-server": "^1.19.6",
+		"@hono/zod-validator": "^0.7.5",
+		"hono": "^4.10.7",
+		"zod": "^4.1.13"
+	},
+	"devDependencies": {
+		"@types/node": "^24.10.1",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
 }

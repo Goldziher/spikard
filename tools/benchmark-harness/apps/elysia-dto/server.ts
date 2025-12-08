@@ -17,46 +17,46 @@ const app = new Elysia();
 // ============================================================================
 
 const SmallPayloadSchema = t.Object({
-  name: t.String(),
-  description: t.String(),
-  price: t.Number(),
-  tax: t.Optional(t.Nullable(t.Number())),
+	name: t.String(),
+	description: t.String(),
+	price: t.Number(),
+	tax: t.Optional(t.Nullable(t.Number())),
 });
 
 const AddressSchema = t.Object({
-  street: t.String(),
-  city: t.String(),
-  state: t.String(),
-  zip_code: t.String(),
+	street: t.String(),
+	city: t.String(),
+	state: t.String(),
+	zip_code: t.String(),
 });
 
 const MediumPayloadSchema = t.Object({
-  name: t.String(),
-  email: t.String(),
-  age: t.Integer(),
-  address: AddressSchema,
-  tags: t.Array(t.String()),
+	name: t.String(),
+	email: t.String(),
+	age: t.Integer(),
+	address: AddressSchema,
+	tags: t.Array(t.String()),
 });
 
 const ItemSchema = t.Object({
-  id: t.String(),
-  name: t.String(),
-  price: t.Number(),
-  quantity: t.Integer(),
+	id: t.String(),
+	name: t.String(),
+	price: t.Number(),
+	quantity: t.Integer(),
 });
 
 const LargePayloadSchema = t.Object({
-  user_id: t.String(),
-  name: t.String(),
-  email: t.String(),
-  items: t.Array(ItemSchema),
-  metadata: t.Record(t.String(), t.Any()),
+	user_id: t.String(),
+	name: t.String(),
+	email: t.String(),
+	items: t.Array(ItemSchema),
+	metadata: t.Record(t.String(), t.Any()),
 });
 
 const VeryLargePayloadSchema = t.Object({
-  batch_id: t.String(),
-  records: t.Array(t.Record(t.String(), t.Any())),
-  summary: t.Record(t.String(), t.Any()),
+	batch_id: t.String(),
+	records: t.Array(t.Record(t.String(), t.Any())),
+	summary: t.Record(t.String(), t.Any()),
 });
 
 // ============================================================================
@@ -64,19 +64,19 @@ const VeryLargePayloadSchema = t.Object({
 // ============================================================================
 
 app.post("/json/small", ({ body }) => body, {
-  body: SmallPayloadSchema,
+	body: SmallPayloadSchema,
 });
 
 app.post("/json/medium", ({ body }) => body, {
-  body: MediumPayloadSchema,
+	body: MediumPayloadSchema,
 });
 
 app.post("/json/large", ({ body }) => body, {
-  body: LargePayloadSchema,
+	body: LargePayloadSchema,
 });
 
 app.post("/json/very-large", ({ body }) => body, {
-  body: VeryLargePayloadSchema,
+	body: VeryLargePayloadSchema,
 });
 
 // ============================================================================
@@ -84,18 +84,18 @@ app.post("/json/very-large", ({ body }) => body, {
 // ============================================================================
 
 app.post("/multipart/small", () => ({
-  files_received: 1,
-  total_bytes: 1024,
+	files_received: 1,
+	total_bytes: 1024,
 }));
 
 app.post("/multipart/medium", () => ({
-  files_received: 2,
-  total_bytes: 10240,
+	files_received: 2,
+	total_bytes: 10240,
 }));
 
 app.post("/multipart/large", () => ({
-  files_received: 5,
-  total_bytes: 102400,
+	files_received: 5,
+	total_bytes: 102400,
 }));
 
 // ============================================================================
@@ -113,23 +113,20 @@ app.post("/urlencoded/complex", ({ body }) => body ?? {});
 app.get("/path/simple/:id", ({ params: { id } }) => ({ id }));
 
 app.get("/path/multiple/:user_id/:post_id", ({ params: { user_id, post_id } }) => ({
-  user_id,
-  post_id,
+	user_id,
+	post_id,
 }));
 
-app.get(
-  "/path/deep/:org/:team/:project/:resource/:id",
-  ({ params: { org, team, project, resource, id } }) => ({
-    org,
-    team,
-    project,
-    resource,
-    id,
-  }),
-);
+app.get("/path/deep/:org/:team/:project/:resource/:id", ({ params: { org, team, project, resource, id } }) => ({
+	org,
+	team,
+	project,
+	resource,
+	id,
+}));
 
 app.get("/path/int/:id", ({ params: { id } }) => ({
-  id: parseInt(id, 10),
+	id: parseInt(id, 10),
 }));
 
 app.get("/path/uuid/:uuid", ({ params: { uuid } }) => ({ uuid }));
@@ -161,5 +158,5 @@ app.get("/", () => ({ status: "ok" }));
 const port = Bun.argv[2] ? parseInt(Bun.argv[2], 10) : 8000;
 
 app.listen(port, () => {
-  console.error(`[elysia] Starting server on port ${port}`);
+	console.error(`[elysia] Starting server on port ${port}`);
 });

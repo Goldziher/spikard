@@ -1,22 +1,22 @@
 {
-  "name": "express-raw-benchmark",
-  "version": "0.1.0",
-  "description": "Express raw performance server (no validation) for benchmarking",
-  "type": "module",
-  "main": "server.ts",
-  "scripts": {
-    "start": "tsx server.ts",
-    "dev": "tsx watch server.ts"
-  },
-  "dependencies": {
-    "express": "5.2.1"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.6",
-    "@types/node": "^24.10.1",
-    "tsx": "^4.21.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+	"name": "express-raw-benchmark",
+	"version": "0.1.0",
+	"description": "Express raw performance server (no validation) for benchmarking",
+	"type": "module",
+	"main": "server.ts",
+	"scripts": {
+		"start": "tsx server.ts",
+		"dev": "tsx watch server.ts"
+	},
+	"dependencies": {
+		"express": "5.2.1"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.6",
+		"@types/node": "^24.10.1",
+		"tsx": "^4.21.0"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
 }
