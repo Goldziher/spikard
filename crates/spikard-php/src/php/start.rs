@@ -526,7 +526,7 @@ pub fn spikard_start_server_impl(
     config: &Zval,
     hooks: &Zval,
     dependencies: &Zval,
-) -> PhpResult<u64> {
+) -> PhpResult<i64> {
     // Extract ServerConfig from PHP array
     let mut server_config = extract_server_config_from_php(config)
         .map_err(|e| PhpException::default(format!("Invalid server config: {}", e)))?;
@@ -714,7 +714,8 @@ pub fn spikard_start_server_impl(
     });
 
     std::mem::forget(handle);
-    Ok(id)
+    // Cast to i64 for PHP FFI (PHP integers are signed, not unsigned)
+    Ok(id as i64)
 }
 
 /// Stop server by handle.
@@ -722,13 +723,16 @@ pub fn spikard_start_server_impl(
 /// Triggers graceful shutdown of the server identified by the given handle.
 /// This sends a signal through the shutdown channel, causing the server to
 /// stop accepting new connections and finish processing existing requests.
-pub fn spikard_stop_server_impl(handle: u64) -> PhpResult<()> {
+pub fn spikard_stop_server_impl(handle: i64) -> PhpResult<()> {
+    // Cast back to u64 for internal registry lookup (preserves bit pattern)
+    let handle_u64 = handle as u64;
+
     let mut registry = SERVER_SHUTDOWN_REGISTRY
         .lock()
         .map_err(|e| PhpException::default(format!("Failed to lock shutdown registry: {}", e)))?;
 
     if let Some(ref mut map) = *registry
-        && let Some(shutdown_tx) = map.remove(&handle)
+        && let Some(shutdown_tx) = map.remove(&handle_u64)
     {
         // Send shutdown signal - ignore errors if receiver is already dropped
         let _ = shutdown_tx.send(());
