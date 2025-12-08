@@ -33,6 +33,7 @@ impl RubyLifecycleHook {
     }
 
     /// Mark Ruby values for GC
+    #[allow(dead_code)]
     pub fn mark(&self, marker: &Marker) {
         if let Ok(ruby) = magnus::Ruby::get() {
             marker.mark(self.func.get_inner_with(&ruby));

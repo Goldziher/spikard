@@ -1,6 +1,6 @@
 {
 	"name": "@spikard/node",
-	"version": "0.3.6",
+	"version": "0.3.7",
 	"description": "High-performance Node.js HTTP framework with Rust core. Type-safe routing, validation, middleware, and testing via napi-rs bindings.",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
