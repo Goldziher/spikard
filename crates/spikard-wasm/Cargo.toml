@@ -15,8 +15,12 @@ readme = "README.md"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+default = ["di"]
+di = ["spikard-core/di"]
+
 [dependencies]
-spikard-core.workspace = true
+spikard-core = { workspace = true, features = ["di"] }
 http.workspace = true
 serde.workspace = true
 serde_json.workspace = true
