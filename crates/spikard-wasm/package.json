@@ -53,11 +53,11 @@
 	],
 	"scripts": {
 		"build": "pnpm run build:bundler",
-		"build:bundler": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target bundler --out-dir dist-bundler --release",
-		"build:web": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target web --out-dir dist-web --release",
-		"build:node": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target nodejs --out-dir dist-node --release",
+		"build:bundler": "PATH=\"$HOME/.cargo/bin:$PATH\" pnpm exec wasm-pack build --target bundler --out-dir dist-bundler --release",
+		"build:web": "PATH=\"$HOME/.cargo/bin:$PATH\" pnpm exec wasm-pack build --target web --out-dir dist-web --release",
+		"build:node": "PATH=\"$HOME/.cargo/bin:$PATH\" pnpm exec wasm-pack build --target nodejs --out-dir dist-node --release",
 		"build:all": "pnpm run build:bundler && pnpm run build:node && pnpm run build:web",
-		"test": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target web && PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack test --node",
+		"test": "PATH=\"$HOME/.cargo/bin:$PATH\" pnpm exec wasm-pack build --target web && PATH=\"$HOME/.cargo/bin:$PATH\" pnpm exec wasm-pack test --node",
 		"clean": "rm -rf dist-bundler dist-node dist-web node_modules"
 	},
 	"devDependencies": {

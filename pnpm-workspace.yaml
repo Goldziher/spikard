@@ -1,6 +1,8 @@
 packages:
   - "packages/node"
   - "packages/wasm"
+  - "crates/spikard-node"
+  - "crates/spikard-wasm"
   - "e2e/node"
   - "e2e/wasm"
   - "tools/benchmark-harness/apps/*"
