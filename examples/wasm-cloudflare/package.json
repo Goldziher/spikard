@@ -1,0 +1,20 @@
+{
+	"name": "@examples/wasm-cloudflare",
+	"version": "0.3.7",
+	"private": true,
+	"type": "module",
+	"description": "Spikard WebAssembly runtime on Cloudflare Workers",
+	"dependencies": {
+		"@spikard/wasm": "workspace:*"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20251205.0",
+		"@types/node": "^24.10.1",
+		"typescript": "^5.9.3",
+		"wrangler": "^4.53.0"
+	},
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy"
+	}
+}

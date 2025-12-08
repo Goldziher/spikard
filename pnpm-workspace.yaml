@@ -5,4 +5,5 @@ packages:
   - "crates/spikard-wasm"
   - "e2e/node"
   - "e2e/wasm"
+  - "examples/*"
   - "tools/benchmark-harness/apps/*"
