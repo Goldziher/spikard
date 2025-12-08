@@ -48,6 +48,7 @@ pub fn spikard_background_run_wrapper(callable: &Zval, args: &Zval) -> PhpResult
 }
 
 /// Start server wrapper for PHP.
+/// Returns i64 (signed) because PHP integers are signed, not unsigned.
 #[php_function]
 #[php(name = "spikard_start_server")]
 pub fn spikard_start_server(
@@ -55,16 +56,17 @@ pub fn spikard_start_server(
     config: &Zval,
     hooks: &Zval,
     dependencies: Option<&Zval>,
-) -> PhpResult<u64> {
+) -> PhpResult<i64> {
     let default_deps = Zval::new();
     let deps = dependencies.unwrap_or(&default_deps);
     start::spikard_start_server_impl(routes_zval, config, hooks, deps)
 }
 
 /// Stop server wrapper for PHP.
+/// Accepts i64 (signed) because PHP integers are signed, converts to u64 internally.
 #[php_function]
 #[php(name = "spikard_stop_server")]
-pub fn spikard_stop_server(_handle: u64) -> PhpResult<()> {
+pub fn spikard_stop_server(_handle: i64) -> PhpResult<()> {
     start::spikard_stop_server_impl(_handle)
 }
 
