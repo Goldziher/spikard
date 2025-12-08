@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require 'json'
-require_relative 'spikard/version'
-require_relative 'spikard/response'
-require_relative 'spikard/streaming_response'
-require_relative 'spikard/test_client'
+require_relative "spikard/version"
+require_relative "spikard/response"
+require_relative "spikard/streaming_response"
+require_relative "spikard/test_client"
 
 # Load the native extension
 begin
@@ -13,7 +13,7 @@ begin
   require_relative "spikard/#{ruby_version}/spikard_rb"
 rescue LoadError
   # Fall back to generic extension
-  require_relative 'spikard/spikard_rb'
+  require_relative "spikard/spikard_rb"
 end
 
 # Spikard HTTP framework - Ruby bindings
@@ -66,7 +66,7 @@ module Spikard
     # @param app [App] Application object from create_app
     # @param host [String] Host to bind to (default: "127.0.0.1")
     # @param port [Integer] Port to bind to (default: 8000)
-    def run_server(app, host = '127.0.0.1', port = 8000)
+    def run_server(app, host = "127.0.0.1", port = 8000)
       Native.run_server(app.to_routes_json, app.handlers, host, port)
     end
   end
