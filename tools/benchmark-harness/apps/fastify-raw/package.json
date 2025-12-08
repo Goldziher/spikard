@@ -1,16 +1,22 @@
 {
-  "name": "fastify-raw-benchmark",
-  "version": "0.1.0",
-  "description": "Fastify RAW (no validation) comparison server for benchmarking",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "@fastify/formbody": "^8.0.2",
-    "fastify": "5.6.2"
-  },
-  "engines": {
-    "node": ">=20.0.0"
-  }
+	"name": "fastify-raw-benchmark",
+	"version": "0.1.0",
+	"description": "Fastify RAW (no validation) comparison server for benchmarking",
+	"type": "module",
+	"main": "server.ts",
+	"scripts": {
+		"start": "tsx server.ts"
+	},
+	"dependencies": {
+		"@fastify/formbody": "^8.0.2",
+		"fastify": "5.6.2"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.2",
+		"tsx": "^4.19.2",
+		"typescript": "^5.7.2"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	}
 }

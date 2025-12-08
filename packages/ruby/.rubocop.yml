@@ -11,6 +11,9 @@ Metrics/BlockLength:
   Exclude:
     - 'Rakefile'
     - 'spec/**/*.rb'
+    - 'vendor/**/spec/**/*.rb'
+    - 'vendor/crates/spikard-rb/examples/**/*.rb'
+    - '**/*.gemspec'
 
 Lint/UnusedBlockArgument:
   Exclude:
