@@ -5,8 +5,8 @@
  * This server implements all workload types to measure Node.js binding performance.
  */
 
-// Import Zod for validation
-const { z } = require('zod');
+import { z } from 'zod';
+import * as native from '@spikard/node';
 
 // Route registration arrays
 const routes = [];
@@ -245,50 +245,7 @@ const app = {
   handlers,
 };
 
-// Load and run the server
-const path = require('path');
-
-// Detect platform and architecture dynamically
-function getPlatformTag() {
-  const platform = process.platform;
-  const arch = process.arch;
-
-  if (platform === 'darwin') {
-    // macOS: try universal first, then fallback to specific arch
-    const universalPath = path.join(__dirname, '../../../../packages/node/spikard-node.darwin-universal.node');
-    try {
-      require.resolve(universalPath);
-      return 'darwin-universal';
-    } catch (e) {
-      // Fallback to arch-specific binary
-      if (arch === 'x64') {
-        return 'darwin-x64';
-      } else if (arch === 'arm64') {
-        return 'darwin-arm64';
-      }
-    }
-  } else if (platform === 'linux') {
-    if (arch === 'x64') {
-      return 'linux-x64-gnu'; // Simplified: doesn't check for musl
-    } else if (arch === 'arm64') {
-      return 'linux-arm64-gnu';
-    }
-  } else if (platform === 'win32') {
-    if (arch === 'x64') {
-      return 'win32-x64-msvc';
-    } else if (arch === 'ia32') {
-      return 'win32-ia32-msvc';
-    } else if (arch === 'arm64') {
-      return 'win32-arm64-msvc';
-    }
-  }
-
-  throw new Error(`Unsupported platform/arch combination: ${platform} ${arch}`);
-}
-
-const platformTag = getPlatformTag();
-const nativePath = path.join(__dirname, `../../../../packages/node/spikard-node.${platformTag}.node`);
-const native = require(nativePath);
+// Parse port from command line or environment
 const port = process.argv[2]
   ? parseInt(process.argv[2], 10)
   : process.env.PORT
@@ -296,7 +253,5 @@ const port = process.argv[2]
   : 8000;
 
 // Start the server
-if (require.main === module) {
-  console.error(`[spikard-node] Starting server on port ${port}`);
-  native.runServer(app, '0.0.0.0', port);
-}
+console.error(`[spikard-node] Starting server on port ${port}`);
+native.runServer(app, '0.0.0.0', port);

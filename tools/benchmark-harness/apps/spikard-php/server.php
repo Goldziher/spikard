@@ -21,33 +21,71 @@ use Spikard\Http\Response;
 $app = new App();
 
 // ============================================================================
-// Helper to create echo handler
+// Handler Classes (must be named classes for FFI compatibility)
 // ============================================================================
 
-function echoHandler(): HandlerInterface {
-    return new class implements HandlerInterface {
-        public function matches(Request $request): bool {
-            return true;
-        }
-        public function handle(Request $request): Response {
-            return new Response($request->body ?? [], 200, []);
-        }
-    };
+final class EchoHandler implements HandlerInterface
+{
+    public function matches(Request $request): bool
+    {
+        return true;
+    }
+
+    public function handle(Request $request): Response
+    {
+        return new Response($request->body ?? [], 200, []);
+    }
 }
 
-function fixedHandler(array $data): HandlerInterface {
-    return new class($data) implements HandlerInterface {
-        private array $data;
-        public function __construct(array $data) {
-            $this->data = $data;
+final class FixedDataHandler implements HandlerInterface
+{
+    public function __construct(private readonly array $data)
+    {
+    }
+
+    public function matches(Request $request): bool
+    {
+        return true;
+    }
+
+    public function handle(Request $request): Response
+    {
+        return new Response($this->data, 200, []);
+    }
+}
+
+final class PathParamHandler implements HandlerInterface
+{
+    public function matches(Request $request): bool
+    {
+        return true;
+    }
+
+    public function handle(Request $request): Response
+    {
+        $response = [];
+        if (isset($request->pathParams['id'])) {
+            $response['id'] = $request->pathParams['id'];
         }
-        public function matches(Request $request): bool {
-            return true;
+        if ($request->body !== null) {
+            $response = array_merge($response, $request->body);
         }
-        public function handle(Request $request): Response {
-            return new Response($this->data, 200, []);
-        }
-    };
+        return new Response($response, 200, []);
+    }
+}
+
+// ============================================================================
+// Helper functions to create handler instances
+// ============================================================================
+
+function echoHandler(): HandlerInterface
+{
+    return new EchoHandler();
+}
+
+function fixedHandler(array $data): HandlerInterface
+{
+    return new FixedDataHandler($data);
 }
 
 // ============================================================================
@@ -97,22 +135,7 @@ $app = $app->addRoute('POST', '/data', echoHandler());
 // Path Parameter Workloads
 // ============================================================================
 
-$pathParamHandler = new class implements HandlerInterface {
-    public function matches(Request $request): bool {
-        return true;
-    }
-    public function handle(Request $request): Response {
-        $response = [];
-        if (isset($request->pathParams['id'])) {
-            $response['id'] = $request->pathParams['id'];
-        }
-        if ($request->body !== null) {
-            $response = array_merge($response, $request->body);
-        }
-        return new Response($response, 200, []);
-    }
-};
-$app = $app->addRoute('PATCH', '/items/{id}', $pathParamHandler);
+$app = $app->addRoute('PATCH', '/items/{id}', new PathParamHandler());
 
 // ============================================================================
 // Multipart Form Workloads (~1KB - 100KB)

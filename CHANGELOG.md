@@ -14,7 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Benchmark Harness
 - **PHP benchmark app**: Added `spikard/spikard` package dependency to `tools/benchmark-harness/apps/spikard-php/composer.json` to properly load the Spikard extension
-- **WASM benchmark app**: Fixed `tools/benchmark-harness/apps/spikard-wasm/package.json` to correctly reference `server.ts` instead of `server.js`, use `tsx` for TypeScript execution, and added `tsx` as a dev dependency
+- **PHP benchmark app**: Converted anonymous handler classes to named classes in `tools/benchmark-harness/apps/spikard-php/server.php` to fix FFI callable compatibility (anonymous classes cannot be properly called across the PHP-Rust FFI boundary)
+- **WASM benchmark app**: Updated `tools/benchmark-harness/apps/spikard-wasm/package.json` to use TypeScript (`server.ts`) with `tsx` runtime instead of JavaScript
+- **WASM benchmark harness**: Updated `tools/benchmark-harness/src/framework.rs` to detect and run `server.ts` instead of `server.js` for spikard-wasm framework
+- **Node benchmark app**: Added `@spikard/node` package dependency to `tools/benchmark-harness/apps/spikard-node/package.json` and removed manual native binding loading logic
+- **Node benchmark app**: Converted to ES modules (`"type": "module"`) and updated all imports to use ESM syntax for consistency with modern Node.js and WASM benchmark apps
+- **Ruby benchmark app**: Updated `tools/benchmark-harness/apps/spikard-ruby/Gemfile` to use published `spikard` gem instead of local path dependency
 
 ## [0.3.2] - 2025-12-08
 
