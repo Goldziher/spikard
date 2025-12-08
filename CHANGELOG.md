@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2025-12-08
+
+### Fixed
+
+#### Package Distribution
+- **Node package**: Added `--platform` flag to napi build commands to generate platform-suffixed .node binaries (e.g., `spikard-node.darwin-arm64.node`), ensuring native bindings are included in published npm packages
+- **Ruby gem**: Included vendored Rust workspace crates (`spikard-rb`, `spikard-core`, `spikard-http`) in gem package by updating .gitignore to allow `packages/ruby/vendor/crates/`, fixing gem installation failures
+
 ## [0.3.1] - 2025-12-07
 
 ### Fixed
