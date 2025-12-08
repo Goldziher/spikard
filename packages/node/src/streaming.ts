@@ -1,5 +1,5 @@
+import { createRequire } from "node:module";
 import type { HandlerResult, JsonValue } from "./types";
-import { createRequire } from "module";
 
 export interface StreamingResponseInit {
 	statusCode?: number;

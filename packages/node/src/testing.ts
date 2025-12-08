@@ -2,11 +2,11 @@
  * Testing utilities for Spikard applications
  */
 
+import { createRequire } from "node:module";
 import type { ServerConfig } from "./config";
 import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
 import type { JsonValue } from "./types";
-import { createRequire } from "module";
 
 interface NativeTestResponse {
 	statusCode: number;
