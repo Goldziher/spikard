@@ -1,7 +1,7 @@
 {
 	"name": "spikard/spikard",
 	"description": "High-performance PHP web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with ext-php-rs bindings, async handlers, dependency injection, and lifecycle hooks.",
-	"version": "0.3.4",
+	"version": "0.3.5",
 	"type": "library",
 	"license": "MIT",
 	"keywords": [

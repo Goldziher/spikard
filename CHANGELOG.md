@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.5] - 2025-12-08
+
+### Fixed
+
+#### Ruby Gem
+- **Native extension build**: Completed workspace inheritance fix by updating ALL vendored Cargo.toml files (`packages/ruby/vendor/crates/spikard-core/Cargo.toml` and `packages/ruby/vendor/crates/spikard-http/Cargo.toml`) with explicit dependency versions. v0.3.4 only partially fixed the issue by updating `packages/ruby/vendor/spikard-rb/Cargo.toml`, leaving transitive dependencies still broken.
+- **Cargo.lock collision**: Removed duplicate vendor directories that caused build failures due to multiple packages with the same name in the lockfile.
+
+#### CI/CD
+- **PHP coverage**: Fixed clover.xml output path from `../target` to `../../target` to match enforcement script expectations, resolving coverage job failures.
+
+#### Benchmark Harness
+- **Ruby benchmark**: Added local path override (`gem 'spikard', path: '../../../packages/ruby'`) to Gemfile so bundler uses the built gem instead of trying to fetch from rubygems.org.
+- **Node benchmark**: Changed to use `pnpm build:native` script which outputs bindings directly to the correct location for workspace resolution, eliminating manual copy steps.
+- **WASM benchmark**: Fixed wasm-pack output path to use `dist-deno` subdirectory with proper copy step to `pkg/` directory, ensuring `server.ts` can import from `./pkg/spikard_wasm.js`.
+
 ## [0.3.4] - 2025-12-08
 
 ### Fixed
