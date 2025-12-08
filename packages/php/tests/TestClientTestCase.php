@@ -39,6 +39,11 @@ abstract class TestClientTestCase extends TestCase
             {
                 return Response::json(['ok' => true], 200);
             }
+
+            public function __invoke(Request $request): Response
+            {
+                return $this->handle($request);
+            }
         };
     }
 
@@ -67,6 +72,11 @@ abstract class TestClientTestCase extends TestCase
             {
                 ($this->callback)();
                 return Response::json(['ok' => true], 200);
+            }
+
+            public function __invoke(Request $request): Response
+            {
+                return $this->handle($request);
             }
         };
     }
@@ -97,6 +107,11 @@ abstract class TestClientTestCase extends TestCase
                 ($this->callback)($request);
                 return Response::json(['ok' => true], 200);
             }
+
+            public function __invoke(Request $request): Response
+            {
+                return $this->handle($request);
+            }
         };
     }
 
@@ -114,6 +129,11 @@ abstract class TestClientTestCase extends TestCase
             public function handle(Request $request): Response
             {
                 return Response::json(['params' => $request->queryParams], 200);
+            }
+
+            public function __invoke(Request $request): Response
+            {
+                return $this->handle($request);
             }
         };
     }
@@ -133,6 +153,11 @@ abstract class TestClientTestCase extends TestCase
             {
                 return Response::json(['headers' => $request->headers], 200);
             }
+
+            public function __invoke(Request $request): Response
+            {
+                return $this->handle($request);
+            }
         };
     }
 
@@ -150,6 +175,11 @@ abstract class TestClientTestCase extends TestCase
             public function handle(Request $request): Response
             {
                 return Response::json(['cookies' => $request->cookies], 200);
+            }
+
+            public function __invoke(Request $request): Response
+            {
+                return $this->handle($request);
             }
         };
     }
@@ -169,6 +199,11 @@ abstract class TestClientTestCase extends TestCase
             {
                 return Response::json(['body' => $request->body], 200);
             }
+
+            public function __invoke(Request $request): Response
+            {
+                return $this->handle($request);
+            }
         };
     }
 
@@ -187,6 +222,11 @@ abstract class TestClientTestCase extends TestCase
             {
                 return Response::json(['files' => $request->files], 200);
             }
+
+            public function __invoke(Request $request): Response
+            {
+                return $this->handle($request);
+            }
         };
     }
 
@@ -204,6 +244,11 @@ abstract class TestClientTestCase extends TestCase
             public function handle(Request $request): Response
             {
                 return Response::json(['method' => $request->method], 200);
+            }
+
+            public function __invoke(Request $request): Response
+            {
+                return $this->handle($request);
             }
         };
     }

@@ -532,6 +532,11 @@ final class SelectiveHandler implements HandlerInterface
     {
         return Response::json(['ok' => true], 200);
     }
+
+    public function __invoke(Request $request): Response
+    {
+        return $this->handle($request);
+    }
 }
 
 final class AppBehavioralTestHandler implements HandlerInterface
@@ -544,6 +549,11 @@ final class AppBehavioralTestHandler implements HandlerInterface
     public function handle(Request $request): Response
     {
         return Response::json(['ok' => true], 200);
+    }
+
+    public function __invoke(Request $request): Response
+    {
+        return $this->handle($request);
     }
 }
 

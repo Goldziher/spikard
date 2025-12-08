@@ -164,6 +164,7 @@ jobs:
         run: cargo tarpaulin --workspace --out Lcov --output-dir target/tarpaulin --timeout 300 --exclude-files "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "examples/**" "tools/**" --exclude spikard-wasm --exclude spikard-php --exclude spikard-node --exclude spikard-rb --exclude spikard-py --verbose
 
       - name: Upload coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v4
         with:
           files: ./target/tarpaulin/lcov.info
@@ -226,11 +227,12 @@ jobs:
             --output-dir target/tarpaulin-php \
             --timeout 300 \
             --exclude-files "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "examples/**" "tools/**" \
-            --exclude spikard-wasm \
+            --exclude spikard-wasm --exclude spikard-php \
             --exclude spikard-node --exclude spikard-rb --exclude spikard-py \
             --verbose
 
       - name: Upload PHP FFI coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v4
         with:
           files: ./target/tarpaulin-php/lcov.info

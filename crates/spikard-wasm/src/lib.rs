@@ -185,6 +185,33 @@ impl TestClient {
         self.dispatch("PATCH", path, JsValue::NULL, options)
     }
 
+    /// Handle a generic HTTP request. Takes a JSON string with method, path, headers, and body.
+    #[wasm_bindgen]
+    pub fn handle_request(&self, request_json: String) -> Promise {
+        let context = match RequestContext::from_json(&request_json) {
+            Ok(ctx) => {
+                let mut ctx = ctx;
+                ctx.routes = self.routes.clone();
+                ctx.handlers = self.handlers.clone();
+                ctx.config = self.config.clone();
+                ctx.lifecycle_hooks = self.lifecycle_hooks.clone();
+                ctx.route_validators = self.route_validators.clone();
+                ctx.rate_state = self.rate_state.clone();
+                ctx
+            }
+            Err(err) => {
+                return future_to_promise(async move { Err(js_error_from_jsvalue("request_parse_failed", err)) });
+            }
+        };
+
+        future_to_promise(async move {
+            exec_request(context)
+                .await
+                .and_then(|response| serde_wasm_bindgen::to_value(&response).map_err(js_error_from_serde))
+                .map_err(|err| js_error_from_jsvalue("execution_failed", err))
+        })
+    }
+
     fn dispatch(&self, method: &str, path: String, headers: JsValue, options: JsValue) -> Promise {
         let context = RequestContext {
             method: method.to_string(),
@@ -219,6 +246,99 @@ struct RequestContext {
     lifecycle_hooks: Option<Arc<WasmLifecycleHooks>>,
     route_validators: HashMap<String, RouteValidators>,
     rate_state: std::rc::Rc<std::cell::RefCell<HashMap<String, RateLimiterState>>>,
+}
+
+impl RequestContext {
+    /// Parse a generic HTTP request from JSON string.
+    /// Expects format: { method, path, headers?: {}, query?: {}, body?: any }
+    fn from_json(request_json: &str) -> Result<Self, JsValue> {
+        let value: serde_json::Value =
+            serde_json::from_str(request_json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+
+        let method = value
+            .get("method")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| JsValue::from_str("Request must have a 'method' field"))?
+            .to_string();
+
+        let path = value
+            .get("path")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| JsValue::from_str("Request must have a 'path' field"))?
+            .to_string();
+
+        let headers_val = if let Some(headers_obj) = value.get("headers").and_then(|v| v.as_object()) {
+            let headers_js = Object::new();
+            for (key, val) in headers_obj.iter() {
+                let val_str = match val {
+                    serde_json::Value::String(s) => s.clone(),
+                    _ => val.to_string(),
+                };
+                Reflect::set(&headers_js, &JsValue::from_str(key), &JsValue::from_str(&val_str))
+                    .map_err(|_| JsValue::from_str("Failed to set header"))?;
+            }
+            headers_js.into()
+        } else {
+            JsValue::NULL
+        };
+
+        let options_obj = Object::new();
+
+        // Handle headers in options (for content-type detection)
+        if let Some(headers_obj) = value.get("headers").and_then(|v| v.as_object()) {
+            let headers_js = Object::new();
+            for (key, val) in headers_obj.iter() {
+                let val_str = match val {
+                    serde_json::Value::String(s) => s.clone(),
+                    _ => val.to_string(),
+                };
+                Reflect::set(&headers_js, &JsValue::from_str(key), &JsValue::from_str(&val_str))
+                    .map_err(|_| JsValue::from_str("Failed to set option header"))?;
+            }
+            Reflect::set(&options_obj, &JsValue::from_str("headers"), &headers_js.into())
+                .map_err(|_| JsValue::from_str("Failed to set headers in options"))?;
+        }
+
+        // Handle body - try to parse as JSON first, otherwise store as form_raw
+        if let Some(body_val) = value.get("body") {
+            match body_val {
+                serde_json::Value::Null => {
+                    // No body
+                }
+                serde_json::Value::String(s) => {
+                    // Try to parse as JSON, fallback to form_raw
+                    if let Ok(json_val) = serde_json::from_str::<serde_json::Value>(s) {
+                        serde_wasm_bindgen::to_value(&json_val)
+                            .ok()
+                            .and_then(|js_val| Reflect::set(&options_obj, &JsValue::from_str("json"), &js_val).ok());
+                    } else {
+                        // Store as form_raw if not valid JSON
+                        Reflect::set(&options_obj, &JsValue::from_str("formRaw"), &JsValue::from_str(s))
+                            .map_err(|_| JsValue::from_str("Failed to set formRaw"))?;
+                    }
+                }
+                _ => {
+                    // Try to convert to JS value
+                    serde_wasm_bindgen::to_value(body_val)
+                        .ok()
+                        .and_then(|js_val| Reflect::set(&options_obj, &JsValue::from_str("json"), &js_val).ok());
+                }
+            }
+        }
+
+        Ok(RequestContext {
+            method,
+            path,
+            headers_val,
+            options: options_obj.into(),
+            routes: Vec::new(),
+            handlers: HashMap::new(),
+            config: ServerConfig::default(),
+            lifecycle_hooks: None,
+            route_validators: HashMap::new(),
+            rate_state: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
+        })
+    }
 }
 
 enum LifecycleRequestOutcome {

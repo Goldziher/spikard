@@ -35,6 +35,11 @@ final class EchoHandler implements HandlerInterface
     {
         return new Response($request->body ?? [], 200, []);
     }
+
+    public function __invoke(Request $request): Response
+    {
+        return $this->handle($request);
+    }
 }
 
 final class FixedDataHandler implements HandlerInterface
@@ -51,6 +56,11 @@ final class FixedDataHandler implements HandlerInterface
     public function handle(Request $request): Response
     {
         return new Response($this->data, 200, []);
+    }
+
+    public function __invoke(Request $request): Response
+    {
+        return $this->handle($request);
     }
 }
 
@@ -71,6 +81,11 @@ final class PathParamHandler implements HandlerInterface
             $response = array_merge($response, $request->body);
         }
         return new Response($response, 200, []);
+    }
+
+    public function __invoke(Request $request): Response
+    {
+        return $this->handle($request);
     }
 }
 

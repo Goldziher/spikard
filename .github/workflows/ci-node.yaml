@@ -170,6 +170,7 @@ jobs:
         run: pnpm --filter @spikard/node test --coverage
 
       - name: Upload coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v4
         with:
           files: ./packages/node/coverage/lcov.info
