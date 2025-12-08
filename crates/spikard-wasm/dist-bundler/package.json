@@ -5,7 +5,7 @@
     "Na'aman Hirschfeld <nhirschfeld@gmail.com>"
   ],
   "description": "WebAssembly bindings for Spikard HTTP framework via wasm-bindgen",
-  "version": "0.3.4",
+  "version": "0.3.6",
   "license": "MIT",
   "repository": {
     "type": "git",

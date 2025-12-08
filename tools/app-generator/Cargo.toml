@@ -2,7 +2,7 @@
 
 [package]
 name = "app-generator"
-version = "0.3.4"
+version = "0.3.6"
 edition = "2024"
 
 [[bin]]
