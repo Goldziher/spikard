@@ -66,10 +66,9 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install dependencies
-        working-directory: crates/spikard-wasm
+      - name: Install workspace dependencies
         shell: bash
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build WASM bindings
         working-directory: crates/spikard-wasm
