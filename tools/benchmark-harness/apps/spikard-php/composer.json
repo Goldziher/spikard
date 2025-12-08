@@ -3,7 +3,8 @@
     "description": "Spikard PHP benchmark application",
     "type": "project",
     "require": {
-        "php": ">=8.2"
+        "php": ">=8.2",
+        "spikard/spikard": "*"
     },
     "repositories": [
         {
