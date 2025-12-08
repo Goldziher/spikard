@@ -219,7 +219,7 @@ jobs:
         working-directory: packages/php
         env:
           XDEBUG_MODE: coverage
-        run: vendor/bin/phpunit --coverage-html htmlcov --coverage-clover ../target/clover.xml
+        run: vendor/bin/phpunit --coverage-html htmlcov --coverage-clover ../../target/clover.xml
 
       - name: Enforce minimum coverage threshold (85%)
         run: bash scripts/ci/php/enforce-coverage-threshold.sh
