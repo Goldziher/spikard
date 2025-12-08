@@ -1,0 +1,49 @@
+{
+  "name": "@spikard/node-darwin-x64",
+  "version": "0.3.1",
+  "cpu": [
+    "x64"
+  ],
+  "main": "spikard-node.darwin-x64.node",
+  "files": [
+    "spikard-node.darwin-x64.node"
+  ],
+  "description": "High-performance HTTP framework for Node.js and Bun. Type-safe routing, validation, and testing powered by Rust core.",
+  "keywords": [
+    "http",
+    "framework",
+    "typescript",
+    "nodejs",
+    "bun",
+    "rust",
+    "napi",
+    "performance",
+    "validation",
+    "testing",
+    "type-safe",
+    "axum",
+    "tower",
+    "web",
+    "api",
+    "rest"
+  ],
+  "author": {
+    "name": "Na'aman Hirschfeld",
+    "email": "nhirschfeld@gmail.com"
+  },
+  "homepage": "https://github.com/Goldziher/spikard",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Goldziher/spikard"
+  },
+  "bugs": {
+    "url": "https://github.com/Goldziher/spikard/issues"
+  },
+  "os": [
+    "darwin"
+  ]
+}

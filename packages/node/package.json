@@ -1,84 +1,84 @@
 {
-	"name": "@spikard/node",
-	"version": "0.3.1",
-	"description": "High-performance Node.js HTTP framework with Rust core. Type-safe routing, validation, middleware, and testing via napi-rs bindings.",
-	"main": "dist/index.js",
-	"module": "dist/index.mjs",
-	"types": "dist/index.d.ts",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.mjs",
-			"require": "./dist/index.js"
-		}
-	},
-	"scripts": {
-		"build": "pnpm build:native && tsup",
-		"build:native": "cd ../../crates/spikard-node && napi build --platform --release -o ../../packages/node",
-		"build:debug": "cd ../../crates/spikard-node && napi build --platform -o ../../packages/node",
-		"test": "pnpm build:debug && vitest run --passWithNoTests",
-		"test:watch": "vitest",
-		"test:cov": "pnpm build:debug && vitest run --coverage --passWithNoTests",
-		"typecheck": "tsc --noEmit",
-		"lint": "biome check src",
-		"lint:fix": "biome check --write src",
-		"format": "biome format --write src",
-		"clean": "rm -rf dist node_modules spikard.*.node coverage"
-	},
-	"keywords": [
-		"http",
-		"framework",
-		"typescript",
-		"nodejs",
-		"bun",
-		"rust",
-		"napi",
-		"performance",
-		"validation",
-		"testing",
-		"type-safe",
-		"axum",
-		"tower",
-		"web",
-		"api",
-		"rest"
-	],
-	"author": {
-		"name": "Na'aman Hirschfeld",
-		"email": "nhirschfeld@gmail.com"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Goldziher/spikard"
-	},
-	"homepage": "https://github.com/Goldziher/spikard",
-	"bugs": {
-		"url": "https://github.com/Goldziher/spikard/issues"
-	},
-	"license": "MIT",
-	"files": [
-		"dist",
-		"index.d.ts",
-		"index.js",
-		"*.node",
-		"README.md",
-		"LICENSE"
-	],
-	"devDependencies": {
-		"@biomejs/biome": "^2.3.8",
-		"@napi-rs/cli": "^3.5.0",
-		"@types/node": "^24.10.1",
-		"@types/ws": "^8.18.1",
-		"@vitest/coverage-v8": "^4.0.15",
-		"tsup": "^8.5.1",
-		"typescript": "^5.9.3",
-		"vitest": "^4.0.15",
-		"ws": "^8.18.3"
-	},
-	"engines": {
-		"node": ">=20"
-	},
-	"dependencies": {
-		"zod": "^4.1.13"
-	}
+  "name": "@spikard/node",
+  "version": "0.3.2",
+  "description": "High-performance Node.js HTTP framework with Rust core. Type-safe routing, validation, middleware, and testing via napi-rs bindings.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "pnpm build:native && tsup",
+    "build:native": "cd ../../crates/spikard-node && napi build --platform --release -o ../../packages/node",
+    "build:debug": "cd ../../crates/spikard-node && napi build --platform -o ../../packages/node",
+    "test": "pnpm build:debug && vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:cov": "pnpm build:debug && vitest run --coverage --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check src",
+    "lint:fix": "biome check --write src",
+    "format": "biome format --write src",
+    "clean": "rm -rf dist node_modules spikard.*.node coverage"
+  },
+  "keywords": [
+    "http",
+    "framework",
+    "typescript",
+    "nodejs",
+    "bun",
+    "rust",
+    "napi",
+    "performance",
+    "validation",
+    "testing",
+    "type-safe",
+    "axum",
+    "tower",
+    "web",
+    "api",
+    "rest"
+  ],
+  "author": {
+    "name": "Na'aman Hirschfeld",
+    "email": "nhirschfeld@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Goldziher/spikard"
+  },
+  "homepage": "https://github.com/Goldziher/spikard",
+  "bugs": {
+    "url": "https://github.com/Goldziher/spikard/issues"
+  },
+  "license": "MIT",
+  "files": [
+    "dist",
+    "index.d.ts",
+    "index.js",
+    "*.node",
+    "README.md",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.8",
+    "@napi-rs/cli": "^3.5.0",
+    "@types/node": "^24.10.1",
+    "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "^4.0.15",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15",
+    "ws": "^8.18.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "zod": "^4.1.13"
+  }
 }

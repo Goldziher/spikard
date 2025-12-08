@@ -1,0 +1,40 @@
+[package]
+name = "spikard-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Shared transport-agnostic primitives for Spikard runtimes"
+keywords = ["http", "web", "framework", "validation", "middleware"]
+categories = ["web-programming::http-server", "web-programming", "development-tools"]
+documentation = "https://docs.rs/spikard-core"
+readme = "README.md"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+anyhow = "1.0"
+jsonschema.workspace = true
+regex = "1"
+flate2 = "1.1"
+brotli = "8.0"
+http.workspace = true
+base64 = "0.22"
+serde_qs = "0.15"
+url = "2.5"
+jiff = "0.2"
+uuid = "1.18"
+indexmap = "2.12"
+tokio = { workspace = true, optional = true }
+bytes = { version = "1.11", optional = true }
+thiserror = { workspace = true, optional = true }
+
+[features]
+default = []
+di = ["dep:tokio", "dep:bytes", "dep:thiserror"]
+
+[dev-dependencies]
+tokio-test = "0.4"
