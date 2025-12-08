@@ -1,121 +1,86 @@
-# Spikard
+# spikard-core
 
-High-performance HTTP framework built on Axum and Tower-HTTP with type-safe routing, validation, WebSocket/SSE support, and lifecycle hooks.
+Shared transport-agnostic primitives and types for building Spikard runtimes across multiple languages and frameworks.
 
 ## Status & Badges
 
-[![Crates.io](https://img.shields.io/crates/v/spikard.svg)](https://crates.io/crates/spikard)
-[![Downloads](https://img.shields.io/crates/d/spikard.svg)](https://crates.io/crates/spikard)
-[![Documentation](https://docs.rs/spikard/badge.svg)](https://docs.rs/spikard)
+[![Crates.io](https://img.shields.io/crates/v/spikard-core.svg)](https://crates.io/crates/spikard-core)
+[![Downloads](https://img.shields.io/crates/d/spikard-core.svg)](https://crates.io/crates/spikard-core)
+[![Documentation](https://docs.rs/spikard-core/badge.svg)](https://docs.rs/spikard-core)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
-[![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
 
-### Multi-Language Bindings
+## Overview
 
-[![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
-[![npm](https://img.shields.io/npm/v/spikard.svg)](https://www.npmjs.com/package/spikard)
-[![RubyGems](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
-[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
+`spikard-core` provides the foundational types and traits that enable Spikard to work across multiple language bindings:
+
+- **Request/Response models** - HTTP-agnostic request and response types
+- **Validation primitives** - JSON Schema validation and header/cookie checking
+- **Middleware interfaces** - Traits for composable middleware stacks
+- **Serialization support** - Efficient serialization via serde
+- **Error handling** - Structured error types for cross-language error translation
 
 ## Features
 
-- **Type-safe routing** with path parameter extraction and compile-time validation
-- **JSON Schema validation** via schemars with automatic OpenAPI generation
-- **WebSocket and SSE** (Server-Sent Events) support
-- **Lifecycle hooks** with zero-cost abstraction (onRequest, preValidation, preHandler, onResponse, onError)
-- **Tower middleware** stack (compression, rate limiting, auth, CORS, request IDs, timeouts)
-- **OpenAPI 3.1** and AsyncAPI generation with Swagger UI and ReDoc
-- **Testing utilities** with in-memory test server
-- **File upload** handling with multipart form support
-- **Streaming responses** with native async/await
-- **Multi-language bindings** (Python, Node.js, Ruby, PHP, WebAssembly)
+- **Transport-agnostic** - Works with Axum, Hyper, or any HTTP framework
+- **Schema validation** - Built-in JSON Schema support via jsonschema crate
+- **Compression** - Gzip and Brotli compression/decompression
+- **Header/Cookie handling** - RFC-compliant header and cookie parsing
+- **URL encoding** - Query string parsing and URL handling
+- **Zero-copy design** - Efficient memory usage with minimal allocations
+- **Type safety** - Strongly-typed request and response structures
 
 ## Installation
 
-### Rust
+```toml
+[dependencies]
+spikard-core = "0.2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+```
+
+### Optional Features
 
 ```toml
 [dependencies]
-spikard = "0.1.0"
-serde = { version = "1.0", features = ["derive"] }
-schemars = "0.8"  # For JSON Schema generation
-tokio = { version = "1", features = ["full"] }
+spikard-core = { version = "0.2.0", features = ["di"] }
 ```
+
+- `di` - Enables dependency injection support with Tokio async runtime
 
 ## Quick Start
 
+### Request/Response Handling
+
 ```rust
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use spikard::prelude::*;
+use spikard_core::{Request, Response};
+use std::collections::HashMap;
 
-#[derive(Deserialize, Serialize, JsonSchema)]
-struct User {
-    id: u64,
-    name: String,
-    email: String,
-}
+// Create a request
+let mut request = Request::new(
+    "GET".to_string(),
+    "/api/users".to_string(),
+);
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut app = App::new();
+// Add headers
+request.headers_mut().insert(
+    "Authorization".to_string(),
+    "Bearer token123".to_string(),
+);
 
-    app.route(get("/users/:id"), |ctx: Context| async move {
-        let id: u64 = ctx.path_param("id").unwrap_or("0").parse().unwrap_or(0);
-        Ok(Json(User {
-            id,
-            name: "Alice".to_string(),
-            email: "alice@example.com".to_string(),
-        }))
-    })?;
+// Add query parameters
+let mut query = HashMap::new();
+query.insert("filter".to_string(), "active".to_string());
+request.set_query_params(query);
 
-    app.route(
-        post("/users")
-            .request_body::<User>()
-            .response_body::<User>(),
-        |ctx: Context| async move {
-            let user: User = ctx.json()?;
-            Ok(Json(user))
-        },
-    )?;
-
-    app.run().await?;
-    Ok(())
-}
+// Create a response
+let mut response = Response::new(200);
+response.set_body(r#"{"users": []}"#.as_bytes().to_vec());
 ```
 
-## Route Registration
-
-### RouteBuilder API
+### Schema Validation
 
 ```rust
-use spikard::{get, post, put, patch, delete};
-use schemars::JsonSchema;
-
-#[derive(JsonSchema)]
-struct UserParams {
-    id: u64,
-}
-
-#[derive(JsonSchema)]
-struct CreateUser {
-    name: String,
-    email: String,
-}
-
-let route = get("/users/:id")
-    .handler_name("get_user_by_id")
-    .params::<UserParams>();
-
-let create_route = post("/users")
-    .request_body::<CreateUser>()
-    .response_body::<User>();
-```
-
-### With Raw JSON Schema
-
-```rust
+use spikard_core::validation::ValidateBody;
 use serde_json::json;
 
 let schema = json!({
@@ -127,373 +92,73 @@ let schema = json!({
     "required": ["name", "email"]
 });
 
-let route = post("/users")
-    .request_schema_json(schema);
-```
-
-## Request Context
-
-Access request data in handlers:
-
-```rust
-use spikard::prelude::*;
-
-async fn handler(ctx: Context) -> HandlerResult {
-    // Parse JSON body
-    let body: MyStruct = ctx.json()?;
-
-    // Query parameters
-    let query: QueryParams = ctx.query()?;
-
-    // Path parameters
-    let id = ctx.path_param("id").unwrap();
-    let path_data: PathParams = ctx.path()?;
-
-    // Headers
-    let auth = ctx.header("authorization");
-
-    // Cookies
-    let session = ctx.cookie("session_id");
-
-    // Request metadata
-    let method = ctx.method();
-    let path = ctx.path_str();
-
-    Ok(Json(body))
-}
-```
-
-## Configuration
-
-```rust
-use spikard::{
-    App, ServerConfig, CompressionConfig, RateLimitConfig,
-    JwtConfig, StaticFilesConfig, OpenApiConfig
-};
-
-let config = ServerConfig {
-    host: "0.0.0.0".to_string(),
-    port: 8080,
-    workers: 4,
-    enable_request_id: true,
-    max_body_size: Some(10 * 1024 * 1024),
-    request_timeout: Some(30),
-    compression: Some(CompressionConfig {
-        gzip: true,
-        brotli: true,
-        min_size: 1024,
-        quality: 6,
-    }),
-    rate_limit: Some(RateLimitConfig {
-        per_second: 100,
-        burst: 200,
-        ip_based: true,
-    }),
-    jwt_auth: Some(JwtConfig {
-        secret: "your-secret".to_string(),
-        algorithm: "HS256".to_string(),
-        audience: None,
-        issuer: None,
-        leeway: 0,
-    }),
-    static_files: vec![
-        StaticFilesConfig {
-            directory: "./public".to_string(),
-            route_prefix: "/static".to_string(),
-            index_file: true,
-            cache_control: Some("public, max-age=3600".to_string()),
-        }
-    ],
-    openapi: Some(OpenApiConfig {
-        enabled: true,
-        title: "My API".to_string(),
-        version: "1.0.0".to_string(),
-        description: Some("API documentation".to_string()),
-        swagger_ui_path: "/docs".to_string(),
-        redoc_path: "/redoc".to_string(),
-        ..Default::default()
-    }),
-    ..Default::default()
-};
-
-let app = App::new().config(config);
-```
-
-## Lifecycle Hooks
-
-```rust
-use spikard::{LifecycleHooks, request_hook, response_hook, HookResult};
-use std::sync::Arc;
-
-let hooks = LifecycleHooks::builder()
-    .on_request(request_hook("logger", |req| async move {
-        println!("Request: {} {}", req.method(), req.uri());
-        Ok(HookResult::Continue(req))
-    }))
-    .pre_validation(request_hook("auth", |req| async move {
-        // Authentication check
-        Ok(HookResult::Continue(req))
-    }))
-    .pre_handler(request_hook("rate_limit", |req| async move {
-        // Rate limiting
-        Ok(HookResult::Continue(req))
-    }))
-    .on_response(response_hook("headers", |mut resp| async move {
-        resp.headers_mut().insert(
-            "X-Frame-Options",
-            axum::http::HeaderValue::from_static("DENY")
-        );
-        Ok(HookResult::Continue(resp))
-    }))
-    .on_error(response_hook("error_log", |resp| async move {
-        eprintln!("Error: {}", resp.status());
-        Ok(HookResult::Continue(resp))
-    }))
-    .build();
-
-let config = ServerConfig {
-    lifecycle_hooks: Some(Arc::new(hooks)),
-    ..Default::default()
-};
-```
-
-## WebSockets
-
-```rust
-use spikard::WebSocketHandler;
-use serde_json::Value;
-
-struct EchoHandler;
-
-impl WebSocketHandler for EchoHandler {
-    fn handle_message(&self, message: Value) -> impl std::future::Future<Output = Option<Value>> + Send {
-        async move { Some(message) } // Echo back
-    }
-
-    fn on_connect(&self) -> impl std::future::Future<Output = ()> + Send {
-        async {
-            println!("Client connected");
-        }
-    }
-
-    fn on_disconnect(&self) -> impl std::future::Future<Output = ()> + Send {
-        async {
-            println!("Client disconnected");
-        }
-    }
-}
-
-app.websocket("/ws", EchoHandler);
-```
-
-## Server-Sent Events
-
-```rust
-use spikard::{SseEventProducer, SseEvent};
-use serde_json::json;
-
-struct TickerProducer {
-    count: std::sync::atomic::AtomicU64,
-}
-
-impl SseEventProducer for TickerProducer {
-    async fn next_event(&self) -> Option<SseEvent> {
-        let n = self.count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        if n < 10 {
-            Some(SseEvent::new(json!({"tick": n})))
-        } else {
-            None
-        }
-    }
-}
-
-app.sse("/events", TickerProducer {
-    count: std::sync::atomic::AtomicU64::new(0),
+let body = json!({
+    "name": "Alice",
+    "email": "alice@example.com"
 });
+
+// Validate body against schema
+validate_body(&body, &schema)?;
 ```
 
-## File Uploads
+### Compression Support
 
 ```rust
-use spikard::UploadFile;
-use serde::Deserialize;
+use spikard_core::compression;
 
-#[derive(Deserialize)]
-struct UploadRequest {
-    file: UploadFile,
-    description: String,
-}
+let original = b"This is a long string that will be compressed";
 
-async fn upload_handler(ctx: Context) -> HandlerResult {
-    let upload: UploadRequest = ctx.json()?;
-    let content = upload.file.as_bytes();
-    let filename = &upload.file.filename;
+// Gzip compression
+let compressed = compression::gzip_encode(original)?;
+let decompressed = compression::gzip_decode(&compressed)?;
 
-    // Process upload...
-
-    Ok(/* response */)
-}
+// Brotli compression
+let compressed = compression::brotli_encode(original)?;
+let decompressed = compression::brotli_decode(&compressed)?;
 ```
 
-## Testing
+## Core Types
 
-```rust
-use spikard::testing::TestServer;
-use axum::http::Request;
+- `Request` - HTTP request model with headers, cookies, body, and path parameters
+- `Response` - HTTP response model with status, headers, and body
+- `HandlerResult` - Standard result type for handlers
+- `ValidationError` - Structured validation errors with field-level details
+- `RequestContext` - Request execution context with metadata
+- `RouteConfig` - Route configuration with validation schemas
 
-#[tokio::test]
-async fn test_api() {
-    let mut app = App::new();
-    // ... configure routes
+## Architecture
 
-    let server = TestServer::from_app(app).unwrap();
+`spikard-core` sits at the foundation of the Spikard architecture:
 
-    let request = Request::builder()
-        .uri("http://localhost/users")
-        .method("GET")
-        .body(axum::body::Body::empty())
-        .unwrap();
-
-    let response = server.call(request).await.unwrap();
-    assert_eq!(response.status, 200);
-
-    let json = response.json().unwrap();
-    // assertions...
-}
+```
+┌─────────────────────────────────────┐
+│  Language Bindings                  │
+│  (Python, Node, Ruby, PHP, WASM)    │
+└──────────────┬──────────────────────┘
+               │ implements
+┌──────────────▼──────────────────────┐
+│  spikard-http (Axum Runtime)        │
+└──────────────┬──────────────────────┘
+               │ uses
+┌──────────────▼──────────────────────┐
+│  spikard-core (Primitives)          │
+└─────────────────────────────────────┘
 ```
 
-## Integration with Axum
-
-Merge custom Axum routers:
-
-```rust
-use axum::{Router, routing::get};
-
-async fn health() -> &'static str {
-    "OK"
-}
-
-let custom_router = Router::new()
-    .route("/health", get(health));
-
-let app = App::new()
-    .merge_axum_router(custom_router);
-```
-
-## Running
-
-```rust
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let app = App::new();
-    app.run().await?;
-    Ok(())
-}
-```
-
-## Type Safety
-
-All handlers use `Context` and return `HandlerResult`:
-
-```rust
-pub type HandlerResult = Result<Response<Body>, (StatusCode, String)>;
-
-pub trait IntoHandler {
-    fn into_handler(self) -> Arc<dyn Handler>;
-}
-```
-
-Handlers can be async functions or closures:
-
-```rust
-async fn handler(ctx: Context) -> HandlerResult { /* ... */ }
-
-|ctx: Context| async move { /* ... */ }
-```
-
-## Features
-
-- **Type-safe routing** with path parameter extraction
-- **JSON Schema validation** via schemars
-- **WebSocket and SSE** support
-- **Lifecycle hooks** with zero-cost abstraction
-- **Tower middleware** (compression, rate limiting, auth, CORS, etc.)
-- **OpenAPI 3.1** generation
-- **Testing utilities** with in-memory server
-- **File upload** handling
-- **Streaming responses**
-
-## Performance
-
-Built on:
-- **Axum** for routing and handlers
-- **Tower-HTTP** for middleware
-- **Tokio** for async runtime
-- **jsonschema** for validation
-- Zero-copy where possible
-
-## Language Bindings
-
-Spikard is available for multiple languages:
-
-### Python
-```bash
-pip install spikard
-```
-See [spikard-py](../spikard-py/README.md) for details.
-
-### Node.js / TypeScript
-```bash
-npm install spikard
-```
-See [spikard-node](../spikard-node/README.md) for details.
-
-### Ruby
-```bash
-gem install spikard
-```
-See [spikard-rb](../spikard-rb/README.md) for details.
-
-### PHP
-```bash
-composer require spikard/spikard
-```
-See [spikard-php](../spikard-php/README.md) for details.
-
-### WebAssembly
-```bash
-npm install spikard-wasm
-```
-See [spikard-wasm](../spikard-wasm/README.md) for details.
+All language bindings depend on `spikard-core` to ensure consistent request/response handling across platforms.
 
 ## Documentation
 
 - [Main Project README](../../README.md)
-- [Contributing Guide](../../CONTRIBUTING.md)
+- [Full API Documentation](https://docs.rs/spikard-core)
 - [Architecture Decision Records](../../docs/adr/)
-- [Full API Documentation](https://docs.rs/spikard)
-- [Getting Started Guide](../../docs/getting-started.md)
 
-## Examples
+## Related Crates
 
-See `/examples/rust/` for more Rust examples.
-
-## Performance
-
-Built on industry-proven foundations:
-- **Axum** for blazing-fast routing (600k+ req/s)
-- **Tower-HTTP** for zero-overhead middleware
-- **Tokio** for high-performance async runtime
-- **jsonschema** for efficient validation
-
-Benchmarks: ~165k req/s baseline with 0.3ms mean latency (macOS, 50 concurrent connections)
-
-## Related Projects
-
-- [spikard-http](../spikard-http/README.md) - HTTP runtime
-- [spikard-core](../spikard-core/README.md) - Core primitives
-- [spikard-cli](../spikard-cli/README.md) - Command-line interface
-- [spikard-codegen](../spikard-codegen/README.md) - Code generation tools
+- [spikard](../spikard/README.md) - High-level HTTP framework
+- [spikard-http](../spikard-http/README.md) - HTTP server implementation
+- [spikard-py](../spikard-py/README.md) - Python bindings
+- [spikard-node](../spikard-node/README.md) - Node.js bindings
 
 ## License
 

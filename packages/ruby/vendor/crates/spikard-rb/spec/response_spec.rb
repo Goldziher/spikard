@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 require 'spikard'
 require 'rspec'
@@ -131,7 +131,7 @@ RSpec.describe Spikard::Response do
 
       bytes = response.bytes
       expect(bytes).to be_a(Array)
-      expect(bytes).to eq([65, 66, 67]) # ASCII codes for 'A', 'B', 'C'
+      expect(bytes).to eq([65, 66, 67])  # ASCII codes for 'A', 'B', 'C'
     end
   end
 end

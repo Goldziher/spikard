@@ -1,38 +1,40 @@
 [package]
-name = "spikard"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-description = "High-performance HTTP framework built on Axum and Tower-HTTP with type-safe routing, validation, WebSocket/SSE support, and lifecycle hooks"
-keywords = ["http", "framework", "axum", "tower", "api"]
-categories = ["web-programming::http-server", "web-programming::http-client"]
-documentation = "https://docs.rs/spikard"
+name = "spikard-core"
+version = "0.3.7"
+edition = "2024"
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/Goldziher/spikard"
+homepage = "https://github.com/Goldziher/spikard"
+description = "Shared transport-agnostic primitives for Spikard runtimes"
+keywords = ["http", "web", "framework", "validation", "middleware"]
+categories = ["web-programming::http-server", "web-programming", "development-tools"]
+documentation = "https://docs.rs/spikard-core"
 readme = "README.md"
 
-[lib]
-name = "spikard"
-path = "src/lib.rs"
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing = "0.1"
+anyhow = "1.0"
+jsonschema = { version = "0.37", default-features = false }
+regex = "1"
+flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }
+brotli = "8.0"
+http = "1.4"
+base64 = "0.22"
+serde_qs = "0.15"
+url = "2.5"
+jiff = "0.2"
+uuid = "1.19"
+indexmap = "2.12"
+tokio = { version = "1", features = ["full"], optional = true }
+bytes = { version = "1.11", optional = true }
+thiserror = { version = "2.0", optional = true }
 
 [features]
 default = []
-di = ["spikard-http/di", "spikard-core/di"]
-
-[dependencies]
-anyhow = "1.0"
-axum.workspace = true
-axum-test = "18"
-base64 = "0.22"
-bytes = "1.11"
-schemars = { version = "1.1", features = ["derive"] }
-serde.workspace = true
-serde_json.workspace = true
-spikard-http = { workspace = true }
-spikard-core = { workspace = true, optional = true }
-thiserror.workspace = true
+di = ["dep:tokio", "dep:bytes", "dep:thiserror"]
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros"] }
-tower = { workspace = true, features = ["util"] }
+tokio-test = "0.4"
