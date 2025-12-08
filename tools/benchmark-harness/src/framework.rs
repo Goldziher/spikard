@@ -587,7 +587,9 @@ mod tests {
         let result = detect_framework(temp_dir.path());
         assert!(result.is_ok());
         let name = result.unwrap().name;
-        assert_eq!(name, "spikard-wasm");
+        // When only server.ts exists, both spikard-node and spikard-wasm match (same detect_files).
+        // spikard-node appears first in registry, so it wins the tie.
+        assert_eq!(name, "spikard-node");
     }
 
     #[test]

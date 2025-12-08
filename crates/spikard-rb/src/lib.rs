@@ -150,6 +150,7 @@ struct NativeBuiltResponse {
     response: RefCell<Option<HandlerResponse>>,
     body_json: Option<JsonValue>,
     /// Ruby values that must be kept alive for GC (e.g., streaming enumerators)
+    #[allow(dead_code)]
     gc_handles: Vec<Opaque<Value>>,
 }
 
@@ -163,6 +164,7 @@ struct NativeLifecycleRegistry {
 #[magnus::wrap(class = "Spikard::Native::DependencyRegistry", free_immediately, mark)]
 struct NativeDependencyRegistry {
     container: RefCell<Option<spikard_core::di::DependencyContainer>>,
+    #[allow(dead_code)]
     gc_handles: RefCell<Vec<Opaque<Value>>>,
     registered_keys: RefCell<Vec<String>>,
 }
@@ -284,6 +286,7 @@ impl NativeBuiltResponse {
         Ok(headers_hash.as_value())
     }
 
+    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         if let Ok(ruby) = Ruby::get() {
             for handle in &self.gc_handles {
@@ -320,6 +323,7 @@ impl NativeLifecycleRegistry {
         mem::take(&mut *self.hooks.borrow_mut())
     }
 
+    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         for hook in self.ruby_hooks.borrow().iter() {
             hook.mark(marker);
@@ -406,6 +410,7 @@ impl NativeDependencyRegistry {
         Ok(())
     }
 
+    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         if let Ok(ruby) = Ruby::get() {
             for handle in self.gc_handles.borrow().iter() {
@@ -751,6 +756,7 @@ impl RubyHandler {
     }
 
     /// Required by Ruby GC; invoked through the magnus mark hook.
+    #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
         if let Ok(ruby) = Ruby::get() {
             let proc_val = self.inner.handler_proc.get_inner_with(&ruby);
@@ -1468,6 +1474,7 @@ fn fetch_handler(ruby: &Ruby, handlers: &RHash, name: &str) -> Result<Value, Err
 }
 
 /// GC mark hook so Ruby keeps handler closures alive.
+#[allow(dead_code)]
 fn mark(client: &NativeTestClient, marker: &Marker) {
     let inner_ref = client.inner.borrow();
     if let Some(inner) = inner_ref.as_ref() {
