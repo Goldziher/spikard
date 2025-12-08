@@ -16,7 +16,7 @@ $PlatformDir = switch ($env:TARGET) {
 	}
 }
 
-$args = @('--release', '--target', $env:TARGET, '-o', "npm/$PlatformDir")
+$args = @('--platform', '--release', '--target', $env:TARGET, '-o', "npm/$PlatformDir")
 if ($env:USE_NAPI_CROSS -eq 'true') { $args += '--use-napi-cross' }
 if ($env:USE_CROSS -eq 'true') { $args += '--use-cross' }
 
