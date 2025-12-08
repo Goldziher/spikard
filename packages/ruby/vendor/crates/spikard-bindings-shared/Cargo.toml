@@ -1,0 +1,63 @@
+[package]
+name = "spikard-bindings-shared"
+version = "0.3.7"
+edition = "2024"
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/Goldziher/spikard"
+homepage = "https://github.com/Goldziher/spikard"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+axum = { version = "0.8", features = ["multipart", "ws"] }
+tokio = { version = "1", features = ["full"] }
+thiserror = "2.0"
+spikard-core = { path = "../spikard-core", features = ["di"] }
+spikard-http = { path = "../spikard-http", features = ["di"] }
+tracing = "0.1"
+http = "1.4"
+http-body-util = "0.1"
+
+[features]
+default = []
+python-support = ["pyo3", "pyo3-async-runtimes"]
+node-support = ["napi", "napi-derive"]
+ruby-support = ["magnus"]
+php-support = ["ext-php-rs"]
+wasm-support = ["wasm-bindgen"]
+
+[dependencies.pyo3]
+version = "0.27"
+optional = true
+features = ["abi3-py310"]
+
+[dependencies.pyo3-async-runtimes]
+version = "0.27"
+optional = true
+features = ["tokio-runtime"]
+
+[dependencies.napi]
+version = "3"
+optional = true
+default-features = false
+features = ["napi9", "async"]
+
+[dependencies.napi-derive]
+version = "3"
+optional = true
+
+[dependencies.magnus]
+version = "0.8"
+optional = true
+
+[dependencies.ext-php-rs]
+version = "0.15"
+optional = true
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true
+
+[dev-dependencies]
+pretty_assertions = "1.4"
