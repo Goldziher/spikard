@@ -76,10 +76,10 @@ export function route(path: string, options: RouteOptions = {}): (handler: Route
 			method: methods.join(","),
 			path,
 			handler_name: handler.name || "anonymous",
-			request_schema: options.bodySchema ?? undefined,
-			response_schema: options.responseSchema ?? undefined,
-			parameter_schema: options.parameterSchema ?? undefined,
-			cors: options.cors ?? undefined,
+			...(options.bodySchema !== undefined && { request_schema: options.bodySchema }),
+			...(options.responseSchema !== undefined && { response_schema: options.responseSchema }),
+			...(options.parameterSchema !== undefined && { parameter_schema: options.parameterSchema }),
+			...(options.cors !== undefined && { cors: options.cors }),
 			is_async: true,
 		};
 

@@ -25,7 +25,7 @@ extension-module = [
 [dependencies]
 spikard = { workspace = true }
 spikard-core = { workspace = true }
-spikard-http = { path = "../spikard-http", optional = true }
+spikard-http = { path = "../spikard-http", optional = true, features = ["di"] }
 spikard-bindings-shared = { path = "../spikard-bindings-shared", optional = true }
 axum = { workspace = true, optional = true }
 axum-test = { version = "18", optional = true }

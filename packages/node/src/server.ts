@@ -5,6 +5,7 @@
 import type { ServerConfig } from "./config";
 import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
+import { createRequire } from "module";
 
 interface NativeServerBinding {
 	runServer(app: SpikardApp, config: ServerConfig | ServerOptions): void;
@@ -12,22 +13,21 @@ interface NativeServerBinding {
 
 let nativeBinding: NativeServerBinding;
 
-const loadBinding = (): NativeServerBinding => {
+function loadBinding(): NativeServerBinding {
 	try {
-		return require("../spikard-node.darwin-arm64.node") as NativeServerBinding;
+		// createRequire allows us to require CommonJS modules from ESM context
+		// This is necessary to load the NAPI binding which is a .node file loaded via CommonJS
+		const require = createRequire(import.meta.url);
+		return require("../index.js") as NativeServerBinding;
 	} catch {
-		try {
-			return require("../spikard-node.node") as NativeServerBinding;
-		} catch {
-			console.warn("[spikard-node] Native binding not found. Please run: pnpm build:native");
-			return {
-				runServer: () => {
-					throw new Error("Native binding not built. Run: pnpm build:native");
-				},
-			};
-		}
+		console.warn("[spikard-node] Native binding not found. Please run: pnpm build:native");
+		return {
+			runServer: () => {
+				throw new Error("Native binding not built. Run: pnpm build:native");
+			},
+		};
 	}
-};
+}
 
 nativeBinding = loadBinding();
 

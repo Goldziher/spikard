@@ -1,4 +1,5 @@
 import type { HandlerResult, JsonValue } from "./types";
+import { createRequire } from "module";
 
 export interface StreamingResponseInit {
 	statusCode?: number;
@@ -21,18 +22,17 @@ let nativeBinding: NativeStreamingBinding;
 
 const loadBinding = (): NativeStreamingBinding => {
 	try {
-		return require("../spikard-node.darwin-arm64.node") as NativeStreamingBinding;
+		// createRequire allows us to require CommonJS modules from ESM context
+		// This is necessary to load the NAPI binding which is a .node file loaded via CommonJS
+		const require = createRequire(import.meta.url);
+		return require("../index.js") as NativeStreamingBinding;
 	} catch {
-		try {
-			return require("../spikard-node.node") as NativeStreamingBinding;
-		} catch {
-			console.warn("[spikard-node] Native binding not found. Please run: pnpm build:native");
-			return {
-				createStreamingHandle: () => {
-					throw new Error("Native binding not built. Run: pnpm build:native");
-				},
-			};
-		}
+		console.warn("[spikard-node] Native binding not found. Please run: pnpm build:native");
+		return {
+			createStreamingHandle: () => {
+				throw new Error("Native binding not built. Run: pnpm build:native");
+			},
+		};
 	}
 };
 

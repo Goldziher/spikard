@@ -6,6 +6,7 @@ import type { ServerConfig } from "./config";
 import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
 import type { JsonValue } from "./types";
+import { createRequire } from "module";
 
 interface NativeTestResponse {
 	statusCode: number;
@@ -122,15 +123,13 @@ let nativeTestClient: NativeClientConstructor | null = null;
 
 const loadNativeTestClient = (): NativeClientConstructor | null => {
 	try {
-		const binding = require("../spikard-node.darwin-arm64.node") as NativeBinding;
+		// createRequire allows us to require CommonJS modules from ESM context
+		// This is necessary to load the NAPI binding which is a .node file loaded via CommonJS
+		const require = createRequire(import.meta.url);
+		const binding = require("../index.js") as NativeBinding;
 		return binding.TestClient;
 	} catch {
-		try {
-			const binding = require("../spikard-node.node") as NativeBinding;
-			return binding.TestClient;
-		} catch {
-			return null;
-		}
+		return null;
 	}
 };
 
