@@ -165,7 +165,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: github.actor != 'dependabot[bot]'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./target/tarpaulin/lcov.info
           flags: rust
@@ -233,7 +233,7 @@ jobs:
 
       - name: Upload PHP FFI coverage to Codecov
         if: github.actor != 'dependabot[bot]'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./target/tarpaulin-php/lcov.info
           flags: rust-php-linux
