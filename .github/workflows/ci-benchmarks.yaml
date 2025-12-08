@@ -429,7 +429,7 @@ jobs:
           node-version: "24"
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v1
+        uses: denoland/setup-deno@v2
         with:
           deno-version: latest
 
