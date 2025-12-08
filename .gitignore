@@ -72,7 +72,10 @@ packages/wasm/runtime/
 pnpm-debug.log*
 vendor/
 !packages/ruby/vendor/
-!packages/ruby/vendor/crates/
+packages/ruby/vendor/crates/spikard-core/
+packages/ruby/vendor/crates/spikard-http/
+packages/ruby/vendor/crates/spikard-bindings-shared/
+packages/ruby/vendor/crates/spikard-rb/
 !packages/ruby/vendor/crates/**
 packages/php/var/*
 !packages/php/var/.gitkeep

@@ -91,6 +91,10 @@ jobs:
           MSYSTEM_PREFIX="${RI_DEVKIT}/msys64/ucrt64"
           echo "BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_gnu=-I${MSYSTEM_PREFIX}/include --target=x86_64-pc-windows-gnu" >> "$GITHUB_ENV"
 
+      - name: Vendor Rust crates for Ruby gem
+        shell: bash
+        run: bash scripts/ci/ruby/vendor-crates.sh
+
       - name: Build Ruby gem
         working-directory: packages/ruby
         env:

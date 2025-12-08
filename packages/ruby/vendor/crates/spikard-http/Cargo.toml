@@ -17,7 +17,7 @@ axum = { version = "0.8", features = ["multipart", "ws"]  }
 tokio = { version = "1", features = ["full"] }
 tokio-util = "0.7"
 tower = "0.5"
-tower-http = "1.4"
+tower-http = { version = "0.6.8", features = ["trace", "request-id", "compression-gzip", "compression-br", "timeout", "limit", "fs", "set-header", "sensitive-headers"] }
 tower_governor = "0.8"
 jsonwebtoken = { version = "10.2", features = ["use_pem", "rust_crypto"] }
 utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }

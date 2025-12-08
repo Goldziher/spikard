@@ -14,7 +14,7 @@ mkdir -p "$VENDOR_DIR"
 # Copy internal crates
 for crate in spikard-core spikard-http spikard-bindings-shared spikard-rb; do
 	echo "  Copying $crate..."
-	rm -rf "$VENDOR_DIR/$crate"
+	rm -rf "${VENDOR_DIR:?}/$crate"
 	cp -r "crates/$crate" "$VENDOR_DIR/"
 done
 
@@ -35,9 +35,6 @@ patch_cargo_toml() {
 	sed -i.bak 's/repository\.workspace = true/repository = "https:\/\/github.com\/Goldziher\/spikard"/' "$file"
 	sed -i.bak 's/homepage\.workspace = true/homepage = "https:\/\/github.com\/Goldziher\/spikard"/' "$file"
 
-	# Fix tower-http hardcoded version to match workspace version (in case it's already patched to "1.4")
-	sed -i.bak 's/tower-http = "1\.4"/tower-http = { version = "0.6.8", features = ["trace", "request-id", "compression-gzip", "compression-br", "timeout", "limit", "fs", "set-header", "sensitive-headers"] }/' "$file"
-
 	# Replace workspace dependencies with explicit versions (external deps)
 	# Use perl for more flexible matching that handles all formats
 
@@ -51,10 +48,11 @@ patch_cargo_toml() {
 	perl -i.bak -pe 's/thiserror\.workspace = true/thiserror = "2.0"/g' "$file"
 	perl -i.bak -pe 's/jsonschema\.workspace = true/jsonschema = { version = "0.37", default-features = false }/g' "$file"
 	perl -i.bak -pe 's/flate2\.workspace = true/flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }/g' "$file"
-	perl -i.bak -pe 's/http\.workspace = true/http = "1.4"/g' "$file"
-	perl -i.bak -pe 's/tokio\.workspace = true/tokio = { version = "1", features = ["full"] }/g' "$file"
-	perl -i.bak -pe 's/tower\.workspace = true/tower = "0.5"/g' "$file"
+	# Process tower-http BEFORE http to avoid partial matches
 	perl -i.bak -pe 's/tower-http\.workspace = true/tower-http = { version = "0.6.8", features = ["trace", "request-id", "compression-gzip", "compression-br", "timeout", "limit", "fs", "set-header", "sensitive-headers"] }/g' "$file"
+	perl -i.bak -pe 's/\bhttp\.workspace = true/http = "1.4"/g' "$file"
+	perl -i.bak -pe 's/\btokio\.workspace = true/tokio = { version = "1", features = ["full"] }/g' "$file"
+	perl -i.bak -pe 's/\btower\.workspace = true/tower = "0.5"/g' "$file"
 	perl -i.bak -pe 's/tracing-subscriber\.workspace = true/tracing-subscriber = { version = "0.3", features = ["env-filter"] }/g' "$file"
 	perl -i.bak -pe 's/tower_governor\.workspace = true/tower_governor = "0.8"/g' "$file"
 	perl -i.bak -pe 's/jsonwebtoken\.workspace = true/jsonwebtoken = { version = "10.2", features = ["use_pem", "rust_crypto"] }/g' "$file"
@@ -86,7 +84,7 @@ patch_cargo_toml() {
 # Patch all vendored Cargo.toml files
 for toml in "$VENDOR_DIR"/*/Cargo.toml; do
 	if [ -f "$toml" ]; then
-		echo "  Patching $(basename $(dirname $toml))/Cargo.toml..."
+		echo "  Patching $(basename "$(dirname "$toml")")/Cargo.toml..."
 		patch_cargo_toml "$toml"
 	fi
 done
