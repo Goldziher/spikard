@@ -1,0 +1,15 @@
+{
+	"name": "@examples/wasm-deno",
+	"version": "0.3.7",
+	"private": true,
+	"type": "module",
+	"description": "Spikard WASM Deno example using npm: imports",
+	"scripts": {
+		"dev": "deno run --allow-net --allow-read --watch src/main.ts",
+		"run": "deno run --allow-net --allow-read src/main.ts",
+		"start": "deno run --allow-net --allow-read src/main.ts"
+	},
+	"dependencies": {
+		"@spikard/wasm": "workspace:*"
+	}
+}
