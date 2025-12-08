@@ -35,6 +35,31 @@ cd node-simple  # Node.js example
 cd rust-lifecycle-hooks  # Rust lifecycle hooks demo
 ```
 
+### WebAssembly Examples
+
+Spikard WASM bindings for edge runtimes and browsers:
+
+```bash
+# Rollup bundler (browser + Node.js)
+cd wasm-rollup
+pnpm install
+pnpm build
+
+# Deno runtime (zero build)
+cd wasm-deno
+deno task run
+
+# Cloudflare Workers (edge)
+cd wasm-cloudflare
+pnpm install
+pnpm run dev
+```
+
+**Resources:**
+- [Rollup Example](wasm-rollup/) - Build with Rollup for universal deployment
+- [Deno Example](wasm-deno/) - Native Deno with TypeScript
+- [Cloudflare Workers Example](wasm-cloudflare/) - Deploy to the edge
+
 ## Schemas Overview
 
 | Schema | Type | Features |
@@ -58,7 +83,12 @@ examples/
 │   ├── events-stream.asyncapi.yaml
 │   └── auth-service.openapi.yaml
 ├── php/                            # PHP implementation (PSR-4)
-├── node-simple/                    # Node.js example
+├── ruby/                           # Ruby implementation
+├── node/                           # Node.js (@spikard/node) tutorial examples
+├── node-simple/                    # Simple Node.js example
+├── wasm-rollup/                    # WASM with Rollup bundler
+├── wasm-deno/                      # WASM with Deno runtime
+├── wasm-cloudflare/                # WASM for Cloudflare Workers
 ├── rust-lifecycle-hooks/           # Rust lifecycle demo
 ├── asyncapi/                       # AsyncAPI examples
 └── di/                             # Dependency injection examples
