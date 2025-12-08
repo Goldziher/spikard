@@ -220,7 +220,7 @@ jobs:
 
       - name: Build spikard-node binding
         working-directory: packages/node
-        run: pnpm build:native
+        run: pnpm build
 
       - name: Rebuild workspace after native build
         run: pnpm install --frozen-lockfile

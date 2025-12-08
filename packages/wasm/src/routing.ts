@@ -76,10 +76,10 @@ export function route(path: string, options: RouteOptions = {}): (handler: Route
 			method: methods.join(","),
 			path,
 			handler_name: handler.name || "anonymous",
-			request_schema: options.bodySchema,
-			response_schema: options.responseSchema,
-			parameter_schema: options.parameterSchema,
-			cors: options.cors,
+			request_schema: options.bodySchema ?? undefined,
+			response_schema: options.responseSchema ?? undefined,
+			parameter_schema: options.parameterSchema ?? undefined,
+			cors: options.cors ?? undefined,
 			is_async: true,
 		};
 
