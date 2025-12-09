@@ -1042,7 +1042,7 @@ fn websocket_reply_literal(
     }
 }
 
-/// Generate JSON-RPC test module from fixtures
+/// Generate JSON-RPC tests from fixtures
 fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Result<()> {
     if fixtures.is_empty() {
         return Ok(());
@@ -1051,7 +1051,7 @@ fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Res
     let test_file = output_dir.join("tests").join("test_jsonrpc.py");
     let mut code = String::new();
 
-    code.push_str("\"\"\"JSON-RPC tests generated from fixtures.\"\"\"\n\n");
+    code.push_str("\"\"\"JSON-RPC 2.0 e2e tests generated from fixtures.\"\"\"\n\n");
     code.push_str("import pytest\n");
     code.push_str("from httpx import AsyncClient\n");
     code.push_str("from app.main import *\n\n");
@@ -1064,26 +1064,29 @@ fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Res
         for (idx, example) in fixture.examples.iter().enumerate() {
             code.push_str("@pytest.mark.asyncio\n");
             code.push_str(&format!("async def test_{}_success_{}():\n", factory_name, idx + 1));
+            code.push_str(&format!("    \"\"\"Test {}.\"\"\" \n", method_name));
             code.push_str(&format!("    app = create_app_{}()\n", factory_name));
-            code.push_str("    async with AsyncClient(app=app, base_url='http://test') as client:\n");
+            code.push_str("    async with AsyncClient(app=app, base_url=\"http://test\") as client:\n");
             let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
             code.push_str(&format!(
-                "        response = await client.post('{}', json={{\n",
+                "        response = await client.post(\"{}\", json={{\n",
                 endpoint
             ));
-            code.push_str("            'jsonrpc': '2.0',\n");
-            code.push_str(&format!("            'method': '{}',\n", method_name));
-            code.push_str(&format!(
-                "            'params': {},\n",
-                serde_json::to_string(&example.params)?
-            ));
-            code.push_str("            'id': 1,\n");
+            code.push_str("            \"jsonrpc\": \"2.0\",\n");
+            code.push_str(&format!("            \"method\": \"{}\",\n", method_name));
+            let params_json = serde_json::to_string(&example.params)?;
+            let params_py = json_to_python_literal(&params_json);
+            code.push_str(&format!("            \"params\": {},\n", params_py));
+            code.push_str("            \"id\": 1,\n");
             code.push_str("        })\n");
             code.push_str("        assert response.status_code == 200\n");
             code.push_str("        data = response.json()\n");
-            code.push_str("        assert data['jsonrpc'] == '2.0'\n");
-            code.push_str("        assert 'result' in data\n");
-            code.push_str("        assert data['id'] == 1\n\n");
+            code.push_str("        assert data[\"jsonrpc\"] == \"2.0\"\n");
+            code.push_str("        assert \"result\" in data\n");
+            code.push_str("        assert data[\"id\"] == 1\n");
+            code.push_str("        # Result should match expected structure\n");
+            code.push_str("        result = data[\"result\"]\n");
+            code.push_str("        assert isinstance(result, dict)\n\n");
         }
 
         // Error tests
@@ -1094,61 +1097,79 @@ fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Res
                 "async def test_{}_{}_error():\n",
                 factory_name, error_test_name
             ));
+            code.push_str(&format!(
+                "    \"\"\"Test {} - {} error case.\"\"\" \n",
+                method_name, error_test_name
+            ));
             code.push_str(&format!("    app = create_app_{}()\n", factory_name));
-            code.push_str("    async with AsyncClient(app=app, base_url='http://test') as client:\n");
+            code.push_str("    async with AsyncClient(app=app, base_url=\"http://test\") as client:\n");
             let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
             code.push_str(&format!(
-                "        response = await client.post('{}', json={{\n",
+                "        response = await client.post(\"{}\", json={{\n",
                 endpoint
             ));
-            code.push_str("            'jsonrpc': '2.0',\n");
-            code.push_str(&format!("            'method': '{}',\n", method_name));
+            code.push_str("            \"jsonrpc\": \"2.0\",\n");
+            code.push_str(&format!("            \"method\": \"{}\",\n", method_name));
             if let Some(params) = &error_case.params {
-                code.push_str(&format!("            'params': {},\n", serde_json::to_string(params)?));
+                let params_json = serde_json::to_string(params)?;
+                let params_py = json_to_python_literal(&params_json);
+                code.push_str(&format!("            \"params\": {},\n", params_py));
             }
-            code.push_str("            'id': 1,\n");
+            code.push_str("            \"id\": 1,\n");
             code.push_str("        })\n");
             code.push_str("        assert response.status_code == 200\n");
             code.push_str("        data = response.json()\n");
-            code.push_str("        assert data['jsonrpc'] == '2.0'\n");
-            code.push_str("        assert 'error' in data\n");
+            code.push_str("        assert data[\"jsonrpc\"] == \"2.0\"\n");
+            code.push_str("        assert \"error\" in data\n");
             code.push_str(&format!(
-                "        assert data['error']['code'] == {}\n",
+                "        assert data[\"error\"][\"code\"] == {}\n",
                 error_case.error.code
             ));
-            code.push_str("        assert data['id'] == 1\n\n");
+            code.push_str("        assert \"message\" in data[\"error\"]\n");
+            code.push_str("        assert data[\"id\"] == 1\n\n");
         }
 
         // Batch request test (if multiple examples)
         if fixture.examples.len() > 1 {
             code.push_str("@pytest.mark.asyncio\n");
-            code.push_str(&format!("async def test_{}_batch():\n", factory_name));
+            code.push_str(&format!("async def test_{}_batch_request():\n", factory_name));
+            code.push_str(&format!("    \"\"\"Test {} - batch request.\"\"\" \n", method_name));
             code.push_str(&format!("    app = create_app_{}()\n", factory_name));
-            code.push_str("    async with AsyncClient(app=app, base_url='http://test') as client:\n");
+            code.push_str("    async with AsyncClient(app=app, base_url=\"http://test\") as client:\n");
             code.push_str("        batch_request = [\n");
             for (idx, example) in fixture.examples.iter().take(2).enumerate() {
                 code.push_str("            {\n");
-                code.push_str("                'jsonrpc': '2.0',\n");
-                code.push_str(&format!("                'method': '{}',\n", method_name));
-                code.push_str(&format!(
-                    "                'params': {},\n",
-                    serde_json::to_string(&example.params)?
-                ));
-                code.push_str(&format!("                'id': {},\n", idx + 1));
+                code.push_str("                \"jsonrpc\": \"2.0\",\n");
+                code.push_str(&format!("                \"method\": \"{}\",\n", method_name));
+                let params_json = serde_json::to_string(&example.params)?;
+                let params_py = json_to_python_literal(&params_json);
+                code.push_str(&format!("                \"params\": {},\n", params_py));
+                code.push_str(&format!("                \"id\": {},\n", idx + 1));
                 code.push_str("            },\n");
             }
             code.push_str("        ]\n");
             let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
             code.push_str(&format!(
-                "        response = await client.post('{}', json=batch_request)\n",
+                "        response = await client.post(\"{}\", json=batch_request)\n",
                 endpoint
             ));
             code.push_str("        assert response.status_code == 200\n");
-            code.push_str("        # Note: batch support requires server implementation\n\n");
+            code.push_str("        # Batch requests return array of responses\n");
+            code.push_str("        responses = response.json()\n");
+            code.push_str("        assert isinstance(responses, list)\n");
+            code.push_str("        assert len(responses) >= 1\n\n");
         }
     }
 
     fs::create_dir_all(test_file.parent().unwrap())?;
     fs::write(&test_file, code)?;
     Ok(())
+}
+
+/// Convert JSON string to Python literal
+fn json_to_python_literal(json_str: &str) -> String {
+    json_str
+        .replace("true", "True")
+        .replace("false", "False")
+        .replace("null", "None")
 }
