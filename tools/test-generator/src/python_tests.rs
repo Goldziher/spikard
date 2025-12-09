@@ -5,6 +5,7 @@
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
+use crate::jsonrpc::JsonRpcFixture;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
@@ -42,6 +43,8 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
     }
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
+    let jsonrpc_fixtures =
+        crate::jsonrpc::load_jsonrpc_fixtures(fixtures_dir).context("Failed to load JSON-RPC fixtures")?;
 
     for (category, fixtures) in fixtures_by_category.iter() {
         let test_content = generate_test_file(category, fixtures)?;
@@ -62,6 +65,11 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
         fs::write(tests_dir.join("test_asyncapi_websocket.py"), websocket_content)
             .context("Failed to write test_asyncapi_websocket.py")?;
         println!("  ✓ Generated tests/test_asyncapi_websocket.py");
+    }
+
+    if !jsonrpc_fixtures.is_empty() {
+        generate_jsonrpc_tests(&jsonrpc_fixtures, output_dir)?;
+        println!("  ✓ Generated tests/test_jsonrpc.py");
     }
 
     Ok(())
@@ -1032,4 +1040,115 @@ fn websocket_reply_literal(
         let literal = replies.iter().map(json_to_python).collect::<Vec<_>>().join(", ");
         Ok(Some(format!("[{}]", literal)))
     }
+}
+
+/// Generate JSON-RPC test module from fixtures
+fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Result<()> {
+    if fixtures.is_empty() {
+        return Ok(());
+    }
+
+    let test_file = output_dir.join("tests").join("test_jsonrpc.py");
+    let mut code = String::new();
+
+    code.push_str("\"\"\"JSON-RPC tests generated from fixtures.\"\"\"\n\n");
+    code.push_str("import pytest\n");
+    code.push_str("from httpx import AsyncClient\n");
+    code.push_str("from app.main import *\n\n");
+
+    for fixture in fixtures {
+        let factory_name = sanitize_identifier(&fixture.name);
+        let method_name = &fixture.method;
+
+        // Success tests from examples
+        for (idx, example) in fixture.examples.iter().enumerate() {
+            code.push_str("@pytest.mark.asyncio\n");
+            code.push_str(&format!("async def test_{}_success_{}():\n", factory_name, idx + 1));
+            code.push_str(&format!("    app = create_app_{}()\n", factory_name));
+            code.push_str("    async with AsyncClient(app=app, base_url='http://test') as client:\n");
+            let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
+            code.push_str(&format!(
+                "        response = await client.post('{}', json={{\n",
+                endpoint
+            ));
+            code.push_str("            'jsonrpc': '2.0',\n");
+            code.push_str(&format!("            'method': '{}',\n", method_name));
+            code.push_str(&format!(
+                "            'params': {},\n",
+                serde_json::to_string(&example.params)?
+            ));
+            code.push_str("            'id': 1,\n");
+            code.push_str("        })\n");
+            code.push_str("        assert response.status_code == 200\n");
+            code.push_str("        data = response.json()\n");
+            code.push_str("        assert data['jsonrpc'] == '2.0'\n");
+            code.push_str("        assert 'result' in data\n");
+            code.push_str("        assert data['id'] == 1\n\n");
+        }
+
+        // Error tests
+        for error_case in &fixture.error_cases {
+            let error_test_name = sanitize_identifier(&error_case.name);
+            code.push_str("@pytest.mark.asyncio\n");
+            code.push_str(&format!(
+                "async def test_{}_{}_error():\n",
+                factory_name, error_test_name
+            ));
+            code.push_str(&format!("    app = create_app_{}()\n", factory_name));
+            code.push_str("    async with AsyncClient(app=app, base_url='http://test') as client:\n");
+            let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
+            code.push_str(&format!(
+                "        response = await client.post('{}', json={{\n",
+                endpoint
+            ));
+            code.push_str("            'jsonrpc': '2.0',\n");
+            code.push_str(&format!("            'method': '{}',\n", method_name));
+            if let Some(params) = &error_case.params {
+                code.push_str(&format!("            'params': {},\n", serde_json::to_string(params)?));
+            }
+            code.push_str("            'id': 1,\n");
+            code.push_str("        })\n");
+            code.push_str("        assert response.status_code == 200\n");
+            code.push_str("        data = response.json()\n");
+            code.push_str("        assert data['jsonrpc'] == '2.0'\n");
+            code.push_str("        assert 'error' in data\n");
+            code.push_str(&format!(
+                "        assert data['error']['code'] == {}\n",
+                error_case.error.code
+            ));
+            code.push_str("        assert data['id'] == 1\n\n");
+        }
+
+        // Batch request test (if multiple examples)
+        if fixture.examples.len() > 1 {
+            code.push_str("@pytest.mark.asyncio\n");
+            code.push_str(&format!("async def test_{}_batch():\n", factory_name));
+            code.push_str(&format!("    app = create_app_{}()\n", factory_name));
+            code.push_str("    async with AsyncClient(app=app, base_url='http://test') as client:\n");
+            code.push_str("        batch_request = [\n");
+            for (idx, example) in fixture.examples.iter().take(2).enumerate() {
+                code.push_str("            {\n");
+                code.push_str("                'jsonrpc': '2.0',\n");
+                code.push_str(&format!("                'method': '{}',\n", method_name));
+                code.push_str(&format!(
+                    "                'params': {},\n",
+                    serde_json::to_string(&example.params)?
+                ));
+                code.push_str(&format!("                'id': {},\n", idx + 1));
+                code.push_str("            },\n");
+            }
+            code.push_str("        ]\n");
+            let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
+            code.push_str(&format!(
+                "        response = await client.post('{}', json=batch_request)\n",
+                endpoint
+            ));
+            code.push_str("        assert response.status_code == 200\n");
+            code.push_str("        # Note: batch support requires server implementation\n\n");
+        }
+    }
+
+    fs::create_dir_all(test_file.parent().unwrap())?;
+    fs::write(&test_file, code)?;
+    Ok(())
 }

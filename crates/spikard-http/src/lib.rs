@@ -13,6 +13,7 @@ pub mod debug;
 pub mod di_handler;
 pub mod handler_response;
 pub mod handler_trait;
+pub mod jsonrpc;
 pub mod lifecycle;
 pub mod middleware;
 pub mod openapi;
@@ -38,6 +39,7 @@ pub use body_metadata::ResponseBodySize;
 pub use di_handler::DependencyInjectingHandler;
 pub use handler_response::HandlerResponse;
 pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
+pub use jsonrpc::JsonRpcConfig;
 pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
 pub use openapi::{ContactInfo, LicenseInfo, OpenApiConfig, SecuritySchemeInfo, ServerInfo};
 pub use response::Response;
@@ -134,6 +136,8 @@ pub struct ServerConfig {
     pub shutdown_timeout: u64,
     /// OpenAPI documentation configuration
     pub openapi: Option<crate::openapi::OpenApiConfig>,
+    /// JSON-RPC configuration
+    pub jsonrpc: Option<crate::jsonrpc::JsonRpcConfig>,
     /// Lifecycle hooks for request/response processing
     pub lifecycle_hooks: Option<std::sync::Arc<LifecycleHooks>>,
     /// Background task executor configuration
@@ -160,6 +164,7 @@ impl Default for ServerConfig {
             graceful_shutdown: true,
             shutdown_timeout: 30,
             openapi: None,
+            jsonrpc: None,
             lifecycle_hooks: None,
             background_tasks: BackgroundTaskConfig::default(),
             #[cfg(feature = "di")]
@@ -314,6 +319,12 @@ impl ServerConfigBuilder {
     /// Set OpenAPI documentation configuration
     pub fn openapi(mut self, openapi: Option<crate::openapi::OpenApiConfig>) -> Self {
         self.config.openapi = openapi;
+        self
+    }
+
+    /// Set JSON-RPC configuration
+    pub fn jsonrpc(mut self, jsonrpc: Option<crate::jsonrpc::JsonRpcConfig>) -> Self {
+        self.config.jsonrpc = jsonrpc;
         self
     }
 

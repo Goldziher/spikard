@@ -1,0 +1,569 @@
+{
+	"openrpc": "1.3.2",
+	"info": {
+		"title": "User Management API",
+		"version": "1.0.0",
+		"description": "JSON-RPC 2.0 API for user management operations",
+		"contact": {
+			"name": "API Support",
+			"email": "support@example.com"
+		},
+		"license": {
+			"name": "MIT",
+			"url": "https://opensource.org/licenses/MIT"
+		}
+	},
+	"servers": [
+		{
+			"name": "Development Server",
+			"url": "http://localhost:8000/rpc",
+			"description": "Local development server"
+		},
+		{
+			"name": "Production Server",
+			"url": "https://api.example.com/rpc",
+			"description": "Production API server"
+		}
+	],
+	"methods": [
+		{
+			"name": "user.getById",
+			"summary": "Get user by ID",
+			"description": "Retrieves a user's details by their unique identifier",
+			"tags": [
+				{
+					"name": "users"
+				}
+			],
+			"params": [
+				{
+					"name": "userId",
+					"description": "Unique identifier for the user",
+					"required": true,
+					"schema": {
+						"type": "string",
+						"format": "uuid"
+					}
+				}
+			],
+			"result": {
+				"name": "user",
+				"description": "User details",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"name": {
+							"type": "string"
+						},
+						"email": {
+							"type": "string",
+							"format": "email"
+						},
+						"createdAt": {
+							"type": "string",
+							"format": "date-time"
+						},
+						"role": {
+							"type": "string",
+							"enum": ["admin", "user", "guest"]
+						}
+					},
+					"required": ["id", "name", "email", "createdAt", "role"]
+				}
+			},
+			"errors": [
+				{
+					"code": -32602,
+					"message": "Invalid params",
+					"data": {
+						"type": "object",
+						"properties": {
+							"field": {
+								"type": "string"
+							},
+							"reason": {
+								"type": "string"
+							}
+						}
+					}
+				},
+				{
+					"code": 404,
+					"message": "User not found"
+				}
+			],
+			"examples": [
+				{
+					"name": "Get Alice",
+					"description": "Example of getting user Alice",
+					"params": [
+						{
+							"name": "userId",
+							"value": "550e8400-e29b-41d4-a716-446655440000"
+						}
+					],
+					"result": {
+						"name": "user",
+						"value": {
+							"id": "550e8400-e29b-41d4-a716-446655440000",
+							"name": "Alice Johnson",
+							"email": "alice@example.com",
+							"createdAt": "2024-01-15T10:30:00Z",
+							"role": "admin"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "user.create",
+			"summary": "Create new user",
+			"description": "Creates a new user account",
+			"tags": [
+				{
+					"name": "users"
+				}
+			],
+			"params": [
+				{
+					"name": "userData",
+					"description": "User creation data",
+					"required": true,
+					"schema": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"minLength": 1,
+								"maxLength": 100
+							},
+							"email": {
+								"type": "string",
+								"format": "email"
+							},
+							"password": {
+								"type": "string",
+								"minLength": 8
+							},
+							"role": {
+								"type": "string",
+								"enum": ["user", "admin"],
+								"default": "user"
+							}
+						},
+						"required": ["name", "email", "password"]
+					}
+				}
+			],
+			"result": {
+				"name": "createdUser",
+				"description": "The newly created user",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"name": {
+							"type": "string"
+						},
+						"email": {
+							"type": "string",
+							"format": "email"
+						},
+						"role": {
+							"type": "string",
+							"enum": ["admin", "user", "guest"]
+						},
+						"createdAt": {
+							"type": "string",
+							"format": "date-time"
+						}
+					},
+					"required": ["id", "name", "email", "role", "createdAt"]
+				}
+			},
+			"errors": [
+				{
+					"code": -32602,
+					"message": "Invalid params"
+				},
+				{
+					"code": 409,
+					"message": "User already exists"
+				}
+			],
+			"examples": [
+				{
+					"name": "Create Bob",
+					"params": [
+						{
+							"name": "userData",
+							"value": {
+								"name": "Bob Smith",
+								"email": "bob@example.com",
+								"password": "SecurePass123!",
+								"role": "user"
+							}
+						}
+					],
+					"result": {
+						"name": "createdUser",
+						"value": {
+							"id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+							"name": "Bob Smith",
+							"email": "bob@example.com",
+							"role": "user",
+							"createdAt": "2024-01-15T11:00:00Z"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "user.update",
+			"summary": "Update user",
+			"description": "Updates an existing user's information",
+			"tags": [
+				{
+					"name": "users"
+				}
+			],
+			"params": [
+				{
+					"name": "userId",
+					"description": "ID of user to update",
+					"required": true,
+					"schema": {
+						"type": "string",
+						"format": "uuid"
+					}
+				},
+				{
+					"name": "updates",
+					"description": "Fields to update",
+					"required": true,
+					"schema": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"minLength": 1,
+								"maxLength": 100
+							},
+							"email": {
+								"type": "string",
+								"format": "email"
+							},
+							"role": {
+								"type": "string",
+								"enum": ["user", "admin", "guest"]
+							}
+						},
+						"minProperties": 1
+					}
+				}
+			],
+			"result": {
+				"name": "updatedUser",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"name": {
+							"type": "string"
+						},
+						"email": {
+							"type": "string",
+							"format": "email"
+						},
+						"role": {
+							"type": "string"
+						},
+						"createdAt": {
+							"type": "string",
+							"format": "date-time"
+						},
+						"updatedAt": {
+							"type": "string",
+							"format": "date-time"
+						}
+					}
+				}
+			},
+			"errors": [
+				{
+					"code": 404,
+					"message": "User not found"
+				},
+				{
+					"code": -32602,
+					"message": "Invalid params"
+				}
+			],
+			"examples": [
+				{
+					"name": "Update user role",
+					"params": [
+						{
+							"name": "userId",
+							"value": "550e8400-e29b-41d4-a716-446655440000"
+						},
+						{
+							"name": "updates",
+							"value": {
+								"role": "admin"
+							}
+						}
+					],
+					"result": {
+						"name": "updatedUser",
+						"value": {
+							"id": "550e8400-e29b-41d4-a716-446655440000",
+							"name": "Alice Johnson",
+							"email": "alice@example.com",
+							"role": "admin",
+							"createdAt": "2024-01-15T10:30:00Z",
+							"updatedAt": "2024-01-15T12:00:00Z"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "user.delete",
+			"summary": "Delete user",
+			"description": "Deletes a user account",
+			"tags": [
+				{
+					"name": "users"
+				}
+			],
+			"params": [
+				{
+					"name": "userId",
+					"description": "ID of user to delete",
+					"required": true,
+					"schema": {
+						"type": "string",
+						"format": "uuid"
+					}
+				}
+			],
+			"result": {
+				"name": "deletionResult",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"success": {
+							"type": "boolean"
+						},
+						"deletedId": {
+							"type": "string",
+							"format": "uuid"
+						}
+					},
+					"required": ["success", "deletedId"]
+				}
+			},
+			"errors": [
+				{
+					"code": 404,
+					"message": "User not found"
+				}
+			],
+			"examples": [
+				{
+					"name": "Delete user",
+					"params": [
+						{
+							"name": "userId",
+							"value": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+						}
+					],
+					"result": {
+						"name": "deletionResult",
+						"value": {
+							"success": true,
+							"deletedId": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "user.list",
+			"summary": "List users",
+			"description": "Lists users with pagination and filtering",
+			"tags": [
+				{
+					"name": "users"
+				}
+			],
+			"params": [
+				{
+					"name": "options",
+					"description": "Pagination and filter options",
+					"required": false,
+					"schema": {
+						"type": "object",
+						"properties": {
+							"page": {
+								"type": "integer",
+								"minimum": 1,
+								"default": 1
+							},
+							"perPage": {
+								"type": "integer",
+								"minimum": 1,
+								"maximum": 100,
+								"default": 20
+							},
+							"role": {
+								"type": "string",
+								"enum": ["admin", "user", "guest"]
+							}
+						}
+					}
+				}
+			],
+			"result": {
+				"name": "userList",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"users": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"id": {
+										"type": "string",
+										"format": "uuid"
+									},
+									"name": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"role": {
+										"type": "string"
+									}
+								}
+							}
+						},
+						"pagination": {
+							"type": "object",
+							"properties": {
+								"page": {
+									"type": "integer"
+								},
+								"perPage": {
+									"type": "integer"
+								},
+								"total": {
+									"type": "integer"
+								},
+								"totalPages": {
+									"type": "integer"
+								}
+							}
+						}
+					}
+				}
+			},
+			"examples": [
+				{
+					"name": "List first page",
+					"params": [
+						{
+							"name": "options",
+							"value": {
+								"page": 1,
+								"perPage": 10
+							}
+						}
+					],
+					"result": {
+						"name": "userList",
+						"value": {
+							"users": [
+								{
+									"id": "550e8400-e29b-41d4-a716-446655440000",
+									"name": "Alice Johnson",
+									"email": "alice@example.com",
+									"role": "admin"
+								},
+								{
+									"id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+									"name": "Bob Smith",
+									"email": "bob@example.com",
+									"role": "user"
+								}
+							],
+							"pagination": {
+								"page": 1,
+								"perPage": 10,
+								"total": 2,
+								"totalPages": 1
+							}
+						}
+					}
+				}
+			]
+		}
+	],
+	"components": {
+		"schemas": {
+			"User": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"name": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string",
+						"format": "email"
+					},
+					"role": {
+						"type": "string",
+						"enum": ["admin", "user", "guest"]
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				},
+				"required": ["id", "name", "email", "role", "createdAt"]
+			},
+			"Error": {
+				"type": "object",
+				"properties": {
+					"code": {
+						"type": "integer"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"type": "object"
+					}
+				},
+				"required": ["code", "message"]
+			}
+		}
+	}
+}

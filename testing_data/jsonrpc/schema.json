@@ -1,0 +1,157 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Spikard JSON-RPC Test Fixture Schema",
+	"description": "Schema for JSON-RPC 2.0 method test fixtures used to generate e2e test apps and test suites",
+	"type": "object",
+	"required": [
+		"name",
+		"description",
+		"method",
+		"protocol",
+		"transport",
+		"endpoint",
+		"params_schema",
+		"result_schema",
+		"examples"
+	],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Fixture name (snake_case method name)",
+			"pattern": "^[a-z][a-z0-9_]*$",
+			"minLength": 1,
+			"examples": ["user_getById", "user_create", "user_list"]
+		},
+		"description": {
+			"type": "string",
+			"description": "Human-readable description of what this method does",
+			"minLength": 1,
+			"examples": ["Get user details by unique identifier", "Create a new user account"]
+		},
+		"method": {
+			"type": "string",
+			"description": "JSON-RPC method name (typically namespaced)",
+			"pattern": "^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)*$",
+			"minLength": 1,
+			"examples": ["user.getById", "user.create", "account.update", "system.ping"]
+		},
+		"protocol": {
+			"type": "string",
+			"const": "jsonrpc",
+			"description": "Must be 'jsonrpc' for JSON-RPC fixtures"
+		},
+		"transport": {
+			"type": "string",
+			"enum": ["http", "websocket", "sse"],
+			"description": "Transport protocol for this JSON-RPC method",
+			"default": "http"
+		},
+		"endpoint": {
+			"type": "string",
+			"description": "HTTP endpoint path for JSON-RPC requests",
+			"pattern": "^/.*",
+			"default": "/rpc",
+			"examples": ["/rpc", "/api/rpc", "/jsonrpc"]
+		},
+		"params_schema": {
+			"type": "object",
+			"description": "JSON Schema for method parameters (follows JSON-RPC 2.0 params structure)",
+			"properties": {
+				"type": {
+					"type": "string"
+				},
+				"properties": {
+					"type": "object"
+				},
+				"required": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"result_schema": {
+			"type": "object",
+			"description": "JSON Schema for method result (JSON-RPC 2.0 result structure)",
+			"properties": {
+				"type": {
+					"type": "string"
+				},
+				"properties": {
+					"type": "object"
+				},
+				"required": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"examples": {
+			"type": "array",
+			"description": "Success case examples with valid params and expected results",
+			"minItems": 1,
+			"items": {
+				"type": "object",
+				"required": ["params", "result"],
+				"properties": {
+					"params": {
+						"description": "Method parameters (JSON-RPC params field)"
+					},
+					"result": {
+						"description": "Expected result (JSON-RPC result field)"
+					}
+				}
+			}
+		},
+		"error_cases": {
+			"type": "array",
+			"description": "Error case examples with invalid params or error conditions",
+			"items": {
+				"type": "object",
+				"required": ["name", "error"],
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Error case identifier (snake_case)",
+						"pattern": "^[a-z][a-z0-9_]*$",
+						"examples": ["user_not_found", "invalid_uuid", "permission_denied"]
+					},
+					"params": {
+						"description": "Method parameters that trigger this error"
+					},
+					"error": {
+						"type": "object",
+						"description": "JSON-RPC 2.0 error object",
+						"required": ["code", "message"],
+						"properties": {
+							"code": {
+								"type": "integer",
+								"description": "JSON-RPC error code (standard codes: -32700 to -32603, or custom codes)",
+								"examples": [-32700, -32600, -32601, -32602, -32603, 404, 409]
+							},
+							"message": {
+								"type": "string",
+								"description": "Human-readable error message",
+								"minLength": 1
+							},
+							"data": {
+								"description": "Additional error data (optional)"
+							}
+						}
+					}
+				}
+			}
+		},
+		"tags": {
+			"type": "array",
+			"description": "Optional tags for categorizing methods",
+			"items": {
+				"type": "string"
+			},
+			"examples": [["users"], ["auth", "security"], ["admin"]]
+		}
+	}
+}

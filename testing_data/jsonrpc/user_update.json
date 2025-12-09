@@ -1,0 +1,132 @@
+{
+	"name": "user_update",
+	"description": "Update an existing user's information",
+	"method": "user.update",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"properties": {
+			"userId": {
+				"type": "string",
+				"format": "uuid",
+				"description": "ID of user to update"
+			},
+			"updates": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 100
+					},
+					"email": {
+						"type": "string",
+						"format": "email"
+					},
+					"role": {
+						"type": "string",
+						"enum": ["user", "admin", "guest"]
+					}
+				},
+				"minProperties": 1
+			}
+		},
+		"required": ["userId", "updates"]
+	},
+	"result_schema": {
+		"type": "object",
+		"properties": {
+			"id": {
+				"type": "string",
+				"format": "uuid"
+			},
+			"name": {
+				"type": "string"
+			},
+			"email": {
+				"type": "string",
+				"format": "email"
+			},
+			"role": {
+				"type": "string"
+			},
+			"createdAt": {
+				"type": "string",
+				"format": "date-time"
+			},
+			"updatedAt": {
+				"type": "string",
+				"format": "date-time"
+			}
+		}
+	},
+	"examples": [
+		{
+			"params": {
+				"userId": "550e8400-e29b-41d4-a716-446655440000",
+				"updates": {
+					"role": "admin"
+				}
+			},
+			"result": {
+				"id": "550e8400-e29b-41d4-a716-446655440000",
+				"name": "Alice Johnson",
+				"email": "alice@example.com",
+				"role": "admin",
+				"createdAt": "2024-01-15T10:30:00Z",
+				"updatedAt": "2024-01-15T15:00:00Z"
+			}
+		},
+		{
+			"params": {
+				"userId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+				"updates": {
+					"name": "Robert Smith",
+					"email": "robert@example.com"
+				}
+			},
+			"result": {
+				"id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+				"name": "Robert Smith",
+				"email": "robert@example.com",
+				"role": "user",
+				"createdAt": "2024-01-15T11:00:00Z",
+				"updatedAt": "2024-01-15T15:30:00Z"
+			}
+		}
+	],
+	"error_cases": [
+		{
+			"name": "user_not_found",
+			"params": {
+				"userId": "00000000-0000-0000-0000-000000000000",
+				"updates": {
+					"name": "New Name"
+				}
+			},
+			"error": {
+				"code": 404,
+				"message": "User not found"
+			}
+		},
+		{
+			"name": "invalid_role",
+			"params": {
+				"userId": "550e8400-e29b-41d4-a716-446655440000",
+				"updates": {
+					"role": "superuser"
+				}
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "role",
+					"reason": "Role must be one of: user, admin, guest"
+				}
+			}
+		}
+	]
+}

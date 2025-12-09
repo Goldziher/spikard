@@ -13,6 +13,7 @@
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
+use crate::jsonrpc::{JsonRpcFixture, load_jsonrpc_fixtures};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, chunk_bytes, streaming_data};
 use anyhow::{Context, Result};
@@ -99,9 +100,15 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
 
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
+    let jsonrpc_fixtures = load_jsonrpc_fixtures(fixtures_dir).context("Failed to load JSON-RPC fixtures")?;
 
-    let app_content =
-        generate_app_file_per_fixture(&fixtures_by_category, &app_dir, &sse_fixtures, &websocket_fixtures)?;
+    let app_content = generate_app_file_per_fixture(
+        &fixtures_by_category,
+        &app_dir,
+        &sse_fixtures,
+        &websocket_fixtures,
+        &jsonrpc_fixtures,
+    )?;
     fs::write(app_dir.join("main.py"), app_content).context("Failed to write main.py")?;
 
     fs::write(app_dir.join("__init__.py"), "\"\"\"E2E test application.\"\"\"\n")
@@ -117,6 +124,7 @@ fn generate_app_file_per_fixture(
     app_dir: &Path,
     sse_fixtures: &[AsyncFixture],
     websocket_fixtures: &[AsyncFixture],
+    jsonrpc_fixtures: &[JsonRpcFixture],
 ) -> Result<String> {
     let mut needs_background = false;
     let mut needs_static_assets = false;
@@ -265,6 +273,7 @@ fn generate_app_file_per_fixture(
 
     append_sse_factories(&mut code, sse_fixtures, &mut all_app_factories)?;
     append_websocket_factories(&mut code, websocket_fixtures, &mut all_app_factories)?;
+    append_jsonrpc_factories(&mut code, jsonrpc_fixtures, &mut all_app_factories)?;
 
     code.push_str("# App factory functions:\n");
     for (category, fixture_name, factory_fn) in all_app_factories {
@@ -498,6 +507,201 @@ def {factory_name}() -> Spikard:
         ));
 
         registry.push(("websocket".to_string(), channel_path.clone(), factory_name));
+    }
+
+    Ok(())
+}
+
+fn append_jsonrpc_factories(
+    code: &mut String,
+    fixtures: &[JsonRpcFixture],
+    registry: &mut Vec<(String, String, String)>,
+) -> Result<()> {
+    if fixtures.is_empty() {
+        return Ok(());
+    }
+
+    code.push_str("\n# ============================================================\n");
+    code.push_str("# JSON-RPC Method Handlers\n");
+    code.push_str("# ============================================================\n\n");
+
+    for fixture in fixtures {
+        let factory_name = sanitize_identifier(&fixture.name);
+        let method_name = &fixture.method;
+
+        // Generate msgspec DTOs for params
+        code.push_str(&format!(
+            "\nclass {}Params(msgspec.Struct):\n",
+            to_pascal_case(&fixture.name)
+        ));
+        let mut params_class = String::new();
+        params_class.push_str("    \"\"\"JSON-RPC params.\"\"\"\n\n");
+
+        let Some(params_obj) = fixture.params_schema.as_object() else {
+            params_class.push_str("    pass\n");
+            code.push_str(&params_class);
+            code.push_str("\n");
+            continue;
+        };
+
+        let Some(properties) = params_obj.get("properties").and_then(|v| v.as_object()) else {
+            params_class.push_str("    pass\n");
+            code.push_str(&params_class);
+            code.push_str("\n");
+            continue;
+        };
+
+        let required_fields: Vec<String> = params_obj
+            .get("required")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .unwrap_or_default();
+
+        let mut required_props: Vec<(&String, &Value)> = Vec::new();
+        let mut optional_props: Vec<(&String, &Value)> = Vec::new();
+
+        for (prop_name, prop_schema) in properties {
+            if required_fields.contains(prop_name) {
+                required_props.push((prop_name, prop_schema));
+            } else {
+                optional_props.push((prop_name, prop_schema));
+            }
+        }
+
+        if required_props.is_empty() && optional_props.is_empty() {
+            params_class.push_str("    pass\n");
+        } else {
+            for (prop_name, prop_schema) in required_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                params_class.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            }
+
+            for (prop_name, prop_schema) in optional_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                params_class.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
+            }
+        }
+
+        code.push_str(&params_class);
+
+        // Generate msgspec DTOs for result
+        code.push_str(&format!(
+            "\nclass {}Result(msgspec.Struct):\n",
+            to_pascal_case(&fixture.name)
+        ));
+        let mut result_class = String::new();
+        result_class.push_str("    \"\"\"JSON-RPC result.\"\"\"\n\n");
+
+        let Some(result_obj) = fixture.result_schema.as_object() else {
+            result_class.push_str("    pass\n");
+            code.push_str(&result_class);
+            code.push_str("\n");
+            continue;
+        };
+
+        let Some(result_properties) = result_obj.get("properties").and_then(|v| v.as_object()) else {
+            result_class.push_str("    pass\n");
+            code.push_str(&result_class);
+            code.push_str("\n");
+            continue;
+        };
+
+        let result_required_fields: Vec<String> = result_obj
+            .get("required")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .unwrap_or_default();
+
+        let mut result_required_props: Vec<(&String, &Value)> = Vec::new();
+        let mut result_optional_props: Vec<(&String, &Value)> = Vec::new();
+
+        for (prop_name, prop_schema) in result_properties {
+            if result_required_fields.contains(prop_name) {
+                result_required_props.push((prop_name, prop_schema));
+            } else {
+                result_optional_props.push((prop_name, prop_schema));
+            }
+        }
+
+        if result_required_props.is_empty() && result_optional_props.is_empty() {
+            result_class.push_str("    pass\n");
+        } else {
+            for (prop_name, prop_schema) in result_required_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                result_class.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            }
+
+            for (prop_name, prop_schema) in result_optional_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                result_class.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
+            }
+        }
+
+        code.push_str(&result_class);
+
+        // Generate handler function that processes JSON-RPC requests
+        let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
+        code.push_str(&format!("\n@post(\"{}\")\n", endpoint));
+        code.push_str(&format!(
+            "async def handle_{}(request: dict) -> Response:\n",
+            factory_name
+        ));
+        code.push_str("    \"\"\"JSON-RPC 2.0 handler.\"\"\"\n");
+        code.push_str(&format!("    if request.get('method') != '{}':\n", method_name));
+        code.push_str("        return Response(\n");
+        code.push_str("            status_code=200,\n");
+        code.push_str("            body=json.dumps({{\n");
+        code.push_str("                'jsonrpc': '2.0',\n");
+        code.push_str("                'error': {{'code': -32601, 'message': 'Method not found'}},\n");
+        code.push_str("                'id': request.get('id')\n");
+        code.push_str("            }}),\n");
+        code.push_str("            headers={{'Content-Type': 'application/json'}}\n");
+        code.push_str("        )\n");
+        code.push_str("    try:\n");
+        code.push_str(&format!(
+            "        params = msgspec.convert(request.get('params', {{}}), {}Params)\n",
+            to_pascal_case(&fixture.name)
+        ));
+        code.push_str("        # Echo back the params as the result for testing\n");
+        code.push_str(&format!(
+            "        result = {}Result(**msgspec.to_builtins(params))\n",
+            to_pascal_case(&fixture.name)
+        ));
+        code.push_str("        return Response(\n");
+        code.push_str("            status_code=200,\n");
+        code.push_str("            body=json.dumps({{\n");
+        code.push_str("                'jsonrpc': '2.0',\n");
+        code.push_str("                'result': msgspec.to_builtins(result),\n");
+        code.push_str("                'id': request.get('id')\n");
+        code.push_str("            }}),\n");
+        code.push_str("            headers={{'Content-Type': 'application/json'}}\n");
+        code.push_str("        )\n");
+        code.push_str("    except Exception as e:\n");
+        code.push_str("        return Response(\n");
+        code.push_str("            status_code=200,\n");
+        code.push_str("            body=json.dumps({{\n");
+        code.push_str("                'jsonrpc': '2.0',\n");
+        code.push_str("                'error': {{'code': -32602, 'message': 'Invalid params', 'data': str(e)}},\n");
+        code.push_str("                'id': request.get('id')\n");
+        code.push_str("            }}),\n");
+        code.push_str("            headers={{'Content-Type': 'application/json'}}\n");
+        code.push_str("        )\n\n");
+
+        // Generate app factory
+        code.push_str(&format!("def create_app_{}() -> Spikard:\n", factory_name));
+        code.push_str("    app = Spikard()\n");
+        code.push_str(&format!("    app.add_route(handle_{})\n", factory_name));
+        code.push_str("    return app\n\n");
+
+        registry.push((
+            "jsonrpc".to_string(),
+            fixture.name.clone(),
+            format!("create_app_{}", factory_name),
+        ));
     }
 
     Ok(())

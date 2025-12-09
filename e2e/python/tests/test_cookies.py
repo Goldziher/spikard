@@ -349,8 +349,8 @@ async def test_multiple_cookies_success() -> None:
     async with TestClient(create_app_cookies_multiple_cookies_success()) as client:
         cookies = {
             "googall_tracker": "ga789",
-            "fatebook_tracker": "tracker456",
             "session_id": "session123",
+            "fatebook_tracker": "tracker456",
         }
         response = await client.get("/items/", cookies=cookies)
 

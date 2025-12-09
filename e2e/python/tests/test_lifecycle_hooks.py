@@ -32,8 +32,8 @@ async def test_onresponse_security_headers() -> None:
         response_headers = response.headers
         assert response_headers.get("x-frame-options") == "DENY"
         assert response_headers.get("strict-transport-security") == "max-age=31536000; includeSubDomains"
-        assert response_headers.get("x-content-type-options") == "nosniff"
         assert response_headers.get("x-xss-protection") == "1; mode=block"
+        assert response_headers.get("x-content-type-options") == "nosniff"
 
 
 async def test_prehandler_authentication_failed_short_circuit() -> None:
@@ -134,8 +134,8 @@ async def test_multiple_hooks_all_phases() -> None:
 
     async with TestClient(create_app_lifecycle_hooks_multiple_hooks_all_phases()) as client:
         headers = {
-            "Authorization": "Bearer valid-token-12345",
             "Content-Type": "application/json",
+            "Authorization": "Bearer valid-token-12345",
         }
         json_data = {"action": "update_profile", "user_id": "user-123"}
         response = await client.post("/api/full-lifecycle", headers=headers, json=json_data)
@@ -151,14 +151,14 @@ async def test_multiple_hooks_all_phases() -> None:
         assert "user_id" in response_data
         assert response_data["user_id"] == "user-123"
         response_headers = response.headers
-        assert response_headers.get("x-content-type-options") == "nosniff"
         header_value = response_headers.get("x-response-time")
         assert header_value is not None
         assert re.match(r".*ms", header_value)
-        assert response_headers.get("x-frame-options") == "DENY"
         header_value = response_headers.get("x-request-id")
         assert header_value is not None
         assert re.match(r".*", header_value)
+        assert response_headers.get("x-content-type-options") == "nosniff"
+        assert response_headers.get("x-frame-options") == "DENY"
 
 
 async def test_hook_execution_order() -> None:
