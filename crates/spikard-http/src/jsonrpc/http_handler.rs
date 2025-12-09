@@ -134,7 +134,7 @@ pub async fn handle_jsonrpc(
     // Route request based on type
     let response = match request {
         JsonRpcRequestOrBatch::Single(req) => {
-            let response = state.router.route_single(req, http_request, request_data).await;
+            let response = state.router.route_single(req, http_request, &request_data).await;
             serde_json::to_string(&response).expect("Response serialization should never fail")
         }
         JsonRpcRequestOrBatch::Batch(batch) => {
@@ -143,7 +143,7 @@ pub async fn handle_jsonrpc(
                 .uri(uri.clone())
                 .body(Body::empty())
                 .unwrap_or_else(|_| Request::builder().method("POST").uri("/").body(Body::empty()).unwrap());
-            match state.router.route_batch(batch, http_request, request_data).await {
+            match state.router.route_batch(batch, http_request, &request_data).await {
                 Ok(responses) => {
                     serde_json::to_string(&responses).expect("Batch response serialization should never fail")
                 }

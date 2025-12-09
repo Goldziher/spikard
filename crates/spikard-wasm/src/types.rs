@@ -18,6 +18,8 @@ pub struct RouteDefinition {
     pub response_schema: Option<Value>,
     #[serde(default)]
     pub parameter_schema: Option<Value>,
+    #[serde(default)]
+    pub jsonrpc_method: Option<Value>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]

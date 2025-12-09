@@ -28,6 +28,7 @@ pub struct RegisteredRoutePayload {
     pub request_schema: Option<serde_json::Value>,
     pub response_schema: Option<serde_json::Value>,
     pub parameter_schema: Option<serde_json::Value>,
+    pub jsonrpc_method: Option<serde_json::Value>,
 }
 
 impl RegisteredRoutePayload {
@@ -578,6 +579,7 @@ pub fn spikard_start_server_impl(
         let request_schema = reg.request_schema.clone();
         let response_schema = reg.response_schema.clone();
         let parameter_schema = reg.parameter_schema.clone();
+        let jsonrpc_method = reg.jsonrpc_method.clone();
 
         let handler =
             PhpHandler::register_from_zval(handler_callable, handler_name.clone(), method.clone(), path.clone())
@@ -615,6 +617,7 @@ pub fn spikard_start_server_impl(
             cors: None,
             body_param_name: None,
             handler_dependencies: Some(Vec::new()),
+            jsonrpc_method,
         });
 
         route_pairs.push((route, Arc::new(handler) as Arc<dyn spikard_http::Handler>));

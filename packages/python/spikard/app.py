@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from spikard.config import ServerConfig
 from spikard.introspection import extract_parameter_schema
+from spikard.jsonrpc import JsonRpcMethodInfo
 from spikard.params import ParamBase
 from spikard.schema import extract_schemas
 from spikard.types import Route
@@ -51,7 +52,7 @@ class Spikard:
         body_schema: dict[str, Any] | None = None,
         parameter_schema: dict[str, Any] | None = None,
         file_params: dict[str, Any] | None = None,
-        jsonrpc_method: Any | None = None,
+        jsonrpc_method: JsonRpcMethodInfo | None = None,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Internal method to register a route.
 
