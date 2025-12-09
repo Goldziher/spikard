@@ -44,6 +44,8 @@ enum GenerateCommand {
     Openapi(OpenapiArgs),
     /// Generate AsyncAPI handler scaffolding (SSE/WebSocket)
     Asyncapi(AsyncapiHandlerArgs),
+    /// Generate JSON-RPC 2.0 handlers from OpenRPC schemas
+    Jsonrpc(JsonrpcArgs),
     /// Generate PHP DTO classes (Request/Response) for Spikard integration
     PhpDto(PhpDtoArgs),
 }
@@ -82,6 +84,20 @@ struct AsyncapiHandlerArgs {
     /// DTO implementation for the selected language (defaults per language)
     #[arg(long = "dto", value_enum)]
     dto: Option<DtoArg>,
+}
+
+#[derive(Args, Debug)]
+struct JsonrpcArgs {
+    /// Path to OpenRPC schema file (JSON or YAML)
+    schema: PathBuf,
+
+    /// Target language for handler scaffolding
+    #[arg(long, short = 'l', default_value = "python")]
+    lang: GenerateLanguage,
+
+    /// Output file path (prints to stdout if not specified)
+    #[arg(long, short = 'o')]
+    output: Option<PathBuf>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -276,6 +292,32 @@ fn main() -> Result<()> {
                         }
                     }
                     CodegenOutcome::InMemory(_) => {}
+                }
+            }
+            GenerateCommand::Jsonrpc(args) => {
+                println!("Generating JSON-RPC 2.0 handlers from OpenRPC schema...");
+                println!("  Input: {}", args.schema.display());
+                println!("  Language: {:?}", args.lang);
+                if let Some(ref path) = args.output {
+                    println!("  Output: {}", path.display());
+                }
+                let request = CodegenRequest {
+                    schema_path: args.schema.clone(),
+                    schema_kind: SchemaKind::OpenRpc,
+                    target: CodegenTargetKind::JsonRpcHandlers {
+                        language: args.lang.into(),
+                        output: args.output.clone().unwrap_or_else(|| PathBuf::from("handlers.py")),
+                    },
+                    dto: None,
+                };
+
+                match CodegenEngine::execute(request).context("Failed to generate code from OpenRPC schema")? {
+                    CodegenOutcome::InMemory(code) => println!("{}", code),
+                    CodegenOutcome::Files(files) => {
+                        for asset in files {
+                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
+                        }
+                    }
                 }
             }
         },
