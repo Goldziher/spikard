@@ -88,6 +88,9 @@ pub struct RouteMetadata {
     #[cfg(feature = "di")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub handler_dependencies: Option<Vec<String>>,
+    /// JSON-RPC method metadata (if this route is exposed as a JSON-RPC method)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub jsonrpc_method: Option<Value>,
 }
 
 /// Compression configuration shared across runtimes

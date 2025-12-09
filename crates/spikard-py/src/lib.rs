@@ -74,6 +74,19 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         if deps.is_none() { None } else { Some(deps.extract()?) }
     };
 
+    let jsonrpc_method_value = {
+        let jsonrpc_method = match route.getattr("jsonrpc_method") {
+            Ok(value) => value,
+            Err(_) => py.None().into_bound(py),
+        };
+        if jsonrpc_method.is_none() {
+            None
+        } else {
+            // Convert Python JsonRpcMethodInfo to JSON Value
+            extract_jsonrpc_method_info(py, &jsonrpc_method)?
+        }
+    };
+
     Ok(RouteMetadata {
         method,
         path,
@@ -86,6 +99,7 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         cors: None,
         body_param_name: body_param_name_value,
         handler_dependencies,
+        jsonrpc_method: jsonrpc_method_value,
     })
 }
 
@@ -95,6 +109,20 @@ fn extract_json_field(py: Python<'_>, route: &Bound<'_, PyAny>, field: &str) -> 
         return Ok(None);
     }
     py_to_json_value(py, &value).map(Some)
+}
+
+fn extract_jsonrpc_method_info(
+    py: Python<'_>,
+    jsonrpc_method: &Bound<'_, PyAny>,
+) -> PyResult<Option<serde_json::Value>> {
+    // Try to call to_dict() method on the JsonRpcMethodInfo object
+    match jsonrpc_method.call_method0("to_dict") {
+        Ok(dict) => py_to_json_value(py, &dict).map(Some),
+        Err(_) => {
+            // Fallback: try to extract it as a dict directly
+            py_to_json_value(py, jsonrpc_method).map(Some)
+        }
+    }
 }
 
 #[allow(clippy::only_used_in_recursion)]

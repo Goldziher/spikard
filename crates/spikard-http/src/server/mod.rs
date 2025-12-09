@@ -489,6 +489,66 @@ pub fn build_router_with_handlers_and_config(
     }
     let hooks = config.lifecycle_hooks.clone();
 
+    // Prepare JSON-RPC registry if enabled (must be done before routes are moved)
+    let jsonrpc_registry = if let Some(ref jsonrpc_config) = config.jsonrpc {
+        if jsonrpc_config.enabled {
+            let registry = Arc::new(crate::jsonrpc::JsonRpcMethodRegistry::new());
+
+            // Register JSON-RPC methods from application handlers
+            for (route, handler) in &routes {
+                if let Some(ref jsonrpc_info) = route.jsonrpc_method {
+                    let method_name = jsonrpc_info.method_name.clone();
+
+                    // Build method metadata from route's JSON-RPC info
+                    let metadata = crate::jsonrpc::MethodMetadata::new(&method_name)
+                        .with_params_schema(jsonrpc_info.params_schema.clone().unwrap_or(serde_json::json!({})))
+                        .with_result_schema(jsonrpc_info.result_schema.clone().unwrap_or(serde_json::json!({})));
+
+                    let metadata = if let Some(ref description) = jsonrpc_info.description {
+                        metadata.with_description(description.clone())
+                    } else {
+                        metadata
+                    };
+
+                    let metadata = if jsonrpc_info.deprecated {
+                        metadata.mark_deprecated()
+                    } else {
+                        metadata
+                    };
+
+                    let mut metadata = metadata;
+                    for tag in &jsonrpc_info.tags {
+                        metadata = metadata.with_tag(tag.clone());
+                    }
+
+                    // Register the method with the registry
+                    if let Err(e) = registry.register(&method_name, Arc::clone(handler), metadata) {
+                        tracing::warn!(
+                            "Failed to register JSON-RPC method '{}' for route {}: {}",
+                            method_name,
+                            route.path,
+                            e
+                        );
+                    } else {
+                        tracing::debug!(
+                            "Registered JSON-RPC method '{}' for route {} {} (handler: {})",
+                            method_name,
+                            route.method,
+                            route.path,
+                            route.handler_name
+                        );
+                    }
+                }
+            }
+
+            Some(registry)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     #[cfg(feature = "di")]
     let mut app = build_router_with_handlers(routes, hooks, config.di_container.clone())?;
     #[cfg(not(feature = "di"))]
@@ -662,32 +722,29 @@ pub fn build_router_with_handlers_and_config(
     // Wire up JSON-RPC endpoint if configured
     if let Some(ref jsonrpc_config) = config.jsonrpc {
         if jsonrpc_config.enabled {
-            // Create method registry
-            let registry = Arc::new(crate::jsonrpc::JsonRpcMethodRegistry::new());
+            // Use the pre-built registry from earlier
+            if let Some(registry) = jsonrpc_registry {
+                // Create router
+                let router = Arc::new(crate::jsonrpc::JsonRpcRouter::new(
+                    registry,
+                    jsonrpc_config.enable_batch,
+                    jsonrpc_config.max_batch_size,
+                ));
 
-            // TODO: Register methods from application handlers here
-            // For now, the registry is empty
+                // Create state
+                let state = Arc::new(crate::jsonrpc::JsonRpcState { router });
 
-            // Create router
-            let router = Arc::new(crate::jsonrpc::JsonRpcRouter::new(
-                registry,
-                jsonrpc_config.enable_batch,
-                jsonrpc_config.max_batch_size,
-            ));
+                // Add main endpoint
+                let endpoint_path = jsonrpc_config.endpoint_path.clone();
+                app = app.route(&endpoint_path, post(crate::jsonrpc::handle_jsonrpc).with_state(state));
 
-            // Create state
-            let state = Arc::new(crate::jsonrpc::JsonRpcState { router });
+                // TODO: Add per-method routes if enabled
+                // TODO: Add WebSocket endpoint if enabled
+                // TODO: Add SSE endpoint if enabled
+                // TODO: Add OpenRPC spec endpoint if enabled
 
-            // Add main endpoint
-            let endpoint_path = jsonrpc_config.endpoint_path.clone();
-            app = app.route(&endpoint_path, post(crate::jsonrpc::handle_jsonrpc).with_state(state));
-
-            // TODO: Add per-method routes if enabled
-            // TODO: Add WebSocket endpoint if enabled
-            // TODO: Add SSE endpoint if enabled
-            // TODO: Add OpenRPC spec endpoint if enabled
-
-            tracing::info!("JSON-RPC endpoint enabled at {}", endpoint_path);
+                tracing::info!("JSON-RPC endpoint enabled at {}", endpoint_path);
+            }
         }
     }
 
@@ -733,6 +790,10 @@ impl Server {
                         cors: route.cors.clone(),
                         body_param_name: None,
                         handler_dependencies: Some(route.handler_dependencies.clone()),
+                        jsonrpc_method: route
+                            .jsonrpc_method
+                            .as_ref()
+                            .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
                     }
                 }
                 #[cfg(not(feature = "di"))]
@@ -748,6 +809,10 @@ impl Server {
                         is_async: route.is_async,
                         cors: route.cors.clone(),
                         body_param_name: None,
+                        jsonrpc_method: route
+                            .jsonrpc_method
+                            .as_ref()
+                            .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
                     }
                 }
             })

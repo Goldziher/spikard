@@ -76,6 +76,7 @@ pub fn build_route_metadata(
         body_param_name,
         #[cfg(feature = "di")]
         handler_dependencies: handler_deps_option,
+        jsonrpc_method: None,
     };
 
     // Validate schemas and parameter validator during build to fail fast

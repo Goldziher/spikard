@@ -522,8 +522,71 @@ fn append_jsonrpc_factories(
     }
 
     code.push_str("\n# ============================================================\n");
-    code.push_str("# JSON-RPC Method Handlers\n");
+    code.push_str("# JSON-RPC Method Handlers with State Management\n");
     code.push_str("# ============================================================\n\n");
+
+    // Add module-level state storage for user data
+    code.push_str("import uuid\n");
+    code.push_str("import re\n");
+    code.push_str("from datetime import datetime\n\n");
+    code.push_str("# Module-level user storage (persists across requests)\n");
+    code.push_str("_user_store: dict[str, dict] = {}\n\n");
+
+    // Pre-populate with example users from fixtures
+    code.push_str("def _init_user_store():\n");
+    code.push_str("    \"\"\"Initialize user store with example users.\"\"\"\n");
+    code.push_str("    global _user_store\n");
+    code.push_str("    _user_store = {\n");
+    code.push_str("        '550e8400-e29b-41d4-a716-446655440000': {\n");
+    code.push_str("            'id': '550e8400-e29b-41d4-a716-446655440000',\n");
+    code.push_str("            'name': 'Alice Johnson',\n");
+    code.push_str("            'email': 'alice@example.com',\n");
+    code.push_str("            'role': 'admin',\n");
+    code.push_str("            'createdAt': '2024-01-15T10:30:00Z',\n");
+    code.push_str("        },\n");
+    code.push_str("        '7c9e6679-7425-40de-944b-e07fc1f90ae7': {\n");
+    code.push_str("            'id': '7c9e6679-7425-40de-944b-e07fc1f90ae7',\n");
+    code.push_str("            'name': 'Bob Smith',\n");
+    code.push_str("            'email': 'bob@example.com',\n");
+    code.push_str("            'role': 'user',\n");
+    code.push_str("            'createdAt': '2024-01-15T11:00:00Z',\n");
+    code.push_str("        },\n");
+    code.push_str("    }\n\n");
+
+    // Add validation helpers
+    code.push_str("def _is_valid_email(email: str) -> bool:\n");
+    code.push_str("    \"\"\"Validate email format.\"\"\"\n");
+    code.push_str("    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'\n");
+    code.push_str("    return bool(re.match(pattern, email))\n\n");
+
+    code.push_str("def _is_valid_uuid(value: str) -> bool:\n");
+    code.push_str("    \"\"\"Validate UUID format.\"\"\"\n");
+    code.push_str("    try:\n");
+    code.push_str("        uuid.UUID(value)\n");
+    code.push_str("        return True\n");
+    code.push_str("    except (ValueError, TypeError):\n");
+    code.push_str("        return False\n\n");
+
+    code.push_str(
+        "def _jsonrpc_error(code: int, message: str, data: dict | None = None, req_id: int | None = None) -> dict:\n",
+    );
+    code.push_str("    \"\"\"Create JSON-RPC 2.0 error response.\"\"\"\n");
+    code.push_str("    response = {\n");
+    code.push_str("        'jsonrpc': '2.0',\n");
+    code.push_str("        'error': {'code': code, 'message': message},\n");
+    code.push_str("        'id': req_id\n");
+    code.push_str("    }\n");
+    code.push_str("    if data:\n");
+    code.push_str("        response['error']['data'] = data\n");
+    code.push_str("    return response\n\n");
+
+    code.push_str("def _jsonrpc_result(result: dict, req_id: int | None = None) -> dict:\n");
+    code.push_str("    \"\"\"Create JSON-RPC 2.0 success response.\"\"\"\n");
+    code.push_str("    return {\n");
+    code.push_str("        'jsonrpc': '2.0',\n");
+    code.push_str("        'result': result,\n");
+    code.push_str("        'id': req_id\n");
+    code.push_str("    }\n\n");
 
     for fixture in fixtures {
         let factory_name = sanitize_identifier(&fixture.name);
@@ -643,56 +706,259 @@ fn append_jsonrpc_factories(
 
         code.push_str(&result_class);
 
-        // Generate handler function that processes JSON-RPC requests
+        // Generate handler function with full business logic
         let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
         code.push_str(&format!("\n@post(\"{}\")\n", endpoint));
         code.push_str(&format!(
             "async def handle_{}(request: dict) -> Response:\n",
             factory_name
         ));
-        code.push_str("    \"\"\"JSON-RPC 2.0 handler.\"\"\"\n");
+        code.push_str("    \"\"\"JSON-RPC 2.0 handler with business logic.\"\"\"\n");
         code.push_str(&format!("    if request.get('method') != '{}':\n", method_name));
+        code.push_str("        error_resp = _jsonrpc_error(-32601, 'Method not found', req_id=request.get('id'))\n");
         code.push_str("        return Response(\n");
         code.push_str("            status_code=200,\n");
-        code.push_str("            body=json.dumps({{\n");
-        code.push_str("                'jsonrpc': '2.0',\n");
-        code.push_str("                'error': {{'code': -32601, 'message': 'Method not found'}},\n");
-        code.push_str("                'id': request.get('id')\n");
-        code.push_str("            }}),\n");
-        code.push_str("            headers={{'Content-Type': 'application/json'}}\n");
-        code.push_str("        )\n");
-        code.push_str("    try:\n");
-        code.push_str(&format!(
-            "        params = msgspec.convert(request.get('params', {{}}), {}Params)\n",
-            to_pascal_case(&fixture.name)
-        ));
-        code.push_str("        # Echo back the params as the result for testing\n");
-        code.push_str(&format!(
-            "        result = {}Result(**msgspec.to_builtins(params))\n",
-            to_pascal_case(&fixture.name)
-        ));
-        code.push_str("        return Response(\n");
-        code.push_str("            status_code=200,\n");
-        code.push_str("            body=json.dumps({{\n");
-        code.push_str("                'jsonrpc': '2.0',\n");
-        code.push_str("                'result': msgspec.to_builtins(result),\n");
-        code.push_str("                'id': request.get('id')\n");
-        code.push_str("            }}),\n");
-        code.push_str("            headers={{'Content-Type': 'application/json'}}\n");
-        code.push_str("        )\n");
-        code.push_str("    except Exception as e:\n");
-        code.push_str("        return Response(\n");
-        code.push_str("            status_code=200,\n");
-        code.push_str("            body=json.dumps({{\n");
-        code.push_str("                'jsonrpc': '2.0',\n");
-        code.push_str("                'error': {{'code': -32602, 'message': 'Invalid params', 'data': str(e)}},\n");
-        code.push_str("                'id': request.get('id')\n");
-        code.push_str("            }}),\n");
-        code.push_str("            headers={{'Content-Type': 'application/json'}}\n");
+        code.push_str("            body=json.dumps(error_resp),\n");
+        code.push_str("            headers={'Content-Type': 'application/json'}\n");
         code.push_str("        )\n\n");
+
+        // Generate method-specific logic based on the method name
+        if method_name.contains("user.create") {
+            code.push_str("    try:\n");
+            code.push_str("        params_dict = request.get('params', {})\n");
+            code.push_str("        user_data = params_dict.get('userData', {})\n\n");
+            code.push_str("        # Validate email format\n");
+            code.push_str("        email = user_data.get('email', '')\n");
+            code.push_str("        if not _is_valid_email(email):\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                -32602,\n");
+            code.push_str("                'Invalid params',\n");
+            code.push_str("                {'field': 'email', 'reason': 'Invalid email format'},\n");
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        # Validate password length\n");
+            code.push_str("        password = user_data.get('password', '')\n");
+            code.push_str("        if len(password) < 8:\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                -32602,\n");
+            code.push_str("                'Invalid params',\n");
+            code.push_str(
+                "                {'field': 'password', 'reason': 'Password must be at least 8 characters'},\n",
+            );
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        # Check if email already exists (alice@example.com is reserved)\n");
+            code.push_str("        if email == 'alice@example.com':\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                409,\n");
+            code.push_str("                'User already exists',\n");
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        # Create new user\n");
+            code.push_str("        new_user_id = str(uuid.uuid4())\n");
+            code.push_str("        new_user = {\n");
+            code.push_str("            'id': new_user_id,\n");
+            code.push_str("            'name': user_data.get('name'),\n");
+            code.push_str("            'email': email,\n");
+            code.push_str("            'role': user_data.get('role', 'user'),\n");
+            code.push_str("            'createdAt': datetime.utcnow().isoformat() + 'Z',\n");
+            code.push_str("        }\n");
+            code.push_str("        _user_store[new_user_id] = new_user\n\n");
+
+            code.push_str("        result = _jsonrpc_result(new_user, req_id=request.get('id'))\n");
+            code.push_str("        return Response(status_code=200, body=json.dumps(result), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("    except Exception as e:\n");
+            code.push_str("        error_resp = _jsonrpc_error(-32602, 'Invalid params', {'error': str(e)}, req_id=request.get('id'))\n");
+            code.push_str("        return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+        } else if method_name.contains("user.getById") {
+            code.push_str("    try:\n");
+            code.push_str("        params_dict = request.get('params', {})\n");
+            code.push_str("        user_id = params_dict.get('userId')\n\n");
+
+            code.push_str("        # Validate UUID format\n");
+            code.push_str("        if not _is_valid_uuid(user_id):\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                -32602,\n");
+            code.push_str("                'Invalid params',\n");
+            code.push_str("                {'field': 'userId', 'reason': 'Invalid UUID format'},\n");
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        # Look up user\n");
+            code.push_str("        user = _user_store.get(user_id)\n");
+            code.push_str("        if not user:\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                404,\n");
+            code.push_str("                'User not found',\n");
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        result = _jsonrpc_result(user, req_id=request.get('id'))\n");
+            code.push_str("        return Response(status_code=200, body=json.dumps(result), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("    except Exception as e:\n");
+            code.push_str("        error_resp = _jsonrpc_error(-32602, 'Invalid params', {'error': str(e)}, req_id=request.get('id'))\n");
+            code.push_str("        return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+        } else if method_name.contains("user.delete") {
+            code.push_str("    try:\n");
+            code.push_str("        params_dict = request.get('params', {})\n");
+            code.push_str("        user_id = params_dict.get('userId')\n\n");
+
+            code.push_str("        # Validate UUID format\n");
+            code.push_str("        if not _is_valid_uuid(user_id):\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                -32602,\n");
+            code.push_str("                'Invalid params',\n");
+            code.push_str("                {'field': 'userId', 'reason': 'Invalid UUID format'},\n");
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        # Check if user exists\n");
+            code.push_str("        if user_id not in _user_store:\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                404,\n");
+            code.push_str("                'User not found',\n");
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        # Delete user\n");
+            code.push_str("        del _user_store[user_id]\n");
+            code.push_str(
+                "        result = _jsonrpc_result({'success': True, 'deletedId': user_id}, req_id=request.get('id'))\n",
+            );
+            code.push_str("        return Response(status_code=200, body=json.dumps(result), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("    except Exception as e:\n");
+            code.push_str("        error_resp = _jsonrpc_error(-32602, 'Invalid params', {'error': str(e)}, req_id=request.get('id'))\n");
+            code.push_str("        return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+        } else if method_name.contains("user.update") {
+            code.push_str("    try:\n");
+            code.push_str("        params_dict = request.get('params', {})\n");
+            code.push_str("        user_id = params_dict.get('userId')\n");
+            code.push_str("        updates = params_dict.get('updates', {})\n\n");
+
+            code.push_str("        # Validate UUID format\n");
+            code.push_str("        if not _is_valid_uuid(user_id):\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                -32602,\n");
+            code.push_str("                'Invalid params',\n");
+            code.push_str("                {'field': 'userId', 'reason': 'Invalid UUID format'},\n");
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        # Check if user exists\n");
+            code.push_str("        if user_id not in _user_store:\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                404,\n");
+            code.push_str("                'User not found',\n");
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        # Validate role if present\n");
+            code.push_str("        if 'role' in updates:\n");
+            code.push_str("            if updates['role'] not in ['user', 'admin', 'guest']:\n");
+            code.push_str("                error_resp = _jsonrpc_error(\n");
+            code.push_str("                    -32602,\n");
+            code.push_str("                    'Invalid params',\n");
+            code.push_str(
+                "                    {'field': 'role', 'reason': 'Role must be one of: user, admin, guest'},\n",
+            );
+            code.push_str("                    req_id=request.get('id')\n");
+            code.push_str("                )\n");
+            code.push_str("                return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        # Apply updates\n");
+            code.push_str("        user = _user_store[user_id]\n");
+            code.push_str("        if 'name' in updates:\n");
+            code.push_str("            user['name'] = updates['name']\n");
+            code.push_str("        if 'email' in updates:\n");
+            code.push_str("            user['email'] = updates['email']\n");
+            code.push_str("        if 'role' in updates:\n");
+            code.push_str("            user['role'] = updates['role']\n");
+            code.push_str("        user['updatedAt'] = datetime.utcnow().isoformat() + 'Z'\n\n");
+
+            code.push_str("        result = _jsonrpc_result(user, req_id=request.get('id'))\n");
+            code.push_str("        return Response(status_code=200, body=json.dumps(result), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("    except Exception as e:\n");
+            code.push_str("        error_resp = _jsonrpc_error(-32602, 'Invalid params', {'error': str(e)}, req_id=request.get('id'))\n");
+            code.push_str("        return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+        } else if method_name.contains("user.list") {
+            code.push_str("    try:\n");
+            code.push_str("        params_dict = request.get('params', {})\n");
+            code.push_str("        options = params_dict.get('options', {})\n\n");
+
+            code.push_str("        # Extract pagination parameters\n");
+            code.push_str("        page = options.get('page', 1)\n");
+            code.push_str("        per_page = options.get('perPage', 20)\n");
+            code.push_str("        role_filter = options.get('role')\n\n");
+
+            code.push_str("        # Validate pagination\n");
+            code.push_str("        if page < 1:\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                -32602,\n");
+            code.push_str("                'Invalid params',\n");
+            code.push_str("                {'field': 'page', 'reason': 'Page must be at least 1'},\n");
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        if per_page > 100:\n");
+            code.push_str("            error_resp = _jsonrpc_error(\n");
+            code.push_str("                -32602,\n");
+            code.push_str("                'Invalid params',\n");
+            code.push_str("                {'field': 'perPage', 'reason': 'perPage must be at most 100'},\n");
+            code.push_str("                req_id=request.get('id')\n");
+            code.push_str("            )\n");
+            code.push_str("            return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("        # Filter users\n");
+            code.push_str("        all_users = list(_user_store.values())\n");
+            code.push_str("        if role_filter:\n");
+            code.push_str("            all_users = [u for u in all_users if u.get('role') == role_filter]\n\n");
+
+            code.push_str("        # Apply pagination\n");
+            code.push_str("        total = len(all_users)\n");
+            code.push_str("        start_idx = (page - 1) * per_page\n");
+            code.push_str("        end_idx = start_idx + per_page\n");
+            code.push_str("        paginated_users = all_users[start_idx:end_idx]\n");
+            code.push_str("        total_pages = (total + per_page - 1) // per_page\n\n");
+
+            code.push_str("        # Build response\n");
+            code.push_str("        result = {\n");
+            code.push_str("            'users': paginated_users,\n");
+            code.push_str("            'pagination': {\n");
+            code.push_str("                'page': page,\n");
+            code.push_str("                'perPage': per_page,\n");
+            code.push_str("                'total': total,\n");
+            code.push_str("                'totalPages': total_pages,\n");
+            code.push_str("            }\n");
+            code.push_str("        }\n");
+            code.push_str("        response = _jsonrpc_result(result, req_id=request.get('id'))\n");
+            code.push_str("        return Response(status_code=200, body=json.dumps(response), headers={'Content-Type': 'application/json'})\n\n");
+
+            code.push_str("    except Exception as e:\n");
+            code.push_str("        error_resp = _jsonrpc_error(-32602, 'Invalid params', {'error': str(e)}, req_id=request.get('id'))\n");
+            code.push_str("        return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
+        }
 
         // Generate app factory
         code.push_str(&format!("def create_app_{}() -> Spikard:\n", factory_name));
+        code.push_str("    \"\"\"Create app with initialized user store.\"\"\"\n");
+        code.push_str("    _init_user_store()\n");
         code.push_str("    app = Spikard()\n");
         code.push_str(&format!("    app.add_route(handle_{})\n", factory_name));
         code.push_str("    return app\n\n");
