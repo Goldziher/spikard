@@ -375,6 +375,7 @@ impl RouteBuilder {
                 cors: self.cors,
                 body_param_name: None,
                 handler_dependencies: None,
+                jsonrpc_method: None,
             }
         }
         #[cfg(not(feature = "di"))]
@@ -390,6 +391,7 @@ impl RouteBuilder {
                 is_async: self.is_async,
                 cors: self.cors,
                 body_param_name: None,
+                jsonrpc_method: None,
             }
         }
     }

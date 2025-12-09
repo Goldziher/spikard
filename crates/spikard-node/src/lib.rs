@@ -330,6 +330,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             cors: None,
             body_param_name: None,
             handler_dependencies: None, // TODO: Extract from route
+            jsonrpc_method: None,
         };
 
         routes.push(route_meta);
@@ -366,6 +367,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                         cors: None,
                         body_param_name: None,
                         handler_dependencies: None,
+                        jsonrpc_method: None,
                     });
                 }
             }

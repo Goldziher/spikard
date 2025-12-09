@@ -187,6 +187,7 @@ mod tests {
             body_param_name: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
+            jsonrpc_method: None,
         }
     }
 
@@ -666,6 +667,7 @@ mod tests {
             body_param_name: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
+            jsonrpc_method: None,
         };
 
         let result = route_to_operation(&route);
