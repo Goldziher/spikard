@@ -30,6 +30,9 @@
 
 use super::method_registry::JsonRpcMethodRegistry;
 use super::protocol::*;
+use crate::handler_trait::RequestData;
+use axum::body::Body;
+use axum::http::Request;
 use serde_json::Value;
 use std::sync::Arc;
 
@@ -77,26 +80,34 @@ impl JsonRpcRouter {
     /// Processes a single request by:
     /// 1. Checking if the method exists in the registry
     /// 2. Handling notifications (requests without IDs)
-    /// 3. Invoking the handler
-    /// 4. Returning appropriately formatted responses
+    /// 3. Invoking the handler with the HTTP request context
+    /// 4. Converting handler responses to JSON-RPC format
+    /// 5. Returning appropriately formatted responses
     ///
     /// For notifications, the server MUST NOT send a response.
-    /// This method currently returns a no-op response; actual handler
-    /// invocation will be implemented in the HTTP handler layer.
+    /// The response is still generated but marked as not-to-be-sent by the caller.
     ///
     /// # Arguments
     ///
     /// * `request` - The JSON-RPC request to route
+    /// * `http_request` - The HTTP request context (headers, method, etc.)
+    /// * `request_data` - Extracted request data (params, body, etc.)
     ///
     /// # Returns
     ///
     /// A `JsonRpcResponseType` containing either a success response with the
-    /// handler's result or an error response if the method is not found
-    pub async fn route_single(&self, request: JsonRpcRequest) -> JsonRpcResponseType {
+    /// handler's result or an error response if the method is not found or
+    /// the handler fails
+    pub async fn route_single(
+        &self,
+        request: JsonRpcRequest,
+        http_request: Request<Body>,
+        request_data: RequestData,
+    ) -> JsonRpcResponseType {
         // Check if method exists in registry
-        let _handler = match self.registry.get(&request.method) {
-            Some(h) => h,
-            None => {
+        let handler = match self.registry.get(&request.method) {
+            Ok(Some(h)) => h,
+            Ok(None) => {
                 let id = request.id.unwrap_or(Value::Null);
                 return JsonRpcResponseType::Error(JsonRpcErrorResponse::error(
                     error_codes::METHOD_NOT_FOUND,
@@ -104,21 +115,60 @@ impl JsonRpcRouter {
                     id,
                 ));
             }
+            Err(e) => {
+                let id = request.id.unwrap_or(Value::Null);
+                return JsonRpcResponseType::Error(JsonRpcErrorResponse::error(
+                    error_codes::INTERNAL_ERROR,
+                    &format!("Internal error: {}", e),
+                    id,
+                ));
+            }
         };
 
-        // If notification (no id), don't send response
-        if request.is_notification() {
-            // TODO: Call handler but don't wait for response
-            // For now, just return success with null (this won't be sent to client)
-            return JsonRpcResponseType::Success(JsonRpcResponse::success(Value::Null, Value::Null));
+        // If notification (no id), we still call the handler but the response won't be sent
+        // (is_notification is tracked for logging/debugging purposes but the response is still generated)
+        let _is_notification = request.is_notification();
+
+        // Invoke the handler
+        let handler_result = handler.call(http_request, request_data).await;
+
+        // Handle handler result and convert to JSON-RPC response
+        match handler_result {
+            Ok(response) => {
+                // Extract response body for JSON-RPC result
+                let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+                    .await
+                    .unwrap_or_default();
+
+                let result = if body_bytes.is_empty() {
+                    Value::Null
+                } else {
+                    // Try to parse as JSON, fall back to string if not valid JSON
+                    match serde_json::from_slice::<Value>(&body_bytes) {
+                        Ok(json_val) => json_val,
+                        Err(_) => Value::String(
+                            String::from_utf8(body_bytes.to_vec()).unwrap_or_else(|_| "[binary data]".to_string()),
+                        ),
+                    }
+                };
+
+                let id = request.id.unwrap_or(Value::Null);
+                JsonRpcResponseType::Success(JsonRpcResponse::success(result, id))
+            }
+            Err((_status, error_msg)) => {
+                // Handler error: return JSON-RPC internal error
+                let id = request.id.unwrap_or(Value::Null);
+                let error_data = serde_json::json!({
+                    "details": error_msg
+                });
+                JsonRpcResponseType::Error(JsonRpcErrorResponse::error_with_data(
+                    error_codes::INTERNAL_ERROR,
+                    "Internal error from handler",
+                    error_data,
+                    id,
+                ))
+            }
         }
-
-        // TODO: Call handler with proper error handling
-        // For now, echo params back as result
-        let id = request.id.unwrap_or(Value::Null);
-        let result = request.params.unwrap_or_else(|| Value::Object(serde_json::Map::new()));
-
-        JsonRpcResponseType::Success(JsonRpcResponse::success(result, id))
     }
 
     /// Routes a batch of JSON-RPC requests
@@ -137,6 +187,8 @@ impl JsonRpcRouter {
     /// # Arguments
     ///
     /// * `batch` - A vector of JSON-RPC requests
+    /// * `http_request` - The HTTP request context (shared for all batch requests)
+    /// * `request_data` - Extracted request data (shared for all batch requests)
     ///
     /// # Returns
     ///
@@ -152,6 +204,8 @@ impl JsonRpcRouter {
     pub async fn route_batch(
         &self,
         batch: Vec<JsonRpcRequest>,
+        http_request: Request<Body>,
+        request_data: RequestData,
     ) -> Result<Vec<JsonRpcResponseType>, JsonRpcErrorResponse> {
         // Check if batch requests are enabled
         if !self.enable_batch {
@@ -185,7 +239,15 @@ impl JsonRpcRouter {
         for request in batch {
             // Skip notifications - they should not produce responses
             let is_notification = request.is_notification();
-            let response = self.route_single(request).await;
+            // Note: We rebuild the request for each iteration since map() consumes it
+            // In a real scenario, each request might need its own context
+            let req_for_handler = Request::builder()
+                .method("POST")
+                .uri(http_request.uri().clone())
+                .body(Body::empty())
+                .unwrap_or_else(|_| Request::builder().method("POST").uri("/").body(Body::empty()).unwrap());
+
+            let response = self.route_single(request, req_for_handler, request_data.clone()).await;
 
             // Only include non-notification responses
             if !is_notification {
@@ -262,18 +324,71 @@ mod tests {
     use axum::body::Body;
     use axum::http::Request;
     use serde_json::json;
+    use std::collections::HashMap;
     use std::sync::Arc;
 
-    /// Mock handler for testing
-    struct MockHandler;
+    /// Helper function to create minimal RequestData for tests
+    fn create_test_request_data() -> RequestData {
+        RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: Value::Object(serde_json::Map::new()),
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Value::Null,
+            raw_body: None,
+            headers: Arc::new(HashMap::new()),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/rpc".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        }
+    }
 
-    impl Handler for MockHandler {
+    /// Helper function to create a test HTTP request
+    fn create_test_http_request() -> Request<Body> {
+        Request::builder()
+            .method("POST")
+            .uri("/rpc")
+            .body(Body::empty())
+            .unwrap()
+    }
+
+    /// Mock handler that returns success with JSON
+    struct MockSuccessHandler;
+
+    impl Handler for MockSuccessHandler {
         fn call(
             &self,
             _request: Request<Body>,
             _request_data: RequestData,
         ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
-            Box::pin(async { Err((axum::http::StatusCode::OK, "mock".to_string())) })
+            Box::pin(async {
+                use axum::response::Response;
+                let response = Response::builder()
+                    .status(200)
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"result":"success"}"#))
+                    .unwrap();
+                Ok(response)
+            })
+        }
+    }
+
+    /// Mock handler that returns an error
+    struct MockErrorHandler;
+
+    impl Handler for MockErrorHandler {
+        fn call(
+            &self,
+            _request: Request<Body>,
+            _request_data: RequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
+            Box::pin(async {
+                Err((
+                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                    "Handler error".to_string(),
+                ))
+            })
         }
     }
 
@@ -283,7 +398,10 @@ mod tests {
         let router = JsonRpcRouter::new(registry, true, 100);
 
         let request = JsonRpcRequest::new("unknown_method", None, Some(json!(1)));
-        let response = router.route_single(request).await;
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, request_data).await;
 
         match response {
             JsonRpcResponseType::Error(err) => {
@@ -299,18 +417,21 @@ mod tests {
         let registry = Arc::new(JsonRpcMethodRegistry::new());
 
         // Register a method so we get past the not found check
-        let handler = Arc::new(MockHandler);
+        let handler = Arc::new(MockSuccessHandler);
         let metadata = super::super::method_registry::MethodMetadata::new("notify_method");
-        registry.register("notify_method", handler, metadata);
+        registry.register("notify_method", handler, metadata).unwrap();
 
         let router = JsonRpcRouter::new(registry.clone(), true, 100);
 
         let request = JsonRpcRequest::new("notify_method", None, None);
         assert!(request.is_notification());
 
-        let response = router.route_single(request).await;
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
 
-        // Notifications should return success with null ID (but won't be sent to client)
+        let response = router.route_single(request, http_request, request_data).await;
+
+        // Notifications should return success (but won't be sent to client)
         match response {
             JsonRpcResponseType::Success(resp) => {
                 assert_eq!(resp.id, Value::Null);
@@ -320,26 +441,56 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_route_single_with_params() {
+    async fn test_route_single_with_handler_success() {
         let registry = Arc::new(JsonRpcMethodRegistry::new());
 
-        // Register a method
-        let handler = Arc::new(MockHandler);
+        // Register a handler that returns JSON
+        let handler = Arc::new(MockSuccessHandler);
         let metadata = super::super::method_registry::MethodMetadata::new("test_method");
-        registry.register("test_method", handler, metadata);
+        registry.register("test_method", handler, metadata).unwrap();
 
         let router = JsonRpcRouter::new(registry.clone(), true, 100);
 
-        let params = json!({"key": "value"});
-        let request = JsonRpcRequest::new("test_method", Some(params.clone()), Some(json!(1)));
-        let response = router.route_single(request).await;
+        let request = JsonRpcRequest::new("test_method", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, request_data).await;
 
         match response {
             JsonRpcResponseType::Success(resp) => {
-                assert_eq!(resp.result, params);
+                // Handler returns {"result":"success"} which should be extracted
+                assert_eq!(resp.result, json!({"result":"success"}));
                 assert_eq!(resp.id, json!(1));
             }
             _ => panic!("Expected success response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_route_single_with_handler_error() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a handler that returns an error
+        let handler = Arc::new(MockErrorHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("error_method");
+        registry.register("error_method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let request = JsonRpcRequest::new("error_method", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert_eq!(err.error.code, error_codes::INTERNAL_ERROR);
+                assert_eq!(err.id, json!(1));
+                assert!(err.error.data.is_some());
+            }
+            _ => panic!("Expected error response"),
         }
     }
 
@@ -349,7 +500,10 @@ mod tests {
         let router = JsonRpcRouter::new(registry, false, 100);
 
         let batch = vec![JsonRpcRequest::new("method", None, Some(json!(1)))];
-        let result = router.route_batch(batch).await;
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, request_data).await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -362,7 +516,10 @@ mod tests {
         let router = JsonRpcRouter::new(registry, true, 100);
 
         let batch = vec![];
-        let result = router.route_batch(batch).await;
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, request_data).await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -377,7 +534,10 @@ mod tests {
         let batch = (1..=10)
             .map(|i| JsonRpcRequest::new("method", None, Some(json!(i))))
             .collect();
-        let result = router.route_batch(batch).await;
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, request_data).await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -389,9 +549,9 @@ mod tests {
         let registry = Arc::new(JsonRpcMethodRegistry::new());
 
         // Register a method
-        let handler = Arc::new(MockHandler);
+        let handler = Arc::new(MockSuccessHandler);
         let metadata = super::super::method_registry::MethodMetadata::new("method");
-        registry.register("method", handler, metadata);
+        registry.register("method", handler, metadata).unwrap();
 
         let router = JsonRpcRouter::new(registry.clone(), true, 100);
 
@@ -401,7 +561,10 @@ mod tests {
             JsonRpcRequest::new("method", None, Some(json!(2))), // Normal request
         ];
 
-        let result = router.route_batch(batch).await;
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, request_data).await;
         assert!(result.is_ok());
 
         let responses = result.unwrap();

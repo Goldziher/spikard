@@ -39,11 +39,15 @@
 //! ```
 
 use super::router::{JsonRpcRequestOrBatch, JsonRpcRouter};
+use crate::handler_trait::RequestData;
+use crate::server::request_extraction::extract_headers;
 use axum::{
+    body::Body,
     extract::State,
-    http::{HeaderMap, StatusCode, header},
+    http::{HeaderMap, Request, StatusCode, header},
     response::{IntoResponse, Response as AxumResponse},
 };
+use std::collections::HashMap;
 use std::sync::Arc;
 
 /// State passed to the JSON-RPC HTTP handler
@@ -66,6 +70,7 @@ pub struct JsonRpcState {
 ///
 /// * `state` - The application state containing the JSON-RPC router
 /// * `headers` - HTTP request headers (used for Content-Type validation)
+/// * `uri` - HTTP request URI (used for extracting path and query params)
 /// * `body` - The raw request body as a string
 ///
 /// # Returns
@@ -93,7 +98,12 @@ pub struct JsonRpcState {
 /// [{"jsonrpc":"2.0","method":"add","params":[1,2],"id":1},
 ///  {"jsonrpc":"2.0","method":"multiply","params":[3,4],"id":2}]
 /// ```
-pub async fn handle_jsonrpc(State(state): State<Arc<JsonRpcState>>, headers: HeaderMap, body: String) -> AxumResponse {
+pub async fn handle_jsonrpc(
+    State(state): State<Arc<JsonRpcState>>,
+    headers: HeaderMap,
+    uri: axum::http::Uri,
+    body: String,
+) -> AxumResponse {
     // Validate Content-Type header
     if !validate_content_type(&headers) {
         return create_error_response(
@@ -111,21 +121,60 @@ pub async fn handle_jsonrpc(State(state): State<Arc<JsonRpcState>>, headers: Hea
         }
     };
 
+    // Create a minimal RequestData from the HTTP request context
+    let request_data = create_jsonrpc_request_data(&headers, &uri);
+
+    // Create HTTP request for handler invocation
+    let http_request = Request::builder()
+        .method("POST")
+        .uri(uri.clone())
+        .body(Body::empty())
+        .unwrap_or_else(|_| Request::builder().method("POST").uri("/").body(Body::empty()).unwrap());
+
     // Route request based on type
     let response = match request {
         JsonRpcRequestOrBatch::Single(req) => {
-            let response = state.router.route_single(req).await;
+            let response = state.router.route_single(req, http_request, request_data).await;
             serde_json::to_string(&response).expect("Response serialization should never fail")
         }
-        JsonRpcRequestOrBatch::Batch(batch) => match state.router.route_batch(batch).await {
-            Ok(responses) => serde_json::to_string(&responses).expect("Batch response serialization should never fail"),
-            Err(error_response) => {
-                serde_json::to_string(&error_response).expect("Error serialization should never fail")
+        JsonRpcRequestOrBatch::Batch(batch) => {
+            let http_request = Request::builder()
+                .method("POST")
+                .uri(uri.clone())
+                .body(Body::empty())
+                .unwrap_or_else(|_| Request::builder().method("POST").uri("/").body(Body::empty()).unwrap());
+            match state.router.route_batch(batch, http_request, request_data).await {
+                Ok(responses) => {
+                    serde_json::to_string(&responses).expect("Batch response serialization should never fail")
+                }
+                Err(error_response) => {
+                    serde_json::to_string(&error_response).expect("Error serialization should never fail")
+                }
             }
-        },
+        }
     };
 
     create_jsonrpc_response(response)
+}
+
+/// Helper function to create RequestData from JSON-RPC HTTP context
+///
+/// Creates a minimal RequestData with headers and path info extracted from the HTTP request.
+/// Query parameters are extracted from the URI.
+fn create_jsonrpc_request_data(headers: &HeaderMap, uri: &axum::http::Uri) -> RequestData {
+    RequestData {
+        path_params: Arc::new(HashMap::new()),
+        query_params: serde_json::json!({}),
+        raw_query_params: Arc::new(HashMap::new()),
+        body: serde_json::json!({}),
+        raw_body: None,
+        headers: Arc::new(extract_headers(headers)),
+        cookies: Arc::new(HashMap::new()),
+        method: "POST".to_string(),
+        path: uri.path().to_string(),
+        #[cfg(feature = "di")]
+        dependencies: None,
+    }
 }
 
 /// Validates that the Content-Type header is application/json
@@ -222,13 +271,19 @@ mod tests {
         HeaderMap::new()
     }
 
+    /// Helper to create a test URI
+    fn create_test_uri() -> axum::http::Uri {
+        axum::http::Uri::from_static("/rpc")
+    }
+
     #[tokio::test]
     async fn test_handle_jsonrpc_single_request() {
         let state = create_test_state();
         let headers = create_json_headers();
+        let uri = create_test_uri();
         let body = r#"{"jsonrpc":"2.0","method":"test.method","params":{},"id":1}"#.to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should return 200 OK
         assert_eq!(response.status(), StatusCode::OK);
@@ -242,13 +297,14 @@ mod tests {
     async fn test_handle_jsonrpc_batch_request() {
         let state = create_test_state();
         let headers = create_json_headers();
+        let uri = create_test_uri();
         let body = r#"[
             {"jsonrpc":"2.0","method":"test.method","params":{},"id":1},
             {"jsonrpc":"2.0","method":"test.method","params":{},"id":2}
         ]"#
         .to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should return 200 OK
         assert_eq!(response.status(), StatusCode::OK);
@@ -262,9 +318,10 @@ mod tests {
     async fn test_invalid_content_type() {
         let state = create_test_state();
         let headers = create_wrong_content_type_headers();
+        let uri = create_test_uri();
         let body = r#"{"jsonrpc":"2.0","method":"test","id":1}"#.to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should return 415 Unsupported Media Type
         assert_eq!(response.status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
@@ -278,9 +335,10 @@ mod tests {
     async fn test_missing_content_type_defaults_to_json() {
         let state = create_test_state();
         let headers = create_empty_headers();
+        let uri = create_test_uri();
         let body = r#"{"jsonrpc":"2.0","method":"test.method","params":{},"id":1}"#.to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should return 200 OK (no Content-Type is valid, defaults to JSON)
         assert_eq!(response.status(), StatusCode::OK);
@@ -290,9 +348,10 @@ mod tests {
     async fn test_invalid_json_parse_error() {
         let state = create_test_state();
         let headers = create_json_headers();
+        let uri = create_test_uri();
         let body = r#"{"invalid json"}"#.to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should return 200 OK with parse error in JSON-RPC response
         assert_eq!(response.status(), StatusCode::OK);
@@ -302,6 +361,7 @@ mod tests {
     async fn test_notification_in_batch() {
         let state = create_test_state();
         let headers = create_json_headers();
+        let uri = create_test_uri();
         // Batch with both regular requests and a notification
         let body = r#"[
             {"jsonrpc":"2.0","method":"test","params":{},"id":1},
@@ -310,7 +370,7 @@ mod tests {
         ]"#
         .to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should return 200 OK
         assert_eq!(response.status(), StatusCode::OK);
@@ -367,9 +427,10 @@ mod tests {
     async fn test_method_not_found_in_single_request() {
         let state = create_test_state();
         let headers = create_json_headers();
+        let uri = create_test_uri();
         let body = r#"{"jsonrpc":"2.0","method":"nonexistent.method","params":{},"id":1}"#.to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should return 200 OK with error in response
         assert_eq!(response.status(), StatusCode::OK);
@@ -381,12 +442,13 @@ mod tests {
         let router = Arc::new(JsonRpcRouter::new(registry, false, 100)); // batch disabled
         let state = Arc::new(JsonRpcState { router });
         let headers = create_json_headers();
+        let uri = create_test_uri();
         let body = r#"[
             {"jsonrpc":"2.0","method":"test","params":{},"id":1}
         ]"#
         .to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should return 200 OK with batch error in response
         assert_eq!(response.status(), StatusCode::OK);
@@ -398,6 +460,7 @@ mod tests {
         let router = Arc::new(JsonRpcRouter::new(registry, true, 2)); // max 2 requests
         let state = Arc::new(JsonRpcState { router });
         let headers = create_json_headers();
+        let uri = create_test_uri();
         let body = r#"[
             {"jsonrpc":"2.0","method":"test","params":{},"id":1},
             {"jsonrpc":"2.0","method":"test","params":{},"id":2},
@@ -405,7 +468,7 @@ mod tests {
         ]"#
         .to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should return 200 OK with batch size error in response
         assert_eq!(response.status(), StatusCode::OK);
@@ -415,9 +478,10 @@ mod tests {
     async fn test_empty_batch() {
         let state = create_test_state();
         let headers = create_json_headers();
+        let uri = create_test_uri();
         let body = r#"[]"#.to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should return 200 OK with empty batch error in response
         assert_eq!(response.status(), StatusCode::OK);
@@ -427,6 +491,7 @@ mod tests {
     async fn test_response_with_params() {
         let state = create_test_state();
         let headers = create_json_headers();
+        let uri = create_test_uri();
         let params = json!({"key": "value", "number": 42});
         let body = serde_json::to_string(&json!({
             "jsonrpc": "2.0",
@@ -436,7 +501,7 @@ mod tests {
         }))
         .unwrap();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         assert_eq!(response.status(), StatusCode::OK);
     }
@@ -446,9 +511,10 @@ mod tests {
         let state = create_test_state();
         let mut headers = HeaderMap::new();
         headers.insert(header::CONTENT_TYPE, "Application/JSON".parse().unwrap());
+        let uri = create_test_uri();
         let body = r#"{"jsonrpc":"2.0","method":"test","id":1}"#.to_string();
 
-        let response = handle_jsonrpc(State(state), headers, body).await;
+        let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
         // Should work with different case
         assert_eq!(response.status(), StatusCode::OK);

@@ -7,7 +7,32 @@ use crate::handler_trait::Handler;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::fmt;
 use std::sync::{Arc, RwLock};
+
+/// Error type for registry operations that involve lock acquisition
+#[derive(Debug, Clone)]
+pub struct RegistryError {
+    /// Description of the error
+    message: String,
+}
+
+impl RegistryError {
+    /// Create a lock poisoning error
+    fn lock_poisoned() -> Self {
+        Self {
+            message: "Failed to acquire lock on registry: lock was poisoned due to a previous panic".to_string(),
+        }
+    }
+}
+
+impl fmt::Display for RegistryError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for RegistryError {}
 
 /// Example for a JSON-RPC method
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -153,17 +178,37 @@ impl JsonRpcMethodRegistry {
     /// * `handler` - The handler that processes this method
     /// * `metadata` - Metadata describing the method
     ///
-    /// # Panics
+    /// # Returns
     ///
-    /// This method will panic if the write lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn register(&self, name: impl Into<String>, handler: Arc<dyn Handler>, metadata: MethodMetadata) {
+    /// Returns `Ok(())` on success, or `Err(RegistryError)` if the lock cannot be acquired.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// # use spikard_http::jsonrpc::{JsonRpcMethodRegistry, MethodMetadata};
+    /// # use std::sync::Arc;
+    /// # struct DummyHandler;
+    /// # impl spikard_http::handler_trait::Handler for DummyHandler {
+    /// #     fn call(&self, _: axum::http::Request<axum::body::Body>, _: spikard_http::handler_trait::RequestData) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::handler_trait::HandlerResult> + Send + '_>> {
+    /// #         Box::pin(async { Err((axum::http::StatusCode::OK, String::new())) })
+    /// #     }
+    /// # }
+    /// let registry = JsonRpcMethodRegistry::new();
+    /// let handler = Arc::new(DummyHandler);
+    /// let metadata = MethodMetadata::new("test");
+    /// registry.register("test", handler, metadata)?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    pub fn register(
+        &self,
+        name: impl Into<String>,
+        handler: Arc<dyn Handler>,
+        metadata: MethodMetadata,
+    ) -> Result<(), RegistryError> {
         let name = name.into();
-        let mut methods = self
-            .methods
-            .write()
-            .expect("Failed to acquire write lock on methods registry");
+        let mut methods = self.methods.write().map_err(|_| RegistryError::lock_poisoned())?;
         methods.insert(name, (handler, metadata));
+        Ok(())
     }
 
     /// Get a handler by method name
@@ -176,18 +221,11 @@ impl JsonRpcMethodRegistry {
     ///
     /// # Returns
     ///
-    /// An `Option<Arc<dyn Handler>>` containing the handler if found, or `None` otherwise.
-    ///
-    /// # Panics
-    ///
-    /// This method will panic if the read lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn get(&self, name: &str) -> Option<Arc<dyn Handler>> {
-        let methods = self
-            .methods
-            .read()
-            .expect("Failed to acquire read lock on methods registry");
-        methods.get(name).map(|(handler, _)| Arc::clone(handler))
+    /// `Ok(Option<Arc<dyn Handler>>)` containing the handler if found, `Ok(None)` if not found,
+    /// or `Err(RegistryError)` if the lock cannot be acquired.
+    pub fn get(&self, name: &str) -> Result<Option<Arc<dyn Handler>>, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.get(name).map(|(handler, _)| Arc::clone(handler)))
     }
 
     /// Get metadata for a method by name
@@ -200,18 +238,11 @@ impl JsonRpcMethodRegistry {
     ///
     /// # Returns
     ///
-    /// An `Option<MethodMetadata>` containing the metadata if found, or `None` otherwise.
-    ///
-    /// # Panics
-    ///
-    /// This method will panic if the read lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn get_metadata(&self, name: &str) -> Option<MethodMetadata> {
-        let methods = self
-            .methods
-            .read()
-            .expect("Failed to acquire read lock on methods registry");
-        methods.get(name).map(|(_, metadata)| metadata.clone())
+    /// `Ok(Option<MethodMetadata>)` containing the metadata if found, `Ok(None)` if not found,
+    /// or `Err(RegistryError)` if the lock cannot be acquired.
+    pub fn get_metadata(&self, name: &str) -> Result<Option<MethodMetadata>, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.get(name).map(|(_, metadata)| metadata.clone()))
     }
 
     /// Get both handler and metadata for a method
@@ -224,40 +255,26 @@ impl JsonRpcMethodRegistry {
     ///
     /// # Returns
     ///
-    /// An `Option` containing a tuple of `(Arc<dyn Handler>, MethodMetadata)` if found.
-    ///
-    /// # Panics
-    ///
-    /// This method will panic if the read lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn get_with_metadata(&self, name: &str) -> Option<(Arc<dyn Handler>, MethodMetadata)> {
-        let methods = self
-            .methods
-            .read()
-            .expect("Failed to acquire read lock on methods registry");
-        methods
+    /// `Ok(Option<(Arc<dyn Handler>, MethodMetadata)>)` if found, `Ok(None)` if not found,
+    /// or `Err(RegistryError)` if the lock cannot be acquired.
+    pub fn get_with_metadata(&self, name: &str) -> Result<Option<(Arc<dyn Handler>, MethodMetadata)>, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods
             .get(name)
-            .map(|(handler, metadata)| (Arc::clone(handler), metadata.clone()))
+            .map(|(handler, metadata)| (Arc::clone(handler), metadata.clone())))
     }
 
     /// List all registered method names
     ///
     /// # Returns
     ///
-    /// A `Vec<String>` containing all registered method names, sorted lexicographically.
-    ///
-    /// # Panics
-    ///
-    /// This method will panic if the read lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn list_methods(&self) -> Vec<String> {
-        let methods = self
-            .methods
-            .read()
-            .expect("Failed to acquire read lock on methods registry");
+    /// `Ok(Vec<String>)` containing all registered method names, sorted lexicographically,
+    /// or `Err(RegistryError)` if the lock cannot be acquired.
+    pub fn list_methods(&self) -> Result<Vec<String>, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
         let mut names: Vec<String> = methods.keys().cloned().collect();
         names.sort();
-        names
+        Ok(names)
     }
 
     /// Check if a method is registered
@@ -268,109 +285,75 @@ impl JsonRpcMethodRegistry {
     ///
     /// # Returns
     ///
-    /// `true` if the method is registered, `false` otherwise.
-    ///
-    /// # Panics
-    ///
-    /// This method will panic if the read lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn contains(&self, name: &str) -> bool {
-        let methods = self
-            .methods
-            .read()
-            .expect("Failed to acquire read lock on methods registry");
-        methods.contains_key(name)
+    /// `Ok(true)` if the method is registered, `Ok(false)` if not,
+    /// or `Err(RegistryError)` if the lock cannot be acquired.
+    pub fn contains(&self, name: &str) -> Result<bool, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.contains_key(name))
     }
 
     /// Get the number of registered methods
     ///
     /// # Returns
     ///
-    /// The count of registered methods.
-    ///
-    /// # Panics
-    ///
-    /// This method will panic if the read lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn len(&self) -> usize {
-        let methods = self
-            .methods
-            .read()
-            .expect("Failed to acquire read lock on methods registry");
-        methods.len()
+    /// `Ok(usize)` containing the count of registered methods,
+    /// or `Err(RegistryError)` if the lock cannot be acquired.
+    pub fn len(&self) -> Result<usize, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.len())
     }
 
     /// Check if the registry is empty
     ///
     /// # Returns
     ///
-    /// `true` if no methods are registered, `false` otherwise.
-    ///
-    /// # Panics
-    ///
-    /// This method will panic if the read lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn is_empty(&self) -> bool {
-        let methods = self
-            .methods
-            .read()
-            .expect("Failed to acquire read lock on methods registry");
-        methods.is_empty()
+    /// `Ok(true)` if no methods are registered, `Ok(false)` if any methods exist,
+    /// or `Err(RegistryError)` if the lock cannot be acquired.
+    pub fn is_empty(&self) -> Result<bool, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.is_empty())
     }
 
     /// Remove a method from the registry
     ///
-    /// Returns `true` if the method was removed, `false` if it didn't exist.
+    /// Returns `Ok(true)` if the method was removed, `Ok(false)` if it didn't exist.
     ///
     /// # Arguments
     ///
     /// * `name` - The method name to remove
     ///
-    /// # Panics
+    /// # Returns
     ///
-    /// This method will panic if the write lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn remove(&self, name: &str) -> bool {
-        let mut methods = self
-            .methods
-            .write()
-            .expect("Failed to acquire write lock on methods registry");
-        methods.remove(name).is_some()
+    /// `Ok(true)` if the method was removed, `Ok(false)` if not found,
+    /// or `Err(RegistryError)` if the lock cannot be acquired.
+    pub fn remove(&self, name: &str) -> Result<bool, RegistryError> {
+        let mut methods = self.methods.write().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.remove(name).is_some())
     }
 
     /// Clear all methods from the registry
     ///
-    /// # Panics
+    /// # Returns
     ///
-    /// This method will panic if the write lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn clear(&self) {
-        let mut methods = self
-            .methods
-            .write()
-            .expect("Failed to acquire write lock on methods registry");
+    /// `Ok(())` on success, or `Err(RegistryError)` if the lock cannot be acquired.
+    pub fn clear(&self) -> Result<(), RegistryError> {
+        let mut methods = self.methods.write().map_err(|_| RegistryError::lock_poisoned())?;
         methods.clear();
+        Ok(())
     }
 
     /// Get all methods with their metadata
     ///
     /// # Returns
     ///
-    /// A `Vec` containing tuples of method name, handler, and metadata.
-    ///
-    /// # Panics
-    ///
-    /// This method will panic if the read lock cannot be acquired. This is
-    /// extremely unlikely in normal operation.
-    pub fn list_all(&self) -> Vec<(String, Arc<dyn Handler>, MethodMetadata)> {
-        let methods = self
-            .methods
-            .read()
-            .expect("Failed to acquire read lock on methods registry");
-        methods
+    /// `Ok(Vec)` containing tuples of method name, handler, and metadata,
+    /// or `Err(RegistryError)` if the lock cannot be acquired.
+    pub fn list_all(&self) -> Result<Vec<(String, Arc<dyn Handler>, MethodMetadata)>, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods
             .iter()
             .map(|(name, (handler, metadata))| (name.clone(), Arc::clone(handler), metadata.clone()))
-            .collect()
+            .collect())
     }
 }
 
@@ -419,9 +402,9 @@ mod tests {
     #[test]
     fn test_new_registry_is_empty() {
         let registry = create_test_registry();
-        assert!(registry.is_empty());
-        assert_eq!(registry.len(), 0);
-        assert!(registry.list_methods().is_empty());
+        assert!(registry.is_empty().unwrap());
+        assert_eq!(registry.len().unwrap(), 0);
+        assert!(registry.list_methods().unwrap().is_empty());
     }
 
     #[test]
@@ -430,20 +413,25 @@ mod tests {
         let handler = create_mock_handler();
         let metadata = MethodMetadata::new("test_method");
 
-        registry.register("test_method", handler.clone(), metadata.clone());
+        registry
+            .register("test_method", handler.clone(), metadata.clone())
+            .unwrap();
 
-        assert!(!registry.is_empty());
-        assert_eq!(registry.len(), 1);
-        assert!(registry.contains("test_method"));
-        assert!(registry.get("test_method").is_some());
-        assert_eq!(registry.get_metadata("test_method").unwrap().name, "test_method");
+        assert!(!registry.is_empty().unwrap());
+        assert_eq!(registry.len().unwrap(), 1);
+        assert!(registry.contains("test_method").unwrap());
+        assert!(registry.get("test_method").unwrap().is_some());
+        assert_eq!(
+            registry.get_metadata("test_method").unwrap().unwrap().name,
+            "test_method"
+        );
     }
 
     #[test]
     fn test_get_nonexistent_method() {
         let registry = create_test_registry();
-        assert!(registry.get("nonexistent").is_none());
-        assert!(registry.get_metadata("nonexistent").is_none());
+        assert!(registry.get("nonexistent").unwrap().is_none());
+        assert!(registry.get_metadata("nonexistent").unwrap().is_none());
     }
 
     #[test]
@@ -451,11 +439,17 @@ mod tests {
         let registry = create_test_registry();
         let handler = create_mock_handler();
 
-        registry.register("zebra", handler.clone(), MethodMetadata::new("zebra"));
-        registry.register("apple", handler.clone(), MethodMetadata::new("apple"));
-        registry.register("banana", handler.clone(), MethodMetadata::new("banana"));
+        registry
+            .register("zebra", handler.clone(), MethodMetadata::new("zebra"))
+            .unwrap();
+        registry
+            .register("apple", handler.clone(), MethodMetadata::new("apple"))
+            .unwrap();
+        registry
+            .register("banana", handler.clone(), MethodMetadata::new("banana"))
+            .unwrap();
 
-        let methods = registry.list_methods();
+        let methods = registry.list_methods().unwrap();
         assert_eq!(methods, vec!["apple", "banana", "zebra"]);
     }
 
@@ -465,11 +459,15 @@ mod tests {
         let handler1 = create_mock_handler();
         let handler2 = create_mock_handler();
 
-        registry.register("method", handler1, MethodMetadata::new("method"));
-        assert_eq!(registry.len(), 1);
+        registry
+            .register("method", handler1, MethodMetadata::new("method"))
+            .unwrap();
+        assert_eq!(registry.len().unwrap(), 1);
 
-        registry.register("method", handler2, MethodMetadata::new("method"));
-        assert_eq!(registry.len(), 1);
+        registry
+            .register("method", handler2, MethodMetadata::new("method"))
+            .unwrap();
+        assert_eq!(registry.len().unwrap(), 1);
     }
 
     #[test]
@@ -477,19 +475,21 @@ mod tests {
         let registry = create_test_registry();
         let handler = create_mock_handler();
 
-        registry.register("method", handler, MethodMetadata::new("method"));
-        assert_eq!(registry.len(), 1);
+        registry
+            .register("method", handler, MethodMetadata::new("method"))
+            .unwrap();
+        assert_eq!(registry.len().unwrap(), 1);
 
-        let removed = registry.remove("method");
+        let removed = registry.remove("method").unwrap();
         assert!(removed);
-        assert_eq!(registry.len(), 0);
-        assert!(registry.get("method").is_none());
+        assert_eq!(registry.len().unwrap(), 0);
+        assert!(registry.get("method").unwrap().is_none());
     }
 
     #[test]
     fn test_remove_nonexistent_method() {
         let registry = create_test_registry();
-        let removed = registry.remove("nonexistent");
+        let removed = registry.remove("nonexistent").unwrap();
         assert!(!removed);
     }
 
@@ -498,14 +498,20 @@ mod tests {
         let registry = create_test_registry();
         let handler = create_mock_handler();
 
-        registry.register("method1", handler.clone(), MethodMetadata::new("method1"));
-        registry.register("method2", handler.clone(), MethodMetadata::new("method2"));
-        registry.register("method3", handler.clone(), MethodMetadata::new("method3"));
+        registry
+            .register("method1", handler.clone(), MethodMetadata::new("method1"))
+            .unwrap();
+        registry
+            .register("method2", handler.clone(), MethodMetadata::new("method2"))
+            .unwrap();
+        registry
+            .register("method3", handler.clone(), MethodMetadata::new("method3"))
+            .unwrap();
 
-        assert_eq!(registry.len(), 3);
-        registry.clear();
-        assert_eq!(registry.len(), 0);
-        assert!(registry.is_empty());
+        assert_eq!(registry.len().unwrap(), 3);
+        registry.clear().unwrap();
+        assert_eq!(registry.len().unwrap(), 0);
+        assert!(registry.is_empty().unwrap());
     }
 
     #[test]
@@ -514,9 +520,9 @@ mod tests {
         let handler = create_mock_handler();
         let metadata = MethodMetadata::new("method").with_description("Test method");
 
-        registry.register("method", handler.clone(), metadata);
+        registry.register("method", handler.clone(), metadata).unwrap();
 
-        let result = registry.get_with_metadata("method");
+        let result = registry.get_with_metadata("method").unwrap();
         assert!(result.is_some());
 
         let (_retrieved_handler, retrieved_metadata) = result.unwrap();
@@ -529,10 +535,14 @@ mod tests {
         let registry = create_test_registry();
         let handler = create_mock_handler();
 
-        registry.register("add", handler.clone(), MethodMetadata::new("add"));
-        registry.register("subtract", handler.clone(), MethodMetadata::new("subtract"));
+        registry
+            .register("add", handler.clone(), MethodMetadata::new("add"))
+            .unwrap();
+        registry
+            .register("subtract", handler.clone(), MethodMetadata::new("subtract"))
+            .unwrap();
 
-        let all = registry.list_all();
+        let all = registry.list_all().unwrap();
         assert_eq!(all.len(), 2);
 
         let names: Vec<String> = all.iter().map(|(name, _, _)| name.clone()).collect();
@@ -545,11 +555,13 @@ mod tests {
         let registry1 = create_test_registry();
         let handler = create_mock_handler();
 
-        registry1.register("method", handler, MethodMetadata::new("method"));
+        registry1
+            .register("method", handler, MethodMetadata::new("method"))
+            .unwrap();
 
         let registry2 = registry1.clone();
-        assert_eq!(registry2.len(), 1);
-        assert!(registry2.contains("method"));
+        assert_eq!(registry2.len().unwrap(), 1);
+        assert!(registry2.contains("method").unwrap());
     }
 
     #[test]
