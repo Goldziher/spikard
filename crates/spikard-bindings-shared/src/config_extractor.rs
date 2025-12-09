@@ -9,7 +9,7 @@
 //! works with any `ConfigSource` implementation.
 
 use spikard_http::{
-    ApiKeyConfig, BackgroundTaskConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig,
+    ApiKeyConfig, BackgroundTaskConfig, CompressionConfig, ContactInfo, JwtConfig, JsonRpcConfig, LicenseInfo, OpenApiConfig,
     RateLimitConfig, SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
 };
 use std::collections::HashMap;
@@ -114,6 +114,10 @@ impl ConfigExtractor {
             .get_nested("openapi")
             .and_then(|cfg| Self::extract_openapi_config(cfg.as_ref()).ok());
 
+        let jsonrpc = source
+            .get_nested("jsonrpc")
+            .and_then(|cfg| Self::extract_jsonrpc_config(cfg.as_ref()).ok());
+
         Ok(ServerConfig {
             host,
             port,
@@ -130,6 +134,7 @@ impl ConfigExtractor {
             shutdown_timeout,
             background_tasks: BackgroundTaskConfig::default(),
             openapi,
+            jsonrpc,
             lifecycle_hooks: None,
             di_container: None,
         })
@@ -317,6 +322,26 @@ impl ConfigExtractor {
         // TODO: Implement when bindings support iterating HashMap-like structures
         // For now, return empty map as default
         Ok(HashMap::new())
+    }
+
+    /// Extract JsonRpcConfig from a ConfigSource
+    pub fn extract_jsonrpc_config(source: &dyn ConfigSource) -> Result<JsonRpcConfig, String> {
+        let enabled = source.get_bool("enabled").unwrap_or(true);
+        let endpoint_path = source
+            .get_string("endpoint_path")
+            .unwrap_or_else(|| "/rpc".to_string());
+        let enable_batch = source.get_bool("enable_batch").unwrap_or(true);
+        let max_batch_size = source
+            .get_usize("max_batch_size")
+            .or_else(|| source.get_u32("max_batch_size").map(|s| s as usize))
+            .unwrap_or(100);
+
+        Ok(JsonRpcConfig {
+            enabled,
+            endpoint_path,
+            enable_batch,
+            max_batch_size,
+        })
     }
 }
 

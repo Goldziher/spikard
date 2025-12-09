@@ -13,7 +13,7 @@ use axum::Router as AxumRouter;
 use axum::body::Body;
 use axum::extract::{DefaultBodyLimit, Path};
 use axum::http::StatusCode;
-use axum::routing::{MethodRouter, get};
+use axum::routing::{MethodRouter, get, post};
 use spikard_core::type_hints;
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -657,6 +657,38 @@ pub fn build_router_with_handlers_and_config(
         app = app.route(&redoc_path, get(move || async move { Html(redoc_html) }));
 
         tracing::info!("OpenAPI documentation enabled at {}", openapi_json_path);
+    }
+
+    // Wire up JSON-RPC endpoint if configured
+    if let Some(ref jsonrpc_config) = config.jsonrpc {
+        if jsonrpc_config.enabled {
+            // Create method registry
+            let registry = Arc::new(crate::jsonrpc::JsonRpcMethodRegistry::new());
+
+            // TODO: Register methods from application handlers here
+            // For now, the registry is empty
+
+            // Create router
+            let router = Arc::new(crate::jsonrpc::JsonRpcRouter::new(
+                registry,
+                jsonrpc_config.enable_batch,
+                jsonrpc_config.max_batch_size,
+            ));
+
+            // Create state
+            let state = Arc::new(crate::jsonrpc::JsonRpcState { router });
+
+            // Add main endpoint
+            let endpoint_path = jsonrpc_config.endpoint_path.clone();
+            app = app.route(&endpoint_path, post(crate::jsonrpc::handle_jsonrpc).with_state(state));
+
+            // TODO: Add per-method routes if enabled
+            // TODO: Add WebSocket endpoint if enabled
+            // TODO: Add SSE endpoint if enabled
+            // TODO: Add OpenRPC spec endpoint if enabled
+
+            tracing::info!("JSON-RPC endpoint enabled at {}", endpoint_path);
+        }
     }
 
     Ok(app)

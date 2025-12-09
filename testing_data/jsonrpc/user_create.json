@@ -1,0 +1,134 @@
+{
+	"name": "user_create",
+	"description": "Create a new user account",
+	"method": "user.create",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"properties": {
+			"userData": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 100
+					},
+					"email": {
+						"type": "string",
+						"format": "email"
+					},
+					"password": {
+						"type": "string",
+						"minLength": 8
+					},
+					"role": {
+						"type": "string",
+						"enum": ["user", "admin"],
+						"default": "user"
+					}
+				},
+				"required": ["name", "email", "password"]
+			}
+		},
+		"required": ["userData"]
+	},
+	"result_schema": {
+		"type": "object",
+		"properties": {
+			"id": {
+				"type": "string",
+				"format": "uuid"
+			},
+			"name": {
+				"type": "string"
+			},
+			"email": {
+				"type": "string",
+				"format": "email"
+			},
+			"role": {
+				"type": "string",
+				"enum": ["admin", "user", "guest"]
+			},
+			"createdAt": {
+				"type": "string",
+				"format": "date-time"
+			}
+		},
+		"required": ["id", "name", "email", "role", "createdAt"]
+	},
+	"examples": [
+		{
+			"params": {
+				"userData": {
+					"name": "Charlie Brown",
+					"email": "charlie@example.com",
+					"password": "SecurePass123!",
+					"role": "user"
+				}
+			},
+			"result": {
+				"id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+				"name": "Charlie Brown",
+				"email": "charlie@example.com",
+				"role": "user",
+				"createdAt": "2024-01-15T14:00:00Z"
+			}
+		}
+	],
+	"error_cases": [
+		{
+			"name": "email_already_exists",
+			"params": {
+				"userData": {
+					"name": "Duplicate User",
+					"email": "alice@example.com",
+					"password": "SecurePass123!"
+				}
+			},
+			"error": {
+				"code": 409,
+				"message": "User already exists"
+			}
+		},
+		{
+			"name": "invalid_email",
+			"params": {
+				"userData": {
+					"name": "Test User",
+					"email": "not-an-email",
+					"password": "SecurePass123!"
+				}
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "email",
+					"reason": "Invalid email format"
+				}
+			}
+		},
+		{
+			"name": "password_too_short",
+			"params": {
+				"userData": {
+					"name": "Test User",
+					"email": "test@example.com",
+					"password": "short"
+				}
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "password",
+					"reason": "Password must be at least 8 characters"
+				}
+			}
+		}
+	]
+}

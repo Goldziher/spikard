@@ -484,6 +484,7 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         shutdown_timeout,
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi: openapi_config,
+        jsonrpc: None,
         lifecycle_hooks: None,
         di_container: None,
     })
