@@ -6,6 +6,8 @@ on:
     paths:
       - 'crates/spikard-wasm/**'
       - 'packages/wasm/**'
+      - 'e2e/deno/**'
+      - 'e2e/cloudflare/**'
       - 'pnpm-lock.yaml'
       - 'crates/spikard/**/*.rs'
       - 'crates/spikard-http/**/*.rs'
@@ -19,6 +21,8 @@ on:
     paths:
       - 'crates/spikard-wasm/**'
       - 'packages/wasm/**'
+      - 'e2e/deno/**'
+      - 'e2e/cloudflare/**'
       - 'pnpm-lock.yaml'
       - 'crates/spikard/**/*.rs'
       - 'crates/spikard-http/**/*.rs'
@@ -177,4 +181,166 @@ jobs:
         with:
           name: wasm-coverage-report
           path: packages/wasm/coverage/
+          retention-days: 30
+
+  test-deno:
+    name: Test Deno E2E
+    needs: build-wasm
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Download WASM bindings
+        uses: actions/download-artifact@v6
+        with:
+          name: wasm-bindings
+          path: crates/spikard-wasm/
+
+      - name: Generate Deno e2e tests
+        run: |
+          cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang deno --output e2e/deno
+
+      - name: Run Deno tests
+        working-directory: e2e/deno
+        run: deno test --allow-read --allow-net --allow-env tests/
+
+  test-cloudflare:
+    name: Test Cloudflare Workers E2E
+    needs: build-wasm
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Download WASM bindings
+        uses: actions/download-artifact@v6
+        with:
+          name: wasm-bindings
+          path: crates/spikard-wasm/
+
+      - name: Generate Cloudflare e2e tests
+        run: |
+          cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang cloudflare --output e2e/cloudflare
+
+      - name: Install dependencies
+        working-directory: e2e/cloudflare
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Cloudflare Workers tests
+        working-directory: e2e/cloudflare
+        run: pnpm test
+
+  coverage-deno:
+    name: Deno E2E Coverage (80% minimum)
+    needs: build-wasm
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Download WASM bindings
+        uses: actions/download-artifact@v6
+        with:
+          name: wasm-bindings
+          path: crates/spikard-wasm/
+
+      - name: Generate Deno e2e tests
+        run: |
+          cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang deno --output e2e/deno
+
+      - name: Run Deno coverage
+        working-directory: e2e/deno
+        run: |
+          deno test --allow-read --allow-net --allow-env --coverage=coverage_profile/ tests/
+          deno coverage coverage_profile/ --lcov --output=coverage/lcov.info
+
+      - name: Upload coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./e2e/deno/coverage/lcov.info
+          flags: deno-e2e
+          name: deno-e2e-coverage
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: deno-e2e-coverage-report
+          path: e2e/deno/coverage/
+          retention-days: 30
+
+  coverage-cloudflare:
+    name: Cloudflare Workers E2E Coverage (80% minimum)
+    needs: build-wasm
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Download WASM bindings
+        uses: actions/download-artifact@v6
+        with:
+          name: wasm-bindings
+          path: crates/spikard-wasm/
+
+      - name: Generate Cloudflare e2e tests
+        run: |
+          cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang cloudflare --output e2e/cloudflare
+
+      - name: Install dependencies
+        working-directory: e2e/cloudflare
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Cloudflare coverage
+        working-directory: e2e/cloudflare
+        run: pnpm test --coverage
+
+      - name: Upload coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./e2e/cloudflare/coverage/lcov.info
+          flags: cloudflare-e2e
+          name: cloudflare-e2e-coverage
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: cloudflare-e2e-coverage-report
+          path: e2e/cloudflare/coverage/
           retention-days: 30
