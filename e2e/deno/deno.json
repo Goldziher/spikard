@@ -1,0 +1,8 @@
+{
+	"tasks": {
+		"test": "deno test --allow-net --allow-read --allow-env tests/"
+	},
+	"imports": {
+		"@spikard/wasm": "npm:@spikard/wasm@workspace:*"
+	}
+}

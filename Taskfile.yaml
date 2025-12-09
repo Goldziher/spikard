@@ -576,6 +576,18 @@ tasks:
       - rm -rf e2e/wasm
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang wasm --output e2e/wasm
 
+  generate:tests:deno:
+    desc: "Generate Deno e2e test suite from fixtures (Deno.test)"
+    cmds:
+      - rm -rf e2e/deno
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang deno --output e2e/deno
+
+  generate:tests:cloudflare:
+    desc: "Generate Cloudflare Workers e2e test suite from fixtures (vitest with workerd)"
+    cmds:
+      - rm -rf e2e/cloudflare
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang cloudflare --output e2e/cloudflare
+
   generate:tests:ruby:
     desc: "Generate Ruby e2e test suite from fixtures"
     cmds:
@@ -594,6 +606,8 @@ tasks:
       - task: generate:tests:python
       - task: generate:tests:node
       - task: generate:tests:wasm
+      - task: generate:tests:deno
+      - task: generate:tests:cloudflare
       - task: generate:tests:ruby
       - task: generate:tests:php
 
@@ -674,6 +688,23 @@ tasks:
     cmds:
       - pnpm test
 
+  test:e2e:deno:
+    desc: "Run Deno e2e tests (fixture-driven integration tests)"
+    dir: e2e/deno
+    deps:
+      - build:wasm
+    cmds:
+      - deno test --allow-read --allow-net --allow-env tests/
+
+  test:e2e:cloudflare:
+    desc: "Run Cloudflare Workers e2e tests (local workerd)"
+    dir: e2e/cloudflare
+    deps:
+      - build:wasm
+    cmds:
+      - pnpm install
+      - pnpm test
+
   test:e2e:ruby:
     desc: "Run Ruby e2e tests (fixture-driven integration tests)"
     dir: e2e/ruby
@@ -697,6 +728,8 @@ tasks:
       - task: test:e2e:python
       - task: test:e2e:node
       - task: test:e2e:wasm
+      - task: test:e2e:deno
+      - task: test:e2e:cloudflare
       - task: test:e2e:ruby
       - task: test:e2e:php
 

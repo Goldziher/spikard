@@ -1,0 +1,19 @@
+{
+	"name": "spikard-e2e-cloudflare",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"test": "vitest run",
+		"test:watch": "vitest"
+	},
+	"devDependencies": {
+		"@spikard/wasm": "workspace:*",
+		"@cloudflare/vitest-pool-workers": "^0.7.0",
+		"@cloudflare/workers-types": "^4.20250106.0",
+		"@vitest/coverage-v8": "^4.0.6",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.6",
+		"wrangler": "^3.100.0"
+	}
+}

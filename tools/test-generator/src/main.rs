@@ -59,7 +59,7 @@ enum Commands {
     /// Generate test suite for a language
     Tests {
         /// Target language
-        #[arg(long, value_parser = ["rust", "python", "typescript", "node", "ruby", "wasm", "php"])]
+        #[arg(long, value_parser = ["rust", "python", "typescript", "node", "ruby", "wasm", "php", "deno", "cloudflare"])]
         lang: String,
 
         /// Fixtures directory
@@ -160,6 +160,14 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
         "wasm" => {
             node_app::generate_node_app(&fixtures, &output, &ts_target::WASM_TARGET)?;
             node_tests::generate_node_tests(&fixtures, &output, &ts_target::WASM_TARGET)?;
+        }
+        "deno" => {
+            node_app::generate_node_app(&fixtures, &output, &ts_target::DENO_TARGET)?;
+            node_tests::generate_node_tests(&fixtures, &output, &ts_target::DENO_TARGET)?;
+        }
+        "cloudflare" => {
+            node_app::generate_node_app(&fixtures, &output, &ts_target::CLOUDFLARE_TARGET)?;
+            node_tests::generate_node_tests(&fixtures, &output, &ts_target::CLOUDFLARE_TARGET)?;
         }
         "ruby" => {
             ruby_app::generate_ruby_app(&fixtures, &output)?;

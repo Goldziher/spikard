@@ -78,7 +78,10 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
         println!("  ✓ Generated tests/asyncapi_websocket.spec.ts");
     }
 
-    format_generated_ts(output_dir)?;
+    // Skip biome formatting for Deno (it doesn't understand Deno.test syntax)
+    if !matches!(target.runtime, crate::ts_target::Runtime::Deno) {
+        format_generated_ts(output_dir)?;
+    }
 
     Ok(())
 }
@@ -92,7 +95,15 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
         "import {{ TestClient }} from \"{}\";\n",
         target.binding_package
     ));
-    code.push_str("import { describe, expect, test } from \"vitest\";\n");
+
+    match target.runtime {
+        crate::ts_target::Runtime::Deno => {
+            code.push_str("import { assertEquals } from \"@std/assert\";\n");
+        }
+        _ => {
+            code.push_str("import { describe, expect, test } from \"vitest\";\n");
+        }
+    }
 
     let mut app_factories = Vec::new();
     for fixture in fixtures {
@@ -127,6 +138,11 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
     }
 
     code.push_str("});\n");
+
+    // For Deno, convert vitest syntax to Deno.test()
+    if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
+        code = convert_to_deno_syntax(&code, category);
+    }
 
     Ok(code)
 }
@@ -236,6 +252,43 @@ fn generate_sse_test_file(
     file_content.push_str(&test_blocks);
     file_content.push_str("});\n");
 
+    // For Deno, convert vitest syntax to Deno.test()
+    if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
+        // Don't use convert_to_deno_syntax for async API tests - just do simple replacements
+        file_content = file_content
+            .replace(
+                "import { describe, expect, test } from \"vitest\";\n",
+                "import { assertEquals } from \"@std/assert\";\n",
+            )
+            .replace("import { readFileSync } from \"node:fs\";\n", "")
+            .replace(
+                "import path from \"node:path\";\n",
+                "import { join, resolve } from \"@std/path\";\n",
+            )
+            .replace("__dirname", "new URL(\".\", import.meta.url).pathname")
+            .replace("path.resolve(", "resolve(")
+            .replace("path.join(", "join(")
+            .replace("readFileSync(", "Deno.readTextFileSync(")
+            .replace("describe(\"asyncapi_sse\", () => {\n", "")
+            .replace("\n\ttest(\"SSE", "\nDeno.test(\"asyncapi_sse: SSE")
+            .replace(
+                "expect(JSON.parse(payload)).toEqual(expected[index]);",
+                "assertEquals(JSON.parse(payload), expected[index]);",
+            )
+            .replace(
+                "expect(events.length).toBe(expected.length);",
+                "assertEquals(events.length, expected.length);",
+            )
+            .replace(
+                "expect(response.statusCode).toBe(200);",
+                "assertEquals(response.statusCode, 200);",
+            );
+        // Remove trailing });\n
+        if file_content.ends_with("\n});\n") {
+            file_content = file_content[..file_content.len() - 5].to_string();
+        }
+    }
+
     Ok(file_content)
 }
 
@@ -344,6 +397,51 @@ fn generate_websocket_test_file(
     file_content.push_str("describe(\"asyncapi_websocket\", () => {\n");
     file_content.push_str(&test_blocks);
     file_content.push_str("});\n");
+
+    // For Deno, convert vitest syntax to Deno.test()
+    if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
+        // Don't use convert_to_deno_syntax for async API tests - just do simple replacements
+        file_content = file_content
+            .replace(
+                "import { describe, expect, test } from \"vitest\";\n",
+                "import { assertEquals } from \"@std/assert\";\n",
+            )
+            .replace("import { readFileSync } from \"node:fs\";\n", "")
+            .replace(
+                "import path from \"node:path\";\n",
+                "import { join, resolve } from \"@std/path\";\n",
+            )
+            .replace("__dirname", "new URL(\".\", import.meta.url).pathname")
+            .replace("path.resolve(", "resolve(")
+            .replace("path.join(", "join(")
+            .replace("readFileSync(", "Deno.readTextFileSync(")
+            .replace("describe(\"asyncapi_websocket\", () => {\n", "")
+            .replace("\n\ttest(\"WebSocket", "\nDeno.test(\"asyncapi_websocket: WebSocket")
+            .replace(
+                "expect(response[key]).toEqual(value);",
+                "assertEquals(response[key], value);",
+            )
+            .replace(
+                "expect(JSON.parse(payload)).toEqual(expected[index]);",
+                "assertEquals(JSON.parse(payload), expected[index]);",
+            )
+            .replace(
+                "expect(events.length).toBe(expected.length);",
+                "assertEquals(events.length, expected.length);",
+            )
+            .replace(
+                "expect(response.statusCode).toBe(200);",
+                "assertEquals(response.statusCode, 200);",
+            )
+            .replace(
+                "expect(response.validated).toBe(true);",
+                "assertEquals(response.validated, true);",
+            );
+        // Remove trailing });\n
+        if file_content.ends_with("\n});\n") {
+            file_content = file_content[..file_content.len() - 5].to_string();
+        }
+    }
 
     Ok(file_content)
 }
@@ -1143,6 +1241,147 @@ fn format_generated_ts(dir: &Path) -> Result<()> {
 }
 
 /// Sanitize fixture name for test function
+/// Convert vitest syntax to Deno.test() syntax
+fn convert_to_deno_syntax(code: &str, category: &str) -> String {
+    let mut result = code.to_string();
+
+    // Remove describe wrapper - find the opening and matching closing brace
+    let describe_pattern = format!("describe(\"{}\", () => {{", category);
+    if let Some(start_pos) = result.find(&describe_pattern) {
+        // Find the matching closing brace
+        let after_open = &result[start_pos + describe_pattern.len()..];
+        let mut depth = 1;
+        let mut close_pos = 0;
+        for (i, ch) in after_open.chars().enumerate() {
+            if ch == '{' {
+                depth += 1;
+            } else if ch == '}' {
+                depth -= 1;
+                if depth == 0 {
+                    close_pos = i;
+                    break;
+                }
+            }
+        }
+        if close_pos > 0 {
+            // Extract the content between the braces
+            let content = after_open[..close_pos].trim();
+            // Replace the entire describe block with just the content
+            let before_describe = &result[..start_pos];
+            let after_closing = &result[start_pos + describe_pattern.len() + close_pos + 1..];
+            result = format!(
+                "{}{}{}",
+                before_describe.trim_end(),
+                content,
+                after_closing
+                    .trim_start()
+                    .trim_start_matches(");\n")
+                    .trim_start_matches(");")
+            );
+        }
+    }
+
+    // Convert test() to Deno.test() with category prefix
+    let lines: Vec<String> = result
+        .lines()
+        .map(|line| {
+            if line.contains("test(\"") || line.contains("Deno.test(\"") {
+                // Already converted or needs conversion
+                if !line.contains("Deno.test(\"") && line.contains("test(\"") {
+                    // Extract test name between quotes
+                    if let Some(start) = line.find("test(\"") {
+                        if let Some(end) = line[start + 6..].find("\"") {
+                            let test_name = &line[start + 6..start + 6 + end];
+                            return line.replace(
+                                &format!("test(\"{}\"", test_name),
+                                &format!("Deno.test(\"{}: {}\"", category, test_name),
+                            );
+                        }
+                    }
+                }
+            }
+            line.to_string()
+        })
+        .collect();
+    result = lines.join("\n");
+
+    // Convert all expect() calls to assertEquals()
+    // Handle expect().toBe() and expect().toEqual()
+    loop {
+        let mut modified = false;
+
+        // Find expect( patterns
+        if let Some(expect_pos) = result.find("expect(") {
+            // Find the matching closing parenthesis for expect()
+            let after_expect = &result[expect_pos + 7..];
+            let mut depth = 1;
+            let mut expr_end = 0;
+
+            for (i, ch) in after_expect.chars().enumerate() {
+                match ch {
+                    '(' => depth += 1,
+                    ')' => {
+                        depth -= 1;
+                        if depth == 0 {
+                            expr_end = i;
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            if expr_end > 0 {
+                let expr = &after_expect[..expr_end];
+                let after_expr = &after_expect[expr_end + 1..];
+
+                // Check for .toBe( or .toEqual(
+                if let Some(method_match) = after_expr
+                    .strip_prefix(".toBe(")
+                    .or_else(|| after_expr.strip_prefix(".toEqual("))
+                {
+                    // Find the closing parenthesis for the argument
+                    let mut depth2 = 1;
+                    let mut arg_end = 0;
+
+                    for (i, ch) in method_match.chars().enumerate() {
+                        match ch {
+                            '(' => depth2 += 1,
+                            ')' => {
+                                depth2 -= 1;
+                                if depth2 == 0 {
+                                    arg_end = i;
+                                    break;
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+
+                    if arg_end > 0 {
+                        let arg = &method_match[..arg_end];
+                        let replacement = format!("assertEquals({}, {})", expr, arg);
+
+                        // Calculate the full length of the original expression
+                        let method_name_len = if after_expr.starts_with(".toBe(") { 6 } else { 8 };
+                        let original_len = 7 + expr_end + 1 + method_name_len + arg_end + 1; // "expect(" + expr + ")" + ".toBe(" or ".toEqual(" + arg + ")"
+                        let original = &result[expect_pos..expect_pos + original_len];
+
+                        result = result.replacen(original, &replacement, 1);
+                        modified = true;
+                    }
+                }
+            }
+        }
+
+        if !modified {
+            break;
+        }
+    }
+
+    result
+}
+
 fn sanitize_test_name(name: &str) -> String {
     let mut result = name.replace(
         [
