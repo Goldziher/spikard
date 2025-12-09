@@ -116,13 +116,51 @@ fn extract_jsonrpc_method_info(
     jsonrpc_method: &Bound<'_, PyAny>,
 ) -> PyResult<Option<serde_json::Value>> {
     // Try to call to_dict() method on the JsonRpcMethodInfo object
-    match jsonrpc_method.call_method0("to_dict") {
-        Ok(dict) => py_to_json_value(py, &dict).map(Some),
+    let dict = match jsonrpc_method.call_method0("to_dict") {
+        Ok(dict_result) => dict_result,
         Err(_) => {
-            // Fallback: try to extract it as a dict directly
-            py_to_json_value(py, jsonrpc_method).map(Some)
+            // to_dict() failed, check if it's at least a dict-like object
+            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "jsonrpc_method must be a JsonRpcMethodInfo instance with a to_dict() method or a dict. \
+                 Received object type that doesn't support to_dict() conversion.",
+            ));
+        }
+    };
+
+    // Validate that we got a dict back
+    if dict.cast::<PyDict>().is_err() {
+        return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "to_dict() must return a dictionary, got different type",
+        ));
+    }
+
+    // Validate required fields
+    let dict_obj = dict.cast::<PyDict>()?;
+    if !dict_obj.contains("method_name")? {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            "JsonRpcMethodInfo.to_dict() is missing required field 'method_name'",
+        ));
+    }
+
+    // Ensure method_name is a string
+    match dict_obj.get_item("method_name")? {
+        Some(method_name_obj) => {
+            // Verify it's a string
+            if method_name_obj.extract::<String>().is_err() {
+                return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                    "'method_name' must be a string",
+                ));
+            }
+        }
+        None => {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                "'method_name' must not be None",
+            ));
         }
     }
+
+    // Convert to JSON value
+    py_to_json_value(py, &dict).map(Some)
 }
 
 #[allow(clippy::only_used_in_recursion)]

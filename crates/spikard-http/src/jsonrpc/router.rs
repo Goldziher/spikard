@@ -91,7 +91,7 @@ impl JsonRpcRouter {
     ///
     /// * `request` - The JSON-RPC request to route
     /// * `http_request` - The HTTP request context (headers, method, etc.)
-    /// * `request_data` - Extracted request data (params, body, etc.)
+    /// * `request_data` - Reference to extracted request data (params, body, etc.)
     ///
     /// # Returns
     ///
@@ -102,7 +102,7 @@ impl JsonRpcRouter {
         &self,
         request: JsonRpcRequest,
         http_request: Request<Body>,
-        request_data: RequestData,
+        request_data: &RequestData,
     ) -> JsonRpcResponseType {
         // Check if method exists in registry
         let handler = match self.registry.get(&request.method) {
@@ -129,8 +129,9 @@ impl JsonRpcRouter {
         // (is_notification is tracked for logging/debugging purposes but the response is still generated)
         let _is_notification = request.is_notification();
 
-        // Invoke the handler
-        let handler_result = handler.call(http_request, request_data).await;
+        // Invoke the handler with a clone of request_data
+        // Note: We only clone here, not in the batch loop, so batch requests avoid O(N) clones
+        let handler_result = handler.call(http_request, request_data.clone()).await;
 
         // Handle handler result and convert to JSON-RPC response
         match handler_result {
@@ -205,7 +206,7 @@ impl JsonRpcRouter {
         &self,
         batch: Vec<JsonRpcRequest>,
         http_request: Request<Body>,
-        request_data: RequestData,
+        request_data: &RequestData,
     ) -> Result<Vec<JsonRpcResponseType>, JsonRpcErrorResponse> {
         // Check if batch requests are enabled
         if !self.enable_batch {
@@ -234,20 +235,24 @@ impl JsonRpcRouter {
             ));
         }
 
+        // Preserve original request context (headers, extensions, URI, method)
+        // Extract parts from the original request to preserve authentication and tracing context
+        let (base_parts, _body) = http_request.into_parts();
+
         // Route each request and collect responses
         let mut responses = Vec::with_capacity(batch.len());
         for request in batch {
             // Skip notifications - they should not produce responses
             let is_notification = request.is_notification();
-            // Note: We rebuild the request for each iteration since map() consumes it
-            // In a real scenario, each request might need its own context
-            let req_for_handler = Request::builder()
-                .method("POST")
-                .uri(http_request.uri().clone())
-                .body(Body::empty())
-                .unwrap_or_else(|_| Request::builder().method("POST").uri("/").body(Body::empty()).unwrap());
 
-            let response = self.route_single(request, req_for_handler, request_data.clone()).await;
+            // Create a new request for this batch item, preserving:
+            // - Original URI (for routing context)
+            // - Original HTTP method (POST for JSON-RPC)
+            // - Original headers (contains Authorization, Cookie, Content-Type, etc.)
+            // - Original extensions (contains request IDs, tracing context, auth claims)
+            let req_for_handler = Request::from_parts(base_parts.clone(), Body::empty());
+
+            let response = self.route_single(request, req_for_handler, &request_data).await;
 
             // Only include non-notification responses
             if !is_notification {
@@ -288,11 +293,31 @@ impl JsonRpcRouter {
     pub fn parse_request(body: &str) -> Result<JsonRpcRequestOrBatch, JsonRpcErrorResponse> {
         // Try to parse as single request first
         if let Ok(request) = serde_json::from_str::<JsonRpcRequest>(body) {
+            // Validate method name
+            if let Err(validation_error) = super::protocol::validate_method_name(&request.method) {
+                let id = request.id.unwrap_or(Value::Null);
+                return Err(JsonRpcErrorResponse::error(
+                    error_codes::INVALID_REQUEST,
+                    format!("Invalid method name: {}", validation_error),
+                    id,
+                ));
+            }
             return Ok(JsonRpcRequestOrBatch::Single(request));
         }
 
         // Try to parse as batch
         if let Ok(batch) = serde_json::from_str::<Vec<JsonRpcRequest>>(body) {
+            // Validate all method names in the batch
+            for request in &batch {
+                if let Err(validation_error) = super::protocol::validate_method_name(&request.method) {
+                    let id = request.id.clone().unwrap_or(Value::Null);
+                    return Err(JsonRpcErrorResponse::error(
+                        error_codes::INVALID_REQUEST,
+                        format!("Invalid method name: {}", validation_error),
+                        id,
+                    ));
+                }
+            }
             return Ok(JsonRpcRequestOrBatch::Batch(batch));
         }
 
@@ -401,7 +426,7 @@ mod tests {
         let http_request = create_test_http_request();
         let request_data = create_test_request_data();
 
-        let response = router.route_single(request, http_request, request_data).await;
+        let response = router.route_single(request, http_request, &request_data).await;
 
         match response {
             JsonRpcResponseType::Error(err) => {
@@ -429,7 +454,7 @@ mod tests {
         let http_request = create_test_http_request();
         let request_data = create_test_request_data();
 
-        let response = router.route_single(request, http_request, request_data).await;
+        let response = router.route_single(request, http_request, &request_data).await;
 
         // Notifications should return success (but won't be sent to client)
         match response {
@@ -455,7 +480,7 @@ mod tests {
         let http_request = create_test_http_request();
         let request_data = create_test_request_data();
 
-        let response = router.route_single(request, http_request, request_data).await;
+        let response = router.route_single(request, http_request, &request_data).await;
 
         match response {
             JsonRpcResponseType::Success(resp) => {
@@ -482,7 +507,7 @@ mod tests {
         let http_request = create_test_http_request();
         let request_data = create_test_request_data();
 
-        let response = router.route_single(request, http_request, request_data).await;
+        let response = router.route_single(request, http_request, &request_data).await;
 
         match response {
             JsonRpcResponseType::Error(err) => {
@@ -503,7 +528,7 @@ mod tests {
         let http_request = create_test_http_request();
         let request_data = create_test_request_data();
 
-        let result = router.route_batch(batch, http_request, request_data).await;
+        let result = router.route_batch(batch, http_request, &request_data).await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -519,7 +544,7 @@ mod tests {
         let http_request = create_test_http_request();
         let request_data = create_test_request_data();
 
-        let result = router.route_batch(batch, http_request, request_data).await;
+        let result = router.route_batch(batch, http_request, &request_data).await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -537,7 +562,7 @@ mod tests {
         let http_request = create_test_http_request();
         let request_data = create_test_request_data();
 
-        let result = router.route_batch(batch, http_request, request_data).await;
+        let result = router.route_batch(batch, http_request, &request_data).await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -564,7 +589,7 @@ mod tests {
         let http_request = create_test_http_request();
         let request_data = create_test_request_data();
 
-        let result = router.route_batch(batch, http_request, request_data).await;
+        let result = router.route_batch(batch, http_request, &request_data).await;
         assert!(result.is_ok());
 
         let responses = result.unwrap();
@@ -641,6 +666,162 @@ mod tests {
                 let params = req.params.unwrap();
                 assert_eq!(params["subtrahend"], 23);
                 assert_eq!(params["minuend"], 42);
+            }
+            _ => panic!("Expected single request"),
+        }
+    }
+
+    // ============= Method Name Validation Tests in parse_request =============
+
+    #[test]
+    fn test_parse_request_invalid_method_name_empty() {
+        let json = r#"{"jsonrpc":"2.0","method":"","id":1}"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("Invalid method name"));
+    }
+
+    #[test]
+    fn test_parse_request_invalid_method_name_leading_space() {
+        let json = r#"{"jsonrpc":"2.0","method":" method","id":1}"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("Invalid method name"));
+    }
+
+    #[test]
+    fn test_parse_request_invalid_method_name_trailing_space() {
+        let json = r#"{"jsonrpc":"2.0","method":"method ","id":1}"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("Invalid method name"));
+    }
+
+    #[test]
+    fn test_parse_request_invalid_method_name_with_space() {
+        let json = r#"{"jsonrpc":"2.0","method":"method name","id":1}"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("Invalid method name"));
+    }
+
+    #[test]
+    fn test_parse_request_invalid_method_name_special_char() {
+        let json = r#"{"jsonrpc":"2.0","method":"method@name","id":1}"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("Invalid method name"));
+    }
+
+    #[test]
+    fn test_parse_request_invalid_method_name_too_long() {
+        let long_method = "a".repeat(256);
+        let json = format!(r#"{{"jsonrpc":"2.0","method":"{}","id":1}}"#, long_method);
+        let parsed = JsonRpcRouter::parse_request(&json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("Invalid method name"));
+    }
+
+    #[test]
+    fn test_parse_request_batch_valid_method_names() {
+        let json = r#"[
+            {"jsonrpc":"2.0","method":"test.method","id":1},
+            {"jsonrpc":"2.0","method":"another_method","id":2}
+        ]"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_ok());
+        match parsed.unwrap() {
+            JsonRpcRequestOrBatch::Batch(batch) => {
+                assert_eq!(batch.len(), 2);
+                assert_eq!(batch[0].method, "test.method");
+                assert_eq!(batch[1].method, "another_method");
+            }
+            _ => panic!("Expected batch request"),
+        }
+    }
+
+    #[test]
+    fn test_parse_request_batch_invalid_first_method_name() {
+        let json = r#"[
+            {"jsonrpc":"2.0","method":" invalid","id":1},
+            {"jsonrpc":"2.0","method":"valid","id":2}
+        ]"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("Invalid method name"));
+    }
+
+    #[test]
+    fn test_parse_request_batch_invalid_second_method_name() {
+        let json = r#"[
+            {"jsonrpc":"2.0","method":"valid","id":1},
+            {"jsonrpc":"2.0","method":"invalid#method","id":2}
+        ]"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("Invalid method name"));
+    }
+
+    #[test]
+    fn test_parse_request_batch_notification_invalid_method_name() {
+        let json = r#"[
+            {"jsonrpc":"2.0","method":"valid","id":1},
+            {"jsonrpc":"2.0","method":"invalid method"}
+        ]"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("Invalid method name"));
+    }
+
+    #[test]
+    fn test_parse_request_method_name_dos_prevention() {
+        // Test that very long method names are rejected
+        let json = format!(r#"{{"jsonrpc":"2.0","method":"{}","id":1}}"#, "a".repeat(10000));
+        let parsed = JsonRpcRouter::parse_request(&json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("Invalid method name"));
+    }
+
+    #[test]
+    fn test_parse_request_valid_method_names_complex() {
+        let json = r#"{"jsonrpc":"2.0","method":"user.getById_v1-2","id":1}"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_ok());
+        match parsed.unwrap() {
+            JsonRpcRequestOrBatch::Single(req) => {
+                assert_eq!(req.method, "user.getById_v1-2");
             }
             _ => panic!("Expected single request"),
         }

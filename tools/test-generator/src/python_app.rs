@@ -708,7 +708,8 @@ fn append_jsonrpc_factories(
 
         // Generate handler function with full business logic
         let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
-        code.push_str(&format!("\n@post(\"{}\")\n", endpoint));
+        // NO decorator here - register route in factory where app instance exists
+        code.push_str("\n");
         code.push_str(&format!(
             "async def handle_{}(request: dict) -> Response:\n",
             factory_name
@@ -960,7 +961,10 @@ fn append_jsonrpc_factories(
         code.push_str("    \"\"\"Create app with initialized user store.\"\"\"\n");
         code.push_str("    _init_user_store()\n");
         code.push_str("    app = Spikard()\n");
-        code.push_str(&format!("    app.add_route(handle_{})\n", factory_name));
+        code.push_str(&format!(
+            "    app.register_route(\"POST\", \"{}\", handle_{})\n",
+            endpoint, factory_name
+        ));
         code.push_str("    return app\n\n");
 
         registry.push((

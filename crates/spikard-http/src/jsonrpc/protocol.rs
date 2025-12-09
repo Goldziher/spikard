@@ -16,6 +16,98 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+/// Maximum allowed length for a JSON-RPC method name
+const MAX_METHOD_NAME_LENGTH: usize = 255;
+
+/// Validates a JSON-RPC method name for security and correctness
+///
+/// This function prevents DoS attacks through method name validation by enforcing:
+/// - Maximum length of 255 characters to prevent resource exhaustion
+/// - Only allowed characters: alphanumeric (a-z, A-Z, 0-9), dot (.), underscore (_), hyphen (-)
+/// - No control characters (0x00-0x1F, 0x7F) to prevent injection attacks
+/// - No leading or trailing whitespace to ensure proper formatting
+///
+/// # Arguments
+///
+/// * `method_name` - The method name to validate
+///
+/// # Returns
+///
+/// * `Ok(())` - If the method name is valid
+/// * `Err(String)` - If the method name is invalid with a descriptive error message
+///
+/// # Example
+///
+/// ```ignore
+/// use spikard_http::jsonrpc::validate_method_name;
+///
+/// // Valid method names
+/// assert!(validate_method_name("user.getById").is_ok());
+/// assert!(validate_method_name("calculate_sum").is_ok());
+/// assert!(validate_method_name("api-v1-handler").is_ok());
+/// assert!(validate_method_name("rpc1").is_ok());
+///
+/// // Invalid method names
+/// assert!(validate_method_name("").is_err());  // Empty
+/// assert!(validate_method_name(" method").is_err());  // Leading whitespace
+/// assert!(validate_method_name("method ").is_err());  // Trailing whitespace
+/// assert!(validate_method_name("method\x00name").is_err());  // Control character
+/// assert!(validate_method_name("a".repeat(256)).is_err());  // Too long
+/// ```
+pub fn validate_method_name(method_name: &str) -> Result<(), String> {
+    // Check for empty method name
+    if method_name.is_empty() {
+        return Err("Method name cannot be empty".to_string());
+    }
+
+    // Check for leading or trailing whitespace
+    if method_name.starts_with(char::is_whitespace) || method_name.ends_with(char::is_whitespace) {
+        return Err("Method name cannot have leading or trailing whitespace".to_string());
+    }
+
+    // Check length
+    if method_name.len() > MAX_METHOD_NAME_LENGTH {
+        return Err(format!(
+            "Method name exceeds maximum length of {} characters (got {})",
+            MAX_METHOD_NAME_LENGTH,
+            method_name.len()
+        ));
+    }
+
+    // Check for invalid characters
+    // Valid: alphanumeric, dot, underscore, hyphen
+    // Invalid: control characters and other special characters
+    for ch in method_name.chars() {
+        match ch {
+            // Allow alphanumeric
+            'a'..='z' | 'A'..='Z' | '0'..='9' => {}
+            // Allow dot (namespace separator)
+            '.' => {}
+            // Allow underscore
+            '_' => {}
+            // Allow hyphen
+            '-' => {}
+            // Reject control characters (0x00-0x1F and 0x7F)
+            c if (c as u32) < 0x20 || (c as u32) == 0x7F => {
+                return Err(format!(
+                    "Method name contains invalid control character: 0x{:02X}",
+                    c as u32
+                ));
+            }
+            // Reject all other special characters
+            c => {
+                return Err(format!(
+                    "Method name contains invalid character: '{}' (0x{:02X}). \
+                     Only alphanumeric, dot (.), underscore (_), and hyphen (-) are allowed",
+                    c, c as u32
+                ));
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// JSON-RPC 2.0 Request
 ///
 /// Represents a JSON-RPC request method invocation with optional parameters and identifier.
@@ -508,5 +600,198 @@ mod tests {
         // Verify we can serialize both variants
         let _success_json = serde_json::to_value(&success_resp).unwrap();
         let _error_json = serde_json::to_value(&error_resp).unwrap();
+    }
+
+    // ============= Method Name Validation Tests =============
+
+    #[test]
+    fn test_validate_method_name_valid_simple() {
+        assert!(validate_method_name("test").is_ok());
+        assert!(validate_method_name("method").is_ok());
+        assert!(validate_method_name("rpc").is_ok());
+    }
+
+    #[test]
+    fn test_validate_method_name_valid_with_dot() {
+        assert!(validate_method_name("user.get").is_ok());
+        assert!(validate_method_name("api.v1.endpoint").is_ok());
+        assert!(validate_method_name("service.method.action").is_ok());
+    }
+
+    #[test]
+    fn test_validate_method_name_valid_with_underscore() {
+        assert!(validate_method_name("get_user").is_ok());
+        assert!(validate_method_name("_private_method").is_ok());
+        assert!(validate_method_name("method_v1").is_ok());
+    }
+
+    #[test]
+    fn test_validate_method_name_valid_with_hyphen() {
+        assert!(validate_method_name("get-user").is_ok());
+        assert!(validate_method_name("api-v1").is_ok());
+        assert!(validate_method_name("my-method-name").is_ok());
+    }
+
+    #[test]
+    fn test_validate_method_name_valid_with_numbers() {
+        assert!(validate_method_name("method1").is_ok());
+        assert!(validate_method_name("v2.endpoint").is_ok());
+        assert!(validate_method_name("rpc123abc").is_ok());
+    }
+
+    #[test]
+    fn test_validate_method_name_valid_mixed() {
+        assert!(validate_method_name("user.get_by_id").is_ok());
+        assert!(validate_method_name("api-v1.service_name").is_ok());
+        assert!(validate_method_name("Service_v1_2_3").is_ok());
+    }
+
+    #[test]
+    fn test_validate_method_name_valid_max_length() {
+        let max_name = "a".repeat(255);
+        assert!(validate_method_name(&max_name).is_ok());
+    }
+
+    #[test]
+    fn test_validate_method_name_empty() {
+        let result = validate_method_name("");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("cannot be empty"));
+    }
+
+    #[test]
+    fn test_validate_method_name_leading_space() {
+        let result = validate_method_name(" method");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("leading or trailing whitespace"));
+    }
+
+    #[test]
+    fn test_validate_method_name_trailing_space() {
+        let result = validate_method_name("method ");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("leading or trailing whitespace"));
+    }
+
+    #[test]
+    fn test_validate_method_name_leading_and_trailing_space() {
+        let result = validate_method_name(" method ");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("leading or trailing whitespace"));
+    }
+
+    #[test]
+    fn test_validate_method_name_internal_space() {
+        let result = validate_method_name("method name");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("invalid character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_too_long() {
+        let too_long_name = "a".repeat(256);
+        let result = validate_method_name(&too_long_name);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("exceeds maximum length"));
+    }
+
+    #[test]
+    fn test_validate_method_name_null_byte() {
+        let result = validate_method_name("method\x00name");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("control character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_newline() {
+        let result = validate_method_name("method\nname");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("control character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_carriage_return() {
+        let result = validate_method_name("method\rname");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("control character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_tab() {
+        let result = validate_method_name("method\tname");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("control character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_delete_char() {
+        let result = validate_method_name("method\x7fname");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("control character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_special_char_at_sign() {
+        let result = validate_method_name("method@name");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("invalid character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_special_char_hash() {
+        let result = validate_method_name("method#name");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("invalid character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_special_char_percent() {
+        let result = validate_method_name("method%name");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("invalid character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_special_char_slash() {
+        let result = validate_method_name("method/name");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("invalid character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_special_char_backslash() {
+        let result = validate_method_name("method\\name");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("invalid character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_special_char_quote() {
+        let result = validate_method_name("method\"name");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("invalid character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_dos_attack_very_long() {
+        let very_long = "a".repeat(10000);
+        let result = validate_method_name(&very_long);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("exceeds maximum length"));
+    }
+
+    #[test]
+    fn test_validate_method_name_dos_attack_control_chars() {
+        let result = validate_method_name("method\x00\x00\x00\x00");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("control character"));
+    }
+
+    #[test]
+    fn test_validate_method_name_edge_case_single_char() {
+        assert!(validate_method_name("a").is_ok());
+        assert!(validate_method_name("_").is_ok());
+        assert!(validate_method_name("-").is_ok());
+        assert!(validate_method_name(".").is_ok());
     }
 }

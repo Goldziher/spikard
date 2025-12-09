@@ -12,7 +12,9 @@ use serde::{Deserialize, Serialize};
 
 pub use http_handler::{JsonRpcState, handle_jsonrpc};
 pub use method_registry::{JsonRpcMethodRegistry, MethodExample, MethodMetadata};
-pub use protocol::{JsonRpcErrorResponse, JsonRpcRequest, JsonRpcResponse, JsonRpcResponseType, error_codes};
+pub use protocol::{
+    JsonRpcErrorResponse, JsonRpcRequest, JsonRpcResponse, JsonRpcResponseType, error_codes, validate_method_name,
+};
 pub use router::{JsonRpcRequestOrBatch, JsonRpcRouter};
 
 /// JSON-RPC server configuration
