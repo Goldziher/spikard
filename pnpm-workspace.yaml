@@ -5,5 +5,7 @@ packages:
   - "crates/spikard-wasm"
   - "e2e/node"
   - "e2e/wasm"
+  - "e2e/deno"
+  - "e2e/cloudflare"
   - "examples/*"
   - "tools/benchmark-harness/apps/*"

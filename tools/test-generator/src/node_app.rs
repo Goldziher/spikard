@@ -70,28 +70,100 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
     )?;
     fs::write(app_dir.join("main.ts"), app_content).context("Failed to write main.ts")?;
 
-    let package_json = generate_package_json(target);
-    fs::write(output_dir.join("package.json"), package_json).context("Failed to write package.json")?;
+    // Generate runtime-specific config files
+    match target.runtime {
+        crate::ts_target::Runtime::Node | crate::ts_target::Runtime::NodeWasm => {
+            let package_json = generate_package_json(target);
+            fs::write(output_dir.join("package.json"), package_json).context("Failed to write package.json")?;
 
-    let tsconfig = generate_tsconfig();
-    fs::write(output_dir.join("tsconfig.json"), tsconfig).context("Failed to write tsconfig.json")?;
+            let tsconfig = generate_tsconfig(target);
+            fs::write(output_dir.join("tsconfig.json"), tsconfig).context("Failed to write tsconfig.json")?;
 
-    let vitest_config = generate_vitest_config();
-    fs::write(output_dir.join("vitest.config.ts"), vitest_config).context("Failed to write vitest.config.ts")?;
+            let vitest_config = generate_vitest_config(target);
+            fs::write(output_dir.join("vitest.config.ts"), vitest_config)
+                .context("Failed to write vitest.config.ts")?;
 
-    println!("  ✓ Generated app/main.ts");
-    println!("  ✓ Generated package.json");
-    println!("  ✓ Generated tsconfig.json");
-    println!("  ✓ Generated vitest.config.ts");
+            println!("  ✓ Generated app/main.ts");
+            println!("  ✓ Generated package.json");
+            println!("  ✓ Generated tsconfig.json");
+            println!("  ✓ Generated vitest.config.ts");
+        }
+        crate::ts_target::Runtime::Deno => {
+            let deno_json = generate_deno_config(target);
+            fs::write(output_dir.join("deno.json"), deno_json).context("Failed to write deno.json")?;
 
-    format_generated_ts(output_dir)?;
+            let package_json = generate_minimal_package_json(target);
+            fs::write(output_dir.join("package.json"), package_json).context("Failed to write package.json")?;
+
+            let tsconfig = generate_tsconfig(target);
+            fs::write(output_dir.join("tsconfig.json"), tsconfig).context("Failed to write tsconfig.json")?;
+
+            println!("  ✓ Generated app/main.ts");
+            println!("  ✓ Generated deno.json");
+            println!("  ✓ Generated package.json");
+            println!("  ✓ Generated tsconfig.json");
+        }
+        crate::ts_target::Runtime::CloudflareWorkers => {
+            let wrangler = generate_wrangler_config();
+            fs::write(output_dir.join("wrangler.toml"), wrangler).context("Failed to write wrangler.toml")?;
+
+            let package_json = generate_package_json(target);
+            fs::write(output_dir.join("package.json"), package_json).context("Failed to write package.json")?;
+
+            let tsconfig = generate_tsconfig(target);
+            fs::write(output_dir.join("tsconfig.json"), tsconfig).context("Failed to write tsconfig.json")?;
+
+            let vitest_config = generate_vitest_config(target);
+            fs::write(output_dir.join("vitest.config.ts"), vitest_config)
+                .context("Failed to write vitest.config.ts")?;
+
+            println!("  ✓ Generated app/main.ts");
+            println!("  ✓ Generated wrangler.toml");
+            println!("  ✓ Generated package.json");
+            println!("  ✓ Generated tsconfig.json");
+            println!("  ✓ Generated vitest.config.ts");
+        }
+    }
+
+    // Skip biome formatting for Deno (it doesn't understand Deno.test syntax)
+    if !matches!(target.runtime, crate::ts_target::Runtime::Deno) {
+        format_generated_ts(output_dir)?;
+    }
     Ok(())
 }
 
 /// Generate package.json for the e2e Node.js project
 fn generate_package_json(target: &TypeScriptTarget) -> String {
-    format!(
-        r#"{{
+    match target.runtime {
+        crate::ts_target::Runtime::CloudflareWorkers => {
+            format!(
+                r#"{{
+	"name": "{name}",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {{
+		"test": "vitest run",
+		"test:watch": "vitest"
+	}},
+	"devDependencies": {{
+		"{dependency}": "workspace:*",
+		"@cloudflare/vitest-pool-workers": "^0.7.0",
+		"@cloudflare/workers-types": "^4.20250106.0",
+		"@vitest/coverage-v8": "^4.0.6",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.6",
+		"wrangler": "^3.100.0"
+	}}
+}}
+"#,
+                name = target.e2e_package_name,
+                dependency = target.dependency_package
+            )
+        }
+        _ => {
+            format!(
+                r#"{{
 	"name": "{name}",
 	"version": "0.1.0",
 	"private": true,
@@ -109,15 +181,64 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 	}}
 }}
 "#,
-        name = target.e2e_package_name,
-        dependency = target.dependency_package
+                name = target.e2e_package_name,
+                dependency = target.dependency_package
+            )
+        }
+    }
+}
+
+/// Generate minimal package.json for Deno (workspace linking only)
+fn generate_minimal_package_json(target: &TypeScriptTarget) -> String {
+    format!(
+        r#"{{
+	"name": "{name}",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module"
+}}
+"#,
+        name = target.e2e_package_name
     )
 }
 
+/// Generate deno.json for Deno configuration
+fn generate_deno_config(target: &TypeScriptTarget) -> String {
+    format!(
+        r#"{{
+	"tasks": {{
+		"test": "deno test --allow-net --allow-read --allow-env tests/"
+	}},
+	"imports": {{
+		"{pkg}": "npm:{pkg}@workspace:*"
+	}}
+}}
+"#,
+        pkg = target.dependency_package
+    )
+}
+
+/// Generate wrangler.toml for Cloudflare Workers configuration
+fn generate_wrangler_config() -> String {
+    r#"name = "spikard-e2e-cloudflare"
+main = "app/main.ts"
+compatibility_date = "2025-01-08"
+compatibility_flags = ["nodejs_compat"]
+"#
+    .to_string()
+}
+
 /// Generate tsconfig.json for TypeScript compilation
-fn generate_tsconfig() -> String {
-    r#"{
-	"compilerOptions": {
+fn generate_tsconfig(target: &TypeScriptTarget) -> String {
+    let types = match target.runtime {
+        crate::ts_target::Runtime::Deno => r#"["@std/assert"]"#,
+        crate::ts_target::Runtime::CloudflareWorkers => r#"["vitest/globals", "@cloudflare/workers-types"]"#,
+        _ => r#"["vitest/globals", "node"]"#,
+    };
+
+    format!(
+        r#"{{
+	"compilerOptions": {{
 		"target": "ES2022",
 		"module": "ES2022",
 		"lib": ["ES2022"],
@@ -127,12 +248,12 @@ fn generate_tsconfig() -> String {
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true,
-		"types": ["vitest/globals", "node"]
-	},
+		"types": {types}
+	}},
 	"include": ["app/**/*", "tests/**/*"]
-}
+}}
 "#
-    .to_string()
+    )
 }
 
 fn format_generated_ts(dir: &Path) -> Result<()> {
@@ -150,8 +271,25 @@ fn format_generated_ts(dir: &Path) -> Result<()> {
 }
 
 /// Generate vitest.config.ts for test configuration
-fn generate_vitest_config() -> String {
-    r#"import { defineConfig } from "vitest/config";
+fn generate_vitest_config(target: &TypeScriptTarget) -> String {
+    match target.runtime {
+        crate::ts_target::Runtime::CloudflareWorkers => {
+            r#"import { defineWorkersConfig } from "@cloudflare/vitest-pool-workers/config";
+
+export default defineWorkersConfig({
+	test: {
+		globals: true,
+		poolOptions: {
+			workers: {
+				wrangler: { configPath: "./wrangler.toml" },
+			},
+		},
+	},
+});
+"#
+            .to_string()
+        }
+        _ => r#"import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	test: {
@@ -160,7 +298,8 @@ export default defineConfig({
 	},
 });
 "#
-    .to_string()
+        .to_string(),
+    }
 }
 
 /// Generate app file with per-fixture app factory functions
@@ -263,7 +402,17 @@ fn generate_app_file_per_fixture(
     code.push_str(&format!("}} from \"{}\";\n", target.binding_package));
     let needs_buffer_import = has_websocket || padded_binary_bodies || streaming_has_binary_chunks;
     if needs_buffer_import {
-        code.push_str("import { Buffer } from \"node:buffer\";\n");
+        match target.runtime {
+            crate::ts_target::Runtime::Node | crate::ts_target::Runtime::NodeWasm => {
+                code.push_str("import { Buffer } from \"node:buffer\";\n");
+            }
+            crate::ts_target::Runtime::Deno => {
+                code.push_str("// Deno has Buffer in globalThis\n");
+            }
+            crate::ts_target::Runtime::CloudflareWorkers => {
+                code.push_str("// Buffer available via nodejs_compat flag\n");
+            }
+        }
     }
     code.push_str("import { z } from \"zod\";\n\n");
 
