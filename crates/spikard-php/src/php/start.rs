@@ -33,6 +33,20 @@ pub struct RegisteredRoutePayload {
 
 impl RegisteredRoutePayload {
     pub fn into_route(self) -> Result<Route, String> {
+        // Validate JSON-RPC method metadata if present
+        if let Some(ref json) = self.jsonrpc_method {
+            if let Ok(obj) = serde_json::from_value::<serde_json::Map<String, serde_json::Value>>(json.clone()) {
+                if let Some(method_name_val) = obj.get("method_name") {
+                    if let Some(method_name) = method_name_val.as_str() {
+                        spikard::validation::validate_jsonrpc_method_name(method_name)
+                            .map_err(|e| format!("Invalid JSON-RPC method name: {}", e))?;
+                    } else {
+                        return Err("jsonrpc_method.method_name must be a string".to_string());
+                    }
+                }
+            }
+        }
+
         Ok(Route {
             method: self
                 .method

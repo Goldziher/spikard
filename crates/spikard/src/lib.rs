@@ -7,6 +7,7 @@
 //! middleware behaviour across languages.
 
 pub mod upload;
+pub mod validation;
 
 use std::collections::HashMap;
 use std::future::Future;

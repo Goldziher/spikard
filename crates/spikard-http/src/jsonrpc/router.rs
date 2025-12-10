@@ -12,6 +12,15 @@
 //! - Notification handling (requests without IDs)
 //! - Comprehensive error handling for all JSON-RPC error codes
 //! - Thread-safe access via Arc<JsonRpcMethodRegistry>
+//! - Method name validation at routing time (defense in depth)
+//!
+//! # Validation
+//!
+//! Method names are validated at two points:
+//! 1. During request parsing in `parse_request()` - validates method names when requests are deserialized
+//! 2. During routing in `route_single()` - provides defense-in-depth validation even for programmatically created requests
+//!
+//! Invalid method names return a JSON-RPC error with code -32600 (Invalid Request) as per the JSON-RPC 2.0 spec.
 //!
 //! # Example
 //!
@@ -104,6 +113,16 @@ impl JsonRpcRouter {
         http_request: Request<Body>,
         request_data: &RequestData,
     ) -> JsonRpcResponseType {
+        // Validate method name format early to prevent invalid methods from reaching handlers
+        if let Err(validation_error) = super::protocol::validate_method_name(&request.method) {
+            let id = request.id.unwrap_or(Value::Null);
+            return JsonRpcResponseType::Error(JsonRpcErrorResponse::error(
+                error_codes::INVALID_REQUEST,
+                format!("Invalid method name: {}", validation_error),
+                id,
+            ));
+        }
+
         // Check if method exists in registry
         let handler = match self.registry.get(&request.method) {
             Ok(Some(h)) => h,
@@ -414,6 +433,112 @@ mod tests {
                     "Handler error".to_string(),
                 ))
             })
+        }
+    }
+
+    #[tokio::test]
+    async fn test_route_single_invalid_method_name_empty() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let request = JsonRpcRequest::new("", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+                assert!(err.error.message.contains("Invalid method name"));
+                assert_eq!(err.id, json!(1));
+            }
+            _ => panic!("Expected error response for invalid method name"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_route_single_invalid_method_name_with_space() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let request = JsonRpcRequest::new("method name", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+                assert!(err.error.message.contains("Invalid method name"));
+                assert_eq!(err.id, json!(1));
+            }
+            _ => panic!("Expected error response for invalid method name"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_route_single_invalid_method_name_control_char() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let request = JsonRpcRequest::new("method\nname", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+                assert!(err.error.message.contains("Invalid method name"));
+                assert_eq!(err.id, json!(1));
+            }
+            _ => panic!("Expected error response for invalid method name"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_route_single_invalid_method_name_special_char() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let request = JsonRpcRequest::new("method@name", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+                assert!(err.error.message.contains("Invalid method name"));
+                assert_eq!(err.id, json!(1));
+            }
+            _ => panic!("Expected error response for invalid method name"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_route_single_invalid_method_name_too_long() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let long_method = "a".repeat(256);
+        let request = JsonRpcRequest::new(long_method, None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+                assert!(err.error.message.contains("Invalid method name"));
+                assert_eq!(err.id, json!(1));
+            }
+            _ => panic!("Expected error response for invalid method name"),
         }
     }
 
