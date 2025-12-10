@@ -40,9 +40,9 @@ module Spikard
     def request(method, path, headers, body)
       # Call the native request method and wrap in Response
       native_response = @client.request(method, path, {
-        headers: headers,
-        body: body
-      })
+                                          headers: headers,
+                                          body: body
+                                        })
       Response.new(native_response)
     end
   end

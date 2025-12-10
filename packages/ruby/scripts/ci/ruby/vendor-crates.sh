@@ -14,7 +14,7 @@ mkdir -p "$VENDOR_DIR"
 # Copy internal crates
 for crate in spikard-core spikard-http spikard-bindings-shared spikard-rb; do
 	echo "  Copying $crate..."
-	rm -rf "$VENDOR_DIR/$crate"
+	rm -rf "${VENDOR_DIR:?}/${crate:?}"
 	cp -r "crates/$crate" "$VENDOR_DIR/"
 done
 
@@ -59,7 +59,7 @@ patch_cargo_toml() {
 # Patch all vendored Cargo.toml files
 for toml in "$VENDOR_DIR"/*/Cargo.toml; do
 	if [ -f "$toml" ]; then
-		echo "  Patching $(basename $(dirname $toml))/Cargo.toml..."
+		echo "  Patching $(basename "$(dirname "$toml")")/Cargo.toml..."
 		patch_cargo_toml "$toml"
 	fi
 done
