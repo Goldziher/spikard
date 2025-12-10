@@ -1,7 +1,7 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"title": "Spikard JSON-RPC Test Fixture Schema",
-	"description": "Schema for JSON-RPC 2.0 method test fixtures used to generate e2e test apps and test suites",
+	"description": "Schema for JSON-RPC 2.0 method test fixtures used to generate e2e test apps and test suites. Fixtures are organized into three categories: core methods (user_*.json), protocol-level edge cases (edge_cases/), standard error scenarios (errors/), and schema validation edge cases (validation/).",
 	"type": "object",
 	"required": [
 		"name",
@@ -33,7 +33,7 @@
 			"description": "JSON-RPC method name (typically namespaced)",
 			"pattern": "^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)*$",
 			"minLength": 1,
-			"examples": ["user.getById", "user.create", "account.update", "system.ping"]
+			"examples": ["user.getById", "user.create", "account.update", "system.ping", "batch"]
 		},
 		"protocol": {
 			"type": "string",
@@ -97,6 +97,14 @@
 				"type": "object",
 				"required": ["params", "result"],
 				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Optional human-readable name for the example"
+					},
+					"description": {
+						"type": "string",
+						"description": "Optional description of what this example demonstrates"
+					},
 					"params": {
 						"description": "Method parameters (JSON-RPC params field)"
 					},
@@ -151,7 +159,191 @@
 			"items": {
 				"type": "string"
 			},
-			"examples": [["users"], ["auth", "security"], ["admin"]]
+			"examples": [["users"], ["auth", "security"], ["admin"], ["batch"], ["edge-cases"], ["validation"]]
 		}
+	},
+	"fixture_directories": {
+		"root": {
+			"description": "Core method fixtures for standard JSON-RPC operations",
+			"files": {
+				"user_create.json": {
+					"description": "Tests JSON-RPC method for creating a new user",
+					"purpose": "User creation with validation",
+					"test_cases": 3,
+					"scenarios": [
+						"Successful user creation with complete data",
+						"Email already exists (409 conflict error)",
+						"Invalid email format (validation error)"
+					]
+				},
+				"user_getById.json": {
+					"description": "Tests JSON-RPC method for retrieving a user by ID",
+					"purpose": "User lookup and retrieval",
+					"test_cases": 2,
+					"scenarios": ["Successful user retrieval with valid UUID", "User not found (404 error)"]
+				},
+				"user_list.json": {
+					"description": "Tests JSON-RPC method for listing all users",
+					"purpose": "User enumeration with pagination",
+					"test_cases": 2,
+					"scenarios": ["Successful list of users", "Empty user list"]
+				},
+				"user_update.json": {
+					"description": "Tests JSON-RPC method for updating an existing user",
+					"purpose": "User modification with partial updates",
+					"test_cases": 3,
+					"scenarios": ["Successful user update", "User not found (404 error)", "Invalid update data"]
+				},
+				"user_delete.json": {
+					"description": "Tests JSON-RPC method for deleting a user",
+					"purpose": "User removal from system",
+					"test_cases": 2,
+					"scenarios": ["Successful user deletion", "User not found (404 error)"]
+				}
+			}
+		},
+		"edge_cases": {
+			"description": "Protocol-level edge cases and advanced JSON-RPC scenarios",
+			"purpose": "Test complex request patterns and boundary conditions",
+			"files": {
+				"batch_requests.json": {
+					"description": "Tests JSON-RPC 2.0 batch request handling with various combinations",
+					"purpose": "Batch request protocol compliance",
+					"test_cases": 6,
+					"scenarios": [
+						"Simple batch with 3 successful calls",
+						"Mixed success and error responses in batch",
+						"Batch containing notifications (requests without id)",
+						"Large batch with 10+ requests for performance testing",
+						"Batch with all requests calling the same method",
+						"Batch with duplicate request IDs"
+					],
+					"edge_case_coverage": [
+						"Notification handling (no response expected)",
+						"Response ordering preservation",
+						"Duplicate ID handling",
+						"Large payload handling",
+						"Mixed method invocations"
+					],
+					"standards_compliance": "JSON-RPC 2.0 Section 6 (Batch)"
+				}
+			}
+		},
+		"errors": {
+			"description": "Standard JSON-RPC error scenarios and error code coverage",
+			"purpose": "Comprehensive error handling and response validation",
+			"files": {
+				"standard_errors.json": {
+					"description": "Tests all standard JSON-RPC 2.0 error codes and custom error scenarios",
+					"purpose": "Error code compliance and error message consistency",
+					"test_cases": 13,
+					"scenarios": [
+						"Parse error (-32700) with invalid JSON",
+						"Parse error with unterminated string",
+						"Parse error with trailing comma",
+						"Invalid request (-32600) missing jsonrpc field",
+						"Invalid request missing method field",
+						"Invalid request with wrong JSON-RPC version",
+						"Invalid request with non-string jsonrpc field",
+						"Method not found (-32601) for non-existent method",
+						"Method not found with typo suggestion",
+						"Invalid params (-32602) with missing required field",
+						"Invalid params with type mismatch",
+						"Invalid params with multiple validation errors",
+						"Internal error (-32603) for database failures",
+						"Internal error for request timeouts",
+						"Internal error for unhandled exceptions"
+					],
+					"error_codes_covered": [-32700, -32600, -32601, -32602, -32603],
+					"standards_compliance": "JSON-RPC 2.0 Section 5 (Error Object)"
+				}
+			}
+		},
+		"validation": {
+			"description": "JSON Schema validation edge cases and constraint testing",
+			"purpose": "Schema validation boundary conditions and format constraints",
+			"files": {
+				"schema_validation.json": {
+					"description": "Comprehensive JSON Schema validation with basic type and constraint edge cases",
+					"purpose": "Validate schema constraint handling (minLength, maxLength, minimum, maximum, format, required, additionalProperties)",
+					"test_cases": 12,
+					"scenarios": [
+						"Valid complete profile with all optional fields",
+						"Valid minimal profile with only required fields",
+						"String constraint violations: name too short (minLength)",
+						"String constraint violations: name too long (maxLength)",
+						"Numeric constraint violations: age negative (minimum)",
+						"Numeric constraint violations: age exceeds maximum",
+						"Format constraint violations: invalid email format",
+						"Array constraint violations: empty array (minItems)",
+						"Array constraint violations: non-string items in string array",
+						"Required field violations: missing name",
+						"Required field violations: missing email",
+						"Edge case: empty string violating minLength"
+					],
+					"constraints_covered": [
+						"minLength",
+						"maxLength",
+						"minimum",
+						"maximum",
+						"format (email)",
+						"required",
+						"minItems",
+						"type validation",
+						"additionalProperties"
+					],
+					"validation_categories": [
+						"String length constraints",
+						"Numeric range constraints",
+						"Array element type validation",
+						"Array size constraints",
+						"Format validation",
+						"Required field validation"
+					]
+				}
+			}
+		}
+	},
+	"fixture_coverage_summary": {
+		"total_fixture_files": 9,
+		"total_test_cases": 38,
+		"directory_breakdown": {
+			"core_methods": {
+				"count": 5,
+				"test_cases": 12,
+				"description": "Basic CRUD operations on user resource"
+			},
+			"edge_cases": {
+				"count": 1,
+				"test_cases": 6,
+				"description": "Protocol-level complexity and batch operations"
+			},
+			"errors": {
+				"count": 1,
+				"test_cases": 13,
+				"description": "Error code compliance and error message validation"
+			},
+			"validation": {
+				"count": 1,
+				"test_cases": 12,
+				"description": "Schema constraint enforcement and validation edge cases"
+			}
+		},
+		"standards_compliance": [
+			"JSON-RPC 2.0 (RFC 7591) - Core protocol compliance",
+			"JSON Schema (draft 7) - Validation constraints",
+			"HTTP/1.1 - Transport layer"
+		],
+		"coverage_areas": [
+			"Successful request/response handling",
+			"Standard error codes (-32700 to -32603)",
+			"Custom error codes (404, 409)",
+			"Batch request processing",
+			"Notification handling",
+			"Schema validation",
+			"Type constraints",
+			"Format validation",
+			"Array and object constraints"
+		]
 	}
 }

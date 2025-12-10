@@ -1,0 +1,120 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "JSON-RPC Validation Fixture Schema",
+	"description": "Schema for JSON-RPC validation test fixtures in Spikard testing framework",
+	"type": "object",
+	"definitions": {
+		"validationError": {
+			"type": "object",
+			"properties": {
+				"fieldPath": {
+					"type": "string",
+					"description": "Path to the field with validation error (e.g., 'user.profile.address.zip')"
+				},
+				"constraint": {
+					"type": "string",
+					"enum": [
+						"type",
+						"required",
+						"minLength",
+						"maxLength",
+						"minimum",
+						"maximum",
+						"pattern",
+						"format",
+						"minItems",
+						"maxItems",
+						"uniqueItems",
+						"additionalProperties",
+						"enum"
+					],
+					"description": "JSON Schema constraint that failed"
+				},
+				"value": {
+					"description": "The actual value that failed validation"
+				},
+				"details": {
+					"type": "string",
+					"description": "Human-readable error message explaining the validation failure"
+				}
+			},
+			"required": ["fieldPath", "constraint", "details"]
+		},
+		"testCase": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string",
+					"description": "Unique test case identifier"
+				},
+				"method": {
+					"type": "string",
+					"description": "JSON-RPC method name (e.g., 'user.create')"
+				},
+				"params": {
+					"description": "JSON-RPC params object to validate"
+				},
+				"expectedSuccess": {
+					"type": "boolean",
+					"description": "Whether this test case should pass validation"
+				},
+				"expectedError": {
+					"type": "object",
+					"properties": {
+						"code": {
+							"type": "string",
+							"description": "JSON-RPC error code (e.g., '-32602' for Invalid params)"
+						},
+						"message": {
+							"type": "string",
+							"description": "JSON-RPC error message"
+						},
+						"data": {
+							"type": "object",
+							"description": "Error details object",
+							"properties": {
+								"fieldPath": {
+									"type": "string"
+								},
+								"constraint": {
+									"type": "string"
+								},
+								"value": {},
+								"details": {
+									"type": "string"
+								},
+								"errors": {
+									"type": "array",
+									"items": {
+										"$ref": "#/definitions/validationError"
+									},
+									"description": "Array of validation errors when multiple fields fail"
+								}
+							}
+						}
+					},
+					"required": ["code", "message"]
+				},
+				"schemaConfig": {
+					"type": "string",
+					"enum": ["additionalPropertiesFalse", "additionalPropertiesTrue", "additionalPropertiesDefault"],
+					"description": "Schema configuration variant (used in extra_fields tests)"
+				},
+				"note": {
+					"type": "string",
+					"description": "Optional explanatory note about the test case"
+				}
+			},
+			"required": ["name", "method", "params", "expectedSuccess"]
+		}
+	},
+	"properties": {
+		"testCases": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/testCase"
+			},
+			"description": "Array of validation test cases"
+		}
+	}
+}

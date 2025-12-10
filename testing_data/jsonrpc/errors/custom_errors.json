@@ -1,0 +1,361 @@
+{
+	"conflict_duplicate_email": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUser",
+			"params": {
+				"email": "alice@example.com",
+				"name": "Alice Smith"
+			},
+			"id": 100
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 409,
+				"message": "User with email already exists",
+				"data": {
+					"email": "alice@example.com",
+					"field": "email",
+					"existing_user_id": "550e8400-e29b-41d4-a716-446655440001",
+					"suggestion": "Use a different email address"
+				}
+			},
+			"id": 100
+		}
+	},
+	"conflict_duplicate_username": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUser",
+			"params": {
+				"username": "john_doe",
+				"email": "john@example.com"
+			},
+			"id": 101
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 409,
+				"message": "Username already exists",
+				"data": {
+					"username": "john_doe",
+					"field": "username",
+					"existing_user_id": "550e8400-e29b-41d4-a716-446655440002"
+				}
+			},
+			"id": 101
+		}
+	},
+	"conflict_duplicate_resource": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createProject",
+			"params": {
+				"name": "MyProject",
+				"workspace_id": "ws-123"
+			},
+			"id": 102
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 409,
+				"message": "Project with this name already exists in workspace",
+				"data": {
+					"resource": "project",
+					"workspace_id": "ws-123",
+					"conflicting_field": "name",
+					"conflicting_value": "MyProject",
+					"existing_id": "proj-456"
+				}
+			},
+			"id": 102
+		}
+	},
+	"not_found_user": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "getUser",
+			"params": {
+				"id": "550e8400-e29b-41d4-a716-000000000000"
+			},
+			"id": 103
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 404,
+				"message": "User not found",
+				"data": {
+					"id": "550e8400-e29b-41d4-a716-000000000000",
+					"resource": "user",
+					"suggestion": "Verify the user ID and try again"
+				}
+			},
+			"id": 103
+		}
+	},
+	"not_found_project": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "getProject",
+			"params": {
+				"id": "proj-unknown-123"
+			},
+			"id": 104
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 404,
+				"message": "Project not found",
+				"data": {
+					"id": "proj-unknown-123",
+					"resource": "project",
+					"searched_in": "all_workspaces"
+				}
+			},
+			"id": 104
+		}
+	},
+	"not_found_document": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "getDocument",
+			"params": {
+				"id": "doc-999",
+				"project_id": "proj-123"
+			},
+			"id": 105
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 404,
+				"message": "Document not found in project",
+				"data": {
+					"resource": "document",
+					"document_id": "doc-999",
+					"project_id": "proj-123",
+					"was_deleted": false
+				}
+			},
+			"id": 105
+		}
+	},
+	"forbidden_insufficient_permissions": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "deleteUser",
+			"params": {
+				"id": "550e8400-e29b-41d4-a716-446655440003"
+			},
+			"id": 106
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 403,
+				"message": "Insufficient permissions",
+				"data": {
+					"required_role": "admin",
+					"user_role": "user",
+					"action": "deleteUser",
+					"resource": "user",
+					"suggestion": "Contact an administrator to perform this action"
+				}
+			},
+			"id": 106
+		}
+	},
+	"forbidden_resource_access": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "updateProject",
+			"params": {
+				"id": "proj-789",
+				"name": "Updated Project"
+			},
+			"id": 107
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 403,
+				"message": "Access denied",
+				"data": {
+					"resource": "project",
+					"resource_id": "proj-789",
+					"action": "update",
+					"reason": "You do not have write permissions for this project",
+					"owner_id": "550e8400-e29b-41d4-a716-446655440005"
+				}
+			},
+			"id": 107
+		}
+	},
+	"forbidden_rate_limit": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "uploadFile",
+			"params": {
+				"filename": "largefile.bin",
+				"size_bytes": 1073741824
+			},
+			"id": 108
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 403,
+				"message": "Rate limit exceeded",
+				"data": {
+					"reason": "File upload limit exceeded",
+					"limit": 5,
+					"current_count": 5,
+					"reset_time": "2025-12-10T11:00:00Z",
+					"retry_after_seconds": 1800
+				}
+			},
+			"id": 108
+		}
+	},
+	"unauthorized_missing_token": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "getProfile",
+			"params": {},
+			"id": 109
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 401,
+				"message": "Authentication required",
+				"data": {
+					"reason": "Missing or invalid authentication token",
+					"hint": "Provide valid API key or JWT token",
+					"auth_schemes": ["Bearer", "ApiKey"]
+				}
+			},
+			"id": 109
+		}
+	},
+	"unauthorized_invalid_token": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "getProfile",
+			"params": {},
+			"id": 110,
+			"headers": {
+				"Authorization": "Bearer invalid.token.here"
+			}
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 401,
+				"message": "Invalid authentication token",
+				"data": {
+					"reason": "Token validation failed",
+					"error": "Signature verification failed",
+					"hint": "Ensure your token is not expired and was issued by the server"
+				}
+			},
+			"id": 110
+		}
+	},
+	"unauthorized_expired_token": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "listProjects",
+			"params": {},
+			"id": 111,
+			"headers": {
+				"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDIxODAwMDB9.invalid"
+			}
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 401,
+				"message": "Token expired",
+				"data": {
+					"reason": "Authentication token has expired",
+					"expired_at": "2025-12-09T10:00:00Z",
+					"hint": "Refresh your token or log in again"
+				}
+			},
+			"id": 111
+		}
+	},
+	"unprocessable_validation_failed": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUser",
+			"params": {
+				"email": "not-an-email",
+				"age": -10,
+				"phone": "invalid-phone"
+			},
+			"id": 112
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 422,
+				"message": "Validation failed",
+				"data": {
+					"errors": [
+						{
+							"field": "email",
+							"message": "Invalid email format",
+							"rule": "email"
+						},
+						{
+							"field": "age",
+							"message": "Must be between 0 and 150",
+							"rule": "range"
+						},
+						{
+							"field": "phone",
+							"message": "Invalid phone format",
+							"rule": "pattern"
+						}
+					],
+					"total_errors": 3
+				}
+			},
+			"id": 112
+		}
+	},
+	"unprocessable_business_rule": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "transferMoney",
+			"params": {
+				"from_account": "acc-001",
+				"to_account": "acc-002",
+				"amount": 5000
+			},
+			"id": 113
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 422,
+				"message": "Insufficient funds",
+				"data": {
+					"reason": "Account balance is insufficient for this transfer",
+					"account": "acc-001",
+					"balance": 3500,
+					"requested_amount": 5000,
+					"deficit": 1500
+				}
+			},
+			"id": 113
+		}
+	}
+}
