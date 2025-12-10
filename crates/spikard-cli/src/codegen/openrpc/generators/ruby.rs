@@ -146,11 +146,11 @@ fn generate_ruby_handler(
     // Placeholder return
     code.push_str("    # Example return structure (update with real data):\n");
     code.push_str("    result = {}\n");
-    if let Some(properties) = method.result.schema.get("properties") {
-        if let Some(props) = properties.as_object() {
-            for field_name in props.keys().take(3) {
-                code.push_str(&format!("    result[\"{}\"] = \"TODO\"\n", field_name));
-            }
+    if let Some(properties) = method.result.schema.get("properties")
+        && let Some(props) = properties.as_object()
+    {
+        for field_name in props.keys().take(3) {
+            code.push_str(&format!("    result[\"{}\"] = \"TODO\"\n", field_name));
         }
     }
     code.push_str("    result\n");

@@ -483,7 +483,7 @@ pub mod error_codes {
 
     /// Helper function to check if a code is a reserved server error code
     pub fn is_server_error(code: i32) -> bool {
-        code >= SERVER_ERROR_END && code <= SERVER_ERROR_BASE
+        (SERVER_ERROR_END..=SERVER_ERROR_BASE).contains(&code)
     }
 }
 

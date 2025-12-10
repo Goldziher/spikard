@@ -119,7 +119,7 @@ impl JsonRpcRouter {
                 let id = request.id.unwrap_or(Value::Null);
                 return JsonRpcResponseType::Error(JsonRpcErrorResponse::error(
                     error_codes::INTERNAL_ERROR,
-                    &format!("Internal error: {}", e),
+                    format!("Internal error: {}", e),
                     id,
                 ));
             }
@@ -252,7 +252,7 @@ impl JsonRpcRouter {
             // - Original extensions (contains request IDs, tracing context, auth claims)
             let req_for_handler = Request::from_parts(base_parts.clone(), Body::empty());
 
-            let response = self.route_single(request, req_for_handler, &request_data).await;
+            let response = self.route_single(request, req_for_handler, request_data).await;
 
             // Only include non-notification responses
             if !is_notification {
@@ -290,17 +290,17 @@ impl JsonRpcRouter {
     /// let parsed = JsonRpcRouter::parse_request(batch_json);
     /// assert!(parsed.is_ok());
     /// ```
-    pub fn parse_request(body: &str) -> Result<JsonRpcRequestOrBatch, JsonRpcErrorResponse> {
+    pub fn parse_request(body: &str) -> Result<JsonRpcRequestOrBatch, Box<JsonRpcErrorResponse>> {
         // Try to parse as single request first
         if let Ok(request) = serde_json::from_str::<JsonRpcRequest>(body) {
             // Validate method name
             if let Err(validation_error) = super::protocol::validate_method_name(&request.method) {
                 let id = request.id.unwrap_or(Value::Null);
-                return Err(JsonRpcErrorResponse::error(
+                return Err(Box::new(JsonRpcErrorResponse::error(
                     error_codes::INVALID_REQUEST,
                     format!("Invalid method name: {}", validation_error),
                     id,
-                ));
+                )));
             }
             return Ok(JsonRpcRequestOrBatch::Single(request));
         }
@@ -311,22 +311,22 @@ impl JsonRpcRouter {
             for request in &batch {
                 if let Err(validation_error) = super::protocol::validate_method_name(&request.method) {
                     let id = request.id.clone().unwrap_or(Value::Null);
-                    return Err(JsonRpcErrorResponse::error(
+                    return Err(Box::new(JsonRpcErrorResponse::error(
                         error_codes::INVALID_REQUEST,
                         format!("Invalid method name: {}", validation_error),
                         id,
-                    ));
+                    )));
                 }
             }
             return Ok(JsonRpcRequestOrBatch::Batch(batch));
         }
 
         // Neither single nor batch - parse error
-        Err(JsonRpcErrorResponse::error(
+        Err(Box::new(JsonRpcErrorResponse::error(
             error_codes::PARSE_ERROR,
             "Parse error",
             Value::Null,
-        ))
+        )))
     }
 }
 

@@ -130,6 +130,15 @@ impl MethodMetadata {
     }
 }
 
+/// Type alias for handler and metadata pair
+type MethodEntry = (Arc<dyn Handler>, MethodMetadata);
+
+/// Type alias for the internal storage structure
+type MethodStorage = Arc<RwLock<HashMap<String, MethodEntry>>>;
+
+/// Type alias for list_all return type: (name, handler, metadata)
+type MethodListEntry = (String, Arc<dyn Handler>, MethodMetadata);
+
 /// Thread-safe registry for JSON-RPC methods
 ///
 /// Stores handlers along with their metadata. The registry uses `Arc<RwLock>` for
@@ -157,7 +166,7 @@ impl MethodMetadata {
 /// ```
 pub struct JsonRpcMethodRegistry {
     /// Internal storage: method name -> (handler, metadata)
-    methods: Arc<RwLock<HashMap<String, (Arc<dyn Handler>, MethodMetadata)>>>,
+    methods: MethodStorage,
 }
 
 impl JsonRpcMethodRegistry {
@@ -255,9 +264,9 @@ impl JsonRpcMethodRegistry {
     ///
     /// # Returns
     ///
-    /// `Ok(Option<(Arc<dyn Handler>, MethodMetadata)>)` if found, `Ok(None)` if not found,
+    /// `Ok(Option<MethodEntry>)` if found, `Ok(None)` if not found,
     /// or `Err(RegistryError)` if the lock cannot be acquired.
-    pub fn get_with_metadata(&self, name: &str) -> Result<Option<(Arc<dyn Handler>, MethodMetadata)>, RegistryError> {
+    pub fn get_with_metadata(&self, name: &str) -> Result<Option<MethodEntry>, RegistryError> {
         let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
         Ok(methods
             .get(name)
@@ -348,7 +357,7 @@ impl JsonRpcMethodRegistry {
     ///
     /// `Ok(Vec)` containing tuples of method name, handler, and metadata,
     /// or `Err(RegistryError)` if the lock cannot be acquired.
-    pub fn list_all(&self) -> Result<Vec<(String, Arc<dyn Handler>, MethodMetadata)>, RegistryError> {
+    pub fn list_all(&self) -> Result<Vec<MethodListEntry>, RegistryError> {
         let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
         Ok(methods
             .iter()
