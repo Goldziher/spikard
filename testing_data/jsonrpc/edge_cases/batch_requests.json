@@ -1,0 +1,425 @@
+{
+	"name": "batch_requests",
+	"description": "JSON-RPC 2.0 batch request handling with various combinations",
+	"method": "batch",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "array",
+		"description": "Array of JSON-RPC requests"
+	},
+	"result_schema": {
+		"type": "array",
+		"description": "Array of JSON-RPC responses"
+	},
+	"examples": [
+		{
+			"name": "simple_batch_three_requests",
+			"description": "Batch with 3 successful calls",
+			"request": [
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.getById",
+					"params": {
+						"id": "550e8400-e29b-41d4-a716-446655440000"
+					},
+					"id": 2
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 3
+				}
+			],
+			"expected_response": [
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"id": "550e8400-e29b-41d4-a716-446655440000",
+						"name": "Alice Smith",
+						"email": "alice@example.com",
+						"role": "user",
+						"createdAt": "2024-01-10T10:00:00Z"
+					},
+					"id": 2
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 3
+				}
+			]
+		},
+		{
+			"name": "batch_mixed_success_error",
+			"description": "Batch with mixed success and error responses",
+			"request": [
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.getById",
+					"params": {
+						"id": "invalid-uuid"
+					},
+					"id": 2
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 3
+				}
+			],
+			"expected_response": [
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"error": {
+						"code": -32602,
+						"message": "Invalid params",
+						"data": {
+							"field": "id",
+							"reason": "Invalid UUID format"
+						}
+					},
+					"id": 2
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 3
+				}
+			]
+		},
+		{
+			"name": "batch_with_notifications",
+			"description": "Batch containing notifications (no id field, no response expected)",
+			"request": [
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "audit.log",
+					"params": {
+						"event": "user_list_called"
+					}
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 2
+				}
+			],
+			"expected_response": [
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 2
+				}
+			]
+		},
+		{
+			"name": "large_batch_ten_requests",
+			"description": "Large batch with 10+ requests to test performance",
+			"request": [
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 2
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 3
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 4
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 5
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 6
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 7
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 8
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 9
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 10
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 11
+				}
+			],
+			"expected_response": [
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 2
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 3
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 4
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 5
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 6
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 7
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 8
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 9
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 10
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 11
+				}
+			]
+		},
+		{
+			"name": "batch_same_method",
+			"description": "Batch with all requests calling the same method",
+			"request": [
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 2
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 3
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 4
+				}
+			],
+			"expected_response": [
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 2
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 3
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 4
+				}
+			]
+		},
+		{
+			"name": "batch_duplicate_ids",
+			"description": "Batch with duplicate request IDs (edge case handling)",
+			"request": [
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 2
+				}
+			],
+			"expected_response": [
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 2
+				}
+			]
+		}
+	],
+	"tags": ["batch", "protocol", "edge-cases"]
+}
