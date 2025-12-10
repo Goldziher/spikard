@@ -48,6 +48,7 @@ impl RegisteredRoutePayload {
             cors: None,
             expects_json_body: self.request_schema.is_some(),
             handler_dependencies: vec![],
+            jsonrpc_method: self.jsonrpc_method.and_then(|json| serde_json::from_value(json).ok()),
         })
     }
 }

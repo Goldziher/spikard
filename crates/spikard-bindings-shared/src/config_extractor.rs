@@ -9,8 +9,8 @@
 //! works with any `ConfigSource` implementation.
 
 use spikard_http::{
-    ApiKeyConfig, BackgroundTaskConfig, CompressionConfig, ContactInfo, JwtConfig, JsonRpcConfig, LicenseInfo, OpenApiConfig,
-    RateLimitConfig, SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
+    ApiKeyConfig, BackgroundTaskConfig, CompressionConfig, ContactInfo, JsonRpcConfig, JwtConfig, LicenseInfo,
+    OpenApiConfig, RateLimitConfig, SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
 };
 use std::collections::HashMap;
 
@@ -327,9 +327,7 @@ impl ConfigExtractor {
     /// Extract JsonRpcConfig from a ConfigSource
     pub fn extract_jsonrpc_config(source: &dyn ConfigSource) -> Result<JsonRpcConfig, String> {
         let enabled = source.get_bool("enabled").unwrap_or(true);
-        let endpoint_path = source
-            .get_string("endpoint_path")
-            .unwrap_or_else(|| "/rpc".to_string());
+        let endpoint_path = source.get_string("endpoint_path").unwrap_or_else(|| "/rpc".to_string());
         let enable_batch = source.get_bool("enable_batch").unwrap_or(true);
         let max_batch_size = source
             .get_usize("max_batch_size")

@@ -22,7 +22,7 @@ impl OpenRpcGenerator for PhpOpenRpcGenerator {
         code.push_str(&spec.info.title);
         code.push_str(" v");
         code.push_str(&spec.info.version);
-        code.push_str("\n");
+        code.push('\n');
         code.push_str(" */\n\n");
 
         code.push_str("declare(strict_types=1);\n\n");
@@ -157,11 +157,11 @@ fn generate_php_handler(code: &mut String, method: &crate::codegen::openrpc::spe
     // Placeholder return
     code.push_str("        // Example return structure (update with real data):\n");
     code.push_str("        $result = [];\n");
-    if let Some(properties) = method.result.schema.get("properties") {
-        if let Some(props) = properties.as_object() {
-            for field_name in props.keys().take(3) {
-                code.push_str(&format!("        $result['{}'] = 'TODO';\n", field_name));
-            }
+    if let Some(properties) = method.result.schema.get("properties")
+        && let Some(props) = properties.as_object()
+    {
+        for field_name in props.keys().take(3) {
+            code.push_str(&format!("        $result['{}'] = 'TODO';\n", field_name));
         }
     }
     code.push_str("        return $result;\n");

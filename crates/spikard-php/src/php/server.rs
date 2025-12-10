@@ -444,6 +444,7 @@ impl PhpServer {
                 cors: None,
                 expects_json_body: route.request_schema.is_some(),
                 handler_dependencies: vec![], // PHP routes don't currently declare dependencies
+                jsonrpc_method: None,
             };
 
             router.add_route(route_meta);
@@ -516,6 +517,7 @@ impl PhpServer {
                 cors: None,
                 expects_json_body: route.request_schema.is_some(),
                 handler_dependencies: vec![],
+                jsonrpc_method: None,
             };
 
             routes_with_handlers.push((metadata, Arc::new(handler) as Arc<dyn Handler>));
@@ -545,6 +547,7 @@ impl PhpServer {
                     cors: r.cors.clone(), // Use route-specific CORS config
                     body_param_name: None,
                     handler_dependencies: Some(Vec::new()),
+                    jsonrpc_method: None,
                 }
             })
             .collect();

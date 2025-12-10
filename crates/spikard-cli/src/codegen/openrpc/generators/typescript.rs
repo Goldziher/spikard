@@ -23,7 +23,7 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
         code.push_str(&spec.info.title);
         code.push_str(" v");
         code.push_str(&spec.info.version);
-        code.push_str("\n");
+        code.push('\n');
         code.push_str(" */\n\n");
 
         // Imports
@@ -161,11 +161,11 @@ fn generate_typescript_schemas(
     // Generate result schema
     let result_schema_name = format!("{}ResultSchema", pascal_case(&method.name));
     code.push_str(&format!("const {} = z.object({{\n", result_schema_name));
-    if let Some(properties) = method.result.schema.get("properties") {
-        if let Some(props) = properties.as_object() {
-            for (field_name, field_schema) in props {
-                code.push_str(&format!("  {}: {},\n", field_name, json_schema_to_zod(field_schema)));
-            }
+    if let Some(properties) = method.result.schema.get("properties")
+        && let Some(props) = properties.as_object()
+    {
+        for (field_name, field_schema) in props {
+            code.push_str(&format!("  {}: {},\n", field_name, json_schema_to_zod(field_schema)));
         }
     }
     code.push_str("});\n\n");
@@ -192,7 +192,7 @@ fn generate_typescript_types(
         result_type_name, result_schema_name
     ));
 
-    code.push_str("\n");
+    code.push('\n');
 
     Ok(())
 }
@@ -238,11 +238,11 @@ fn generate_typescript_handler(
     // Placeholder return
     code.push_str("  // Example return structure (update with real data):\n");
     code.push_str("  const result: Record<string, unknown> = {};\n");
-    if let Some(properties) = method.result.schema.get("properties") {
-        if let Some(props) = properties.as_object() {
-            for field_name in props.keys().take(3) {
-                code.push_str(&format!("  result[\"{}\"] = \"TODO\";\n", field_name));
-            }
+    if let Some(properties) = method.result.schema.get("properties")
+        && let Some(props) = properties.as_object()
+    {
+        for field_name in props.keys().take(3) {
+            code.push_str(&format!("  result[\"{}\"] = \"TODO\";\n", field_name));
         }
     }
     code.push_str("  return result as any; // TODO: type-safe return\n");

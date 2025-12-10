@@ -56,12 +56,12 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         );
         code.push_str("    \"\"\"\n");
         code.push_str("    Route JSON-RPC method calls to appropriate handlers.\n");
-        code.push_str("\n");
+        code.push('\n');
         code.push_str("    Args:\n");
         code.push_str("        method_name: The JSON-RPC method name\n");
         code.push_str("        params: The parameters for the method\n");
         code.push_str("        request_id: The JSON-RPC request ID\n");
-        code.push_str("\n");
+        code.push('\n');
         code.push_str("    Returns:\n");
         code.push_str("        A JSON-RPC 2.0 response object\n");
         code.push_str("    \"\"\"\n");
@@ -145,17 +145,17 @@ fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()>
     if let Some(desc) = &method.result.description {
         code.push_str("    ");
         code.push_str(desc);
-        code.push_str("\n");
+        code.push('\n');
     }
     code.push_str("    \"\"\"\n");
 
     // Extract fields from result schema
-    if let Some(properties) = method.result.schema.get("properties") {
-        if let Some(props) = properties.as_object() {
-            for (field_name, field_schema) in props {
-                let py_type = json_schema_to_python_type(field_schema);
-                code.push_str(&format!("    {}: {}\n", field_name, py_type));
-            }
+    if let Some(properties) = method.result.schema.get("properties")
+        && let Some(props) = properties.as_object()
+    {
+        for (field_name, field_schema) in props {
+            let py_type = json_schema_to_python_type(field_schema);
+            code.push_str(&format!("    {}: {}\n", field_name, py_type));
         }
     }
     code.push_str("\n\n");
@@ -175,9 +175,10 @@ fn generate_python_handler(code: &mut String, method: &OpenRpcMethod) -> Result<
         code.push_str(".\n");
     }
     if let Some(desc) = &method.description {
-        code.push_str("\n    ");
+        code.push('\n');
+        code.push_str("    ");
         code.push_str(desc);
-        code.push_str("\n");
+        code.push('\n');
     }
     code.push_str("\n    Args:\n");
     code.push_str("        params: Method parameters\n");
@@ -209,13 +210,13 @@ fn generate_python_handler(code: &mut String, method: &OpenRpcMethod) -> Result<
     code.push_str("    # 4. Raise appropriate JSON-RPC errors on failure\n\n");
 
     // Placeholder return
-    code.push_str(&format!("    # Example return structure (update with real data):\n"));
+    code.push_str("    # Example return structure (update with real data):\n");
     code.push_str("    result_data = {}\n");
-    if let Some(properties) = method.result.schema.get("properties") {
-        if let Some(props) = properties.as_object() {
-            for field_name in props.keys().take(3) {
-                code.push_str(&format!("    result_data[\"{}\"] = \"TODO\"\n", field_name));
-            }
+    if let Some(properties) = method.result.schema.get("properties")
+        && let Some(props) = properties.as_object()
+    {
+        for field_name in props.keys().take(3) {
+            code.push_str(&format!("    result_data[\"{}\"] = \"TODO\"\n", field_name));
         }
     }
     code.push_str("    return result_data\n\n");
