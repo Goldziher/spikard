@@ -366,4 +366,459 @@ mod tests {
         let result = parse_query_string_to_json(b"name=test%26value%3D123", false);
         assert_eq!(result, json!({ "name": "test&value=123" }));
     }
+
+    // ==================== NEW COMPREHENSIVE TESTS ====================
+
+    // ===== INVALID PERCENT ENCODING TESTS =====
+
+    #[test]
+    fn test_malformed_percent_single_char() {
+        // Lone percent at end of string - should preserve as literal
+        let result = parse_query_string(b"key=%", '&');
+        assert_eq!(result, vec![(String::from("key"), String::from("%"))]);
+    }
+
+    #[test]
+    fn test_malformed_percent_single_hex_only() {
+        // Percent with only one hex digit
+        let result = parse_query_string(b"key=%2", '&');
+        assert_eq!(result, vec![(String::from("key"), String::from("%2"))]);
+    }
+
+    #[test]
+    fn test_malformed_percent_invalid_hex_chars() {
+        // Percent with non-hex characters
+        let result = parse_query_string(b"key=%GG&other=value", '&');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("key"), String::from("%GG")),
+                (String::from("other"), String::from("value")),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_malformed_percent_mixed_invalid_hex() {
+        // Percent with one valid and one invalid hex digit
+        let result = parse_query_string(b"key=%2G&other=value", '&');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("key"), String::from("%2G")),
+                (String::from("other"), String::from("value")),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_percent_encoding_lowercase_hex() {
+        // Valid percent encoding with lowercase hex
+        let result = parse_query_string(b"key=%2f&other=test", '&');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("key"), String::from("/")),
+                (String::from("other"), String::from("test")),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_percent_encoding_uppercase_hex() {
+        // Valid percent encoding with uppercase hex
+        let result = parse_query_string(b"key=%2F&other=test", '&');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("key"), String::from("/")),
+                (String::from("other"), String::from("test")),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_percent_encoding_mixed_case_hex() {
+        // Valid percent encoding with mixed case hex (0x3D is '=', 0x4A is 'J')
+        let result = parse_query_string(b"key=%2f%3D%4A", '&');
+        assert_eq!(result, vec![(String::from("key"), String::from("/=J"))]);
+    }
+
+    // ===== PLUS/SPACE HANDLING TESTS =====
+
+    #[test]
+    fn test_plus_as_space_in_value() {
+        let result = parse_query_string(b"message=hello+world", '&');
+        assert_eq!(result, vec![(String::from("message"), String::from("hello world"))]);
+    }
+
+    #[test]
+    fn test_plus_as_space_multiple_plus() {
+        let result = parse_query_string(b"message=a+b+c+d", '&');
+        assert_eq!(result, vec![(String::from("message"), String::from("a b c d"))]);
+    }
+
+    #[test]
+    fn test_percent_encoded_space_vs_plus() {
+        // %20 should decode to space, + should also decode to space
+        let result = parse_query_string(b"a=%20space&b=+plus", '&');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("a"), String::from(" space")),
+                (String::from("b"), String::from(" plus")),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_mixed_plus_and_percent_encoded_space() {
+        // Both + and %20 decode to space, so we get "hello  world" (two spaces total)
+        let result = parse_query_string(b"text=hello+%20world", '&');
+        assert_eq!(result, vec![(String::from("text"), String::from("hello  world"))]);
+    }
+
+    // ===== SPECIAL CHARACTER HANDLING =====
+
+    #[test]
+    fn test_ampersand_in_value_encoded() {
+        let result = parse_query_string(b"text=foo%26bar", '&');
+        assert_eq!(result, vec![(String::from("text"), String::from("foo&bar"))]);
+    }
+
+    #[test]
+    fn test_equals_in_value_encoded() {
+        let result = parse_query_string(b"text=a%3Db", '&');
+        assert_eq!(result, vec![(String::from("text"), String::from("a=b"))]);
+    }
+
+    #[test]
+    fn test_question_mark_in_value_encoded() {
+        let result = parse_query_string(b"text=what%3F", '&');
+        assert_eq!(result, vec![(String::from("text"), String::from("what?"))]);
+    }
+
+    #[test]
+    fn test_hash_in_value_encoded() {
+        let result = parse_query_string(b"text=anchor%23top", '&');
+        assert_eq!(result, vec![(String::from("text"), String::from("anchor#top"))]);
+    }
+
+    #[test]
+    fn test_multiple_encoded_special_chars() {
+        let result = parse_query_string(b"text=%26%3D%3F%23", '&');
+        assert_eq!(result, vec![(String::from("text"), String::from("&=?#"))]);
+    }
+
+    // ===== EDGE CASES =====
+
+    #[test]
+    fn test_empty_query_string() {
+        let result = parse_query_string(b"", '&');
+        assert_eq!(result, vec![]);
+    }
+
+    #[test]
+    fn test_multiple_consecutive_separators() {
+        // &&& should skip empty values
+        let result = parse_query_string(b"a=1&&&b=2", '&');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("a"), String::from("1")),
+                (String::from("b"), String::from("2")),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_key_without_value() {
+        let result = parse_query_string(b"key=", '&');
+        assert_eq!(result, vec![(String::from("key"), String::from(""))]);
+    }
+
+    #[test]
+    fn test_key_without_equals() {
+        // Key with no = sign should have empty value
+        let result = parse_query_string(b"key", '&');
+        assert_eq!(result, vec![(String::from("key"), String::from(""))]);
+    }
+
+    #[test]
+    fn test_value_without_key() {
+        // =value should have empty key
+        let result = parse_query_string(b"=value", '&');
+        assert_eq!(result, vec![(String::from(""), String::from("value"))]);
+    }
+
+    #[test]
+    fn test_multiple_equals_in_pair() {
+        // key=val=more should treat first = as separator
+        let result = parse_query_string(b"key=val=more", '&');
+        assert_eq!(result, vec![(String::from("key"), String::from("val=more"))]);
+    }
+
+    #[test]
+    fn test_separator_at_start() {
+        let result = parse_query_string(b"&key=value", '&');
+        assert_eq!(result, vec![(String::from("key"), String::from("value"))]);
+    }
+
+    #[test]
+    fn test_separator_at_end() {
+        let result = parse_query_string(b"key=value&", '&');
+        assert_eq!(result, vec![(String::from("key"), String::from("value"))]);
+    }
+
+    #[test]
+    fn test_separator_at_both_ends() {
+        let result = parse_query_string(b"&key=value&", '&');
+        assert_eq!(result, vec![(String::from("key"), String::from("value"))]);
+    }
+
+    // ===== ARRAY PARAMETER TESTS =====
+
+    #[test]
+    fn test_multiple_values_same_key() {
+        let result = parse_query_string(b"tag=foo&tag=bar&tag=baz", '&');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("tag"), String::from("foo")),
+                (String::from("tag"), String::from("bar")),
+                (String::from("tag"), String::from("baz")),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_multiple_values_mixed_keys() {
+        let result = parse_query_string(b"tag=foo&id=1&tag=bar&id=2", '&');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("tag"), String::from("foo")),
+                (String::from("id"), String::from("1")),
+                (String::from("tag"), String::from("bar")),
+                (String::from("id"), String::from("2")),
+            ]
+        );
+    }
+
+    // ===== JSON CONVERSION EDGE CASES =====
+
+    #[test]
+    fn test_json_conversion_empty_key() {
+        let result = parse_query_string_to_json(b"=value", false);
+        assert_eq!(result, json!({ "": "value" }));
+    }
+
+    #[test]
+    fn test_json_conversion_all_empty_values() {
+        let result = parse_query_string_to_json(b"a=&b=&c=", false);
+        assert_eq!(result, json!({ "a": "", "b": "", "c": "" }));
+    }
+
+    #[test]
+    fn test_json_conversion_malformed_json_object() {
+        // Invalid JSON object should fallback to string
+        let result = parse_query_string_to_json(b"data={invalid", false);
+        assert_eq!(result, json!({ "data": "{invalid" }));
+    }
+
+    #[test]
+    fn test_json_conversion_malformed_json_array() {
+        // Invalid JSON array should fallback to string
+        let result = parse_query_string_to_json(b"items=[1,2,", false);
+        assert_eq!(result, json!({ "items": "[1,2," }));
+    }
+
+    #[test]
+    fn test_json_conversion_with_quotes_in_value() {
+        // Quotes should be stripped
+        let result = parse_query_string_to_json(b"text=\"hello\"", false);
+        assert_eq!(result, json!({ "text": "hello" }));
+    }
+
+    #[test]
+    fn test_json_conversion_single_quotes_in_object() {
+        // Single quotes in JSON object should be normalized to double quotes
+        let result = parse_query_string_to_json(b"obj={'key':'value'}", false);
+        // Should try to parse with quote normalization
+        let value = result.get("obj");
+        assert!(value.is_some());
+    }
+
+    #[test]
+    fn test_boolean_case_insensitive_variations() {
+        assert_eq!(parse_query_string_to_json(b"a=tRuE", false), json!({"a": true}));
+        assert_eq!(parse_query_string_to_json(b"a=FaLsE", false), json!({"a": false}));
+        assert_eq!(
+            parse_query_string_to_json(b"a=tRuE&b=FaLsE", false),
+            json!({"a": true, "b": false})
+        );
+    }
+
+    #[test]
+    fn test_boolean_with_numbers_no_parse() {
+        // Without parse_numbers, 1 and 0 should still convert to boolean
+        assert_eq!(parse_query_string_to_json(b"a=1", false), json!({"a": true}));
+        assert_eq!(parse_query_string_to_json(b"a=0", false), json!({"a": false}));
+    }
+
+    #[test]
+    fn test_number_parsing_negative() {
+        assert_eq!(parse_query_string_to_json(b"a=-123", true), json!({"a": -123}));
+        assert_eq!(parse_query_string_to_json(b"a=-1.5", true), json!({"a": -1.5}));
+    }
+
+    #[test]
+    fn test_number_parsing_zero() {
+        assert_eq!(parse_query_string_to_json(b"a=0", true), json!({"a": 0}));
+        assert_eq!(parse_query_string_to_json(b"a=0.0", true), json!({"a": 0.0}));
+    }
+
+    #[test]
+    fn test_number_parsing_scientific_notation() {
+        assert_eq!(parse_query_string_to_json(b"a=1e10", true), json!({"a": 1e10}));
+        assert_eq!(parse_query_string_to_json(b"a=1.5e-3", true), json!({"a": 1.5e-3}));
+    }
+
+    #[test]
+    fn test_array_mixed_types_with_number_parsing() {
+        assert_eq!(
+            parse_query_string_to_json(b"vals=1&vals=2.5&vals=true&vals=test", true),
+            json!({"vals": [1, 2.5, true, "test"]})
+        );
+    }
+
+    #[test]
+    fn test_array_mixed_types_without_number_parsing() {
+        // Without number parsing: "1" -> true, "2.5" stays as string (not a valid boolean), "true" -> true, "test" -> string
+        assert_eq!(
+            parse_query_string_to_json(b"vals=1&vals=2.5&vals=true&vals=test", false),
+            json!({"vals": [true, "2.5", true, "test"]})
+        );
+    }
+
+    // ===== UTF-8 AND UNICODE TESTS =====
+
+    #[test]
+    fn test_utf8_chinese_characters() {
+        let result = parse_query_string("name=中文".as_bytes(), '&');
+        assert_eq!(result, vec![(String::from("name"), String::from("中文"))]);
+    }
+
+    #[test]
+    fn test_utf8_emoji() {
+        let result = parse_query_string("emoji=🚀".as_bytes(), '&');
+        assert_eq!(result, vec![(String::from("emoji"), String::from("🚀"))]);
+    }
+
+    #[test]
+    fn test_utf8_mixed_with_encoding() {
+        let result = parse_query_string("text=hello%20中文".as_bytes(), '&');
+        assert_eq!(result, vec![(String::from("text"), String::from("hello 中文"))]);
+    }
+
+    // ===== CUSTOM SEPARATOR TESTS =====
+
+    #[test]
+    fn test_custom_separator_semicolon() {
+        let result = parse_query_string(b"a=1;b=2;c=3", ';');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("a"), String::from("1")),
+                (String::from("b"), String::from("2")),
+                (String::from("c"), String::from("3")),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_custom_separator_comma() {
+        let result = parse_query_string(b"a=1,b=2,c=3", ',');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("a"), String::from("1")),
+                (String::from("b"), String::from("2")),
+                (String::from("c"), String::from("3")),
+            ]
+        );
+    }
+
+    // ===== ENCODING BOUNDARY TESTS =====
+
+    #[test]
+    fn test_percent_encoding_all_byte_values() {
+        // Test encoding of various special bytes
+        let result = parse_query_string(b"space=%20&at=%40&hash=%23&dollar=%24", '&');
+        assert_eq!(
+            result,
+            vec![
+                (String::from("space"), String::from(" ")),
+                (String::from("at"), String::from("@")),
+                (String::from("hash"), String::from("#")),
+                (String::from("dollar"), String::from("$")),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_high_byte_values_in_percent_encoding() {
+        // Test percent encoding of high byte values (0xFF, 0xFE, etc.)
+        let result = parse_query_string(b"high=%ff%fe%fd", '&');
+        // These are valid UTF-8 sequences for the encoded bytes
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].0, "high");
+    }
+
+    #[test]
+    fn test_very_long_query_string() {
+        // Test handling of long query strings
+        let mut long_query = String::from("key=");
+        long_query.push_str(&"a".repeat(10000));
+        let result = parse_query_string(long_query.as_bytes(), '&');
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].0, "key");
+        assert_eq!(result[0].1.len(), 10000);
+    }
+
+    #[test]
+    fn test_very_large_number_of_parameters() {
+        // Test handling many parameters
+        let mut query = String::new();
+        for i in 0..100 {
+            if i > 0 {
+                query.push('&');
+            }
+            query.push_str(&format!("param{}=value{}", i, i));
+        }
+        let result = parse_query_string(query.as_bytes(), '&');
+        assert_eq!(result.len(), 100);
+        assert_eq!(result[0].0, "param0");
+        assert_eq!(result[99].0, "param99");
+    }
+
+    // ===== WHITESPACE HANDLING =====
+
+    #[test]
+    fn test_literal_space_in_value() {
+        let result = parse_query_string(b"name=hello world", '&');
+        assert_eq!(result, vec![(String::from("name"), String::from("hello world"))]);
+    }
+
+    #[test]
+    fn test_tab_in_value() {
+        let result = parse_query_string(b"name=hello\tworld", '&');
+        assert_eq!(result, vec![(String::from("name"), String::from("hello\tworld"))]);
+    }
+
+    #[test]
+    fn test_newline_in_value() {
+        let result = parse_query_string(b"name=hello\nworld", '&');
+        assert_eq!(result, vec![(String::from("name"), String::from("hello\nworld"))]);
+    }
 }

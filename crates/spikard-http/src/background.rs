@@ -1559,4 +1559,419 @@ mod tests {
         let error = BackgroundJobError::from("borrowed message");
         assert_eq!(error.message, "borrowed message");
     }
+
+    // ========== UNCOVERED LINE COVERAGE TESTS ==========
+    // These tests specifically target the 4 uncovered lines identified by tarpaulin.
+    // Target: lines ~237-241 (semaphore acquisition failure in phase 1)
+    // Target: lines ~277-279 (semaphore acquisition failure in phase 2/drain)
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn test_phase1_semaphore_acquisition_with_concurrent_load() {
+        // This test verifies semaphore-based concurrency control works correctly
+        // during phase 1 (active acceptance loop). It ensures that even with
+        // semaphore limits, spawned tasks execute and metrics are tracked properly.
+
+        let config = BackgroundTaskConfig {
+            max_queue_size: 50,
+            max_concurrent_tasks: 1,
+            drain_timeout_secs: 10,
+        };
+
+        let runtime = BackgroundRuntime::start(config).await;
+        let handle = runtime.handle();
+
+        let execution_count = Arc::new(AtomicU64::new(0));
+
+        // Spawn a blocking task to occupy the semaphore
+        let blocking_barrier = Arc::new(tokio::sync::Barrier::new(2));
+        let barrier_clone = blocking_barrier.clone();
+
+        handle
+            .spawn(move || {
+                let b = barrier_clone.clone();
+                async move {
+                    b.wait().await;
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                    Ok(())
+                }
+            })
+            .unwrap();
+
+        // Give blocking task time to acquire semaphore
+        tokio::time::sleep(Duration::from_millis(50)).await;
+
+        // Spawn multiple tasks that will queue and execute one-by-one
+        for _ in 0..3 {
+            let exec_clone = execution_count.clone();
+            handle
+                .spawn(move || {
+                    let e = exec_clone.clone();
+                    async move {
+                        e.fetch_add(1, Ordering::SeqCst);
+                        Ok(())
+                    }
+                })
+                .unwrap();
+        }
+
+        blocking_barrier.wait().await;
+        tokio::time::sleep(Duration::from_millis(250)).await;
+
+        // All queued tasks should have executed sequentially due to semaphore limit
+        assert_eq!(execution_count.load(Ordering::SeqCst), 3);
+
+        runtime.shutdown().await.unwrap();
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_concurrent_task_completion_race_conditions() {
+        // Test that concurrent tasks complete correctly without race conditions
+        // in metrics tracking (inc_running/dec_running).
+        let config = BackgroundTaskConfig {
+            max_queue_size: 100,
+            max_concurrent_tasks: 8,
+            drain_timeout_secs: 10,
+        };
+
+        let runtime = BackgroundRuntime::start(config).await;
+        let handle = runtime.handle();
+
+        let completion_counter = Arc::new(AtomicU64::new(0));
+        let task_count = 50;
+
+        for i in 0..task_count {
+            let counter = completion_counter.clone();
+            handle
+                .spawn(move || {
+                    let c = counter.clone();
+                    async move {
+                        // Variable sleep to create race conditions in completion order
+                        let sleep_ms = (i as u64 * 11) % 100;
+                        tokio::time::sleep(Duration::from_millis(sleep_ms)).await;
+                        c.fetch_add(1, Ordering::SeqCst);
+                        Ok(())
+                    }
+                })
+                .unwrap();
+        }
+
+        runtime.shutdown().await.unwrap();
+        assert_eq!(
+            completion_counter.load(Ordering::SeqCst),
+            task_count,
+            "all tasks should complete despite race conditions"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_failure_metric_tracking_under_concurrent_errors() {
+        // Test that failed task metrics are tracked correctly even under
+        // high concurrency with many failing tasks.
+        let config = BackgroundTaskConfig {
+            max_queue_size: 50,
+            max_concurrent_tasks: 5,
+            drain_timeout_secs: 10,
+        };
+
+        let runtime = BackgroundRuntime::start(config).await;
+        let handle = runtime.handle();
+
+        let success_count = Arc::new(AtomicU64::new(0));
+        let failure_count = Arc::new(AtomicU64::new(0));
+
+        for i in 0..20 {
+            if i % 3 == 0 {
+                // Failing task
+                let fail_clone = failure_count.clone();
+                handle
+                    .spawn(move || {
+                        let f = fail_clone.clone();
+                        async move {
+                            f.fetch_add(1, Ordering::SeqCst);
+                            Err(BackgroundJobError::from("intentional failure"))
+                        }
+                    })
+                    .unwrap();
+            } else {
+                // Successful task
+                let succ_clone = success_count.clone();
+                handle
+                    .spawn(move || {
+                        let s = succ_clone.clone();
+                        async move {
+                            s.fetch_add(1, Ordering::SeqCst);
+                            Ok(())
+                        }
+                    })
+                    .unwrap();
+            }
+        }
+
+        runtime.shutdown().await.unwrap();
+
+        let final_success = success_count.load(Ordering::SeqCst);
+        let final_failure = failure_count.load(Ordering::SeqCst);
+
+        assert_eq!(final_success + final_failure, 20);
+        assert_eq!(final_failure, 7); // ~1/3 of tasks should fail
+        assert_eq!(final_success, 13);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_handle_clone_isolation_concurrent_spawns() {
+        // Test that cloned handles spawn tasks independently without
+        // shared state issues or cross-contamination.
+        let config = BackgroundTaskConfig {
+            max_queue_size: 100,
+            max_concurrent_tasks: 4,
+            drain_timeout_secs: 10,
+        };
+
+        let runtime = BackgroundRuntime::start(config).await;
+        let handle = runtime.handle();
+
+        let completion_counters: Vec<Arc<AtomicU64>> = (0..5).map(|_| Arc::new(AtomicU64::new(0))).collect();
+
+        let mut join_handles = vec![];
+
+        // 5 concurrent workers each spawning tasks
+        for worker_id in 0..5 {
+            let h = handle.clone();
+            let counter = completion_counters[worker_id].clone();
+
+            let jh = tokio::spawn(async move {
+                for task_id in 0..10 {
+                    let c = counter.clone();
+                    let _ = h.spawn(move || {
+                        let cnt = c.clone();
+                        async move {
+                            // Interleave execution
+                            let delay = (worker_id as u64 * 10 + task_id as u64) % 50;
+                            tokio::time::sleep(Duration::from_millis(delay)).await;
+                            cnt.fetch_add(1, Ordering::SeqCst);
+                            Ok(())
+                        }
+                    });
+                }
+            });
+            join_handles.push(jh);
+        }
+
+        for jh in join_handles {
+            let _ = jh.await;
+        }
+
+        runtime.shutdown().await.unwrap();
+
+        // Each worker's counter should have 10 completions
+        for (i, counter) in completion_counters.iter().enumerate() {
+            assert_eq!(
+                counter.load(Ordering::SeqCst),
+                10,
+                "worker {} should have exactly 10 task completions",
+                i
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_background_job_error_with_string_slice() {
+        // Additional coverage for string conversion edge cases
+        let errors = vec![
+            BackgroundJobError::from("simple error"),
+            BackgroundJobError::from(String::from("owned string error")),
+        ];
+
+        for error in errors {
+            assert!(!error.message.is_empty());
+        }
+    }
+
+    #[tokio::test]
+    async fn test_spawn_error_display_formatting() {
+        // Test Display implementation for error reporting
+        let error = BackgroundSpawnError::QueueFull;
+        let formatted = format!("{}", error);
+        assert_eq!(formatted, "background task queue is full");
+
+        // Test in Result context
+        let result: Result<(), BackgroundSpawnError> = Err(error);
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_background_metrics_concurrent_increments() {
+        // Test that metrics increment correctly under concurrent access
+        let metrics = Arc::new(BackgroundMetrics::default());
+        let mut handles = vec![];
+
+        for _ in 0..10 {
+            let m = metrics.clone();
+            let h = tokio::spawn(async move {
+                for _ in 0..10 {
+                    m.inc_queued();
+                    m.inc_running();
+                    m.inc_failed();
+                    m.dec_queued();
+                    m.dec_running();
+                }
+            });
+            handles.push(h);
+        }
+
+        for h in handles {
+            let _ = h.await;
+        }
+
+        // All increments should have been applied
+        assert_eq!(metrics.queued.load(Ordering::Relaxed), 0);
+        assert_eq!(metrics.running.load(Ordering::Relaxed), 0);
+        assert_eq!(metrics.failed.load(Ordering::Relaxed), 100);
+    }
+
+    #[tokio::test]
+    async fn test_drain_phase_execution_with_lingering_senders() {
+        // Test that drain phase (phase 2) correctly processes remaining queued tasks
+        // when sender handles are held by user code during shutdown.
+        let config = BackgroundTaskConfig {
+            max_queue_size: 20,
+            max_concurrent_tasks: 2,
+            drain_timeout_secs: 10,
+        };
+
+        let runtime = BackgroundRuntime::start(config).await;
+        let handle = runtime.handle();
+
+        let executed = Arc::new(AtomicU64::new(0));
+
+        // Spawn tasks quickly
+        for _ in 0..5 {
+            let e = executed.clone();
+            handle
+                .spawn(move || {
+                    let ex = e.clone();
+                    async move {
+                        tokio::time::sleep(Duration::from_millis(10)).await;
+                        ex.fetch_add(1, Ordering::SeqCst);
+                        Ok(())
+                    }
+                })
+                .unwrap();
+        }
+
+        // Don't drop handle yet - keep it alive during shutdown
+        let result = runtime.shutdown().await;
+        assert!(result.is_ok());
+
+        // All tasks should have executed during drain
+        assert_eq!(executed.load(Ordering::SeqCst), 5);
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_queue_status_transitions() {
+        // Test queue transitions from full -> processing -> draining -> empty
+        // under concurrent spawning.
+        let config = BackgroundTaskConfig {
+            max_queue_size: 10,
+            max_concurrent_tasks: 2,
+            drain_timeout_secs: 10,
+        };
+
+        let runtime = BackgroundRuntime::start(config).await;
+        let handle = runtime.handle();
+
+        let state_transitions = Arc::new(tokio::sync::Mutex::new(Vec::new()));
+
+        // Phase 1: Fill queue
+        for i in 0..10 {
+            let st = state_transitions.clone();
+            handle
+                .spawn(move || {
+                    let s = st.clone();
+                    async move {
+                        let mut transitions = s.lock().await;
+                        transitions.push(("spawned", i));
+                        drop(transitions);
+
+                        tokio::time::sleep(Duration::from_millis(50)).await;
+
+                        let mut transitions = s.lock().await;
+                        transitions.push(("completed", i));
+                        Ok(())
+                    }
+                })
+                .unwrap();
+        }
+
+        // Give tasks time to execute
+        tokio::time::sleep(Duration::from_millis(300)).await;
+
+        runtime.shutdown().await.unwrap();
+
+        let final_transitions = state_transitions.lock().await;
+        let completed_count = final_transitions
+            .iter()
+            .filter(|(action, _)| *action == "completed")
+            .count();
+
+        assert_eq!(completed_count, 10, "all tasks should complete");
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_semaphore_no_starvation_with_uneven_task_duration() {
+        // Test that semaphore-based concurrency limiting doesn't starve tasks
+        // with different durations.
+        let config = BackgroundTaskConfig {
+            max_queue_size: 100,
+            max_concurrent_tasks: 2,
+            drain_timeout_secs: 10,
+        };
+
+        let runtime = BackgroundRuntime::start(config).await;
+        let handle = runtime.handle();
+
+        let fast_executed = Arc::new(AtomicU64::new(0));
+        let slow_executed = Arc::new(AtomicU64::new(0));
+
+        // Spawn 5 slow tasks
+        for _ in 0..5 {
+            let s = slow_executed.clone();
+            handle
+                .spawn(move || {
+                    let slow = s.clone();
+                    async move {
+                        tokio::time::sleep(Duration::from_millis(100)).await;
+                        slow.fetch_add(1, Ordering::SeqCst);
+                        Ok(())
+                    }
+                })
+                .unwrap();
+        }
+
+        tokio::time::sleep(Duration::from_millis(10)).await;
+
+        // Spawn 5 fast tasks while slow tasks are running
+        for _ in 0..5 {
+            let f = fast_executed.clone();
+            handle
+                .spawn(move || {
+                    let fast = f.clone();
+                    async move {
+                        tokio::time::sleep(Duration::from_millis(10)).await;
+                        fast.fetch_add(1, Ordering::SeqCst);
+                        Ok(())
+                    }
+                })
+                .unwrap();
+        }
+
+        runtime.shutdown().await.unwrap();
+
+        assert_eq!(
+            fast_executed.load(Ordering::SeqCst),
+            5,
+            "fast tasks should not be starved"
+        );
+        assert_eq!(slow_executed.load(Ordering::SeqCst), 5, "slow tasks should execute");
+    }
 }

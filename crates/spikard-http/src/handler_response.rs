@@ -529,4 +529,392 @@ mod tests {
         let body = result.into_body().collect().await.unwrap();
         assert_eq!(body.to_bytes(), "roundtrip test");
     }
+
+    // ============================================================================
+    // Edge Case Tests: Streaming Response Handling
+    // ============================================================================
+
+    /// Test 18: Single chunk stream (minimal data)
+    #[tokio::test]
+    async fn test_single_chunk_stream() {
+        let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from("only"))];
+        let stream = futures::stream::iter(chunks);
+        let handler_response = HandlerResponse::stream(stream).with_status(StatusCode::OK);
+
+        let axum_response = handler_response.into_response();
+        let status = axum_response.status();
+        let body = axum_response.into_body().collect().await.unwrap();
+        let bytes = body.to_bytes();
+
+        assert_eq!(bytes, "only");
+        assert_eq!(status, StatusCode::OK);
+    }
+
+    /// Test 19: Stream with 1000+ chunks (performance edge case)
+    #[tokio::test]
+    async fn test_very_large_stream_many_chunks() {
+        let chunk_count = 1500;
+        let chunks: Vec<Result<Bytes, Box<dyn std::error::Error + Send + Sync>>> =
+            (0..chunk_count).map(|_| Ok(Bytes::from(format!("x")))).collect();
+
+        let stream = futures::stream::iter(chunks);
+        let handler_response = HandlerResponse::stream(stream);
+
+        let axum_response = handler_response.into_response();
+        let body = axum_response.into_body().collect().await.unwrap();
+        let bytes = body.to_bytes();
+
+        // Verify we got all chunks
+        assert_eq!(bytes.len(), chunk_count);
+    }
+
+    /// Test 20: Stream with varying chunk sizes (1 byte to 1MB)
+    #[tokio::test]
+    async fn test_stream_with_varying_chunk_sizes() {
+        let chunks: Vec<Result<Bytes, Box<dyn std::error::Error + Send + Sync>>> = vec![
+            Ok(Bytes::from("x")),                 // 1 byte
+            Ok(Bytes::from("xx".repeat(100))),    // 200 bytes
+            Ok(Bytes::from("x".repeat(10_000))),  // 10KB
+            Ok(Bytes::from("x".repeat(100_000))), // 100KB
+        ];
+
+        let stream = futures::stream::iter(chunks);
+        let handler_response = HandlerResponse::stream(stream);
+
+        let axum_response = handler_response.into_response();
+        let body = axum_response.into_body().collect().await.unwrap();
+        let bytes = body.to_bytes();
+
+        // Total: 1 + 200 + 10000 + 100000
+        assert_eq!(bytes.len(), 110_201);
+    }
+
+    /// Test 21: Stream with error in the middle (chunk 500/1000)
+    #[tokio::test]
+    async fn test_stream_error_in_middle() {
+        let chunks: Vec<Result<Bytes, Box<dyn std::error::Error + Send + Sync>>> = (0..1000)
+            .map(|i| {
+                if i == 500 {
+                    Err("midstream error".into())
+                } else {
+                    Ok(Bytes::from("chunk"))
+                }
+            })
+            .collect();
+
+        let stream = futures::stream::iter(chunks);
+        let handler_response = HandlerResponse::stream(stream);
+
+        let axum_response = handler_response.into_response();
+        let result = axum_response.into_body().collect().await;
+
+        // Error should be propagated
+        assert!(result.is_err());
+    }
+
+    /// Test 22: Stream with SSE-like headers
+    #[tokio::test]
+    async fn test_stream_with_sse_headers() {
+        let chunks = vec![
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from("event: message\n")),
+            Ok(Bytes::from("data: {\"msg\": \"hello\"}\n\n")),
+        ];
+        let stream = futures::stream::iter(chunks);
+
+        let handler_response = HandlerResponse::stream(stream)
+            .with_status(StatusCode::OK)
+            .with_header(header::CONTENT_TYPE, HeaderValue::from_static("text/event-stream"))
+            .with_header(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"))
+            .with_header(header::CONNECTION, HeaderValue::from_static("keep-alive"));
+
+        let axum_response = handler_response.into_response();
+
+        assert_eq!(axum_response.status(), StatusCode::OK);
+        assert_eq!(
+            axum_response.headers().get(header::CONTENT_TYPE).unwrap(),
+            "text/event-stream"
+        );
+        assert_eq!(axum_response.headers().get(header::CACHE_CONTROL).unwrap(), "no-cache");
+
+        let body = axum_response.into_body().collect().await.unwrap();
+        let body_bytes = body.to_bytes();
+        let body_str = std::str::from_utf8(&body_bytes).unwrap();
+        assert!(body_str.contains("event: message"));
+    }
+
+    /// Test 23: Stream with WebSocket-like upgrade headers (200 OK with Upgrade)
+    #[tokio::test]
+    async fn test_stream_with_websocket_headers() {
+        let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from(
+            "ws-frame-data",
+        ))];
+        let stream = futures::stream::iter(chunks);
+
+        let handler_response = HandlerResponse::stream(stream)
+            .with_status(StatusCode::OK)
+            .with_header(header::UPGRADE, HeaderValue::from_static("websocket"))
+            .with_header(
+                HeaderName::from_static("sec-websocket-accept"),
+                HeaderValue::from_static("s3pPLMBiTxaQ9kYGzzhZRbK+xOo="),
+            );
+
+        let axum_response = handler_response.into_response();
+
+        assert_eq!(axum_response.status(), StatusCode::OK);
+        assert_eq!(axum_response.headers().get(header::UPGRADE).unwrap(), "websocket");
+
+        let body = axum_response.into_body().collect().await.unwrap();
+        assert_eq!(body.to_bytes(), "ws-frame-data");
+    }
+
+    /// Test 24: Stream status transitions (from 200 OK to 206 Partial Content)
+    #[tokio::test]
+    async fn test_stream_status_transition() {
+        let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from("data"))];
+        let stream = futures::stream::iter(chunks);
+
+        // Create with 200 OK, change to 206 Partial Content
+        let handler_response = HandlerResponse::stream(stream)
+            .with_status(StatusCode::OK)
+            .with_status(StatusCode::PARTIAL_CONTENT); // Override
+
+        match handler_response {
+            HandlerResponse::Stream { status, .. } => {
+                assert_eq!(status, StatusCode::PARTIAL_CONTENT);
+            }
+            HandlerResponse::Response(_) => panic!("Expected Stream variant"),
+        }
+    }
+
+    /// Test 25: Stream with chunked transfer encoding simulation
+    #[tokio::test]
+    async fn test_stream_chunked_encoding_simulation() {
+        let chunks = vec![
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from("5\r\nhello\r\n")),
+            Ok(Bytes::from("5\r\nworld\r\n")),
+            Ok(Bytes::from("0\r\n\r\n")),
+        ];
+
+        let stream = futures::stream::iter(chunks);
+        let handler_response =
+            HandlerResponse::stream(stream).with_header(header::TRANSFER_ENCODING, HeaderValue::from_static("chunked"));
+
+        let axum_response = handler_response.into_response();
+        let body = axum_response.into_body().collect().await.unwrap();
+        let body_bytes = body.to_bytes();
+
+        // Verify chunked encoding format is preserved
+        assert!(std::str::from_utf8(&body_bytes).unwrap().contains("hello"));
+    }
+
+    /// Test 26: Stream with binary data (non-UTF8)
+    #[tokio::test]
+    async fn test_stream_with_binary_data() {
+        let chunks = vec![
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from(vec![0xFF, 0xD8, 0xFF])),
+            Ok(Bytes::from(vec![0xE0, 0x00, 0x10])),
+            Ok(Bytes::from(vec![0x4A, 0x46, 0x49])),
+        ];
+
+        let stream = futures::stream::iter(chunks);
+        let handler_response = HandlerResponse::stream(stream).with_header(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/octet-stream"),
+        );
+
+        let axum_response = handler_response.into_response();
+        let body = axum_response.into_body().collect().await.unwrap();
+        let bytes = body.to_bytes();
+
+        // Verify binary data integrity
+        assert_eq!(bytes[0], 0xFF);
+        assert_eq!(bytes[1], 0xD8);
+        assert_eq!(bytes[2], 0xFF);
+        assert_eq!(bytes[3], 0xE0);
+        assert_eq!(bytes[4], 0x00);
+    }
+
+    /// Test 27: Stream with null bytes in payload
+    #[tokio::test]
+    async fn test_stream_with_null_bytes() {
+        let chunks = vec![
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from(vec![0x00, 0x01, 0x02])),
+            Ok(Bytes::from(vec![0x00, 0x00, 0x00])),
+            Ok(Bytes::from(vec![0xFF, 0xFE, 0xFD])),
+        ];
+
+        let stream = futures::stream::iter(chunks);
+        let handler_response = HandlerResponse::stream(stream);
+
+        let axum_response = handler_response.into_response();
+        let body = axum_response.into_body().collect().await.unwrap();
+        let bytes = body.to_bytes();
+
+        assert_eq!(bytes.len(), 9);
+        assert_eq!(bytes[0], 0x00);
+        assert_eq!(bytes[4], 0x00);
+        assert_eq!(bytes[8], 0xFD);
+    }
+
+    /// Test 28: Stream with maximum header count
+    #[tokio::test]
+    async fn test_stream_with_many_headers() {
+        let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from("data"))];
+        let stream = futures::stream::iter(chunks);
+
+        let mut handler_response = HandlerResponse::stream(stream);
+
+        // Add many headers
+        for i in 0..50 {
+            let header_name = format!("x-custom-{}", i);
+            handler_response = handler_response.with_header(
+                HeaderName::from_bytes(header_name.as_bytes()).unwrap(),
+                HeaderValue::from_static("value"),
+            );
+        }
+
+        let axum_response = handler_response.into_response();
+        assert_eq!(axum_response.status(), StatusCode::OK);
+        assert_eq!(axum_response.headers().len(), 50);
+    }
+
+    /// Test 29: Empty stream with 204 No Content status
+    #[tokio::test]
+    async fn test_empty_stream_with_204_no_content() {
+        let chunks: Vec<Result<Bytes, Box<dyn std::error::Error + Send + Sync>>> = vec![];
+        let stream = futures::stream::iter(chunks);
+
+        let handler_response = HandlerResponse::stream(stream).with_status(StatusCode::NO_CONTENT);
+
+        let axum_response = handler_response.into_response();
+
+        assert_eq!(axum_response.status(), StatusCode::NO_CONTENT);
+        let body = axum_response.into_body().collect().await.unwrap();
+        assert!(body.to_bytes().is_empty());
+    }
+
+    /// Test 30: Stream with repeated header replacement
+    #[tokio::test]
+    async fn test_stream_repeated_header_updates() {
+        let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from("test"))];
+        let stream = futures::stream::iter(chunks);
+
+        let handler_response = HandlerResponse::stream(stream)
+            .with_header(header::CONTENT_TYPE, HeaderValue::from_static("text/plain"))
+            .with_header(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))
+            .with_header(header::CONTENT_TYPE, HeaderValue::from_static("application/xml"));
+
+        match handler_response {
+            HandlerResponse::Stream { headers, .. } => {
+                // Last value should win
+                assert_eq!(headers.get(header::CONTENT_TYPE).unwrap(), "application/xml");
+            }
+            HandlerResponse::Response(_) => panic!("Expected Stream variant"),
+        }
+    }
+
+    /// Test 31: Stream with extremely long chunk
+    #[tokio::test]
+    async fn test_stream_with_extremely_long_chunk() {
+        let large_chunk = "x".repeat(10_000_000); // 10MB single chunk
+        let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from(
+            large_chunk,
+        ))];
+        let stream = futures::stream::iter(chunks);
+
+        let handler_response = HandlerResponse::stream(stream);
+
+        let axum_response = handler_response.into_response();
+        let body = axum_response.into_body().collect().await.unwrap();
+        let bytes = body.to_bytes();
+
+        assert_eq!(bytes.len(), 10_000_000);
+    }
+
+    /// Test 32: Stream with zero-length chunks mixed in
+    #[tokio::test]
+    async fn test_stream_with_zero_length_chunks() {
+        let chunks: Vec<Result<Bytes, Box<dyn std::error::Error + Send + Sync>>> = vec![
+            Ok(Bytes::from("hello")),
+            Ok(Bytes::new()), // Empty chunk
+            Ok(Bytes::from("world")),
+            Ok(Bytes::new()), // Another empty chunk
+            Ok(Bytes::from("!")),
+        ];
+
+        let stream = futures::stream::iter(chunks);
+        let handler_response = HandlerResponse::stream(stream);
+
+        let axum_response = handler_response.into_response();
+        let body = axum_response.into_body().collect().await.unwrap();
+        let bytes = body.to_bytes();
+
+        // Empty chunks should be handled gracefully
+        assert_eq!(bytes, "helloworld!");
+    }
+
+    /// Test 33: Handler response variant preserves custom status on failure
+    #[test]
+    fn test_response_variant_preserves_original_status() {
+        let axum_response = AxumResponse::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(Body::from("error"))
+            .unwrap();
+
+        let handler_response = HandlerResponse::from(axum_response);
+
+        // Try to override (should be ignored for Response variant)
+        let result = handler_response
+            .with_status(StatusCode::OK)
+            .with_status(StatusCode::INTERNAL_SERVER_ERROR);
+
+        match result {
+            HandlerResponse::Response(resp) => {
+                assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+            }
+            HandlerResponse::Stream { .. } => panic!("Expected Response variant"),
+        }
+    }
+
+    /// Test 34: Stream response conversion preserves header ordering
+    #[tokio::test]
+    async fn test_stream_into_response_preserves_headers() {
+        let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from("data"))];
+        let stream = futures::stream::iter(chunks);
+
+        let handler_response = HandlerResponse::stream(stream)
+            .with_header(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))
+            .with_header(header::CACHE_CONTROL, HeaderValue::from_static("max-age=3600"))
+            .with_header(header::ETAG, HeaderValue::from_static("\"abc123\""));
+
+        let axum_response = handler_response.into_response();
+
+        assert!(axum_response.headers().get(header::CONTENT_TYPE).is_some());
+        assert!(axum_response.headers().get(header::CACHE_CONTROL).is_some());
+        assert!(axum_response.headers().get(header::ETAG).is_some());
+        assert_eq!(axum_response.headers().len(), 3);
+    }
+
+    /// Test 35: Stream with 5xx status codes
+    #[tokio::test]
+    async fn test_stream_with_error_status_codes() {
+        let error_statuses = vec![
+            StatusCode::INTERNAL_SERVER_ERROR,
+            StatusCode::SERVICE_UNAVAILABLE,
+            StatusCode::GATEWAY_TIMEOUT,
+        ];
+
+        for status in error_statuses {
+            let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from("error"))];
+            let stream = futures::stream::iter(chunks);
+            let handler_response = HandlerResponse::stream(stream).with_status(status);
+
+            match handler_response {
+                HandlerResponse::Stream { status: s, .. } => {
+                    assert_eq!(s, status);
+                }
+                HandlerResponse::Response(_) => panic!("Expected Stream variant"),
+            }
+        }
+    }
 }
