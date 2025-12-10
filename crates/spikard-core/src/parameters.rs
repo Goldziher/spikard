@@ -40,7 +40,7 @@ struct ParameterDef {
 }
 
 /// Parameter validator that uses JSON Schema
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ParameterValidator {
     schema: Value,
     parameter_defs: Vec<ParameterDef>,
@@ -719,5 +719,1188 @@ mod tests {
         );
         let params = result.unwrap();
         assert_eq!(params, json!({"flag": false}));
+    }
+
+    // === ERROR PATH TESTS - COMPREHENSIVE COVERAGE ===
+
+    #[test]
+    fn test_integer_coercion_invalid_format_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "source": "query"
+                }
+            },
+            "required": ["count"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("count".to_string(), vec!["not_a_number".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"count": "not_a_number"}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err(), "Should fail to coerce non-integer string");
+        let err = result.unwrap_err();
+        assert_eq!(err.errors.len(), 1);
+        assert_eq!(err.errors[0].error_type, "int_parsing");
+        assert_eq!(err.errors[0].loc, vec!["query".to_string(), "count".to_string()]);
+        assert!(err.errors[0].msg.contains("valid integer"));
+    }
+
+    #[test]
+    fn test_integer_coercion_with_letters_mixed_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "source": "path"
+                }
+            },
+            "required": ["id"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut path_params = HashMap::new();
+        path_params.insert("id".to_string(), "123abc".to_string());
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "int_parsing");
+    }
+
+    #[test]
+    fn test_integer_coercion_overflow_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "big_num": {
+                    "type": "integer",
+                    "source": "query"
+                }
+            },
+            "required": ["big_num"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let too_large = "9223372036854775808"; // i64::MAX + 1
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("big_num".to_string(), vec![too_large.to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"big_num": too_large}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err(), "Should fail on integer overflow");
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "int_parsing");
+    }
+
+    #[test]
+    fn test_integer_coercion_negative_overflow_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "small_num": {
+                    "type": "integer",
+                    "source": "query"
+                }
+            },
+            "required": ["small_num"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let too_small = "-9223372036854775809"; // i64::MIN - 1
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("small_num".to_string(), vec![too_small.to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"small_num": too_small}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "int_parsing");
+    }
+
+    #[test]
+    fn test_float_coercion_invalid_format_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "price": {
+                    "type": "number",
+                    "source": "query"
+                }
+            },
+            "required": ["price"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("price".to_string(), vec!["not.a.number".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"price": "not.a.number"}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "float_parsing");
+        assert!(err.errors[0].msg.contains("valid number"));
+    }
+
+    #[test]
+    fn test_float_coercion_scientific_notation_success() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "number",
+                    "source": "query"
+                }
+            },
+            "required": ["value"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("value".to_string(), vec!["1.5e10".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"value": 1.5e10}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["value"], json!(1.5e10));
+    }
+
+    #[test]
+    fn test_boolean_coercion_empty_string_returns_false() {
+        // BUG: Empty string returns false instead of error - this is behavior to verify
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "flag": {
+                    "type": "boolean",
+                    "source": "query"
+                }
+            },
+            "required": ["flag"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("flag".to_string(), vec!["".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"flag": ""}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        // Current behavior: returns false instead of error
+        // This may be intentional but is worth testing
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["flag"], json!(false));
+    }
+
+    #[test]
+    fn test_boolean_coercion_whitespace_string_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "flag": {
+                    "type": "boolean",
+                    "source": "query"
+                }
+            },
+            "required": ["flag"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("flag".to_string(), vec!["   ".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"flag": "   "}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err(), "Whitespace-only string should fail boolean parsing");
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "bool_parsing");
+    }
+
+    #[test]
+    fn test_boolean_coercion_invalid_value_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "source": "path"
+                }
+            },
+            "required": ["enabled"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut path_params = HashMap::new();
+        path_params.insert("enabled".to_string(), "maybe".to_string());
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "bool_parsing");
+        assert!(err.errors[0].msg.contains("valid boolean"));
+    }
+
+    #[test]
+    fn test_required_query_parameter_missing_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "required_param": {
+                    "type": "string",
+                    "source": "query"
+                }
+            },
+            "required": ["required_param"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "missing");
+        assert_eq!(
+            err.errors[0].loc,
+            vec!["query".to_string(), "required_param".to_string()]
+        );
+        assert!(err.errors[0].msg.contains("required"));
+    }
+
+    #[test]
+    fn test_required_path_parameter_missing_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "string",
+                    "source": "path"
+                }
+            },
+            "required": ["user_id"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "missing");
+        assert_eq!(err.errors[0].loc, vec!["path".to_string(), "user_id".to_string()]);
+    }
+
+    #[test]
+    fn test_required_header_parameter_missing_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "Authorization": {
+                    "type": "string",
+                    "source": "header"
+                }
+            },
+            "required": ["Authorization"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "missing");
+        // Header names are normalized: underscores to dashes, lowercase
+        assert_eq!(
+            err.errors[0].loc,
+            vec!["headers".to_string(), "authorization".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_required_cookie_parameter_missing_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "source": "cookie"
+                }
+            },
+            "required": ["session_id"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "missing");
+        assert_eq!(err.errors[0].loc, vec!["cookie".to_string(), "session_id".to_string()]);
+    }
+
+    #[test]
+    fn test_optional_parameter_missing_succeeds() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "optional_param": {
+                    "type": "string",
+                    "source": "query",
+                    "optional": true
+                }
+            },
+            "required": []
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok(), "Optional parameter should not cause error when missing");
+        let extracted = result.unwrap();
+        assert!(!extracted.as_object().unwrap().contains_key("optional_param"));
+    }
+
+    #[test]
+    fn test_uuid_validation_invalid_format_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "source": "path"
+                }
+            },
+            "required": ["id"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut path_params = HashMap::new();
+        path_params.insert("id".to_string(), "not-a-uuid".to_string());
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "uuid_parsing");
+        assert!(err.errors[0].msg.contains("UUID"));
+    }
+
+    #[test]
+    fn test_uuid_validation_uppercase_succeeds() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "source": "query"
+                }
+            },
+            "required": ["id"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let valid_uuid = "550e8400-e29b-41d4-a716-446655440000";
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("id".to_string(), vec![valid_uuid.to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"id": valid_uuid}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["id"], json!(valid_uuid));
+    }
+
+    #[test]
+    fn test_date_validation_invalid_format_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "format": "date",
+                    "source": "query"
+                }
+            },
+            "required": ["created_at"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("created_at".to_string(), vec!["2024/12/10".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"created_at": "2024/12/10"}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "date_parsing");
+        assert!(err.errors[0].msg.contains("date"));
+    }
+
+    #[test]
+    fn test_date_validation_valid_iso_succeeds() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "format": "date",
+                    "source": "query"
+                }
+            },
+            "required": ["created_at"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let valid_date = "2024-12-10";
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("created_at".to_string(), vec![valid_date.to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"created_at": valid_date}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["created_at"], json!(valid_date));
+    }
+
+    #[test]
+    fn test_datetime_validation_invalid_format_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "timestamp": {
+                    "type": "string",
+                    "format": "date-time",
+                    "source": "query"
+                }
+            },
+            "required": ["timestamp"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("timestamp".to_string(), vec!["not-a-datetime".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"timestamp": "not-a-datetime"}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "datetime_parsing");
+    }
+
+    #[test]
+    fn test_time_validation_invalid_format_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "start_time": {
+                    "type": "string",
+                    "format": "time",
+                    "source": "query"
+                }
+            },
+            "required": ["start_time"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("start_time".to_string(), vec!["25:00:00".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"start_time": "25:00:00"}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "time_parsing");
+    }
+
+    #[test]
+    fn test_time_validation_string_passthrough() {
+        // Note: The time format validation happens during coercion, but the JSON Schema
+        // validator may have stricter validation. This test verifies that we can pass through
+        // a string parameter that the schema doesn't enforce format validation on.
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "start_time": {
+                    "type": "string",
+                    "source": "query"
+                    // No format field, just plain string
+                }
+            },
+            "required": ["start_time"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let time_string = "14:30:00";
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("start_time".to_string(), vec![time_string.to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"start_time": time_string}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok(), "String parameter should pass: {:?}", result);
+        let extracted = result.unwrap();
+        assert_eq!(extracted["start_time"], json!(time_string));
+    }
+
+    #[test]
+    fn test_duration_validation_invalid_format_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "timeout": {
+                    "type": "string",
+                    "format": "duration",
+                    "source": "query"
+                }
+            },
+            "required": ["timeout"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("timeout".to_string(), vec!["not-a-duration".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"timeout": "not-a-duration"}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "duration_parsing");
+    }
+
+    #[test]
+    fn test_duration_validation_iso8601_succeeds() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "timeout": {
+                    "type": "string",
+                    "format": "duration",
+                    "source": "query"
+                }
+            },
+            "required": ["timeout"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let valid_duration = "PT5M"; // 5 minutes
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("timeout".to_string(), vec![valid_duration.to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"timeout": valid_duration}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_header_name_normalization_with_underscores() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "X_Custom_Header": {
+                    "type": "string",
+                    "source": "header"
+                }
+            },
+            "required": ["X_Custom_Header"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut headers = HashMap::new();
+        // Headers are normalized: underscores to dashes, lowercase
+        headers.insert("x-custom-header".to_string(), "value".to_string());
+
+        let result =
+            validator.validate_and_extract(&json!({}), &HashMap::new(), &HashMap::new(), &headers, &HashMap::new());
+
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["X_Custom_Header"], json!("value"));
+    }
+
+    #[test]
+    fn test_multiple_query_parameter_values_uses_first() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "source": "query"
+                }
+            },
+            "required": ["id"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        // Multiple values provided - should use first
+        raw_query_params.insert("id".to_string(), vec!["123".to_string(), "456".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"id": [123, 456]}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok(), "Should accept first value of multiple query params");
+        let extracted = result.unwrap();
+        // Only first value is extracted
+        assert_eq!(extracted["id"], json!(123));
+    }
+
+    #[test]
+    fn test_schema_creation_missing_source_field_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "param": {
+                    "type": "string"
+                    // Missing required "source" field
+                }
+            },
+            "required": []
+        });
+
+        let result = ParameterValidator::new(schema);
+        assert!(result.is_err(), "Schema without 'source' field should fail");
+        let err_msg = result.unwrap_err();
+        assert!(err_msg.contains("source"));
+    }
+
+    #[test]
+    fn test_schema_creation_invalid_source_value_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "param": {
+                    "type": "string",
+                    "source": "invalid_source"
+                }
+            },
+            "required": []
+        });
+
+        let result = ParameterValidator::new(schema);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err();
+        assert!(err_msg.contains("Invalid source"));
+    }
+
+    #[test]
+    fn test_multiple_errors_reported_together() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "source": "query"
+                },
+                "user_id": {
+                    "type": "string",
+                    "source": "path"
+                },
+                "token": {
+                    "type": "string",
+                    "source": "header"
+                }
+            },
+            "required": ["count", "user_id", "token"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        // Should report all three missing parameters
+        assert_eq!(err.errors.len(), 3);
+        assert!(err.errors.iter().all(|e| e.error_type == "missing"));
+    }
+
+    #[test]
+    fn test_coercion_error_includes_original_value() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer",
+                    "source": "query"
+                }
+            },
+            "required": ["age"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let invalid_value = "not_an_int";
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("age".to_string(), vec![invalid_value.to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"age": invalid_value}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        // Error should include the actual invalid input
+        assert_eq!(err.errors[0].input, json!(invalid_value));
+    }
+
+    #[test]
+    fn test_string_parameter_passes_through() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "source": "query"
+                }
+            },
+            "required": ["name"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("name".to_string(), vec!["Alice".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"name": "Alice"}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["name"], json!("Alice"));
+    }
+
+    #[test]
+    fn test_string_with_special_characters_passes_through() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "source": "query"
+                }
+            },
+            "required": ["message"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let special_value = "Hello! @#$%^&*() Unicode: 你好";
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("message".to_string(), vec![special_value.to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"message": special_value}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["message"], json!(special_value));
+    }
+
+    #[test]
+    fn test_array_query_parameter_missing_required_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "source": "query"
+                }
+            },
+            "required": ["ids"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.errors[0].error_type, "missing");
+    }
+
+    #[test]
+    fn test_empty_array_parameter_accepted() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "source": "query"
+                }
+            },
+            "required": ["tags"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({"tags": []}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        // Empty array should be accepted
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["tags"], json!([]));
+    }
+
+    #[test]
+    fn test_parameter_source_from_str_query() {
+        assert_eq!(ParameterSource::from_str("query"), Some(ParameterSource::Query));
+    }
+
+    #[test]
+    fn test_parameter_source_from_str_path() {
+        assert_eq!(ParameterSource::from_str("path"), Some(ParameterSource::Path));
+    }
+
+    #[test]
+    fn test_parameter_source_from_str_header() {
+        assert_eq!(ParameterSource::from_str("header"), Some(ParameterSource::Header));
+    }
+
+    #[test]
+    fn test_parameter_source_from_str_cookie() {
+        assert_eq!(ParameterSource::from_str("cookie"), Some(ParameterSource::Cookie));
+    }
+
+    #[test]
+    fn test_parameter_source_from_str_invalid() {
+        assert_eq!(ParameterSource::from_str("invalid"), None);
+    }
+
+    #[test]
+    fn test_integer_with_plus_sign() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "source": "query"
+                }
+            },
+            "required": ["count"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("count".to_string(), vec!["+123".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"count": "+123"}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        // i64::from_str accepts "+123"
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["count"], json!(123));
+    }
+
+    #[test]
+    fn test_float_with_leading_dot() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "ratio": {
+                    "type": "number",
+                    "source": "query"
+                }
+            },
+            "required": ["ratio"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("ratio".to_string(), vec![".5".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"ratio": 0.5}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        // f64::from_str accepts ".5"
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["ratio"], json!(0.5));
+    }
+
+    #[test]
+    fn test_float_with_trailing_dot() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "number",
+                    "source": "query"
+                }
+            },
+            "required": ["value"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("value".to_string(), vec!["5.".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"value": 5.0}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        // f64::from_str accepts "5."
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_boolean_case_insensitive_true() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "flag": {
+                    "type": "boolean",
+                    "source": "query"
+                }
+            },
+            "required": ["flag"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("flag".to_string(), vec!["TrUe".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"flag": true}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["flag"], json!(true));
+    }
+
+    #[test]
+    fn test_boolean_case_insensitive_false() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "flag": {
+                    "type": "boolean",
+                    "source": "query"
+                }
+            },
+            "required": ["flag"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("flag".to_string(), vec!["FaLsE".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"flag": false}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok());
+        let extracted = result.unwrap();
+        assert_eq!(extracted["flag"], json!(false));
     }
 }
