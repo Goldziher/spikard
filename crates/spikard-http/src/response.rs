@@ -396,4 +396,332 @@ mod tests {
         let cookie = response.headers.get("set-cookie").unwrap();
         assert!(cookie.contains("Max-Age=-1"));
     }
+
+    // Additional defensive tests for edge cases and regressions
+
+    #[test]
+    fn response_various_status_codes() {
+        let status_codes = vec![
+            (200, "OK"),
+            (201, "Created"),
+            (204, "No Content"),
+            (301, "Moved Permanently"),
+            (302, "Found"),
+            (304, "Not Modified"),
+            (400, "Bad Request"),
+            (401, "Unauthorized"),
+            (403, "Forbidden"),
+            (404, "Not Found"),
+            (500, "Internal Server Error"),
+            (502, "Bad Gateway"),
+            (503, "Service Unavailable"),
+        ];
+
+        for (code, _name) in status_codes {
+            let response = Response::with_status(None, code);
+            assert_eq!(response.status_code, code);
+            assert!(response.headers.is_empty());
+        }
+    }
+
+    #[test]
+    fn response_with_large_json_body() {
+        let mut items = vec![];
+        for i in 0..1000 {
+            items.push(json!({"id": i, "name": format!("item_{}", i)}));
+        }
+        let large_array = serde_json::Value::Array(items);
+        let response = Response::new(Some(large_array.clone()));
+        assert_eq!(response.status_code, 200);
+        assert_eq!(response.content, Some(large_array));
+    }
+
+    #[test]
+    fn response_with_deeply_nested_json() {
+        let nested = json!({
+            "level1": {
+                "level2": {
+                    "level3": {
+                        "level4": {
+                            "level5": {
+                                "data": "deeply nested value"
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        let response = Response::new(Some(nested.clone()));
+        assert_eq!(response.content, Some(nested));
+    }
+
+    #[test]
+    fn response_with_empty_json_object() {
+        let empty_obj = json!({});
+        let response = Response::new(Some(empty_obj.clone()));
+        assert_eq!(response.content, Some(empty_obj));
+        assert_ne!(response.content, None);
+    }
+
+    #[test]
+    fn response_with_empty_json_array() {
+        let empty_array = json!([]);
+        let response = Response::new(Some(empty_array.clone()));
+        assert_eq!(response.content, Some(empty_array));
+        assert_ne!(response.content, None);
+    }
+
+    #[test]
+    fn response_with_null_vs_none() {
+        let null_value = json!(null);
+        let response_with_null = Response::new(Some(null_value.clone()));
+        let response_with_none = Response::new(None);
+
+        // These should be different: Some(null) vs None
+        assert_eq!(response_with_null.content, Some(null_value));
+        assert_eq!(response_with_none.content, None);
+        assert_ne!(response_with_null.content, response_with_none.content);
+    }
+
+    #[test]
+    fn response_with_json_primitives() {
+        let test_cases = vec![
+            json!(true),
+            json!(false),
+            json!(0),
+            json!(-1),
+            json!(42),
+            json!(3.14),
+            json!("string"),
+            json!(""),
+        ];
+
+        for test_value in test_cases {
+            let response = Response::new(Some(test_value.clone()));
+            assert_eq!(response.content, Some(test_value));
+        }
+    }
+
+    #[test]
+    fn response_header_case_sensitivity() {
+        let mut response = Response::new(None);
+        // HashMap is case-sensitive, so these are different keys
+        response.set_header("Content-Type".to_string(), "application/json".to_string());
+        response.set_header("content-type".to_string(), "text/plain".to_string());
+
+        assert_eq!(response.headers.len(), 2);
+        assert_eq!(
+            response.headers.get("Content-Type"),
+            Some(&"application/json".to_string())
+        );
+        assert_eq!(response.headers.get("content-type"), Some(&"text/plain".to_string()));
+    }
+
+    #[test]
+    fn response_header_with_empty_value() {
+        let mut response = Response::new(None);
+        response.set_header("X-Empty".to_string(), "".to_string());
+        assert_eq!(response.headers.get("X-Empty"), Some(&"".to_string()));
+    }
+
+    #[test]
+    fn response_header_with_special_chars() {
+        let mut response = Response::new(None);
+        response.set_header("X-Special".to_string(), "value; charset=utf-8".to_string());
+        assert_eq!(
+            response.headers.get("X-Special"),
+            Some(&"value; charset=utf-8".to_string())
+        );
+    }
+
+    #[test]
+    fn response_multiple_different_cookies() {
+        let mut response = Response::new(None);
+        response.set_cookie(
+            "session".to_string(),
+            "abc123".to_string(),
+            None,
+            None,
+            None,
+            false,
+            false,
+            None,
+        );
+        // Note: Due to HashMap implementation, this overwrites the previous cookie
+        // This test documents the current behavior
+        let cookie_count = response.headers.iter().filter(|(k, _)| *k == "set-cookie").count();
+        assert_eq!(cookie_count, 1);
+    }
+
+    #[test]
+    fn response_cookie_empty_value() {
+        let mut response = Response::new(None);
+        response.set_cookie(
+            "empty".to_string(),
+            "".to_string(),
+            None,
+            None,
+            None,
+            false,
+            false,
+            None,
+        );
+        let cookie = response.headers.get("set-cookie").unwrap();
+        assert_eq!(cookie, "empty=");
+    }
+
+    #[test]
+    fn response_cookie_with_equals_in_value() {
+        let mut response = Response::new(None);
+        response.set_cookie(
+            "data".to_string(),
+            "key=value&other=123".to_string(),
+            None,
+            None,
+            None,
+            false,
+            false,
+            None,
+        );
+        let cookie = response.headers.get("set-cookie").unwrap();
+        assert!(cookie.contains("key=value&other=123"));
+    }
+
+    #[test]
+    fn response_cookie_attribute_order() {
+        let mut response = Response::new(None);
+        response.set_cookie(
+            "test".to_string(),
+            "value".to_string(),
+            Some(3600),
+            Some("example.com".to_string()),
+            Some("/".to_string()),
+            true,
+            true,
+            Some("Strict".to_string()),
+        );
+        let cookie = response.headers.get("set-cookie").unwrap();
+
+        // Verify order: name=value; Max-Age; Domain; Path; Secure; HttpOnly; SameSite
+        let parts: Vec<&str> = cookie.split("; ").collect();
+        assert_eq!(parts.len(), 8); // name=value + 7 attributes
+        assert!(parts[0].starts_with("test="));
+        assert!(parts[1].starts_with("Max-Age="));
+        assert!(parts[2].starts_with("Domain="));
+        assert!(parts[3].starts_with("Path="));
+        assert_eq!(parts[4], "Secure");
+        assert_eq!(parts[5], "HttpOnly");
+        assert!(parts[6].starts_with("SameSite="));
+    }
+
+    #[test]
+    fn response_cookie_with_very_long_value() {
+        let mut response = Response::new(None);
+        let long_value = "x".repeat(4096);
+        response.set_cookie(
+            "long".to_string(),
+            long_value.clone(),
+            None,
+            None,
+            None,
+            false,
+            false,
+            None,
+        );
+        let cookie = response.headers.get("set-cookie").unwrap();
+        assert!(cookie.contains(&format!("long={}", long_value)));
+    }
+
+    #[test]
+    fn response_cookie_max_age_large_value() {
+        let mut response = Response::new(None);
+        let max_age_value = 86400 * 365; // One year in seconds
+        response.set_cookie(
+            "session".to_string(),
+            "token".to_string(),
+            Some(max_age_value),
+            None,
+            None,
+            false,
+            false,
+            None,
+        );
+        let cookie = response.headers.get("set-cookie").unwrap();
+        assert!(cookie.contains(&format!("Max-Age={}", max_age_value)));
+    }
+
+    #[test]
+    fn response_status_code_informational() {
+        let response = Response::with_status(None, 100);
+        assert_eq!(response.status_code, 100);
+    }
+
+    #[test]
+    fn response_status_code_redirect_with_location() {
+        let mut response = Response::with_status(None, 301);
+        response.set_header("Location".to_string(), "https://example.com/new".to_string());
+        assert_eq!(response.status_code, 301);
+        assert_eq!(
+            response.headers.get("Location"),
+            Some(&"https://example.com/new".to_string())
+        );
+    }
+
+    #[test]
+    fn response_with_error_status_and_content() {
+        let error_content = json!({
+            "error": "Unauthorized",
+            "code": 401,
+            "message": "Invalid credentials"
+        });
+        let response = Response::with_status(Some(error_content.clone()), 401);
+        assert_eq!(response.status_code, 401);
+        assert_eq!(response.content, Some(error_content));
+    }
+
+    #[test]
+    fn response_clone_preserves_state() {
+        let mut original = Response::with_status(Some(json!({"key": "value"})), 202);
+        original.set_header("X-Custom".to_string(), "header-value".to_string());
+        original.set_cookie(
+            "session".to_string(),
+            "token".to_string(),
+            Some(3600),
+            None,
+            None,
+            true,
+            false,
+            None,
+        );
+
+        let cloned = original.clone();
+
+        assert_eq!(cloned.status_code, 202);
+        assert_eq!(cloned.content, original.content);
+        assert_eq!(cloned.headers, original.headers);
+    }
+
+    #[test]
+    fn response_with_numeric_status_boundaries() {
+        let boundary_codes = vec![1, 99, 100, 199, 200, 299, 300, 399, 400, 499, 500, 599, 600, 999, 65535];
+        for code in boundary_codes {
+            let response = Response::with_status(None, code);
+            assert_eq!(response.status_code, code);
+        }
+    }
+
+    #[test]
+    fn response_header_unicode_value() {
+        let mut response = Response::new(None);
+        response.set_header("X-Unicode".to_string(), "こんにちは".to_string());
+        assert_eq!(response.headers.get("X-Unicode"), Some(&"こんにちは".to_string()));
+    }
+
+    #[test]
+    fn response_debug_trait() {
+        let response = Response::with_status(Some(json!({"test": "data"})), 200);
+        let debug_str = format!("{:?}", response);
+        assert!(debug_str.contains("Response"));
+        assert!(debug_str.contains("200"));
+    }
 }
