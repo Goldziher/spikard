@@ -29,9 +29,9 @@ pub fn init_python_event_loop() -> PyResult<()> {
         }
 
         let asyncio = py.import("asyncio")?;
-        let event_loop = asyncio.call_method0("new_event_loop")?;
+        let event_loop: Py<PyAny> = asyncio.call_method0("new_event_loop")?.unbind();
         PYTHON_EVENT_LOOP
-            .set(event_loop.into())
+            .set(event_loop.clone_ref(py))
             .map_err(|_| pyo3::exceptions::PyRuntimeError::new_err("Event loop already initialized"))?;
 
         // Start the event loop in a dedicated Python thread

@@ -29,6 +29,7 @@ The handler function receives the parsed JSON message and can return:
 WebSocket handlers are always async to maintain consistency with HTTP handlers.
 """
 
+import asyncio
 import inspect
 from collections.abc import Callable
 from typing import Any, TypeVar, get_type_hints
@@ -38,7 +39,7 @@ __all__ = ["websocket"]
 F = TypeVar("F", bound=Callable[..., Any])
 
 
-def websocket(
+def websocket(  # noqa: C901
     path: str,
     *,
     message_schema: dict[str, Any] | None = None,
@@ -78,7 +79,7 @@ def websocket(
         JSON Schema validation will be performed on incoming messages if a schema is provided.
     """
 
-    def decorator(func: F) -> F:
+    def decorator(func: F) -> F:  # noqa: C901
         from spikard.app import Spikard  # noqa: PLC0415
         from spikard.schema import extract_json_schema  # noqa: PLC0415
 
@@ -122,15 +123,57 @@ def websocket(
             _is_websocket_handler = True
             _websocket_func = func
 
-            async def handle_message(self, message: dict[str, Any]) -> Any:
+            def handle_message(self, message: dict[str, Any]) -> Any:
                 """Handle incoming WebSocket message."""
-                return await func(message)
+                result = func(message)
+                if inspect.isawaitable(result):
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        temp_loop = asyncio.new_event_loop()
+                        try:
+                            asyncio.set_event_loop(temp_loop)
+                            return temp_loop.run_until_complete(result)
+                        finally:
+                            temp_loop.close()
+                            asyncio.set_event_loop(loop)
+                    return loop.run_until_complete(result)
+                return result
 
-            async def on_connect(self) -> None:
+            def on_connect(self) -> None:
                 """Called when WebSocket connection is established."""
+                hook = getattr(func, "on_connect", None)
+                if hook:
+                    result = hook()
+                    if inspect.isawaitable(result):
+                        loop = asyncio.get_event_loop()
+                        if loop.is_running():
+                            temp_loop = asyncio.new_event_loop()
+                            try:
+                                asyncio.set_event_loop(temp_loop)
+                                temp_loop.run_until_complete(result)
+                            finally:
+                                temp_loop.close()
+                                asyncio.set_event_loop(loop)
+                        else:
+                            loop.run_until_complete(result)
 
-            async def on_disconnect(self) -> None:
+            def on_disconnect(self) -> None:
                 """Called when WebSocket connection is closed."""
+                hook = getattr(func, "on_disconnect", None)
+                if hook:
+                    result = hook()
+                    if inspect.isawaitable(result):
+                        loop = asyncio.get_event_loop()
+                        if loop.is_running():
+                            temp_loop = asyncio.new_event_loop()
+                            try:
+                                asyncio.set_event_loop(temp_loop)
+                                temp_loop.run_until_complete(result)
+                            finally:
+                                temp_loop.close()
+                                asyncio.set_event_loop(loop)
+                        else:
+                            loop.run_until_complete(result)
 
         app._websocket_handlers[path] = lambda: WebSocketHandlerWrapper()  # noqa: SLF001
 

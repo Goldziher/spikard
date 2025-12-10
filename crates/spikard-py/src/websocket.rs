@@ -39,48 +39,35 @@ impl WebSocketHandler for PythonWebSocketHandler {
 
         match result_py {
             Ok(result_py) => {
-                // Check if it's a coroutine and handle accordingly
-                let is_coroutine = Python::attach(|py| -> PyResult<bool> {
-                    let asyncio = py.import("asyncio")?;
-                    asyncio.call_method1("iscoroutine", (result_py.bind(py),))?.extract()
-                })
-                .unwrap_or(false);
+                let resolved = Python::attach(|py| -> PyResult<Py<PyAny>> {
+                    let inspect = py.import("inspect")?;
+                    let awaitable = result_py.bind(py);
+                    let is_awaitable: bool = inspect.call_method1("isawaitable", (awaitable,))?.extract()?;
+                    if is_awaitable {
+                        let asyncio = py.import("asyncio")?;
+                        let loop_obj = asyncio.call_method0("new_event_loop")?;
+                        asyncio.call_method1("set_event_loop", (loop_obj.clone(),))?;
+                        let awaited = loop_obj.call_method1("run_until_complete", (awaitable,))?;
+                        Ok(awaited.unbind())
+                    } else {
+                        Ok(awaitable.clone().unbind())
+                    }
+                });
 
-                if is_coroutine {
-                    debug!("Python WebSocket handler: result is a coroutine, awaiting...");
-                    let future_result =
-                        Python::attach(|py| pyo3_async_runtimes::tokio::into_future(result_py.bind(py).clone()));
-
-                    match future_result {
-                        Ok(future) => match future.await {
-                            Ok(result) => {
-                                debug!("Python WebSocket handler: coroutine completed");
-                                let is_none = Python::attach(|py| result.bind(py).is_none());
-                                if is_none {
-                                    debug!("Python WebSocket handler: received None response");
-                                    return None;
-                                }
-                                Python::attach(|py| python_to_json(py, result.bind(py)).ok())
-                            }
-                            Err(e) => {
-                                error!("Python error in coroutine: {}", e);
-                                None
-                            }
-                        },
-                        Err(e) => {
-                            error!("Failed to convert coroutine to future: {}", e);
-                            None
+                match resolved {
+                    Ok(obj) => {
+                        let is_none = Python::attach(|py| obj.bind(py).is_none());
+                        if is_none {
+                            debug!("Python WebSocket handler: received None response");
+                            return None;
                         }
+                        Python::attach(|py| python_to_json(py, obj.bind(py)).ok())
                     }
-                } else {
-                    // Synchronous result
-                    debug!("Python WebSocket handler: synchronous result");
-                    let is_none = Python::attach(|py| result_py.bind(py).is_none());
-                    if is_none {
-                        debug!("Python WebSocket handler: received None response");
-                        return None;
+                    Err(e) => {
+                        error!("Python error resolving websocket message: {}", e);
+                        Python::attach(|py| e.print(py));
+                        None
                     }
-                    Python::attach(|py| python_to_json(py, result_py.bind(py)).ok())
                 }
             }
             Err(e) => {
@@ -102,15 +89,14 @@ impl WebSocketHandler for PythonWebSocketHandler {
         });
 
         if let Ok(coroutine) = coroutine_py {
-            let future_result =
-                Python::attach(|py| pyo3_async_runtimes::tokio::into_future(coroutine.bind(py).clone()));
-
-            if let Ok(future) = future_result {
-                let _ = future.await;
-                debug!("Python WebSocket handler: on_connect completed");
-            } else {
-                error!("Failed to convert on_connect coroutine to future");
-            }
+            let _ = Python::attach(|py| {
+                let asyncio = py.import("asyncio")?;
+                let loop_obj = asyncio.call_method0("new_event_loop")?;
+                asyncio.call_method1("set_event_loop", (loop_obj.clone(),))?;
+                let _ = loop_obj.call_method1("run_until_complete", (coroutine.bind(py),))?;
+                Ok::<(), PyErr>(())
+            });
+            debug!("Python WebSocket handler: on_connect completed");
         } else {
             error!("Failed to call on_connect");
         }
@@ -127,15 +113,14 @@ impl WebSocketHandler for PythonWebSocketHandler {
         });
 
         if let Ok(coroutine) = coroutine_py {
-            let future_result =
-                Python::attach(|py| pyo3_async_runtimes::tokio::into_future(coroutine.bind(py).clone()));
-
-            if let Ok(future) = future_result {
-                let _ = future.await;
-                debug!("Python WebSocket handler: on_disconnect completed");
-            } else {
-                error!("Failed to convert on_disconnect coroutine to future");
-            }
+            let _ = Python::attach(|py| {
+                let asyncio = py.import("asyncio")?;
+                let loop_obj = asyncio.call_method0("new_event_loop")?;
+                asyncio.call_method1("set_event_loop", (loop_obj.clone(),))?;
+                let _ = loop_obj.call_method1("run_until_complete", (coroutine.bind(py),))?;
+                Ok::<(), PyErr>(())
+            });
+            debug!("Python WebSocket handler: on_disconnect completed");
         } else {
             error!("Failed to call on_disconnect");
         }
