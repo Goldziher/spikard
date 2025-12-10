@@ -210,10 +210,8 @@ exclude = [
   "examples",
   "testing_data",
   "e2e",
-  "tools/benchmark-harness/apps/spikard-python",
-  "tools/benchmark-harness/apps/spikard-streaming",
-  "tools/benchmark-harness/apps",
-  "tools/app-generator/tools/benchmark-harness/apps",
+  "tools/benchmark-harness",
+  "tools/app-generator",
 ]
 python_version = "3.10"
 disable_error_code = 'import-untyped'

@@ -103,7 +103,7 @@ repos:
     hooks:
       - id: rubocop
         args: ["--autocorrect", "--config", "packages/ruby/.rubocop.yml"]
-        exclude: ^packages/ruby/Gemfile\.ext\.lock$
+        exclude: ^packages/ruby/(Gemfile\.ext\.lock|vendor/)
         files: ^packages/ruby/
   - repo: local
     hooks:
@@ -113,7 +113,7 @@ repos:
         require_serial: true
         language: system
         types: [python]
-        exclude: ^scripts/|^examples/|^e2e/
+        exclude: ^scripts/|^examples/|^e2e/|^tools/benchmark-harness/|^tools/app-generator/|^testing_data/
       - id: phpstan
         name: PHPStan
         entry: phpstan analyse --memory-limit=2G --no-progress --configuration packages/php/phpstan.neon packages/php/src packages/php/tests
