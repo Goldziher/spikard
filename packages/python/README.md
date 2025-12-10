@@ -372,7 +372,7 @@ config = ServerConfig(static_files=[static])
 **OpenAPI Documentation:**
 
 ```python
-from spikard.config import OpenApiConfig
+from spikard import OpenApiConfig, ServerConfig
 
 openapi = OpenApiConfig(
     enabled=True,

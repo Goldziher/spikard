@@ -8,6 +8,7 @@ from spikard.config import (
     ApiKeyConfig,
     CompressionConfig,
     JwtConfig,
+    OpenApiConfig,
     RateLimitConfig,
     ServerConfig,
     StaticFilesConfig,
@@ -19,6 +20,7 @@ from spikard.params import Body, Cookie, Header, Path, Query
 from spikard.request import Request
 from spikard.routing import delete, get, head, options, patch, post, put, route, trace
 from spikard.sse import SseEvent, sse
+from spikard.testing import TestClient
 from spikard.websocket import websocket
 
 __all__ = [
@@ -30,6 +32,7 @@ __all__ = [
     "HttpMethod",
     "JsonRpcMethodInfo",
     "JwtConfig",
+    "OpenApiConfig",
     "Path",
     "Provide",
     "Query",
@@ -41,6 +44,7 @@ __all__ = [
     "SseEvent",
     "StaticFilesConfig",
     "StreamingResponse",
+    "TestClient",
     "UploadFile",
     "background",
     "delete",
