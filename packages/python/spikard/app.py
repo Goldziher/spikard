@@ -48,17 +48,19 @@ class Spikard:
         self,
         method: HttpMethod,
         path: str,
+        handler: Callable[..., Any] | None = None,
         *,
         body_schema: dict[str, Any] | None = None,
         parameter_schema: dict[str, Any] | None = None,
         file_params: dict[str, Any] | None = None,
         jsonrpc_method: JsonRpcMethodInfo | None = None,
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]] | Callable[..., Any]:
         """Internal method to register a route.
 
         Args:
             method: HTTP method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE)
             path: URL path pattern
+            handler: Optional handler to register immediately instead of using decorator style
             body_schema: Optional explicit body schema (takes precedence over type hint extraction)
             parameter_schema: Optional explicit parameter schema (takes precedence over type hint extraction)
             file_params: Optional file parameter schema for multipart file validation
@@ -178,6 +180,8 @@ class Spikard:
             self._routes.append(route)
             return func
 
+        if handler is not None:
+            return decorator(handler)
         return decorator
 
     def run(

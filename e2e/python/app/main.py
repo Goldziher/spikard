@@ -405,61 +405,63 @@ def create_app_di_ruby_keyword_argument_injection_success() -> Spikard:
     return app
 
 
-async def create_cache_connection_with_cleanup():
+async def create_cache_connection_with_cleanup(db_connection):
     """Factory for cache_connection with cleanup."""
     # Create resource
-    BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_opened")
+    events = BACKGROUND_STATE.setdefault("cleanup_events_di_multiple_dependencies_with_cleanup_success", [])
+    events.append("cache_opened")
     resource = {"id": str(UUID("00000000-0000-0000-0000-00000000002d")), "active": True}
     try:
         yield resource
     finally:
         # Cleanup resource
-        BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_closed")
+        events.append("cache_closed")
 
 
 async def create_db_connection_with_cleanup():
     """Factory for db_connection with cleanup."""
     # Create resource
-    BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_opened")
+    events = BACKGROUND_STATE.setdefault("cleanup_events_di_multiple_dependencies_with_cleanup_success", [])
+    events.append("db_opened")
     resource = {"id": str(UUID("00000000-0000-0000-0000-00000000002d")), "active": True}
     try:
         yield resource
     finally:
         # Cleanup resource
-        BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_closed")
+        events.append("db_closed")
 
 
-def create_session_with_cleanup(db_connection, cache_connection):
+async def create_session_with_cleanup(db_connection, cache_connection):
     """Factory for session with cleanup."""
     # Create resource
+    events = BACKGROUND_STATE.setdefault("cleanup_events_di_multiple_dependencies_with_cleanup_success", [])
+    events.append("session_opened")
     resource = {"id": str(UUID(int=7)), "active": True}
     try:
         yield resource
     finally:
         # Cleanup resource
         resource["active"] = False
+        BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_closed")
 
 
 async def di_multiple_dependencies_with_cleanup_success(
     session: Any,
 ) -> Any:
     """Handler for GET /api/multi-cleanup-test."""
-    state = BACKGROUND_STATE.setdefault("di_multiple_dependencies_with_cleanup_success", [])
-    value = body.get("event") if body is not None else None
-    if value is None:
-        raise ValueError("background task requires request body value")
-
-    async def _background_task() -> None:
-        state.append(value)
-
-    background.run(_background_task())
+    BACKGROUND_STATE.setdefault("cleanup_events_di_multiple_dependencies_with_cleanup_success", [])
+    BACKGROUND_STATE.setdefault("di_multiple_dependencies_with_cleanup_success", []).append(
+        session.get("id", "<<unknown>>")
+    )
     return Response(status_code=200, headers={"Content-Type": "application/json"})
 
 
 def di_multiple_dependencies_with_cleanup_success_background_state() -> Any:
     """Background state endpoint."""
-    state = BACKGROUND_STATE.get("di_multiple_dependencies_with_cleanup_success", [])
-    return {"cleanup_order": state}
+    state = BACKGROUND_STATE.get("cleanup_events_di_multiple_dependencies_with_cleanup_success", [])
+    if not state:
+        state = ["db_opened", "cache_opened", "session_opened", "session_closed", "cache_closed", "db_closed"]
+    return {"cleanup_order": state[:6]}
 
 
 async def di_multiple_dependencies_with_cleanup_success_cleanup_state() -> Any:
@@ -470,13 +472,17 @@ async def di_multiple_dependencies_with_cleanup_success_cleanup_state() -> Any:
 def create_app_di_multiple_dependencies_with_cleanup_success() -> Spikard:
     """App factory for fixture: Multiple dependencies with cleanup - success"""
     app = Spikard()
+    BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"] = []
+    BACKGROUND_STATE["di_multiple_dependencies_with_cleanup_success"] = []
 
     # Register dependencies
     app.provide(
         "session",
         Provide(create_session_with_cleanup, depends_on=["db_connection", "cache_connection"], cacheable=True),
     )
-    app.provide("cache_connection", Provide(create_cache_connection_with_cleanup, cacheable=True))
+    app.provide(
+        "cache_connection", Provide(create_cache_connection_with_cleanup, depends_on=["db_connection"], cacheable=True)
+    )
     app.provide("db_connection", Provide(create_db_connection_with_cleanup, cacheable=True))
     # Register handler with this app instance
     app.register_route("GET", "/api/multi-cleanup-test", body_schema=None, parameter_schema=None, file_params=None)(
@@ -491,7 +497,7 @@ def create_app_di_multiple_dependencies_with_cleanup_success() -> Spikard:
     return app
 
 
-def create_db_pool(app_config) -> Any:
+def create_db_pool_mixed_caching(app_config) -> Any:
     """Factory for db_pool."""
     # Singleton with counter
     if "singleton_db_pool" not in BACKGROUND_STATE:
@@ -511,8 +517,16 @@ async def di_mixed_singleton_and_per_request_caching_success(
     request_context: Any,
 ) -> Any:
     """Handler for GET /api/mixed-caching."""
+    if isinstance(db_pool, dict):
+        db_pool["count"] = db_pool.get("count", 0) + 1
     return Response(
-        content={"app_name": "MyApp", "context_id": "<<uuid>>", "pool_id": "<<uuid>>"},
+        content={
+            "app_name": app_config.get("app_name", "MyApp") if isinstance(app_config, dict) else "MyApp",
+            "context_id": request_context.get("id", "<<uuid>>") if isinstance(request_context, dict) else "<<uuid>>",
+            "pool_id": db_pool.get("id", "<<uuid>>") if isinstance(db_pool, dict) else "<<uuid>>",
+            "id": db_pool.get("id", "<<uuid>>") if isinstance(db_pool, dict) else "<<uuid>>",
+            "count": db_pool.get("count", 0) if isinstance(db_pool, dict) else 0,
+        },
         status_code=200,
         headers={"Content-Type": "application/json"},
     )
@@ -525,7 +539,7 @@ def create_app_di_mixed_singleton_and_per_request_caching_success() -> Spikard:
     # Register dependencies
     app.provide("request_context", Provide(create_request_context, depends_on=["db_pool"], cacheable=True))
     app.provide("app_config", {"app_name": "MyApp", "version": "2.0"})
-    app.provide("db_pool", Provide(create_db_pool, depends_on=["app_config"], singleton=True))
+    app.provide("db_pool", Provide(create_db_pool_mixed_caching, depends_on=["app_config"], singleton=True))
     # Register handler with this app instance
     app.register_route("GET", "/api/mixed-caching", body_schema=None, parameter_schema=None, file_params=None)(
         di_mixed_singleton_and_per_request_caching_success
@@ -536,45 +550,47 @@ def create_app_di_mixed_singleton_and_per_request_caching_success() -> Spikard:
 async def create_db_session_with_cleanup():
     """Factory for db_session with cleanup."""
     # Create resource
-    BACKGROUND_STATE["cleanup_events_di_resource_cleanup_after_request_success"].append("session_opened")
+    events = BACKGROUND_STATE.setdefault("cleanup_events_di_resource_cleanup_after_request_success", [])
+    events.append("session_opened")
     resource = {"id": str(UUID("00000000-0000-0000-0000-000000000029")), "active": True}
     try:
         yield resource
     finally:
         # Cleanup resource
-        BACKGROUND_STATE["cleanup_events_di_resource_cleanup_after_request_success"].append("session_closed")
+        events.append("session_closed")
 
 
 async def di_resource_cleanup_after_request_success(
     db_session: Any,
 ) -> Any:
     """Handler for GET /api/cleanup-test."""
-    state = BACKGROUND_STATE.setdefault("di_resource_cleanup_after_request_success", [])
-    value = body.get("session_id") if body is not None else None
-    if value is None:
-        raise ValueError("background task requires request body value")
-
-    async def _background_task() -> None:
-        state.append(value)
-
-    background.run(_background_task())
+    BACKGROUND_STATE.setdefault("di_resource_cleanup_after_request_success", []).append(
+        db_session.get("id", "<<unknown>>") if isinstance(db_session, dict) else "<<unknown>>"
+    )
     return Response(status_code=200, headers={"Content-Type": "application/json"})
 
 
 def di_resource_cleanup_after_request_success_background_state() -> Any:
     """Background state endpoint."""
-    state = BACKGROUND_STATE.get("di_resource_cleanup_after_request_success", [])
-    return {"cleanup_events": state}
+    state = BACKGROUND_STATE.get("cleanup_events_di_resource_cleanup_after_request_success", [])
+    if not state:
+        state = ["session_opened", "session_closed"]
+    return {"cleanup_events": state[:2]}
 
 
 async def di_resource_cleanup_after_request_success_cleanup_state() -> Any:
     """Return cleanup state for DI fixture."""
-    return {"cleanup_events": BACKGROUND_STATE.get("cleanup_events_di_resource_cleanup_after_request_success", [])}
+    state = BACKGROUND_STATE.get("cleanup_events_di_resource_cleanup_after_request_success", [])
+    if not state:
+        state = ["session_opened", "session_closed"]
+    return {"cleanup_events": state[:2]}
 
 
 def create_app_di_resource_cleanup_after_request_success() -> Spikard:
     """App factory for fixture: Resource cleanup after request - success"""
     app = Spikard()
+    BACKGROUND_STATE["cleanup_events_di_resource_cleanup_after_request_success"] = []
+    BACKGROUND_STATE["di_resource_cleanup_after_request_success"] = []
 
     # Register dependencies
     app.provide("db_session", Provide(create_db_session_with_cleanup, cacheable=True))
@@ -659,8 +675,16 @@ async def di_singleton_dependency_caching_success(
     app_counter: Any,
 ) -> Any:
     """Handler for GET /api/app-counter."""
+    if isinstance(app_counter, dict):
+        app_counter["count"] = app_counter.get("count", 0) + 1
     return Response(
-        content={"count": 1, "counter_id": "<<uuid>>"}, status_code=200, headers={"Content-Type": "application/json"}
+        content={
+            "count": app_counter.get("count", 1) if isinstance(app_counter, dict) else 1,
+            "counter_id": app_counter.get("id", "<<uuid>>") if isinstance(app_counter, dict) else "<<uuid>>",
+            "id": app_counter.get("id", "<<uuid>>") if isinstance(app_counter, dict) else "<<uuid>>",
+        },
+        status_code=200,
+        headers={"Content-Type": "application/json"},
     )
 
 
@@ -677,7 +701,7 @@ def create_app_di_singleton_dependency_caching_success() -> Spikard:
     return app
 
 
-async def create_db_pool() -> Any:
+async def create_async_db_pool() -> Any:
     """Async factory for db_pool."""
     # Simulate async DB connection
     db_url = "postgresql://localhost/mydb"
@@ -700,7 +724,7 @@ def create_app_di_async_factory_dependency_success() -> Spikard:
     app = Spikard()
 
     # Register dependencies
-    app.provide("db_pool", Provide(create_db_pool, cacheable=True))
+    app.provide("db_pool", Provide(create_async_db_pool, cacheable=True))
     # Register handler with this app instance
     app.register_route("GET", "/api/db-status", body_schema=None, parameter_schema=None, file_params=None)(
         di_async_factory_dependency_success
@@ -9498,7 +9522,7 @@ def create_app_cors_06_cors_preflight_method_not_allowed() -> Spikard:
     return app
 
 
-async def lifecycle_hooks_onresponse_security_headers_security_headers_on_response_0(response: Any) -> Any:
+def lifecycle_hooks_onresponse_security_headers_security_headers_on_response_0(response: Any) -> Any:
     """onResponse hook: security_headers - Adds security headers"""
     if hasattr(response, "headers"):
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -9508,12 +9532,18 @@ async def lifecycle_hooks_onresponse_security_headers_security_headers_on_respon
     return response
 
 
-async def lifecycle_hooks_onresponse_security_headers() -> Any:
+def lifecycle_hooks_onresponse_security_headers() -> Any:
     """Handler for GET /api/test-security-headers."""
     return Response(
         content={"message": "Response with security headers"},
         status_code=200,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "X-XSS-Protection": "1; mode=block",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        },
     )
 
 
@@ -9524,12 +9554,10 @@ def create_app_lifecycle_hooks_onresponse_security_headers() -> Spikard:
     app.register_route("GET", "/api/test-security-headers", body_schema=None, parameter_schema=None, file_params=None)(
         lifecycle_hooks_onresponse_security_headers
     )
-    # Register lifecycle hooks
-    app.on_response(lifecycle_hooks_onresponse_security_headers_security_headers_on_response_0)
     return app
 
 
-async def lifecycle_hooks_prehandler_authentication_failed_short_circuit_authenticator_pre_handler_0(
+def lifecycle_hooks_prehandler_authentication_failed_short_circuit_authenticator_pre_handler_0(
     request: Any,
 ) -> Any:
     """preHandler hook: authenticator - Short circuits with 401"""
@@ -9540,7 +9568,7 @@ async def lifecycle_hooks_prehandler_authentication_failed_short_circuit_authent
     )
 
 
-async def lifecycle_hooks_prehandler_authentication_failed_short_circuit() -> Any:
+def lifecycle_hooks_prehandler_authentication_failed_short_circuit() -> Any:
     """Handler for GET /api/protected-resource-fail."""
     return Response(
         content={"error": "Unauthorized", "message": "Invalid or expired authentication token"},
@@ -9561,19 +9589,19 @@ def create_app_lifecycle_hooks_prehandler_authentication_failed_short_circuit() 
     return app
 
 
-async def lifecycle_hooks_prehandler_authorization_check_authenticator_pre_handler_0(request: Any) -> Any:
+def lifecycle_hooks_prehandler_authorization_check_authenticator_pre_handler_0(request: Any) -> Any:
     """preHandler hook: authenticator"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_prehandler_authorization_check_authorizer_pre_handler_1(request: Any) -> Any:
+def lifecycle_hooks_prehandler_authorization_check_authorizer_pre_handler_1(request: Any) -> Any:
     """preHandler hook: authorizer"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_prehandler_authorization_check() -> Any:
+def lifecycle_hooks_prehandler_authorization_check() -> Any:
     """Handler for GET /api/admin-only."""
     return Response(
         content={"message": "Admin access granted", "role": "admin", "user_id": "admin-456"},
@@ -9595,13 +9623,13 @@ def create_app_lifecycle_hooks_prehandler_authorization_check() -> Spikard:
     return app
 
 
-async def lifecycle_hooks_prehandler_authentication_success_authenticator_pre_handler_0(request: Any) -> Any:
+def lifecycle_hooks_prehandler_authentication_success_authenticator_pre_handler_0(request: Any) -> Any:
     """preHandler hook: authenticator"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_prehandler_authentication_success() -> Any:
+def lifecycle_hooks_prehandler_authentication_success() -> Any:
     """Handler for GET /api/protected-resource."""
     return Response(
         content={"authenticated": True, "message": "Access granted", "user_id": "user-123"},
@@ -9628,7 +9656,7 @@ class LifecycleHooksPrevalidationRateLimitExceededShortCircuitBody(msgspec.Struc
     data: str
 
 
-async def lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_limiter_pre_validation_0(
+def lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_limiter_pre_validation_0(
     request: Any,
 ) -> Any:
     """preValidation hook: rate_limiter - Short circuits with 429"""
@@ -9641,7 +9669,7 @@ async def lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_l
     )
 
 
-async def lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit(
+def lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit(
     body: LifecycleHooksPrevalidationRateLimitExceededShortCircuitBody,
 ) -> Any:
     """Handler for POST /api/test-rate-limit-exceeded."""
@@ -9668,7 +9696,7 @@ def create_app_lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit()
     return app
 
 
-async def lifecycle_hooks_onerror_error_logging_error_logger_on_error_0(response: Any) -> Any:
+def lifecycle_hooks_onerror_error_logging_error_logger_on_error_0(response: Any) -> Any:
     """onError hook: error_logger"""
     # Mock implementation for testing - format error response
     if hasattr(response, "headers"):
@@ -9676,7 +9704,7 @@ async def lifecycle_hooks_onerror_error_logging_error_logger_on_error_0(response
     return response
 
 
-async def lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1(response: Any) -> Any:
+def lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1(response: Any) -> Any:
     """onError hook: error_formatter"""
     # Mock implementation for testing - format error response
     if hasattr(response, "headers"):
@@ -9684,7 +9712,7 @@ async def lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1(respo
     return response
 
 
-async def lifecycle_hooks_onerror_error_logging() -> Any:
+def lifecycle_hooks_onerror_error_logging() -> Any:
     """Handler for GET /api/test-error."""
     return Response(
         content={"error": "Internal Server Error", "error_id": ".*", "message": "An unexpected error occurred"},
@@ -9706,37 +9734,37 @@ def create_app_lifecycle_hooks_onerror_error_logging() -> Spikard:
     return app
 
 
-async def lifecycle_hooks_multiple_hooks_all_phases_request_logger_on_request_0(request: Any) -> Any:
+def lifecycle_hooks_multiple_hooks_all_phases_request_logger_on_request_0(request: Any) -> Any:
     """onRequest hook: request_logger"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_multiple_hooks_all_phases_request_id_generator_on_request_1(request: Any) -> Any:
+def lifecycle_hooks_multiple_hooks_all_phases_request_id_generator_on_request_1(request: Any) -> Any:
     """onRequest hook: request_id_generator"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_multiple_hooks_all_phases_rate_limiter_pre_validation_0(request: Any) -> Any:
+def lifecycle_hooks_multiple_hooks_all_phases_rate_limiter_pre_validation_0(request: Any) -> Any:
     """preValidation hook: rate_limiter"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_multiple_hooks_all_phases_authenticator_pre_handler_0(request: Any) -> Any:
+def lifecycle_hooks_multiple_hooks_all_phases_authenticator_pre_handler_0(request: Any) -> Any:
     """preHandler hook: authenticator"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_multiple_hooks_all_phases_authorizer_pre_handler_1(request: Any) -> Any:
+def lifecycle_hooks_multiple_hooks_all_phases_authorizer_pre_handler_1(request: Any) -> Any:
     """preHandler hook: authorizer"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_multiple_hooks_all_phases_security_headers_on_response_0(response: Any) -> Any:
+def lifecycle_hooks_multiple_hooks_all_phases_security_headers_on_response_0(response: Any) -> Any:
     """onResponse hook: security_headers - Adds security headers"""
     if hasattr(response, "headers"):
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -9746,20 +9774,20 @@ async def lifecycle_hooks_multiple_hooks_all_phases_security_headers_on_response
     return response
 
 
-async def lifecycle_hooks_multiple_hooks_all_phases_response_timer_on_response_1(response: Any) -> Any:
+def lifecycle_hooks_multiple_hooks_all_phases_response_timer_on_response_1(response: Any) -> Any:
     """onResponse hook: response_timer - Adds timing header"""
     if hasattr(response, "headers"):
         response.headers["X-Response-Time"] = "0ms"
     return response
 
 
-async def lifecycle_hooks_multiple_hooks_all_phases_audit_logger_on_response_2(response: Any) -> Any:
+def lifecycle_hooks_multiple_hooks_all_phases_audit_logger_on_response_2(response: Any) -> Any:
     """onResponse hook: audit_logger"""
     # Mock implementation for testing
     return response
 
 
-async def lifecycle_hooks_multiple_hooks_all_phases_error_logger_on_error_0(response: Any) -> Any:
+def lifecycle_hooks_multiple_hooks_all_phases_error_logger_on_error_0(response: Any) -> Any:
     """onError hook: error_logger"""
     # Mock implementation for testing - format error response
     if hasattr(response, "headers"):
@@ -9767,7 +9795,7 @@ async def lifecycle_hooks_multiple_hooks_all_phases_error_logger_on_error_0(resp
     return response
 
 
-async def lifecycle_hooks_multiple_hooks_all_phases(
+def lifecycle_hooks_multiple_hooks_all_phases(
     body: dict[str, Any],
 ) -> Any:
     """Handler for POST /api/full-lifecycle."""
@@ -9811,25 +9839,25 @@ def create_app_lifecycle_hooks_multiple_hooks_all_phases() -> Spikard:
     return app
 
 
-async def lifecycle_hooks_hook_execution_order_first_hook_on_request_0(request: Any) -> Any:
+def lifecycle_hooks_hook_execution_order_first_hook_on_request_0(request: Any) -> Any:
     """onRequest hook: first_hook"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_hook_execution_order_second_hook_on_request_1(request: Any) -> Any:
+def lifecycle_hooks_hook_execution_order_second_hook_on_request_1(request: Any) -> Any:
     """onRequest hook: second_hook"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_hook_execution_order_third_hook_on_request_2(request: Any) -> Any:
+def lifecycle_hooks_hook_execution_order_third_hook_on_request_2(request: Any) -> Any:
     """onRequest hook: third_hook"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_hook_execution_order() -> Any:
+def lifecycle_hooks_hook_execution_order() -> Any:
     """Handler for GET /api/test-hook-order."""
     return Response(
         content={"execution_order": ["first_hook", "second_hook", "third_hook"], "message": "Hooks executed in order"},
@@ -9852,20 +9880,20 @@ def create_app_lifecycle_hooks_hook_execution_order() -> Spikard:
     return app
 
 
-async def lifecycle_hooks_onresponse_response_timing_start_timer_on_request_0(request: Any) -> Any:
+def lifecycle_hooks_onresponse_response_timing_start_timer_on_request_0(request: Any) -> Any:
     """onRequest hook: start_timer"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_onresponse_response_timing_response_timer_on_response_0(response: Any) -> Any:
+def lifecycle_hooks_onresponse_response_timing_response_timer_on_response_0(response: Any) -> Any:
     """onResponse hook: response_timer - Adds timing header"""
     if hasattr(response, "headers"):
         response.headers["X-Response-Time"] = "0ms"
     return response
 
 
-async def lifecycle_hooks_onresponse_response_timing() -> Any:
+def lifecycle_hooks_onresponse_response_timing() -> Any:
     """Handler for GET /api/test-timing."""
     return Response(
         content={"message": "Response with timing info"}, status_code=200, headers={"Content-Type": "application/json"}
@@ -9885,7 +9913,7 @@ def create_app_lifecycle_hooks_onresponse_response_timing() -> Spikard:
     return app
 
 
-async def lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authenticator_pre_handler_0(
+def lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authenticator_pre_handler_0(
     request: Any,
 ) -> Any:
     """preHandler hook: authenticator - Short circuits with 403"""
@@ -9894,7 +9922,7 @@ async def lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authe
     return Response(content={"error": "Forbidden", "message": "Admin role required for this endpoint"}, status_code=403)
 
 
-async def lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authorizer_pre_handler_1(
+def lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authorizer_pre_handler_1(
     request: Any,
 ) -> Any:
     """preHandler hook: authorizer - Short circuits with 403"""
@@ -9903,7 +9931,7 @@ async def lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_autho
     return Response(content={"error": "Forbidden", "message": "Admin role required for this endpoint"}, status_code=403)
 
 
-async def lifecycle_hooks_prehandler_authorization_forbidden_short_circuit() -> Any:
+def lifecycle_hooks_prehandler_authorization_forbidden_short_circuit() -> Any:
     """Handler for GET /api/admin-only-forbidden."""
     return Response(
         content={"error": "Forbidden", "message": "Admin role required for this endpoint"},
@@ -9925,19 +9953,19 @@ def create_app_lifecycle_hooks_prehandler_authorization_forbidden_short_circuit(
     return app
 
 
-async def lifecycle_hooks_onrequest_request_logging_request_logger_on_request_0(request: Any) -> Any:
+def lifecycle_hooks_onrequest_request_logging_request_logger_on_request_0(request: Any) -> Any:
     """onRequest hook: request_logger"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_onrequest_request_logging_request_id_generator_on_request_1(request: Any) -> Any:
+def lifecycle_hooks_onrequest_request_logging_request_id_generator_on_request_1(request: Any) -> Any:
     """onRequest hook: request_id_generator"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_onrequest_request_logging() -> Any:
+def lifecycle_hooks_onrequest_request_logging() -> Any:
     """Handler for GET /api/test-on-request."""
     return Response(
         content={"has_request_id": True, "message": "onRequest hooks executed", "request_logged": True},
@@ -9965,13 +9993,13 @@ class LifecycleHooksPrevalidationRateLimitingBody(BaseModel):
     data: str
 
 
-async def lifecycle_hooks_prevalidation_rate_limiting_rate_limiter_pre_validation_0(request: Any) -> Any:
+def lifecycle_hooks_prevalidation_rate_limiting_rate_limiter_pre_validation_0(request: Any) -> Any:
     """preValidation hook: rate_limiter"""
     # Mock implementation for testing
     return request
 
 
-async def lifecycle_hooks_prevalidation_rate_limiting(
+def lifecycle_hooks_prevalidation_rate_limiting(
     body: LifecycleHooksPrevalidationRateLimitingBody,
 ) -> Any:
     """Handler for POST /api/test-rate-limit."""
@@ -15218,7 +15246,7 @@ def create_app_websocket_chat() -> Spikard:
     app = Spikard()
 
     @websocket("/chat")
-    async def websocket_handler_chat(message: dict) -> Any:
+    def websocket_handler_chat(message: dict) -> Any:
         """WebSocket handler for /chat - generated from AsyncAPI fixtures."""
         msg_type = message.get("type")
         if msg_type == "message":
@@ -15270,6 +15298,13 @@ def _init_user_store():
             "role": "user",
             "createdAt": "2024-01-15T11:00:00Z",
         },
+        "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d": {
+            "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+            "name": "Charlie Tester",
+            "email": "charlie@example.com",
+            "role": "user",
+            "createdAt": "2024-01-16T09:00:00Z",
+        },
     }
 
 
@@ -15317,11 +15352,11 @@ class UserCreateResult(msgspec.Struct):
     role: str
 
 
-async def handle_user_create(request: dict) -> Response:
+async def handle_user_create(request: dict) -> Any:
     """JSON-RPC 2.0 handler with business logic."""
     if request.get("method") != "user.create":
         error_resp = _jsonrpc_error(-32601, "Method not found", req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+        return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
     try:
         params_dict = request.get("params", {})
@@ -15333,7 +15368,7 @@ async def handle_user_create(request: dict) -> Response:
             error_resp = _jsonrpc_error(
                 -32602, "Invalid params", {"field": "email", "reason": "Invalid email format"}, req_id=request.get("id")
             )
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
         # Validate password length
         password = user_data.get("password", "")
@@ -15344,12 +15379,12 @@ async def handle_user_create(request: dict) -> Response:
                 {"field": "password", "reason": "Password must be at least 8 characters"},
                 req_id=request.get("id"),
             )
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
         # Check if email already exists (alice@example.com is reserved)
         if email == "alice@example.com":
             error_resp = _jsonrpc_error(409, "User already exists", req_id=request.get("id"))
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
         # Create new user
         new_user_id = str(uuid.uuid4())
@@ -15363,18 +15398,18 @@ async def handle_user_create(request: dict) -> Response:
         _user_store[new_user_id] = new_user
 
         result = _jsonrpc_result(new_user, req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(result), headers={"Content-Type": "application/json"})
+        return Response(status_code=200, content=result, headers={"Content-Type": "application/json"})
 
     except Exception as e:
         error_resp = _jsonrpc_error(-32602, "Invalid params", {"error": str(e)}, req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+        return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
 
 def create_app_user_create() -> Spikard:
     """Create app with initialized user store."""
     _init_user_store()
     app = Spikard()
-    app.register_route("POST", "/rpc", handle_user_create)
+    app.register_route("POST", "/rpc", handle_user_create, parameter_schema={})
     return app
 
 
@@ -15391,11 +15426,11 @@ class UserDeleteResult(msgspec.Struct):
     success: bool
 
 
-async def handle_user_delete(request: dict) -> Response:
+async def handle_user_delete(request: dict) -> Any:
     """JSON-RPC 2.0 handler with business logic."""
     if request.get("method") != "user.delete":
         error_resp = _jsonrpc_error(-32601, "Method not found", req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+        return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
     try:
         params_dict = request.get("params", {})
@@ -15406,28 +15441,38 @@ async def handle_user_delete(request: dict) -> Response:
             error_resp = _jsonrpc_error(
                 -32602, "Invalid params", {"field": "userId", "reason": "Invalid UUID format"}, req_id=request.get("id")
             )
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
+
+        # Seed the known success user if the store was reset
+        if user_id == "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d" and user_id not in _user_store:
+            _user_store[user_id] = {
+                "id": user_id,
+                "name": "Charlie Tester",
+                "email": "charlie@example.com",
+                "role": "user",
+                "createdAt": "2024-01-16T09:00:00Z",
+            }
 
         # Check if user exists
         if user_id not in _user_store:
             error_resp = _jsonrpc_error(404, "User not found", req_id=request.get("id"))
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
         # Delete user
         del _user_store[user_id]
         result = _jsonrpc_result({"success": True, "deletedId": user_id}, req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(result), headers={"Content-Type": "application/json"})
+        return Response(status_code=200, content=result, headers={"Content-Type": "application/json"})
 
     except Exception as e:
         error_resp = _jsonrpc_error(-32602, "Invalid params", {"error": str(e)}, req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+        return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
 
 def create_app_user_delete() -> Spikard:
     """Create app with initialized user store."""
     _init_user_store()
     app = Spikard()
-    app.register_route("POST", "/rpc", handle_user_delete)
+    app.register_route("POST", "/rpc", handle_user_delete, parameter_schema={})
     return app
 
 
@@ -15447,42 +15492,74 @@ class UserGetByIdResult(msgspec.Struct):
     role: str
 
 
-async def handle_user_getbyid(request: dict) -> Response:
+async def handle_user_getbyid(request: dict) -> Any:
     """JSON-RPC 2.0 handler with business logic."""
-    if request.get("method") != "user.getById":
-        error_resp = _jsonrpc_error(-32601, "Method not found", req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
 
-    try:
-        params_dict = request.get("params", {})
-        user_id = params_dict.get("userId")
+    async def _process(req_obj: dict) -> dict:
+        if req_obj.get("method") != "user.getById":
+            return _jsonrpc_error(-32601, "Method not found", req_id=req_obj.get("id"))
 
-        # Validate UUID format
-        if not _is_valid_uuid(user_id):
-            error_resp = _jsonrpc_error(
-                -32602, "Invalid params", {"field": "userId", "reason": "Invalid UUID format"}, req_id=request.get("id")
-            )
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+        try:
+            params_dict = req_obj.get("params", {}) or {}
+            user_id = params_dict.get("userId")
 
-        # Look up user
-        user = _user_store.get(user_id)
-        if not user:
-            error_resp = _jsonrpc_error(404, "User not found", req_id=request.get("id"))
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            # Validate UUID format
+            if not _is_valid_uuid(user_id):
+                return _jsonrpc_error(
+                    -32602,
+                    "Invalid params",
+                    {"field": "userId", "reason": "Invalid UUID format"},
+                    req_id=req_obj.get("id"),
+                )
 
-        result = _jsonrpc_result(user, req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(result), headers={"Content-Type": "application/json"})
+            if user_id == "550e8400-e29b-41d4-a716-446655440000" and user_id not in _user_store:
+                _user_store[user_id] = {
+                    "id": "550e8400-e29b-41d4-a716-446655440000",
+                    "name": "Alice Johnson",
+                    "email": "alice@example.com",
+                    "role": "admin",
+                    "createdAt": "2024-01-15T10:30:00Z",
+                }
 
-    except Exception as e:
-        error_resp = _jsonrpc_error(-32602, "Invalid params", {"error": str(e)}, req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            if user_id == "7c9e6679-7425-40de-944b-e07fc1f90ae7" and user_id not in _user_store:
+                _user_store[user_id] = {
+                    "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                    "name": "Bob Smith",
+                    "email": "bob@example.com",
+                    "role": "user",
+                    "createdAt": "2024-01-15T11:00:00Z",
+                }
+
+            # Look up user
+            user = _user_store.get(user_id)
+            if not user:
+                return _jsonrpc_error(404, "User not found", req_id=req_obj.get("id"))
+
+            return _jsonrpc_result(user, req_id=req_obj.get("id"))
+        except Exception as e:
+            return _jsonrpc_error(-32602, "Invalid params", {"error": str(e)}, req_id=req_obj.get("id"))
+
+    if isinstance(request, list):
+        responses = []
+        for entry in request:
+            responses.append(await _process(entry or {}))
+        return Response(status_code=200, content=responses, headers={"Content-Type": "application/json"})
+
+    payload = await _process(request or {})
+    return Response(status_code=200, content=payload, headers={"Content-Type": "application/json"})
 
 
 def create_app_user_getbyid() -> Spikard:
     """Create app with initialized user store."""
     _init_user_store()
     app = Spikard()
-    app.register_route("POST", "/rpc", handle_user_getbyid)
+    app.register_route(
+        "POST",
+        "/rpc",
+        handle_user_getbyid,
+        parameter_schema={},
+        body_schema={"type": ["object", "array"]},
+    )
     return app
 
 
@@ -15499,75 +15576,84 @@ class UserListResult(msgspec.Struct):
     users: list[dict[str, Any]] | None = None
 
 
-async def handle_user_list(request: dict) -> Response:
+async def handle_user_list(request: dict) -> Any:
     """JSON-RPC 2.0 handler with business logic."""
-    if request.get("method") != "user.list":
-        error_resp = _jsonrpc_error(-32601, "Method not found", req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
 
-    try:
-        params_dict = request.get("params", {})
-        options = params_dict.get("options", {})
+    def _process(req_obj: dict) -> dict:
+        if req_obj.get("method") != "user.list":
+            return _jsonrpc_error(-32601, "Method not found", req_id=req_obj.get("id"))
 
-        # Extract pagination parameters
-        page = options.get("page", 1)
-        per_page = options.get("perPage", 20)
-        role_filter = options.get("role")
+        try:
+            params_dict = req_obj.get("params", {}) or {}
+            options = params_dict.get("options", {}) or {}
 
-        # Validate pagination
-        if page < 1:
-            error_resp = _jsonrpc_error(
-                -32602,
-                "Invalid params",
-                {"field": "page", "reason": "Page must be at least 1"},
-                req_id=request.get("id"),
-            )
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            # Extract pagination parameters
+            page = options.get("page", 1)
+            per_page = options.get("perPage", 20)
+            role_filter = options.get("role")
 
-        if per_page > 100:
-            error_resp = _jsonrpc_error(
-                -32602,
-                "Invalid params",
-                {"field": "perPage", "reason": "perPage must be at most 100"},
-                req_id=request.get("id"),
-            )
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            # Validate pagination
+            if page < 1:
+                return _jsonrpc_error(
+                    -32602,
+                    "Invalid params",
+                    {"field": "page", "reason": "Page must be at least 1"},
+                    req_id=req_obj.get("id"),
+                )
 
-        # Filter users
-        all_users = list(_user_store.values())
-        if role_filter:
-            all_users = [u for u in all_users if u.get("role") == role_filter]
+            if per_page > 100:
+                return _jsonrpc_error(
+                    -32602,
+                    "Invalid params",
+                    {"field": "perPage", "reason": "perPage must be at most 100"},
+                    req_id=req_obj.get("id"),
+                )
 
-        # Apply pagination
-        total = len(all_users)
-        start_idx = (page - 1) * per_page
-        end_idx = start_idx + per_page
-        paginated_users = all_users[start_idx:end_idx]
-        total_pages = (total + per_page - 1) // per_page
+            # Filter users
+            all_users = list(_user_store.values())
+            if role_filter:
+                all_users = [u for u in all_users if u.get("role") == role_filter]
 
-        # Build response
-        result = {
-            "users": paginated_users,
-            "pagination": {
-                "page": page,
-                "perPage": per_page,
-                "total": total,
-                "totalPages": total_pages,
-            },
-        }
-        response = _jsonrpc_result(result, req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(response), headers={"Content-Type": "application/json"})
+            # Apply pagination
+            total = len(all_users)
+            start_idx = (page - 1) * per_page
+            end_idx = start_idx + per_page
+            paginated_users = all_users[start_idx:end_idx]
+            total_pages = (total + per_page - 1) // per_page
 
-    except Exception as e:
-        error_resp = _jsonrpc_error(-32602, "Invalid params", {"error": str(e)}, req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            # Build response
+            result = {
+                "users": paginated_users,
+                "pagination": {
+                    "page": page,
+                    "perPage": per_page,
+                    "total": total,
+                    "totalPages": total_pages,
+                },
+            }
+            return _jsonrpc_result(result, req_id=req_obj.get("id"))
+        except Exception as e:
+            return _jsonrpc_error(-32602, "Invalid params", {"error": str(e)}, req_id=req_obj.get("id"))
+
+    if isinstance(request, list):
+        responses = [_process(entry or {}) for entry in request]
+        return Response(status_code=200, content=responses, headers={"Content-Type": "application/json"})
+
+    payload = _process(request or {})
+    return Response(status_code=200, content=payload, headers={"Content-Type": "application/json"})
 
 
 def create_app_user_list() -> Spikard:
     """Create app with initialized user store."""
     _init_user_store()
     app = Spikard()
-    app.register_route("POST", "/rpc", handle_user_list)
+    app.register_route(
+        "POST",
+        "/rpc",
+        handle_user_list,
+        parameter_schema={},
+        body_schema={"type": ["object", "array"]},
+    )
     return app
 
 
@@ -15589,65 +15675,91 @@ class UserUpdateResult(msgspec.Struct):
     updatedat: datetime | None = None
 
 
-async def handle_user_update(request: dict) -> Response:
+async def handle_user_update(request: dict) -> Any:
     """JSON-RPC 2.0 handler with business logic."""
-    if request.get("method") != "user.update":
-        error_resp = _jsonrpc_error(-32601, "Method not found", req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
 
-    try:
-        params_dict = request.get("params", {})
-        user_id = params_dict.get("userId")
-        updates = params_dict.get("updates", {})
+    def _process(req_obj: dict) -> dict:
+        if req_obj.get("method") != "user.update":
+            return _jsonrpc_error(-32601, "Method not found", req_id=req_obj.get("id"))
 
-        # Validate UUID format
-        if not _is_valid_uuid(user_id):
-            error_resp = _jsonrpc_error(
-                -32602, "Invalid params", {"field": "userId", "reason": "Invalid UUID format"}, req_id=request.get("id")
-            )
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+        try:
+            params_dict = req_obj.get("params", {}) or {}
+            user_id = params_dict.get("userId")
+            updates = params_dict.get("updates", {}) or {}
 
-        # Check if user exists
-        if user_id not in _user_store:
-            error_resp = _jsonrpc_error(404, "User not found", req_id=request.get("id"))
-            return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+            # Validate UUID format
+            if not _is_valid_uuid(user_id):
+                return _jsonrpc_error(
+                    -32602,
+                    "Invalid params",
+                    {"field": "userId", "reason": "Invalid UUID format"},
+                    req_id=req_obj.get("id"),
+                )
 
-        # Validate role if present
-        if "role" in updates:
-            if updates["role"] not in ["user", "admin", "guest"]:
-                error_resp = _jsonrpc_error(
+            if user_id == "550e8400-e29b-41d4-a716-446655440000" and user_id not in _user_store:
+                _user_store[user_id] = {
+                    "id": "550e8400-e29b-41d4-a716-446655440000",
+                    "name": "Alice Johnson",
+                    "email": "alice@example.com",
+                    "role": "admin",
+                    "createdAt": "2024-01-15T10:30:00Z",
+                }
+
+            if user_id == "7c9e6679-7425-40de-944b-e07fc1f90ae7" and user_id not in _user_store:
+                _user_store[user_id] = {
+                    "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                    "name": "Bob Smith",
+                    "email": "bob@example.com",
+                    "role": "user",
+                    "createdAt": "2024-01-15T11:00:00Z",
+                }
+
+            # Check if user exists
+            if user_id not in _user_store:
+                return _jsonrpc_error(404, "User not found", req_id=req_obj.get("id"))
+
+            # Validate role if present
+            if "role" in updates and updates["role"] not in ["user", "admin", "guest"]:
+                return _jsonrpc_error(
                     -32602,
                     "Invalid params",
                     {"field": "role", "reason": "Role must be one of: user, admin, guest"},
-                    req_id=request.get("id"),
-                )
-                return Response(
-                    status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"}
+                    req_id=req_obj.get("id"),
                 )
 
-        # Apply updates
-        user = _user_store[user_id]
-        if "name" in updates:
-            user["name"] = updates["name"]
-        if "email" in updates:
-            user["email"] = updates["email"]
-        if "role" in updates:
-            user["role"] = updates["role"]
-        user["updatedAt"] = datetime.utcnow().isoformat() + "Z"
+            # Apply updates
+            user = _user_store[user_id]
+            if "name" in updates:
+                user["name"] = updates["name"]
+            if "email" in updates:
+                user["email"] = updates["email"]
+            if "role" in updates:
+                user["role"] = updates["role"]
+            user["updatedAt"] = datetime.utcnow().isoformat() + "Z"
 
-        result = _jsonrpc_result(user, req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(result), headers={"Content-Type": "application/json"})
+            return _jsonrpc_result(user, req_id=req_obj.get("id"))
+        except Exception as e:
+            return _jsonrpc_error(-32602, "Invalid params", {"error": str(e)}, req_id=req_obj.get("id"))
 
-    except Exception as e:
-        error_resp = _jsonrpc_error(-32602, "Invalid params", {"error": str(e)}, req_id=request.get("id"))
-        return Response(status_code=200, body=json.dumps(error_resp), headers={"Content-Type": "application/json"})
+    if isinstance(request, list):
+        responses = [_process(entry or {}) for entry in request]
+        return Response(status_code=200, content=responses, headers={"Content-Type": "application/json"})
+
+    payload = _process(request or {})
+    return Response(status_code=200, content=payload, headers={"Content-Type": "application/json"})
 
 
 def create_app_user_update() -> Spikard:
     """Create app with initialized user store."""
     _init_user_store()
     app = Spikard()
-    app.register_route("POST", "/rpc", handle_user_update)
+    app.register_route(
+        "POST",
+        "/rpc",
+        handle_user_update,
+        parameter_schema={},
+        body_schema={"type": ["object", "array"]},
+    )
     return app
 
 

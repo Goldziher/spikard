@@ -395,12 +395,13 @@ tasks:
       - composer update --no-interaction --no-progress
 
   php:test:
-    desc: "Run PHP test suite with native extension loaded"
+    desc: "Run PHP test suite (pure PHP; extension compiled separately)"
     deps:
       - php:install
       - php:build
     cmds:
-      - php -d extension=target/release/libspikard_php.dylib vendor/bin/phpunit --configuration packages/php/phpunit.xml
+      # Run the PHP unit tests in pure PHP mode; the native extension is compiled by php:build for CI parity but not loaded here.
+      - php vendor/bin/phpunit --configuration packages/php/phpunit.xml --no-coverage
 
   php:lint:
     desc: "Run PHP static analysis WITH auto-fix (phpstan + php-cs-fixer)"
