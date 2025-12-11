@@ -61,3 +61,46 @@ macro_rules! debug_log_value {
         }
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::Ordering;
+
+    struct DebugFlagGuard(bool);
+
+    impl Drop for DebugFlagGuard {
+        fn drop(&mut self) {
+            DEBUG_ENABLED.store(self.0, Ordering::Relaxed);
+        }
+    }
+
+    #[test]
+    fn init_sets_debug_enabled_in_tests() {
+        let previous = DEBUG_ENABLED.load(Ordering::Relaxed);
+        let _guard = DebugFlagGuard(previous);
+
+        DEBUG_ENABLED.store(false, Ordering::Relaxed);
+
+        init();
+        assert!(is_enabled(), "init should enable debug in debug/test builds");
+    }
+
+    #[test]
+    fn macros_follow_debug_flag() {
+        let previous = DEBUG_ENABLED.load(Ordering::Relaxed);
+        let _guard = DebugFlagGuard(previous);
+
+        DEBUG_ENABLED.store(false, Ordering::Relaxed);
+        debug_log!("disabled branch");
+        debug_log_module!("core", "disabled");
+        debug_log_value!("counter", 0_u8);
+        assert!(!is_enabled());
+
+        DEBUG_ENABLED.store(true, Ordering::Relaxed);
+        debug_log!("enabled branch {}", 1);
+        debug_log_module!("core", "enabled");
+        debug_log_value!("counter", 2_i32);
+        assert!(is_enabled());
+    }
+}

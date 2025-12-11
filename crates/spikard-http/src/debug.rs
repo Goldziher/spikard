@@ -61,3 +61,47 @@ macro_rules! debug_log_value {
         }
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::Ordering;
+
+    struct DebugFlagGuard(bool);
+
+    impl Drop for DebugFlagGuard {
+        fn drop(&mut self) {
+            DEBUG_ENABLED.store(self.0, Ordering::Relaxed);
+        }
+    }
+
+    #[test]
+    fn init_enables_debug_when_requested() {
+        let previous = DEBUG_ENABLED.load(Ordering::Relaxed);
+        let _guard = DebugFlagGuard(previous);
+
+        DEBUG_ENABLED.store(false, Ordering::Relaxed);
+
+        init();
+
+        assert!(is_enabled(), "init should enable debug in test builds");
+    }
+
+    #[test]
+    fn macros_respect_debug_flag() {
+        let previous = DEBUG_ENABLED.load(Ordering::Relaxed);
+        let _guard = DebugFlagGuard(previous);
+
+        DEBUG_ENABLED.store(false, Ordering::Relaxed);
+        debug_log!("should not print while disabled");
+        debug_log_module!("middleware", "disabled branch");
+        debug_log_value!("key", 1_u8);
+        assert!(!is_enabled());
+
+        DEBUG_ENABLED.store(true, Ordering::Relaxed);
+        debug_log!("now printing {}", 2);
+        debug_log_module!("router", "enabled branch");
+        debug_log_value!("value", 3_i32);
+        assert!(is_enabled());
+    }
+}
