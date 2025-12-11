@@ -255,4 +255,11 @@ const config = {
 	host: "0.0.0.0",
 	port,
 };
-native.runServer(app, config);
+try {
+	// runServer is fire-and-forget; any error is thrown synchronously before background thread starts.
+	native.runServer(app, config);
+	console.error(`[spikard-node] runServer dispatched successfully`);
+} catch (err) {
+	console.error(`[spikard-node] Failed to start server:`, err);
+	process.exit(1);
+}

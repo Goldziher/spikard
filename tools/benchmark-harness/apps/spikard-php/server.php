@@ -14,6 +14,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Spikard\App;
 use Spikard\Config\ServerConfig;
+use Spikard\DI\DependencyContainer;
 use Spikard\Handlers\HandlerInterface;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
@@ -198,6 +199,11 @@ if (PHP_SAPI === 'cli' && __FILE__ === realpath($_SERVER['SCRIPT_FILENAME'])) {
         workers: 1  // Single worker for consistent benchmarking
     );
 
-    $app = $app->withConfig($config);
+    // Provide an empty DI container to satisfy the native runtime.
+    $container = new DependencyContainer();
+
+    $app = $app
+        ->withConfig($config)
+        ->withDependencies($container);
     $app->run();
 }

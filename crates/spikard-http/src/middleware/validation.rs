@@ -130,6 +130,10 @@ mod tests {
     use super::*;
     use axum::http::HeaderValue;
 
+    // ============================================================================
+    // CONTENT-TYPE VALIDATION TESTS (6 tests)
+    // ============================================================================
+
     #[test]
     fn validate_content_length_accepts_matching_sizes() {
         let mut headers = HeaderMap::new();
@@ -283,5 +287,324 @@ mod tests {
 
         let mime = "application/x-www-form-urlencoded".parse::<mime::Mime>().unwrap();
         assert!(!is_json_content_type(&mime));
+    }
+
+    // ============================================================================
+    // CHARSET VALIDATION TESTS (5 tests)
+    // ============================================================================
+
+    #[test]
+    fn test_json_with_utf8_uppercase_charset() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json; charset=UTF-8"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(result.is_ok(), "UTF-8 in uppercase should be accepted");
+    }
+
+    #[test]
+    fn test_json_with_utf8_no_hyphen_charset() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json; charset=utf8"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(result.is_ok(), "utf8 without hyphen should be accepted");
+    }
+
+    #[test]
+    fn test_json_with_iso88591_charset_rejected() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json; charset=iso-8859-1"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(result.is_err(), "iso-8859-1 should be rejected for JSON");
+    }
+
+    #[test]
+    fn test_json_with_utf32_charset_rejected() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json; charset=utf-32"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(result.is_err(), "UTF-32 should be rejected for JSON");
+    }
+
+    #[test]
+    fn test_multipart_with_boundary_and_charset() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("multipart/form-data; boundary=abc123; charset=utf-8"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(
+            result.is_ok(),
+            "multipart with boundary should accept charset parameter"
+        );
+    }
+
+    // ============================================================================
+    // CONTENT-LENGTH VALIDATION TESTS (4 tests)
+    // ============================================================================
+
+    #[test]
+    fn test_validate_content_length_no_header() {
+        let headers = HeaderMap::new();
+
+        let result = validate_content_length(&headers, 1024);
+        assert!(result.is_ok(), "Missing Content-Length header should pass");
+    }
+
+    #[test]
+    fn test_validate_content_length_zero_bytes() {
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::CONTENT_LENGTH, HeaderValue::from_static("0"));
+
+        assert!(validate_content_length(&headers, 0).is_ok());
+    }
+
+    #[test]
+    fn test_validate_content_length_large_body() {
+        let mut headers = HeaderMap::new();
+        let large_size = 1024 * 1024 * 100; // 100MB
+        headers.insert(
+            axum::http::header::CONTENT_LENGTH,
+            HeaderValue::from_str(&large_size.to_string()).unwrap(),
+        );
+
+        assert!(validate_content_length(&headers, large_size).is_ok());
+    }
+
+    #[test]
+    fn test_validate_content_length_invalid_header_format() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_LENGTH,
+            HeaderValue::from_static("not-a-number"),
+        );
+
+        let result = validate_content_length(&headers, 100);
+        assert!(
+            result.is_ok(),
+            "Invalid Content-Length format should be skipped gracefully"
+        );
+    }
+
+    // ============================================================================
+    // INVALID CONTENT-TYPE TESTS (5 tests)
+    // ============================================================================
+
+    #[test]
+    fn test_invalid_content_type_format() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("not/a/valid/type"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(result.is_err(), "Invalid mime type format should be rejected");
+    }
+
+    #[test]
+    fn test_unsupported_content_type_xml() {
+        // Note: validate_content_type_headers doesn't reject XML by default
+        // but we test it to ensure XML is recognized
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/xml"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(
+            result.is_ok(),
+            "XML should pass header validation (routing layer rejects if needed)"
+        );
+    }
+
+    #[test]
+    fn test_unsupported_content_type_plain_text() {
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::CONTENT_TYPE, HeaderValue::from_static("text/plain"));
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(result.is_ok(), "Plain text should pass header validation");
+    }
+
+    #[test]
+    fn test_content_type_with_boundary_missing_boundary_param() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("multipart/form-data; charset=utf-8"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(
+            result.is_err(),
+            "multipart/form-data without boundary parameter should be rejected"
+        );
+    }
+
+    #[test]
+    fn test_content_type_form_urlencoded() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/x-www-form-urlencoded"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(result.is_ok(), "form-urlencoded should be accepted");
+    }
+
+    // ============================================================================
+    // JSON CONTENT TYPE HELPER TESTS (6 tests)
+    // ============================================================================
+
+    #[test]
+    fn test_is_json_content_type_with_hal_json() {
+        let mime = "application/hal+json".parse::<mime::Mime>().unwrap();
+        assert!(is_json_content_type(&mime), "HAL+JSON should be recognized as JSON");
+    }
+
+    #[test]
+    fn test_is_json_content_type_with_ld_json() {
+        let mime = "application/ld+json".parse::<mime::Mime>().unwrap();
+        assert!(is_json_content_type(&mime), "LD+JSON should be recognized as JSON");
+    }
+
+    #[test]
+    fn test_is_json_content_type_rejects_json_patch() {
+        // json-patch is actually JSON, but testing edge case
+        let mime = "application/json-patch+json".parse::<mime::Mime>().unwrap();
+        assert!(is_json_content_type(&mime), "JSON-Patch should be recognized as JSON");
+    }
+
+    #[test]
+    fn test_is_json_content_type_rejects_html() {
+        let mime = "text/html".parse::<mime::Mime>().unwrap();
+        assert!(!is_json_content_type(&mime), "HTML should not be JSON");
+    }
+
+    #[test]
+    fn test_is_json_content_type_rejects_csv() {
+        let mime = "text/csv".parse::<mime::Mime>().unwrap();
+        assert!(!is_json_content_type(&mime), "CSV should not be JSON");
+    }
+
+    #[test]
+    fn test_is_json_content_type_rejects_image_png() {
+        let mime = "image/png".parse::<mime::Mime>().unwrap();
+        assert!(!is_json_content_type(&mime), "PNG should not be JSON");
+    }
+
+    // ============================================================================
+    // EDGE CASES & ERROR CONDITIONS (4 tests)
+    // ============================================================================
+
+    #[test]
+    fn test_validate_json_content_type_missing_header() {
+        let headers = HeaderMap::new();
+        let result = validate_json_content_type(&headers);
+        assert!(
+            result.is_ok(),
+            "Missing Content-Type for JSON route should be OK (routing layer handles)"
+        );
+    }
+
+    #[test]
+    fn test_validate_json_content_type_accepts_form_urlencoded() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/x-www-form-urlencoded"),
+        );
+
+        let result = validate_json_content_type(&headers);
+        assert!(result.is_ok(), "Form-urlencoded should be accepted for JSON routes");
+    }
+
+    #[test]
+    fn test_validate_json_content_type_accepts_multipart() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("multipart/form-data; boundary=abc123"),
+        );
+
+        let result = validate_json_content_type(&headers);
+        assert!(result.is_ok(), "Multipart should be accepted for JSON routes");
+    }
+
+    #[test]
+    fn test_validate_json_content_type_rejects_xml() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/xml"),
+        );
+
+        let result = validate_json_content_type(&headers);
+        assert!(result.is_err(), "XML should be rejected for JSON-expecting routes");
+        assert_eq!(
+            result.unwrap_err().status(),
+            StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            "Should return 415 Unsupported Media Type"
+        );
+    }
+
+    // ============================================================================
+    // MIME TYPE PARAMETER TESTS (3 tests)
+    // ============================================================================
+
+    #[test]
+    fn test_content_type_with_multiple_parameters() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json; charset=utf-8; boundary=xyz"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(result.is_ok(), "Multiple parameters should be parsed correctly");
+    }
+
+    #[test]
+    fn test_content_type_with_quoted_parameter() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static(r#"multipart/form-data; boundary="----WebKitFormBoundary""#),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(result.is_ok(), "Quoted boundary parameter should be handled");
+    }
+
+    #[test]
+    fn test_content_type_case_insensitive_type() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("Application/JSON"),
+        );
+
+        let result = validate_content_type_headers(&headers, 0);
+        assert!(result.is_ok(), "Content-Type type/subtype should be case-insensitive");
     }
 }

@@ -917,6 +917,8 @@ fn route_metadata_from_definition(def: &RouteDefinition) -> RouteMetadata {
         is_async: true,
         cors: None,
         body_param_name: None,
+        #[cfg(feature = "di")]
+        handler_dependencies: None,
         jsonrpc_method: def.jsonrpc_method.clone(),
     }
 }

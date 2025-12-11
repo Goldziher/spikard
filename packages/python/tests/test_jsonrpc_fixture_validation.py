@@ -15,7 +15,7 @@ def load_fixture(filename: str) -> dict[str, object]:
     """Load a JSON fixture file."""
     fixture_path = FIXTURES_DIR / filename
     assert fixture_path.exists(), f"Fixture file not found: {fixture_path}"
-    with fixture_path.open() as f:
+    with fixture_path.open(encoding="utf-8") as f:
         data: object = json.load(f)
         if isinstance(data, dict):
             return data
@@ -26,7 +26,7 @@ def load_fixture_from_subdir(subdir: str, filename: str) -> dict[str, object]:
     """Load a JSON fixture file from a subdirectory."""
     fixture_path = FIXTURES_DIR / subdir / filename
     assert fixture_path.exists(), f"Fixture file not found: {fixture_path}"
-    with fixture_path.open() as f:
+    with fixture_path.open(encoding="utf-8") as f:
         data: object = json.load(f)
         if isinstance(data, dict):
             return data
