@@ -1035,8 +1035,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_all_hook_phases_in_sequence() {
-        let mut execution_log: Vec<String> = Vec::new();
-
         // Simulate logging by using different status codes
         let hooks = LifecycleHooks::builder()
             .on_request(request_hook("on_request", |req| async move {

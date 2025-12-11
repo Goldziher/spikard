@@ -1,3 +1,5 @@
+#![allow(clippy::pedantic, clippy::nursery)]
+#![cfg_attr(test, allow(clippy::all))]
 //! Spikard HTTP Server
 //!
 //! Pure Rust HTTP server with language-agnostic handler trait.

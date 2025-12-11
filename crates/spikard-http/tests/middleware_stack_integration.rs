@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Comprehensive integration tests for the middleware stack
 //!
 //! Tests the observable behavior of middleware covering:

@@ -358,7 +358,7 @@ mod tests {
 
     impl WebSocketHandler for SelectiveHandler {
         async fn handle_message(&self, message: Value) -> Option<Value> {
-            if message.get("respond").map_or(false, |v| v.as_bool().unwrap_or(false)) {
+            if message.get("respond").is_some_and(|v| v.as_bool().unwrap_or(false)) {
                 Some(serde_json::json!({"response": "acknowledged"}))
             } else {
                 None
@@ -371,13 +371,11 @@ mod tests {
 
     impl WebSocketHandler for TransformHandler {
         async fn handle_message(&self, message: Value) -> Option<Value> {
-            if let Some(obj) = message.as_object() {
+            message.as_object().map_or(None, |obj| {
                 let mut resp = obj.clone();
                 resp.insert("processed".to_string(), Value::Bool(true));
                 Some(Value::Object(resp))
-            } else {
-                None
-            }
+            })
         }
     }
 

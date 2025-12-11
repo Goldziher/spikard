@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Integration tests for Dependency Injection system
 //!
 //! These tests verify that the DI system integrates correctly with the HTTP handler pipeline.

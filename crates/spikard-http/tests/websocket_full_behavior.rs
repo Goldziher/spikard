@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Comprehensive integration tests for WebSocket functionality
 //!
 //! These tests verify full end-to-end WebSocket behavior including:

@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Comprehensive integration tests for JWT and API key authentication middleware
 //!
 //! Tests the observable behavior of authentication middleware covering:

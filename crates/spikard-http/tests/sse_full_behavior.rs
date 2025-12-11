@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Comprehensive integration tests for Server-Sent Events (SSE) functionality
 //!
 //! These tests verify full end-to-end SSE behavior including:

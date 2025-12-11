@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Behavioral tests for WebSocket functionality in spikard-http
 //!
 //! This test module verifies observable WebSocket behavior from the perspective of

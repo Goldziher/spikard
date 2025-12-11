@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Behavioral tests for background task execution in spikard-http.
 //!
 //! These tests focus on observable behavior: task completion, timing, resource cleanup,

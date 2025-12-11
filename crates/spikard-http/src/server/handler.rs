@@ -1504,11 +1504,11 @@ mod tests {
         let inner = Arc::new(PanicHandlerImpl);
         let validator_handler = Arc::new(ValidatingHandler::new(inner, &route));
 
-        let mut handles = vec![];
+        let mut join_handles = vec![];
 
         // Spawn multiple concurrent requests
         for i in 0..5 {
-            let handler = validator_handler.clone();
+            let shared_handler = validator_handler.clone();
             let handle = tokio::spawn(async move {
                 let request = Request::builder()
                     .method("POST")
@@ -1518,17 +1518,17 @@ mod tests {
 
                 let request_data = create_request_data(json!({"id": i}));
 
-                let result = handler.call(request, request_data).await;
+                let result = shared_handler.call(request, request_data).await;
                 assert!(result.is_err(), "Each concurrent panic should be caught");
 
                 let (status, _body) = result.unwrap_err();
                 assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
             });
 
-            handles.push(handle);
+            join_handles.push(handle);
         }
 
-        for handle in handles {
+        for handle in join_handles {
             handle.await.expect("Concurrent test should complete");
         }
     }
