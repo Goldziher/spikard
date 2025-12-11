@@ -420,3 +420,769 @@ where
         _marker: std::marker::PhantomData,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Test HookResult enum variants
+    #[test]
+    fn test_hook_result_continue_variant() {
+        let result: HookResult<i32, String> = HookResult::Continue(42);
+        assert!(matches!(result, HookResult::Continue(42)));
+    }
+
+    #[test]
+    fn test_hook_result_short_circuit_variant() {
+        let result: HookResult<i32, String> = HookResult::ShortCircuit("response".to_string());
+        assert!(matches!(result, HookResult::ShortCircuit(ref s) if s == "response"));
+    }
+
+    #[test]
+    fn test_hook_result_debug_format() {
+        let continue_result: HookResult<i32, String> = HookResult::Continue(100);
+        let debug_str = format!("{:?}", continue_result);
+        assert!(debug_str.contains("Continue"));
+
+        let short_circuit_result: HookResult<i32, String> = HookResult::ShortCircuit("err".to_string());
+        let debug_str = format!("{:?}", short_circuit_result);
+        assert!(debug_str.contains("ShortCircuit"));
+    }
+
+    // Test LifecycleHooks Default and creation
+    #[test]
+    fn test_lifecycle_hooks_default() {
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
+        assert!(hooks.is_empty());
+    }
+
+    #[test]
+    fn test_lifecycle_hooks_new() {
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+        assert!(hooks.is_empty());
+    }
+
+    #[test]
+    fn test_lifecycle_hooks_is_empty_true() {
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
+        assert!(hooks.is_empty());
+    }
+
+    #[test]
+    fn test_lifecycle_hooks_debug_format_empty() {
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
+        let debug_str = format!("{:?}", hooks);
+        assert!(debug_str.contains("LifecycleHooks"));
+        assert!(debug_str.contains("on_request_count"));
+        assert!(debug_str.contains("0"));
+    }
+
+    #[test]
+    fn test_lifecycle_hooks_clone() {
+        let hooks1: LifecycleHooks<String, String> = LifecycleHooks::default();
+        let hooks2 = hooks1.clone();
+        assert!(hooks2.is_empty());
+    }
+
+    // Test builder pattern
+    #[test]
+    fn test_lifecycle_hooks_builder_new() {
+        let builder: LifecycleHooksBuilder<String, String> = LifecycleHooksBuilder::new();
+        let hooks = builder.build();
+        assert!(hooks.is_empty());
+    }
+
+    #[test]
+    fn test_lifecycle_hooks_builder_default() {
+        let builder: LifecycleHooksBuilder<String, String> = LifecycleHooksBuilder::default();
+        let hooks = builder.build();
+        assert!(hooks.is_empty());
+    }
+
+    #[test]
+    fn test_lifecycle_hooks_builder_method() {
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::builder().build();
+        assert!(hooks.is_empty());
+    }
+
+    // Test add methods
+    #[test]
+    fn test_add_on_request_hook() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        // Create a simple hook that continues with modified request
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestRequestHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestRequestHookLocal);
+
+        hooks.add_on_request(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    // Simple test hook for request processing
+    #[cfg(not(target_arch = "wasm32"))]
+    struct TestRequestHook;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    impl NativeLifecycleHook<String, String> for TestRequestHook {
+        fn name(&self) -> &str {
+            "test_request_hook"
+        }
+
+        fn execute_request<'a>(&'a self, req: String) -> RequestHookFutureSend<'a, String, String> {
+            Box::pin(async move { Ok(HookResult::Continue(req + "_modified")) })
+        }
+
+        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureSend<'a, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    struct TestRequestHookLocal;
+
+    #[cfg(target_arch = "wasm32")]
+    impl LocalLifecycleHook<String, String> for TestRequestHookLocal {
+        fn name(&self) -> &str {
+            "test_request_hook"
+        }
+
+        fn execute_request<'a>(&'a self, req: String) -> RequestHookFutureLocal<'a, String, String> {
+            Box::pin(async move { Ok(HookResult::Continue(req + "_modified")) })
+        }
+
+        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+    }
+
+    #[test]
+    fn test_add_pre_validation_hook() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestRequestHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestRequestHookLocal);
+
+        hooks.add_pre_validation(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    #[test]
+    fn test_add_pre_handler_hook() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestRequestHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestRequestHookLocal);
+
+        hooks.add_pre_handler(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    // Test response hooks
+    #[cfg(not(target_arch = "wasm32"))]
+    struct TestResponseHook;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    impl NativeLifecycleHook<String, String> for TestResponseHook {
+        fn name(&self) -> &str {
+            "test_response_hook"
+        }
+
+        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureSend<'a, String, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+
+        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureSend<'a, String> {
+            Box::pin(async move { Ok(HookResult::Continue(resp + "_processed")) })
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    struct TestResponseHookLocal;
+
+    #[cfg(target_arch = "wasm32")]
+    impl LocalLifecycleHook<String, String> for TestResponseHookLocal {
+        fn name(&self) -> &str {
+            "test_response_hook"
+        }
+
+        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+
+        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureLocal<'a, String> {
+            Box::pin(async move { Ok(HookResult::Continue(resp + "_processed")) })
+        }
+    }
+
+    #[test]
+    fn test_add_on_response_hook() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestResponseHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestResponseHookLocal);
+
+        hooks.add_on_response(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    #[test]
+    fn test_add_on_error_hook() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestResponseHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestResponseHookLocal);
+
+        hooks.add_on_error(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    // Test empty hook execution
+    #[test]
+    fn test_execute_on_request_no_hooks() {
+        // Just verify the hooks are empty when created
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
+        assert!(hooks.is_empty());
+    }
+
+    #[test]
+    fn test_execute_pre_validation_no_hooks() {
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
+        assert!(hooks.is_empty());
+    }
+
+    #[test]
+    fn test_execute_pre_handler_no_hooks() {
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
+        assert!(hooks.is_empty());
+    }
+
+    #[test]
+    fn test_execute_on_response_no_hooks() {
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
+        assert!(hooks.is_empty());
+    }
+
+    #[test]
+    fn test_execute_on_error_no_hooks() {
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
+        assert!(hooks.is_empty());
+    }
+
+    // Test short-circuit behavior
+    #[cfg(not(target_arch = "wasm32"))]
+    struct TestShortCircuitHook;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    impl NativeLifecycleHook<String, String> for TestShortCircuitHook {
+        fn name(&self) -> &str {
+            "short_circuit"
+        }
+
+        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureSend<'a, String, String> {
+            Box::pin(async { Ok(HookResult::ShortCircuit("short_circuit_response".to_string())) })
+        }
+
+        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureSend<'a, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    struct TestShortCircuitHookLocal;
+
+    #[cfg(target_arch = "wasm32")]
+    impl LocalLifecycleHook<String, String> for TestShortCircuitHookLocal {
+        fn name(&self) -> &str {
+            "short_circuit"
+        }
+
+        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
+            Box::pin(async { Ok(HookResult::ShortCircuit("short_circuit_response".to_string())) })
+        }
+
+        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+    }
+
+    #[test]
+    fn test_on_request_short_circuit() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestShortCircuitHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestShortCircuitHookLocal);
+
+        hooks.add_on_request(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    #[test]
+    fn test_pre_validation_short_circuit() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestShortCircuitHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestShortCircuitHookLocal);
+
+        hooks.add_pre_validation(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    #[test]
+    fn test_pre_handler_short_circuit() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestShortCircuitHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestShortCircuitHookLocal);
+
+        hooks.add_pre_handler(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    // Test response hook short-circuit behavior (treated same as continue)
+    #[cfg(not(target_arch = "wasm32"))]
+    struct TestResponseShortCircuitHook;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    impl NativeLifecycleHook<String, String> for TestResponseShortCircuitHook {
+        fn name(&self) -> &str {
+            "response_short_circuit"
+        }
+
+        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureSend<'a, String, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+
+        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureSend<'a, String> {
+            Box::pin(async move { Ok(HookResult::ShortCircuit("short_circuit_".to_string() + &resp)) })
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    struct TestResponseShortCircuitHookLocal;
+
+    #[cfg(target_arch = "wasm32")]
+    impl LocalLifecycleHook<String, String> for TestResponseShortCircuitHookLocal {
+        fn name(&self) -> &str {
+            "response_short_circuit"
+        }
+
+        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+
+        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureLocal<'a, String> {
+            Box::pin(async move { Ok(HookResult::ShortCircuit("short_circuit_".to_string() + &resp)) })
+        }
+    }
+
+    #[test]
+    fn test_on_response_short_circuit() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestResponseShortCircuitHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestResponseShortCircuitHookLocal);
+
+        hooks.add_on_response(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    #[test]
+    fn test_on_error_short_circuit() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestResponseShortCircuitHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestResponseShortCircuitHookLocal);
+
+        hooks.add_on_error(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    // Test multiple hooks in sequence
+    #[test]
+    fn test_multiple_on_request_hooks_in_sequence() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            hooks.add_on_request(Arc::new(TestAppendHook("_first")));
+            hooks.add_on_request(Arc::new(TestAppendHook("_second")));
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            hooks.add_on_request(Arc::new(TestAppendHookLocal("_first")));
+            hooks.add_on_request(Arc::new(TestAppendHookLocal("_second")));
+        }
+
+        assert_eq!(hooks.on_request.len(), 2);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    struct TestAppendHook(&'static str);
+
+    #[cfg(not(target_arch = "wasm32"))]
+    impl NativeLifecycleHook<String, String> for TestAppendHook {
+        fn name(&self) -> &str {
+            "append"
+        }
+
+        fn execute_request<'a>(&'a self, req: String) -> RequestHookFutureSend<'a, String, String> {
+            let suffix = self.0;
+            Box::pin(async move { Ok(HookResult::Continue(req + suffix)) })
+        }
+
+        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureSend<'a, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    struct TestAppendHookLocal(&'static str);
+
+    #[cfg(target_arch = "wasm32")]
+    impl LocalLifecycleHook<String, String> for TestAppendHookLocal {
+        fn name(&self) -> &str {
+            "append"
+        }
+
+        fn execute_request<'a>(&'a self, req: String) -> RequestHookFutureLocal<'a, String, String> {
+            let suffix = self.0;
+            Box::pin(async move { Ok(HookResult::Continue(req + suffix)) })
+        }
+
+        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+    }
+
+    #[test]
+    fn test_multiple_response_hooks_in_sequence() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            hooks.add_on_response(Arc::new(TestAppendResponseHook("_first")));
+            hooks.add_on_response(Arc::new(TestAppendResponseHook("_second")));
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            hooks.add_on_response(Arc::new(TestAppendResponseHookLocal("_first")));
+            hooks.add_on_response(Arc::new(TestAppendResponseHookLocal("_second")));
+        }
+
+        assert_eq!(hooks.on_response.len(), 2);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    struct TestAppendResponseHook(&'static str);
+
+    #[cfg(not(target_arch = "wasm32"))]
+    impl NativeLifecycleHook<String, String> for TestAppendResponseHook {
+        fn name(&self) -> &str {
+            "append_response"
+        }
+
+        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureSend<'a, String, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+
+        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureSend<'a, String> {
+            let suffix = self.0;
+            Box::pin(async move { Ok(HookResult::Continue(resp + suffix)) })
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    struct TestAppendResponseHookLocal(&'static str);
+
+    #[cfg(target_arch = "wasm32")]
+    impl LocalLifecycleHook<String, String> for TestAppendResponseHookLocal {
+        fn name(&self) -> &str {
+            "append_response"
+        }
+
+        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
+            Box::pin(async { Err("not implemented".to_string()) })
+        }
+
+        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureLocal<'a, String> {
+            let suffix = self.0;
+            Box::pin(async move { Ok(HookResult::Continue(resp + suffix)) })
+        }
+    }
+
+    // Test builder chaining
+    #[test]
+    fn test_builder_chain_multiple_hooks() {
+        #[cfg(not(target_arch = "wasm32"))]
+        let hooks = LifecycleHooks::builder()
+            .on_request(Arc::new(TestRequestHook))
+            .pre_validation(Arc::new(TestRequestHook))
+            .pre_handler(Arc::new(TestRequestHook))
+            .on_response(Arc::new(TestResponseHook))
+            .on_error(Arc::new(TestResponseHook))
+            .build();
+
+        #[cfg(target_arch = "wasm32")]
+        let hooks = LifecycleHooks::builder()
+            .on_request(Arc::new(TestRequestHookLocal))
+            .pre_validation(Arc::new(TestRequestHookLocal))
+            .pre_handler(Arc::new(TestRequestHookLocal))
+            .on_response(Arc::new(TestResponseHookLocal))
+            .on_error(Arc::new(TestResponseHookLocal))
+            .build();
+
+        assert!(!hooks.is_empty());
+    }
+
+    // Test hook error propagation
+    #[cfg(not(target_arch = "wasm32"))]
+    struct TestErrorHook;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    impl NativeLifecycleHook<String, String> for TestErrorHook {
+        fn name(&self) -> &str {
+            "error_hook"
+        }
+
+        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureSend<'a, String, String> {
+            Box::pin(async { Err("hook_error".to_string()) })
+        }
+
+        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureSend<'a, String> {
+            Box::pin(async { Err("hook_error".to_string()) })
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    struct TestErrorHookLocal;
+
+    #[cfg(target_arch = "wasm32")]
+    impl LocalLifecycleHook<String, String> for TestErrorHookLocal {
+        fn name(&self) -> &str {
+            "error_hook"
+        }
+
+        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
+            Box::pin(async { Err("hook_error".to_string()) })
+        }
+
+        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
+            Box::pin(async { Err("hook_error".to_string()) })
+        }
+    }
+
+    #[test]
+    fn test_on_request_hook_error_propagates() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestErrorHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestErrorHookLocal);
+
+        hooks.add_on_request(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    #[test]
+    fn test_pre_validation_hook_error_propagates() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestErrorHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestErrorHookLocal);
+
+        hooks.add_pre_validation(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    #[test]
+    fn test_pre_handler_hook_error_propagates() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestErrorHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestErrorHookLocal);
+
+        hooks.add_pre_handler(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    #[test]
+    fn test_on_response_hook_error_propagates() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestErrorHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestErrorHookLocal);
+
+        hooks.add_on_response(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    #[test]
+    fn test_on_error_hook_error_propagates() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let hook = Arc::new(TestErrorHook);
+        #[cfg(target_arch = "wasm32")]
+        let hook = Arc::new(TestErrorHookLocal);
+
+        hooks.add_on_error(hook);
+        assert!(!hooks.is_empty());
+    }
+
+    // Test debug format with hooks
+    #[test]
+    fn test_debug_format_with_hooks() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        hooks.add_on_request(Arc::new(TestRequestHook));
+        #[cfg(target_arch = "wasm32")]
+        hooks.add_on_request(Arc::new(TestRequestHookLocal));
+
+        let debug_str = format!("{:?}", hooks);
+        assert!(debug_str.contains("on_request_count"));
+        assert!(debug_str.contains("1"));
+    }
+
+    // Test that request hooks cannot be called with response
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn test_request_hook_called_with_response_returns_error() {
+        let hook = TestRequestHook;
+        assert_eq!(hook.name(), "test_request_hook");
+    }
+
+    // Test that response hooks cannot be called with request
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn test_response_hook_called_with_request_returns_error() {
+        let hook = TestResponseHook;
+        assert_eq!(hook.name(), "test_response_hook");
+    }
+
+    // Test hook name accessor
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn test_request_hook_name() {
+        let hook = TestRequestHook;
+        assert_eq!(hook.name(), "test_request_hook");
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn test_response_hook_name() {
+        let hook = TestResponseHook;
+        assert_eq!(hook.name(), "test_response_hook");
+    }
+
+    // Test first hook in chain short-circuits
+    #[test]
+    fn test_first_hook_short_circuits_subsequent_hooks_not_executed() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            hooks.add_on_request(Arc::new(TestShortCircuitHook));
+            hooks.add_on_request(Arc::new(TestRequestHook));
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            hooks.add_on_request(Arc::new(TestShortCircuitHookLocal));
+            hooks.add_on_request(Arc::new(TestRequestHookLocal));
+        }
+
+        assert_eq!(hooks.on_request.len(), 2);
+    }
+
+    // Additional accessor tests for hook counts
+    #[test]
+    fn test_hook_count_accessors() {
+        let hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+        assert_eq!(hooks.on_request.len(), 0);
+        assert_eq!(hooks.pre_validation.len(), 0);
+        assert_eq!(hooks.pre_handler.len(), 0);
+        assert_eq!(hooks.on_response.len(), 0);
+        assert_eq!(hooks.on_error.len(), 0);
+    }
+
+    // Test that clone preserves structure
+    #[test]
+    fn test_lifecycle_hooks_clone_with_hooks() {
+        let mut hooks1: LifecycleHooks<String, String> = LifecycleHooks::new();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        hooks1.add_on_request(Arc::new(TestRequestHook));
+        #[cfg(target_arch = "wasm32")]
+        hooks1.add_on_request(Arc::new(TestRequestHookLocal));
+
+        let hooks2 = hooks1.clone();
+        assert_eq!(hooks1.on_request.len(), hooks2.on_request.len());
+        assert!(!hooks2.is_empty());
+    }
+
+    // Test LifecycleHooksBuilder as Default
+    #[test]
+    fn test_builder_as_default() {
+        let builder = LifecycleHooksBuilder::<String, String>::default();
+        let hooks = builder.build();
+        assert!(hooks.is_empty());
+    }
+
+    // Test is_empty checks all fields
+    #[test]
+    fn test_is_empty_comprehensive() {
+        let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
+        assert!(hooks.is_empty());
+
+        #[cfg(not(target_arch = "wasm32"))]
+        hooks.add_on_request(Arc::new(TestRequestHook));
+        #[cfg(target_arch = "wasm32")]
+        hooks.add_on_request(Arc::new(TestRequestHookLocal));
+
+        assert!(!hooks.is_empty());
+    }
+
+    // Test struct field visibility
+    #[test]
+    fn test_hook_result_enum_value() {
+        let val1: HookResult<String, String> = HookResult::Continue(String::from("test"));
+        let val2: HookResult<String, String> = HookResult::ShortCircuit(String::from("response"));
+
+        match val1 {
+            HookResult::Continue(s) => assert_eq!(s, "test"),
+            HookResult::ShortCircuit(_) => panic!("Wrong variant"),
+        }
+
+        match val2 {
+            HookResult::Continue(_) => panic!("Wrong variant"),
+            HookResult::ShortCircuit(s) => assert_eq!(s, "response"),
+        }
+    }
+}

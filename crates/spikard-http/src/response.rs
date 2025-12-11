@@ -604,7 +604,7 @@ mod tests {
 
         // Verify order: name=value; Max-Age; Domain; Path; Secure; HttpOnly; SameSite
         let parts: Vec<&str> = cookie.split("; ").collect();
-        assert_eq!(parts.len(), 8); // name=value + 7 attributes
+        assert_eq!(parts.len(), 7); // name=value + 6 attributes
         assert!(parts[0].starts_with("test="));
         assert!(parts[1].starts_with("Max-Age="));
         assert!(parts[2].starts_with("Domain="));

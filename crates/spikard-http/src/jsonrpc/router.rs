@@ -951,4 +951,1336 @@ mod tests {
             _ => panic!("Expected single request"),
         }
     }
+
+    // ============= Standard Error Code Tests =============
+
+    #[tokio::test]
+    async fn test_error_code_parse_error_invalid_json() {
+        let json = r#"{"invalid json"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_err());
+        let err = parsed.unwrap_err();
+        assert_eq!(err.error.code, error_codes::PARSE_ERROR);
+        assert_eq!(err.error.code, -32700);
+    }
+
+    #[tokio::test]
+    async fn test_error_code_method_not_found() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let request = JsonRpcRequest::new("nonexistent_method", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert_eq!(err.error.code, error_codes::METHOD_NOT_FOUND);
+                assert_eq!(err.error.code, -32601);
+                assert_eq!(err.id, json!(1));
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_error_code_invalid_request_empty_method() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let request = JsonRpcRequest::new("", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+                assert_eq!(err.error.code, -32600);
+                assert_eq!(err.id, json!(1));
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_error_code_internal_error_from_handler() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a handler that returns an error
+        let handler = Arc::new(MockErrorHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("error_method");
+        registry.register("error_method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let request = JsonRpcRequest::new("error_method", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert_eq!(err.error.code, error_codes::INTERNAL_ERROR);
+                assert_eq!(err.error.code, -32603);
+                assert_eq!(err.id, json!(1));
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_error_code_server_error_custom_range() {
+        // Test that server error codes in the range -32000 to -32099 are reserved
+        assert!(error_codes::is_server_error(-32000));
+        assert!(error_codes::is_server_error(-32050));
+        assert!(error_codes::is_server_error(-32099));
+        assert!(!error_codes::is_server_error(-31999));
+        assert!(!error_codes::is_server_error(-32100));
+    }
+
+    // ============= Error Response Structure Tests =============
+
+    #[tokio::test]
+    async fn test_error_response_always_has_code() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let request = JsonRpcRequest::new("nonexistent", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert!(err.error.code != 0);
+                assert!(err.error.code < 0); // JSON-RPC codes are negative
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_error_response_always_has_message() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let request = JsonRpcRequest::new("nonexistent", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert!(!err.error.message.is_empty());
+                assert!(err.jsonrpc == "2.0");
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_error_response_data_optional() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let request = JsonRpcRequest::new("nonexistent", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                // data field is optional for method not found
+                // but might be None or Some
+                assert_eq!(err.error.code, error_codes::METHOD_NOT_FOUND);
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_error_response_id_matches_request() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let test_id = json!(42);
+        let request = JsonRpcRequest::new("nonexistent", None, Some(test_id.clone()));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                assert_eq!(err.id, test_id);
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_error_response_no_result_field() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let request = JsonRpcRequest::new("nonexistent", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(_) => {
+                // Error responses never have a "result" field
+                // This is guaranteed by the JsonRpcResponseType enum
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_error_data_includes_details() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a handler that returns an error with details
+        let handler = Arc::new(MockErrorHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("error_method");
+        registry.register("error_method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let request = JsonRpcRequest::new("error_method", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+
+        match response {
+            JsonRpcResponseType::Error(err) => {
+                // Handler errors should include data with details
+                assert!(err.error.data.is_some());
+                let data = err.error.data.unwrap();
+                assert!(data.get("details").is_some());
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    // ============= Batch Processing Tests =============
+
+    #[tokio::test]
+    async fn test_batch_single_request() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a handler
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("test");
+        registry.register("test", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![JsonRpcRequest::new("test", None, Some(json!(1)))];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_batch_three_requests_all_succeed() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a handler
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("test");
+        registry.register("test", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("test", None, Some(json!(1))),
+            JsonRpcRequest::new("test", None, Some(json!(2))),
+            JsonRpcRequest::new("test", None, Some(json!(3))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 3);
+        for resp in &responses {
+            match resp {
+                JsonRpcResponseType::Success(_) => {}
+                _ => panic!("Expected all success responses"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_mixed_success_and_errors() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register one valid method
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("valid");
+        registry.register("valid", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("valid", None, Some(json!(1))),
+            JsonRpcRequest::new("invalid", None, Some(json!(2))),
+            JsonRpcRequest::new("valid", None, Some(json!(3))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 3);
+
+        match &responses[0] {
+            JsonRpcResponseType::Success(_) => {}
+            _ => panic!("Expected success at index 0"),
+        }
+        match &responses[1] {
+            JsonRpcResponseType::Error(_) => {}
+            _ => panic!("Expected error at index 1"),
+        }
+        match &responses[2] {
+            JsonRpcResponseType::Success(_) => {}
+            _ => panic!("Expected success at index 2"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_all_errors() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        // Don't register any methods - all will fail
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("nonexistent1", None, Some(json!(1))),
+            JsonRpcRequest::new("nonexistent2", None, Some(json!(2))),
+            JsonRpcRequest::new("nonexistent3", None, Some(json!(3))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 3);
+        for resp in &responses {
+            match resp {
+                JsonRpcResponseType::Error(_) => {}
+                _ => panic!("Expected all error responses"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_exceeds_max_size() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 5);
+
+        let batch = (1..=10)
+            .map(|i| JsonRpcRequest::new("method", None, Some(json!(i))))
+            .collect();
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_batch_empty_array() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, true, 100);
+
+        let batch = vec![];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_batch_disabled_error() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let router = JsonRpcRouter::new(registry, false, 100);
+
+        let batch = vec![JsonRpcRequest::new("method", None, Some(json!(1)))];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+    }
+
+    // ============= Batch Notification Handling Tests =============
+
+    #[tokio::test]
+    async fn test_notification_no_response_generated() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a method
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("notify");
+        registry.register("notify", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("notify", None, Some(json!(1))), // Normal request
+            JsonRpcRequest::new("notify", None, None),           // Notification
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        // Should only have 1 response (notification filtered out)
+        assert_eq!(responses.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_batch_mixed_notifications_responses() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a method
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method");
+        registry.register("method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("method", None, Some(json!(1))), // Normal request
+            JsonRpcRequest::new("method", None, None),           // Notification
+            JsonRpcRequest::new("method", None, Some(json!(2))), // Normal request
+            JsonRpcRequest::new("method", None, None),           // Notification
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        // Should only have 2 responses (2 notifications filtered out)
+        assert_eq!(responses.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_batch_all_notifications_empty_response() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a method
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method");
+        registry.register("method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("method", None, None), // Notification
+            JsonRpcRequest::new("method", None, None), // Notification
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        // Should have empty response array
+        assert_eq!(responses.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_notification_error_still_not_responded() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        // Don't register the method - will error
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("nonexistent", None, Some(json!(1))), // Will error but has id
+            JsonRpcRequest::new("nonexistent", None, None),           // Notification (no id)
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        // Should only have 1 response (error for first, notification not responded)
+        assert_eq!(responses.len(), 1);
+        match &responses[0] {
+            JsonRpcResponseType::Error(_) => {}
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    // ============= Batch State & Concurrency Tests =============
+
+    #[tokio::test]
+    async fn test_batch_requests_independent_state() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a handler
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("test");
+        registry.register("test", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("test", None, Some(json!(1))),
+            JsonRpcRequest::new("test", None, Some(json!(2))),
+            JsonRpcRequest::new("test", None, Some(json!(3))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 3);
+        // Verify each response has its corresponding ID
+        for (i, resp) in responses.iter().enumerate() {
+            match resp {
+                JsonRpcResponseType::Success(s) => {
+                    assert_eq!(s.id, json!(i + 1));
+                }
+                _ => panic!("Expected success response"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_error_preserves_request_order() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register one valid method
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("valid");
+        registry.register("valid", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("valid", None, Some(json!("first"))),
+            JsonRpcRequest::new("invalid", None, Some(json!("second"))),
+            JsonRpcRequest::new("valid", None, Some(json!("third"))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 3);
+
+        // Verify order is preserved - first and third are successes, second is error
+        match &responses[0] {
+            JsonRpcResponseType::Success(s) => {
+                assert_eq!(s.id, json!("first"));
+                assert_eq!(s.jsonrpc, "2.0");
+            }
+            _ => panic!("Expected success at index 0"),
+        }
+        match &responses[1] {
+            JsonRpcResponseType::Error(e) => {
+                assert_eq!(e.id, json!("second"));
+                assert_eq!(e.error.code, error_codes::METHOD_NOT_FOUND);
+            }
+            _ => panic!("Expected error at index 1"),
+        }
+        match &responses[2] {
+            JsonRpcResponseType::Success(s) => {
+                assert_eq!(s.id, json!("third"));
+                assert_eq!(s.jsonrpc, "2.0");
+            }
+            _ => panic!("Expected success at index 2"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_handler_execution_order() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register handlers
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method1");
+        registry.register("method1", handler.clone(), metadata).unwrap();
+
+        let metadata = super::super::method_registry::MethodMetadata::new("method2");
+        registry.register("method2", handler.clone(), metadata).unwrap();
+
+        let metadata = super::super::method_registry::MethodMetadata::new("method3");
+        registry.register("method3", handler.clone(), metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("method1", None, Some(json!(1))),
+            JsonRpcRequest::new("method2", None, Some(json!(2))),
+            JsonRpcRequest::new("method3", None, Some(json!(3))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        // All should succeed regardless of execution order
+        assert_eq!(responses.len(), 3);
+        for resp in &responses {
+            match resp {
+                JsonRpcResponseType::Success(_) => {}
+                _ => panic!("Expected all success responses"),
+            }
+        }
+    }
+
+    // ============= Batch Parsing Tests =============
+
+    #[test]
+    fn test_parse_batch_single_request_in_array() {
+        let json = r#"[{"jsonrpc":"2.0","method":"test","id":1}]"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_ok());
+        match parsed.unwrap() {
+            JsonRpcRequestOrBatch::Batch(batch) => {
+                assert_eq!(batch.len(), 1);
+                assert_eq!(batch[0].method, "test");
+            }
+            _ => panic!("Expected batch request"),
+        }
+    }
+
+    #[test]
+    fn test_parse_batch_three_requests() {
+        let json = r#"[
+            {"jsonrpc":"2.0","method":"test1","id":1},
+            {"jsonrpc":"2.0","method":"test2","id":2},
+            {"jsonrpc":"2.0","method":"test3","id":3}
+        ]"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_ok());
+        match parsed.unwrap() {
+            JsonRpcRequestOrBatch::Batch(batch) => {
+                assert_eq!(batch.len(), 3);
+                assert_eq!(batch[0].method, "test1");
+                assert_eq!(batch[1].method, "test2");
+                assert_eq!(batch[2].method, "test3");
+            }
+            _ => panic!("Expected batch request"),
+        }
+    }
+
+    #[test]
+    fn test_parse_batch_mixed_notifications() {
+        let json = r#"[
+            {"jsonrpc":"2.0","method":"method","id":1},
+            {"jsonrpc":"2.0","method":"method"},
+            {"jsonrpc":"2.0","method":"method","id":2}
+        ]"#;
+        let parsed = JsonRpcRouter::parse_request(json);
+
+        assert!(parsed.is_ok());
+        match parsed.unwrap() {
+            JsonRpcRequestOrBatch::Batch(batch) => {
+                assert_eq!(batch.len(), 3);
+                assert!(!batch[0].is_notification());
+                assert!(batch[1].is_notification());
+                assert!(!batch[2].is_notification());
+            }
+            _ => panic!("Expected batch request"),
+        }
+    }
+
+    // ============= Batch Processing Edge Cases & Concurrency Tests =============
+
+    #[tokio::test]
+    async fn test_batch_max_size_boundary_exactly_at_limit() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let max_size = 10;
+        let router = JsonRpcRouter::new(registry, true, max_size);
+
+        // Create batch exactly at the limit
+        let batch: Vec<JsonRpcRequest> = (1..=max_size)
+            .map(|i| JsonRpcRequest::new("method", None, Some(json!(i))))
+            .collect();
+
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        // Should succeed (batch size validation passes), but individual responses will be errors
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), max_size);
+    }
+
+    #[tokio::test]
+    async fn test_batch_max_size_boundary_one_over_limit() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        let max_size = 10;
+        let router = JsonRpcRouter::new(registry, true, max_size);
+
+        // Create batch one over the limit
+        let batch: Vec<JsonRpcRequest> = (1..=max_size + 1)
+            .map(|i| JsonRpcRequest::new("method", None, Some(json!(i))))
+            .collect();
+
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        // Should fail due to batch size limit
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.error.code, error_codes::INVALID_REQUEST);
+        assert!(err.error.message.contains("exceeds maximum"));
+    }
+
+    #[tokio::test]
+    async fn test_batch_notification_with_numeric_id_zero() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a method
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method");
+        registry.register("method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("method", None, Some(json!(0))), // ID 0 is a valid request
+            JsonRpcRequest::new("method", None, Some(json!(1))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 2);
+        // Both should have responses since both have IDs
+        match &responses[0] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!(0)),
+            _ => panic!("Expected success response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_mixed_id_types_string_and_number() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a method
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method");
+        registry.register("method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("method", None, Some(json!("string_id"))),
+            JsonRpcRequest::new("method", None, Some(json!(42))),
+            JsonRpcRequest::new("method", None, Some(json!("another_string"))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 3);
+
+        // Verify IDs are preserved exactly as sent
+        match &responses[0] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!("string_id")),
+            _ => panic!("Expected success response"),
+        }
+        match &responses[1] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!(42)),
+            _ => panic!("Expected success response"),
+        }
+        match &responses[2] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!("another_string")),
+            _ => panic!("Expected success response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_all_notifications_truly_empty_response() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register multiple methods
+        for i in 1..=5 {
+            let handler = Arc::new(MockSuccessHandler);
+            let method_name = format!("method{}", i);
+            let metadata = super::super::method_registry::MethodMetadata::new(&method_name);
+            registry.register(&method_name, handler, metadata).unwrap();
+        }
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        // All notifications - no IDs
+        let batch = vec![
+            JsonRpcRequest::new("method1", None, None),
+            JsonRpcRequest::new("method2", None, None),
+            JsonRpcRequest::new("method3", None, None),
+            JsonRpcRequest::new("method4", None, None),
+            JsonRpcRequest::new("method5", None, None),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        // Should return completely empty array
+        assert_eq!(responses.len(), 0);
+        assert!(responses.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_batch_single_notification_among_requests() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method");
+        registry.register("method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("method", None, Some(json!(1))),
+            JsonRpcRequest::new("method", None, None), // Single notification in the middle
+            JsonRpcRequest::new("method", None, Some(json!(2))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 2); // Only non-notifications
+
+        match &responses[0] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!(1)),
+            _ => panic!("Expected success at index 0"),
+        }
+        match &responses[1] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!(2)),
+            _ => panic!("Expected success at index 1"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_error_one_request_fails_others_succeed() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("success");
+        registry.register("success", handler, metadata).unwrap();
+
+        // Don't register "failing_method" - it will return method not found
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("success", None, Some(json!(1))),
+            JsonRpcRequest::new("failing_method", None, Some(json!(2))),
+            JsonRpcRequest::new("success", None, Some(json!(3))),
+            JsonRpcRequest::new("failing_method", None, Some(json!(4))),
+            JsonRpcRequest::new("success", None, Some(json!(5))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 5); // All requests have responses
+
+        // Pattern: success, error, success, error, success
+        match &responses[0] {
+            JsonRpcResponseType::Success(s) => {
+                assert_eq!(s.id, json!(1));
+            }
+            _ => panic!("Expected success at index 0"),
+        }
+        match &responses[1] {
+            JsonRpcResponseType::Error(e) => {
+                assert_eq!(e.id, json!(2));
+                assert_eq!(e.error.code, error_codes::METHOD_NOT_FOUND);
+            }
+            _ => panic!("Expected error at index 1"),
+        }
+        match &responses[2] {
+            JsonRpcResponseType::Success(s) => {
+                assert_eq!(s.id, json!(3));
+            }
+            _ => panic!("Expected success at index 2"),
+        }
+        match &responses[3] {
+            JsonRpcResponseType::Error(e) => {
+                assert_eq!(e.id, json!(4));
+                assert_eq!(e.error.code, error_codes::METHOD_NOT_FOUND);
+            }
+            _ => panic!("Expected error at index 3"),
+        }
+        match &responses[4] {
+            JsonRpcResponseType::Success(s) => {
+                assert_eq!(s.id, json!(5));
+            }
+            _ => panic!("Expected success at index 4"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_response_order_with_complex_id_types() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method");
+        registry.register("method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("method", None, Some(json!("alpha"))),
+            JsonRpcRequest::new("method", None, Some(json!(999))),
+            JsonRpcRequest::new("method", None, Some(json!(null))),
+            JsonRpcRequest::new("method", None, Some(json!("beta"))),
+            JsonRpcRequest::new("method", None, Some(json!(0))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 5);
+
+        // Verify order and IDs are preserved
+        match &responses[0] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!("alpha")),
+            _ => panic!("Expected success at index 0"),
+        }
+        match &responses[1] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!(999)),
+            _ => panic!("Expected success at index 1"),
+        }
+        match &responses[2] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!(null)),
+            _ => panic!("Expected success at index 2"),
+        }
+        match &responses[3] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!("beta")),
+            _ => panic!("Expected success at index 3"),
+        }
+        match &responses[4] {
+            JsonRpcResponseType::Success(s) => assert_eq!(s.id, json!(0)),
+            _ => panic!("Expected success at index 4"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_handler_error_does_not_stop_batch() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register a handler that fails
+        let error_handler = Arc::new(MockErrorHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("failing");
+        registry.register("failing", error_handler, metadata).unwrap();
+
+        // Register a successful handler
+        let success_handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("success");
+        registry.register("success", success_handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("success", None, Some(json!(1))),
+            JsonRpcRequest::new("failing", None, Some(json!(2))),
+            JsonRpcRequest::new("success", None, Some(json!(3))),
+            JsonRpcRequest::new("failing", None, Some(json!(4))),
+            JsonRpcRequest::new("success", None, Some(json!(5))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 5);
+
+        // All requests should have responses, handlers that fail should return internal errors
+        for resp in &responses {
+            match resp {
+                JsonRpcResponseType::Success(s) => {
+                    assert_eq!(s.jsonrpc, "2.0");
+                    assert!(s.id != Value::Null);
+                }
+                JsonRpcResponseType::Error(e) => {
+                    assert_eq!(e.error.code, error_codes::INTERNAL_ERROR);
+                    assert!(e.id != Value::Null);
+                }
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_large_batch_within_limits() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method");
+        registry.register("method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        // Create a large batch but still within limit
+        let batch: Vec<JsonRpcRequest> = (1..=50)
+            .map(|i| JsonRpcRequest::new("method", None, Some(json!(i))))
+            .collect();
+
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 50);
+        for resp in &responses {
+            match resp {
+                JsonRpcResponseType::Success(_) => {}
+                _ => panic!("Expected all success responses"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_id_preservation_with_duplicates() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method");
+        registry.register("method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        // Note: JSON-RPC spec doesn't prohibit duplicate IDs, but responses should match requests
+        let batch = vec![
+            JsonRpcRequest::new("method", None, Some(json!(1))),
+            JsonRpcRequest::new("method", None, Some(json!(1))), // Duplicate ID
+            JsonRpcRequest::new("method", None, Some(json!(2))),
+            JsonRpcRequest::new("method", None, Some(json!(1))), // Duplicate ID again
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 4);
+
+        // All should have their respective IDs preserved
+        assert_eq!(responses[0].id(), json!(1));
+        assert_eq!(responses[1].id(), json!(1));
+        assert_eq!(responses[2].id(), json!(2));
+        assert_eq!(responses[3].id(), json!(1));
+    }
+
+    #[tokio::test]
+    async fn test_batch_different_methods_in_sequence() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        // Register multiple different methods
+        for method_name in &["user.getById", "post.create", "comment.delete", "admin.stats"] {
+            let handler = Arc::new(MockSuccessHandler);
+            let metadata = super::super::method_registry::MethodMetadata::new(method_name.to_string());
+            registry.register(method_name.to_string(), handler, metadata).unwrap();
+        }
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("user.getById", None, Some(json!(1))),
+            JsonRpcRequest::new("post.create", None, Some(json!(2))),
+            JsonRpcRequest::new("comment.delete", None, Some(json!(3))),
+            JsonRpcRequest::new("admin.stats", None, Some(json!(4))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 4);
+        for resp in &responses {
+            match resp {
+                JsonRpcResponseType::Success(_) => {}
+                _ => panic!("Expected all success responses"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_mixed_valid_and_method_not_found_errors() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("exists");
+        registry.register("exists", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("exists", None, Some(json!(1))),
+            JsonRpcRequest::new("not_exists", None, Some(json!(2))),
+            JsonRpcRequest::new("exists", None, Some(json!(3))),
+            JsonRpcRequest::new("not_exists", None, Some(json!(4))),
+            JsonRpcRequest::new("not_exists", None, Some(json!(5))),
+            JsonRpcRequest::new("exists", None, Some(json!(6))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 6);
+
+        // Check pattern: success, error, success, error, error, success
+        match &responses[0] {
+            JsonRpcResponseType::Success(_) => {}
+            _ => panic!("Expected success at index 0"),
+        }
+        for i in [1, 3, 4] {
+            match &responses[i] {
+                JsonRpcResponseType::Error(e) => {
+                    assert_eq!(e.error.code, error_codes::METHOD_NOT_FOUND);
+                }
+                _ => panic!("Expected error at index {}", i),
+            }
+        }
+        match &responses[2] {
+            JsonRpcResponseType::Success(_) => {}
+            _ => panic!("Expected success at index 2"),
+        }
+        match &responses[5] {
+            JsonRpcResponseType::Success(_) => {}
+            _ => panic!("Expected success at index 5"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_request_data_shared_correctly() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method");
+        registry.register("method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("method", None, Some(json!(1))),
+            JsonRpcRequest::new("method", None, Some(json!(2))),
+            JsonRpcRequest::new("method", None, Some(json!(3))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        assert_eq!(responses.len(), 3);
+
+        // All handlers should have received the request_data
+        for resp in &responses {
+            match resp {
+                JsonRpcResponseType::Success(s) => {
+                    assert_eq!(s.jsonrpc, "2.0");
+                    assert!(s.result != Value::Null);
+                }
+                _ => panic!("Expected success response"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_response_contains_required_fields() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+
+        let handler = Arc::new(MockSuccessHandler);
+        let metadata = super::super::method_registry::MethodMetadata::new("method");
+        registry.register("method", handler, metadata).unwrap();
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("method", None, Some(json!(1))),
+            JsonRpcRequest::new("method", None, Some(json!(2))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+
+        for resp in &responses {
+            match resp {
+                JsonRpcResponseType::Success(s) => {
+                    // Must have jsonrpc, result, and id
+                    assert_eq!(s.jsonrpc, "2.0");
+                    assert!(!s.result.is_null());
+                    assert!(!s.id.is_null());
+                }
+                _ => panic!("Expected success response"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_error_response_required_fields() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        // Don't register any method
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("not_found", None, Some(json!(1))),
+            JsonRpcRequest::new("also_not_found", None, Some(json!(2))),
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+
+        for resp in &responses {
+            match resp {
+                JsonRpcResponseType::Error(e) => {
+                    // Must have jsonrpc, error (with code and message), and id
+                    assert_eq!(e.jsonrpc, "2.0");
+                    assert!(e.error.code < 0);
+                    assert!(!e.error.message.is_empty());
+                    assert!(!e.id.is_null());
+                }
+                _ => panic!("Expected error response"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_batch_notification_errors_still_not_responded() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        // Don't register the method - notifications will "fail" but shouldn't send responses
+
+        let router = JsonRpcRouter::new(registry.clone(), true, 100);
+
+        let batch = vec![
+            JsonRpcRequest::new("not_found", None, Some(json!(1))), // Has ID, will error
+            JsonRpcRequest::new("not_found", None, None),           // Notification, should not respond
+            JsonRpcRequest::new("not_found", None, Some(json!(2))), // Has ID, will error
+        ];
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let result = router.route_batch(batch, http_request, &request_data).await;
+
+        assert!(result.is_ok());
+        let responses = result.unwrap();
+        // Should only have 2 responses - the notification doesn't get a response even if it errors
+        assert_eq!(responses.len(), 2);
+
+        // Both responses should be errors for the requests with IDs
+        match &responses[0] {
+            JsonRpcResponseType::Error(e) => {
+                assert_eq!(e.id, json!(1));
+            }
+            _ => panic!("Expected error at index 0"),
+        }
+        match &responses[1] {
+            JsonRpcResponseType::Error(e) => {
+                assert_eq!(e.id, json!(2));
+            }
+            _ => panic!("Expected error at index 1"),
+        }
+    }
+
+    // Helper trait extension to access ID from response
+    impl JsonRpcResponseType {
+        fn id(&self) -> Value {
+            match self {
+                JsonRpcResponseType::Success(s) => s.id.clone(),
+                JsonRpcResponseType::Error(e) => e.id.clone(),
+            }
+        }
+    }
 }

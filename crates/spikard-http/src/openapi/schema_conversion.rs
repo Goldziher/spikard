@@ -864,4 +864,553 @@ mod tests {
             assert!(response.content.contains_key("application/json"));
         }
     }
+
+    // ============================================================================
+    // ADDITIONAL COMPREHENSIVE TESTS (20+ new tests)
+    // ============================================================================
+
+    // Test 1: Multiple formats on string type
+    #[test]
+    fn test_string_format_datetime_creates_string_type() {
+        let schema_json = serde_json::json!({
+            "type": "string",
+            "format": "date-time"
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(matches!(
+                obj.schema_type,
+                utoipa::openapi::schema::SchemaType::Type(utoipa::openapi::schema::Type::String)
+            ));
+        }
+    }
+
+    // Test 2: String with email format
+    #[test]
+    fn test_string_format_email_creates_string_type() {
+        let schema_json = serde_json::json!({
+            "type": "string",
+            "format": "email"
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(matches!(
+                obj.schema_type,
+                utoipa::openapi::schema::SchemaType::Type(utoipa::openapi::schema::Type::String)
+            ));
+        }
+    }
+
+    // Test 3: String with uri format
+    #[test]
+    fn test_string_format_uri_creates_string_type() {
+        let schema_json = serde_json::json!({
+            "type": "string",
+            "format": "uri"
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(matches!(
+                obj.schema_type,
+                utoipa::openapi::schema::SchemaType::Type(utoipa::openapi::schema::Type::String)
+            ));
+        }
+    }
+
+    // Test 4: Array of nested arrays with mixed types
+    #[test]
+    fn test_array_nested_with_mixed_object_types() {
+        let schema_json = serde_json::json!({
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "integer" },
+                        "tags": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                        }
+                    },
+                    "required": ["id"]
+                }
+            }
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+    }
+
+    // Test 5: Object with deeply nested arrays
+    #[test]
+    fn test_object_with_deeply_nested_arrays() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "level1": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+    }
+
+    // Test 6: Object with many properties (50+)
+    #[test]
+    fn test_object_with_many_properties() {
+        let mut properties = serde_json::Map::new();
+        for i in 0..50 {
+            properties.insert(
+                format!("prop_{}", i),
+                serde_json::json!({ "type": if i % 2 == 0 { "string" } else { "integer" } }),
+            );
+        }
+
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": properties
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert_eq!(obj.properties.len(), 50);
+        }
+    }
+
+    // Test 7: Required field that doesn't exist in properties
+    #[test]
+    fn test_required_field_not_in_properties() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer" }
+            },
+            "required": ["id", "missing_field"]
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(obj.required.contains(&"id".to_string()));
+            assert!(obj.required.contains(&"missing_field".to_string()));
+        }
+    }
+
+    // Test 8: Empty object with required fields
+    #[test]
+    fn test_empty_object_with_required_fields() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {},
+            "required": ["field1", "field2"]
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(obj.required.contains(&"field1".to_string()));
+            assert!(obj.required.contains(&"field2".to_string()));
+        }
+    }
+
+    // Test 9: Array items with null schema
+    #[test]
+    fn test_array_items_missing_completely() {
+        let schema_json = serde_json::json!({
+            "type": "array"
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Array(_arr))) = result {
+            // Array without items schema is valid
+        } else {
+            panic!("Expected Array schema");
+        }
+    }
+
+    // Test 10: Nested object with mixed required fields across levels
+    #[test]
+    fn test_nested_object_mixed_required_across_levels() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "level1": {
+                    "type": "object",
+                    "properties": {
+                        "level2": {
+                            "type": "object",
+                            "properties": {
+                                "value": { "type": "string" }
+                            },
+                            "required": ["value"]
+                        }
+                    },
+                    "required": ["level2"]
+                }
+            },
+            "required": ["level1"]
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(outer))) = result {
+            assert!(outer.required.contains(&"level1".to_string()));
+        }
+    }
+
+    // Test 11: Test all format strings are handled correctly
+    #[test]
+    fn test_string_format_all_known_formats() {
+        let formats = vec!["date-time", "date", "email", "uri"];
+
+        for format in formats {
+            let schema_json = serde_json::json!({
+                "type": "string",
+                "format": format
+            });
+
+            let result = json_value_to_schema(&schema_json);
+            assert!(result.is_ok(), "Format '{}' should be handled", format);
+        }
+    }
+
+    // Test 12: Request body with nested complex object
+    #[test]
+    fn test_request_body_complex_nested_structure() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "user": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "integer" },
+                        "profile": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "contacts": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "email": { "type": "string" },
+                                            "phone": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "required": ["user"]
+        });
+
+        let result = json_schema_to_request_body(&schema_json);
+        assert!(result.is_ok());
+
+        let request_body = result.unwrap();
+        assert!(request_body.content.contains_key("application/json"));
+        assert!(matches!(request_body.required, Some(utoipa::openapi::Required::True)));
+    }
+
+    // Test 13: Response with array of complex objects
+    #[test]
+    fn test_response_array_of_complex_objects() {
+        let schema_json = serde_json::json!({
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "integer" },
+                    "name": { "type": "string" },
+                    "created_at": { "type": "string", "format": "date-time" }
+                },
+                "required": ["id", "name"]
+            }
+        });
+
+        let result = json_schema_to_response(&schema_json);
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert!(response.content.contains_key("application/json"));
+        assert_eq!(response.description, "Successful response");
+    }
+
+    // Test 14: Object properties with format-only fields (no explicit type but has format)
+    #[test]
+    fn test_object_property_with_format_but_type_string() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "timestamp": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "email": {
+                    "type": "string",
+                    "format": "email"
+                }
+            }
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(obj.properties.contains_key("timestamp"));
+            assert!(obj.properties.contains_key("email"));
+        }
+    }
+
+    // Test 15: Duplicate required fields
+    #[test]
+    fn test_duplicate_required_fields() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer" },
+                "name": { "type": "string" }
+            },
+            "required": ["id", "name", "id", "name"]
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(obj.required.contains(&"id".to_string()));
+            assert!(obj.required.contains(&"name".to_string()));
+        }
+    }
+
+    // Test 16: Very long property names
+    #[test]
+    fn test_object_with_very_long_property_names() {
+        let long_name = "very_long_property_name_that_is_256_characters_or_more_\
+            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\
+            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\
+            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\
+            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {
+                long_name: { "type": "string" }
+            }
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(obj.properties.contains_key(long_name));
+        }
+    }
+
+    // Test 17: Array of primitives with all types
+    #[test]
+    fn test_arrays_of_all_primitive_types() {
+        let types = vec!["string", "integer", "number", "boolean"];
+
+        for type_name in types {
+            let schema_json = serde_json::json!({
+                "type": "array",
+                "items": { "type": type_name }
+            });
+
+            let result = json_value_to_schema(&schema_json);
+            assert!(result.is_ok(), "Array of {} should be handled correctly", type_name);
+        }
+    }
+
+    // Test 18: Mixed required and optional in large object
+    #[test]
+    fn test_large_object_with_mixed_required_optional() {
+        let mut properties = serde_json::Map::new();
+        let mut required = Vec::new();
+
+        for i in 0..30 {
+            properties.insert(format!("field_{}", i), serde_json::json!({ "type": "string" }));
+            if i % 3 == 0 {
+                required.push(format!("field_{}", i));
+            }
+        }
+
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": properties,
+            "required": required
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(obj.required.len() >= 9);
+            assert!(obj.properties.len() == 30);
+        }
+    }
+
+    // Test 19: Object without properties but with required
+    #[test]
+    fn test_object_no_properties_with_required() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "required": ["name", "age"]
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(obj.required.contains(&"name".to_string()));
+            assert!(obj.required.contains(&"age".to_string()));
+        }
+    }
+
+    // Test 20: Request body with all optional fields
+    #[test]
+    fn test_request_body_all_optional_fields() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "email": { "type": "string" },
+                "age": { "type": "integer" }
+            }
+        });
+
+        let result = json_schema_to_request_body(&schema_json);
+        assert!(result.is_ok());
+
+        let request_body = result.unwrap();
+        assert!(request_body.content.contains_key("application/json"));
+    }
+
+    // Test 21: Numeric min/max values (if supported by schema)
+    #[test]
+    fn test_integer_with_min_max_values() {
+        let schema_json = serde_json::json!({
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+    }
+
+    // Test 22: String with min/max length
+    #[test]
+    fn test_string_with_length_constraints() {
+        let schema_json = serde_json::json!({
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+    }
+
+    // Test 23: Array with min/max items
+    #[test]
+    fn test_array_with_item_count_constraints() {
+        let schema_json = serde_json::json!({
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1,
+            "maxItems": 10
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+    }
+
+    // Test 24: Object with pattern properties
+    #[test]
+    fn test_object_with_pattern_properties() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer" }
+            },
+            "patternProperties": {
+                "^S_": { "type": "string" }
+            }
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+    }
+
+    // Test 25: Deeply nested object with 15 levels
+    #[test]
+    fn test_deeply_nested_object_15_levels() {
+        let mut schema = serde_json::json!({ "type": "string" });
+
+        for i in 0..15 {
+            schema = serde_json::json!({
+                "type": "object",
+                "properties": {
+                    format!("level_{}", i): schema
+                }
+            });
+        }
+
+        let result = json_value_to_schema(&schema);
+        assert!(result.is_ok(), "15-level deep nesting should not cause stack overflow");
+    }
+
+    // Test 26: Unicode property names
+    #[test]
+    fn test_object_with_unicode_property_names() {
+        let schema_json = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "名前": { "type": "string" },
+                "年齢": { "type": "integer" },
+                "🚀": { "type": "string" }
+            }
+        });
+
+        let result = json_value_to_schema(&schema_json);
+        assert!(result.is_ok());
+
+        if let Ok(RefOr::T(Schema::Object(obj))) = result {
+            assert!(obj.properties.contains_key("名前"));
+            assert!(obj.properties.contains_key("年齢"));
+            assert!(obj.properties.contains_key("🚀"));
+        }
+    }
 }

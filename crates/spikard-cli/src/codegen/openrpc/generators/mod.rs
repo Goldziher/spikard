@@ -17,6 +17,9 @@ pub use typescript::TypeScriptOpenRpcGenerator;
 
 use crate::codegen::openrpc::spec_parser::OpenRpcSpec;
 
+#[cfg(test)]
+mod tests;
+
 /// Language-agnostic OpenRPC code generator trait
 ///
 /// Implementations provide language-specific code generation for:
@@ -31,17 +34,4 @@ pub trait OpenRpcGenerator {
     /// Language identifier (e.g., "python", "typescript")
     #[allow(dead_code)]
     fn language_name(&self) -> &'static str;
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_language_names() {
-        assert_eq!(PythonOpenRpcGenerator.language_name(), "python");
-        assert_eq!(TypeScriptOpenRpcGenerator.language_name(), "typescript");
-        assert_eq!(RubyOpenRpcGenerator.language_name(), "ruby");
-        assert_eq!(PhpOpenRpcGenerator.language_name(), "php");
-    }
 }

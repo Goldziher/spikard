@@ -17,7 +17,7 @@ build = "build.rs"
 name = "spikard_rb_core"
 
 [dependencies]
-magnus = { git = "https://github.com/matsadler/magnus", rev = "f6db11769efb517427bf7f121f9c32e18b059b38", features = ["rb-sys"] }
+magnus = { version = "0.8.2", features = ["rb-sys"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 spikard-core = { path = "../spikard-core", features = ["di"] }

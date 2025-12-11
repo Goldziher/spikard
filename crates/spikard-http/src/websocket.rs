@@ -828,4 +828,571 @@ mod tests {
         let response3: Option<Value> = handler.handle_message(number).await;
         assert!(response3.is_none());
     }
+
+    // ===== NEW COMPREHENSIVE VALIDATION & PROTOCOL VIOLATION TESTS =====
+
+    /// Test message validation failure with schema constraint
+    #[test]
+    fn test_message_schema_rejects_wrong_type() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {"id": {"type": "integer"}},
+            "required": ["id"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        // Message with string instead of integer should fail validation
+        let invalid_msg: Value = serde_json::json!({"id": "not_an_integer"});
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+        assert!(!validator.is_valid(&invalid_msg));
+    }
+
+    /// Test response schema validation failure
+    #[test]
+    fn test_response_schema_rejects_invalid_type() {
+        let handler: EchoHandler = EchoHandler;
+        let response_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {"count": {"type": "integer"}},
+            "required": ["count"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, None, Some(response_schema)).unwrap();
+
+        // Response with array instead of object should fail validation
+        let invalid_response: Value = serde_json::json!([1, 2, 3]);
+        let validator: &jsonschema::Validator = state.response_schema.as_ref().unwrap();
+        assert!(!validator.is_valid(&invalid_response));
+    }
+
+    /// Test message with multiple required fields missing
+    #[test]
+    fn test_message_missing_multiple_required_fields() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "integer"},
+                "action": {"type": "string"},
+                "timestamp": {"type": "string"}
+            },
+            "required": ["user_id", "action", "timestamp"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        // Message missing all required fields
+        let invalid_msg: Value = serde_json::json!({"other": "value"});
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+        assert!(!validator.is_valid(&invalid_msg));
+
+        // Message missing some required fields
+        let partial_msg: Value = serde_json::json!({"user_id": 123});
+        assert!(!validator.is_valid(&partial_msg));
+    }
+
+    /// Test deeply nested schema validation with required nested properties
+    #[test]
+    fn test_deeply_nested_schema_validation_failure() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "type": "object",
+                    "properties": {
+                        "request": {
+                            "type": "object",
+                            "properties": {
+                                "id": {"type": "string"}
+                            },
+                            "required": ["id"]
+                        }
+                    },
+                    "required": ["request"]
+                }
+            },
+            "required": ["metadata"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        // Missing deeply nested required field
+        let invalid_msg: Value = serde_json::json!({
+            "metadata": {
+                "request": {}
+            }
+        });
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+        assert!(!validator.is_valid(&invalid_msg));
+    }
+
+    /// Test array property validation with items constraint
+    #[test]
+    fn test_array_property_type_validation() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {"type": "integer"}
+                }
+            }
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Valid: array of integers
+        let valid_msg: Value = serde_json::json!({"ids": [1, 2, 3]});
+        assert!(validator.is_valid(&valid_msg));
+
+        // Invalid: array with mixed types
+        let invalid_msg: Value = serde_json::json!({"ids": [1, "two", 3]});
+        assert!(!validator.is_valid(&invalid_msg));
+
+        // Invalid: not an array
+        let invalid_msg2: Value = serde_json::json!({"ids": "not_an_array"});
+        assert!(!validator.is_valid(&invalid_msg2));
+    }
+
+    /// Test enum/const property validation
+    #[test]
+    fn test_enum_property_validation() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": ["pending", "active", "completed"]
+                }
+            },
+            "required": ["status"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Valid enum value
+        let valid_msg: Value = serde_json::json!({"status": "active"});
+        assert!(validator.is_valid(&valid_msg));
+
+        // Invalid enum value
+        let invalid_msg: Value = serde_json::json!({"status": "unknown"});
+        assert!(!validator.is_valid(&invalid_msg));
+    }
+
+    /// Test minimum/maximum constraints on numbers
+    #[test]
+    fn test_number_range_validation() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 150
+                }
+            },
+            "required": ["age"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Valid: within range
+        let valid_msg: Value = serde_json::json!({"age": 25});
+        assert!(validator.is_valid(&valid_msg));
+
+        // Invalid: below minimum
+        let invalid_msg: Value = serde_json::json!({"age": -1});
+        assert!(!validator.is_valid(&invalid_msg));
+
+        // Invalid: above maximum
+        let invalid_msg2: Value = serde_json::json!({"age": 200});
+        assert!(!validator.is_valid(&invalid_msg2));
+    }
+
+    /// Test string length constraints
+    #[test]
+    fn test_string_length_validation() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 20
+                }
+            },
+            "required": ["username"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Valid: within length range
+        let valid_msg: Value = serde_json::json!({"username": "alice"});
+        assert!(validator.is_valid(&valid_msg));
+
+        // Invalid: too short
+        let invalid_msg: Value = serde_json::json!({"username": "ab"});
+        assert!(!validator.is_valid(&invalid_msg));
+
+        // Invalid: too long
+        let invalid_msg2: Value =
+            serde_json::json!({"username": "this_is_a_very_long_username_over_twenty_characters"});
+        assert!(!validator.is_valid(&invalid_msg2));
+    }
+
+    /// Test pattern (regex) validation
+    #[test]
+    fn test_pattern_validation() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+                }
+            },
+            "required": ["email"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Valid: proper email format
+        let valid_msg: Value = serde_json::json!({"email": "user@example.com"});
+        assert!(validator.is_valid(&valid_msg));
+
+        // Invalid: missing domain extension
+        let invalid_msg: Value = serde_json::json!({"email": "user@example"});
+        assert!(!validator.is_valid(&invalid_msg));
+
+        // Invalid: missing @ symbol
+        let invalid_msg2: Value = serde_json::json!({"email": "userexample.com"});
+        assert!(!validator.is_valid(&invalid_msg2));
+    }
+
+    /// Test additionalProperties constraint
+    #[test]
+    fn test_additional_properties_validation() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"}
+            },
+            "additionalProperties": false
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Valid: only defined properties
+        let valid_msg: Value = serde_json::json!({"name": "Alice"});
+        assert!(validator.is_valid(&valid_msg));
+
+        // Invalid: extra property when additionalProperties=false
+        let invalid_msg: Value = serde_json::json!({"name": "Bob", "age": 30});
+        assert!(!validator.is_valid(&invalid_msg));
+    }
+
+    /// Test oneOf constraint (mutually exclusive properties)
+    #[test]
+    fn test_one_of_constraint() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "oneOf": [
+                {
+                    "properties": {"type": {"const": "text"}},
+                    "required": ["type"]
+                },
+                {
+                    "properties": {"type": {"const": "number"}},
+                    "required": ["type"]
+                }
+            ]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Valid: matches one schema
+        let valid_msg: Value = serde_json::json!({"type": "text"});
+        assert!(validator.is_valid(&valid_msg));
+
+        // Invalid: matches no schema
+        let invalid_msg: Value = serde_json::json!({"type": "unknown"});
+        assert!(!validator.is_valid(&invalid_msg));
+    }
+
+    /// Test anyOf constraint (at least one match)
+    #[test]
+    fn test_any_of_constraint() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "value": {"type": ["string", "integer"]}
+            },
+            "required": ["value"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Valid: string value
+        let msg1: Value = serde_json::json!({"value": "text"});
+        assert!(validator.is_valid(&msg1));
+
+        // Valid: integer value
+        let msg2: Value = serde_json::json!({"value": 42});
+        assert!(validator.is_valid(&msg2));
+
+        // Invalid: boolean value (not in type union)
+        let invalid_msg: Value = serde_json::json!({"value": true});
+        assert!(!validator.is_valid(&invalid_msg));
+    }
+
+    /// Test response validation with complex constraints
+    #[test]
+    fn test_response_schema_with_multiple_constraints() {
+        let handler: EchoHandler = EchoHandler;
+        let response_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "success": {"type": "boolean"},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {"type": "object"},
+                            "minItems": 1
+                        }
+                    },
+                    "required": ["items"]
+                }
+            },
+            "required": ["success", "data"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, None, Some(response_schema)).unwrap();
+
+        let validator: &jsonschema::Validator = state.response_schema.as_ref().unwrap();
+
+        // Valid response
+        let valid_response: Value = serde_json::json!({
+            "success": true,
+            "data": {
+                "items": [{"id": 1}]
+            }
+        });
+        assert!(validator.is_valid(&valid_response));
+
+        // Invalid: empty items array (violates minItems: 1)
+        let invalid_response: Value = serde_json::json!({
+            "success": true,
+            "data": {
+                "items": []
+            }
+        });
+        assert!(!validator.is_valid(&invalid_response));
+
+        // Invalid: missing required field
+        let invalid_response2: Value = serde_json::json!({
+            "success": true
+        });
+        assert!(!validator.is_valid(&invalid_response2));
+    }
+
+    /// Test null type validation
+    #[test]
+    fn test_null_value_validation() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "optional_field": {"type": ["string", "null"]},
+                "required_field": {"type": "string"}
+            },
+            "required": ["required_field"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Valid: optional field can be null
+        let msg1: Value = serde_json::json!({
+            "optional_field": null,
+            "required_field": "value"
+        });
+        assert!(validator.is_valid(&msg1));
+
+        // Valid: optional field omitted
+        let msg2: Value = serde_json::json!({"required_field": "value"});
+        assert!(validator.is_valid(&msg2));
+
+        // Invalid: required field is null (when type is string only)
+        let invalid_msg: Value = serde_json::json!({"required_field": null});
+        assert!(!validator.is_valid(&invalid_msg));
+    }
+
+    /// Test schema with default values (they don't change validation)
+    #[test]
+    fn test_schema_with_defaults_still_validates() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "default": "pending"
+                }
+            }
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Message without status should still be valid (default doesn't require field)
+        let msg: Value = serde_json::json!({});
+        assert!(validator.is_valid(&msg));
+    }
+
+    /// Test both message and response schema validation together
+    #[test]
+    fn test_both_schemas_validate_independently() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {"action": {"type": "string"}},
+            "required": ["action"]
+        });
+        let response_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {"result": {"type": "string"}},
+            "required": ["result"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), Some(response_schema)).unwrap();
+
+        let msg_validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+        let resp_validator: &jsonschema::Validator = state.response_schema.as_ref().unwrap();
+
+        // Valid message, invalid response schema
+        let valid_msg: Value = serde_json::json!({"action": "test"});
+        let invalid_response: Value = serde_json::json!({"data": "oops"});
+
+        assert!(msg_validator.is_valid(&valid_msg));
+        assert!(!resp_validator.is_valid(&invalid_response));
+
+        // Invalid message, valid response schema
+        let invalid_msg: Value = serde_json::json!({"data": "oops"});
+        let valid_response: Value = serde_json::json!({"result": "ok"});
+
+        assert!(!msg_validator.is_valid(&invalid_msg));
+        assert!(resp_validator.is_valid(&valid_response));
+    }
+
+    /// Test validation with very long/large payload
+    #[test]
+    fn test_validation_with_large_payload() {
+        let handler: EchoHandler = EchoHandler;
+        let message_schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {"type": "integer"}
+                }
+            },
+            "required": ["items"]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Create large payload with 10,000 integers
+        let mut items = Vec::new();
+        for i in 0..10_000 {
+            items.push(i);
+        }
+        let large_msg: Value = serde_json::json!({"items": items});
+
+        assert!(validator.is_valid(&large_msg));
+    }
+
+    /// Test validation error doesn't panic with invalid schema combinations
+    #[test]
+    fn test_mutually_exclusive_schema_properties() {
+        let handler: EchoHandler = EchoHandler;
+
+        // allOf requires all schemas to be valid
+        let message_schema: serde_json::Value = serde_json::json!({
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {"a": {"type": "string"}},
+                    "required": ["a"]
+                },
+                {
+                    "type": "object",
+                    "properties": {"b": {"type": "integer"}},
+                    "required": ["b"]
+                }
+            ]
+        });
+
+        let state: WebSocketState<EchoHandler> =
+            WebSocketState::with_schemas(handler, Some(message_schema), None).unwrap();
+
+        let validator: &jsonschema::Validator = state.message_schema.as_ref().unwrap();
+
+        // Must satisfy all constraints
+        let valid_msg: Value = serde_json::json!({"a": "text", "b": 42});
+        assert!(validator.is_valid(&valid_msg));
+
+        // Missing one required field
+        let invalid_msg: Value = serde_json::json!({"a": "text"});
+        assert!(!validator.is_valid(&invalid_msg));
+    }
 }

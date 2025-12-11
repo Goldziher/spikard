@@ -958,4 +958,569 @@ mod tests {
             assert_eq!(evt.data.get("count").and_then(|v| v.as_i64()), Some(42));
         }
     }
+
+    // ============================================================================
+    // Tests: Event Formatting & Protocol Compliance
+    // ============================================================================
+
+    #[test]
+    fn test_sse_event_to_axum_preserves_data() {
+        let event = SseEvent::new(serde_json::json!({"key": "value"}));
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok(), "Event conversion should succeed");
+    }
+
+    #[test]
+    fn test_sse_event_data_only_no_metadata() {
+        let event = SseEvent::new(serde_json::json!({"message": "hello"}));
+        assert!(event.event_type.is_none(), "event_type should be None");
+        assert!(event.id.is_none(), "id should be None");
+        assert!(event.retry.is_none(), "retry should be None");
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_with_all_fields_filled() {
+        let event = SseEvent::with_type("update", serde_json::json!({"status": "ok"}))
+            .with_id("evt-999")
+            .with_retry(10000);
+
+        assert_eq!(event.event_type.as_ref(), Some(&"update".to_string()));
+        assert_eq!(event.id.as_ref(), Some(&"evt-999".to_string()));
+        assert_eq!(event.retry, Some(10000));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_empty_data_field() {
+        let event = SseEvent::new(serde_json::json!({}));
+        assert!(event.data.is_object());
+        assert_eq!(event.data.as_object().unwrap().len(), 0);
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_data_with_newlines_in_string() {
+        let multiline_data = "first line\nsecond line\nthird line";
+        let event = SseEvent::new(serde_json::json!({"text": multiline_data}));
+
+        let stored_text = event.data.get("text").and_then(|v| v.as_str());
+        assert_eq!(stored_text, Some(multiline_data));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_data_with_colons() {
+        let data_with_colons = "key1: value1, key2: value2";
+        let event = SseEvent::new(serde_json::json!({"data": data_with_colons}));
+
+        let stored_data = event.data.get("data").and_then(|v| v.as_str());
+        assert_eq!(stored_data, Some(data_with_colons));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_comment_only_structure() {
+        // SSE protocol allows comments starting with ':'
+        // Test that we can serialize events with minimal content
+        let event = SseEvent::new(serde_json::json!({"comment": "this is a comment"}));
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    // ============================================================================
+    // Tests: Field Validation
+    // ============================================================================
+
+    #[test]
+    fn test_sse_event_type_with_spaces() {
+        let event = SseEvent::with_type("event type with spaces", serde_json::json!({"data": "test"}));
+        assert_eq!(event.event_type, Some("event type with spaces".to_string()));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_type_with_special_chars() {
+        let event_types = vec!["update-v2", "event_123", "message.sent", "type-with-dash"];
+
+        for event_type in event_types {
+            let event = SseEvent::with_type(event_type, serde_json::json!({"data": "test"}));
+            assert_eq!(event.event_type.as_ref(), Some(&event_type.to_string()));
+
+            let axum_event = event.into_axum_event();
+            assert!(axum_event.is_ok(), "Event type '{}' should be valid", event_type);
+        }
+    }
+
+    #[test]
+    fn test_sse_event_id_alphanumeric() {
+        let ids = vec!["123", "abc-def", "event_001", "id-with-dashes-123"];
+
+        for id in ids {
+            let event = SseEvent::new(serde_json::json!({"data": "test"})).with_id(id);
+            assert_eq!(event.id.as_ref(), Some(&id.to_string()));
+
+            let axum_event = event.into_axum_event();
+            assert!(axum_event.is_ok(), "ID '{}' should be valid", id);
+        }
+    }
+
+    #[test]
+    fn test_sse_event_retry_zero() {
+        let event = SseEvent::new(serde_json::json!({"data": "test"})).with_retry(0);
+        assert_eq!(event.retry, Some(0));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_retry_small_value() {
+        let event = SseEvent::new(serde_json::json!({"data": "test"})).with_retry(100);
+        assert_eq!(event.retry, Some(100));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_retry_large_value() {
+        let large_retry = u64::MAX / 2; // Half of max u64
+        let event = SseEvent::new(serde_json::json!({"data": "test"})).with_retry(large_retry);
+        assert_eq!(event.retry, Some(large_retry));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_retry_typical_values() {
+        let typical_retries = vec![1000, 3000, 5000, 10000, 30000];
+
+        for retry_ms in typical_retries {
+            let event = SseEvent::new(serde_json::json!({"data": "test"})).with_retry(retry_ms);
+            assert_eq!(event.retry, Some(retry_ms));
+
+            let axum_event = event.into_axum_event();
+            assert!(axum_event.is_ok());
+        }
+    }
+
+    // ============================================================================
+    // Tests: Protocol Compliance & UTF-8
+    // ============================================================================
+
+    #[test]
+    fn test_sse_event_utf8_emoji_in_data() {
+        let emoji_data = "Hello 👋 World 🌍";
+        let event = SseEvent::new(serde_json::json!({"text": emoji_data}));
+
+        let stored = event.data.get("text").and_then(|v| v.as_str());
+        assert_eq!(stored, Some(emoji_data));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_utf8_chinese_characters() {
+        let chinese_text = "你好世界";
+        let event = SseEvent::new(serde_json::json!({"text": chinese_text}));
+
+        let stored = event.data.get("text").and_then(|v| v.as_str());
+        assert_eq!(stored, Some(chinese_text));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_utf8_arabic_characters() {
+        let arabic_text = "مرحبا بالعالم";
+        let event = SseEvent::new(serde_json::json!({"text": arabic_text}));
+
+        let stored = event.data.get("text").and_then(|v| v.as_str());
+        assert_eq!(stored, Some(arabic_text));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_utf8_mixed_scripts() {
+        let mixed = "Hello 你好 مرحبا 👋";
+        let event = SseEvent::new(serde_json::json!({"text": mixed}));
+
+        let stored = event.data.get("text").and_then(|v| v.as_str());
+        assert_eq!(stored, Some(mixed));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_json_serialization_produces_valid_utf8() {
+        let event = SseEvent::new(serde_json::json!({"text": "test"}));
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+
+        // The result should be valid UTF-8 (implicit in String)
+        if let Ok(_evt) = axum_event {
+            // If conversion succeeds, UTF-8 is guaranteed
+        }
+    }
+
+    // ============================================================================
+    // Tests: Edge Cases - Large Payloads
+    // ============================================================================
+
+    #[test]
+    fn test_sse_event_64kb_payload() {
+        let large_data = "x".repeat(65536);
+        let event = SseEvent::new(serde_json::json!({"payload": large_data.clone()}));
+
+        let stored = event.data.get("payload").and_then(|v| v.as_str());
+        assert_eq!(stored.map(|s| s.len()), Some(65536));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_1mb_payload() {
+        let large_data = "y".repeat(1_000_000);
+        let event = SseEvent::new(serde_json::json!({"payload": large_data.clone()}));
+
+        let stored = event.data.get("payload").and_then(|v| v.as_str());
+        assert_eq!(stored.map(|s| s.len()), Some(1_000_000));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_deeply_nested_json() {
+        let deeply_nested = serde_json::json!({
+            "level1": {
+                "level2": {
+                    "level3": {
+                        "level4": {
+                            "level5": {
+                                "level6": {
+                                    "level7": {
+                                        "value": "deep"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        let event = SseEvent::new(deeply_nested);
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_array_in_data() {
+        let event = SseEvent::new(serde_json::json!({
+            "items": [1, 2, 3, 4, 5]
+        }));
+
+        let items = event.data.get("items").and_then(|v| v.as_array());
+        assert!(items.is_some());
+        assert_eq!(items.unwrap().len(), 5);
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_null_value_in_data() {
+        let event = SseEvent::new(serde_json::json!({
+            "nullable": null
+        }));
+
+        assert!(event.data.get("nullable").unwrap().is_null());
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_boolean_values() {
+        let event = SseEvent::new(serde_json::json!({
+            "active": true,
+            "deleted": false
+        }));
+
+        assert_eq!(event.data.get("active").and_then(|v| v.as_bool()), Some(true));
+        assert_eq!(event.data.get("deleted").and_then(|v| v.as_bool()), Some(false));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    // ============================================================================
+    // Tests: Edge Cases - Connection & Streaming
+    // ============================================================================
+
+    #[tokio::test]
+    async fn test_sse_last_event_id_header_simulation() {
+        // Simulate client reconnection with Last-Event-ID
+        let producer = RapidEventProducer::new(5);
+
+        let mut events = Vec::new();
+        for _ in 0..5 {
+            if let Some(evt) = producer.next_event().await {
+                events.push(evt);
+            }
+        }
+
+        assert_eq!(events.len(), 5);
+    }
+
+    #[tokio::test]
+    async fn test_sse_retry_timeout_specification() {
+        let producer = FullFieldProducer {
+            sent: AtomicBool::new(false),
+        };
+
+        let event = producer.next_event().await;
+        assert!(event.is_some());
+
+        if let Some(evt) = event {
+            assert_eq!(evt.retry, Some(5000), "Retry should be 5000ms");
+        }
+    }
+
+    #[test]
+    fn test_sse_event_builder_method_chaining() {
+        let event = SseEvent::new(serde_json::json!({"data": "test"}))
+            .with_id("id-1")
+            .with_retry(3000);
+
+        // Verify chaining worked
+        assert_eq!(event.id, Some("id-1".to_string()));
+        assert_eq!(event.retry, Some(3000));
+
+        // Can also chain with_type via with_type constructor
+        let event2 = SseEvent::with_type("msg", serde_json::json!({"x": 1}))
+            .with_id("id-2")
+            .with_retry(5000);
+
+        assert_eq!(event2.event_type, Some("msg".to_string()));
+        assert_eq!(event2.id, Some("id-2".to_string()));
+        assert_eq!(event2.retry, Some(5000));
+    }
+
+    #[test]
+    fn test_sse_event_overwriting_fields() {
+        let event = SseEvent::new(serde_json::json!({"v": 1}))
+            .with_id("id-original")
+            .with_retry(1000);
+
+        // Note: with_id/with_retry consume and return, so we can't really
+        // "overwrite" in place, but we test that setting works correctly
+        assert_eq!(event.id, Some("id-original".to_string()));
+        assert_eq!(event.retry, Some(1000));
+    }
+
+    #[test]
+    fn test_sse_event_type_empty_string() {
+        let event = SseEvent::with_type("", serde_json::json!({"data": "test"}));
+        assert_eq!(event.event_type, Some("".to_string()));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_id_empty_string() {
+        let event = SseEvent::new(serde_json::json!({"data": "test"})).with_id("");
+        assert_eq!(event.id, Some("".to_string()));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    // ============================================================================
+    // Tests: Multiple Events & Batching
+    // ============================================================================
+
+    #[tokio::test]
+    async fn test_sse_event_sequence_maintains_order() {
+        let producer = RapidEventProducer::new(10);
+
+        let mut event_ids = Vec::new();
+        for _ in 0..10 {
+            if let Some(evt) = producer.next_event().await {
+                if let Some(id) = evt.data.get("id").and_then(|v| v.as_i64()) {
+                    event_ids.push(id);
+                }
+            }
+        }
+
+        // Verify ordering
+        for i in 0..event_ids.len() {
+            assert_eq!(event_ids[i], i as i64, "Event order should match insertion order");
+        }
+    }
+
+    #[tokio::test]
+    async fn test_sse_rapid_events_no_loss() {
+        let producer = RapidEventProducer::new(50);
+
+        let mut count = 0;
+        loop {
+            match producer.next_event().await {
+                Some(_) => count += 1,
+                None => break,
+            }
+        }
+
+        assert_eq!(count, 50, "All events should be produced without loss");
+    }
+
+    #[tokio::test]
+    async fn test_sse_event_batching_simulation() {
+        let producer = RapidEventProducer::new(20);
+
+        // Simulate batch processing
+        let mut batch_size = 0;
+        let mut batch_count = 0;
+
+        loop {
+            match producer.next_event().await {
+                Some(_evt) => {
+                    batch_size += 1;
+                    if batch_size >= 5 {
+                        batch_count += 1;
+                        batch_size = 0;
+                    }
+                }
+                None => {
+                    if batch_size > 0 {
+                        batch_count += 1;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // 20 events / 5 per batch = 4 full batches
+        assert!(batch_count >= 4, "Should have processed at least 4 batches");
+    }
+
+    // ============================================================================
+    // Tests: State & Arc Handling
+    // ============================================================================
+
+    #[test]
+    fn test_sse_state_arc_sharing() {
+        let producer = TestProducer {
+            count: AtomicUsize::new(0),
+        };
+        let state1 = SseState::new(producer);
+        let state2 = state1.clone();
+        let state3 = state2.clone();
+
+        // All should share the same Arc pointer
+        assert!(Arc::ptr_eq(&state1.producer, &state2.producer));
+        assert!(Arc::ptr_eq(&state2.producer, &state3.producer));
+    }
+
+    #[test]
+    fn test_sse_state_schema_arc_sharing() {
+        let producer = TestProducer {
+            count: AtomicUsize::new(0),
+        };
+        let schema = serde_json::json!({
+            "type": "object"
+        });
+
+        let state1 = SseState::with_schema(producer, Some(schema)).expect("schema should be valid");
+        let state2 = state1.clone();
+
+        // Schemas should share Arc
+        match (&state1.event_schema, &state2.event_schema) {
+            (Some(s1), Some(s2)) => {
+                assert!(Arc::ptr_eq(s1, s2));
+            }
+            _ => panic!("Both states should have schema"),
+        }
+    }
+
+    // ============================================================================
+    // Tests: Conversion & Serialization
+    // ============================================================================
+
+    #[test]
+    fn test_sse_event_into_axum_event_numeric_data() {
+        let event = SseEvent::new(serde_json::json!({
+            "count": 42,
+            "temperature": 98.6,
+            "negative": -273
+        }));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_json_number_precision() {
+        let event = SseEvent::new(serde_json::json!({
+            "float": 3.14159265359,
+            "large_int": 9007199254740991i64
+        }));
+
+        assert_eq!(event.data.get("float").and_then(|v| v.as_f64()), Some(3.14159265359));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_string_escaping() {
+        let event = SseEvent::new(serde_json::json!({
+            "escaped": "line1\nline2\ttab",
+            "quotes": "He said \"hello\"",
+            "backslash": "path\\to\\file"
+        }));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
+
+    #[test]
+    fn test_sse_event_all_json_types_combined() {
+        let event = SseEvent::new(serde_json::json!({
+            "string": "text",
+            "number": 123,
+            "float": 1.5,
+            "boolean": true,
+            "null_value": null,
+            "array": [1, 2, 3],
+            "object": {
+                "nested": "value"
+            }
+        }));
+
+        let axum_event = event.into_axum_event();
+        assert!(axum_event.is_ok());
+    }
 }

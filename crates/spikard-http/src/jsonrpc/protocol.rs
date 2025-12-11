@@ -794,4 +794,443 @@ mod tests {
         assert!(validate_method_name("-").is_ok());
         assert!(validate_method_name(".").is_ok());
     }
+
+    // ============= JSON-RPC 2.0 Spec Compliance Tests =============
+
+    #[test]
+    fn test_request_with_null_id_is_notification() {
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "notify",
+            "params": []
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        assert!(request.is_notification());
+        assert_eq!(request.method, "notify");
+    }
+
+    #[test]
+    fn test_request_with_string_id_preserved() {
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "add",
+            "params": [1, 2],
+            "id": "abc-123"
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        assert!(!request.is_notification());
+        assert_eq!(request.id, Some(json!("abc-123")));
+    }
+
+    #[test]
+    fn test_request_with_zero_id_valid() {
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "test",
+            "id": 0
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        assert!(!request.is_notification());
+        assert_eq!(request.id, Some(json!(0)));
+    }
+
+    #[test]
+    fn test_request_with_negative_id_valid() {
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "test",
+            "id": -999
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        assert!(!request.is_notification());
+        assert_eq!(request.id, Some(json!(-999)));
+    }
+
+    #[test]
+    fn test_request_without_jsonrpc_field_invalid() {
+        let json = json!({
+            "method": "test",
+            "id": 1
+        });
+
+        let result: serde_json::Result<JsonRpcRequest> = serde_json::from_value(json);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_response_preserves_id_type_numeric() {
+        let response = JsonRpcResponse::success(json!(42), json!(999));
+        let serialized = serde_json::to_value(&response).unwrap();
+
+        assert_eq!(serialized["id"], 999);
+        assert!(serialized["id"].is_number());
+    }
+
+    #[test]
+    fn test_error_response_never_has_result_field() {
+        let err = JsonRpcErrorResponse::error(error_codes::INVALID_PARAMS, "Bad params", json!(1));
+        let serialized = serde_json::to_value(&err).unwrap();
+
+        assert!(serialized.get("result").is_none());
+        assert!(serialized.get("error").is_some());
+    }
+
+    #[test]
+    fn test_success_response_never_has_error_field() {
+        let success = JsonRpcResponse::success(json!({"data": 123}), json!(1));
+        let serialized = serde_json::to_value(&success).unwrap();
+
+        assert!(serialized.get("error").is_none());
+        assert!(serialized.get("result").is_some());
+    }
+
+    // ============= Parameter Type Coverage Tests =============
+
+    #[test]
+    fn test_params_array_type() {
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "sum",
+            "params": [1, 2, 3, 4, 5],
+            "id": 1
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        assert!(request.params.is_some());
+        let params = request.params.unwrap();
+        assert!(params.is_array());
+        let arr = params.as_array().unwrap();
+        assert_eq!(arr.len(), 5);
+        assert_eq!(arr[0], json!(1));
+    }
+
+    #[test]
+    fn test_params_object_type() {
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "subtract",
+            "params": {"a": 5, "b": 3},
+            "id": 2
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        assert!(request.params.is_some());
+        let params = request.params.unwrap();
+        assert!(params.is_object());
+        let obj = params.as_object().unwrap();
+        assert_eq!(obj.get("a"), Some(&json!(5)));
+        assert_eq!(obj.get("b"), Some(&json!(3)));
+    }
+
+    #[test]
+    fn test_params_null_type() {
+        // When params is not present, it's None
+        let json_no_params = json!({
+            "jsonrpc": "2.0",
+            "method": "test",
+            "id": 3
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json_no_params).unwrap();
+        assert!(request.params.is_none());
+
+        // When params is explicitly null in JSON, serde also treats it as None
+        // This is correct behavior per JSON-RPC spec
+    }
+
+    #[test]
+    fn test_params_primitive_string() {
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "echo",
+            "params": "hello world",
+            "id": 4
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        assert!(request.params.is_some());
+        assert_eq!(request.params.unwrap(), json!("hello world"));
+    }
+
+    #[test]
+    fn test_params_primitive_number() {
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "increment",
+            "params": 42,
+            "id": 5
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        assert!(request.params.is_some());
+        assert_eq!(request.params.unwrap(), json!(42));
+    }
+
+    #[test]
+    fn test_params_deeply_nested() {
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "process",
+            "params": {
+                "level1": {
+                    "level2": {
+                        "level3": {
+                            "level4": {
+                                "level5": {
+                                    "level6": {
+                                        "level7": {
+                                            "level8": {
+                                                "level9": {
+                                                    "level10": "deep value"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "id": 6
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        assert!(request.params.is_some());
+        let deep = request.params.unwrap();
+        assert!(
+            deep["level1"]["level2"]["level3"]["level4"]["level5"]["level6"]["level7"]["level8"]["level9"]["level10"]
+                .is_string()
+        );
+        assert_eq!(
+            deep["level1"]["level2"]["level3"]["level4"]["level5"]["level6"]["level7"]["level8"]["level9"]["level10"],
+            "deep value"
+        );
+    }
+
+    #[test]
+    fn test_params_unicode_strings() {
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "translate",
+            "params": {
+                "emoji": "Hello 👋 World 🌍",
+                "rtl": "שלום עולם",
+                "cjk": "你好世界",
+                "special": "café ñ ü"
+            },
+            "id": 7
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        let params = request.params.unwrap();
+        assert_eq!(params["emoji"], "Hello 👋 World 🌍");
+        assert_eq!(params["rtl"], "שלום עולם");
+        assert_eq!(params["cjk"], "你好世界");
+        assert_eq!(params["special"], "café ñ ü");
+    }
+
+    // ============= Response Serialization Edge Cases Tests =============
+
+    #[test]
+    fn test_response_result_with_null_valid() {
+        let response = JsonRpcResponse::success(json!(null), json!(1));
+        let serialized = serde_json::to_value(&response).unwrap();
+
+        assert_eq!(serialized["jsonrpc"], "2.0");
+        assert_eq!(serialized["id"], 1);
+        assert_eq!(serialized["result"], json!(null));
+        assert!(serialized.get("error").is_none());
+    }
+
+    #[test]
+    fn test_response_result_with_false_valid() {
+        let response = JsonRpcResponse::success(json!(false), json!(2));
+        let serialized = serde_json::to_value(&response).unwrap();
+
+        assert_eq!(serialized["jsonrpc"], "2.0");
+        assert_eq!(serialized["id"], 2);
+        assert_eq!(serialized["result"], json!(false));
+        assert!(serialized.get("error").is_none());
+    }
+
+    #[test]
+    fn test_response_result_with_zero_valid() {
+        let response = JsonRpcResponse::success(json!(0), json!(3));
+        let serialized = serde_json::to_value(&response).unwrap();
+
+        assert_eq!(serialized["jsonrpc"], "2.0");
+        assert_eq!(serialized["id"], 3);
+        assert_eq!(serialized["result"], json!(0));
+        assert!(serialized.get("error").is_none());
+    }
+
+    #[test]
+    fn test_response_result_with_empty_object_valid() {
+        let response = JsonRpcResponse::success(json!({}), json!(4));
+        let serialized = serde_json::to_value(&response).unwrap();
+
+        assert_eq!(serialized["jsonrpc"], "2.0");
+        assert_eq!(serialized["id"], 4);
+        assert_eq!(serialized["result"], json!({}));
+        assert!(serialized.get("error").is_none());
+    }
+
+    #[test]
+    fn test_response_result_with_empty_array_valid() {
+        let response = JsonRpcResponse::success(json!([]), json!(5));
+        let serialized = serde_json::to_value(&response).unwrap();
+
+        assert_eq!(serialized["jsonrpc"], "2.0");
+        assert_eq!(serialized["id"], 5);
+        assert_eq!(serialized["result"], json!([]));
+        assert!(serialized.get("error").is_none());
+    }
+
+    #[test]
+    fn test_error_code_parse_error() {
+        let err = JsonRpcErrorResponse::error(error_codes::PARSE_ERROR, "Parse error", json!(null));
+        let serialized = serde_json::to_value(&err).unwrap();
+
+        assert_eq!(serialized["error"]["code"], -32700);
+        assert!(serialized.get("result").is_none());
+    }
+
+    #[test]
+    fn test_error_code_roundtrip() {
+        let codes = vec![
+            error_codes::PARSE_ERROR,
+            error_codes::INVALID_REQUEST,
+            error_codes::METHOD_NOT_FOUND,
+            error_codes::INVALID_PARAMS,
+            error_codes::INTERNAL_ERROR,
+        ];
+
+        for code in codes {
+            let err = JsonRpcErrorResponse::error(code, "Test error", json!(1));
+            let serialized = serde_json::to_value(&err).unwrap();
+            let deserialized: JsonRpcErrorResponse = serde_json::from_value(serialized).unwrap();
+
+            assert_eq!(deserialized.error.code, code);
+        }
+    }
+
+    // ============= ID Handling Tests =============
+
+    #[test]
+    fn test_notification_has_no_id_field() {
+        let notif = JsonRpcRequest::new("notify", None, None);
+        let serialized = serde_json::to_value(&notif).unwrap();
+
+        assert!(serialized.get("id").is_none());
+    }
+
+    #[test]
+    fn test_id_preservation_in_batch() {
+        let json_batch = json!([
+            {
+                "jsonrpc": "2.0",
+                "method": "method1",
+                "id": "string-id"
+            },
+            {
+                "jsonrpc": "2.0",
+                "method": "method2",
+                "id": 42
+            },
+            {
+                "jsonrpc": "2.0",
+                "method": "method3"
+            }
+        ]);
+
+        let batch: Vec<JsonRpcRequest> = serde_json::from_value(json_batch).unwrap();
+
+        assert_eq!(batch.len(), 3);
+        assert_eq!(batch[0].id, Some(json!("string-id")));
+        assert_eq!(batch[1].id, Some(json!(42)));
+        assert_eq!(batch[2].id, None);
+    }
+
+    #[test]
+    fn test_mixed_id_types_in_batch() {
+        let responses = vec![
+            JsonRpcResponse::success(json!(100), json!("id1")),
+            JsonRpcResponse::success(json!(200), json!(2)),
+            JsonRpcResponse::success(json!(300), json!(null)),
+        ];
+
+        for resp in responses {
+            let serialized = serde_json::to_value(&resp).unwrap();
+            let deserialized: JsonRpcResponse = serde_json::from_value(serialized).unwrap();
+            assert_eq!(deserialized.jsonrpc, "2.0");
+        }
+    }
+
+    #[test]
+    fn test_large_numeric_id() {
+        let large_id = i64::MAX;
+        let json = json!({
+            "jsonrpc": "2.0",
+            "method": "test",
+            "id": large_id
+        });
+
+        let request: JsonRpcRequest = serde_json::from_value(json).unwrap();
+
+        assert_eq!(request.id, Some(json!(large_id)));
+    }
+
+    // ============= Error Response Structure Tests =============
+
+    #[test]
+    fn test_error_always_has_code() {
+        let err = JsonRpcErrorResponse::error(error_codes::METHOD_NOT_FOUND, "Not found", json!(1));
+        let serialized = serde_json::to_value(&err).unwrap();
+
+        assert!(serialized["error"].get("code").is_some());
+        assert_eq!(serialized["error"]["code"], -32601);
+    }
+
+    #[test]
+    fn test_error_always_has_message() {
+        let err = JsonRpcErrorResponse::error(error_codes::INVALID_PARAMS, "Invalid parameters", json!(2));
+        let serialized = serde_json::to_value(&err).unwrap();
+
+        assert!(serialized["error"].get("message").is_some());
+        assert_eq!(serialized["error"]["message"], "Invalid parameters");
+    }
+
+    #[test]
+    fn test_error_data_optional() {
+        let err_without_data = JsonRpcErrorResponse::error(error_codes::INTERNAL_ERROR, "Internal error", json!(3));
+        let serialized_without = serde_json::to_value(&err_without_data).unwrap();
+
+        assert!(serialized_without["error"].get("data").is_none());
+
+        let err_with_data = JsonRpcErrorResponse::error_with_data(
+            error_codes::INTERNAL_ERROR,
+            "Internal error",
+            json!({"details": "something went wrong"}),
+            json!(4),
+        );
+        let serialized_with = serde_json::to_value(&err_with_data).unwrap();
+
+        assert!(serialized_with["error"].get("data").is_some());
+    }
 }

@@ -49,6 +49,9 @@ base64 = "0.22.1"
 flate2.workspace = true
 brotli = "8.0"
 
+[lints]
+workspace = true
+
 [features]
 default = []
 di = ["spikard-core/di"]
