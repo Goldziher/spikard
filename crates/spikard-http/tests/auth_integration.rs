@@ -16,10 +16,15 @@ mod common;
 
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
+use axum::middleware::{self, Next};
+use axum::routing::get;
+use axum::{Router, extract::State};
 use serde_json::json;
+use spikard_http::auth::{Claims, api_key_auth_middleware, jwt_auth_middleware};
 use spikard_http::{Handler, HandlerResult, RequestData};
 use std::future::Future;
 use std::pin::Pin;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::common::test_builders::{HandlerBuilder, RequestBuilder, assert_status, load_fixture, parse_json_body};
 
@@ -207,6 +212,110 @@ async fn test_jwt_not_before_future_returns_401() {
 
     // Verify fixture contains expected error message
     assert!(expected_detail.contains("not valid yet") || expected_detail.contains("future"));
+}
+
+/// Behavioral test: jwt_auth_middleware rejects mismatched issuer
+#[tokio::test]
+async fn test_jwt_auth_middleware_rejects_wrong_issuer() {
+    let issued_at = SystemTime::now().duration_since(UNIX_EPOCH).expect("time").as_secs() as usize;
+    let claims = Claims {
+        sub: "user-1".to_string(),
+        exp: issued_at + 3600,
+        iat: Some(issued_at),
+        nbf: None,
+        aud: Some(vec!["spikard-clients".to_string()]),
+        iss: Some("https://auth.example.com".to_string()),
+    };
+
+    let token = jsonwebtoken::encode(
+        &jsonwebtoken::Header::default(),
+        &claims,
+        &jsonwebtoken::EncodingKey::from_secret(b"secret"),
+    )
+    .expect("encode token");
+
+    let mut headers = axum::http::HeaderMap::new();
+    headers.insert(
+        "Authorization",
+        axum::http::HeaderValue::from_str(&format!("Bearer {token}")).unwrap(),
+    );
+
+    let config = spikard_http::JwtConfig {
+        secret: "secret".to_string(),
+        algorithm: "HS256".to_string(),
+        audience: Some(vec!["spikard-clients".to_string()]),
+        issuer: Some("https://wrong-issuer.example.com".to_string()),
+        leeway: 0,
+    };
+
+    let config_state = config.clone();
+
+    async fn auth_layer(
+        State(cfg): State<spikard_http::JwtConfig>,
+        req: Request<Body>,
+        next: Next,
+    ) -> Result<axum::response::Response, axum::response::Response> {
+        let headers = req.headers().clone();
+        jwt_auth_middleware(cfg, headers, req, next).await
+    }
+
+    let app = Router::new()
+        .route(
+            "/protected",
+            get(|| async { axum::response::Response::new(Body::from("ok")) }),
+        )
+        .layer(middleware::from_fn_with_state(config_state, auth_layer));
+
+    let response = axum_test::TestServer::new(app)
+        .unwrap()
+        .get("/protected")
+        .add_header("Authorization", &format!("Bearer {token}"))
+        .await;
+
+    assert_eq!(response.status_code(), StatusCode::UNAUTHORIZED);
+    let body: serde_json::Value = response.json();
+    assert!(
+        body["detail"].as_str().unwrap_or_default().contains("issuer"),
+        "detail should mention issuer mismatch"
+    );
+}
+
+/// Behavioral test: api_key_auth_middleware accepts query param fallback
+#[tokio::test]
+async fn test_api_key_auth_middleware_query_fallback() {
+    let config = spikard_http::ApiKeyConfig {
+        header_name: "X-API-Key".to_string(),
+        keys: vec!["top-secret".to_string()],
+    };
+
+    let config_state = config.clone();
+
+    async fn api_key_layer(
+        State(cfg): State<spikard_http::ApiKeyConfig>,
+        req: Request<Body>,
+        next: Next,
+    ) -> Result<axum::response::Response, axum::response::Response> {
+        let headers = req.headers().clone();
+        api_key_auth_middleware(cfg, headers, req, next).await
+    }
+
+    let app = Router::new()
+        .route(
+            "/data",
+            get(|| async {
+                let mut response = axum::response::Response::new(Body::empty());
+                *response.status_mut() = StatusCode::NO_CONTENT;
+                response
+            }),
+        )
+        .layer(middleware::from_fn_with_state(config_state, api_key_layer));
+
+    let response = axum_test::TestServer::new(app)
+        .unwrap()
+        .get("/data?api_key=top-secret")
+        .await;
+
+    assert_eq!(response.status_code(), StatusCode::NO_CONTENT);
 }
 
 /// Test 8: Malformed token (wrong parts) returns 401
