@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Integration tests for server handler wrappers (ValidatingHandler, DependencyInjectingHandler)
 //!
 //! These tests verify critical validation and dependency injection behavior across

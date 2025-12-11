@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Behavioral tests for multipart form data handling in spikard-http
 //!
 //! These tests verify observable behavior of the multipart parser through real HTTP requests

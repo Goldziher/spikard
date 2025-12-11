@@ -732,14 +732,14 @@ pub fn build_router_with_handlers_and_config(
         // Use the pre-built registry from earlier
         if let Some(registry) = jsonrpc_registry {
             // Create router
-            let router = Arc::new(crate::jsonrpc::JsonRpcRouter::new(
+            let jsonrpc_router = Arc::new(crate::jsonrpc::JsonRpcRouter::new(
                 registry,
                 jsonrpc_config.enable_batch,
                 jsonrpc_config.max_batch_size,
             ));
 
             // Create state
-            let state = Arc::new(crate::jsonrpc::JsonRpcState { router });
+            let state = Arc::new(crate::jsonrpc::JsonRpcState { router: jsonrpc_router });
 
             // Add main endpoint
             let endpoint_path = jsonrpc_config.endpoint_path.clone();

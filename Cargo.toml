@@ -65,7 +65,7 @@ jsonwebtoken = { version = "10.2", features = ["use_pem", "rust_crypto"] }
 
 # OpenAPI
 utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
-utoipa-swagger-ui = { version = "9", features = ["axum"] }
+utoipa-swagger-ui = { version = "9", features = ["axum", "vendored"] }
 utoipa-redoc = { version = "6", features = ["axum"] }
 
 # Utilities
@@ -85,6 +85,9 @@ unexpected_cfgs = { level = "allow", check-cfg = ['cfg(tarpaulin_include)'] }
 all = { level = "deny", priority = 0 }
 pedantic = { level = "deny", priority = 0 }
 nursery = { level = "deny", priority = 0 }
+
+[patch.crates-io]
+utoipa-swagger-ui-vendored = { path = "vendor/utoipa-swagger-ui-vendored" }
 
 [workspace.metadata.cargo-llvm-cov]
 exclude = ["spikard-node"]

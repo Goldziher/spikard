@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Comprehensive tests for lifecycle hooks execution
 //!
 //! Tests the execute_with_lifecycle_hooks function covering:

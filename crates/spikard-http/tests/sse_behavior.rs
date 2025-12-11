@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Behavioral tests for Server-Sent Events (SSE) functionality
 //!
 //! These tests verify end-to-end SSE behavior including:

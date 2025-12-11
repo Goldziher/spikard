@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Comprehensive integration tests for HTTP request extraction and parsing
 //!
 //! Tests the observable behavior of request extraction covering:

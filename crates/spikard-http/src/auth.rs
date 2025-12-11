@@ -44,7 +44,11 @@ pub struct Claims {
 /// On success, the validated claims are available to downstream handlers.
 /// On failure, returns 401 Unauthorized with RFC 9457 Problem Details.
 ///
-/// Coverage: Tested via integration tests (auth_integration.rs)
+/// Coverage: Tested via integration tests (`auth_integration.rs`)
+///
+/// # Errors
+/// Returns an error response when the Authorization header is missing, malformed,
+/// the token is invalid, or configuration is incorrect.
 #[cfg(not(tarpaulin_include))]
 pub async fn jwt_auth_middleware(
     config: JwtConfig,
@@ -110,20 +114,18 @@ pub async fn jwt_auth_middleware(
         let detail = match e.kind() {
             jsonwebtoken::errors::ErrorKind::ExpiredSignature => "Token has expired".to_string(),
             jsonwebtoken::errors::ErrorKind::InvalidToken => "Token is invalid".to_string(),
-            jsonwebtoken::errors::ErrorKind::InvalidSignature => "Token signature is invalid".to_string(),
-            jsonwebtoken::errors::ErrorKind::Base64(_) => "Token signature is invalid".to_string(),
-            jsonwebtoken::errors::ErrorKind::InvalidAudience => "Token audience is invalid".to_string(),
-            jsonwebtoken::errors::ErrorKind::InvalidIssuer => {
-                if let Some(ref expected_iss) = config.issuer {
-                    format!("Token issuer is invalid, expected '{}'", expected_iss)
-                } else {
-                    "Token issuer is invalid".to_string()
-                }
+            jsonwebtoken::errors::ErrorKind::InvalidSignature | jsonwebtoken::errors::ErrorKind::Base64(_) => {
+                "Token signature is invalid".to_string()
             }
+            jsonwebtoken::errors::ErrorKind::InvalidAudience => "Token audience is invalid".to_string(),
+            jsonwebtoken::errors::ErrorKind::InvalidIssuer => config.issuer.as_ref().map_or_else(
+                || "Token issuer is invalid".to_string(),
+                |expected_iss| format!("Token issuer is invalid, expected '{expected_iss}'"),
+            ),
             jsonwebtoken::errors::ErrorKind::ImmatureSignature => {
                 "JWT not valid yet, not before claim is in the future".to_string()
             }
-            _ => format!("Token validation failed: {}", e),
+            _ => format!("Token validation failed: {e}"),
         };
 
         let problem =
@@ -149,7 +151,7 @@ fn parse_algorithm(alg: &str) -> Result<Algorithm, String> {
         "PS256" => Ok(Algorithm::PS256),
         "PS384" => Ok(Algorithm::PS384),
         "PS512" => Ok(Algorithm::PS512),
-        _ => Err(format!("Unsupported algorithm: {}", alg)),
+        _ => Err(format!("Unsupported algorithm: {alg}")),
     }
 }
 
@@ -160,7 +162,10 @@ fn parse_algorithm(alg: &str) -> Result<Algorithm, String> {
 /// On success, the request proceeds to the next handler.
 /// On failure, returns 401 Unauthorized with RFC 9457 Problem Details.
 ///
-/// Coverage: Tested via integration tests (auth_integration.rs)
+/// Coverage: Tested via integration tests (`auth_integration.rs`)
+///
+/// # Errors
+/// Returns an error response when the API key is missing or invalid.
 #[cfg(not(tarpaulin_include))]
 pub async fn api_key_auth_middleware(
     config: ApiKeyConfig,
@@ -174,11 +179,7 @@ pub async fn api_key_auth_middleware(
 
     let api_key_from_header = headers.get(&config.header_name).and_then(|v| v.to_str().ok());
 
-    let api_key = if let Some(key) = api_key_from_header {
-        Some(key)
-    } else {
-        extract_api_key_from_query(&uri)
-    };
+    let api_key = api_key_from_header.map_or_else(|| extract_api_key_from_query(&uri), Some);
 
     let api_key = api_key.ok_or_else(|| {
         let problem =

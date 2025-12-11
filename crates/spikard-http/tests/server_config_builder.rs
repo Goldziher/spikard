@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Tests for ServerConfig builder with dependency injection
 
 mod common;
