@@ -108,4 +108,6 @@ export interface SpikardApp {
 	config?: import("./config").ServerConfig;
 	/** Optional lifecycle hooks */
 	lifecycleHooks?: Partial<import("./app").LifecycleHooks>;
+	/** Optional dependency injection container */
+	dependencies?: Record<string, unknown>;
 }
