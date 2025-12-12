@@ -1439,7 +1439,8 @@ fn validate_jwt(token: &str, config: &JwtConfig) -> Result<(), ProblemDetails> {
         .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
     mac.update(signing_input.as_bytes());
     let expected_sig = mac.finalize().into_bytes();
-    if expected_sig.as_ref() != signature_bytes.as_slice() {
+    let expected_sig_bytes: &[u8] = expected_sig.as_ref();
+    if expected_sig_bytes != signature_bytes.as_slice() {
         return Err(unauthorized_problem(
             "JWT validation failed",
             "Token signature is invalid",
