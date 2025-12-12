@@ -138,25 +138,25 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
         crate::ts_target::Runtime::CloudflareWorkers => {
             format!(
                 r#"{{
-	"name": "{name}",
-	"version": "0.1.0",
-	"private": true,
-	"type": "module",
-	"scripts": {{
-		"test": "vitest run",
-		"test:watch": "vitest"
-		}},
-			"devDependencies": {{
-				"{dependency}": "workspace:*",
-				"@cloudflare/vitest-pool-workers": "^0.7.0",
-				"@cloudflare/workers-types": "^4.20250106.0",
-				"@vitest/coverage-v8": "^4.0.6",
-			"typescript": "^5.9.3",
-			"vitest": "^4.0.6",
-			"wrangler": "^3.100.0"
-		}}
-}}
-	"#,
+		"name": "{name}",
+		"version": "0.1.0",
+		"private": true,
+		"type": "module",
+		"scripts": {{
+			"test": "vitest run",
+			"test:watch": "vitest"
+			}},
+				"devDependencies": {{
+					"{dependency}": "workspace:*",
+					"@cloudflare/vitest-pool-workers": "^0.10.15",
+					"@cloudflare/workers-types": "^4.20251212.0",
+					"@vitest/coverage-v8": "^4.0.15",
+				"typescript": "^5.9.3",
+				"vitest": "^4.0.15",
+				"wrangler": "^4.54.0"
+			}}
+	}}
+		"#,
                 name = target.e2e_package_name,
                 dependency = target.dependency_package
             )
@@ -164,23 +164,23 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
         _ => {
             format!(
                 r#"{{
-	"name": "{name}",
-	"version": "0.1.0",
-	"private": true,
-	"type": "module",
-	"scripts": {{
-		"test": "vitest run",
-		"test:watch": "vitest"
-	}},
-		"devDependencies": {{
-			"{dependency}": "workspace:*",
-	        "@types/node": "^24.9.2",
-			"@vitest/coverage-v8": "^4.0.6",
-			"typescript": "^5.9.3",
-			"vitest": "^4.0.6"
-		}}
-}}
-"#,
+		"name": "{name}",
+		"version": "0.1.0",
+		"private": true,
+		"type": "module",
+		"scripts": {{
+			"test": "vitest run",
+			"test:watch": "vitest"
+		}},
+			"devDependencies": {{
+				"{dependency}": "workspace:*",
+		        "@types/node": "^24.9.2",
+				"@vitest/coverage-v8": "^4.0.15",
+				"typescript": "^5.9.3",
+				"vitest": "^4.0.15"
+			}}
+	}}
+	"#,
                 name = target.e2e_package_name,
                 dependency = target.dependency_package
             )
