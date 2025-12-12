@@ -185,8 +185,7 @@ export class TestResponse {
 		const decoded = this.getDecodedBody();
 		const bufferCtor = globalAny.Buffer as { from: (data: Uint8Array) => Uint8Array } | undefined;
 		if (bufferCtor) {
-			const buf = bufferCtor.from(decoded);
-			return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+			return bufferCtor.from(decoded);
 		}
 		return decoded.slice();
 	}
