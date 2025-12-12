@@ -17,8 +17,8 @@ use crate::lifecycle::{
 };
 use crate::matching::match_route;
 use crate::types::{
-    ApiKeyConfig, BodyKind, BodyPayload, HandlerResponsePayload, JwtConfig, RequestPayload, RouteDefinition,
-    ServerConfig, build_params,
+    ApiKeyConfig, BodyKind, BodyMetadata, BodyPayload, HandlerResponsePayload, JwtConfig, RequestPayload,
+    RouteDefinition, ServerConfig, build_params,
 };
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
@@ -850,25 +850,14 @@ fn attach_clear_timeout(promise: &Promise, timeout_id: JsValue) -> Result<Promis
         .dyn_into::<Function>()
         .map_err(|_| JsValue::from_str("clearTimeout is not a function"))?;
 
-    let clear_timeout_success = clear_timeout.clone();
-    let global_success = global.clone();
-    let timeout_id_success = timeout_id.clone();
-    let on_fulfilled = Closure::wrap(Box::new(move |value: JsValue| -> JsValue {
-        let _ = clear_timeout_success.call1(&global_success, &timeout_id_success);
-        value
-    }) as Box<dyn FnMut(JsValue) -> JsValue>);
+    let global_finally = global.clone();
+    let timeout_id_finally = timeout_id.clone();
+    let on_finally = Closure::wrap(Box::new(move || {
+        let _ = clear_timeout.call1(&global_finally, &timeout_id_finally);
+    }) as Box<dyn FnMut()>);
 
-    let clear_timeout_error = clear_timeout.clone();
-    let global_error = global.clone();
-    let timeout_id_error = timeout_id.clone();
-    let on_rejected = Closure::wrap(Box::new(move |err: JsValue| -> JsValue {
-        let _ = clear_timeout_error.call1(&global_error, &timeout_id_error);
-        Promise::reject(&err).into()
-    }) as Box<dyn FnMut(JsValue) -> JsValue>);
-
-    let chained = promise.then2(&on_fulfilled, &on_rejected);
-    on_fulfilled.forget();
-    on_rejected.forget();
+    let chained = promise.finally(&on_finally);
+    on_finally.forget();
     Ok(chained)
 }
 
