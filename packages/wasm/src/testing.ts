@@ -95,20 +95,22 @@ async function loadWasmBindings(): Promise<WasmBindings> {
 		return wasmBindingsPromise;
 	}
 	wasmBindingsPromise = (async () => {
-		try {
-			return (await import("../runtime/spikard_wasm.js")) as unknown as WasmBindings;
-		} catch {
-			const webFallback = "../../../crates/spikard-wasm/dist-web/" + "spikard_wasm.js";
-			const nodeFallback = "../../../crates/spikard-wasm/dist-node/" + "spikard_wasm.js";
-			const preferNode = isNodeLikeEnvironment();
-			const first = preferNode ? nodeFallback : webFallback;
-			const second = preferNode ? webFallback : nodeFallback;
+		const runtimePath = "../runtime/spikard_wasm.js";
+		const webFallback = "../../../crates/spikard-wasm/dist-web/" + "spikard_wasm.js";
+		const nodeFallback = "../../../crates/spikard-wasm/dist-node/" + "spikard_wasm.js";
+		const preferNode = isNodeLikeEnvironment();
+
+		const candidates = preferNode ? [nodeFallback, runtimePath, webFallback] : [runtimePath, webFallback, nodeFallback];
+
+		for (const candidate of candidates) {
 			try {
-				return (await import(first)) as unknown as WasmBindings;
+				return (await import(candidate)) as unknown as WasmBindings;
 			} catch {
-				return (await import(second)) as unknown as WasmBindings;
+				// Try next candidate.
 			}
 		}
+
+		throw new Error("Failed to load WASM bindings (runtime, dist-web, dist-node).");
 	})();
 	return wasmBindingsPromise;
 }
