@@ -3,7 +3,7 @@ import type { LifecycleHookFunction, LifecycleHookPayload, LifecycleHooks } from
 import type { HandlerFunction, SpikardApp } from "./index";
 import type { Request } from "./request";
 import { isStreamingResponse } from "./streaming";
-import type { HandlerPayload, JsonValue, StructuredHandlerResponse } from "./types";
+import type { HandlerBody, HandlerPayload, JsonValue, StructuredHandlerResponse } from "./types";
 
 type HeaderMap = Record<string, string>;
 type HeaderInput = HeaderMap | Map<string, string> | null | undefined;
@@ -561,9 +561,9 @@ class WasmRequest implements Request {
 	public readonly files?: MultipartFile[];
 	private readonly rawJson: string;
 	private readonly bodyKind: RequestBodyKind;
-	private readonly bodyJson?: JsonValue;
-	private readonly formData?: Record<string, string>;
-	private readonly textBody?: string;
+	private readonly bodyJson: JsonValue | undefined;
+	private readonly formData: Record<string, string> | undefined;
+	private readonly textBody: string | undefined;
 	private bodyMetadata: BodyMetadata | null = null;
 	private bodyDirty = false;
 	private _body: Buffer | Uint8Array | null;
@@ -591,7 +591,9 @@ class WasmRequest implements Request {
 		this.bodyJson = applied.jsonValue;
 		this.formData = applied.formValue;
 		this.textBody = applied.textValue;
-		this.files = applied.files ?? undefined;
+		if (applied.files !== undefined) {
+			this.files = applied.files;
+		}
 		this._body = applied.buffer;
 	}
 
@@ -660,12 +662,12 @@ class WasmRequest implements Request {
 					return this.formData ? { __spikard_form__: this.formData } : null;
 				case "multipart":
 					return this.formData || this.files
-						? {
+						? ({
 								__spikard_multipart__: {
 									fields: this.formData ?? {},
 									files: this.files ?? [],
 								},
-							}
+							} as unknown as JsonValue)
 						: null;
 				case "binary":
 					if (this.bodyMetadata?.rawBase64) {
@@ -733,17 +735,17 @@ function isWasmRequest(value: unknown): value is WasmRequest {
 	return value instanceof WasmRequest;
 }
 
-function maybeWrapRequestPayload(payload: HandlerPayload): HandlerPayload {
+function maybeWrapRequestPayload(payload: HandlerPayload | InternalRequestPayload): HandlerPayload {
 	if (!payload || typeof payload !== "object") {
-		return payload;
+		return payload as HandlerPayload;
 	}
 	if (!("method" in payload) || !("path" in payload)) {
-		return payload;
+		return payload as HandlerPayload;
 	}
 	const candidate = payload as InternalRequestPayload & { [RAW_REQUEST_KEY]?: string };
 	const rawJson =
 		typeof candidate[RAW_REQUEST_KEY] === "string" ? candidate[RAW_REQUEST_KEY] : JSON.stringify(candidate);
-	return new WasmRequest(candidate, rawJson);
+	return new WasmRequest(candidate, rawJson) as unknown as HandlerPayload;
 }
 
 function buildQueryString(raw?: Map<string, string[]> | Record<string, string[]>): string {
@@ -820,10 +822,10 @@ function applyBodyMetadata(
 ): {
 	kind: RequestBodyKind;
 	buffer: Buffer | Uint8Array | null;
-	jsonValue?: JsonValue;
-	formValue?: Record<string, string>;
-	textValue?: string;
-	files?: MultipartFile[];
+	jsonValue: JsonValue | undefined;
+	formValue: Record<string, string> | undefined;
+	textValue: string | undefined;
+	files: MultipartFile[] | undefined;
 } {
 	const kind = normalizeRequestBodyKind(metadata?.kind);
 	let buffer: Buffer | Uint8Array | null = null;
@@ -864,7 +866,7 @@ function applyBodyMetadata(
 		jsonValue,
 		formValue,
 		textValue,
-		files: files ?? undefined,
+		files,
 	};
 }
 
@@ -993,7 +995,7 @@ async function normalizeStructuredResponse(
 	if (isStructuredResponseLike(value)) {
 		const headers = normalizeRecord(value.headers ?? {});
 		const status = value.status ?? value.statusCode ?? 200;
-		const body =
+		const body: HandlerBody =
 			value.body === undefined
 				? null
 				: typeof value.body === "object" && value.body !== null
@@ -1022,7 +1024,7 @@ function isStructuredResponseLike(value: unknown): value is StructuredHandlerRes
 
 function matchPath(template: string, actual: string): Record<string, string> | null {
 	const params: Record<string, string> = {};
-	const [actualPath] = actual.split("?");
+	const actualPath = actual.split("?")[0] ?? actual;
 
 	const templateSegments = template.split("/").filter(Boolean);
 	const actualSegments = actualPath.split("/").filter(Boolean);
@@ -1034,6 +1036,9 @@ function matchPath(template: string, actual: string): Record<string, string> | n
 	for (let i = 0; i < templateSegments.length; i += 1) {
 		const templateSegment = templateSegments[i];
 		const actualSegment = actualSegments[i];
+		if (templateSegment === undefined || actualSegment === undefined) {
+			return null;
+		}
 		if (templateSegment.startsWith("{") && templateSegment.endsWith("}")) {
 			const key = templateSegment.slice(1, -1);
 			params[key] = decodeURIComponent(actualSegment);

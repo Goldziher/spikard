@@ -32,39 +32,41 @@ pub struct RegisteredRoutePayload {
 }
 
 impl RegisteredRoutePayload {
-    pub fn into_route(self) -> Result<Route, String> {
-        // Validate JSON-RPC method metadata if present
-        if let Some(ref json) = self.jsonrpc_method {
-            if let Ok(obj) = serde_json::from_value::<serde_json::Map<String, serde_json::Value>>(json.clone()) {
-                if let Some(method_name_val) = obj.get("method_name") {
-                    if let Some(method_name) = method_name_val.as_str() {
-                        spikard::validation::validate_jsonrpc_method_name(method_name)
-                            .map_err(|e| format!("Invalid JSON-RPC method name: {}", e))?;
-                    } else {
-                        return Err("jsonrpc_method.method_name must be a string".to_string());
-                    }
-                }
-            }
-        }
+	pub fn into_route(self) -> Result<Route, String> {
+		let jsonrpc_method = self.jsonrpc_method;
 
-        Ok(Route {
-            method: self
-                .method
-                .parse()
-                .map_err(|e| format!("Invalid method {}: {}", self.method, e))?,
-            path: self.path,
+		// Validate JSON-RPC method metadata if present
+		if let Some(ref json) = jsonrpc_method {
+			let obj = serde_json::from_value::<serde_json::Map<String, serde_json::Value>>(json.clone())
+				.map_err(|e| format!("jsonrpc_method must be an object: {}", e))?;
+
+			if let Some(method_name_val) = obj.get("method_name") {
+				let method_name = method_name_val
+					.as_str()
+					.ok_or_else(|| "jsonrpc_method.method_name must be a string".to_string())?;
+				spikard::validation::validate_jsonrpc_method_name(method_name)
+					.map_err(|e| format!("Invalid JSON-RPC method name: {}", e))?;
+			}
+		}
+
+	        Ok(Route {
+	            method: self
+	                .method
+	                .parse()
+	                .map_err(|e| format!("Invalid method {}: {}", self.method, e))?,
+	            path: self.path,
             handler_name: self.handler_name,
             request_validator: None,
             response_validator: None,
             parameter_validator: None,
             file_params: None,
             is_async: false,
-            cors: None,
-            expects_json_body: self.request_schema.is_some(),
-            handler_dependencies: vec![],
-            jsonrpc_method: self.jsonrpc_method.and_then(|json| serde_json::from_value(json).ok()),
-        })
-    }
+	            cors: None,
+	            expects_json_body: self.request_schema.is_some(),
+	            handler_dependencies: vec![],
+	            jsonrpc_method: jsonrpc_method.and_then(|json| serde_json::from_value(json).ok()),
+	        })
+	    }
 }
 
 /// Extract ServerConfig from a PHP associative array (Zval).
