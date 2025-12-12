@@ -86,9 +86,6 @@ all = { level = "deny", priority = 0 }
 pedantic = { level = "deny", priority = 0 }
 nursery = { level = "deny", priority = 0 }
 
-[patch.crates-io]
-utoipa-swagger-ui-vendored = { path = "vendor/utoipa-swagger-ui-vendored" }
-
 [workspace.metadata.cargo-llvm-cov]
 exclude = ["spikard-node"]
 
