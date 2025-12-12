@@ -210,7 +210,7 @@ fn generate_deno_config(target: &TypeScriptTarget) -> String {
 		"test": "deno test --allow-net --allow-read --allow-env tests/"
 	}},
 	"imports": {{
-		"{pkg}": "npm:{pkg}@workspace:*"
+		"{pkg}": "npm:{pkg}"
 	}}
 }}
 "#,
@@ -273,26 +273,20 @@ fn format_generated_ts(dir: &Path) -> Result<()> {
 /// Generate vitest.config.ts for test configuration
 fn generate_vitest_config(target: &TypeScriptTarget) -> String {
     match target.runtime {
-        crate::ts_target::Runtime::CloudflareWorkers => {
-            r#"import { defineWorkersConfig } from "@cloudflare/vitest-pool-workers/config";
-
-export default defineWorkersConfig({
-	test: {
-		globals: true,
-		poolOptions: {
-			workers: {
-				wrangler: { configPath: "./wrangler.toml" },
-			},
-		},
-	},
-});
-"#
-            .to_string()
-        }
-        _ => r#"import { defineConfig } from "vitest/config";
+        crate::ts_target::Runtime::CloudflareWorkers => r#"import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	test: {
+		globals: true,
+		environment: "node",
+	},
+});
+"#
+        .to_string(),
+        _ => r#"import { defineConfig } from "vitest/config";
+
+	export default defineConfig({
+		test: {
 		globals: true,
 		environment: "node",
 	},
