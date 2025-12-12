@@ -13,6 +13,9 @@ fn make_request_data() -> RequestData {
             ("filter".to_string(), vec!["active".to_string()]),
         ])),
         body: json!({"name": "spikard", "active": true}),
+        #[cfg(feature = "di")]
+        raw_body: Some(bytes::Bytes::from_static(b"{\"name\":\"spikard\",\"active\":true}")),
+        #[cfg(not(feature = "di"))]
         raw_body: Some(b"{\"name\":\"spikard\",\"active\":true}".to_vec()),
         headers: Arc::new(HashMap::from([
             ("content-type".to_string(), "application/json".to_string()),

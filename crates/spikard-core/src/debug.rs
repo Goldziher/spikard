@@ -65,31 +65,52 @@ macro_rules! debug_log_value {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
     use std::sync::atomic::Ordering;
 
-    struct DebugFlagGuard(bool);
+    static FLAG_LOCK: Mutex<()> = Mutex::new(());
+
+    struct DebugFlagGuard {
+        previous_flag: bool,
+        previous_env: Option<String>,
+    }
 
     impl Drop for DebugFlagGuard {
         fn drop(&mut self) {
-            DEBUG_ENABLED.store(self.0, Ordering::Relaxed);
+            DEBUG_ENABLED.store(self.previous_flag, Ordering::Relaxed);
+            if let Some(prev) = &self.previous_env {
+                unsafe { std::env::set_var("SPIKARD_DEBUG", prev) };
+            } else {
+                unsafe { std::env::remove_var("SPIKARD_DEBUG") };
+            }
         }
     }
 
     #[test]
     fn init_sets_debug_enabled_in_tests() {
+        let _lock = FLAG_LOCK.lock().unwrap();
         let previous = DEBUG_ENABLED.load(Ordering::Relaxed);
-        let _guard = DebugFlagGuard(previous);
+        let previous_env = std::env::var("SPIKARD_DEBUG").ok();
+        let _guard = DebugFlagGuard {
+            previous_flag: previous,
+            previous_env,
+        };
 
-        DEBUG_ENABLED.store(false, Ordering::Relaxed);
+        unsafe { std::env::set_var("SPIKARD_DEBUG", "1") };
 
         init();
-        assert!(is_enabled(), "init should enable debug in debug/test builds");
+        assert!(is_enabled(), "init should enable debug when SPIKARD_DEBUG is set");
     }
 
     #[test]
     fn macros_follow_debug_flag() {
+        let _lock = FLAG_LOCK.lock().unwrap();
         let previous = DEBUG_ENABLED.load(Ordering::Relaxed);
-        let _guard = DebugFlagGuard(previous);
+        let previous_env = std::env::var("SPIKARD_DEBUG").ok();
+        let _guard = DebugFlagGuard {
+            previous_flag: previous,
+            previous_env,
+        };
 
         DEBUG_ENABLED.store(false, Ordering::Relaxed);
         debug_log!("disabled branch");

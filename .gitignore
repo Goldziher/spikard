@@ -78,6 +78,10 @@ packages/php/var/*
 !packages/php/var/cache/.gitkeep
 packages/ruby/ext/spikard_rb/Makefile
 packages/ruby/ext/spikard_rb/.rb-sys/
+packages/ruby/ext/spikard_rb/spikard_rb.bundle
+packages/ruby/ext/spikard_rb/spikard_rb.bundle.dSYM
+packages/ruby/ext/spikard_rb/mkmf.log
+packages/ruby/ext/spikard_rb/target/
 reports/
 results/
 rust-coverage.lcov
