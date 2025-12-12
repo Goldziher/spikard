@@ -397,10 +397,17 @@ fn generate_app_file_per_fixture(
         value_imports.push("Spikard");
     }
     if !value_imports.is_empty() {
+        let binding_import = if matches!(target.runtime, crate::ts_target::Runtime::CloudflareWorkers)
+            && target.binding_package == "@spikard/wasm"
+        {
+            "../../packages/wasm/src/index.ts"
+        } else {
+            target.binding_package
+        };
         code.push_str(&format!(
             "import {{ {} }} from \"{}\";\n",
             value_imports.join(", "),
-            target.binding_package
+            binding_import
         ));
     }
 
@@ -413,7 +420,14 @@ fn generate_app_file_per_fixture(
     for name in type_imports {
         code.push_str(&format!("\t{},\n", name));
     }
-    code.push_str(&format!("}} from \"{}\";\n", target.binding_package));
+    let binding_type_import = if matches!(target.runtime, crate::ts_target::Runtime::CloudflareWorkers)
+        && target.binding_package == "@spikard/wasm"
+    {
+        "../../packages/wasm/src/index.ts"
+    } else {
+        target.binding_package
+    };
+    code.push_str(&format!("}} from \"{}\";\n", binding_type_import));
     let needs_buffer_import = has_websocket || padded_binary_bodies || streaming_has_binary_chunks;
     if needs_buffer_import {
         match target.runtime {
