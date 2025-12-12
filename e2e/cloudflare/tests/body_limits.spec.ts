@@ -3,8 +3,8 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
+import { TestClient } from "../../packages/wasm/src/index.ts";
 import { createAppBodyLimitsBodyOverLimitReturns413, createAppBodyLimitsBodyUnderLimitSucceeds } from "../app/main.ts";
 
 describe("body_limits", () => {

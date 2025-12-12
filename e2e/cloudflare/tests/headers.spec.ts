@@ -3,8 +3,8 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
+import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppHeaders30BearerTokenFormatValid,
 	createAppHeaders31BearerTokenFormatInvalid,
@@ -378,9 +378,9 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
+			"X-Request-Id": "req-12345",
 			"X-Client-Version": "1.2.3",
 			"X-Trace-Id": "trace-abc",
-			"X-Request-Id": "req-12345",
 		};
 		const response = await client.get("/headers/multiple", headers);
 
