@@ -853,23 +853,23 @@ fn attach_clear_timeout(promise: &Promise, timeout_id: JsValue) -> Result<Promis
     let clear_timeout_success = clear_timeout.clone();
     let global_success = global.clone();
     let timeout_id_success = timeout_id.clone();
-    let on_fulfilled = Closure::once_into_js(move |value: JsValue| -> JsValue {
+    let on_fulfilled = Closure::wrap(Box::new(move |value: JsValue| -> JsValue {
         let _ = clear_timeout_success.call1(&global_success, &timeout_id_success);
         value
-    });
+    }) as Box<dyn FnMut(JsValue) -> JsValue>);
 
     let clear_timeout_error = clear_timeout.clone();
     let global_error = global.clone();
     let timeout_id_error = timeout_id.clone();
-    let on_rejected = Closure::once_into_js(move |err: JsValue| -> JsValue {
+    let on_rejected = Closure::wrap(Box::new(move |err: JsValue| -> JsValue {
         let _ = clear_timeout_error.call1(&global_error, &timeout_id_error);
         Promise::reject(&err).into()
-    });
+    }) as Box<dyn FnMut(JsValue) -> JsValue>);
 
-    Ok(promise.then2(
-        on_fulfilled.unchecked_ref::<Function>(),
-        on_rejected.unchecked_ref::<Function>(),
-    ))
+    let chained = promise.then2(&on_fulfilled, &on_rejected);
+    on_fulfilled.forget();
+    on_rejected.forget();
+    Ok(chained)
 }
 
 async fn resolve_dependency_map(
