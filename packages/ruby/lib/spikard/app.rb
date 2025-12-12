@@ -138,20 +138,38 @@ module Spikard
       handler_name = handler_name&.to_s
       validate_route_arguments!(block, options)
       metadata = if defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_route_metadata)
-                   Spikard::Native.build_route_metadata(
-                     method,
-                     path,
-                     handler_name,
-                     options[:request_schema],
-                     options[:response_schema],
-                     options[:parameter_schema],
-                     options[:file_params],
-                     options.fetch(:is_async, false),
-                     options[:cors],
-                     options[:body_param_name]&.to_s,
-                     options[:jsonrpc_method],
-                     block
-                   )
+                   begin
+                     Spikard::Native.build_route_metadata(
+                       method,
+                       path,
+                       handler_name,
+                       options[:request_schema],
+                       options[:response_schema],
+                       options[:parameter_schema],
+                       options[:file_params],
+                       options.fetch(:is_async, false),
+                       options[:cors],
+                       options[:body_param_name]&.to_s,
+                       options[:jsonrpc_method],
+                       block
+                     )
+                   rescue ArgumentError => e
+                     raise unless e.message.include?('wrong number of arguments')
+
+                     Spikard::Native.build_route_metadata(
+                       method,
+                       path,
+                       handler_name,
+                       options[:request_schema],
+                       options[:response_schema],
+                       options[:parameter_schema],
+                       options[:file_params],
+                       options.fetch(:is_async, false),
+                       options[:cors],
+                       options[:body_param_name]&.to_s,
+                       block
+                     )
+                   end
                  else
                    handler_name ||= default_handler_name(method, path)
 

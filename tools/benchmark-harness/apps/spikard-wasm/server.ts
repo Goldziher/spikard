@@ -6,7 +6,7 @@
  * against the pure Rust baseline.
  */
 
-import { init, TestClient } from "./pkg/spikard_wasm.js";
+import { init, TestClient } from "../../../../crates/spikard-wasm/dist-web/spikard_wasm.js";
 
 init();
 

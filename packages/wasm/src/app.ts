@@ -50,7 +50,9 @@ export type LifecycleHookPayload = Request | StructuredHandlerResponse;
  * - The (possibly modified) request to continue processing
  * - A Response object to short-circuit the request pipeline
  */
-export type LifecycleHookFunction = (payload: LifecycleHookPayload) => MaybePromise<LifecycleHookPayload>;
+export type LifecycleHookFunction = {
+	bivarianceHack(payload: LifecycleHookPayload): MaybePromise<LifecycleHookPayload>;
+}["bivarianceHack"];
 
 /**
  * Container for lifecycle hooks

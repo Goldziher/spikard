@@ -29,7 +29,7 @@ use std::sync::Arc;
 /// This eliminates 6 serialization cycles, providing 6x performance improvement.
 pub struct NodeHandler {
     handler_name: String,
-    handler_fn: Arc<ThreadsafeFunction<HandlerInput, Promise<HandlerOutput>, Vec<()>, napi::Status, false>>,
+    handler_fn: Arc<ThreadsafeFunction<HandlerInput, Promise<HandlerOutput>, Vec<HandlerInput>, napi::Status, false>>,
 }
 
 unsafe impl Send for NodeHandler {}
@@ -39,7 +39,7 @@ impl NodeHandler {
     /// Create a new Node handler wrapper with a JavaScript function
     pub fn new(
         handler_name: String,
-        handler_fn: ThreadsafeFunction<HandlerInput, Promise<HandlerOutput>, Vec<()>, napi::Status, false>,
+        handler_fn: ThreadsafeFunction<HandlerInput, Promise<HandlerOutput>, Vec<HandlerInput>, napi::Status, false>,
     ) -> Self {
         Self {
             handler_name,
