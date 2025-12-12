@@ -1,8 +1,6 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
-exclude: |
-  ^(benchmark-results/|results/|target/)
 
 repos:
   - repo: https://github.com/Goldziher/gitfluff
@@ -15,12 +13,10 @@ repos:
     rev: v0.11.0
     hooks:
       - id: shellcheck
-        exclude: ^(node_modules/|target/|dist/|vendor/|\.venv/)
   - repo: https://github.com/scop/pre-commit-shfmt
     rev: v3.12.0-2
     hooks:
       - id: shfmt
-        exclude: ^(node_modules/|target/|dist/|vendor/|\\.venv/)
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.9
     hooks:
@@ -29,11 +25,7 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: |
-          benchmark-results/|results/|target/
       - id: end-of-file-fixer
-        exclude: |
-          benchmark-results/|results/|target/
       - id: check-toml
       - id: check-case-conflict
   - repo: https://github.com/abravalheri/validate-pyproject
@@ -49,17 +41,13 @@ repos:
     hooks:
       - id: biome-format
       - id: biome-lint
-        exclude: |
-          benchmark-results/|results/|target/|docs/css/
   - repo: https://github.com/oxc-project/mirrors-oxlint
     rev: v1.32.0
     hooks:
       - id: oxlint
         args: ["--fix"]
-        exclude: |
-          benchmark-results/|results/|target/
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.8
+    rev: v0.14.9
     hooks:
       - id: ruff
         args: ["--fix", "--unsafe-fixes"]
@@ -103,7 +91,6 @@ repos:
     hooks:
       - id: rubocop
         args: ["--autocorrect", "--config", "packages/ruby/.rubocop.yml"]
-        exclude: ^packages/ruby/(Gemfile\.ext\.lock|vendor/)
         files: ^packages/ruby/
   - repo: local
     hooks:
@@ -113,7 +100,6 @@ repos:
         require_serial: true
         language: system
         types: [python]
-        exclude: ^scripts/|^examples/|^e2e/|^tools/benchmark-harness/|^tools/app-generator/|^testing_data/
       - id: phpstan
         name: PHPStan
         entry: phpstan analyse --memory-limit=2G --no-progress --configuration packages/php/phpstan.neon packages/php/src packages/php/tests

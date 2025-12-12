@@ -16,12 +16,18 @@ use crate::lifecycle::{
     response_into_value,
 };
 use crate::matching::match_route;
-use crate::types::{BodyPayload, HandlerResponsePayload, RequestPayload, RouteDefinition, ServerConfig, build_params};
+use crate::types::{
+    ApiKeyConfig, BodyKind, BodyPayload, HandlerResponsePayload, JwtConfig, RequestPayload, RouteDefinition,
+    ServerConfig, build_params,
+};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use base64::engine::general_purpose::URL_SAFE_NO_PAD as BASE64_URL_SAFE_NO_PAD;
+use hmac::{Hmac, Mac};
 use http::StatusCode;
 use js_sys::{Date as JsDate, Function, JSON, Object, Promise, Reflect, Symbol, Uint8Array};
 use serde_json::{Map as JsonMap, Value};
+use sha2::Sha256;
 use spikard_core::RouteMetadata;
 use spikard_core::bindings::response::{RawResponse, StaticAsset};
 use spikard_core::errors::StructuredError;
@@ -460,8 +466,12 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
     let request_options = types::RequestOptions::from_js(context.options)
         .map_err(|e| js_error_from_jsvalue("request_options_invalid", e))?;
     if !request_options.headers.is_empty() {
-        headers.extend(request_options.headers.clone());
+        for (key, value) in &request_options.headers {
+            headers.insert(key.to_ascii_lowercase(), value.clone());
+        }
     }
+
+    let cookies = parse_cookie_header(&headers);
 
     if let Some(snapshot) = serve_static_from_manifest(&context.method, &context.path, &headers, &context.config) {
         return Ok(snapshot);
@@ -469,6 +479,10 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
 
     let (route, path_params, path_without_query, query) = match_route(&context.routes, &context.method, &context.path)
         .map_err(|e| js_error_from_jsvalue("route_match_failed", e))?;
+
+    if let Some(snapshot) = enforce_auth(&headers, &query.raw, &context.config) {
+        return Ok(snapshot);
+    }
 
     let rate_limit_id = headers
         .get("x-forwarded-for")
@@ -493,13 +507,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
             query_map.insert(key.clone(), value.clone());
         }
         let query_value = Value::Object(query_map);
-        match parameter_validator.validate_and_extract(
-            &query_value,
-            &query.raw,
-            &path_params,
-            &headers,
-            &HashMap::new(),
-        ) {
+        match parameter_validator.validate_and_extract(&query_value, &query.raw, &path_params, &headers, &cookies) {
             Ok(value) => {
                 params = value_to_param_map(value);
             }
@@ -510,8 +518,14 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         }
     }
 
-    let body_payload = request_options.body_payload();
+    let mut body_payload = request_options.body_payload();
     if let Some(request_validator) = validators.request.as_ref() {
+        if matches!(body_payload.metadata.kind, BodyKind::Form | BodyKind::Multipart) {
+            if let Some(value) = body_payload.value.take() {
+                let coerced = coerce_value_against_schema(value, request_validator.schema());
+                body_payload.value = Some(coerced);
+            }
+        }
         if let Err(error) = request_validator.validate(body_payload.value.as_ref().unwrap_or(&Value::Null)) {
             let problem = ProblemDetails::from_validation_error(&error);
             return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
@@ -528,6 +542,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         &path_without_query,
         path_params,
         &headers,
+        cookies.clone(),
         query.clone(),
         params,
         body_value.clone(),
@@ -957,7 +972,7 @@ fn read_headers(value: JsValue) -> Result<HashMap<String, String>, JsValue> {
             let value = js_sys::Reflect::get(&obj, &JsValue::from(&key))
                 .map_err(|_| JsValue::from_str("Failed to read header value"))?;
             if let Some(string_val) = value.as_string() {
-                headers.insert(key, string_val);
+                headers.insert(key.to_ascii_lowercase(), string_val);
             }
         }
     }
@@ -1092,11 +1107,320 @@ fn header_value<'a>(headers: &'a HashMap<String, String>, name: &str) -> Option<
     })
 }
 
+fn parse_cookie_header(headers: &HashMap<String, String>) -> HashMap<String, String> {
+    let Some(value) = header_value(headers, "cookie") else {
+        return HashMap::new();
+    };
+    let mut cookies = HashMap::new();
+    for segment in value.split(';') {
+        let trimmed = segment.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        let Some((name, cookie_value)) = trimmed.split_once('=') else {
+            continue;
+        };
+        let name = name.trim();
+        if name.is_empty() {
+            continue;
+        }
+        cookies.insert(name.to_string(), cookie_value.trim().to_string());
+    }
+    cookies
+}
+
+fn coerce_value_against_schema(value: Value, schema: &Value) -> Value {
+    let Some(schema_obj) = schema.as_object() else {
+        return value;
+    };
+
+    if let Some(any_of) = schema_obj.get("anyOf").and_then(|v| v.as_array()) {
+        for candidate in any_of {
+            let coerced = coerce_value_against_schema(value.clone(), candidate);
+            if coerced != value {
+                return coerced;
+            }
+        }
+        return value;
+    }
+
+    if let Some(one_of) = schema_obj.get("oneOf").and_then(|v| v.as_array()) {
+        for candidate in one_of {
+            let coerced = coerce_value_against_schema(value.clone(), candidate);
+            if coerced != value {
+                return coerced;
+            }
+        }
+        return value;
+    }
+
+    let expected_type = schema_obj.get("type").and_then(|v| v.as_str());
+
+    match (expected_type, value) {
+        (Some("integer"), Value::String(text)) => text
+            .trim()
+            .parse::<i64>()
+            .map(serde_json::Number::from)
+            .map(Value::Number)
+            .unwrap_or(Value::String(text)),
+        (Some("number"), Value::String(text)) => text
+            .trim()
+            .parse::<f64>()
+            .ok()
+            .and_then(serde_json::Number::from_f64)
+            .map(Value::Number)
+            .unwrap_or(Value::String(text)),
+        (Some("boolean"), Value::String(text)) => match text.trim().to_ascii_lowercase().as_str() {
+            "true" | "1" | "yes" | "on" => Value::Bool(true),
+            "false" | "0" | "no" | "off" => Value::Bool(false),
+            _ => Value::String(text),
+        },
+        (Some("array"), Value::Array(items)) => {
+            let Some(items_schema) = schema_obj.get("items") else {
+                return Value::Array(items);
+            };
+            let coerced = items
+                .into_iter()
+                .map(|item| coerce_value_against_schema(item, items_schema))
+                .collect::<Vec<_>>();
+            Value::Array(coerced)
+        }
+        (Some("object"), Value::Object(mut obj)) => {
+            let Some(properties) = schema_obj.get("properties").and_then(|v| v.as_object()) else {
+                return Value::Object(obj);
+            };
+            for (key, prop_schema) in properties {
+                if let Some(current) = obj.get(key).cloned() {
+                    obj.insert(key.clone(), coerce_value_against_schema(current, prop_schema));
+                }
+            }
+            Value::Object(obj)
+        }
+        (_, other) => other,
+    }
+}
+
 fn value_to_param_map(value: Value) -> HashMap<String, Value> {
     match value {
         Value::Object(map) => map.into_iter().collect(),
         _ => HashMap::new(),
     }
+}
+
+fn unauthorized_problem(title: &str, detail: impl Into<String>) -> ProblemDetails {
+    ProblemDetails::new(
+        "https://spikard.dev/errors/unauthorized",
+        title,
+        StatusCode::UNAUTHORIZED,
+    )
+    .with_detail(detail)
+}
+
+fn enforce_auth(
+    headers: &HashMap<String, String>,
+    raw_query: &HashMap<String, Vec<String>>,
+    config: &ServerConfig,
+) -> Option<ResponseSnapshot> {
+    let jwt = config.jwt_auth.as_ref();
+    let api_key = config.api_key_auth.as_ref();
+
+    if jwt.is_none() && api_key.is_none() {
+        return None;
+    }
+
+    let authorization = headers.get("authorization").map(|s| s.as_str());
+    let api_key_candidate = api_key.and_then(|cfg| extract_api_key(headers, raw_query, cfg));
+
+    // If an Authorization header is present and JWT auth is enabled, validate it and
+    // do not fall back to API key authentication (prevents downgrade attacks).
+    if let Some(jwt_cfg) = jwt {
+        if let Some(auth_header) = authorization {
+            match validate_jwt_from_authorization(auth_header, jwt_cfg) {
+                Ok(()) => return None,
+                Err(problem) => return Some(ResponseSnapshot::from_problem(problem, headers, config)),
+            }
+        }
+    }
+
+    if let Some(api_cfg) = api_key {
+        if api_key_candidate.is_some() {
+            match validate_api_key(api_key_candidate, api_cfg) {
+                Ok(()) => return None,
+                Err(problem) => return Some(ResponseSnapshot::from_problem(problem, headers, config)),
+            }
+        }
+    }
+
+    // Missing credentials.
+    if jwt.is_some() {
+        let problem = unauthorized_problem(
+            "Missing or invalid Authorization header",
+            "Expected 'Authorization: Bearer <token>'",
+        );
+        return Some(ResponseSnapshot::from_problem(problem, headers, config));
+    }
+
+    if let Some(api_cfg) = api_key {
+        let problem = unauthorized_problem(
+            "Missing API key",
+            format!(
+                "Expected '{}' header or 'api_key' query parameter with valid API key",
+                api_cfg.header_name
+            ),
+        );
+        return Some(ResponseSnapshot::from_problem(problem, headers, config));
+    }
+
+    None
+}
+
+fn extract_api_key(
+    headers: &HashMap<String, String>,
+    raw_query: &HashMap<String, Vec<String>>,
+    config: &ApiKeyConfig,
+) -> Option<String> {
+    let header_key = config.header_name.to_ascii_lowercase();
+    headers
+        .get(&header_key)
+        .cloned()
+        .or_else(|| raw_query.get("api_key").and_then(|vals| vals.first().cloned()))
+}
+
+fn validate_api_key(candidate: Option<String>, config: &ApiKeyConfig) -> Result<(), ProblemDetails> {
+    let Some(value) = candidate else {
+        return Err(unauthorized_problem(
+            "Missing API key",
+            format!(
+                "Expected '{}' header or 'api_key' query parameter with valid API key",
+                config.header_name
+            ),
+        ));
+    };
+
+    if config.keys.iter().any(|key| key == &value) {
+        Ok(())
+    } else {
+        Err(unauthorized_problem(
+            "Invalid API key",
+            "The provided API key is not valid",
+        ))
+    }
+}
+
+fn validate_jwt_from_authorization(header: &str, config: &JwtConfig) -> Result<(), ProblemDetails> {
+    let trimmed = header.trim();
+    if !trimmed.to_ascii_lowercase().starts_with("bearer ") {
+        return Err(unauthorized_problem(
+            "Invalid Authorization header format",
+            "Authorization header must use Bearer scheme: 'Bearer <token>'",
+        ));
+    }
+    let token = trimmed[7..].trim();
+    if token.is_empty() {
+        return Err(unauthorized_problem(
+            "Missing or invalid Authorization header",
+            "Expected 'Authorization: Bearer <token>'",
+        ));
+    }
+    validate_jwt(token, config)
+}
+
+fn validate_jwt(token: &str, config: &JwtConfig) -> Result<(), ProblemDetails> {
+    let parts: Vec<&str> = token.split('.').collect();
+    if parts.len() != 3 {
+        return Err(unauthorized_problem(
+            "Malformed JWT token",
+            format!(
+                "Malformed JWT token: expected 3 parts separated by dots, found {}",
+                parts.len()
+            ),
+        ));
+    }
+
+    let signing_input = format!("{}.{}", parts[0], parts[1]);
+    let header_bytes = BASE64_URL_SAFE_NO_PAD
+        .decode(parts[0])
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+    let payload_bytes = BASE64_URL_SAFE_NO_PAD
+        .decode(parts[1])
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+    let signature_bytes = BASE64_URL_SAFE_NO_PAD
+        .decode(parts[2])
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+
+    let header_json: Value = serde_json::from_slice(&header_bytes)
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+    if let Some(expected_alg) = config.algorithm.as_deref() {
+        if let Some(actual) = header_json.get("alg").and_then(|v| v.as_str()) {
+            if actual != expected_alg {
+                return Err(unauthorized_problem("JWT validation failed", "Token is invalid"));
+            }
+        }
+    }
+
+    type HmacSha256 = Hmac<Sha256>;
+    let mut mac = HmacSha256::new_from_slice(config.secret.as_bytes())
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+    mac.update(signing_input.as_bytes());
+    let expected_sig = mac.finalize().into_bytes();
+    if expected_sig.as_slice() != signature_bytes.as_slice() {
+        return Err(unauthorized_problem(
+            "JWT validation failed",
+            "Token signature is invalid",
+        ));
+    }
+
+    let claims: Value = serde_json::from_slice(&payload_bytes)
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+
+    let now = (JsDate::now() / 1000.0) as i64;
+    let leeway = config.leeway as i64;
+
+    if let Some(exp) = claims.get("exp").and_then(|v| v.as_i64()) {
+        if exp + leeway < now {
+            return Err(unauthorized_problem("JWT validation failed", "Token has expired"));
+        }
+    }
+
+    if let Some(nbf) = claims.get("nbf").and_then(|v| v.as_i64()) {
+        if nbf - leeway > now {
+            return Err(unauthorized_problem(
+                "JWT validation failed",
+                "JWT not valid yet, not before claim is in the future",
+            ));
+        }
+    }
+
+    if let Some(issuer) = config.issuer.as_deref() {
+        match claims.get("iss").and_then(|v| v.as_str()) {
+            Some(actual) if actual == issuer => {}
+            _ => {
+                return Err(unauthorized_problem(
+                    "JWT validation failed",
+                    format!("Token issuer is invalid, expected '{issuer}'"),
+                ));
+            }
+        }
+    }
+
+    if !config.audience.is_empty() {
+        let audiences: Vec<String> = match claims.get("aud") {
+            Some(Value::String(s)) => vec![s.clone()],
+            Some(Value::Array(arr)) => arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect(),
+            _ => Vec::new(),
+        };
+        let matches = audiences
+            .iter()
+            .any(|aud| config.audience.iter().any(|expected| expected == aud));
+        if !matches {
+            return Err(unauthorized_problem(
+                "JWT validation failed",
+                "Token audience is invalid",
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 fn js_error_structured(code: &str, details: impl ToString) -> JsValue {

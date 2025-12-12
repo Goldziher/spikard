@@ -33,6 +33,8 @@ once_cell = "1.21"
 url = "2.5"
 percent-encoding = "2.3"
 base64 = "0.22"
+hmac = "0.12"
+sha2 = "0.10"
 thiserror.workspace = true
 serde_qs = "0.15"
 time = { version = "0.3", default-features = false, features = ["formatting", "parsing", "macros", "std"] }
