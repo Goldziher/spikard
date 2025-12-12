@@ -206,6 +206,7 @@ fn generate_minimal_package_json(target: &TypeScriptTarget) -> String {
 fn generate_deno_config(target: &TypeScriptTarget) -> String {
     format!(
         r#"{{
+	"nodeModulesDir": "auto",
 	"tasks": {{
 		"test": "deno test --allow-net --allow-read --allow-env tests/"
 	}},
