@@ -195,18 +195,16 @@ Deno.test("di: Mixed singleton and per-request caching - success", async () => {
 
 	assertEquals(response.statusCode, 200);
 
-	// Second request to verify singleton caching
 	const response2 = await client.get("/api/mixed-caching");
 	assertEquals(response2.statusCode, 200);
 	const data1 = response.json();
 	const data2 = response2.json();
 
-	// Singleton should have same ID but incremented count
 	assert(data1.id !== undefined && data1.id !== null);
 	assert(data2.id !== undefined && data2.id !== null);
-	assertEquals(data1.id, data2.id); // Same singleton instance
+	assertEquals(data1.id, data2.id);
 	if (data1.count !== undefined && data2.count !== undefined) {
-		assert(data2.count > data1.count); // Count incremented
+		assert(data2.count > data1.count);
 	}
 });
 
@@ -258,18 +256,16 @@ Deno.test("di: Singleton dependency caching - success", async () => {
 
 	assertEquals(response.statusCode, 200);
 
-	// Second request to verify singleton caching
 	const response2 = await client.get("/api/app-counter");
 	assertEquals(response2.statusCode, 200);
 	const data1 = response.json();
 	const data2 = response2.json();
 
-	// Singleton should have same ID but incremented count
 	assert(data1.id !== undefined && data1.id !== null);
 	assert(data2.id !== undefined && data2.id !== null);
-	assertEquals(data1.id, data2.id); // Same singleton instance
+	assertEquals(data1.id, data2.id);
 	if (data1.count !== undefined && data2.count !== undefined) {
-		assert(data2.count > data1.count); // Count incremented
+		assert(data2.count > data1.count);
 	}
 });
 

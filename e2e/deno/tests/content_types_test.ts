@@ -115,9 +115,7 @@ Deno.test("content_types: PDF response - application pdf", async () => {
 Deno.test({
 	name: "content_types: 20_content_length_mismatch",
 	ignore: true,
-	fn: async () => {
-		// Not supported by the in-memory HTTP client
-	},
+	fn: async () => {},
 });
 
 Deno.test("content_types: 17_vendor_json_accepted", async () => {
