@@ -328,6 +328,8 @@ pub struct RequestPayload {
     pub(crate) cookies: HashMap<String, String>,
     #[serde(default)]
     pub(crate) params: HashMap<String, Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) dependencies: Option<HashMap<String, Value>>,
     pub(crate) body: Option<Value>,
     #[serde(rename = "__spikard_body_metadata__", skip_serializing_if = "Option::is_none")]
     pub(crate) body_metadata: Option<BodyMetadata>,
@@ -354,6 +356,7 @@ impl RequestPayload {
             headers: headers.clone(),
             cookies: HashMap::new(),
             params,
+            dependencies: None,
             body,
             body_metadata: Some(body_metadata),
         }

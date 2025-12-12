@@ -58,10 +58,11 @@ type NativeClientFactory = (
 	handlers: Record<string, HandlerFunction>,
 	config: string | null,
 	lifecycleHooks: NativeLifecycleHooksPayload | null,
+	dependencies: Record<string, unknown> | null,
 ) => Promise<NativeClient>;
 
-const defaultNativeClientFactory: NativeClientFactory = (routesJson, handlers, config, lifecycleHooks) =>
-	wasmInitPromise.then(() => new NativeTestClient(routesJson, handlers, config, lifecycleHooks));
+const defaultNativeClientFactory: NativeClientFactory = (routesJson, handlers, config, lifecycleHooks, dependencies) =>
+	wasmInitPromise.then(() => new NativeTestClient(routesJson, handlers, config, lifecycleHooks, dependencies));
 
 let nativeClientFactory: NativeClientFactory = defaultNativeClientFactory;
 
@@ -181,10 +182,17 @@ export class TestClient {
 		const lifecycleHooks = normalizeLifecycleHooks(app.lifecycleHooks);
 		const wrappedHandlers = wrapHandlers(this.websocketHandlers);
 		const configString = app.config && Object.keys(app.config).length > 0 ? JSON.stringify(app.config) : null;
+		const dependencies = (app as SpikardApp & { dependencies?: Record<string, unknown> }).dependencies ?? null;
 
 		const nativeLifecycleHooks = createNativeLifecycleHooks(lifecycleHooks);
 
-		this.nativeClientPromise = nativeClientFactory(routesJson, wrappedHandlers, configString, nativeLifecycleHooks);
+		this.nativeClientPromise = nativeClientFactory(
+			routesJson,
+			wrappedHandlers,
+			configString,
+			nativeLifecycleHooks,
+			dependencies,
+		);
 	}
 
 	async get(path: string, headers?: Record<string, string>): Promise<TestResponse> {
@@ -518,9 +526,14 @@ function bufferToBase64(bytes: Uint8Array): string {
 function wrapHandlers(handlers: Record<string, HandlerFunction>): Record<string, HandlerFunction> {
 	const wrapped: Record<string, HandlerFunction> = {};
 	for (const [name, handler] of Object.entries(handlers)) {
+		const looksLikeStringHandler = handler.toString().includes("JSON.parse");
 		wrapped[name] = async (request) => {
+			const rawJson =
+				request && typeof request === "object" && RAW_REQUEST_KEY in request
+					? String((request as { [RAW_REQUEST_KEY]?: unknown })[RAW_REQUEST_KEY] ?? "")
+					: JSON.stringify(request);
 			const normalizedRequest = maybeWrapRequestPayload(request);
-			return handler(normalizedRequest);
+			return looksLikeStringHandler ? handler(rawJson) : handler(normalizedRequest);
 		};
 	}
 	return wrapped;

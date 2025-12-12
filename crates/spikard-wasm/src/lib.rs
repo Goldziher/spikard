@@ -51,6 +51,8 @@ pub struct TestClient {
     lifecycle_hooks: Option<Arc<WasmLifecycleHooks>>,
     route_validators: HashMap<String, RouteValidators>,
     rate_state: std::rc::Rc<std::cell::RefCell<HashMap<String, RateLimiterState>>>,
+    dependencies: HashMap<String, DependencyDescriptor>,
+    dependency_singletons: std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
 }
 
 #[derive(Default)]
@@ -66,6 +68,16 @@ struct RouteValidators {
     parameter: Option<ParameterValidator>,
     request: Option<Arc<SchemaValidator>>,
     response: Option<Arc<SchemaValidator>>,
+}
+
+#[derive(Clone)]
+struct DependencyDescriptor {
+    is_factory: bool,
+    value_json: Option<String>,
+    factory: Option<Function>,
+    depends_on: Vec<String>,
+    singleton: bool,
+    cacheable: bool,
 }
 
 impl Default for RouteValidators {
@@ -87,6 +99,7 @@ impl TestClient {
         handlers: JsValue,
         config: JsValue,
         lifecycle_hooks: Option<JsValue>,
+        dependencies: Option<JsValue>,
     ) -> Result<TestClient, JsValue> {
         let routes: Vec<RouteDefinition> = serde_json::from_str(routes_json)
             .map_err(|err| JsValue::from_str(&format!("Invalid routes JSON: {err}")))?;
@@ -135,6 +148,8 @@ impl TestClient {
         let lifecycle_hooks_value = lifecycle_hooks.unwrap_or(JsValue::UNDEFINED);
         let lifecycle_hooks = parse_hooks(&lifecycle_hooks_value)?.map(Arc::new);
 
+        let dependencies_map = parse_dependencies(dependencies.unwrap_or(JsValue::UNDEFINED))?;
+
         Ok(TestClient {
             routes,
             handlers: handler_map,
@@ -142,6 +157,8 @@ impl TestClient {
             lifecycle_hooks,
             route_validators: validator_map,
             rate_state: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
+            dependencies: dependencies_map,
+            dependency_singletons: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
         })
     }
 
@@ -224,6 +241,8 @@ impl TestClient {
             lifecycle_hooks: self.lifecycle_hooks.clone(),
             route_validators: self.route_validators.clone(),
             rate_state: self.rate_state.clone(),
+            dependencies: self.dependencies.clone(),
+            dependency_singletons: self.dependency_singletons.clone(),
         };
 
         future_to_promise(async move {
@@ -246,6 +265,8 @@ struct RequestContext {
     lifecycle_hooks: Option<Arc<WasmLifecycleHooks>>,
     route_validators: HashMap<String, RouteValidators>,
     rate_state: std::rc::Rc<std::cell::RefCell<HashMap<String, RateLimiterState>>>,
+    dependencies: HashMap<String, DependencyDescriptor>,
+    dependency_singletons: std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
 }
 
 impl RequestContext {
@@ -337,6 +358,8 @@ impl RequestContext {
             lifecycle_hooks: None,
             route_validators: HashMap::new(),
             rate_state: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
+            dependencies: HashMap::new(),
+            dependency_singletons: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
         })
     }
 }
@@ -513,7 +536,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
 
     let lifecycle_runner = LifecycleRunner::new(context.lifecycle_hooks.clone());
 
-    let request_payload = match lifecycle_runner.run_before_handler(request_payload).await? {
+    let mut request_payload = match lifecycle_runner.run_before_handler(request_payload).await? {
         LifecycleRequestOutcome::Continue(payload) => payload,
         LifecycleRequestOutcome::Respond(response_value) => {
             let finalized = lifecycle_runner.run_response_hooks(response_value).await?;
@@ -525,6 +548,13 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
             ));
         }
     };
+
+    if !context.dependencies.is_empty() {
+        let resolved = resolve_dependency_map(&context.dependencies, &context.dependency_singletons).await?;
+        if !resolved.is_empty() {
+            request_payload.dependencies = Some(resolved);
+        }
+    }
 
     let handler_fn = context
         .handlers
@@ -608,6 +638,191 @@ fn extract_error_message(error: &JsValue) -> String {
         .ok()
         .and_then(|val| val.as_string())
         .unwrap_or_else(|| "Internal Server Error".to_string())
+}
+
+fn parse_dependencies(dependencies: JsValue) -> Result<HashMap<String, DependencyDescriptor>, JsValue> {
+    if dependencies.is_undefined() || dependencies.is_null() {
+        return Ok(HashMap::new());
+    }
+
+    let deps_object: Object = dependencies
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("Dependencies must be an object map"))?;
+
+    let dep_keys = js_sys::Object::keys(&deps_object);
+    let mut dep_map = HashMap::new();
+
+    for idx in 0..dep_keys.length() {
+        let key = dep_keys.get(idx).as_string().unwrap_or_default();
+        if key.is_empty() {
+            continue;
+        }
+
+        let dep_val = Reflect::get(&deps_object, &JsValue::from_str(&key))
+            .map_err(|_| JsValue::from_str("Failed to read dependency descriptor"))?;
+        let dep_obj: Object = dep_val
+            .dyn_into()
+            .map_err(|_| JsValue::from_str("Dependency descriptor must be an object"))?;
+
+        let is_factory = Reflect::get(&dep_obj, &JsValue::from_str("isFactory"))
+            .ok()
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let singleton = Reflect::get(&dep_obj, &JsValue::from_str("singleton"))
+            .ok()
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        let cacheable = Reflect::get(&dep_obj, &JsValue::from_str("cacheable"))
+            .ok()
+            .and_then(|v| v.as_bool())
+            .unwrap_or(!is_factory);
+
+        let depends_on = Reflect::get(&dep_obj, &JsValue::from_str("dependsOn"))
+            .ok()
+            .and_then(|v| v.dyn_into::<js_sys::Array>().ok())
+            .map(|arr| {
+                (0..arr.length())
+                    .filter_map(|i| arr.get(i).as_string())
+                    .collect::<Vec<String>>()
+            })
+            .unwrap_or_default();
+
+        if is_factory {
+            let factory_val = Reflect::get(&dep_obj, &JsValue::from_str("factory"))
+                .map_err(|_| JsValue::from_str("Failed to read dependency factory"))?;
+            let factory: Function = factory_val
+                .dyn_into()
+                .map_err(|_| JsValue::from_str("Dependency factory must be a function"))?;
+
+            dep_map.insert(
+                key,
+                DependencyDescriptor {
+                    is_factory: true,
+                    value_json: None,
+                    factory: Some(factory),
+                    depends_on,
+                    singleton,
+                    cacheable,
+                },
+            );
+        } else {
+            let value_val = Reflect::get(&dep_obj, &JsValue::from_str("value"))
+                .map_err(|_| JsValue::from_str("Failed to read dependency value"))?;
+            let value_json = JSON::stringify(&value_val)
+                .ok()
+                .and_then(|v| v.as_string())
+                .unwrap_or_else(|| "null".to_string());
+
+            dep_map.insert(
+                key,
+                DependencyDescriptor {
+                    is_factory: false,
+                    value_json: Some(value_json),
+                    factory: None,
+                    depends_on: Vec::new(),
+                    singleton,
+                    cacheable,
+                },
+            );
+        }
+    }
+
+    Ok(dep_map)
+}
+
+async fn resolve_dependency_map(
+    registry: &HashMap<String, DependencyDescriptor>,
+    singleton_cache: &std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
+) -> Result<HashMap<String, Value>, JsValue> {
+    let mut keys: Vec<String> = registry.keys().cloned().collect();
+    keys.sort();
+
+    let mut resolving: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut request_cache: HashMap<String, String> = HashMap::new();
+    let mut resolved_values: HashMap<String, Value> = HashMap::new();
+
+    for key in keys {
+        let value_json =
+            resolve_dependency_key(&key, registry, singleton_cache, &mut resolving, &mut request_cache).await?;
+
+        let parsed = serde_json::from_str::<Value>(&value_json).unwrap_or(Value::String(value_json));
+        resolved_values.insert(key, parsed);
+    }
+
+    Ok(resolved_values)
+}
+
+fn resolve_dependency_key<'a>(
+    key: &'a str,
+    registry: &'a HashMap<String, DependencyDescriptor>,
+    singleton_cache: &'a std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
+    resolving: &'a mut std::collections::HashSet<String>,
+    request_cache: &'a mut HashMap<String, String>,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, JsValue>> + 'a>> {
+    Box::pin(async move {
+        if let Some(cached) = singleton_cache.borrow().get(key) {
+            return Ok(cached.clone());
+        }
+        if let Some(cached) = request_cache.get(key) {
+            return Ok(cached.clone());
+        }
+
+        if !resolving.insert(key.to_string()) {
+            return Err(JsValue::from_str(&format!("Circular dependency detected for '{key}'")));
+        }
+
+        let descriptor = registry
+            .get(key)
+            .ok_or_else(|| JsValue::from_str(&format!("Dependency '{key}' is not registered")))?;
+
+        let value_json = if !descriptor.is_factory {
+            descriptor.value_json.clone().unwrap_or_else(|| "null".to_string())
+        } else {
+            let mut dep_map = JsonMap::new();
+            for dep_key in &descriptor.depends_on {
+                let dep_json =
+                    resolve_dependency_key(dep_key, registry, singleton_cache, resolving, request_cache).await?;
+                let dep_value = serde_json::from_str::<Value>(&dep_json).unwrap_or(Value::String(dep_json));
+                dep_map.insert(dep_key.clone(), dep_value);
+            }
+            let deps_json =
+                serde_json::to_string(&Value::Object(dep_map)).map_err(|err| JsValue::from_str(&err.to_string()))?;
+
+            let factory = descriptor
+                .factory
+                .as_ref()
+                .ok_or_else(|| JsValue::from_str("Factory dependency missing function"))?;
+
+            let call_result = factory
+                .call1(&JsValue::NULL, &JsValue::from_str(&deps_json))
+                .map_err(|_| JsValue::from_str("Failed to invoke dependency factory"))?;
+
+            let maybe_promise: Result<Promise, _> = call_result.clone().dyn_into();
+            let result_val = match maybe_promise {
+                Ok(promise) => wasm_bindgen_futures::JsFuture::from(promise).await?,
+                Err(_) => call_result,
+            };
+
+            if let Some(text) = result_val.as_string() {
+                text
+            } else {
+                JSON::stringify(&result_val)
+                    .ok()
+                    .and_then(|v| v.as_string())
+                    .unwrap_or_else(|| "null".to_string())
+            }
+        };
+
+        if descriptor.singleton {
+            singleton_cache.borrow_mut().insert(key.to_string(), value_json.clone());
+        } else if descriptor.cacheable {
+            request_cache.insert(key.to_string(), value_json.clone());
+        }
+
+        resolving.remove(key);
+        Ok(value_json)
+    })
 }
 
 fn parse_handler_value(result: JsValue) -> Result<Value, JsValue> {
