@@ -148,7 +148,6 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 	}},
 		"devDependencies": {{
 			"{dependency}": "workspace:*",
-			"@biomejs/biome": "^2.3.8",
 			"@cloudflare/vitest-pool-workers": "^0.7.0",
 			"@cloudflare/workers-types": "^4.20250106.0",
 			"@vitest/coverage-v8": "^4.0.6",
@@ -175,7 +174,6 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 	}},
 		"devDependencies": {{
 			"{dependency}": "workspace:*",
-			"@biomejs/biome": "^2.3.8",
 	        "@types/node": "^24.9.2",
 			"@vitest/coverage-v8": "^4.0.6",
 			"typescript": "^5.9.3",
