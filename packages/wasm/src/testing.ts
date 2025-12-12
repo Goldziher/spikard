@@ -1,4 +1,4 @@
-import type { LifecycleHookFunction, LifecycleHookPayload, LifecycleHooks } from "./app";
+import type { LifecycleHookFunction, LifecycleHooks } from "./app";
 import type { HandlerFunction, SpikardApp } from "./index";
 import type { Request } from "./request";
 import { isStreamingResponse } from "./streaming";
@@ -1029,7 +1029,7 @@ function ensureWasmRequest(value: unknown): WasmRequest | null {
 }
 
 async function normalizeStructuredResponse(
-	value: HandlerPayload | LifecycleHookPayload,
+	value: unknown,
 	defaultResponse?: StructuredHandlerResponse,
 ): Promise<StructuredHandlerResponse> {
 	if (typeof value === "string") {
