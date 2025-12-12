@@ -1399,6 +1399,9 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
         }
     }
 
+    // Cleanup stray braces from syntax conversion.
+    result = result.replace("})});", "});");
+
     result
 }
 
