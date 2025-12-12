@@ -80,6 +80,7 @@ type NativeTestClientConstructor = new (
 ) => NativeClient;
 
 type WasmBindings = {
+	default?: (module?: unknown) => Promise<unknown>;
 	init: () => unknown;
 	TestClient: NativeTestClientConstructor;
 };
@@ -114,6 +115,9 @@ const defaultNativeClientFactory: NativeClientFactory = async (
 	dependencies,
 ) => {
 	const bindings = await loadWasmBindings();
+	if (typeof bindings.default === "function") {
+		await bindings.default();
+	}
 	await Promise.resolve(bindings.init());
 	return new bindings.TestClient(routesJson, handlers, config, lifecycleHooks, dependencies);
 };
