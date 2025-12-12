@@ -289,6 +289,10 @@ fn generate_sse_test_file(
             .replace("path.resolve(", "resolve(")
             .replace("path.join(", "join(")
             .replace("readFileSync(", "Deno.readTextFileSync(")
+            .replace(
+                "Deno.readTextFileSync(fixturePath, \"utf-8\")",
+                "Deno.readTextFileSync(fixturePath)",
+            )
             .replace("describe(\"asyncapi_sse\", () => {\n", "")
             .replace("\n\ttest(\"SSE", "\nDeno.test(\"asyncapi_sse: SSE")
             .replace(
@@ -435,6 +439,10 @@ fn generate_websocket_test_file(
             .replace("path.resolve(", "resolve(")
             .replace("path.join(", "join(")
             .replace("readFileSync(", "Deno.readTextFileSync(")
+            .replace(
+                "Deno.readTextFileSync(fixturePath, \"utf-8\")",
+                "Deno.readTextFileSync(fixturePath)",
+            )
             .replace("describe(\"asyncapi_websocket\", () => {\n", "")
             .replace("\n\ttest(\"WebSocket", "\nDeno.test(\"asyncapi_websocket: WebSocket")
             .replace(

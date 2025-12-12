@@ -420,10 +420,10 @@ fn generate_app_file_per_fixture(
                 code.push_str("import { Buffer } from \"node:buffer\";\n");
             }
             crate::ts_target::Runtime::Deno => {
-                code.push_str("// Deno has Buffer in globalThis\n");
+                code.push_str("import { Buffer } from \"node:buffer\";\n");
             }
             crate::ts_target::Runtime::CloudflareWorkers => {
-                code.push_str("// Buffer available via nodejs_compat flag\n");
+                code.push_str("import { Buffer } from \"node:buffer\";\n");
             }
         }
     }
