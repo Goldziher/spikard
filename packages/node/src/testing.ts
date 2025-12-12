@@ -7,9 +7,9 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
 import type { ServerConfig } from "./config";
+import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
 import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import { getStreamingHandle, isStreamingResponse } from "./streaming";
-import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
 import type { JsonValue } from "./types";
 
 interface NativeTestResponse {

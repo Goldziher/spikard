@@ -52,13 +52,13 @@ pub fn validate_jsonrpc_method_name(name: &str) -> Result<(), String> {
     }
 
     // Cannot start with a dot or hyphen
-    if let Some(first_char) = name.chars().next() {
-        if first_char == '.' || first_char == '-' {
-            return Err(format!(
-                "Invalid JSON-RPC method name '{}'. Method name cannot start with '.' or '-'",
-                name
-            ));
-        }
+    if let Some(first_char) = name.chars().next()
+        && (first_char == '.' || first_char == '-')
+    {
+        return Err(format!(
+            "Invalid JSON-RPC method name '{}'. Method name cannot start with '.' or '-'",
+            name
+        ));
     }
 
     // Cannot end with a dot
