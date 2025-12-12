@@ -207,7 +207,7 @@ jobs:
           coverage: none
 
       - name: Setup Composer Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.composer/cache
