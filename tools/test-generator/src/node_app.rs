@@ -136,11 +136,6 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
 fn generate_package_json(target: &TypeScriptTarget) -> String {
     match target.runtime {
         crate::ts_target::Runtime::CloudflareWorkers => {
-            let dep_version = if target.dependency_package == "@spikard/wasm" {
-                "latest"
-            } else {
-                "workspace:*"
-            };
             format!(
                 r#"{{
 	"name": "{name}",
@@ -152,7 +147,7 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 		"test:watch": "vitest"
 		}},
 			"devDependencies": {{
-				"{dependency}": "{dep_version}",
+				"{dependency}": "workspace:*",
 				"@cloudflare/vitest-pool-workers": "^0.7.0",
 				"@cloudflare/workers-types": "^4.20250106.0",
 				"@vitest/coverage-v8": "^4.0.6",
@@ -163,8 +158,7 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 }}
 	"#,
                 name = target.e2e_package_name,
-                dependency = target.dependency_package,
-                dep_version = dep_version
+                dependency = target.dependency_package
             )
         }
         _ => {
@@ -210,18 +204,32 @@ fn generate_minimal_package_json(target: &TypeScriptTarget) -> String {
 
 /// Generate deno.json for Deno configuration
 fn generate_deno_config(target: &TypeScriptTarget) -> String {
+    let wasm_import = if target.dependency_package == "@spikard/wasm" {
+        // Use the workspace-built ESM bundle to stay in sync with the repo API.
+        "../../packages/wasm/dist/index.mjs".to_string()
+    } else {
+        // Fall back to npm for other packages.
+        format!("npm:{}", target.dependency_package)
+    };
     format!(
         r#"{{
 	"nodeModulesDir": "auto",
+	"compilerOptions": {{
+		"lib": ["deno.ns", "deno.window", "dom", "dom.iterable", "esnext"],
+		"types": ["node"]
+	}},
 	"tasks": {{
 		"test": "deno test --allow-net --allow-read --allow-env tests/"
 	}},
 	"imports": {{
-		"{pkg}": "npm:{pkg}"
+		"{pkg}": "{wasm_import}",
+		"@std/assert": "jsr:@std/assert@1",
+		"@std/path": "jsr:@std/path@1"
 	}}
 }}
 "#,
-        pkg = target.dependency_package
+        pkg = target.dependency_package,
+        wasm_import = wasm_import
     )
 }
 
@@ -238,9 +246,13 @@ compatibility_flags = ["nodejs_compat"]
 /// Generate tsconfig.json for TypeScript compilation
 fn generate_tsconfig(target: &TypeScriptTarget) -> String {
     let types = match target.runtime {
-        crate::ts_target::Runtime::Deno => r#"["@std/assert"]"#,
+        crate::ts_target::Runtime::Deno => r#"["jsr:@std/assert"]"#,
         crate::ts_target::Runtime::CloudflareWorkers => r#"["vitest/globals", "@cloudflare/workers-types"]"#,
         _ => r#"["vitest/globals", "node"]"#,
+    };
+    let strict = match target.runtime {
+        crate::ts_target::Runtime::Deno => "false",
+        _ => "true",
     };
 
     format!(
@@ -248,18 +260,18 @@ fn generate_tsconfig(target: &TypeScriptTarget) -> String {
 	"compilerOptions": {{
 		"target": "ES2022",
 		"module": "ES2022",
-		"lib": ["ES2022"],
-		"moduleResolution": "bundler",
-		"strict": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
-		"resolveJsonModule": true,
-		"types": {types}
-	}},
-	"include": ["app/**/*", "tests/**/*"]
-}}
-"#
+			"lib": ["ES2022"],
+			"moduleResolution": "bundler",
+			"strict": {strict},
+			"esModuleInterop": true,
+			"skipLibCheck": true,
+			"forceConsistentCasingInFileNames": true,
+			"resolveJsonModule": true,
+			"types": {types}
+		}},
+		"include": ["app/**/*", "tests/**/*"]
+	}}
+	"#
     )
 }
 
