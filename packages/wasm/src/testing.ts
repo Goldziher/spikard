@@ -999,7 +999,7 @@ async function normalizeStructuredResponse(
 			value.body === undefined
 				? null
 				: typeof value.body === "object" && value.body !== null
-					? (value.body as StructuredHandlerResponse["body"])
+					? (value.body as HandlerBody)
 					: (value.body as JsonValue);
 		return {
 			status,
