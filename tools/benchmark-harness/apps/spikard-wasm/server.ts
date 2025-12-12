@@ -6,9 +6,16 @@
  * against the pure Rust baseline.
  */
 
-import { init, TestClient } from "../../../../crates/spikard-wasm/dist-web/spikard_wasm.js";
+import * as wasm from "../../../../crates/spikard-wasm/dist-web/spikard_wasm.js";
 
-init();
+if (typeof (wasm as { default?: unknown }).default === "function") {
+	await (wasm as { default: () => Promise<unknown> }).default();
+}
+if (typeof (wasm as { init?: unknown }).init === "function") {
+	(wasm as { init: () => unknown }).init();
+}
+
+const TestClient = (wasm as { TestClient: typeof wasm.TestClient }).TestClient;
 
 // Type definitions for the WASM server
 interface Route {
