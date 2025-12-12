@@ -168,7 +168,61 @@ impl ParameterValidator {
                     } else {
                         Value::Array(vec![value.clone()])
                     };
-                    params_map.insert(param_def.name.clone(), array_value);
+                    let (item_type, item_format) = self.array_item_type_and_format(&param_def.name);
+
+                    let coerced_items = match array_value.as_array() {
+                        Some(items) => {
+                            let mut out = Vec::with_capacity(items.len());
+                            for item in items {
+                                if let Some(text) = item.as_str() {
+                                    match Self::coerce_value(text, item_type, item_format) {
+                                        Ok(coerced) => out.push(coerced),
+                                        Err(e) => {
+                                            errors.push(ValidationErrorDetail {
+                                                error_type: match item_type {
+                                                    Some("integer") => "int_parsing".to_string(),
+                                                    Some("number") => "float_parsing".to_string(),
+                                                    Some("boolean") => "bool_parsing".to_string(),
+                                                    Some("string") => match item_format {
+                                                        Some("uuid") => "uuid_parsing".to_string(),
+                                                        Some("date") => "date_parsing".to_string(),
+                                                        Some("date-time") => "datetime_parsing".to_string(),
+                                                        Some("time") => "time_parsing".to_string(),
+                                                        Some("duration") => "duration_parsing".to_string(),
+                                                        _ => "type_error".to_string(),
+                                                    },
+                                                    _ => "type_error".to_string(),
+                                                },
+                                                loc: vec!["query".to_string(), param_def.name.clone()],
+                                                msg: match item_type {
+                                                    Some("integer") => "Input should be a valid integer, unable to parse string as an integer".to_string(),
+                                                    Some("number") => "Input should be a valid number, unable to parse string as a number".to_string(),
+                                                    Some("boolean") => "Input should be a valid boolean, unable to interpret input".to_string(),
+                                                    Some("string") => match item_format {
+                                                        Some("uuid") => format!("Input should be a valid UUID, {}", e),
+                                                        Some("date") => format!("Input should be a valid date, {}", e),
+                                                        Some("date-time") => format!("Input should be a valid datetime, {}", e),
+                                                        Some("time") => format!("Input should be a valid time, {}", e),
+                                                        Some("duration") => format!("Input should be a valid duration, {}", e),
+                                                        _ => e.clone(),
+                                                    },
+                                                    _ => e.clone(),
+                                                },
+                                                input: Value::String(text.to_string()),
+                                                ctx: None,
+                                            });
+                                        }
+                                    }
+                                } else {
+                                    out.push(item.clone());
+                                }
+                            }
+                            out
+                        }
+                        None => Vec::new(),
+                    };
+
+                    params_map.insert(param_def.name.clone(), Value::Array(coerced_items));
                 }
                 continue;
             }
@@ -374,6 +428,25 @@ impl ParameterValidator {
                 Err(validation_err)
             }
         }
+    }
+
+    fn array_item_type_and_format(&self, name: &str) -> (Option<&str>, Option<&str>) {
+        let Some(prop) = self
+            .schema
+            .get("properties")
+            .and_then(|value| value.as_object())
+            .and_then(|props| props.get(name))
+        else {
+            return (None, None);
+        };
+
+        let Some(items) = prop.get("items") else {
+            return (None, None);
+        };
+
+        let item_type = items.get("type").and_then(|value| value.as_str());
+        let item_format = items.get("format").and_then(|value| value.as_str());
+        (item_type, item_format)
     }
 
     /// Coerce a string value to the expected JSON type

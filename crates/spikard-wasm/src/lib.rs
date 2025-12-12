@@ -541,6 +541,26 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         }
     }
     if let Some(request_validator) = validators.request.as_ref() {
+        if body_payload.value.is_some() && !matches!(body_payload.metadata.kind, BodyKind::Form | BodyKind::Multipart) {
+            let content_type = header_value(&headers, "content-type");
+            if !is_json_content_type(content_type) {
+                let problem = ProblemDetails::new(
+                    "https://spikard.dev/errors/unsupported-media-type",
+                    "Unsupported Media Type",
+                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
+                )
+                .with_detail("Unsupported media type".to_string());
+                return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+            }
+
+            if let Some(Value::String(text)) = body_payload.value.clone() {
+                if let Ok(parsed) = serde_json::from_str::<Value>(&text) {
+                    body_payload.value = Some(parsed);
+                    body_payload.metadata = BodyMetadata::from_body_value(body_payload.value.as_ref());
+                }
+            }
+        }
+
         if matches!(body_payload.metadata.kind, BodyKind::Form | BodyKind::Multipart) {
             if let Some(value) = body_payload.value.take() {
                 let coerced = coerce_value_against_schema(value, request_validator.schema());
@@ -599,9 +619,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
 
     let request_json = serde_json::to_string(&request_payload)
         .map_err(|err| JsValue::from_str(&format!("Failed to serialize request: {err}")))?;
-    let request_value = serde_wasm_bindgen::to_value(&request_payload)
-        .map_err(|err| JsValue::from_str(&format!("Failed to build request object: {err}")))?;
-    let request_object = js_sys::Object::from(request_value);
+    let request_object = js_sys::Object::new();
     Reflect::set(
         &request_object,
         &JsValue::from_str("__spikard_raw_request__"),
@@ -616,8 +634,9 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         .map_err(|_| JsValue::from_str("Handler must return a Promise"))?;
 
     let raced = if let Some(seconds) = request_timeout_seconds {
-        let timeout_promise = build_timeout_promise(seconds)?;
-        Promise::race(&Array::of2(&promise, &timeout_promise))
+        let (timeout_promise, timeout_id) = build_timeout_promise(seconds)?;
+        let guarded = attach_clear_timeout(&promise, timeout_id)?;
+        Promise::race(&Array::of2(&guarded, &timeout_promise))
     } else {
         promise
     };
@@ -794,13 +813,19 @@ fn is_timeout_marker(value: &JsValue) -> bool {
         .unwrap_or(false)
 }
 
-fn build_timeout_promise(seconds: u64) -> Result<Promise, JsValue> {
+fn build_timeout_promise(seconds: u64) -> Result<(Promise, JsValue), JsValue> {
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
     let global = js_sys::global();
     let set_timeout = Reflect::get(&global, &JsValue::from_str("setTimeout"))?
         .dyn_into::<Function>()
         .map_err(|_| JsValue::from_str("setTimeout is not a function"))?;
 
-    Ok(Promise::new(&mut |resolve, _reject| {
+    let timeout_id_cell: Rc<RefCell<Option<JsValue>>> = Rc::new(RefCell::new(None));
+    let timeout_id_writer = timeout_id_cell.clone();
+
+    let promise = Promise::new(&mut |resolve, _reject| {
         let resolve_fn = resolve.clone();
         let callback = Closure::once_into_js(move || {
             let marker = Object::new();
@@ -809,8 +834,42 @@ fn build_timeout_promise(seconds: u64) -> Result<Promise, JsValue> {
         });
 
         let delay_ms = JsValue::from_f64((seconds as f64) * 1000.0);
-        let _ = set_timeout.call2(&global, &callback, &delay_ms);
-    }))
+        let timeout_id = set_timeout
+            .call2(&global, &callback, &delay_ms)
+            .unwrap_or(JsValue::NULL);
+        *timeout_id_writer.borrow_mut() = Some(timeout_id);
+    });
+
+    let timeout_id = timeout_id_cell.borrow().as_ref().cloned().unwrap_or(JsValue::NULL);
+    Ok((promise, timeout_id))
+}
+
+fn attach_clear_timeout(promise: &Promise, timeout_id: JsValue) -> Result<Promise, JsValue> {
+    let global = js_sys::global();
+    let clear_timeout = Reflect::get(&global, &JsValue::from_str("clearTimeout"))?
+        .dyn_into::<Function>()
+        .map_err(|_| JsValue::from_str("clearTimeout is not a function"))?;
+
+    let clear_timeout_success = clear_timeout.clone();
+    let global_success = global.clone();
+    let timeout_id_success = timeout_id.clone();
+    let on_fulfilled = Closure::once_into_js(move |value: JsValue| -> JsValue {
+        let _ = clear_timeout_success.call1(&global_success, &timeout_id_success);
+        value
+    });
+
+    let clear_timeout_error = clear_timeout.clone();
+    let global_error = global.clone();
+    let timeout_id_error = timeout_id.clone();
+    let on_rejected = Closure::once_into_js(move |err: JsValue| -> JsValue {
+        let _ = clear_timeout_error.call1(&global_error, &timeout_id_error);
+        Promise::reject(&err).into()
+    });
+
+    Ok(promise.then2(
+        on_fulfilled.unchecked_ref::<Function>(),
+        on_rejected.unchecked_ref::<Function>(),
+    ))
 }
 
 async fn resolve_dependency_map(
@@ -1171,6 +1230,12 @@ impl ResponseSnapshot {
             raw.apply_compression(request_headers, &http_config);
         }
 
+        raw.headers = raw
+            .headers
+            .into_iter()
+            .map(|(key, value)| (key.to_ascii_lowercase(), value))
+            .collect();
+
         ResponseSnapshot {
             status: raw.status,
             headers: raw.headers,
@@ -1187,6 +1252,17 @@ fn header_value<'a>(headers: &'a HashMap<String, String>, name: &str) -> Option<
             None
         }
     })
+}
+
+fn is_json_content_type(content_type: Option<&str>) -> bool {
+    let Some(value) = content_type else {
+        return true;
+    };
+    let media_type = value.split(';').next().unwrap_or("").trim().to_ascii_lowercase();
+    if media_type.is_empty() {
+        return true;
+    }
+    media_type == "application/json" || media_type.ends_with("+json")
 }
 
 fn parse_cookie_header(headers: &HashMap<String, String>) -> HashMap<String, String> {
