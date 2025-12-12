@@ -3,8 +3,8 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
+import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppContentTypes13JsonWithCharsetUtf16,
 	createAppContentTypes14ContentTypeCaseInsensitive,
@@ -298,7 +298,7 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("binary_data_placeholder");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=file.bin");
 		expect(responseHeaders["content-type"]).toBe("application/octet-stream");
+		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=file.bin");
 	});
 });

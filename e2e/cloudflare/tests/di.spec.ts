@@ -3,8 +3,8 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
+import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppDiAsyncFactoryDependencySuccess,
 	createAppDiCircularDependencyDetectionError,
@@ -156,8 +156,8 @@ describe("di", () => {
 		expect(responseData).toHaveProperty("logged");
 		expect(responseData.logged).toBe(true);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-auth-mode"]).toBe("strict");
 		expect(responseHeaders["x-log-level"]).toBe("debug");
+		expect(responseHeaders["x-auth-mode"]).toBe("strict");
 	});
 
 	test("Ruby keyword argument injection - success", async () => {
