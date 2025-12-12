@@ -205,7 +205,7 @@ fn generate_minimal_package_json(target: &TypeScriptTarget) -> String {
 /// Generate deno.json for Deno configuration
 fn generate_deno_config(target: &TypeScriptTarget) -> String {
     let wasm_import = if target.dependency_package == "@spikard/wasm" {
-        // Use the TypeScript sources (tracked) to stay in sync with the repo API.
+        // Use tracked TypeScript sources to stay in sync with the repo API.
         "../../packages/wasm/src/index.ts".to_string()
     } else {
         // Fall back to npm for other packages.
