@@ -12,10 +12,6 @@ import { Elysia, t } from "elysia";
 
 const app = new Elysia();
 
-// ============================================================================
-// Schema Definitions (using Elysia's TypeBox-based validation)
-// ============================================================================
-
 const SmallPayloadSchema = t.Object({
 	name: t.String(),
 	description: t.String(),
@@ -59,10 +55,6 @@ const VeryLargePayloadSchema = t.Object({
 	summary: t.Record(t.String(), t.Any()),
 });
 
-// ============================================================================
-// JSON Body Workloads
-// ============================================================================
-
 app.post("/json/small", ({ body }) => body, {
 	body: SmallPayloadSchema,
 });
@@ -79,10 +71,6 @@ app.post("/json/very-large", ({ body }) => body, {
 	body: VeryLargePayloadSchema,
 });
 
-// ============================================================================
-// Multipart Form Workloads
-// ============================================================================
-
 app.post("/multipart/small", () => ({
 	files_received: 1,
 	total_bytes: 1024,
@@ -98,17 +86,9 @@ app.post("/multipart/large", () => ({
 	total_bytes: 102400,
 }));
 
-// ============================================================================
-// URL Encoded Form Workloads
-// ============================================================================
-
 app.post("/urlencoded/simple", ({ body }) => body ?? {});
 
 app.post("/urlencoded/complex", ({ body }) => body ?? {});
-
-// ============================================================================
-// Path Parameter Workloads
-// ============================================================================
 
 app.get("/path/simple/:id", ({ params: { id } }) => ({ id }));
 
@@ -133,27 +113,15 @@ app.get("/path/uuid/:uuid", ({ params: { uuid } }) => ({ uuid }));
 
 app.get("/path/date/:date", ({ params: { date } }) => ({ date }));
 
-// ============================================================================
-// Query Parameter Workloads
-// ============================================================================
-
 app.get("/query/few", ({ query }) => query ?? {});
 
 app.get("/query/medium", ({ query }) => query ?? {});
 
 app.get("/query/many", ({ query }) => query ?? {});
 
-// ============================================================================
-// Health Check
-// ============================================================================
-
 app.get("/health", () => ({ status: "ok" }));
 
 app.get("/", () => ({ status: "ok" }));
-
-// ============================================================================
-// Server Startup
-// ============================================================================
 
 const port = Bun.argv[2] ? parseInt(Bun.argv[2], 10) : 8000;
 

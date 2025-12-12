@@ -71,7 +71,6 @@ pub fn load_jsonrpc_fixtures(fixtures_dir: &Path) -> Result<Vec<JsonRpcFixture>>
             continue;
         }
 
-        // Skip schema.json files (they define the fixture format, not actual fixtures)
         if path.file_name().is_some_and(|name| name == "schema.json") {
             continue;
         }
@@ -80,7 +79,6 @@ pub fn load_jsonrpc_fixtures(fixtures_dir: &Path) -> Result<Vec<JsonRpcFixture>>
         let mut fixture: JsonRpcFixture =
             serde_json::from_str(&content).with_context(|| format!("Failed to parse {}", path.display()))?;
 
-        // Set defaults as per JSON-RPC 2.0 spec
         if fixture.protocol.is_none() {
             fixture.protocol = Some("jsonrpc".to_string());
         }
@@ -96,7 +94,6 @@ pub fn load_jsonrpc_fixtures(fixtures_dir: &Path) -> Result<Vec<JsonRpcFixture>>
         fixtures.push(fixture);
     }
 
-    // Sort by name for deterministic output
     fixtures.sort_by(|a, b| a.name.cmp(&b.name));
 
     Ok(fixtures)

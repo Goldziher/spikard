@@ -137,7 +137,6 @@ impl Route {
 
         let expects_json_body = request_validator.is_some();
 
-        // Convert raw JSON metadata to JsonRpcMethodInfo if present
         let jsonrpc_method = metadata
             .jsonrpc_method
             .as_ref()
@@ -379,7 +378,6 @@ mod tests {
             tags: vec!["users".to_string(), "admin".to_string()],
         };
 
-        // Verify all fields are set correctly
         assert_eq!(rpc_info.method_name, "user.create");
         assert_eq!(rpc_info.description.as_ref().unwrap(), "Creates a new user account");
         assert!(rpc_info.params_schema.is_some());
@@ -443,7 +441,6 @@ mod tests {
             .unwrap()
             .with_jsonrpc_method(rpc_info);
 
-        // Verify route has JSON-RPC metadata attached
         assert!(route.is_jsonrpc_method());
         assert_eq!(route.jsonrpc_method_name(), Some("user.create"));
         assert!(route.jsonrpc_method.is_some());
@@ -465,12 +462,10 @@ mod tests {
             tags: vec!["test".to_string()],
         };
 
-        // Verify serialization works (for FFI)
         let json = serde_json::to_value(&rpc_info).unwrap();
         assert_eq!(json["method_name"], "test.method");
         assert_eq!(json["description"], "Test method");
 
-        // Verify deserialization works
         let deserialized: JsonRpcMethodInfo = serde_json::from_value(json).unwrap();
         assert_eq!(deserialized.method_name, rpc_info.method_name);
         assert_eq!(deserialized.description, rpc_info.description);
@@ -498,7 +493,6 @@ mod tests {
 
         let route = Route::from_metadata(metadata, &registry).unwrap();
 
-        // Verify route has None for jsonrpc_method by default
         assert!(!route.is_jsonrpc_method());
         assert_eq!(route.jsonrpc_method_name(), None);
         assert!(route.jsonrpc_method.is_none());

@@ -14,10 +14,6 @@ import { z } from "zod";
 
 const app = new Hono();
 
-// ============================================================================
-// Zod Schema Definitions
-// ============================================================================
-
 /**
  * Small JSON payload schema (~100 bytes)
  */
@@ -87,10 +83,6 @@ const VeryLargePayloadSchema = z.object({
 
 type VeryLargePayload = z.infer<typeof VeryLargePayloadSchema>;
 
-// ============================================================================
-// JSON Body Workloads
-// ============================================================================
-
 app.post("/json/small", zValidator("json", SmallPayloadSchema), (c) => {
 	const validated: SmallPayload = c.req.valid("json");
 	return c.json(validated);
@@ -110,10 +102,6 @@ app.post("/json/very-large", zValidator("json", VeryLargePayloadSchema), (c) => 
 	const validated: VeryLargePayload = c.req.valid("json");
 	return c.json(validated);
 });
-
-// ============================================================================
-// Multipart Form Workloads
-// ============================================================================
 
 interface MultipartResponse {
 	files_received: number;
@@ -135,10 +123,6 @@ app.post("/multipart/large", (c) => {
 	return c.json(response);
 });
 
-// ============================================================================
-// URL Encoded Form Workloads
-// ============================================================================
-
 app.post("/urlencoded/simple", async (c) => {
 	const body: Record<string, string | File> = await c.req.parseBody();
 	return c.json(body);
@@ -148,10 +132,6 @@ app.post("/urlencoded/complex", async (c) => {
 	const body: Record<string, string | File> = await c.req.parseBody();
 	return c.json(body);
 });
-
-// ============================================================================
-// Path Parameter Workloads
-// ============================================================================
 
 interface SimpleIdResponse {
 	id: string;
@@ -223,10 +203,6 @@ app.get("/path/date/:date", (c) => {
 	return c.json(response);
 });
 
-// ============================================================================
-// Query Parameter Workloads
-// ============================================================================
-
 app.get("/query/few", (c) => {
 	const query: Record<string, string> = c.req.query();
 	return c.json(query);
@@ -242,10 +218,6 @@ app.get("/query/many", (c) => {
 	return c.json(query);
 });
 
-// ============================================================================
-// Health Check
-// ============================================================================
-
 interface HealthResponse {
 	status: string;
 }
@@ -259,10 +231,6 @@ app.get("/", (c) => {
 	const response: HealthResponse = { status: "ok" };
 	return c.json(response);
 });
-
-// ============================================================================
-// Server Startup
-// ============================================================================
 
 const port: number = process.argv[2]
 	? Number.parseInt(process.argv[2], 10)

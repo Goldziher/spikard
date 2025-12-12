@@ -13,7 +13,6 @@ impl OpenRpcGenerator for PhpOpenRpcGenerator {
     fn generate_handler_app(&self, spec: &OpenRpcSpec) -> Result<String> {
         let mut code = String::new();
 
-        // Header
         code.push_str("<?php\n");
         code.push_str("/**\n");
         code.push_str(" * JSON-RPC 2.0 handlers generated from OpenRPC specification.\n");
@@ -29,7 +28,6 @@ impl OpenRpcGenerator for PhpOpenRpcGenerator {
 
         code.push_str("namespace JsonRpc\\Handlers;\n\n");
 
-        // Generate handler classes
         code.push_str("// ============================================================================\n");
         code.push_str("// JSON-RPC Method Handlers\n");
         code.push_str("// ============================================================================\n\n");
@@ -38,7 +36,6 @@ impl OpenRpcGenerator for PhpOpenRpcGenerator {
             generate_php_handler(&mut code, method)?;
         }
 
-        // Generate handler registry
         code.push_str("// ============================================================================\n");
         code.push_str("// Handler Registry\n");
         code.push_str("// ============================================================================\n\n");
@@ -99,7 +96,6 @@ impl OpenRpcGenerator for PhpOpenRpcGenerator {
         code.push_str("    }\n");
         code.push_str("}\n\n");
 
-        // Example usage
         code.push_str("// ============================================================================\n");
         code.push_str("// Example Usage\n");
         code.push_str("// ============================================================================\n\n");
@@ -141,7 +137,6 @@ fn generate_php_handler(code: &mut String, method: &crate::codegen::openrpc::spe
     code.push_str("     */\n");
     code.push_str("    public function execute(mixed $params): array {\n");
 
-    // Parameter validation
     if !method.params.is_empty() {
         code.push_str("        $this->validateParams($params);\n");
     }
@@ -154,7 +149,6 @@ fn generate_php_handler(code: &mut String, method: &crate::codegen::openrpc::spe
     code.push_str("        // 3. Return result as array matching schema\n");
     code.push_str("        // 4. Throw appropriate exceptions on failure\n\n");
 
-    // Placeholder return
     code.push_str("        // Example return structure (update with real data):\n");
     code.push_str("        $result = [];\n");
     if let Some(properties) = method.result.schema.get("properties")
@@ -167,7 +161,6 @@ fn generate_php_handler(code: &mut String, method: &crate::codegen::openrpc::spe
     code.push_str("        return $result;\n");
     code.push_str("    }\n");
 
-    // Parameter validation
     if !method.params.is_empty() {
         code.push_str("\n    private function validateParams(mixed $params): void {\n");
         for param in &method.params {

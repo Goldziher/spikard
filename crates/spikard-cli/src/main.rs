@@ -231,11 +231,9 @@ fn main() -> Result<()> {
                 let generator = PhpDtoGenerator::new();
                 let generated = generator.generate_all().context("Failed to generate PHP DTOs")?;
 
-                // Create output directory if it doesn't exist
                 fs::create_dir_all(&args.output)
                     .context(format!("Failed to create output directory: {}", args.output.display()))?;
 
-                // Write each generated file
                 for (filename, code) in generated {
                     let file_path = args.output.join(&filename);
                     fs::write(&file_path, code)

@@ -64,9 +64,7 @@ def create_app_di_route_level_dependency_override_success() -> Spikard:
     """App factory for fixture: Route-level dependency override - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("api_key_validator", {"mode": "test", "strict": False})
-    # Register handler with this app instance
     app.register_route("GET", "/api/override-test", body_schema=None, parameter_schema=None, file_params=None)(
         di_route_level_dependency_override_success
     )
@@ -110,10 +108,8 @@ def create_app_di_circular_dependency_detection_error() -> Spikard:
     """App factory for fixture: Circular dependency detection - error"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("service_b", Provide(create_service_b, depends_on=["service_a"]))
     app.provide("service_a", Provide(create_service_a, depends_on=["service_b"]))
-    # Register handler with this app instance
     app.register_route("GET", "/api/circular", body_schema=None, parameter_schema=None, file_params=None)(
         di_circular_dependency_detection_error
     )
@@ -136,9 +132,7 @@ def create_app_di_factory_dependency_success() -> Spikard:
     """App factory for fixture: Factory dependency - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("timestamp_generator", Provide(create_timestamp))
-    # Register handler with this app instance
     app.register_route("GET", "/api/timestamp", body_schema=None, parameter_schema=None, file_params=None)(
         di_factory_dependency_success
     )
@@ -162,11 +156,9 @@ def create_app_di_value_dependency_injection_success() -> Spikard:
     """App factory for fixture: Value dependency injection - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("version", "1.0.0")
     app.provide("max_connections", 100)
     app.provide("app_name", "SpikardApp")
-    # Register handler with this app instance
     app.register_route("GET", "/api/config", body_schema=None, parameter_schema=None, file_params=None)(
         di_value_dependency_injection_success
     )
@@ -189,10 +181,8 @@ def create_app_di_node_js_object_destructuring_injection_success() -> Spikard:
     """App factory for fixture: Node.js object destructuring injection - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("logger", {"enabled": True, "level": "info"})
     app.provide("db", {"connected": True, "name": "PostgreSQL"})
-    # Register handler with this app instance
     app.register_route("GET", "/api/node-destructure", body_schema=None, parameter_schema=None, file_params=None)(
         di_node_js_object_destructuring_injection_success
     )
@@ -201,20 +191,17 @@ def create_app_di_node_js_object_destructuring_injection_success() -> Spikard:
 
 def create_auth_service(db_pool, cache) -> Any:
     """Factory for auth_service."""
-    # Create auth service
     return {"auth_service_enabled": True, "has_db": db_pool is not None, "has_cache": cache is not None}
 
 
 async def create_cache_from_config(config) -> Any:
     """Async factory for cache."""
-    # Simulate async cache connection
     cache_ttl = config.get("cache_ttl", 300)
     return {"cache_id": str(UUID(int=2)), "ttl": cache_ttl}
 
 
 async def create_db_pool_from_config(config) -> Any:
     """Async factory for db_pool."""
-    # Simulate async DB connection
     db_url = config.get("db_url", "postgresql://localhost/mydb")
     return {"pool_id": str(UUID(int=1)), "connected": True, "url": db_url}
 
@@ -234,12 +221,10 @@ def create_app_di_nested_dependencies_3_levels_success() -> Spikard:
     """App factory for fixture: Nested dependencies (3 levels) - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("cache", Provide(create_cache_from_config, depends_on=["config"], cacheable=True))
     app.provide("db_pool", Provide(create_db_pool_from_config, depends_on=["config"], cacheable=True))
     app.provide("config", {"cache_ttl": 300, "db_url": "postgresql://localhost/mydb"})
     app.provide("auth_service", Provide(create_auth_service, depends_on=["db_pool", "cache"], cacheable=True))
-    # Register handler with this app instance
     app.register_route("GET", "/api/auth-status", body_schema=None, parameter_schema=None, file_params=None)(
         di_nested_dependencies_3_levels_success
     )
@@ -275,9 +260,7 @@ def create_app_di_type_mismatch_in_dependency_resolution_error() -> Spikard:
     """App factory for fixture: Type mismatch in dependency resolution - error"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("config", "string_config")
-    # Register handler with this app instance
     app.register_route("GET", "/api/type-mismatch", body_schema=None, parameter_schema=None, file_params=None)(
         di_type_mismatch_in_dependency_resolution_error
     )
@@ -310,7 +293,6 @@ async def di_missing_dependency_error(
 def create_app_di_missing_dependency_error() -> Spikard:
     """App factory for fixture: Missing dependency - error"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/missing-dep", body_schema=None, parameter_schema=None, file_params=None)(
         di_missing_dependency_error
     )
@@ -333,10 +315,8 @@ def create_app_di_python_parameter_name_based_injection_success() -> Spikard:
     """App factory for fixture: Python parameter name-based injection - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("cache", {"status": "ready"})
     app.provide("db_pool", {"status": "connected"})
-    # Register handler with this app instance
     app.register_route("GET", "/api/python-name-inject", body_schema=None, parameter_schema=None, file_params=None)(
         di_python_parameter_name_based_injection_success
     )
@@ -345,13 +325,11 @@ def create_app_di_python_parameter_name_based_injection_success() -> Spikard:
 
 async def di_dependency_injection_in_lifecycle_hooks_success_log_request_on_request_0(request: Any) -> Any:
     """onRequest hook: log_request"""
-    # Mock implementation for testing
     return request
 
 
 async def di_dependency_injection_in_lifecycle_hooks_success_auth_check_pre_handler_0(request: Any) -> Any:
     """preHandler hook: auth_check"""
-    # Mock implementation for testing
     return request
 
 
@@ -368,14 +346,11 @@ def create_app_di_dependency_injection_in_lifecycle_hooks_success() -> Spikard:
     """App factory for fixture: Dependency injection in lifecycle hooks - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("logger", {"level": "debug"})
     app.provide("auth_service", {"enabled": True, "strict_mode": True})
-    # Register handler with this app instance
     app.register_route("GET", "/api/hook-di-test", body_schema=None, parameter_schema=None, file_params=None)(
         di_dependency_injection_in_lifecycle_hooks_success
     )
-    # Register lifecycle hooks
     app.on_request(di_dependency_injection_in_lifecycle_hooks_success_log_request_on_request_0)
     app.pre_handler(di_dependency_injection_in_lifecycle_hooks_success_auth_check_pre_handler_0)
     return app
@@ -395,10 +370,8 @@ def create_app_di_ruby_keyword_argument_injection_success() -> Spikard:
     """App factory for fixture: Ruby keyword argument injection - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("db_pool", {"adapter": "postgresql", "pool_size": 5})
     app.provide("session", {"session_id": "abc123", "user_id": 42})
-    # Register handler with this app instance
     app.register_route("GET", "/api/ruby-kwargs", body_schema=None, parameter_schema=None, file_params=None)(
         di_ruby_keyword_argument_injection_success
     )
@@ -407,40 +380,34 @@ def create_app_di_ruby_keyword_argument_injection_success() -> Spikard:
 
 async def create_cache_connection_with_cleanup(db_connection):
     """Factory for cache_connection with cleanup."""
-    # Create resource
     events = BACKGROUND_STATE.setdefault("cleanup_events_di_multiple_dependencies_with_cleanup_success", [])
     events.append("cache_opened")
     resource = {"id": str(UUID("00000000-0000-0000-0000-00000000002d")), "active": True}
     try:
         yield resource
     finally:
-        # Cleanup resource
         events.append("cache_closed")
 
 
 async def create_db_connection_with_cleanup():
     """Factory for db_connection with cleanup."""
-    # Create resource
     events = BACKGROUND_STATE.setdefault("cleanup_events_di_multiple_dependencies_with_cleanup_success", [])
     events.append("db_opened")
     resource = {"id": str(UUID("00000000-0000-0000-0000-00000000002d")), "active": True}
     try:
         yield resource
     finally:
-        # Cleanup resource
         events.append("db_closed")
 
 
 async def create_session_with_cleanup(db_connection, cache_connection):
     """Factory for session with cleanup."""
-    # Create resource
     events = BACKGROUND_STATE.setdefault("cleanup_events_di_multiple_dependencies_with_cleanup_success", [])
     events.append("session_opened")
     resource = {"id": str(UUID(int=7)), "active": True}
     try:
         yield resource
     finally:
-        # Cleanup resource
         resource["active"] = False
         BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_closed")
 
@@ -475,7 +442,6 @@ def create_app_di_multiple_dependencies_with_cleanup_success() -> Spikard:
     BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"] = []
     BACKGROUND_STATE["di_multiple_dependencies_with_cleanup_success"] = []
 
-    # Register dependencies
     app.provide(
         "session",
         Provide(create_session_with_cleanup, depends_on=["db_connection", "cache_connection"], cacheable=True),
@@ -484,7 +450,6 @@ def create_app_di_multiple_dependencies_with_cleanup_success() -> Spikard:
         "cache_connection", Provide(create_cache_connection_with_cleanup, depends_on=["db_connection"], cacheable=True)
     )
     app.provide("db_connection", Provide(create_db_connection_with_cleanup, cacheable=True))
-    # Register handler with this app instance
     app.register_route("GET", "/api/multi-cleanup-test", body_schema=None, parameter_schema=None, file_params=None)(
         di_multiple_dependencies_with_cleanup_success
     )
@@ -499,7 +464,6 @@ def create_app_di_multiple_dependencies_with_cleanup_success() -> Spikard:
 
 def create_db_pool_mixed_caching(app_config) -> Any:
     """Factory for db_pool."""
-    # Singleton with counter
     if "singleton_db_pool" not in BACKGROUND_STATE:
         BACKGROUND_STATE["singleton_db_pool"] = {"id": str(UUID(int=99)), "count": 0}
     BACKGROUND_STATE["singleton_db_pool"]["count"] += 1
@@ -536,11 +500,9 @@ def create_app_di_mixed_singleton_and_per_request_caching_success() -> Spikard:
     """App factory for fixture: Mixed singleton and per-request caching - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("request_context", Provide(create_request_context, depends_on=["db_pool"], cacheable=True))
     app.provide("app_config", {"app_name": "MyApp", "version": "2.0"})
     app.provide("db_pool", Provide(create_db_pool_mixed_caching, depends_on=["app_config"], singleton=True))
-    # Register handler with this app instance
     app.register_route("GET", "/api/mixed-caching", body_schema=None, parameter_schema=None, file_params=None)(
         di_mixed_singleton_and_per_request_caching_success
     )
@@ -549,14 +511,12 @@ def create_app_di_mixed_singleton_and_per_request_caching_success() -> Spikard:
 
 async def create_db_session_with_cleanup():
     """Factory for db_session with cleanup."""
-    # Create resource
     events = BACKGROUND_STATE.setdefault("cleanup_events_di_resource_cleanup_after_request_success", [])
     events.append("session_opened")
     resource = {"id": str(UUID("00000000-0000-0000-0000-000000000029")), "active": True}
     try:
         yield resource
     finally:
-        # Cleanup resource
         events.append("session_closed")
 
 
@@ -592,9 +552,7 @@ def create_app_di_resource_cleanup_after_request_success() -> Spikard:
     BACKGROUND_STATE["cleanup_events_di_resource_cleanup_after_request_success"] = []
     BACKGROUND_STATE["di_resource_cleanup_after_request_success"] = []
 
-    # Register dependencies
     app.provide("db_session", Provide(create_db_session_with_cleanup, cacheable=True))
-    # Register handler with this app instance
     app.register_route("GET", "/api/cleanup-test", body_schema=None, parameter_schema=None, file_params=None)(
         di_resource_cleanup_after_request_success
     )
@@ -623,10 +581,8 @@ def create_app_di_python_type_annotation_based_injection_success() -> Spikard:
     """App factory for fixture: Python type annotation-based injection - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("cache_client", {"cache_type": "Redis", "ttl": 300})
     app.provide("database_pool", {"max_connections": 20, "pool_type": "PostgreSQL"})
-    # Register handler with this app instance
     app.register_route("GET", "/api/python-type-inject", body_schema=None, parameter_schema=None, file_params=None)(
         di_python_type_annotation_based_injection_success
     )
@@ -653,9 +609,7 @@ def create_app_di_per_request_dependency_caching_success() -> Spikard:
     """App factory for fixture: Per-request dependency caching - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("request_id_generator", Provide(create_request_id, cacheable=True))
-    # Register handler with this app instance
     app.register_route("GET", "/api/request-id", body_schema=None, parameter_schema=None, file_params=None)(
         di_per_request_dependency_caching_success
     )
@@ -664,7 +618,6 @@ def create_app_di_per_request_dependency_caching_success() -> Spikard:
 
 def create_app_counter() -> Any:
     """Factory for app_counter."""
-    # Singleton with counter
     if "singleton_app_counter" not in BACKGROUND_STATE:
         BACKGROUND_STATE["singleton_app_counter"] = {"id": str(UUID(int=99)), "count": 0}
     BACKGROUND_STATE["singleton_app_counter"]["count"] += 1
@@ -692,9 +645,7 @@ def create_app_di_singleton_dependency_caching_success() -> Spikard:
     """App factory for fixture: Singleton dependency caching - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("app_counter", Provide(create_app_counter, singleton=True))
-    # Register handler with this app instance
     app.register_route("GET", "/api/app-counter", body_schema=None, parameter_schema=None, file_params=None)(
         di_singleton_dependency_caching_success
     )
@@ -703,7 +654,6 @@ def create_app_di_singleton_dependency_caching_success() -> Spikard:
 
 async def create_async_db_pool() -> Any:
     """Async factory for db_pool."""
-    # Simulate async DB connection
     db_url = "postgresql://localhost/mydb"
     return {"pool_id": str(UUID(int=1)), "connected": True, "url": db_url}
 
@@ -723,9 +673,7 @@ def create_app_di_async_factory_dependency_success() -> Spikard:
     """App factory for fixture: Async factory dependency - success"""
     app = Spikard()
 
-    # Register dependencies
     app.provide("db_pool", Provide(create_async_db_pool, cacheable=True))
-    # Register handler with this app instance
     app.register_route("GET", "/api/db-status", body_schema=None, parameter_schema=None, file_params=None)(
         di_async_factory_dependency_success
     )
@@ -744,7 +692,6 @@ async def request_id_request_id_header_is_preserved() -> Any:
 def create_app_request_id_request_id_header_is_preserved() -> Spikard:
     """App factory for fixture: Request ID header is preserved"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/request-id/preserved", body_schema=None, parameter_schema=None, file_params=None)(
         request_id_request_id_header_is_preserved
     )
@@ -760,7 +707,6 @@ def create_app_request_id_request_id_middleware_can_be_disabled() -> Spikard:
     """App factory for fixture: Request ID middleware can be disabled"""
     config = ServerConfig(enable_request_id=False)
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route("GET", "/request-id/disabled", body_schema=None, parameter_schema=None, file_params=None)(
         request_id_request_id_middleware_can_be_disabled
     )
@@ -780,7 +726,6 @@ def create_app_request_id_request_id_is_generated_when_not_provided() -> Spikard
     """App factory for fixture: Request ID is generated when not provided"""
     config = ServerConfig(enable_request_id=True)
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route("GET", "/request-id/generated", body_schema=None, parameter_schema=None, file_params=None)(
         request_id_request_id_is_generated_when_not_provided
     )
@@ -797,7 +742,6 @@ async def query_params_string_validation_with_regex_success(
 def create_app_query_params_string_validation_with_regex_success() -> Spikard:
     """App factory for fixture: String validation with regex - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -824,7 +768,6 @@ async def query_params_49_integer_gt_constraint_success(
 def create_app_query_params_49_integer_gt_constraint_success() -> Spikard:
     """App factory for fixture: 49_integer_gt_constraint_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -867,7 +810,6 @@ async def query_params_enum_query_parameter_invalid_value(
 def create_app_query_params_enum_query_parameter_invalid_value() -> Spikard:
     """App factory for fixture: Enum query parameter - invalid value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/enum",
@@ -899,7 +841,6 @@ async def query_params_68_array_uniqueitems_success(
 def create_app_query_params_68_array_uniqueitems_success() -> Spikard:
     """App factory for fixture: 68_array_uniqueitems_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -928,7 +869,6 @@ async def query_params_47_pattern_validation_email_success(
 def create_app_query_params_47_pattern_validation_email_success() -> Spikard:
     """App factory for fixture: 47_pattern_validation_email_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/subscribe",
@@ -959,7 +899,6 @@ async def query_params_required_integer_query_parameter_success(
 def create_app_query_params_required_integer_query_parameter_success() -> Spikard:
     """App factory for fixture: Required integer query parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int",
@@ -994,7 +933,6 @@ async def query_params_required_string_query_parameter_missing(
 def create_app_query_params_required_string_query_parameter_missing() -> Spikard:
     """App factory for fixture: Required string query parameter - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query",
@@ -1019,7 +957,6 @@ async def query_params_57_boolean_empty_string_coercion(
 def create_app_query_params_57_boolean_empty_string_coercion() -> Spikard:
     """App factory for fixture: 57_boolean_empty_string_coercion"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -1044,7 +981,6 @@ async def query_params_52_integer_le_constraint_boundary(
 def create_app_query_params_52_integer_le_constraint_boundary() -> Spikard:
     """App factory for fixture: 52_integer_le_constraint_boundary"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -1063,7 +999,6 @@ async def query_params_list_with_default_empty_array_no_values_provided(
     tags: list[str] | None = None,
 ) -> Any:
     """Handler for GET /query/list-default."""
-    # Echo back parameters for testing
     result: dict[str, Any] = {}
     if tags is not None:
         result["tags"] = tags
@@ -1073,7 +1008,6 @@ async def query_params_list_with_default_empty_array_no_values_provided(
 def create_app_query_params_list_with_default_empty_array_no_values_provided() -> Spikard:
     """App factory for fixture: List with default empty array - no values provided"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/list-default",
@@ -1106,7 +1040,6 @@ async def query_params_date_query_parameter_success(
 def create_app_query_params_date_query_parameter_success() -> Spikard:
     """App factory for fixture: Date query parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/date",
@@ -1149,7 +1082,6 @@ async def query_params_string_query_param_with_max_length_constraint_fail(
 def create_app_query_params_string_query_param_with_max_length_constraint_fail() -> Spikard:
     """App factory for fixture: String query param with max_length constraint - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/str-max-length",
@@ -1191,7 +1123,6 @@ async def query_params_45_string_minlength_validation_failure(
 def create_app_query_params_45_string_minlength_validation_failure() -> Spikard:
     """App factory for fixture: 45_string_minlength_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/search",
@@ -1216,7 +1147,6 @@ async def query_params_integer_with_default_value_override(
 def create_app_query_params_integer_with_default_value_override() -> Spikard:
     """App factory for fixture: Integer with default value - override"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int/default",
@@ -1258,7 +1188,6 @@ async def query_params_67_multipleof_constraint_failure(
 def create_app_query_params_67_multipleof_constraint_failure() -> Spikard:
     """App factory for fixture: 67_multipleof_constraint_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -1285,7 +1214,6 @@ async def query_params_58_format_email_success(
 def create_app_query_params_58_format_email_success() -> Spikard:
     """App factory for fixture: 58_format_email_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/subscribe",
@@ -1310,7 +1238,6 @@ async def query_params_integer_query_param_with_ge_constraint_boundary(
 def create_app_query_params_integer_query_param_with_ge_constraint_boundary() -> Spikard:
     """App factory for fixture: Integer query param with ge constraint - boundary"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int-ge",
@@ -1335,7 +1262,6 @@ async def query_params_integer_query_param_with_gt_constraint_valid(
 def create_app_query_params_integer_query_param_with_gt_constraint_valid() -> Spikard:
     """App factory for fixture: Integer query param with gt constraint - valid"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int-gt",
@@ -1377,7 +1303,6 @@ async def query_params_required_integer_query_parameter_invalid_type(
 def create_app_query_params_required_integer_query_parameter_invalid_type() -> Spikard:
     """App factory for fixture: Required integer query parameter - invalid type"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int",
@@ -1419,7 +1344,6 @@ async def query_params_required_integer_query_parameter_float_value(
 def create_app_query_params_required_integer_query_parameter_float_value() -> Spikard:
     """App factory for fixture: Required integer query parameter - float value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int",
@@ -1444,7 +1368,6 @@ async def query_params_query_parameter_with_url_encoded_special_characters(
 def create_app_query_params_query_parameter_with_url_encoded_special_characters() -> Spikard:
     """App factory for fixture: Query parameter with URL encoded special characters"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/basic",
@@ -1486,7 +1409,6 @@ async def query_params_59_format_email_failure(
 def create_app_query_params_59_format_email_failure() -> Spikard:
     """App factory for fixture: 59_format_email_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/subscribe",
@@ -1511,7 +1433,6 @@ async def query_params_43_scientific_notation_float(
 def create_app_query_params_43_scientific_notation_float() -> Spikard:
     """App factory for fixture: 43_scientific_notation_float"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/stats",
@@ -1540,7 +1461,6 @@ async def query_params_63_format_uri_success(
 def create_app_query_params_63_format_uri_success() -> Spikard:
     """App factory for fixture: 63_format_uri_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/redirect",
@@ -1565,7 +1485,6 @@ async def query_params_boolean_query_parameter_numeric_1(
 def create_app_query_params_boolean_query_parameter_numeric_1() -> Spikard:
     """App factory for fixture: Boolean query parameter - numeric 1"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/bool",
@@ -1608,7 +1527,6 @@ async def query_params_string_query_param_with_min_length_constraint_fail(
 def create_app_query_params_string_query_param_with_min_length_constraint_fail() -> Spikard:
     """App factory for fixture: String query param with min_length constraint - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/str-min-length",
@@ -1633,7 +1551,6 @@ async def query_params_optional_string_query_parameter_provided(
 def create_app_query_params_optional_string_query_parameter_provided() -> Spikard:
     """App factory for fixture: Optional string query parameter - provided"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/optional",
@@ -1658,7 +1575,6 @@ async def query_params_list_of_integers_multiple_values(
 def create_app_query_params_list_of_integers_multiple_values() -> Spikard:
     """App factory for fixture: List of integers - multiple values"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/list",
@@ -1690,7 +1606,6 @@ async def query_params_integer_query_param_with_lt_constraint_valid(
 def create_app_query_params_integer_query_param_with_lt_constraint_valid() -> Spikard:
     """App factory for fixture: Integer query param with lt constraint - valid"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int-lt",
@@ -1717,7 +1632,6 @@ async def query_params_42_negative_integer_query_param(
 def create_app_query_params_42_negative_integer_query_param() -> Spikard:
     """App factory for fixture: 42_negative_integer_query_param"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/negative",
@@ -1759,7 +1673,6 @@ async def query_params_46_string_maxlength_validation_failure(
 def create_app_query_params_46_string_maxlength_validation_failure() -> Spikard:
     """App factory for fixture: 46_string_maxlength_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/search",
@@ -1801,7 +1714,6 @@ async def query_params_56_array_maxitems_constraint_failure(
 def create_app_query_params_56_array_maxitems_constraint_failure() -> Spikard:
     """App factory for fixture: 56_array_maxitems_constraint_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -1844,7 +1756,6 @@ async def query_params_string_query_param_with_regex_pattern_fail(
 def create_app_query_params_string_query_param_with_regex_pattern_fail() -> Spikard:
     """App factory for fixture: String query param with regex pattern - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/pattern",
@@ -1871,7 +1782,6 @@ async def query_params_44_string_minlength_validation_success(
 def create_app_query_params_44_string_minlength_validation_success() -> Spikard:
     """App factory for fixture: 44_string_minlength_validation_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/search",
@@ -1913,7 +1823,6 @@ async def query_params_61_format_ipv4_failure(
 def create_app_query_params_61_format_ipv4_failure() -> Spikard:
     """App factory for fixture: 61_format_ipv4_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/network",
@@ -1955,7 +1864,6 @@ async def query_params_48_pattern_validation_email_failure(
 def create_app_query_params_48_pattern_validation_email_failure() -> Spikard:
     """App factory for fixture: 48_pattern_validation_email_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/subscribe",
@@ -1996,7 +1904,6 @@ async def query_params_required_integer_query_parameter_missing(
 def create_app_query_params_required_integer_query_parameter_missing() -> Spikard:
     """App factory for fixture: Required integer query parameter - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int",
@@ -2026,7 +1933,6 @@ async def query_params_query_parameter_with_special_characters_url_encoding(
 def create_app_query_params_query_parameter_with_special_characters_url_encoding() -> Spikard:
     """App factory for fixture: Query parameter with special characters - URL encoding"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/test",
@@ -2064,7 +1970,6 @@ async def query_params_list_query_parameter_required_but_missing(
 def create_app_query_params_list_query_parameter_required_but_missing() -> Spikard:
     """App factory for fixture: List query parameter - required but missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/list",
@@ -2096,7 +2001,6 @@ async def query_params_required_string_query_parameter_success(
 def create_app_query_params_required_string_query_parameter_success() -> Spikard:
     """App factory for fixture: Required string query parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query",
@@ -2121,7 +2025,6 @@ async def query_params_66_multipleof_constraint_success(
 def create_app_query_params_66_multipleof_constraint_success() -> Spikard:
     """App factory for fixture: 66_multipleof_constraint_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -2163,7 +2066,6 @@ async def query_params_53_integer_le_constraint_failure(
 def create_app_query_params_53_integer_le_constraint_failure() -> Spikard:
     """App factory for fixture: 53_integer_le_constraint_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -2195,7 +2097,6 @@ async def query_params_multiple_query_parameters_with_different_types(
 def create_app_query_params_multiple_query_parameters_with_different_types() -> Spikard:
     """App factory for fixture: Multiple query parameters with different types"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/multi-type",
@@ -2227,7 +2128,6 @@ async def query_params_71_array_separator_semicolon(
 def create_app_query_params_71_array_separator_semicolon() -> Spikard:
     """App factory for fixture: 71_array_separator_semicolon"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -2258,7 +2158,6 @@ async def query_params_70_array_separator_pipe(
 def create_app_query_params_70_array_separator_pipe() -> Spikard:
     """App factory for fixture: 70_array_separator_pipe"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -2283,7 +2182,6 @@ async def query_params_integer_with_default_value_not_provided(
 def create_app_query_params_integer_with_default_value_not_provided() -> Spikard:
     """App factory for fixture: Integer with default value - not provided"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int/default",
@@ -2308,7 +2206,6 @@ async def query_params_boolean_query_parameter_true(
 def create_app_query_params_boolean_query_parameter_true() -> Spikard:
     """App factory for fixture: Boolean query parameter - true"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/bool",
@@ -2333,7 +2230,6 @@ async def query_params_integer_query_param_with_le_constraint_boundary(
 def create_app_query_params_integer_query_param_with_le_constraint_boundary() -> Spikard:
     """App factory for fixture: Integer query param with le constraint - boundary"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int-le",
@@ -2358,7 +2254,6 @@ async def query_params_float_query_param_with_ge_constraint_success(
 def create_app_query_params_float_query_param_with_ge_constraint_success() -> Spikard:
     """App factory for fixture: Float query param with ge constraint - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/float-ge",
@@ -2383,7 +2278,6 @@ async def query_params_51_integer_ge_constraint_boundary(
 def create_app_query_params_51_integer_ge_constraint_boundary() -> Spikard:
     """App factory for fixture: 51_integer_ge_constraint_boundary"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -2408,7 +2302,6 @@ async def query_params_optional_integer_query_parameter_missing(
 def create_app_query_params_optional_integer_query_parameter_missing() -> Spikard:
     """App factory for fixture: Optional integer query parameter - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/int/optional",
@@ -2450,7 +2343,6 @@ async def query_params_69_array_uniqueitems_failure(
 def create_app_query_params_69_array_uniqueitems_failure() -> Spikard:
     """App factory for fixture: 69_array_uniqueitems_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -2481,7 +2373,6 @@ async def query_params_72_array_separator_space(
 def create_app_query_params_72_array_separator_space() -> Spikard:
     """App factory for fixture: 72_array_separator_space"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/search",
@@ -2526,7 +2417,6 @@ async def query_params_string_validation_with_regex_failure(
 def create_app_query_params_string_validation_with_regex_failure() -> Spikard:
     """App factory for fixture: String validation with regex - failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -2553,7 +2443,6 @@ async def query_params_65_format_hostname_success(
 def create_app_query_params_65_format_hostname_success() -> Spikard:
     """App factory for fixture: 65_format_hostname_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/dns",
@@ -2578,7 +2467,6 @@ async def query_params_query_parameter_with_url_encoded_space(
 def create_app_query_params_query_parameter_with_url_encoded_space() -> Spikard:
     """App factory for fixture: Query parameter with URL encoded space"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/basic",
@@ -2603,7 +2491,6 @@ async def query_params_list_of_strings_multiple_values(
 def create_app_query_params_list_of_strings_multiple_values() -> Spikard:
     """App factory for fixture: List of strings - multiple values"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -2630,7 +2517,6 @@ async def query_params_optional_query_parameter_with_default_value(
 def create_app_query_params_optional_query_parameter_with_default_value() -> Spikard:
     """App factory for fixture: Optional query parameter with default value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/optional-default",
@@ -2659,7 +2545,6 @@ async def query_params_62_format_ipv6_success(
 def create_app_query_params_62_format_ipv6_success() -> Spikard:
     """App factory for fixture: 62_format_ipv6_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/network/ipv6",
@@ -2684,7 +2569,6 @@ async def query_params_array_query_parameter_single_value(
 def create_app_query_params_array_query_parameter_single_value() -> Spikard:
     """App factory for fixture: Array query parameter - single value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/list-default",
@@ -2717,7 +2601,6 @@ async def query_params_optional_string_query_parameter_missing(
 def create_app_query_params_optional_string_query_parameter_missing() -> Spikard:
     """App factory for fixture: Optional string query parameter - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/optional",
@@ -2744,7 +2627,6 @@ async def query_params_datetime_query_parameter_success(
 def create_app_query_params_datetime_query_parameter_success() -> Spikard:
     """App factory for fixture: Datetime query parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/datetime",
@@ -2788,7 +2670,6 @@ async def query_params_uuid_query_parameter_invalid_format(
 def create_app_query_params_uuid_query_parameter_invalid_format() -> Spikard:
     """App factory for fixture: UUID query parameter - invalid format"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/uuid",
@@ -2807,7 +2688,6 @@ async def query_params_array_query_parameter_empty_array(
     tags: list[str] | None = None,
 ) -> Any:
     """Handler for GET /query/list-default."""
-    # Echo back parameters for testing
     result: dict[str, Any] = {}
     if tags is not None:
         result["tags"] = tags
@@ -2817,7 +2697,6 @@ async def query_params_array_query_parameter_empty_array(
 def create_app_query_params_array_query_parameter_empty_array() -> Spikard:
     """App factory for fixture: Array query parameter - empty array"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/list-default",
@@ -2850,7 +2729,6 @@ async def query_params_enum_query_parameter_success(
 def create_app_query_params_enum_query_parameter_success() -> Spikard:
     """App factory for fixture: Enum query parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/enum",
@@ -2886,7 +2764,6 @@ async def query_params_uuid_query_parameter_success(
 def create_app_query_params_uuid_query_parameter_success() -> Spikard:
     """App factory for fixture: UUID query parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/query/uuid",
@@ -2928,7 +2805,6 @@ async def query_params_50_integer_gt_constraint_failure(
 def create_app_query_params_50_integer_gt_constraint_failure() -> Spikard:
     """App factory for fixture: 50_integer_gt_constraint_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -2970,7 +2846,6 @@ async def query_params_64_format_uri_failure(
 def create_app_query_params_64_format_uri_failure() -> Spikard:
     """App factory for fixture: 64_format_uri_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/redirect",
@@ -2995,7 +2870,6 @@ async def query_params_54_array_minitems_constraint_success(
 def create_app_query_params_54_array_minitems_constraint_success() -> Spikard:
     """App factory for fixture: 54_array_minitems_constraint_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -3037,7 +2911,6 @@ async def query_params_55_array_minitems_constraint_failure(
 def create_app_query_params_55_array_minitems_constraint_failure() -> Spikard:
     """App factory for fixture: 55_array_minitems_constraint_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -3062,7 +2935,6 @@ async def query_params_60_format_ipv4_success(
 def create_app_query_params_60_format_ipv4_success() -> Spikard:
     """App factory for fixture: 60_format_ipv4_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/network",
@@ -3091,7 +2963,6 @@ async def streaming_stream_json_lines() -> Any:
 def create_app_streaming_stream_json_lines() -> Spikard:
     """App factory for fixture: Stream JSON lines"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/stream/json-lines", body_schema=None, parameter_schema=None, file_params=None)(
         streaming_stream_json_lines
     )
@@ -3114,7 +2985,6 @@ async def streaming_binary_log_download() -> Any:
 def create_app_streaming_binary_log_download() -> Spikard:
     """App factory for fixture: Binary log download"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/stream/logfile", body_schema=None, parameter_schema=None, file_params=None)(
         streaming_binary_log_download
     )
@@ -3135,7 +3005,6 @@ async def streaming_chunked_csv_export() -> Any:
 def create_app_streaming_chunked_csv_export() -> Spikard:
     """App factory for fixture: Chunked CSV export"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/stream/csv-report", body_schema=None, parameter_schema=None, file_params=None)(
         streaming_chunked_csv_export
     )
@@ -3155,7 +3024,6 @@ def create_app_body_limits_body_under_limit_succeeds() -> Spikard:
     """App factory for fixture: Body under limit succeeds"""
     config = ServerConfig(max_body_size=64)
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/body-limit/under",
@@ -3188,7 +3056,6 @@ def create_app_body_limits_body_over_limit_returns_413() -> Spikard:
     """App factory for fixture: Body over limit returns 413"""
     config = ServerConfig(max_body_size=64)
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/body-limit/over",
@@ -3220,7 +3087,6 @@ async def http_methods_options_cors_preflight_request() -> Any:
 def create_app_http_methods_options_cors_preflight_request() -> Spikard:
     """App factory for fixture: OPTIONS - CORS preflight request"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("OPTIONS", "/items/", body_schema=None, parameter_schema=None, file_params=None)(
         http_methods_options_cors_preflight_request
     )
@@ -3231,7 +3097,6 @@ async def http_methods_delete_remove_resource(
     id: str,
 ) -> Any:
     """Handler for DELETE /items/{id}."""
-    # Echo back parameters for testing
     result: dict[str, Any] = {}
     if id is not None:
         result["id"] = id
@@ -3241,7 +3106,6 @@ async def http_methods_delete_remove_resource(
 def create_app_http_methods_delete_remove_resource() -> Spikard:
     """App factory for fixture: DELETE - Remove resource"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "DELETE",
         "/items/{id}",
@@ -3280,7 +3144,6 @@ async def http_methods_put_create_resource_if_doesn_t_exist(
 def create_app_http_methods_put_create_resource_if_doesn_t_exist() -> Spikard:
     """App factory for fixture: PUT - Create resource if doesn't exist"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "PUT",
         "/items/{id}",
@@ -3322,7 +3185,6 @@ async def http_methods_patch_update_multiple_fields(
 def create_app_http_methods_patch_update_multiple_fields() -> Spikard:
     """App factory for fixture: PATCH - Update multiple fields"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "PATCH",
         "/items/{id}",
@@ -3383,7 +3245,6 @@ async def http_methods_put_validation_error(
 def create_app_http_methods_put_validation_error() -> Spikard:
     """App factory for fixture: PUT - Validation error"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "PUT",
         "/items/{id}",
@@ -3417,7 +3278,6 @@ async def http_methods_head_get_metadata_without_body(
 def create_app_http_methods_head_get_metadata_without_body() -> Spikard:
     """App factory for fixture: HEAD - Get metadata without body"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "HEAD",
         "/items/{id}",
@@ -3446,7 +3306,6 @@ async def http_methods_delete_with_response_body(
 def create_app_http_methods_delete_with_response_body() -> Spikard:
     """App factory for fixture: DELETE - With response body"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "DELETE",
         "/items/{id}",
@@ -3490,7 +3349,6 @@ async def http_methods_put_missing_required_field(
 def create_app_http_methods_put_missing_required_field() -> Spikard:
     """App factory for fixture: PUT - Missing required field"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "PUT",
         "/items/{id}",
@@ -3531,7 +3389,6 @@ async def http_methods_patch_partial_update(
 def create_app_http_methods_patch_partial_update() -> Spikard:
     """App factory for fixture: PATCH - Partial update"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "PATCH",
         "/items/{id}",
@@ -3550,7 +3407,6 @@ async def http_methods_delete_resource_not_found(
     id: str,
 ) -> Any:
     """Handler for DELETE /items/{id}."""
-    # Echo back parameters for testing
     result: dict[str, Any] = {}
     if id is not None:
         result["id"] = id
@@ -3560,7 +3416,6 @@ async def http_methods_delete_resource_not_found(
 def create_app_http_methods_delete_resource_not_found() -> Spikard:
     """App factory for fixture: DELETE - Resource not found"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "DELETE",
         "/items/{id}",
@@ -3598,7 +3453,6 @@ async def http_methods_put_idempotent_operation(
 def create_app_http_methods_put_idempotent_operation() -> Spikard:
     """App factory for fixture: PUT - Idempotent operation"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "PUT",
         "/items/{id}",
@@ -3648,7 +3502,6 @@ async def http_methods_put_complete_resource_replacement(
 def create_app_http_methods_put_complete_resource_replacement() -> Spikard:
     """App factory for fixture: PUT - Complete resource replacement"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "PUT",
         "/items/{id}",
@@ -3686,7 +3539,6 @@ def create_app_rate_limit_rate_limit_below_threshold_succeeds() -> Spikard:
     """App factory for fixture: Rate limit below threshold succeeds"""
     config = ServerConfig(rate_limit=RateLimitConfig(per_second=5, burst=5, ip_based=False))
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route("GET", "/rate-limit/basic", body_schema=None, parameter_schema=None, file_params=None)(
         rate_limit_rate_limit_below_threshold_succeeds
     )
@@ -3702,7 +3554,6 @@ def create_app_rate_limit_rate_limit_exceeded_returns_429() -> Spikard:
     """App factory for fixture: Rate limit exceeded returns 429"""
     config = ServerConfig(rate_limit=RateLimitConfig(per_second=1, burst=1, ip_based=False))
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route("GET", "/rate-limit/exceeded", body_schema=None, parameter_schema=None, file_params=None)(
         rate_limit_rate_limit_exceeded_returns_429
     )
@@ -3736,7 +3587,6 @@ async def json_bodies_uuid_field_invalid_format(
 def create_app_json_bodies_uuid_field_invalid_format() -> Spikard:
     """App factory for fixture: UUID field - invalid format"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -3786,7 +3636,6 @@ async def json_bodies_44_const_validation_failure(
 def create_app_json_bodies_44_const_validation_failure() -> Spikard:
     """App factory for fixture: 44_const_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/api/v1/data",
@@ -3824,7 +3673,6 @@ async def json_bodies_boolean_field_success(
 def create_app_json_bodies_boolean_field_success() -> Spikard:
     """App factory for fixture: Boolean field - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -3859,7 +3707,6 @@ async def json_bodies_numeric_le_validation_success(
 def create_app_json_bodies_numeric_le_validation_success() -> Spikard:
     """App factory for fixture: Numeric le validation - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/validated",
@@ -3904,7 +3751,6 @@ async def json_bodies_deeply_nested_objects(
 def create_app_json_bodies_deeply_nested_objects() -> Spikard:
     """App factory for fixture: Deeply nested objects"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/nested",
@@ -3967,7 +3813,6 @@ async def json_bodies_optional_fields_omitted(
 def create_app_json_bodies_optional_fields_omitted() -> Spikard:
     """App factory for fixture: Optional fields - omitted"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -3997,7 +3842,6 @@ async def json_bodies_uuid_field_success(
 def create_app_json_bodies_uuid_field_success() -> Spikard:
     """App factory for fixture: UUID field - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -4034,7 +3878,6 @@ async def json_bodies_date_field_success(
 def create_app_json_bodies_date_field_success() -> Spikard:
     """App factory for fixture: Date field - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/events/",
@@ -4080,7 +3923,6 @@ async def json_bodies_47_maxproperties_validation_failure() -> Any:
 def create_app_json_bodies_47_maxproperties_validation_failure() -> Spikard:
     """App factory for fixture: 47_maxproperties_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/config", body_schema=None, parameter_schema=None, file_params=None)(
         json_bodies_47_maxproperties_validation_failure
     )
@@ -4116,7 +3958,6 @@ async def json_bodies_46_minproperties_validation_failure() -> Any:
 def create_app_json_bodies_46_minproperties_validation_failure() -> Spikard:
     """App factory for fixture: 46_minproperties_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/config", body_schema=None, parameter_schema=None, file_params=None)(
         json_bodies_46_minproperties_validation_failure
     )
@@ -4158,7 +3999,6 @@ async def json_bodies_string_min_length_validation_fail(
 def create_app_json_bodies_string_min_length_validation_fail() -> Spikard:
     """App factory for fixture: String min_length validation - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/validated",
@@ -4210,7 +4050,6 @@ async def json_bodies_field_type_validation_invalid_type(
 def create_app_json_bodies_field_type_validation_invalid_type() -> Spikard:
     """App factory for fixture: Field type validation - invalid type"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -4258,7 +4097,6 @@ async def json_bodies_36_oneof_schema_multiple_match_failure(
 def create_app_json_bodies_36_oneof_schema_multiple_match_failure() -> Spikard:
     """App factory for fixture: 36_oneof_schema_multiple_match_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/payment",
@@ -4308,7 +4146,6 @@ async def json_bodies_nested_object_success(
 def create_app_json_bodies_nested_object_success() -> Spikard:
     """App factory for fixture: Nested object - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/nested",
@@ -4350,7 +4187,6 @@ async def json_bodies_41_not_schema_success(
 def create_app_json_bodies_41_not_schema_success() -> Spikard:
     """App factory for fixture: 41_not_schema_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/users",
@@ -4400,7 +4236,6 @@ async def json_bodies_string_max_length_validation_fail(
 def create_app_json_bodies_string_max_length_validation_fail() -> Spikard:
     """App factory for fixture: String max_length validation - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/validated",
@@ -4432,7 +4267,6 @@ async def json_bodies_50_deep_nesting_4_levels(
 def create_app_json_bodies_50_deep_nesting_4_levels() -> Spikard:
     """App factory for fixture: 50_deep_nesting_4_levels"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/data",
@@ -4489,7 +4323,6 @@ async def json_bodies_48_dependencies_validation_success(
 def create_app_json_bodies_48_dependencies_validation_success() -> Spikard:
     """App factory for fixture: 48_dependencies_validation_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/billing",
@@ -4523,7 +4356,6 @@ async def json_bodies_patch_partial_update(
 def create_app_json_bodies_patch_partial_update() -> Spikard:
     """App factory for fixture: PATCH partial update"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "PATCH",
         "/items/{id}",
@@ -4571,7 +4403,6 @@ async def json_bodies_30_nested_object_missing_field(
 def create_app_json_bodies_30_nested_object_missing_field() -> Spikard:
     """App factory for fixture: 30_nested_object_missing_field"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/users",
@@ -4617,7 +4448,6 @@ async def json_bodies_datetime_field_success(
 def create_app_json_bodies_datetime_field_success() -> Spikard:
     """App factory for fixture: Datetime field - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/events/",
@@ -4652,7 +4482,6 @@ async def json_bodies_string_pattern_validation_success(
 def create_app_json_bodies_string_pattern_validation_success() -> Spikard:
     """App factory for fixture: String pattern validation - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/validated",
@@ -4689,7 +4518,6 @@ async def json_bodies_extra_fields_ignored_no_additionalproperties(
 def create_app_json_bodies_extra_fields_ignored_no_additionalproperties() -> Spikard:
     """App factory for fixture: Extra fields ignored (no additionalProperties)"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -4745,7 +4573,6 @@ async def json_bodies_40_anyof_schema_failure(
 def create_app_json_bodies_40_anyof_schema_failure() -> Spikard:
     """App factory for fixture: 40_anyof_schema_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/contact",
@@ -4775,7 +4602,6 @@ async def json_bodies_39_anyof_schema_multiple_match_success(
 def create_app_json_bodies_39_anyof_schema_multiple_match_success() -> Spikard:
     """App factory for fixture: 39_anyof_schema_multiple_match_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/contact",
@@ -4817,7 +4643,6 @@ async def json_bodies_array_of_primitive_values(
 def create_app_json_bodies_array_of_primitive_values() -> Spikard:
     """App factory for fixture: Array of primitive values"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -4873,7 +4698,6 @@ async def json_bodies_numeric_ge_validation_fail(
 def create_app_json_bodies_numeric_ge_validation_fail() -> Spikard:
     """App factory for fixture: Numeric ge validation - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/validated",
@@ -4920,7 +4744,6 @@ async def json_bodies_37_oneof_schema_no_match_failure(
 def create_app_json_bodies_37_oneof_schema_no_match_failure() -> Spikard:
     """App factory for fixture: 37_oneof_schema_no_match_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/payment",
@@ -4979,7 +4802,6 @@ async def json_bodies_empty_array_validation_fail(
 def create_app_json_bodies_empty_array_validation_fail() -> Spikard:
     """App factory for fixture: Empty array validation - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/list-validated",
@@ -5011,7 +4833,6 @@ async def json_bodies_38_anyof_schema_success(
 def create_app_json_bodies_38_anyof_schema_success() -> Spikard:
     """App factory for fixture: 38_anyof_schema_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/contact",
@@ -5039,7 +4860,6 @@ async def json_bodies_empty_json_object() -> Any:
 def create_app_json_bodies_empty_json_object() -> Spikard:
     """App factory for fixture: Empty JSON object"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/items/optional-all", body_schema=None, parameter_schema=None, file_params=None)(
         json_bodies_empty_json_object
     )
@@ -5081,7 +4901,6 @@ async def json_bodies_string_pattern_validation_fail(
 def create_app_json_bodies_string_pattern_validation_fail() -> Spikard:
     """App factory for fixture: String pattern validation - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/validated",
@@ -5133,7 +4952,6 @@ async def json_bodies_49_dependencies_validation_failure(
 def create_app_json_bodies_49_dependencies_validation_failure() -> Spikard:
     """App factory for fixture: 49_dependencies_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/billing",
@@ -5175,7 +4993,6 @@ async def json_bodies_simple_json_object_success(
 def create_app_json_bodies_simple_json_object_success() -> Spikard:
     """App factory for fixture: Simple JSON object - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -5224,7 +5041,6 @@ async def json_bodies_required_field_missing_validation_error(
 def create_app_json_bodies_required_field_missing_validation_error() -> Spikard:
     """App factory for fixture: Required field missing - validation error"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -5254,7 +5070,6 @@ async def json_bodies_35_oneof_schema_success(
 def create_app_json_bodies_35_oneof_schema_success() -> Spikard:
     """App factory for fixture: 35_oneof_schema_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/payment",
@@ -5306,7 +5121,6 @@ async def json_bodies_enum_field_invalid_value(
 def create_app_json_bodies_enum_field_invalid_value() -> Spikard:
     """App factory for fixture: Enum field - invalid value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -5346,7 +5160,6 @@ async def json_bodies_enum_field_success(
 def create_app_json_bodies_enum_field_success() -> Spikard:
     """App factory for fixture: Enum field - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -5377,7 +5190,6 @@ async def json_bodies_33_allof_schema_composition(
 def create_app_json_bodies_33_allof_schema_composition() -> Spikard:
     """App factory for fixture: 33_allof_schema_composition"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items",
@@ -5405,7 +5217,6 @@ async def json_bodies_45_minproperties_validation_success() -> Any:
 def create_app_json_bodies_45_minproperties_validation_success() -> Spikard:
     """App factory for fixture: 45_minproperties_validation_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/config", body_schema=None, parameter_schema=None, file_params=None)(
         json_bodies_45_minproperties_validation_success
     )
@@ -5434,7 +5245,6 @@ async def json_bodies_body_with_query_parameters(
 def create_app_json_bodies_body_with_query_parameters() -> Spikard:
     """App factory for fixture: Body with query parameters"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -5487,7 +5297,6 @@ async def json_bodies_42_not_schema_failure(
 def create_app_json_bodies_42_not_schema_failure() -> Spikard:
     """App factory for fixture: 42_not_schema_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/users",
@@ -5512,7 +5321,6 @@ async def json_bodies_43_const_validation_success(
 def create_app_json_bodies_43_const_validation_success() -> Spikard:
     """App factory for fixture: 43_const_validation_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/api/v1/data",
@@ -5543,7 +5351,6 @@ async def json_bodies_32_schema_ref_definitions(
 def create_app_json_bodies_32_schema_ref_definitions() -> Spikard:
     """App factory for fixture: 32_schema_ref_definitions"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/products",
@@ -5582,7 +5389,6 @@ async def json_bodies_29_nested_object_validation_success(
 def create_app_json_bodies_29_nested_object_validation_success() -> Spikard:
     """App factory for fixture: 29_nested_object_validation_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/users",
@@ -5640,7 +5446,6 @@ async def json_bodies_34_additional_properties_false(
 def create_app_json_bodies_34_additional_properties_false() -> Spikard:
     """App factory for fixture: 34_additional_properties_false"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/users",
@@ -5679,7 +5484,6 @@ async def json_bodies_null_value_for_optional_field(
 def create_app_json_bodies_null_value_for_optional_field() -> Spikard:
     """App factory for fixture: Null value for optional field"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -5717,7 +5521,6 @@ async def json_bodies_31_nullable_property_null_value(
 def create_app_json_bodies_31_nullable_property_null_value() -> Spikard:
     """App factory for fixture: 31_nullable_property_null_value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/users",
@@ -5753,7 +5556,6 @@ async def json_bodies_array_of_objects_success(
 def create_app_json_bodies_array_of_objects_success() -> Spikard:
     """App factory for fixture: Array of objects - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/list",
@@ -5839,7 +5641,6 @@ def background_background_event_logging_second_payload_background_state() -> Any
 def create_app_background_background_event_logging_second_payload() -> Spikard:
     """App factory for fixture: Background event logging - second payload"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/background/events",
@@ -5883,7 +5684,6 @@ def background_background_event_logging_background_state() -> Any:
 def create_app_background_background_event_logging() -> Spikard:
     """App factory for fixture: Background event logging"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/background/events",
@@ -5914,7 +5714,6 @@ async def content_types_415_unsupported_media_type(
 def create_app_content_types_415_unsupported_media_type() -> Spikard:
     """App factory for fixture: 415 Unsupported Media Type"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/items/", body_schema={"type": "string"}, parameter_schema=None, file_params=None)(
         content_types_415_unsupported_media_type
     )
@@ -5933,7 +5732,6 @@ async def content_types_xml_response_application_xml() -> Any:
 def create_app_content_types_xml_response_application_xml() -> Spikard:
     """App factory for fixture: XML response - application/xml"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/xml", body_schema=None, parameter_schema=None, file_params=None)(
         content_types_xml_response_application_xml
     )
@@ -5957,7 +5755,6 @@ async def content_types_14_content_type_case_insensitive(
 def create_app_content_types_14_content_type_case_insensitive() -> Spikard:
     """App factory for fixture: 14_content_type_case_insensitive"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/data",
@@ -5980,7 +5777,6 @@ async def content_types_json_with_utf_8_charset() -> Any:
 def create_app_content_types_json_with_utf_8_charset() -> Spikard:
     """App factory for fixture: JSON with UTF-8 charset"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/items/unicode", body_schema=None, parameter_schema=None, file_params=None)(
         content_types_json_with_utf_8_charset
     )
@@ -6012,7 +5808,6 @@ async def content_types_16_text_plain_not_accepted(
 def create_app_content_types_16_text_plain_not_accepted() -> Spikard:
     """App factory for fixture: 16_text_plain_not_accepted"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/data",
@@ -6035,7 +5830,6 @@ async def content_types_pdf_response_application_pdf() -> Any:
 def create_app_content_types_pdf_response_application_pdf() -> Spikard:
     """App factory for fixture: PDF response - application/pdf"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/download/document.pdf", body_schema=None, parameter_schema=None, file_params=None)(
         content_types_pdf_response_application_pdf
     )
@@ -6057,7 +5851,6 @@ async def content_types_20_content_length_mismatch(
 def create_app_content_types_20_content_length_mismatch() -> Spikard:
     """App factory for fixture: 20_content_length_mismatch"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/data",
@@ -6088,7 +5881,6 @@ async def content_types_17_vendor_json_accepted(
 def create_app_content_types_17_vendor_json_accepted() -> Spikard:
     """App factory for fixture: 17_vendor_json_accepted"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/api/v1/resource",
@@ -6125,7 +5917,6 @@ async def content_types_13_json_with_charset_utf16(
 def create_app_content_types_13_json_with_charset_utf16() -> Spikard:
     """App factory for fixture: 13_json_with_charset_utf16"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/data",
@@ -6146,7 +5937,6 @@ async def content_types_json_response_application_json() -> Any:
 def create_app_content_types_json_response_application_json() -> Spikard:
     """App factory for fixture: JSON response - application/json"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/items/json", body_schema=None, parameter_schema=None, file_params=None)(
         content_types_json_response_application_json
     )
@@ -6165,7 +5955,6 @@ async def content_types_15_multipart_boundary_required() -> Any:
 def create_app_content_types_15_multipart_boundary_required() -> Spikard:
     """App factory for fixture: 15_multipart_boundary_required"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/upload",
@@ -6186,7 +5975,6 @@ async def content_types_content_negotiation_accept_header(
 def create_app_content_types_content_negotiation_accept_header() -> Spikard:
     """App factory for fixture: Content negotiation - Accept header"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/accept-test/{id}",
@@ -6213,7 +6001,6 @@ async def content_types_html_response_text_html() -> Any:
 def create_app_content_types_html_response_text_html() -> Spikard:
     """App factory for fixture: HTML response - text/html"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/html", body_schema=None, parameter_schema=None, file_params=None)(
         content_types_html_response_text_html
     )
@@ -6228,7 +6015,6 @@ async def content_types_jpeg_image_response_image_jpeg() -> Any:
 def create_app_content_types_jpeg_image_response_image_jpeg() -> Spikard:
     """App factory for fixture: JPEG image response - image/jpeg"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/images/photo.jpg", body_schema=None, parameter_schema=None, file_params=None)(
         content_types_jpeg_image_response_image_jpeg
     )
@@ -6252,7 +6038,6 @@ async def content_types_19_missing_content_type_default_json(
 def create_app_content_types_19_missing_content_type_default_json() -> Spikard:
     """App factory for fixture: 19_missing_content_type_default_json"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/data",
@@ -6271,7 +6056,6 @@ async def content_types_png_image_response_image_png() -> Any:
 def create_app_content_types_png_image_response_image_png() -> Spikard:
     """App factory for fixture: PNG image response - image/png"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/images/logo.png", body_schema=None, parameter_schema=None, file_params=None)(
         content_types_png_image_response_image_png
     )
@@ -6286,7 +6070,6 @@ async def content_types_plain_text_response_text_plain() -> Any:
 def create_app_content_types_plain_text_response_text_plain() -> Spikard:
     """App factory for fixture: Plain text response - text/plain"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/text", body_schema=None, parameter_schema=None, file_params=None)(
         content_types_plain_text_response_text_plain
     )
@@ -6309,7 +6092,6 @@ async def content_types_18_content_type_with_multiple_params(
 def create_app_content_types_18_content_type_with_multiple_params() -> Spikard:
     """App factory for fixture: 18_content_type_with_multiple_params"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/data",
@@ -6332,7 +6114,6 @@ async def content_types_csv_response_text_csv() -> Any:
 def create_app_content_types_csv_response_text_csv() -> Spikard:
     """App factory for fixture: CSV response - text/csv"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/export/data.csv", body_schema=None, parameter_schema=None, file_params=None)(
         content_types_csv_response_text_csv
     )
@@ -6351,7 +6132,6 @@ async def content_types_binary_response_application_octet_stream() -> Any:
 def create_app_content_types_binary_response_application_octet_stream() -> Spikard:
     """App factory for fixture: Binary response - application/octet-stream"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/download/file.bin", body_schema=None, parameter_schema=None, file_params=None)(
         content_types_binary_response_application_octet_stream
     )
@@ -6378,7 +6158,6 @@ async def multipart_multiple_values_for_same_field_name(
 def create_app_multipart_multiple_values_for_same_field_name() -> Spikard:
     """App factory for fixture: Multiple values for same field name"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/",
@@ -6426,7 +6205,6 @@ async def multipart_19_file_mime_spoofing_png_as_jpeg() -> Any:
 def create_app_multipart_19_file_mime_spoofing_png_as_jpeg() -> Spikard:
     """App factory for fixture: 19_file_mime_spoofing_png_as_jpeg"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/upload",
@@ -6462,7 +6240,6 @@ async def multipart_20_file_mime_spoofing_jpeg_as_png() -> Any:
 def create_app_multipart_20_file_mime_spoofing_jpeg_as_png() -> Spikard:
     """App factory for fixture: 20_file_mime_spoofing_jpeg_as_png"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/upload",
@@ -6481,7 +6258,6 @@ async def multipart_21_file_pdf_magic_number_success() -> Any:
 def create_app_multipart_21_file_pdf_magic_number_success() -> Spikard:
     """App factory for fixture: 21_file_pdf_magic_number_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/upload",
@@ -6521,7 +6297,6 @@ async def multipart_content_type_validation_invalid_type(
 def create_app_multipart_content_type_validation_invalid_type() -> Spikard:
     """App factory for fixture: Content-Type validation - invalid type"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/files/images-only",
@@ -6556,7 +6331,6 @@ async def multipart_pdf_file_upload(
 def create_app_multipart_pdf_file_upload() -> Spikard:
     """App factory for fixture: PDF file upload"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/files/document",
@@ -6586,7 +6360,6 @@ async def multipart_file_list_upload_array_of_files(
 def create_app_multipart_file_list_upload_array_of_files() -> Spikard:
     """App factory for fixture: File list upload (array of files)"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/files/list",
@@ -6622,7 +6395,6 @@ async def multipart_optional_file_upload_provided(
 def create_app_multipart_optional_file_upload_provided() -> Spikard:
     """App factory for fixture: Optional file upload - provided"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/files/optional",
@@ -6659,7 +6431,6 @@ async def multipart_file_size_validation_too_large(
 def create_app_multipart_file_size_validation_too_large() -> Spikard:
     """App factory for fixture: File size validation - too large"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/files/validated",
@@ -6702,7 +6473,6 @@ async def multipart_mixed_files_and_form_data(
 def create_app_multipart_mixed_files_and_form_data() -> Spikard:
     """App factory for fixture: Mixed files and form data"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/",
@@ -6745,7 +6515,6 @@ async def multipart_simple_file_upload(
 def create_app_multipart_simple_file_upload() -> Spikard:
     """App factory for fixture: Simple file upload"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/",
@@ -6779,7 +6548,6 @@ async def multipart_empty_file_upload(
 def create_app_multipart_empty_file_upload() -> Spikard:
     """App factory for fixture: Empty file upload"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/files/upload",
@@ -6803,7 +6571,6 @@ async def multipart_optional_file_upload_missing() -> Any:
 def create_app_multipart_optional_file_upload_missing() -> Spikard:
     """App factory for fixture: Optional file upload - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/files/optional", body_schema=None, parameter_schema=None, file_params=None)(
         multipart_optional_file_upload_missing
     )
@@ -6826,7 +6593,6 @@ async def multipart_file_upload_without_filename(
 def create_app_multipart_file_upload_without_filename() -> Spikard:
     """App factory for fixture: File upload without filename"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/",
@@ -6850,7 +6616,6 @@ async def multipart_18_file_magic_number_jpeg_success() -> Any:
 def create_app_multipart_18_file_magic_number_jpeg_success() -> Spikard:
     """App factory for fixture: 18_file_magic_number_jpeg_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/upload",
@@ -6886,7 +6651,6 @@ async def multipart_22_file_empty_buffer() -> Any:
 def create_app_multipart_22_file_empty_buffer() -> Spikard:
     """App factory for fixture: 22_file_empty_buffer"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/upload",
@@ -6905,7 +6669,6 @@ async def multipart_17_file_magic_number_png_success() -> Any:
 def create_app_multipart_17_file_magic_number_png_success() -> Spikard:
     """App factory for fixture: 17_file_magic_number_png_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/upload",
@@ -6932,7 +6695,6 @@ async def multipart_form_data_without_files(
 def create_app_multipart_form_data_without_files() -> Spikard:
     """App factory for fixture: Form data without files"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/",
@@ -6960,7 +6722,6 @@ async def multipart_multiple_file_uploads(
 def create_app_multipart_multiple_file_uploads() -> Spikard:
     """App factory for fixture: Multiple file uploads"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/",
@@ -7011,7 +6772,6 @@ async def multipart_file_upload_with_custom_headers(
 def create_app_multipart_file_upload_with_custom_headers() -> Spikard:
     """App factory for fixture: File upload with custom headers"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/",
@@ -7054,7 +6814,6 @@ async def multipart_required_file_upload_missing(
 def create_app_multipart_required_file_upload_missing() -> Spikard:
     """App factory for fixture: Required file upload - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/files/required",
@@ -7090,7 +6849,6 @@ async def multipart_image_file_upload(
 def create_app_multipart_image_file_upload() -> Spikard:
     """App factory for fixture: Image file upload"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/files/image",
@@ -7133,7 +6891,6 @@ async def validation_errors_invalid_uuid_format(
 def create_app_validation_errors_invalid_uuid_format() -> Spikard:
     """App factory for fixture: Invalid UUID format"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/{item_id}",
@@ -7176,7 +6933,6 @@ async def validation_errors_invalid_boolean_value(
 def create_app_validation_errors_invalid_boolean_value() -> Spikard:
     """App factory for fixture: Invalid boolean value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -7214,7 +6970,6 @@ async def validation_errors_missing_required_query_parameter(
 def create_app_validation_errors_missing_required_query_parameter() -> Spikard:
     """App factory for fixture: Missing required query parameter"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -7264,7 +7019,6 @@ async def validation_errors_array_max_items_constraint_violation(
 def create_app_validation_errors_array_max_items_constraint_violation() -> Spikard:
     """App factory for fixture: Array max_items constraint violation"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -7313,7 +7067,6 @@ async def validation_errors_numeric_constraint_violation_gt_greater_than(
 def create_app_validation_errors_numeric_constraint_violation_gt_greater_than() -> Spikard:
     """App factory for fixture: Numeric constraint violation - gt (greater than)"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -7359,7 +7112,6 @@ async def validation_errors_string_regex_pattern_mismatch(
 def create_app_validation_errors_string_regex_pattern_mismatch() -> Spikard:
     """App factory for fixture: String regex pattern mismatch"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -7402,7 +7154,6 @@ async def validation_errors_invalid_enum_value(
 def create_app_validation_errors_invalid_enum_value() -> Spikard:
     """App factory for fixture: Invalid enum value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/models/{model_name}",
@@ -7445,7 +7196,6 @@ async def validation_errors_string_min_length_constraint_violation(
 def create_app_validation_errors_string_min_length_constraint_violation() -> Spikard:
     """App factory for fixture: String min_length constraint violation"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -7510,7 +7260,6 @@ async def validation_errors_multiple_validation_errors(
 def create_app_validation_errors_multiple_validation_errors() -> Spikard:
     """App factory for fixture: Multiple validation errors"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -7558,7 +7307,6 @@ async def validation_errors_string_max_length_constraint_violation(
 def create_app_validation_errors_string_max_length_constraint_violation() -> Spikard:
     """App factory for fixture: String max_length constraint violation"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -7623,7 +7371,6 @@ async def validation_errors_nested_object_validation_error(
 def create_app_validation_errors_nested_object_validation_error() -> Spikard:
     """App factory for fixture: Nested object validation error"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -7693,7 +7440,6 @@ async def validation_errors_10_nested_error_path(
 def create_app_validation_errors_10_nested_error_path() -> Spikard:
     """App factory for fixture: 10_nested_error_path"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/profiles",
@@ -7747,7 +7493,6 @@ async def validation_errors_invalid_datetime_format(
 def create_app_validation_errors_invalid_datetime_format() -> Spikard:
     """App factory for fixture: Invalid datetime format"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -7802,7 +7547,6 @@ async def validation_errors_array_item_validation_error(
 def create_app_validation_errors_array_item_validation_error() -> Spikard:
     """App factory for fixture: Array item validation error"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -7852,7 +7596,6 @@ async def validation_errors_missing_required_body_field(
 def create_app_validation_errors_missing_required_body_field() -> Spikard:
     """App factory for fixture: Missing required body field"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -7902,7 +7645,6 @@ async def validation_errors_body_field_type_error_string_for_float(
 def create_app_validation_errors_body_field_type_error_string_for_float() -> Spikard:
     """App factory for fixture: Body field type error - string for float"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -7930,7 +7672,6 @@ async def validation_errors_malformed_json_body(
 def create_app_validation_errors_malformed_json_body() -> Spikard:
     """App factory for fixture: Malformed JSON body"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/items/", body_schema={"type": "string"}, parameter_schema=None, file_params=None)(
         validation_errors_malformed_json_body
     )
@@ -7965,7 +7706,6 @@ async def validation_errors_query_param_type_error_string_provided_for_int(
 def create_app_validation_errors_query_param_type_error_string_provided_for_int() -> Spikard:
     """App factory for fixture: Query param type error - string provided for int"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -8001,7 +7741,6 @@ async def validation_errors_header_validation_error(
 def create_app_validation_errors_header_validation_error() -> Spikard:
     """App factory for fixture: Header validation error"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -8069,7 +7808,6 @@ async def validation_errors_09_multiple_validation_errors(
 def create_app_validation_errors_09_multiple_validation_errors() -> Spikard:
     """App factory for fixture: 09_multiple_validation_errors"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/users",
@@ -8117,7 +7855,6 @@ async def validation_errors_numeric_constraint_violation_le_less_than_or_equal(
 def create_app_validation_errors_numeric_constraint_violation_le_less_than_or_equal() -> Spikard:
     """App factory for fixture: Numeric constraint violation - le (less than or equal)"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -8165,7 +7902,6 @@ async def validation_errors_array_min_items_constraint_violation(
 def create_app_validation_errors_array_min_items_constraint_violation() -> Spikard:
     """App factory for fixture: Array min_items constraint violation"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -8198,7 +7934,6 @@ def create_app_compression_compression_payload_below_min_size_is_not_compressed(
     """App factory for fixture: Compression - payload below min_size is not compressed"""
     config = ServerConfig(compression=CompressionConfig(gzip=True, brotli=False, min_size=4096, quality=6))
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route("GET", "/compression/skip", body_schema=None, parameter_schema=None, file_params=None)(
         compression_compression_payload_below_min_size_is_not_compressed
     )
@@ -8221,7 +7956,6 @@ def create_app_compression_compression_gzip_applied() -> Spikard:
     """App factory for fixture: Compression - gzip applied"""
     config = ServerConfig(compression=CompressionConfig(gzip=True, brotli=False, min_size=0, quality=4))
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route("GET", "/compression/gzip", body_schema=None, parameter_schema=None, file_params=None)(
         compression_compression_gzip_applied
     )
@@ -8240,7 +7974,6 @@ async def edge_cases_19_emoji_in_strings(
 def create_app_edge_cases_19_emoji_in_strings() -> Spikard:
     """App factory for fixture: 19_emoji_in_strings"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/messages",
@@ -8265,7 +7998,6 @@ async def edge_cases_12_percent_encoded_special_chars(
 def create_app_edge_cases_12_percent_encoded_special_chars() -> Spikard:
     """App factory for fixture: 12_percent_encoded_special_chars"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/search",
@@ -8315,7 +8047,6 @@ async def edge_cases_special_string_values_and_escaping(
 def create_app_edge_cases_special_string_values_and_escaping() -> Spikard:
     """App factory for fixture: Special string values and escaping"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/strings/",
@@ -8363,7 +8094,6 @@ async def edge_cases_15_float_precision_preservation(
 def create_app_edge_cases_15_float_precision_preservation() -> Spikard:
     """App factory for fixture: 15_float_precision_preservation"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/calculate",
@@ -8384,7 +8114,6 @@ async def edge_cases_13_empty_string_query_param_preserved(
 def create_app_edge_cases_13_empty_string_query_param_preserved() -> Spikard:
     """App factory for fixture: 13_empty_string_query_param_preserved"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -8417,7 +8146,6 @@ async def edge_cases_24_array_with_holes(
 def create_app_edge_cases_24_array_with_holes() -> Spikard:
     """App factory for fixture: 24_array_with_holes"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items",
@@ -8442,7 +8170,6 @@ async def edge_cases_21_scientific_notation_number(
 def create_app_edge_cases_21_scientific_notation_number() -> Spikard:
     """App factory for fixture: 21_scientific_notation_number"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/calculate",
@@ -8487,7 +8214,6 @@ async def edge_cases_float_precision_and_rounding(
 def create_app_edge_cases_float_precision_and_rounding() -> Spikard:
     """App factory for fixture: Float precision and rounding"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/calculations/",
@@ -8540,7 +8266,6 @@ async def edge_cases_unicode_and_emoji_handling(
 def create_app_edge_cases_unicode_and_emoji_handling() -> Spikard:
     """App factory for fixture: Unicode and emoji handling"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -8594,7 +8319,6 @@ async def edge_cases_17_extremely_long_string(
 def create_app_edge_cases_17_extremely_long_string() -> Spikard:
     """App factory for fixture: 17_extremely_long_string"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/text",
@@ -8619,7 +8343,6 @@ async def edge_cases_11_utf8_query_parameter(
 def create_app_edge_cases_11_utf8_query_parameter() -> Spikard:
     """App factory for fixture: 11_utf8_query_parameter"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/search",
@@ -8650,7 +8373,6 @@ async def edge_cases_18_unicode_normalization(
 def create_app_edge_cases_18_unicode_normalization() -> Spikard:
     """App factory for fixture: 18_unicode_normalization"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/users",
@@ -8692,7 +8414,6 @@ async def edge_cases_20_null_byte_in_string(
 def create_app_edge_cases_20_null_byte_in_string() -> Spikard:
     """App factory for fixture: 20_null_byte_in_string"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/files",
@@ -8723,7 +8444,6 @@ async def edge_cases_23_deeply_nested_json_limit() -> Any:
 def create_app_edge_cases_23_deeply_nested_json_limit() -> Spikard:
     """App factory for fixture: 23_deeply_nested_json_limit"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/data", body_schema=None, parameter_schema=None, file_params=None)(
         edge_cases_23_deeply_nested_json_limit
     )
@@ -8740,7 +8460,6 @@ async def edge_cases_14_large_integer_boundary(
 def create_app_edge_cases_14_large_integer_boundary() -> Spikard:
     """App factory for fixture: 14_large_integer_boundary"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items",
@@ -8765,7 +8484,6 @@ async def edge_cases_22_leading_zeros_integer(
 def create_app_edge_cases_22_leading_zeros_integer() -> Spikard:
     """App factory for fixture: 22_leading_zeros_integer"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/data",
@@ -8806,7 +8524,6 @@ async def edge_cases_large_integer_boundary_values(
 def create_app_edge_cases_large_integer_boundary_values() -> Spikard:
     """App factory for fixture: Large integer boundary values"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/numbers/",
@@ -8846,7 +8563,6 @@ async def edge_cases_deeply_nested_structure_10_levels(
 def create_app_edge_cases_deeply_nested_structure_10_levels() -> Spikard:
     """App factory for fixture: Deeply nested structure (10+ levels)"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/nested/",
@@ -8963,7 +8679,6 @@ async def edge_cases_empty_and_null_value_handling(
 def create_app_edge_cases_empty_and_null_value_handling() -> Spikard:
     """App factory for fixture: Empty and null value handling"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/nulls/",
@@ -9009,7 +8724,6 @@ async def edge_cases_16_negative_zero_handling(
 def create_app_edge_cases_16_negative_zero_handling() -> Spikard:
     """App factory for fixture: 16_negative_zero_handling"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/data",
@@ -9032,7 +8746,6 @@ async def cors_07_cors_preflight_header_not_allowed(
 def create_app_cors_07_cors_preflight_header_not_allowed() -> Spikard:
     """App factory for fixture: 07_cors_preflight_header_not_allowed"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/api/data",
@@ -9083,7 +8796,6 @@ async def cors_cors_vary_header_for_proper_caching() -> Any:
 def create_app_cors_cors_vary_header_for_proper_caching() -> Spikard:
     """App factory for fixture: CORS Vary header for proper caching"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/cached-resource", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_vary_header_for_proper_caching
     )
@@ -9107,7 +8819,6 @@ async def cors_cors_preflight_for_put_method() -> Any:
 def create_app_cors_cors_preflight_for_put_method() -> Spikard:
     """App factory for fixture: CORS preflight for PUT method"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("OPTIONS", "/api/resource/123", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_preflight_for_put_method
     )
@@ -9130,7 +8841,6 @@ async def cors_cors_preflight_for_delete_method() -> Any:
 def create_app_cors_cors_preflight_for_delete_method() -> Spikard:
     """App factory for fixture: CORS preflight for DELETE method"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("OPTIONS", "/api/resource/456", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_preflight_for_delete_method
     )
@@ -9153,7 +8863,6 @@ async def cors_cors_multiple_allowed_origins() -> Any:
 def create_app_cors_cors_multiple_allowed_origins() -> Spikard:
     """App factory for fixture: CORS multiple allowed origins"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/data", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_multiple_allowed_origins
     )
@@ -9176,7 +8885,6 @@ async def cors_cors_preflight_request() -> Any:
 def create_app_cors_cors_preflight_request() -> Spikard:
     """App factory for fixture: CORS preflight request"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("OPTIONS", "/items/", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_preflight_request
     )
@@ -9200,7 +8908,6 @@ async def cors_cors_with_credentials() -> Any:
 def create_app_cors_cors_with_credentials() -> Spikard:
     """App factory for fixture: CORS with credentials"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/user/profile", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_with_credentials
     )
@@ -9223,7 +8930,6 @@ async def cors_cors_regex_pattern_matching_for_origins() -> Any:
 def create_app_cors_cors_regex_pattern_matching_for_origins() -> Spikard:
     """App factory for fixture: CORS regex pattern matching for origins"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/data", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_regex_pattern_matching_for_origins
     )
@@ -9250,7 +8956,6 @@ async def cors_08_cors_max_age(
 def create_app_cors_08_cors_max_age() -> Spikard:
     """App factory for fixture: 08_cors_max_age"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/api/data",
@@ -9296,7 +9001,6 @@ async def cors_10_cors_origin_null(
 def create_app_cors_10_cors_origin_null() -> Spikard:
     """App factory for fixture: 10_cors_origin_null"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -9323,7 +9027,6 @@ async def cors_cors_wildcard_origin() -> Any:
 def create_app_cors_cors_wildcard_origin() -> Spikard:
     """App factory for fixture: CORS wildcard origin"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/public/data", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_wildcard_origin
     )
@@ -9346,7 +9049,6 @@ async def cors_cors_safelisted_headers_without_preflight() -> Any:
 def create_app_cors_cors_safelisted_headers_without_preflight() -> Spikard:
     """App factory for fixture: CORS safelisted headers without preflight"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/api/form", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_safelisted_headers_without_preflight
     )
@@ -9369,7 +9071,6 @@ async def cors_cors_private_network_access() -> Any:
 def create_app_cors_cors_private_network_access() -> Spikard:
     """App factory for fixture: CORS Private Network Access"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("OPTIONS", "/api/local-resource", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_private_network_access
     )
@@ -9384,7 +9085,6 @@ async def cors_cors_origin_case_sensitivity() -> Any:
 def create_app_cors_cors_origin_case_sensitivity() -> Spikard:
     """App factory for fixture: CORS origin case sensitivity"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/data", body_schema=None, parameter_schema=None, file_params=None)(
         cors_cors_origin_case_sensitivity
     )
@@ -9405,7 +9105,6 @@ async def cors_cors_request_blocked(
 def create_app_cors_cors_request_blocked() -> Spikard:
     """App factory for fixture: CORS request blocked"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -9436,7 +9135,6 @@ async def cors_simple_cors_request() -> Any:
 def create_app_cors_simple_cors_request() -> Spikard:
     """App factory for fixture: Simple CORS request"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/items/", body_schema=None, parameter_schema=None, file_params=None)(
         cors_simple_cors_request
     )
@@ -9461,7 +9159,6 @@ async def cors_09_cors_expose_headers(
 def create_app_cors_09_cors_expose_headers() -> Spikard:
     """App factory for fixture: 09_cors_expose_headers"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -9488,7 +9185,6 @@ async def cors_06_cors_preflight_method_not_allowed(
 def create_app_cors_06_cors_preflight_method_not_allowed() -> Spikard:
     """App factory for fixture: 06_cors_preflight_method_not_allowed"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -9550,7 +9246,6 @@ def lifecycle_hooks_onresponse_security_headers() -> Any:
 def create_app_lifecycle_hooks_onresponse_security_headers() -> Spikard:
     """App factory for fixture: onResponse - Security Headers"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/test-security-headers", body_schema=None, parameter_schema=None, file_params=None)(
         lifecycle_hooks_onresponse_security_headers
     )
@@ -9580,24 +9275,20 @@ def lifecycle_hooks_prehandler_authentication_failed_short_circuit() -> Any:
 def create_app_lifecycle_hooks_prehandler_authentication_failed_short_circuit() -> Spikard:
     """App factory for fixture: preHandler - Authentication Failed (Short Circuit)"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET", "/api/protected-resource-fail", body_schema=None, parameter_schema=None, file_params=None
     )(lifecycle_hooks_prehandler_authentication_failed_short_circuit)
-    # Register lifecycle hooks
     app.pre_handler(lifecycle_hooks_prehandler_authentication_failed_short_circuit_authenticator_pre_handler_0)
     return app
 
 
 def lifecycle_hooks_prehandler_authorization_check_authenticator_pre_handler_0(request: Any) -> Any:
     """preHandler hook: authenticator"""
-    # Mock implementation for testing
     return request
 
 
 def lifecycle_hooks_prehandler_authorization_check_authorizer_pre_handler_1(request: Any) -> Any:
     """preHandler hook: authorizer"""
-    # Mock implementation for testing
     return request
 
 
@@ -9613,11 +9304,9 @@ def lifecycle_hooks_prehandler_authorization_check() -> Any:
 def create_app_lifecycle_hooks_prehandler_authorization_check() -> Spikard:
     """App factory for fixture: preHandler - Authorization Check"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/admin-only", body_schema=None, parameter_schema=None, file_params=None)(
         lifecycle_hooks_prehandler_authorization_check
     )
-    # Register lifecycle hooks
     app.pre_handler(lifecycle_hooks_prehandler_authorization_check_authenticator_pre_handler_0)
     app.pre_handler(lifecycle_hooks_prehandler_authorization_check_authorizer_pre_handler_1)
     return app
@@ -9625,7 +9314,6 @@ def create_app_lifecycle_hooks_prehandler_authorization_check() -> Spikard:
 
 def lifecycle_hooks_prehandler_authentication_success_authenticator_pre_handler_0(request: Any) -> Any:
     """preHandler hook: authenticator"""
-    # Mock implementation for testing
     return request
 
 
@@ -9641,11 +9329,9 @@ def lifecycle_hooks_prehandler_authentication_success() -> Any:
 def create_app_lifecycle_hooks_prehandler_authentication_success() -> Spikard:
     """App factory for fixture: preHandler - Authentication Success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/protected-resource", body_schema=None, parameter_schema=None, file_params=None)(
         lifecycle_hooks_prehandler_authentication_success
     )
-    # Register lifecycle hooks
     app.pre_handler(lifecycle_hooks_prehandler_authentication_success_authenticator_pre_handler_0)
     return app
 
@@ -9683,7 +9369,6 @@ def lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit(
 def create_app_lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit() -> Spikard:
     """App factory for fixture: preValidation - Rate Limit Exceeded (Short Circuit)"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/api/test-rate-limit-exceeded",
@@ -9691,14 +9376,12 @@ def create_app_lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit()
         parameter_schema=None,
         file_params=None,
     )(lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit)
-    # Register lifecycle hooks
     app.pre_validation(lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_limiter_pre_validation_0)
     return app
 
 
 def lifecycle_hooks_onerror_error_logging_error_logger_on_error_0(response: Any) -> Any:
     """onError hook: error_logger"""
-    # Mock implementation for testing - format error response
     if hasattr(response, "headers"):
         response.headers["Content-Type"] = "application/json"
     return response
@@ -9706,7 +9389,6 @@ def lifecycle_hooks_onerror_error_logging_error_logger_on_error_0(response: Any)
 
 def lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1(response: Any) -> Any:
     """onError hook: error_formatter"""
-    # Mock implementation for testing - format error response
     if hasattr(response, "headers"):
         response.headers["Content-Type"] = "application/json"
     return response
@@ -9724,11 +9406,9 @@ def lifecycle_hooks_onerror_error_logging() -> Any:
 def create_app_lifecycle_hooks_onerror_error_logging() -> Spikard:
     """App factory for fixture: onError - Error Logging"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/test-error", body_schema=None, parameter_schema=None, file_params=None)(
         lifecycle_hooks_onerror_error_logging
     )
-    # Register lifecycle hooks
     app.on_error(lifecycle_hooks_onerror_error_logging_error_logger_on_error_0)
     app.on_error(lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1)
     return app
@@ -9736,31 +9416,26 @@ def create_app_lifecycle_hooks_onerror_error_logging() -> Spikard:
 
 def lifecycle_hooks_multiple_hooks_all_phases_request_logger_on_request_0(request: Any) -> Any:
     """onRequest hook: request_logger"""
-    # Mock implementation for testing
     return request
 
 
 def lifecycle_hooks_multiple_hooks_all_phases_request_id_generator_on_request_1(request: Any) -> Any:
     """onRequest hook: request_id_generator"""
-    # Mock implementation for testing
     return request
 
 
 def lifecycle_hooks_multiple_hooks_all_phases_rate_limiter_pre_validation_0(request: Any) -> Any:
     """preValidation hook: rate_limiter"""
-    # Mock implementation for testing
     return request
 
 
 def lifecycle_hooks_multiple_hooks_all_phases_authenticator_pre_handler_0(request: Any) -> Any:
     """preHandler hook: authenticator"""
-    # Mock implementation for testing
     return request
 
 
 def lifecycle_hooks_multiple_hooks_all_phases_authorizer_pre_handler_1(request: Any) -> Any:
     """preHandler hook: authorizer"""
-    # Mock implementation for testing
     return request
 
 
@@ -9783,13 +9458,11 @@ def lifecycle_hooks_multiple_hooks_all_phases_response_timer_on_response_1(respo
 
 def lifecycle_hooks_multiple_hooks_all_phases_audit_logger_on_response_2(response: Any) -> Any:
     """onResponse hook: audit_logger"""
-    # Mock implementation for testing
     return response
 
 
 def lifecycle_hooks_multiple_hooks_all_phases_error_logger_on_error_0(response: Any) -> Any:
     """onError hook: error_logger"""
-    # Mock implementation for testing - format error response
     if hasattr(response, "headers"):
         response.headers["Content-Type"] = "application/json"
     return response
@@ -9814,7 +9487,6 @@ def lifecycle_hooks_multiple_hooks_all_phases(
 def create_app_lifecycle_hooks_multiple_hooks_all_phases() -> Spikard:
     """App factory for fixture: Multiple Hooks - All Phases"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/api/full-lifecycle",
@@ -9826,7 +9498,6 @@ def create_app_lifecycle_hooks_multiple_hooks_all_phases() -> Spikard:
         parameter_schema=None,
         file_params=None,
     )(lifecycle_hooks_multiple_hooks_all_phases)
-    # Register lifecycle hooks
     app.on_request(lifecycle_hooks_multiple_hooks_all_phases_request_logger_on_request_0)
     app.on_request(lifecycle_hooks_multiple_hooks_all_phases_request_id_generator_on_request_1)
     app.pre_validation(lifecycle_hooks_multiple_hooks_all_phases_rate_limiter_pre_validation_0)
@@ -9841,19 +9512,16 @@ def create_app_lifecycle_hooks_multiple_hooks_all_phases() -> Spikard:
 
 def lifecycle_hooks_hook_execution_order_first_hook_on_request_0(request: Any) -> Any:
     """onRequest hook: first_hook"""
-    # Mock implementation for testing
     return request
 
 
 def lifecycle_hooks_hook_execution_order_second_hook_on_request_1(request: Any) -> Any:
     """onRequest hook: second_hook"""
-    # Mock implementation for testing
     return request
 
 
 def lifecycle_hooks_hook_execution_order_third_hook_on_request_2(request: Any) -> Any:
     """onRequest hook: third_hook"""
-    # Mock implementation for testing
     return request
 
 
@@ -9869,11 +9537,9 @@ def lifecycle_hooks_hook_execution_order() -> Any:
 def create_app_lifecycle_hooks_hook_execution_order() -> Spikard:
     """App factory for fixture: Hook Execution Order"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/test-hook-order", body_schema=None, parameter_schema=None, file_params=None)(
         lifecycle_hooks_hook_execution_order
     )
-    # Register lifecycle hooks
     app.on_request(lifecycle_hooks_hook_execution_order_first_hook_on_request_0)
     app.on_request(lifecycle_hooks_hook_execution_order_second_hook_on_request_1)
     app.on_request(lifecycle_hooks_hook_execution_order_third_hook_on_request_2)
@@ -9882,7 +9548,6 @@ def create_app_lifecycle_hooks_hook_execution_order() -> Spikard:
 
 def lifecycle_hooks_onresponse_response_timing_start_timer_on_request_0(request: Any) -> Any:
     """onRequest hook: start_timer"""
-    # Mock implementation for testing
     return request
 
 
@@ -9903,11 +9568,9 @@ def lifecycle_hooks_onresponse_response_timing() -> Any:
 def create_app_lifecycle_hooks_onresponse_response_timing() -> Spikard:
     """App factory for fixture: onResponse - Response Timing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/test-timing", body_schema=None, parameter_schema=None, file_params=None)(
         lifecycle_hooks_onresponse_response_timing
     )
-    # Register lifecycle hooks
     app.on_request(lifecycle_hooks_onresponse_response_timing_start_timer_on_request_0)
     app.on_response(lifecycle_hooks_onresponse_response_timing_response_timer_on_response_0)
     return app
@@ -9943,11 +9606,9 @@ def lifecycle_hooks_prehandler_authorization_forbidden_short_circuit() -> Any:
 def create_app_lifecycle_hooks_prehandler_authorization_forbidden_short_circuit() -> Spikard:
     """App factory for fixture: preHandler - Authorization Forbidden (Short Circuit)"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/admin-only-forbidden", body_schema=None, parameter_schema=None, file_params=None)(
         lifecycle_hooks_prehandler_authorization_forbidden_short_circuit
     )
-    # Register lifecycle hooks
     app.pre_handler(lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authenticator_pre_handler_0)
     app.pre_handler(lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authorizer_pre_handler_1)
     return app
@@ -9955,13 +9616,11 @@ def create_app_lifecycle_hooks_prehandler_authorization_forbidden_short_circuit(
 
 def lifecycle_hooks_onrequest_request_logging_request_logger_on_request_0(request: Any) -> Any:
     """onRequest hook: request_logger"""
-    # Mock implementation for testing
     return request
 
 
 def lifecycle_hooks_onrequest_request_logging_request_id_generator_on_request_1(request: Any) -> Any:
     """onRequest hook: request_id_generator"""
-    # Mock implementation for testing
     return request
 
 
@@ -9977,11 +9636,9 @@ def lifecycle_hooks_onrequest_request_logging() -> Any:
 def create_app_lifecycle_hooks_onrequest_request_logging() -> Spikard:
     """App factory for fixture: onRequest - Request Logging"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/test-on-request", body_schema=None, parameter_schema=None, file_params=None)(
         lifecycle_hooks_onrequest_request_logging
     )
-    # Register lifecycle hooks
     app.on_request(lifecycle_hooks_onrequest_request_logging_request_logger_on_request_0)
     app.on_request(lifecycle_hooks_onrequest_request_logging_request_id_generator_on_request_1)
     return app
@@ -9995,7 +9652,6 @@ class LifecycleHooksPrevalidationRateLimitingBody(BaseModel):
 
 def lifecycle_hooks_prevalidation_rate_limiting_rate_limiter_pre_validation_0(request: Any) -> Any:
     """preValidation hook: rate_limiter"""
-    # Mock implementation for testing
     return request
 
 
@@ -10013,7 +9669,6 @@ def lifecycle_hooks_prevalidation_rate_limiting(
 def create_app_lifecycle_hooks_prevalidation_rate_limiting() -> Spikard:
     """App factory for fixture: preValidation - Rate Limiting"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/api/test-rate-limit",
@@ -10021,7 +9676,6 @@ def create_app_lifecycle_hooks_prevalidation_rate_limiting() -> Spikard:
         parameter_schema=None,
         file_params=None,
     )(lifecycle_hooks_prevalidation_rate_limiting)
-    # Register lifecycle hooks
     app.pre_validation(lifecycle_hooks_prevalidation_rate_limiting_rate_limiter_pre_validation_0)
     return app
 
@@ -10036,7 +9690,6 @@ def create_app_request_timeout_request_exceeds_timeout() -> Spikard:
     """App factory for fixture: Request exceeds timeout"""
     config = ServerConfig(request_timeout=1)
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route("GET", "/timeouts/slow", body_schema=None, parameter_schema=None, file_params=None)(
         request_timeout_request_exceeds_timeout
     )
@@ -10055,7 +9708,6 @@ def create_app_request_timeout_request_completes_before_timeout() -> Spikard:
     """App factory for fixture: Request completes before timeout"""
     config = ServerConfig(request_timeout=2)
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route("GET", "/timeouts/fast", body_schema=None, parameter_schema=None, file_params=None)(
         request_timeout_request_completes_before_timeout
     )
@@ -10072,7 +9724,6 @@ async def url_encoded_simple_form_submission_success(
 def create_app_url_encoded_simple_form_submission_success() -> Spikard:
     """App factory for fixture: Simple form submission - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/login/",
@@ -10108,7 +9759,6 @@ async def url_encoded_15_special_characters_field_names(
 def create_app_url_encoded_15_special_characters_field_names() -> Spikard:
     """App factory for fixture: 15_special_characters_field_names"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/data",
@@ -10157,7 +9807,6 @@ async def url_encoded_pattern_validation_fail(
 def create_app_url_encoded_pattern_validation_fail() -> Spikard:
     """App factory for fixture: Pattern validation - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/form/validated",
@@ -10205,7 +9854,6 @@ async def url_encoded_22_additional_properties_strict_failure(
 def create_app_url_encoded_22_additional_properties_strict_failure() -> Spikard:
     """App factory for fixture: 22_additional_properties_strict_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/settings",
@@ -10254,7 +9902,6 @@ async def url_encoded_17_pattern_validation_failure(
 def create_app_url_encoded_17_pattern_validation_failure() -> Spikard:
     """App factory for fixture: 17_pattern_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/accounts",
@@ -10302,7 +9949,6 @@ async def url_encoded_20_format_email_validation_failure(
 def create_app_url_encoded_20_format_email_validation_failure() -> Spikard:
     """App factory for fixture: 20_format_email_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/subscribe",
@@ -10329,7 +9975,6 @@ async def url_encoded_multiple_values_for_same_field(
 def create_app_url_encoded_multiple_values_for_same_field() -> Spikard:
     """App factory for fixture: Multiple values for same field"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/form/tags",
@@ -10371,7 +10016,6 @@ async def url_encoded_required_field_missing_validation_error(
 def create_app_url_encoded_required_field_missing_validation_error() -> Spikard:
     """App factory for fixture: Required field missing - validation error"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/login/",
@@ -10407,7 +10051,6 @@ async def url_encoded_13_array_field_success(
 def create_app_url_encoded_13_array_field_success() -> Spikard:
     """App factory for fixture: 13_array_field_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/register",
@@ -10441,7 +10084,6 @@ async def url_encoded_numeric_field_type_conversion(
 def create_app_url_encoded_numeric_field_type_conversion() -> Spikard:
     """App factory for fixture: Numeric field type conversion"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/form/",
@@ -10477,7 +10119,6 @@ async def url_encoded_special_characters_encoding(
 def create_app_url_encoded_special_characters_encoding() -> Spikard:
     """App factory for fixture: Special characters encoding"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/form/",
@@ -10513,7 +10154,6 @@ async def url_encoded_boolean_field_conversion(
 def create_app_url_encoded_boolean_field_conversion() -> Spikard:
     """App factory for fixture: Boolean field conversion"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/form/",
@@ -10542,7 +10182,6 @@ async def url_encoded_empty_string_value(
 def create_app_url_encoded_empty_string_value() -> Spikard:
     """App factory for fixture: Empty string value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/form/",
@@ -10580,7 +10219,6 @@ async def url_encoded_oauth2_password_grant_flow(
 def create_app_url_encoded_oauth2_password_grant_flow() -> Spikard:
     """App factory for fixture: OAuth2 password grant flow"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/token",
@@ -10634,7 +10272,6 @@ async def url_encoded_19_array_minitems_validation_failure(
 def create_app_url_encoded_19_array_minitems_validation_failure() -> Spikard:
     """App factory for fixture: 19_array_minitems_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/tags",
@@ -10669,7 +10306,6 @@ async def url_encoded_optional_field_missing_success(
 def create_app_url_encoded_optional_field_missing_success() -> Spikard:
     """App factory for fixture: Optional field missing - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/register/",
@@ -10708,7 +10344,6 @@ async def url_encoded_14_nested_object_bracket_notation(
 def create_app_url_encoded_14_nested_object_bracket_notation() -> Spikard:
     """App factory for fixture: 14_nested_object_bracket_notation"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/profile",
@@ -10767,7 +10402,6 @@ async def url_encoded_string_max_length_validation_fail(
 def create_app_url_encoded_string_max_length_validation_fail() -> Spikard:
     """App factory for fixture: String max_length validation - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/form/validated",
@@ -10809,7 +10443,6 @@ async def url_encoded_18_integer_minimum_validation_failure(
 def create_app_url_encoded_18_integer_minimum_validation_failure() -> Spikard:
     """App factory for fixture: 18_integer_minimum_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/products",
@@ -10857,7 +10490,6 @@ async def url_encoded_21_integer_type_coercion_failure(
 def create_app_url_encoded_21_integer_type_coercion_failure() -> Spikard:
     """App factory for fixture: 21_integer_type_coercion_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/products",
@@ -10902,7 +10534,6 @@ async def url_encoded_16_minlength_validation_failure(
 def create_app_url_encoded_16_minlength_validation_failure() -> Spikard:
     """App factory for fixture: 16_minlength_validation_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/users",
@@ -10951,7 +10582,6 @@ async def url_encoded_string_min_length_validation_fail(
 def create_app_url_encoded_string_min_length_validation_fail() -> Spikard:
     """App factory for fixture: String min_length validation - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/form/validated",
@@ -10976,7 +10606,6 @@ async def headers_header_regex_validation_success(
 def create_app_headers_header_regex_validation_success() -> Spikard:
     """App factory for fixture: Header regex validation - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/pattern",
@@ -10997,7 +10626,6 @@ async def headers_33_api_key_header_valid(
     x_api_key: str,
 ) -> Any:
     """Handler for GET /api/data."""
-    # Echo back parameters for testing
     result: dict[str, Any] = {}
     if x_api_key is not None:
         result["x_api_key"] = x_api_key
@@ -11007,7 +10635,6 @@ async def headers_33_api_key_header_valid(
 def create_app_headers_33_api_key_header_valid() -> Spikard:
     """App factory for fixture: 33_api_key_header_valid"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -11034,7 +10661,6 @@ async def headers_content_type_header_application_json(
 def create_app_headers_content_type_header_application_json() -> Spikard:
     """App factory for fixture: Content-Type header - application/json"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/content-type",
@@ -11061,7 +10687,6 @@ async def headers_accept_language_header(
 def create_app_headers_accept_language_header() -> Spikard:
     """App factory for fixture: Accept-Language header"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/accept-language",
@@ -11086,7 +10711,6 @@ async def headers_x_api_key_required_header_success(
 def create_app_headers_x_api_key_required_header_success() -> Spikard:
     """App factory for fixture: X-API-Key required header - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/me",
@@ -11129,7 +10753,6 @@ async def headers_header_validation_max_length_constraint_fail(
 def create_app_headers_header_validation_max_length_constraint_fail() -> Spikard:
     """App factory for fixture: Header validation - max_length constraint fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/max-length",
@@ -11166,7 +10789,6 @@ async def headers_x_api_key_required_header_missing(
 def create_app_headers_x_api_key_required_header_missing() -> Spikard:
     """App factory for fixture: X-API-Key required header - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/me",
@@ -11193,7 +10815,6 @@ async def headers_origin_header(
 def create_app_headers_origin_header() -> Spikard:
     """App factory for fixture: Origin header"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/origin",
@@ -11218,7 +10839,6 @@ async def headers_user_agent_header_default_value(
 def create_app_headers_user_agent_header_default_value() -> Spikard:
     """App factory for fixture: User-Agent header - default value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -11265,7 +10885,6 @@ async def headers_32_bearer_token_missing_prefix(
 def create_app_headers_32_bearer_token_missing_prefix() -> Spikard:
     """App factory for fixture: 32_bearer_token_missing_prefix"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/protected",
@@ -11292,7 +10911,6 @@ async def headers_optional_header_with_none_default_missing(
 def create_app_headers_optional_header_with_none_default_missing() -> Spikard:
     """App factory for fixture: Optional header with None default - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -11337,7 +10955,6 @@ async def headers_header_regex_validation_fail(
 def create_app_headers_header_regex_validation_fail() -> Spikard:
     """App factory for fixture: Header regex validation - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/pattern",
@@ -11381,7 +10998,6 @@ async def headers_31_bearer_token_format_invalid(
 def create_app_headers_31_bearer_token_format_invalid() -> Spikard:
     """App factory for fixture: 31_bearer_token_format_invalid"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/protected",
@@ -11408,7 +11024,6 @@ async def headers_x_api_key_optional_header_success(
 def create_app_headers_x_api_key_optional_header_success() -> Spikard:
     """App factory for fixture: X-API-Key optional header - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/me",
@@ -11437,7 +11052,6 @@ async def headers_authorization_header_success(
 def create_app_headers_authorization_header_success() -> Spikard:
     """App factory for fixture: Authorization header - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/me",
@@ -11456,7 +11070,6 @@ async def headers_30_bearer_token_format_valid(
     authorization: str,
 ) -> Any:
     """Handler for GET /protected."""
-    # Echo back parameters for testing
     result: dict[str, Any] = {}
     if authorization is not None:
         result["authorization"] = authorization
@@ -11466,7 +11079,6 @@ async def headers_30_bearer_token_format_valid(
 def create_app_headers_30_bearer_token_format_valid() -> Spikard:
     """App factory for fixture: 30_bearer_token_format_valid"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/protected",
@@ -11505,7 +11117,6 @@ async def headers_authorization_header_missing(
 def create_app_headers_authorization_header_missing() -> Spikard:
     """App factory for fixture: Authorization header - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/me",
@@ -11532,7 +11143,6 @@ async def headers_accept_header_json(
 def create_app_headers_accept_header_json() -> Spikard:
     """App factory for fixture: Accept header - JSON"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/accept",
@@ -11559,7 +11169,6 @@ async def headers_accept_encoding_header(
 def create_app_headers_accept_encoding_header() -> Spikard:
     """App factory for fixture: Accept-Encoding header"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/accept-encoding",
@@ -11601,7 +11210,6 @@ async def headers_authorization_header_wrong_scheme(
 def create_app_headers_authorization_header_wrong_scheme() -> Spikard:
     """App factory for fixture: Authorization header - wrong scheme"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/me",
@@ -11646,7 +11254,6 @@ async def headers_header_validation_min_length_constraint(
 def create_app_headers_header_validation_min_length_constraint() -> Spikard:
     """App factory for fixture: Header validation - min_length constraint"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/validated",
@@ -11675,7 +11282,6 @@ async def headers_basic_authentication_success(
 def create_app_headers_basic_authentication_success() -> Spikard:
     """App factory for fixture: Basic authentication - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/basic-auth",
@@ -11712,7 +11318,6 @@ async def headers_bearer_token_authentication_missing(
 def create_app_headers_bearer_token_authentication_missing() -> Spikard:
     """App factory for fixture: Bearer token authentication - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/bearer-auth",
@@ -11739,7 +11344,6 @@ async def headers_x_api_key_optional_header_missing(
 def create_app_headers_x_api_key_optional_header_missing() -> Spikard:
     """App factory for fixture: X-API-Key optional header - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/me",
@@ -11766,7 +11370,6 @@ async def headers_multiple_header_values_x_token(
 def create_app_headers_multiple_header_values_x_token() -> Spikard:
     """App factory for fixture: Multiple header values - X-Token"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -11797,7 +11400,6 @@ async def headers_multiple_custom_headers(
 def create_app_headers_multiple_custom_headers() -> Spikard:
     """App factory for fixture: Multiple custom headers"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/multiple",
@@ -11843,7 +11445,6 @@ async def headers_34_api_key_header_invalid(
 def create_app_headers_34_api_key_header_invalid() -> Spikard:
     """App factory for fixture: 34_api_key_header_invalid"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -11868,7 +11469,6 @@ async def headers_bearer_token_authentication_success(
 def create_app_headers_bearer_token_authentication_success() -> Spikard:
     """App factory for fixture: Bearer token authentication - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/bearer-auth",
@@ -11893,7 +11493,6 @@ async def headers_host_header(
 def create_app_headers_host_header() -> Spikard:
     """App factory for fixture: Host header"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/host",
@@ -11920,7 +11519,6 @@ async def headers_referer_header(
 def create_app_headers_referer_header() -> Spikard:
     """App factory for fixture: Referer header"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/referer",
@@ -11945,7 +11543,6 @@ async def headers_header_with_underscore_conversion_explicit(
 def create_app_headers_header_with_underscore_conversion_explicit() -> Spikard:
     """App factory for fixture: Header with underscore conversion - explicit"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/headers/underscore",
@@ -11984,7 +11581,6 @@ async def headers_header_case_insensitivity_access(
 def create_app_headers_header_case_insensitivity_access() -> Spikard:
     """App factory for fixture: Header case insensitivity - access"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/echo",
@@ -12014,7 +11610,6 @@ async def headers_user_agent_header_custom_value(
 def create_app_headers_user_agent_header_custom_value() -> Spikard:
     """App factory for fixture: User-Agent header - custom value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -12039,7 +11634,6 @@ async def path_params_boolean_path_parameter_true(
 def create_app_path_params_boolean_path_parameter_true() -> Spikard:
     """App factory for fixture: Boolean path parameter - True"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/bool/{item_id}",
@@ -12064,7 +11658,6 @@ async def path_params_29_decimal_path_param_success(
 def create_app_path_params_29_decimal_path_param_success() -> Spikard:
     """App factory for fixture: 29_decimal_path_param_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/prices/{amount}",
@@ -12089,7 +11682,6 @@ async def path_params_integer_path_parameter_with_combined_lt_and_gt_constraints
 def create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success() -> Spikard:
     """App factory for fixture: Integer path parameter with combined lt and gt constraints - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/param-lt-gt/{item_id}",
@@ -12121,7 +11713,6 @@ async def path_params_33_string_pattern_path_success(
 def create_app_path_params_33_string_pattern_path_success() -> Spikard:
     """App factory for fixture: 33_string_pattern_path_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/repos/{owner}/{repo}",
@@ -12166,7 +11757,6 @@ async def path_params_31_string_minlength_path_failure(
 def create_app_path_params_31_string_minlength_path_failure() -> Spikard:
     """App factory for fixture: 31_string_minlength_path_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/{username}",
@@ -12191,7 +11781,6 @@ async def path_params_35_negative_integer_path_param(
 def create_app_path_params_35_negative_integer_path_param() -> Spikard:
     """App factory for fixture: 35_negative_integer_path_param"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/offset/{value}",
@@ -12234,7 +11823,6 @@ async def path_params_enum_path_parameter_invalid_value(
 def create_app_path_params_enum_path_parameter_invalid_value() -> Spikard:
     """App factory for fixture: Enum path parameter - invalid value"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/models/{model_name}",
@@ -12261,7 +11849,6 @@ async def path_params_27_datetime_format_path_param_success(
 def create_app_path_params_27_datetime_format_path_param_success() -> Spikard:
     """App factory for fixture: 27_datetime_format_path_param_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/bookings/{timestamp}",
@@ -12303,7 +11890,6 @@ async def path_params_25_date_format_invalid_failure(
 def create_app_path_params_25_date_format_invalid_failure() -> Spikard:
     """App factory for fixture: 25_date_format_invalid_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/events/{date}",
@@ -12328,7 +11914,6 @@ async def path_params_integer_path_parameter_with_lt_constraint_success(
 def create_app_path_params_integer_path_parameter_with_lt_constraint_success() -> Spikard:
     """App factory for fixture: Integer path parameter with lt constraint - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/param-lt/{item_id}",
@@ -12353,7 +11938,6 @@ async def path_params_integer_path_parameter_with_gt_constraint_success(
 def create_app_path_params_integer_path_parameter_with_gt_constraint_success() -> Spikard:
     """App factory for fixture: Integer path parameter with gt constraint - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/param-gt/{item_id}",
@@ -12378,7 +11962,6 @@ async def path_params_28_duration_format_path_param_success(
 def create_app_path_params_28_duration_format_path_param_success() -> Spikard:
     """App factory for fixture: 28_duration_format_path_param_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/delays/{duration}",
@@ -12403,7 +11986,6 @@ async def path_params_path_parameter_type_syntax_with_override(
 def create_app_path_params_path_parameter_type_syntax_with_override() -> Spikard:
     """App factory for fixture: Path parameter type syntax with override"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/type-syntax/items-count/{count:int}",
@@ -12432,7 +12014,6 @@ async def path_params_20_uuid_v3_path_param_success(
 def create_app_path_params_20_uuid_v3_path_param_success() -> Spikard:
     """App factory for fixture: 20_uuid_v3_path_param_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/{id}",
@@ -12474,7 +12055,6 @@ async def path_params_integer_path_parameter_invalid_string(
 def create_app_path_params_integer_path_parameter_invalid_string() -> Spikard:
     """App factory for fixture: Integer path parameter - invalid string"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/int/{item_id}",
@@ -12499,7 +12079,6 @@ async def path_params_30_string_minlength_path_success(
 def create_app_path_params_30_string_minlength_path_success() -> Spikard:
     """App factory for fixture: 30_string_minlength_path_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/{username}",
@@ -12524,7 +12103,6 @@ async def path_params_integer_path_parameter_with_le_constraint_success(
 def create_app_path_params_integer_path_parameter_with_le_constraint_success() -> Spikard:
     """App factory for fixture: Integer path parameter with le constraint - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/param-le/{item_id}",
@@ -12564,7 +12142,6 @@ async def path_params_path_parameter_type_syntax_invalid_uuid() -> Any:
 def create_app_path_params_path_parameter_type_syntax_invalid_uuid() -> Spikard:
     """App factory for fixture: Path parameter type syntax - invalid UUID"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET", "/type-syntax/items/{id:uuid}", body_schema=None, parameter_schema=None, file_params=None
     )(path_params_path_parameter_type_syntax_invalid_uuid)
@@ -12583,7 +12160,6 @@ async def path_params_path_type_parameter_file_path(
 def create_app_path_params_path_type_parameter_file_path() -> Spikard:
     """App factory for fixture: Path type parameter - file path"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/files/{file_path:path}",
@@ -12610,7 +12186,6 @@ async def path_params_path_parameter_with_type_syntax_uuid() -> Any:
 def create_app_path_params_path_parameter_with_type_syntax_uuid() -> Spikard:
     """App factory for fixture: Path parameter with type syntax - UUID"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET", "/type-syntax/items/{id:uuid}", body_schema=None, parameter_schema=None, file_params=None
     )(path_params_path_parameter_with_type_syntax_uuid)
@@ -12644,7 +12219,6 @@ async def path_params_32_string_maxlength_path_failure(
 def create_app_path_params_32_string_maxlength_path_failure() -> Spikard:
     """App factory for fixture: 32_string_maxlength_path_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/{username}",
@@ -12669,7 +12243,6 @@ async def path_params_integer_path_parameter_success(
 def create_app_path_params_integer_path_parameter_success() -> Spikard:
     """App factory for fixture: Integer path parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/int/{item_id}",
@@ -12711,7 +12284,6 @@ async def path_params_34_string_pattern_path_failure(
 def create_app_path_params_34_string_pattern_path_failure() -> Spikard:
     """App factory for fixture: 34_string_pattern_path_failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/repos/{owner}",
@@ -12740,7 +12312,6 @@ async def path_params_21_uuid_v5_path_param_success(
 def create_app_path_params_21_uuid_v5_path_param_success() -> Spikard:
     """App factory for fixture: 21_uuid_v5_path_param_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/{id}",
@@ -12783,7 +12354,6 @@ async def path_params_string_path_parameter_with_max_length_failure(
 def create_app_path_params_string_path_parameter_with_max_length_failure() -> Spikard:
     """App factory for fixture: String path parameter with max_length - failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/param-maxlength/{item_id}",
@@ -12826,7 +12396,6 @@ async def path_params_string_path_parameter_with_min_length_failure(
 def create_app_path_params_string_path_parameter_with_min_length_failure() -> Spikard:
     """App factory for fixture: String path parameter with min_length - failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/param-minlength/{item_id}",
@@ -12858,7 +12427,6 @@ async def path_params_multiple_path_parameters_success(
 def create_app_path_params_multiple_path_parameters_success() -> Spikard:
     """App factory for fixture: Multiple path parameters - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/{version}/{service_id}/{user_id}/{order_id}",
@@ -12888,7 +12456,6 @@ async def path_params_date_path_parameter_success(
 def create_app_path_params_date_path_parameter_success() -> Spikard:
     """App factory for fixture: Date path parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/date/{date_param}",
@@ -12931,7 +12498,6 @@ async def path_params_integer_path_parameter_with_gt_constraint_failure(
 def create_app_path_params_integer_path_parameter_with_gt_constraint_failure() -> Spikard:
     """App factory for fixture: Integer path parameter with gt constraint - failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/param-gt/{item_id}",
@@ -12956,7 +12522,6 @@ async def path_params_24_date_format_path_param_success(
 def create_app_path_params_24_date_format_path_param_success() -> Spikard:
     """App factory for fixture: 24_date_format_path_param_success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/events/{date}",
@@ -12981,7 +12546,6 @@ async def path_params_float_path_parameter_success(
 def create_app_path_params_float_path_parameter_success() -> Spikard:
     """App factory for fixture: Float path parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/float/{item_id}",
@@ -13004,7 +12568,6 @@ async def path_params_path_parameter_with_type_syntax_integer() -> Any:
 def create_app_path_params_path_parameter_with_type_syntax_integer() -> Spikard:
     """App factory for fixture: Path parameter with type syntax - integer"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET", "/type-syntax/users/{user_id:int}", body_schema=None, parameter_schema=None, file_params=None
     )(path_params_path_parameter_with_type_syntax_integer)
@@ -13021,7 +12584,6 @@ async def path_params_string_path_parameter_success(
 def create_app_path_params_string_path_parameter_success() -> Spikard:
     """App factory for fixture: String path parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/str/{item_id}",
@@ -13050,7 +12612,6 @@ async def path_params_uuid_path_parameter_success(
 def create_app_path_params_uuid_path_parameter_success() -> Spikard:
     """App factory for fixture: UUID path parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/{item_id}",
@@ -13075,7 +12636,6 @@ async def path_params_integer_path_parameter_with_ge_constraint_success(
 def create_app_path_params_integer_path_parameter_with_ge_constraint_success() -> Spikard:
     """App factory for fixture: Integer path parameter with ge constraint - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/param-ge/{item_id}",
@@ -13100,7 +12660,6 @@ async def path_params_enum_path_parameter_success(
 def create_app_path_params_enum_path_parameter_success() -> Spikard:
     """App factory for fixture: Enum path parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/models/{model_name}",
@@ -13125,7 +12684,6 @@ async def path_params_boolean_path_parameter_numeric_1(
 def create_app_path_params_boolean_path_parameter_numeric_1() -> Spikard:
     """App factory for fixture: Boolean path parameter - numeric 1"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/path/bool/{item_id}",
@@ -13144,7 +12702,6 @@ async def cookies_25_cookie_samesite_lax(
     tracking: str,
 ) -> Any:
     """Handler for GET /data."""
-    # Echo back parameters for testing
     result: dict[str, Any] = {}
     if tracking is not None:
         result["tracking"] = tracking
@@ -13154,7 +12711,6 @@ async def cookies_25_cookie_samesite_lax(
 def create_app_cookies_25_cookie_samesite_lax() -> Spikard:
     """App factory for fixture: 25_cookie_samesite_lax"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/data",
@@ -13179,7 +12735,6 @@ async def cookies_optional_cookie_parameter_success(
 def create_app_cookies_optional_cookie_parameter_success() -> Spikard:
     """App factory for fixture: Optional cookie parameter - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -13222,7 +12777,6 @@ async def cookies_cookie_regex_pattern_validation_fail(
 def create_app_cookies_cookie_regex_pattern_validation_fail() -> Spikard:
     """App factory for fixture: Cookie regex pattern validation - fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/cookies/pattern",
@@ -13255,7 +12809,6 @@ async def cookies_response_session_cookie_no_max_age(
 def create_app_cookies_response_session_cookie_no_max_age() -> Spikard:
     """App factory for fixture: Response - session cookie (no max_age)"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/cookies/session",
@@ -13275,7 +12828,6 @@ async def cookies_27_cookie_httponly_flag(
     session: str,
 ) -> Any:
     """Handler for GET /secure."""
-    # Echo back parameters for testing
     result: dict[str, Any] = {}
     if session is not None:
         result["session"] = session
@@ -13285,7 +12837,6 @@ async def cookies_27_cookie_httponly_flag(
 def create_app_cookies_27_cookie_httponly_flag() -> Spikard:
     """App factory for fixture: 27_cookie_httponly_flag"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/secure",
@@ -13308,7 +12859,6 @@ async def cookies_response_cookie_with_attributes() -> Any:
 def create_app_cookies_response_cookie_with_attributes() -> Spikard:
     """App factory for fixture: Response cookie with attributes"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/cookie/set", body_schema=None, parameter_schema=None, file_params=None)(
         cookies_response_cookie_with_attributes
     )
@@ -13319,7 +12869,6 @@ async def cookies_24_cookie_samesite_strict(
     session_id: str,
 ) -> Any:
     """Handler for GET /secure."""
-    # Echo back parameters for testing
     result: dict[str, Any] = {}
     if session_id is not None:
         result["session_id"] = session_id
@@ -13329,7 +12878,6 @@ async def cookies_24_cookie_samesite_strict(
 def create_app_cookies_24_cookie_samesite_strict() -> Spikard:
     """App factory for fixture: 24_cookie_samesite_strict"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/secure",
@@ -13354,7 +12902,6 @@ async def cookies_apikey_cookie_authentication_success(
 def create_app_cookies_apikey_cookie_authentication_success() -> Spikard:
     """App factory for fixture: APIKey cookie authentication - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/me",
@@ -13379,7 +12926,6 @@ async def cookies_cookie_validation_min_length_constraint_success(
 def create_app_cookies_cookie_validation_min_length_constraint_success() -> Spikard:
     """App factory for fixture: Cookie validation - min_length constraint success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/cookies/min-length",
@@ -13421,7 +12967,6 @@ async def cookies_cookie_validation_min_length_failure(
 def create_app_cookies_cookie_validation_min_length_failure() -> Spikard:
     """App factory for fixture: Cookie validation - min_length failure"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -13464,7 +13009,6 @@ async def cookies_cookie_validation_max_length_constraint_fail(
 def create_app_cookies_cookie_validation_max_length_constraint_fail() -> Spikard:
     """App factory for fixture: Cookie validation - max_length constraint fail"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/cookies/validated",
@@ -13500,7 +13044,6 @@ async def cookies_required_cookie_missing(
 def create_app_cookies_required_cookie_missing() -> Spikard:
     """App factory for fixture: Required cookie - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/cookies",
@@ -13528,7 +13071,6 @@ async def cookies_optional_cookie_parameter_missing(
 def create_app_cookies_optional_cookie_parameter_missing() -> Spikard:
     """App factory for fixture: Optional cookie parameter - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -13563,7 +13105,6 @@ async def cookies_apikey_cookie_authentication_missing(
 def create_app_cookies_apikey_cookie_authentication_missing() -> Spikard:
     """App factory for fixture: APIKey cookie authentication - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/me/auth",
@@ -13598,7 +13139,6 @@ async def cookies_response_multiple_cookies(
 def create_app_cookies_response_multiple_cookies() -> Spikard:
     """App factory for fixture: Response - multiple cookies"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/cookies/multiple",
@@ -13634,7 +13174,6 @@ async def cookies_response_cookie_with_samesite_lax(
 def create_app_cookies_response_cookie_with_samesite_lax() -> Spikard:
     """App factory for fixture: Response cookie with SameSite=Lax"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/cookies/samesite-lax",
@@ -13662,7 +13201,6 @@ async def cookies_response_delete_cookie(
 def create_app_cookies_response_delete_cookie() -> Spikard:
     """App factory for fixture: Response - delete cookie"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/cookies/delete",
@@ -13695,7 +13233,6 @@ async def cookies_response_cookie_with_path_attribute(
 def create_app_cookies_response_cookie_with_path_attribute() -> Spikard:
     """App factory for fixture: Response cookie with path attribute"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/cookies/set-with-path",
@@ -13723,7 +13260,6 @@ async def cookies_optional_apikey_cookie_missing(
 def create_app_cookies_optional_apikey_cookie_missing() -> Spikard:
     """App factory for fixture: Optional APIKey cookie - missing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/users/me",
@@ -13758,7 +13294,6 @@ async def cookies_response_cookie_with_samesite_strict(
 def create_app_cookies_response_cookie_with_samesite_strict() -> Spikard:
     """App factory for fixture: Response cookie with SameSite=Strict"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/cookies/samesite-strict",
@@ -13795,7 +13330,6 @@ async def cookies_response_cookie_with_samesite_none(
 def create_app_cookies_response_cookie_with_samesite_none() -> Spikard:
     """App factory for fixture: Response cookie with SameSite=None"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/cookies/samesite-none",
@@ -13821,7 +13355,6 @@ async def cookies_cookie_regex_pattern_validation_success(
 def create_app_cookies_cookie_regex_pattern_validation_success() -> Spikard:
     """App factory for fixture: Cookie regex pattern validation - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/cookies/pattern",
@@ -13848,7 +13381,6 @@ async def cookies_response_set_cookie_basic() -> Any:
 def create_app_cookies_response_set_cookie_basic() -> Spikard:
     """App factory for fixture: Response set cookie - basic"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/cookie/", body_schema=None, parameter_schema=None, file_params=None)(
         cookies_response_set_cookie_basic
     )
@@ -13871,7 +13403,6 @@ async def cookies_multiple_cookies_success(
 def create_app_cookies_multiple_cookies_success() -> Spikard:
     """App factory for fixture: Multiple cookies - success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/items/",
@@ -13894,7 +13425,6 @@ async def cookies_26_cookie_secure_flag(
     auth_token: str,
 ) -> Any:
     """Handler for GET /secure."""
-    # Echo back parameters for testing
     result: dict[str, Any] = {}
     if auth_token is not None:
         result["auth_token"] = auth_token
@@ -13904,7 +13434,6 @@ async def cookies_26_cookie_secure_flag(
 def create_app_cookies_26_cookie_secure_flag() -> Spikard:
     """App factory for fixture: 26_cookie_secure_flag"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/secure",
@@ -13937,7 +13466,6 @@ async def cookies_response_cookie_with_domain_attribute(
 def create_app_cookies_response_cookie_with_domain_attribute() -> Spikard:
     """App factory for fixture: Response cookie with domain attribute"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/cookies/set-with-domain",
@@ -13967,7 +13495,6 @@ async def status_codes_408_request_timeout(
 def create_app_status_codes_408_request_timeout() -> Spikard:
     """App factory for fixture: 408 Request Timeout"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/slow-endpoint",
@@ -13993,7 +13520,6 @@ async def status_codes_404_not_found_resource_not_found(
 def create_app_status_codes_404_not_found_resource_not_found() -> Spikard:
     """App factory for fixture: 404 Not Found - Resource not found"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/status-test/{code}",
@@ -14020,7 +13546,6 @@ async def status_codes_503_service_unavailable_server_overload() -> Any:
 def create_app_status_codes_503_service_unavailable_server_overload() -> Spikard:
     """App factory for fixture: 503 Service Unavailable - Server overload"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/health", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_503_service_unavailable_server_overload
     )
@@ -14054,7 +13579,6 @@ async def status_codes_422_unprocessable_entity_validation_error(
 def create_app_status_codes_422_unprocessable_entity_validation_error() -> Spikard:
     """App factory for fixture: 422 Unprocessable Entity - Validation error"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -14078,7 +13602,6 @@ async def status_codes_302_found_temporary_redirect() -> Any:
 def create_app_status_codes_302_found_temporary_redirect() -> Spikard:
     """App factory for fixture: 302 Found - Temporary redirect"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/temp-redirect", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_302_found_temporary_redirect
     )
@@ -14096,7 +13619,6 @@ async def status_codes_304_not_modified_cached_content_valid(
 def create_app_status_codes_304_not_modified_cached_content_valid() -> Spikard:
     """App factory for fixture: 304 Not Modified - Cached content valid"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/status-test/{code}",
@@ -14126,7 +13648,6 @@ async def status_codes_400_bad_request_invalid_request(
 def create_app_status_codes_400_bad_request_invalid_request() -> Spikard:
     """App factory for fixture: 400 Bad Request - Invalid request"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/items/", body_schema={"type": "string"}, parameter_schema=None, file_params=None)(
         status_codes_400_bad_request_invalid_request
     )
@@ -14141,7 +13662,6 @@ async def status_codes_22_501_not_implemented() -> Any:
 def create_app_status_codes_22_501_not_implemented() -> Spikard:
     """App factory for fixture: 22_501_not_implemented"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/data", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_22_501_not_implemented
     )
@@ -14158,7 +13678,6 @@ async def status_codes_204_no_content_success_with_no_body(
 def create_app_status_codes_204_no_content_success_with_no_body() -> Spikard:
     """App factory for fixture: 204 No Content - Success with no body"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "DELETE",
         "/status-test/{code}",
@@ -14181,7 +13700,6 @@ async def status_codes_301_moved_permanently_permanent_redirect() -> Any:
 def create_app_status_codes_301_moved_permanently_permanent_redirect() -> Spikard:
     """App factory for fixture: 301 Moved Permanently - Permanent redirect"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/old-path", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_301_moved_permanently_permanent_redirect
     )
@@ -14206,7 +13724,6 @@ async def status_codes_201_created_resource_created(
 def create_app_status_codes_201_created_resource_created() -> Spikard:
     """App factory for fixture: 201 Created - Resource created"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/items/",
@@ -14242,7 +13759,6 @@ async def status_codes_202_accepted_request_accepted_for_processing(
 def create_app_status_codes_202_accepted_request_accepted_for_processing() -> Spikard:
     """App factory for fixture: 202 Accepted - Request accepted for processing"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/tasks/",
@@ -14266,7 +13782,6 @@ async def status_codes_307_temporary_redirect_method_preserved() -> Any:
 def create_app_status_codes_307_temporary_redirect_method_preserved() -> Spikard:
     """App factory for fixture: 307 Temporary Redirect - Method preserved"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("POST", "/redirect-post", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_307_temporary_redirect_method_preserved
     )
@@ -14290,7 +13805,6 @@ async def status_codes_500_internal_server_error_server_error() -> Any:
 def create_app_status_codes_500_internal_server_error_server_error() -> Spikard:
     """App factory for fixture: 500 Internal Server Error - Server error"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/error", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_500_internal_server_error_server_error
     )
@@ -14305,7 +13819,6 @@ async def status_codes_20_414_uri_too_long() -> Any:
 def create_app_status_codes_20_414_uri_too_long() -> Spikard:
     """App factory for fixture: 20_414_uri_too_long"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/data", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_20_414_uri_too_long
     )
@@ -14324,7 +13837,6 @@ async def status_codes_401_unauthorized_missing_authentication() -> Any:
 def create_app_status_codes_401_unauthorized_missing_authentication() -> Spikard:
     """App factory for fixture: 401 Unauthorized - Missing authentication"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/users/me", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_401_unauthorized_missing_authentication
     )
@@ -14346,7 +13858,6 @@ async def status_codes_23_503_service_unavailable() -> Any:
 def create_app_status_codes_23_503_service_unavailable() -> Spikard:
     """App factory for fixture: 23_503_service_unavailable"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/data", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_23_503_service_unavailable
     )
@@ -14376,7 +13887,6 @@ async def status_codes_19_413_payload_too_large(
 def create_app_status_codes_19_413_payload_too_large() -> Spikard:
     """App factory for fixture: 19_413_payload_too_large"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "POST",
         "/upload",
@@ -14397,7 +13907,6 @@ async def status_codes_403_forbidden_insufficient_permissions() -> Any:
 def create_app_status_codes_403_forbidden_insufficient_permissions() -> Spikard:
     """App factory for fixture: 403 Forbidden - Insufficient permissions"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/admin/users", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_403_forbidden_insufficient_permissions
     )
@@ -14421,7 +13930,6 @@ async def status_codes_21_431_request_header_fields_too_large(
 def create_app_status_codes_21_431_request_header_fields_too_large() -> Spikard:
     """App factory for fixture: 21_431_request_header_fields_too_large"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/data",
@@ -14454,7 +13962,6 @@ async def status_codes_429_too_many_requests() -> Any:
 def create_app_status_codes_429_too_many_requests() -> Spikard:
     """App factory for fixture: 429 Too Many Requests"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/api/resource", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_429_too_many_requests
     )
@@ -14471,7 +13978,6 @@ async def status_codes_200_ok_success(
 def create_app_status_codes_200_ok_success() -> Spikard:
     """App factory for fixture: 200 OK - Success"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/status-test/{code}",
@@ -14512,7 +14018,6 @@ async def status_codes_206_partial_content() -> Any:
 def create_app_status_codes_206_partial_content() -> Spikard:
     """App factory for fixture: 206 Partial Content"""
     app = Spikard()
-    # Register handler with this app instance
     app.register_route("GET", "/files/document.pdf", body_schema=None, parameter_schema=None, file_params=None)(
         status_codes_206_partial_content
     )
@@ -14544,7 +14049,6 @@ def create_app_auth_jwt_malformed_token_format() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/protected",
@@ -14586,7 +14090,6 @@ def create_app_auth_bearer_token_without_prefix() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/protected",
@@ -14625,7 +14128,6 @@ def create_app_auth_jwt_authentication_valid_token() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/protected/user",
@@ -14662,7 +14164,6 @@ def create_app_auth_api_key_rotation_old_key_still_valid() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -14706,7 +14207,6 @@ def create_app_auth_jwt_invalid_issuer() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/protected",
@@ -14745,7 +14245,6 @@ def create_app_auth_jwt_with_multiple_audiences() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/protected",
@@ -14780,7 +14279,6 @@ def create_app_auth_api_key_in_query_parameter() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route("GET", "/api/data", body_schema=None, parameter_schema=None, file_params=None)(
         auth_api_key_in_query_parameter
     )
@@ -14812,7 +14310,6 @@ def create_app_auth_jwt_authentication_expired_token() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/protected/user",
@@ -14852,7 +14349,6 @@ def create_app_auth_api_key_authentication_invalid_key() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -14893,7 +14389,6 @@ def create_app_auth_jwt_not_before_claim_in_future() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/protected",
@@ -14937,7 +14432,6 @@ def create_app_auth_multiple_authentication_schemes_jwt_precedence() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -14982,7 +14476,6 @@ def create_app_auth_jwt_missing_required_custom_claims() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/admin",
@@ -15019,7 +14512,6 @@ def create_app_auth_api_key_authentication_valid_key() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -15056,7 +14548,6 @@ def create_app_auth_api_key_with_custom_header_name() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -15096,7 +14587,6 @@ def create_app_auth_api_key_authentication_missing_header() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/api/data",
@@ -15132,7 +14622,6 @@ def create_app_auth_jwt_authentication_invalid_signature() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/protected/user",
@@ -15170,7 +14659,6 @@ def create_app_auth_jwt_authentication_missing_authorization_header() -> Spikard
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/protected/user",
@@ -15207,7 +14695,6 @@ def create_app_auth_jwt_authentication_invalid_audience() -> Spikard:
         ),
     )
     app = Spikard(config=config)
-    # Register handler with this app instance
     app.register_route(
         "GET",
         "/protected/user",
@@ -15268,15 +14755,10 @@ def create_app_websocket_chat() -> Spikard:
     return app
 
 
-# ============================================================
-# JSON-RPC Method Handlers with State Management
-# ============================================================
-
 import uuid
 import re
 from datetime import datetime
 
-# Module-level user storage (persists across requests)
 _user_store: dict[str, dict] = {}
 
 
@@ -15362,7 +14844,6 @@ async def handle_user_create(request: dict) -> Any:
         params_dict = request.get("params", {})
         user_data = params_dict.get("userData", {})
 
-        # Validate email format
         email = user_data.get("email", "")
         if not _is_valid_email(email):
             error_resp = _jsonrpc_error(
@@ -15370,7 +14851,6 @@ async def handle_user_create(request: dict) -> Any:
             )
             return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
-        # Validate password length
         password = user_data.get("password", "")
         if len(password) < 8:
             error_resp = _jsonrpc_error(
@@ -15386,7 +14866,6 @@ async def handle_user_create(request: dict) -> Any:
             error_resp = _jsonrpc_error(409, "User already exists", req_id=request.get("id"))
             return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
-        # Create new user
         new_user_id = str(uuid.uuid4())
         new_user = {
             "id": new_user_id,
@@ -15436,14 +14915,12 @@ async def handle_user_delete(request: dict) -> Any:
         params_dict = request.get("params", {})
         user_id = params_dict.get("userId")
 
-        # Validate UUID format
         if not _is_valid_uuid(user_id):
             error_resp = _jsonrpc_error(
                 -32602, "Invalid params", {"field": "userId", "reason": "Invalid UUID format"}, req_id=request.get("id")
             )
             return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
-        # Seed the known success user if the store was reset
         if user_id == "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d" and user_id not in _user_store:
             _user_store[user_id] = {
                 "id": user_id,
@@ -15453,12 +14930,10 @@ async def handle_user_delete(request: dict) -> Any:
                 "createdAt": "2024-01-16T09:00:00Z",
             }
 
-        # Check if user exists
         if user_id not in _user_store:
             error_resp = _jsonrpc_error(404, "User not found", req_id=request.get("id"))
             return Response(status_code=200, content=error_resp, headers={"Content-Type": "application/json"})
 
-        # Delete user
         del _user_store[user_id]
         result = _jsonrpc_result({"success": True, "deletedId": user_id}, req_id=request.get("id"))
         return Response(status_code=200, content=result, headers={"Content-Type": "application/json"})
@@ -15503,7 +14978,6 @@ async def handle_user_getbyid(request: dict) -> Any:
             params_dict = req_obj.get("params", {}) or {}
             user_id = params_dict.get("userId")
 
-            # Validate UUID format
             if not _is_valid_uuid(user_id):
                 return _jsonrpc_error(
                     -32602,
@@ -15530,7 +15004,6 @@ async def handle_user_getbyid(request: dict) -> Any:
                     "createdAt": "2024-01-15T11:00:00Z",
                 }
 
-            # Look up user
             user = _user_store.get(user_id)
             if not user:
                 return _jsonrpc_error(404, "User not found", req_id=req_obj.get("id"))
@@ -15587,12 +15060,10 @@ async def handle_user_list(request: dict) -> Any:
             params_dict = req_obj.get("params", {}) or {}
             options = params_dict.get("options", {}) or {}
 
-            # Extract pagination parameters
             page = options.get("page", 1)
             per_page = options.get("perPage", 20)
             role_filter = options.get("role")
 
-            # Validate pagination
             if page < 1:
                 return _jsonrpc_error(
                     -32602,
@@ -15609,19 +15080,16 @@ async def handle_user_list(request: dict) -> Any:
                     req_id=req_obj.get("id"),
                 )
 
-            # Filter users
             all_users = list(_user_store.values())
             if role_filter:
                 all_users = [u for u in all_users if u.get("role") == role_filter]
 
-            # Apply pagination
             total = len(all_users)
             start_idx = (page - 1) * per_page
             end_idx = start_idx + per_page
             paginated_users = all_users[start_idx:end_idx]
             total_pages = (total + per_page - 1) // per_page
 
-            # Build response
             result = {
                 "users": paginated_users,
                 "pagination": {
@@ -15687,7 +15155,6 @@ async def handle_user_update(request: dict) -> Any:
             user_id = params_dict.get("userId")
             updates = params_dict.get("updates", {}) or {}
 
-            # Validate UUID format
             if not _is_valid_uuid(user_id):
                 return _jsonrpc_error(
                     -32602,
@@ -15714,11 +15181,9 @@ async def handle_user_update(request: dict) -> Any:
                     "createdAt": "2024-01-15T11:00:00Z",
                 }
 
-            # Check if user exists
             if user_id not in _user_store:
                 return _jsonrpc_error(404, "User not found", req_id=req_obj.get("id"))
 
-            # Validate role if present
             if "role" in updates and updates["role"] not in ["user", "admin", "guest"]:
                 return _jsonrpc_error(
                     -32602,
@@ -15727,7 +15192,6 @@ async def handle_user_update(request: dict) -> Any:
                     req_id=req_obj.get("id"),
                 )
 
-            # Apply updates
             user = _user_store[user_id]
             if "name" in updates:
                 user["name"] = updates["name"]
@@ -15761,454 +15225,3 @@ def create_app_user_update() -> Spikard:
         body_schema={"type": ["object", "array"]},
     )
     return app
-
-
-# App factory functions:
-# - create_app_di_route_level_dependency_override_success() for di / Route-level dependency override - success
-# - create_app_di_circular_dependency_detection_error() for di / Circular dependency detection - error
-# - create_app_di_factory_dependency_success() for di / Factory dependency - success
-# - create_app_di_value_dependency_injection_success() for di / Value dependency injection - success
-# - create_app_di_node_js_object_destructuring_injection_success() for di / Node.js object destructuring injection - success
-# - create_app_di_nested_dependencies_3_levels_success() for di / Nested dependencies (3 levels) - success
-# - create_app_di_type_mismatch_in_dependency_resolution_error() for di / Type mismatch in dependency resolution - error
-# - create_app_di_missing_dependency_error() for di / Missing dependency - error
-# - create_app_di_python_parameter_name_based_injection_success() for di / Python parameter name-based injection - success
-# - create_app_di_dependency_injection_in_lifecycle_hooks_success() for di / Dependency injection in lifecycle hooks - success
-# - create_app_di_ruby_keyword_argument_injection_success() for di / Ruby keyword argument injection - success
-# - create_app_di_multiple_dependencies_with_cleanup_success() for di / Multiple dependencies with cleanup - success
-# - create_app_di_mixed_singleton_and_per_request_caching_success() for di / Mixed singleton and per-request caching - success
-# - create_app_di_resource_cleanup_after_request_success() for di / Resource cleanup after request - success
-# - create_app_di_python_type_annotation_based_injection_success() for di / Python type annotation-based injection - success
-# - create_app_di_per_request_dependency_caching_success() for di / Per-request dependency caching - success
-# - create_app_di_singleton_dependency_caching_success() for di / Singleton dependency caching - success
-# - create_app_di_async_factory_dependency_success() for di / Async factory dependency - success
-# - create_app_request_id_request_id_header_is_preserved() for request_id / Request ID header is preserved
-# - create_app_request_id_request_id_middleware_can_be_disabled() for request_id / Request ID middleware can be disabled
-# - create_app_request_id_request_id_is_generated_when_not_provided() for request_id / Request ID is generated when not provided
-# - create_app_query_params_string_validation_with_regex_success() for query_params / String validation with regex - success
-# - create_app_query_params_49_integer_gt_constraint_success() for query_params / 49_integer_gt_constraint_success
-# - create_app_query_params_enum_query_parameter_invalid_value() for query_params / Enum query parameter - invalid value
-# - create_app_query_params_68_array_uniqueitems_success() for query_params / 68_array_uniqueitems_success
-# - create_app_query_params_47_pattern_validation_email_success() for query_params / 47_pattern_validation_email_success
-# - create_app_query_params_required_integer_query_parameter_success() for query_params / Required integer query parameter - success
-# - create_app_query_params_required_string_query_parameter_missing() for query_params / Required string query parameter - missing
-# - create_app_query_params_57_boolean_empty_string_coercion() for query_params / 57_boolean_empty_string_coercion
-# - create_app_query_params_52_integer_le_constraint_boundary() for query_params / 52_integer_le_constraint_boundary
-# - create_app_query_params_list_with_default_empty_array_no_values_provided() for query_params / List with default empty array - no values provided
-# - create_app_query_params_date_query_parameter_success() for query_params / Date query parameter - success
-# - create_app_query_params_string_query_param_with_max_length_constraint_fail() for query_params / String query param with max_length constraint - fail
-# - create_app_query_params_45_string_minlength_validation_failure() for query_params / 45_string_minlength_validation_failure
-# - create_app_query_params_integer_with_default_value_override() for query_params / Integer with default value - override
-# - create_app_query_params_67_multipleof_constraint_failure() for query_params / 67_multipleof_constraint_failure
-# - create_app_query_params_58_format_email_success() for query_params / 58_format_email_success
-# - create_app_query_params_integer_query_param_with_ge_constraint_boundary() for query_params / Integer query param with ge constraint - boundary
-# - create_app_query_params_integer_query_param_with_gt_constraint_valid() for query_params / Integer query param with gt constraint - valid
-# - create_app_query_params_required_integer_query_parameter_invalid_type() for query_params / Required integer query parameter - invalid type
-# - create_app_query_params_required_integer_query_parameter_float_value() for query_params / Required integer query parameter - float value
-# - create_app_query_params_query_parameter_with_url_encoded_special_characters() for query_params / Query parameter with URL encoded special characters
-# - create_app_query_params_59_format_email_failure() for query_params / 59_format_email_failure
-# - create_app_query_params_43_scientific_notation_float() for query_params / 43_scientific_notation_float
-# - create_app_query_params_63_format_uri_success() for query_params / 63_format_uri_success
-# - create_app_query_params_boolean_query_parameter_numeric_1() for query_params / Boolean query parameter - numeric 1
-# - create_app_query_params_string_query_param_with_min_length_constraint_fail() for query_params / String query param with min_length constraint - fail
-# - create_app_query_params_optional_string_query_parameter_provided() for query_params / Optional string query parameter - provided
-# - create_app_query_params_list_of_integers_multiple_values() for query_params / List of integers - multiple values
-# - create_app_query_params_integer_query_param_with_lt_constraint_valid() for query_params / Integer query param with lt constraint - valid
-# - create_app_query_params_42_negative_integer_query_param() for query_params / 42_negative_integer_query_param
-# - create_app_query_params_46_string_maxlength_validation_failure() for query_params / 46_string_maxlength_validation_failure
-# - create_app_query_params_56_array_maxitems_constraint_failure() for query_params / 56_array_maxitems_constraint_failure
-# - create_app_query_params_string_query_param_with_regex_pattern_fail() for query_params / String query param with regex pattern - fail
-# - create_app_query_params_44_string_minlength_validation_success() for query_params / 44_string_minlength_validation_success
-# - create_app_query_params_61_format_ipv4_failure() for query_params / 61_format_ipv4_failure
-# - create_app_query_params_48_pattern_validation_email_failure() for query_params / 48_pattern_validation_email_failure
-# - create_app_query_params_required_integer_query_parameter_missing() for query_params / Required integer query parameter - missing
-# - create_app_query_params_query_parameter_with_special_characters_url_encoding() for query_params / Query parameter with special characters - URL encoding
-# - create_app_query_params_list_query_parameter_required_but_missing() for query_params / List query parameter - required but missing
-# - create_app_query_params_required_string_query_parameter_success() for query_params / Required string query parameter - success
-# - create_app_query_params_66_multipleof_constraint_success() for query_params / 66_multipleof_constraint_success
-# - create_app_query_params_53_integer_le_constraint_failure() for query_params / 53_integer_le_constraint_failure
-# - create_app_query_params_multiple_query_parameters_with_different_types() for query_params / Multiple query parameters with different types
-# - create_app_query_params_71_array_separator_semicolon() for query_params / 71_array_separator_semicolon
-# - create_app_query_params_70_array_separator_pipe() for query_params / 70_array_separator_pipe
-# - create_app_query_params_integer_with_default_value_not_provided() for query_params / Integer with default value - not provided
-# - create_app_query_params_boolean_query_parameter_true() for query_params / Boolean query parameter - true
-# - create_app_query_params_integer_query_param_with_le_constraint_boundary() for query_params / Integer query param with le constraint - boundary
-# - create_app_query_params_float_query_param_with_ge_constraint_success() for query_params / Float query param with ge constraint - success
-# - create_app_query_params_51_integer_ge_constraint_boundary() for query_params / 51_integer_ge_constraint_boundary
-# - create_app_query_params_optional_integer_query_parameter_missing() for query_params / Optional integer query parameter - missing
-# - create_app_query_params_69_array_uniqueitems_failure() for query_params / 69_array_uniqueitems_failure
-# - create_app_query_params_72_array_separator_space() for query_params / 72_array_separator_space
-# - create_app_query_params_string_validation_with_regex_failure() for query_params / String validation with regex - failure
-# - create_app_query_params_65_format_hostname_success() for query_params / 65_format_hostname_success
-# - create_app_query_params_query_parameter_with_url_encoded_space() for query_params / Query parameter with URL encoded space
-# - create_app_query_params_list_of_strings_multiple_values() for query_params / List of strings - multiple values
-# - create_app_query_params_optional_query_parameter_with_default_value() for query_params / Optional query parameter with default value
-# - create_app_query_params_62_format_ipv6_success() for query_params / 62_format_ipv6_success
-# - create_app_query_params_array_query_parameter_single_value() for query_params / Array query parameter - single value
-# - create_app_query_params_optional_string_query_parameter_missing() for query_params / Optional string query parameter - missing
-# - create_app_query_params_datetime_query_parameter_success() for query_params / Datetime query parameter - success
-# - create_app_query_params_uuid_query_parameter_invalid_format() for query_params / UUID query parameter - invalid format
-# - create_app_query_params_array_query_parameter_empty_array() for query_params / Array query parameter - empty array
-# - create_app_query_params_enum_query_parameter_success() for query_params / Enum query parameter - success
-# - create_app_query_params_uuid_query_parameter_success() for query_params / UUID query parameter - success
-# - create_app_query_params_50_integer_gt_constraint_failure() for query_params / 50_integer_gt_constraint_failure
-# - create_app_query_params_64_format_uri_failure() for query_params / 64_format_uri_failure
-# - create_app_query_params_54_array_minitems_constraint_success() for query_params / 54_array_minitems_constraint_success
-# - create_app_query_params_55_array_minitems_constraint_failure() for query_params / 55_array_minitems_constraint_failure
-# - create_app_query_params_60_format_ipv4_success() for query_params / 60_format_ipv4_success
-# - create_app_streaming_stream_json_lines() for streaming / Stream JSON lines
-# - create_app_streaming_binary_log_download() for streaming / Binary log download
-# - create_app_streaming_chunked_csv_export() for streaming / Chunked CSV export
-# - create_app_body_limits_body_under_limit_succeeds() for body_limits / Body under limit succeeds
-# - create_app_body_limits_body_over_limit_returns_413() for body_limits / Body over limit returns 413
-# - create_app_http_methods_options_cors_preflight_request() for http_methods / OPTIONS - CORS preflight request
-# - create_app_http_methods_delete_remove_resource() for http_methods / DELETE - Remove resource
-# - create_app_http_methods_put_create_resource_if_doesn_t_exist() for http_methods / PUT - Create resource if doesn't exist
-# - create_app_http_methods_patch_update_multiple_fields() for http_methods / PATCH - Update multiple fields
-# - create_app_http_methods_put_validation_error() for http_methods / PUT - Validation error
-# - create_app_http_methods_head_get_metadata_without_body() for http_methods / HEAD - Get metadata without body
-# - create_app_http_methods_delete_with_response_body() for http_methods / DELETE - With response body
-# - create_app_http_methods_put_missing_required_field() for http_methods / PUT - Missing required field
-# - create_app_http_methods_patch_partial_update() for http_methods / PATCH - Partial update
-# - create_app_http_methods_delete_resource_not_found() for http_methods / DELETE - Resource not found
-# - create_app_http_methods_put_idempotent_operation() for http_methods / PUT - Idempotent operation
-# - create_app_http_methods_put_complete_resource_replacement() for http_methods / PUT - Complete resource replacement
-# - create_app_rate_limit_rate_limit_below_threshold_succeeds() for rate_limit / Rate limit below threshold succeeds
-# - create_app_rate_limit_rate_limit_exceeded_returns_429() for rate_limit / Rate limit exceeded returns 429
-# - create_app_json_bodies_uuid_field_invalid_format() for json_bodies / UUID field - invalid format
-# - create_app_json_bodies_44_const_validation_failure() for json_bodies / 44_const_validation_failure
-# - create_app_json_bodies_boolean_field_success() for json_bodies / Boolean field - success
-# - create_app_json_bodies_numeric_le_validation_success() for json_bodies / Numeric le validation - success
-# - create_app_json_bodies_deeply_nested_objects() for json_bodies / Deeply nested objects
-# - create_app_json_bodies_optional_fields_omitted() for json_bodies / Optional fields - omitted
-# - create_app_json_bodies_uuid_field_success() for json_bodies / UUID field - success
-# - create_app_json_bodies_date_field_success() for json_bodies / Date field - success
-# - create_app_json_bodies_47_maxproperties_validation_failure() for json_bodies / 47_maxproperties_validation_failure
-# - create_app_json_bodies_46_minproperties_validation_failure() for json_bodies / 46_minproperties_validation_failure
-# - create_app_json_bodies_string_min_length_validation_fail() for json_bodies / String min_length validation - fail
-# - create_app_json_bodies_field_type_validation_invalid_type() for json_bodies / Field type validation - invalid type
-# - create_app_json_bodies_36_oneof_schema_multiple_match_failure() for json_bodies / 36_oneof_schema_multiple_match_failure
-# - create_app_json_bodies_nested_object_success() for json_bodies / Nested object - success
-# - create_app_json_bodies_41_not_schema_success() for json_bodies / 41_not_schema_success
-# - create_app_json_bodies_string_max_length_validation_fail() for json_bodies / String max_length validation - fail
-# - create_app_json_bodies_50_deep_nesting_4_levels() for json_bodies / 50_deep_nesting_4_levels
-# - create_app_json_bodies_48_dependencies_validation_success() for json_bodies / 48_dependencies_validation_success
-# - create_app_json_bodies_patch_partial_update() for json_bodies / PATCH partial update
-# - create_app_json_bodies_30_nested_object_missing_field() for json_bodies / 30_nested_object_missing_field
-# - create_app_json_bodies_datetime_field_success() for json_bodies / Datetime field - success
-# - create_app_json_bodies_string_pattern_validation_success() for json_bodies / String pattern validation - success
-# - create_app_json_bodies_extra_fields_ignored_no_additionalproperties() for json_bodies / Extra fields ignored (no additionalProperties)
-# - create_app_json_bodies_40_anyof_schema_failure() for json_bodies / 40_anyof_schema_failure
-# - create_app_json_bodies_39_anyof_schema_multiple_match_success() for json_bodies / 39_anyof_schema_multiple_match_success
-# - create_app_json_bodies_array_of_primitive_values() for json_bodies / Array of primitive values
-# - create_app_json_bodies_numeric_ge_validation_fail() for json_bodies / Numeric ge validation - fail
-# - create_app_json_bodies_37_oneof_schema_no_match_failure() for json_bodies / 37_oneof_schema_no_match_failure
-# - create_app_json_bodies_empty_array_validation_fail() for json_bodies / Empty array validation - fail
-# - create_app_json_bodies_38_anyof_schema_success() for json_bodies / 38_anyof_schema_success
-# - create_app_json_bodies_empty_json_object() for json_bodies / Empty JSON object
-# - create_app_json_bodies_string_pattern_validation_fail() for json_bodies / String pattern validation - fail
-# - create_app_json_bodies_49_dependencies_validation_failure() for json_bodies / 49_dependencies_validation_failure
-# - create_app_json_bodies_simple_json_object_success() for json_bodies / Simple JSON object - success
-# - create_app_json_bodies_required_field_missing_validation_error() for json_bodies / Required field missing - validation error
-# - create_app_json_bodies_35_oneof_schema_success() for json_bodies / 35_oneof_schema_success
-# - create_app_json_bodies_enum_field_invalid_value() for json_bodies / Enum field - invalid value
-# - create_app_json_bodies_enum_field_success() for json_bodies / Enum field - success
-# - create_app_json_bodies_33_allof_schema_composition() for json_bodies / 33_allof_schema_composition
-# - create_app_json_bodies_45_minproperties_validation_success() for json_bodies / 45_minproperties_validation_success
-# - create_app_json_bodies_body_with_query_parameters() for json_bodies / Body with query parameters
-# - create_app_json_bodies_42_not_schema_failure() for json_bodies / 42_not_schema_failure
-# - create_app_json_bodies_43_const_validation_success() for json_bodies / 43_const_validation_success
-# - create_app_json_bodies_32_schema_ref_definitions() for json_bodies / 32_schema_ref_definitions
-# - create_app_json_bodies_29_nested_object_validation_success() for json_bodies / 29_nested_object_validation_success
-# - create_app_json_bodies_34_additional_properties_false() for json_bodies / 34_additional_properties_false
-# - create_app_json_bodies_null_value_for_optional_field() for json_bodies / Null value for optional field
-# - create_app_json_bodies_31_nullable_property_null_value() for json_bodies / 31_nullable_property_null_value
-# - create_app_json_bodies_array_of_objects_success() for json_bodies / Array of objects - success
-# - create_app_static_files_static_file_server_returns_text_file() for static_files / Static file server returns text file
-# - create_app_static_files_static_server_returns_index_html_for_directory() for static_files / Static server returns index.html for directory
-# - create_app_background_background_event_logging_second_payload() for background / Background event logging - second payload
-# - create_app_background_background_event_logging() for background / Background event logging
-# - create_app_content_types_415_unsupported_media_type() for content_types / 415 Unsupported Media Type
-# - create_app_content_types_xml_response_application_xml() for content_types / XML response - application/xml
-# - create_app_content_types_14_content_type_case_insensitive() for content_types / 14_content_type_case_insensitive
-# - create_app_content_types_json_with_utf_8_charset() for content_types / JSON with UTF-8 charset
-# - create_app_content_types_16_text_plain_not_accepted() for content_types / 16_text_plain_not_accepted
-# - create_app_content_types_pdf_response_application_pdf() for content_types / PDF response - application/pdf
-# - create_app_content_types_20_content_length_mismatch() for content_types / 20_content_length_mismatch
-# - create_app_content_types_17_vendor_json_accepted() for content_types / 17_vendor_json_accepted
-# - create_app_content_types_13_json_with_charset_utf16() for content_types / 13_json_with_charset_utf16
-# - create_app_content_types_json_response_application_json() for content_types / JSON response - application/json
-# - create_app_content_types_15_multipart_boundary_required() for content_types / 15_multipart_boundary_required
-# - create_app_content_types_content_negotiation_accept_header() for content_types / Content negotiation - Accept header
-# - create_app_content_types_html_response_text_html() for content_types / HTML response - text/html
-# - create_app_content_types_jpeg_image_response_image_jpeg() for content_types / JPEG image response - image/jpeg
-# - create_app_content_types_19_missing_content_type_default_json() for content_types / 19_missing_content_type_default_json
-# - create_app_content_types_png_image_response_image_png() for content_types / PNG image response - image/png
-# - create_app_content_types_plain_text_response_text_plain() for content_types / Plain text response - text/plain
-# - create_app_content_types_18_content_type_with_multiple_params() for content_types / 18_content_type_with_multiple_params
-# - create_app_content_types_csv_response_text_csv() for content_types / CSV response - text/csv
-# - create_app_content_types_binary_response_application_octet_stream() for content_types / Binary response - application/octet-stream
-# - create_app_multipart_multiple_values_for_same_field_name() for multipart / Multiple values for same field name
-# - create_app_multipart_19_file_mime_spoofing_png_as_jpeg() for multipart / 19_file_mime_spoofing_png_as_jpeg
-# - create_app_multipart_20_file_mime_spoofing_jpeg_as_png() for multipart / 20_file_mime_spoofing_jpeg_as_png
-# - create_app_multipart_21_file_pdf_magic_number_success() for multipart / 21_file_pdf_magic_number_success
-# - create_app_multipart_content_type_validation_invalid_type() for multipart / Content-Type validation - invalid type
-# - create_app_multipart_pdf_file_upload() for multipart / PDF file upload
-# - create_app_multipart_file_list_upload_array_of_files() for multipart / File list upload (array of files)
-# - create_app_multipart_optional_file_upload_provided() for multipart / Optional file upload - provided
-# - create_app_multipart_file_size_validation_too_large() for multipart / File size validation - too large
-# - create_app_multipart_mixed_files_and_form_data() for multipart / Mixed files and form data
-# - create_app_multipart_simple_file_upload() for multipart / Simple file upload
-# - create_app_multipart_empty_file_upload() for multipart / Empty file upload
-# - create_app_multipart_optional_file_upload_missing() for multipart / Optional file upload - missing
-# - create_app_multipart_file_upload_without_filename() for multipart / File upload without filename
-# - create_app_multipart_18_file_magic_number_jpeg_success() for multipart / 18_file_magic_number_jpeg_success
-# - create_app_multipart_22_file_empty_buffer() for multipart / 22_file_empty_buffer
-# - create_app_multipart_17_file_magic_number_png_success() for multipart / 17_file_magic_number_png_success
-# - create_app_multipart_form_data_without_files() for multipart / Form data without files
-# - create_app_multipart_multiple_file_uploads() for multipart / Multiple file uploads
-# - create_app_multipart_file_upload_with_custom_headers() for multipart / File upload with custom headers
-# - create_app_multipart_required_file_upload_missing() for multipart / Required file upload - missing
-# - create_app_multipart_image_file_upload() for multipart / Image file upload
-# - create_app_validation_errors_invalid_uuid_format() for validation_errors / Invalid UUID format
-# - create_app_validation_errors_invalid_boolean_value() for validation_errors / Invalid boolean value
-# - create_app_validation_errors_missing_required_query_parameter() for validation_errors / Missing required query parameter
-# - create_app_validation_errors_array_max_items_constraint_violation() for validation_errors / Array max_items constraint violation
-# - create_app_validation_errors_numeric_constraint_violation_gt_greater_than() for validation_errors / Numeric constraint violation - gt (greater than)
-# - create_app_validation_errors_string_regex_pattern_mismatch() for validation_errors / String regex pattern mismatch
-# - create_app_validation_errors_invalid_enum_value() for validation_errors / Invalid enum value
-# - create_app_validation_errors_string_min_length_constraint_violation() for validation_errors / String min_length constraint violation
-# - create_app_validation_errors_multiple_validation_errors() for validation_errors / Multiple validation errors
-# - create_app_validation_errors_string_max_length_constraint_violation() for validation_errors / String max_length constraint violation
-# - create_app_validation_errors_nested_object_validation_error() for validation_errors / Nested object validation error
-# - create_app_validation_errors_10_nested_error_path() for validation_errors / 10_nested_error_path
-# - create_app_validation_errors_invalid_datetime_format() for validation_errors / Invalid datetime format
-# - create_app_validation_errors_array_item_validation_error() for validation_errors / Array item validation error
-# - create_app_validation_errors_missing_required_body_field() for validation_errors / Missing required body field
-# - create_app_validation_errors_body_field_type_error_string_for_float() for validation_errors / Body field type error - string for float
-# - create_app_validation_errors_malformed_json_body() for validation_errors / Malformed JSON body
-# - create_app_validation_errors_query_param_type_error_string_provided_for_int() for validation_errors / Query param type error - string provided for int
-# - create_app_validation_errors_header_validation_error() for validation_errors / Header validation error
-# - create_app_validation_errors_09_multiple_validation_errors() for validation_errors / 09_multiple_validation_errors
-# - create_app_validation_errors_numeric_constraint_violation_le_less_than_or_equal() for validation_errors / Numeric constraint violation - le (less than or equal)
-# - create_app_validation_errors_array_min_items_constraint_violation() for validation_errors / Array min_items constraint violation
-# - create_app_compression_compression_payload_below_min_size_is_not_compressed() for compression / Compression - payload below min_size is not compressed
-# - create_app_compression_compression_gzip_applied() for compression / Compression - gzip applied
-# - create_app_edge_cases_19_emoji_in_strings() for edge_cases / 19_emoji_in_strings
-# - create_app_edge_cases_12_percent_encoded_special_chars() for edge_cases / 12_percent_encoded_special_chars
-# - create_app_edge_cases_special_string_values_and_escaping() for edge_cases / Special string values and escaping
-# - create_app_edge_cases_15_float_precision_preservation() for edge_cases / 15_float_precision_preservation
-# - create_app_edge_cases_13_empty_string_query_param_preserved() for edge_cases / 13_empty_string_query_param_preserved
-# - create_app_edge_cases_24_array_with_holes() for edge_cases / 24_array_with_holes
-# - create_app_edge_cases_21_scientific_notation_number() for edge_cases / 21_scientific_notation_number
-# - create_app_edge_cases_float_precision_and_rounding() for edge_cases / Float precision and rounding
-# - create_app_edge_cases_unicode_and_emoji_handling() for edge_cases / Unicode and emoji handling
-# - create_app_edge_cases_17_extremely_long_string() for edge_cases / 17_extremely_long_string
-# - create_app_edge_cases_11_utf8_query_parameter() for edge_cases / 11_utf8_query_parameter
-# - create_app_edge_cases_18_unicode_normalization() for edge_cases / 18_unicode_normalization
-# - create_app_edge_cases_20_null_byte_in_string() for edge_cases / 20_null_byte_in_string
-# - create_app_edge_cases_23_deeply_nested_json_limit() for edge_cases / 23_deeply_nested_json_limit
-# - create_app_edge_cases_14_large_integer_boundary() for edge_cases / 14_large_integer_boundary
-# - create_app_edge_cases_22_leading_zeros_integer() for edge_cases / 22_leading_zeros_integer
-# - create_app_edge_cases_large_integer_boundary_values() for edge_cases / Large integer boundary values
-# - create_app_edge_cases_deeply_nested_structure_10_levels() for edge_cases / Deeply nested structure (10+ levels)
-# - create_app_edge_cases_empty_and_null_value_handling() for edge_cases / Empty and null value handling
-# - create_app_edge_cases_16_negative_zero_handling() for edge_cases / 16_negative_zero_handling
-# - create_app_cors_07_cors_preflight_header_not_allowed() for cors / 07_cors_preflight_header_not_allowed
-# - create_app_cors_cors_vary_header_for_proper_caching() for cors / CORS Vary header for proper caching
-# - create_app_cors_cors_preflight_for_put_method() for cors / CORS preflight for PUT method
-# - create_app_cors_cors_preflight_for_delete_method() for cors / CORS preflight for DELETE method
-# - create_app_cors_cors_multiple_allowed_origins() for cors / CORS multiple allowed origins
-# - create_app_cors_cors_preflight_request() for cors / CORS preflight request
-# - create_app_cors_cors_with_credentials() for cors / CORS with credentials
-# - create_app_cors_cors_regex_pattern_matching_for_origins() for cors / CORS regex pattern matching for origins
-# - create_app_cors_08_cors_max_age() for cors / 08_cors_max_age
-# - create_app_cors_10_cors_origin_null() for cors / 10_cors_origin_null
-# - create_app_cors_cors_wildcard_origin() for cors / CORS wildcard origin
-# - create_app_cors_cors_safelisted_headers_without_preflight() for cors / CORS safelisted headers without preflight
-# - create_app_cors_cors_private_network_access() for cors / CORS Private Network Access
-# - create_app_cors_cors_origin_case_sensitivity() for cors / CORS origin case sensitivity
-# - create_app_cors_cors_request_blocked() for cors / CORS request blocked
-# - create_app_cors_simple_cors_request() for cors / Simple CORS request
-# - create_app_cors_09_cors_expose_headers() for cors / 09_cors_expose_headers
-# - create_app_cors_06_cors_preflight_method_not_allowed() for cors / 06_cors_preflight_method_not_allowed
-# - create_app_lifecycle_hooks_onresponse_security_headers() for lifecycle_hooks / onResponse - Security Headers
-# - create_app_lifecycle_hooks_prehandler_authentication_failed_short_circuit() for lifecycle_hooks / preHandler - Authentication Failed (Short Circuit)
-# - create_app_lifecycle_hooks_prehandler_authorization_check() for lifecycle_hooks / preHandler - Authorization Check
-# - create_app_lifecycle_hooks_prehandler_authentication_success() for lifecycle_hooks / preHandler - Authentication Success
-# - create_app_lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit() for lifecycle_hooks / preValidation - Rate Limit Exceeded (Short Circuit)
-# - create_app_lifecycle_hooks_onerror_error_logging() for lifecycle_hooks / onError - Error Logging
-# - create_app_lifecycle_hooks_multiple_hooks_all_phases() for lifecycle_hooks / Multiple Hooks - All Phases
-# - create_app_lifecycle_hooks_hook_execution_order() for lifecycle_hooks / Hook Execution Order
-# - create_app_lifecycle_hooks_onresponse_response_timing() for lifecycle_hooks / onResponse - Response Timing
-# - create_app_lifecycle_hooks_prehandler_authorization_forbidden_short_circuit() for lifecycle_hooks / preHandler - Authorization Forbidden (Short Circuit)
-# - create_app_lifecycle_hooks_onrequest_request_logging() for lifecycle_hooks / onRequest - Request Logging
-# - create_app_lifecycle_hooks_prevalidation_rate_limiting() for lifecycle_hooks / preValidation - Rate Limiting
-# - create_app_request_timeout_request_exceeds_timeout() for request_timeout / Request exceeds timeout
-# - create_app_request_timeout_request_completes_before_timeout() for request_timeout / Request completes before timeout
-# - create_app_url_encoded_simple_form_submission_success() for url_encoded / Simple form submission - success
-# - create_app_url_encoded_15_special_characters_field_names() for url_encoded / 15_special_characters_field_names
-# - create_app_url_encoded_pattern_validation_fail() for url_encoded / Pattern validation - fail
-# - create_app_url_encoded_22_additional_properties_strict_failure() for url_encoded / 22_additional_properties_strict_failure
-# - create_app_url_encoded_17_pattern_validation_failure() for url_encoded / 17_pattern_validation_failure
-# - create_app_url_encoded_20_format_email_validation_failure() for url_encoded / 20_format_email_validation_failure
-# - create_app_url_encoded_multiple_values_for_same_field() for url_encoded / Multiple values for same field
-# - create_app_url_encoded_required_field_missing_validation_error() for url_encoded / Required field missing - validation error
-# - create_app_url_encoded_13_array_field_success() for url_encoded / 13_array_field_success
-# - create_app_url_encoded_numeric_field_type_conversion() for url_encoded / Numeric field type conversion
-# - create_app_url_encoded_special_characters_encoding() for url_encoded / Special characters encoding
-# - create_app_url_encoded_boolean_field_conversion() for url_encoded / Boolean field conversion
-# - create_app_url_encoded_empty_string_value() for url_encoded / Empty string value
-# - create_app_url_encoded_oauth2_password_grant_flow() for url_encoded / OAuth2 password grant flow
-# - create_app_url_encoded_19_array_minitems_validation_failure() for url_encoded / 19_array_minitems_validation_failure
-# - create_app_url_encoded_optional_field_missing_success() for url_encoded / Optional field missing - success
-# - create_app_url_encoded_14_nested_object_bracket_notation() for url_encoded / 14_nested_object_bracket_notation
-# - create_app_url_encoded_string_max_length_validation_fail() for url_encoded / String max_length validation - fail
-# - create_app_url_encoded_18_integer_minimum_validation_failure() for url_encoded / 18_integer_minimum_validation_failure
-# - create_app_url_encoded_21_integer_type_coercion_failure() for url_encoded / 21_integer_type_coercion_failure
-# - create_app_url_encoded_16_minlength_validation_failure() for url_encoded / 16_minlength_validation_failure
-# - create_app_url_encoded_string_min_length_validation_fail() for url_encoded / String min_length validation - fail
-# - create_app_headers_header_regex_validation_success() for headers / Header regex validation - success
-# - create_app_headers_33_api_key_header_valid() for headers / 33_api_key_header_valid
-# - create_app_headers_content_type_header_application_json() for headers / Content-Type header - application/json
-# - create_app_headers_accept_language_header() for headers / Accept-Language header
-# - create_app_headers_x_api_key_required_header_success() for headers / X-API-Key required header - success
-# - create_app_headers_header_validation_max_length_constraint_fail() for headers / Header validation - max_length constraint fail
-# - create_app_headers_x_api_key_required_header_missing() for headers / X-API-Key required header - missing
-# - create_app_headers_origin_header() for headers / Origin header
-# - create_app_headers_user_agent_header_default_value() for headers / User-Agent header - default value
-# - create_app_headers_32_bearer_token_missing_prefix() for headers / 32_bearer_token_missing_prefix
-# - create_app_headers_optional_header_with_none_default_missing() for headers / Optional header with None default - missing
-# - create_app_headers_header_regex_validation_fail() for headers / Header regex validation - fail
-# - create_app_headers_31_bearer_token_format_invalid() for headers / 31_bearer_token_format_invalid
-# - create_app_headers_x_api_key_optional_header_success() for headers / X-API-Key optional header - success
-# - create_app_headers_authorization_header_success() for headers / Authorization header - success
-# - create_app_headers_30_bearer_token_format_valid() for headers / 30_bearer_token_format_valid
-# - create_app_headers_authorization_header_missing() for headers / Authorization header - missing
-# - create_app_headers_accept_header_json() for headers / Accept header - JSON
-# - create_app_headers_accept_encoding_header() for headers / Accept-Encoding header
-# - create_app_headers_authorization_header_wrong_scheme() for headers / Authorization header - wrong scheme
-# - create_app_headers_header_validation_min_length_constraint() for headers / Header validation - min_length constraint
-# - create_app_headers_basic_authentication_success() for headers / Basic authentication - success
-# - create_app_headers_bearer_token_authentication_missing() for headers / Bearer token authentication - missing
-# - create_app_headers_x_api_key_optional_header_missing() for headers / X-API-Key optional header - missing
-# - create_app_headers_multiple_header_values_x_token() for headers / Multiple header values - X-Token
-# - create_app_headers_multiple_custom_headers() for headers / Multiple custom headers
-# - create_app_headers_34_api_key_header_invalid() for headers / 34_api_key_header_invalid
-# - create_app_headers_bearer_token_authentication_success() for headers / Bearer token authentication - success
-# - create_app_headers_host_header() for headers / Host header
-# - create_app_headers_referer_header() for headers / Referer header
-# - create_app_headers_header_with_underscore_conversion_explicit() for headers / Header with underscore conversion - explicit
-# - create_app_headers_header_case_insensitivity_access() for headers / Header case insensitivity - access
-# - create_app_headers_user_agent_header_custom_value() for headers / User-Agent header - custom value
-# - create_app_path_params_boolean_path_parameter_true() for path_params / Boolean path parameter - True
-# - create_app_path_params_29_decimal_path_param_success() for path_params / 29_decimal_path_param_success
-# - create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success() for path_params / Integer path parameter with combined lt and gt constraints - success
-# - create_app_path_params_33_string_pattern_path_success() for path_params / 33_string_pattern_path_success
-# - create_app_path_params_31_string_minlength_path_failure() for path_params / 31_string_minlength_path_failure
-# - create_app_path_params_35_negative_integer_path_param() for path_params / 35_negative_integer_path_param
-# - create_app_path_params_enum_path_parameter_invalid_value() for path_params / Enum path parameter - invalid value
-# - create_app_path_params_27_datetime_format_path_param_success() for path_params / 27_datetime_format_path_param_success
-# - create_app_path_params_25_date_format_invalid_failure() for path_params / 25_date_format_invalid_failure
-# - create_app_path_params_integer_path_parameter_with_lt_constraint_success() for path_params / Integer path parameter with lt constraint - success
-# - create_app_path_params_integer_path_parameter_with_gt_constraint_success() for path_params / Integer path parameter with gt constraint - success
-# - create_app_path_params_28_duration_format_path_param_success() for path_params / 28_duration_format_path_param_success
-# - create_app_path_params_path_parameter_type_syntax_with_override() for path_params / Path parameter type syntax with override
-# - create_app_path_params_20_uuid_v3_path_param_success() for path_params / 20_uuid_v3_path_param_success
-# - create_app_path_params_integer_path_parameter_invalid_string() for path_params / Integer path parameter - invalid string
-# - create_app_path_params_30_string_minlength_path_success() for path_params / 30_string_minlength_path_success
-# - create_app_path_params_integer_path_parameter_with_le_constraint_success() for path_params / Integer path parameter with le constraint - success
-# - create_app_path_params_path_parameter_type_syntax_invalid_uuid() for path_params / Path parameter type syntax - invalid UUID
-# - create_app_path_params_path_type_parameter_file_path() for path_params / Path type parameter - file path
-# - create_app_path_params_path_parameter_with_type_syntax_uuid() for path_params / Path parameter with type syntax - UUID
-# - create_app_path_params_32_string_maxlength_path_failure() for path_params / 32_string_maxlength_path_failure
-# - create_app_path_params_integer_path_parameter_success() for path_params / Integer path parameter - success
-# - create_app_path_params_34_string_pattern_path_failure() for path_params / 34_string_pattern_path_failure
-# - create_app_path_params_21_uuid_v5_path_param_success() for path_params / 21_uuid_v5_path_param_success
-# - create_app_path_params_string_path_parameter_with_max_length_failure() for path_params / String path parameter with max_length - failure
-# - create_app_path_params_string_path_parameter_with_min_length_failure() for path_params / String path parameter with min_length - failure
-# - create_app_path_params_multiple_path_parameters_success() for path_params / Multiple path parameters - success
-# - create_app_path_params_date_path_parameter_success() for path_params / Date path parameter - success
-# - create_app_path_params_integer_path_parameter_with_gt_constraint_failure() for path_params / Integer path parameter with gt constraint - failure
-# - create_app_path_params_24_date_format_path_param_success() for path_params / 24_date_format_path_param_success
-# - create_app_path_params_float_path_parameter_success() for path_params / Float path parameter - success
-# - create_app_path_params_path_parameter_with_type_syntax_integer() for path_params / Path parameter with type syntax - integer
-# - create_app_path_params_string_path_parameter_success() for path_params / String path parameter - success
-# - create_app_path_params_uuid_path_parameter_success() for path_params / UUID path parameter - success
-# - create_app_path_params_integer_path_parameter_with_ge_constraint_success() for path_params / Integer path parameter with ge constraint - success
-# - create_app_path_params_enum_path_parameter_success() for path_params / Enum path parameter - success
-# - create_app_path_params_boolean_path_parameter_numeric_1() for path_params / Boolean path parameter - numeric 1
-# - create_app_cookies_25_cookie_samesite_lax() for cookies / 25_cookie_samesite_lax
-# - create_app_cookies_optional_cookie_parameter_success() for cookies / Optional cookie parameter - success
-# - create_app_cookies_cookie_regex_pattern_validation_fail() for cookies / Cookie regex pattern validation - fail
-# - create_app_cookies_response_session_cookie_no_max_age() for cookies / Response - session cookie (no max_age)
-# - create_app_cookies_27_cookie_httponly_flag() for cookies / 27_cookie_httponly_flag
-# - create_app_cookies_response_cookie_with_attributes() for cookies / Response cookie with attributes
-# - create_app_cookies_24_cookie_samesite_strict() for cookies / 24_cookie_samesite_strict
-# - create_app_cookies_apikey_cookie_authentication_success() for cookies / APIKey cookie authentication - success
-# - create_app_cookies_cookie_validation_min_length_constraint_success() for cookies / Cookie validation - min_length constraint success
-# - create_app_cookies_cookie_validation_min_length_failure() for cookies / Cookie validation - min_length failure
-# - create_app_cookies_cookie_validation_max_length_constraint_fail() for cookies / Cookie validation - max_length constraint fail
-# - create_app_cookies_required_cookie_missing() for cookies / Required cookie - missing
-# - create_app_cookies_optional_cookie_parameter_missing() for cookies / Optional cookie parameter - missing
-# - create_app_cookies_apikey_cookie_authentication_missing() for cookies / APIKey cookie authentication - missing
-# - create_app_cookies_response_multiple_cookies() for cookies / Response - multiple cookies
-# - create_app_cookies_response_cookie_with_samesite_lax() for cookies / Response cookie with SameSite=Lax
-# - create_app_cookies_response_delete_cookie() for cookies / Response - delete cookie
-# - create_app_cookies_response_cookie_with_path_attribute() for cookies / Response cookie with path attribute
-# - create_app_cookies_optional_apikey_cookie_missing() for cookies / Optional APIKey cookie - missing
-# - create_app_cookies_response_cookie_with_samesite_strict() for cookies / Response cookie with SameSite=Strict
-# - create_app_cookies_response_cookie_with_samesite_none() for cookies / Response cookie with SameSite=None
-# - create_app_cookies_cookie_regex_pattern_validation_success() for cookies / Cookie regex pattern validation - success
-# - create_app_cookies_response_set_cookie_basic() for cookies / Response set cookie - basic
-# - create_app_cookies_multiple_cookies_success() for cookies / Multiple cookies - success
-# - create_app_cookies_26_cookie_secure_flag() for cookies / 26_cookie_secure_flag
-# - create_app_cookies_response_cookie_with_domain_attribute() for cookies / Response cookie with domain attribute
-# - create_app_status_codes_408_request_timeout() for status_codes / 408 Request Timeout
-# - create_app_status_codes_404_not_found_resource_not_found() for status_codes / 404 Not Found - Resource not found
-# - create_app_status_codes_503_service_unavailable_server_overload() for status_codes / 503 Service Unavailable - Server overload
-# - create_app_status_codes_422_unprocessable_entity_validation_error() for status_codes / 422 Unprocessable Entity - Validation error
-# - create_app_status_codes_302_found_temporary_redirect() for status_codes / 302 Found - Temporary redirect
-# - create_app_status_codes_304_not_modified_cached_content_valid() for status_codes / 304 Not Modified - Cached content valid
-# - create_app_status_codes_400_bad_request_invalid_request() for status_codes / 400 Bad Request - Invalid request
-# - create_app_status_codes_22_501_not_implemented() for status_codes / 22_501_not_implemented
-# - create_app_status_codes_204_no_content_success_with_no_body() for status_codes / 204 No Content - Success with no body
-# - create_app_status_codes_301_moved_permanently_permanent_redirect() for status_codes / 301 Moved Permanently - Permanent redirect
-# - create_app_status_codes_201_created_resource_created() for status_codes / 201 Created - Resource created
-# - create_app_status_codes_202_accepted_request_accepted_for_processing() for status_codes / 202 Accepted - Request accepted for processing
-# - create_app_status_codes_307_temporary_redirect_method_preserved() for status_codes / 307 Temporary Redirect - Method preserved
-# - create_app_status_codes_500_internal_server_error_server_error() for status_codes / 500 Internal Server Error - Server error
-# - create_app_status_codes_20_414_uri_too_long() for status_codes / 20_414_uri_too_long
-# - create_app_status_codes_401_unauthorized_missing_authentication() for status_codes / 401 Unauthorized - Missing authentication
-# - create_app_status_codes_23_503_service_unavailable() for status_codes / 23_503_service_unavailable
-# - create_app_status_codes_19_413_payload_too_large() for status_codes / 19_413_payload_too_large
-# - create_app_status_codes_403_forbidden_insufficient_permissions() for status_codes / 403 Forbidden - Insufficient permissions
-# - create_app_status_codes_21_431_request_header_fields_too_large() for status_codes / 21_431_request_header_fields_too_large
-# - create_app_status_codes_429_too_many_requests() for status_codes / 429 Too Many Requests
-# - create_app_status_codes_200_ok_success() for status_codes / 200 OK - Success
-# - create_app_status_codes_206_partial_content() for status_codes / 206 Partial Content
-# - create_app_auth_jwt_malformed_token_format() for auth / JWT malformed token format
-# - create_app_auth_bearer_token_without_prefix() for auth / Bearer token without prefix
-# - create_app_auth_jwt_authentication_valid_token() for auth / JWT authentication - valid token
-# - create_app_auth_api_key_rotation_old_key_still_valid() for auth / API key rotation - old key still valid
-# - create_app_auth_jwt_invalid_issuer() for auth / JWT invalid issuer
-# - create_app_auth_jwt_with_multiple_audiences() for auth / JWT with multiple audiences
-# - create_app_auth_api_key_in_query_parameter() for auth / API key in query parameter
-# - create_app_auth_jwt_authentication_expired_token() for auth / JWT authentication - expired token
-# - create_app_auth_api_key_authentication_invalid_key() for auth / API key authentication - invalid key
-# - create_app_auth_jwt_not_before_claim_in_future() for auth / JWT not before claim in future
-# - create_app_auth_multiple_authentication_schemes_jwt_precedence() for auth / Multiple authentication schemes - JWT precedence
-# - create_app_auth_jwt_missing_required_custom_claims() for auth / JWT missing required custom claims
-# - create_app_auth_api_key_authentication_valid_key() for auth / API key authentication - valid key
-# - create_app_auth_api_key_with_custom_header_name() for auth / API key with custom header name
-# - create_app_auth_api_key_authentication_missing_header() for auth / API key authentication - missing header
-# - create_app_auth_jwt_authentication_invalid_signature() for auth / JWT authentication - invalid signature
-# - create_app_auth_jwt_authentication_missing_authorization_header() for auth / JWT authentication - missing Authorization header
-# - create_app_auth_jwt_authentication_invalid_audience() for auth / JWT authentication - invalid audience
-# - create_app_sse_notifications() for sse / /notifications
-# - create_app_websocket_chat() for websocket / /chat
-# - create_app_user_create() for jsonrpc / user_create
-# - create_app_user_delete() for jsonrpc / user_delete
-# - create_app_user_getbyid() for jsonrpc / user_getById
-# - create_app_user_list() for jsonrpc / user_list
-# - create_app_user_update() for jsonrpc / user_update

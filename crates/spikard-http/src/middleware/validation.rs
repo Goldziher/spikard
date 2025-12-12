@@ -130,10 +130,6 @@ mod tests {
     use super::*;
     use axum::http::HeaderValue;
 
-    // ============================================================================
-    // CONTENT-TYPE VALIDATION TESTS (6 tests)
-    // ============================================================================
-
     #[test]
     fn validate_content_length_accepts_matching_sizes() {
         let mut headers = HeaderMap::new();
@@ -289,10 +285,6 @@ mod tests {
         assert!(!is_json_content_type(&mime));
     }
 
-    // ============================================================================
-    // CHARSET VALIDATION TESTS (5 tests)
-    // ============================================================================
-
     #[test]
     fn test_json_with_utf8_uppercase_charset() {
         let mut headers = HeaderMap::new();
@@ -356,10 +348,6 @@ mod tests {
         );
     }
 
-    // ============================================================================
-    // CONTENT-LENGTH VALIDATION TESTS (4 tests)
-    // ============================================================================
-
     #[test]
     fn test_validate_content_length_no_header() {
         let headers = HeaderMap::new();
@@ -379,7 +367,7 @@ mod tests {
     #[test]
     fn test_validate_content_length_large_body() {
         let mut headers = HeaderMap::new();
-        let large_size = 1024 * 1024 * 100; // 100MB
+        let large_size = 1024 * 1024 * 100;
         headers.insert(
             axum::http::header::CONTENT_LENGTH,
             HeaderValue::from_str(&large_size.to_string()).unwrap(),
@@ -403,10 +391,6 @@ mod tests {
         );
     }
 
-    // ============================================================================
-    // INVALID CONTENT-TYPE TESTS (5 tests)
-    // ============================================================================
-
     #[test]
     fn test_invalid_content_type_format() {
         let mut headers = HeaderMap::new();
@@ -421,8 +405,6 @@ mod tests {
 
     #[test]
     fn test_unsupported_content_type_xml() {
-        // Note: validate_content_type_headers doesn't reject XML by default
-        // but we test it to ensure XML is recognized
         let mut headers = HeaderMap::new();
         headers.insert(
             axum::http::header::CONTENT_TYPE,
@@ -472,10 +454,6 @@ mod tests {
         assert!(result.is_ok(), "form-urlencoded should be accepted");
     }
 
-    // ============================================================================
-    // JSON CONTENT TYPE HELPER TESTS (6 tests)
-    // ============================================================================
-
     #[test]
     fn test_is_json_content_type_with_hal_json() {
         let mime = "application/hal+json".parse::<mime::Mime>().unwrap();
@@ -490,7 +468,6 @@ mod tests {
 
     #[test]
     fn test_is_json_content_type_rejects_json_patch() {
-        // json-patch is actually JSON, but testing edge case
         let mime = "application/json-patch+json".parse::<mime::Mime>().unwrap();
         assert!(is_json_content_type(&mime), "JSON-Patch should be recognized as JSON");
     }
@@ -512,10 +489,6 @@ mod tests {
         let mime = "image/png".parse::<mime::Mime>().unwrap();
         assert!(!is_json_content_type(&mime), "PNG should not be JSON");
     }
-
-    // ============================================================================
-    // EDGE CASES & ERROR CONDITIONS (4 tests)
-    // ============================================================================
 
     #[test]
     fn test_validate_json_content_type_missing_header() {
@@ -567,10 +540,6 @@ mod tests {
             "Should return 415 Unsupported Media Type"
         );
     }
-
-    // ============================================================================
-    // MIME TYPE PARAMETER TESTS (3 tests)
-    // ============================================================================
 
     #[test]
     fn test_content_type_with_multiple_parameters() {

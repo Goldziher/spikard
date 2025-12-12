@@ -48,6 +48,6 @@ Deno.test("compression: Compression - gzip applied", async () => {
 		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	);
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders.vary, "Accept-Encoding");
 	assertEquals(responseHeaders["content-encoding"], "gzip");
+	assertEquals(responseHeaders.vary, "Accept-Encoding");
 });

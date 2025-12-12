@@ -26,8 +26,6 @@ mod di_builder_tests {
         assert!(config.di_container.is_some());
         let container = config.di_container.unwrap();
 
-        // Verify the dependency exists (we can't easily resolve it here without a request)
-        // but we can check the container exists
         assert!(Arc::strong_count(&container) >= 1);
     }
 
@@ -123,7 +121,6 @@ mod di_builder_tests {
         let config = ServerConfig::builder()
             .provide_value("multiplier", 2)
             .provide_factory("result", |resolved| {
-                // Eagerly get the value to avoid lifetime issues
                 let multiplier = resolved.get::<i32>("multiplier").map(|v| *v);
                 async move {
                     let mult = multiplier.ok_or("multiplier not found")?;
@@ -133,14 +130,10 @@ mod di_builder_tests {
             .build();
 
         assert!(config.di_container.is_some());
-
-        // We can't easily test resolution here without creating a full request context,
-        // but we verified the factory can be registered
     }
 
     #[test]
     fn test_builder_without_di() {
-        // Test that builder works fine without any DI configuration
         let config = ServerConfig::builder().port(3000).host("localhost").build();
 
         assert_eq!(config.port, 3000);
@@ -173,7 +166,6 @@ mod di_builder_tests {
 
     #[test]
     fn test_type_inference() {
-        // Test that the builder can infer types correctly
         let config = ServerConfig::builder()
             .provide_value("string", "test")
             .provide_value("number", 42)
@@ -189,7 +181,6 @@ mod di_builder_tests {
         let builder = ServerConfig::builder();
         let config = builder.build();
 
-        // Should have default values
         assert_eq!(config.port, 8000);
         assert_eq!(config.host, "127.0.0.1");
         assert_eq!(config.workers, 1);
@@ -215,7 +206,6 @@ mod di_builder_tests {
 
     #[test]
     fn test_provide_with_arc() {
-        // Test providing Arc<T> values
         let shared_value = Arc::new("shared".to_string());
 
         let config = ServerConfig::builder()
@@ -223,7 +213,6 @@ mod di_builder_tests {
             .build();
 
         assert!(config.di_container.is_some());
-        // Original Arc is still valid
         assert_eq!(*shared_value, "shared");
     }
 }
@@ -234,7 +223,6 @@ mod no_di_tests {
 
     #[test]
     fn test_builder_without_di_feature() {
-        // Test that builder works without DI feature enabled
         let config = ServerConfig::builder().port(3000).host("localhost").build();
 
         assert_eq!(config.port, 3000);

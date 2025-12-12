@@ -171,13 +171,9 @@ struct NativeDependencyRegistry {
 
 impl StreamingResponsePayload {
     fn into_response(self) -> Result<HandlerResponse, Error> {
-        // Get Ruby VM reference. In FFI, Ruby must be available during this callback.
-        // If Ruby becomes unavailable, this is a fatal error condition.
         let ruby = match Ruby::get() {
             Ok(r) => r,
             Err(_) => {
-                // Ruby VM is unavailable. This should never happen during active FFI.
-                // We panic because continuing without a Ruby VM is unsafe.
                 panic!("Ruby VM became unavailable during streaming response construction");
             }
         };
@@ -501,7 +497,6 @@ impl NativeTestClient {
 
         let mut server_config = extract_server_config(ruby, config_value)?;
 
-        // Extract and register dependencies
         #[cfg(feature = "di")]
         {
             if let Ok(registry) = <&NativeDependencyRegistry>::try_convert(dependencies) {
@@ -803,20 +798,13 @@ impl RubyHandler {
 
         let handler_proc = self.inner.handler_proc.get_inner_with(&ruby);
 
-        // Extract resolved dependencies (if any) and convert to Ruby keyword arguments
         #[cfg(feature = "di")]
         let handler_result = {
             if let Some(deps) = &request_data.dependencies {
-                // Build keyword arguments hash from dependencies
-                // ONLY include dependencies that the handler actually declared
                 let kwargs_hash = ruby.hash_new();
 
-                // Check if all required handler dependencies are present
-                // If any are missing, return error BEFORE calling handler
                 for key in &self.inner.handler_dependencies {
                     if !deps.contains(key) {
-                        // Handler requires a dependency that was not resolved
-                        // This should have been caught by DI system, but safety check here
                         return Err((
                             StatusCode::INTERNAL_SERVER_ERROR,
                             format!(
@@ -827,17 +815,11 @@ impl RubyHandler {
                     }
                 }
 
-                // Filter dependencies: only pass those declared by the handler
                 for key in &self.inner.handler_dependencies {
                     if let Some(value) = deps.get_arc(key) {
-                        // Check what type of dependency this is and extract Ruby value
                         let ruby_val = if let Some(wrapper) = value.downcast_ref::<crate::di::RubyValueWrapper>() {
-                            // It's a Ruby value wrapper (singleton with preserved mutations)
-                            // Get the raw Ruby value directly to preserve object identity
                             wrapper.get_value(&ruby)
                         } else if let Some(json) = value.downcast_ref::<serde_json::Value>() {
-                            // It's already JSON (non-singleton or value dependency)
-                            // Convert JSON to Ruby value
                             match crate::di::json_to_ruby(&ruby, json) {
                                 Ok(val) => val,
                                 Err(e) => {
@@ -857,7 +839,6 @@ impl RubyHandler {
                             ));
                         };
 
-                        // Add to kwargs hash
                         let key_sym = ruby.to_symbol(key);
                         if let Err(e) = kwargs_hash.aset(key_sym, ruby_val) {
                             return Err((
@@ -867,13 +848,6 @@ impl RubyHandler {
                         }
                     }
                 }
-
-                // Call handler with request and dependencies as keyword arguments
-                // Ruby 3.x requires keyword arguments to be passed differently than Ruby 2.x
-                // We'll create a Ruby lambda that calls the handler with ** splat operator
-                //
-                // Equivalent Ruby code:
-                //   lambda { |req, kwargs| handler_proc.call(req, **kwargs) }.call(request, kwargs_hash)
 
                 let wrapper_code = ruby
                     .eval::<Value>(
@@ -892,7 +866,6 @@ impl RubyHandler {
 
                 wrapper_code.funcall("call", (handler_proc, request_value, kwargs_hash))
             } else {
-                // No dependencies, call with just request
                 handler_proc.funcall("call", (request_value,))
             }
         };
@@ -1282,7 +1255,6 @@ fn interpret_handler_response(
     handler: &RubyHandlerInner,
     value: Value,
 ) -> Result<RubyHandlerResult, Error> {
-    // Prefer native-built responses to avoid Ruby-side normalization overhead
     let native_method = ruby.intern("to_native_response");
     if value.respond_to(native_method, false)? {
         let native_value: Value = value.funcall("to_native_response", ())?;
@@ -1518,7 +1490,6 @@ fn build_response(ruby: &Ruby, content: Value, status_code: i64, headers: Value)
         (Some(json_value), None)
     };
 
-    // Build the Axum response
     let status = StatusCode::from_u16(status_u16).map_err(|err| {
         Error::new(
             ruby.exception_arg_error(),
@@ -1584,7 +1555,6 @@ fn build_streaming_response(ruby: &Ruby, stream: Value, status_code: i64, header
         hash.to_hash_map::<String, String>()?
     };
 
-    // Verify the stream responds to #next
     let next_method = ruby.intern("next");
     if !stream.respond_to(next_method, false)? {
         return Err(Error::new(ruby.exception_arg_error(), "stream must respond to #next"));
@@ -1653,7 +1623,6 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     testing::websocket::init(ruby, &spikard_module)?;
     testing::sse::init(ruby, &spikard_module)?;
 
-    // Touch GC mark hooks so the compiler keeps them and silence unused warnings.
     let _ = NativeBuiltResponse::mark as fn(&NativeBuiltResponse, &Marker);
     let _ = NativeLifecycleRegistry::mark as fn(&NativeLifecycleRegistry, &Marker);
     let _ = NativeDependencyRegistry::mark as fn(&NativeDependencyRegistry, &Marker);
@@ -1663,10 +1632,6 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     Ok(())
 }
 
-// ============================================================================
-// Unit Tests for Magnus FFI Layer
-// ============================================================================
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1675,7 +1640,6 @@ mod tests {
     /// Test that NativeBuiltResponse can extract parts safely
     #[test]
     fn test_native_built_response_status_extraction() {
-        // Test that StatusCode::from_u16 works for valid codes
         use axum::http::StatusCode;
 
         let valid_codes = vec![200u16, 201, 204, 301, 400, 404, 500, 503];
@@ -1690,8 +1654,6 @@ mod tests {
     fn test_native_built_response_invalid_status() {
         use axum::http::StatusCode;
 
-        // StatusCode validates up to 599 (3-digit codes). Higher values are invalid.
-        // Testing edge cases at the boundary
         assert!(StatusCode::from_u16(599).is_ok(), "599 should be valid");
     }
 
@@ -1700,7 +1662,6 @@ mod tests {
     fn test_header_construction() {
         use axum::http::{HeaderName, HeaderValue};
 
-        // Valid header names and values
         let valid_headers = vec![
             ("X-Custom-Header", "value"),
             ("Content-Type", "application/json"),
@@ -1722,14 +1683,12 @@ mod tests {
     fn test_invalid_header_construction() {
         use axum::http::{HeaderName, HeaderValue};
 
-        // Invalid header names (contain invalid bytes)
         let invalid_name = "X\nInvalid";
         assert!(
             HeaderName::from_bytes(invalid_name.as_bytes()).is_err(),
             "Header with newline should be invalid"
         );
 
-        // Invalid header value (null bytes)
         let invalid_value = "value\x00invalid";
         assert!(
             HeaderValue::from_str(invalid_value).is_err(),
@@ -1758,7 +1717,6 @@ mod tests {
     /// Test global runtime initialization
     #[test]
     fn test_global_runtime_initialization() {
-        // Verify that GLOBAL_RUNTIME can be accessed without panicking
         let _ = &*GLOBAL_RUNTIME;
     }
 
@@ -1775,7 +1733,6 @@ mod tests {
         ];
 
         for path in paths {
-            // Just verify we can work with these paths
             assert!(!path.is_empty());
             assert!(path.starts_with('/'));
         }
@@ -1813,7 +1770,6 @@ mod tests {
     /// Test multipart file handling structure
     #[test]
     fn test_multipart_file_part_structure() {
-        // Verify the concept of multipart files
         let file_data = spikard_http::testing::MultipartFilePart {
             field_name: "file".to_string(),
             filename: "test.txt".to_string(),
@@ -1832,7 +1788,6 @@ mod tests {
     fn test_response_header_concepts() {
         use axum::http::HeaderName;
 
-        // HTTP header names are case-insensitive
         let names = vec!["content-type", "Content-Type", "CONTENT-TYPE"];
 
         for name in names {

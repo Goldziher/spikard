@@ -9,7 +9,6 @@ import { get, post, type Request, Spikard } from "@spikard/node";
 
 const app = new Spikard();
 
-// Simple in-memory user store
 const users: Record<number, { id: number; name: string; email: string }> = {
 	1: { id: 1, name: "Alice", email: "alice@example.com" },
 	2: { id: 2, name: "Bob", email: "bob@example.com" },
@@ -19,7 +18,6 @@ const users: Record<number, { id: number; name: string; email: string }> = {
  * GET endpoint returning a list of users
  */
 get("/users")(async function listUsers(req: Request) {
-	// Support optional filtering by name via query params
 	const nameFilter = req.query?.name as string | undefined;
 
 	let userList = Object.values(users);
@@ -74,7 +72,6 @@ post("/users")(async function createUser(req: Request) {
 		email?: string;
 	} | null;
 
-	// Validate required fields
 	if (!body?.name || typeof body.name !== "string") {
 		return {
 			statusCode: 400,
@@ -97,7 +94,6 @@ post("/users")(async function createUser(req: Request) {
 		};
 	}
 
-	// Validate email format (simple check)
 	if (!body.email.includes("@")) {
 		return {
 			statusCode: 400,
@@ -109,7 +105,6 @@ post("/users")(async function createUser(req: Request) {
 		};
 	}
 
-	// Create user
 	const newId = Math.max(...Object.keys(users).map(Number)) + 1;
 	const newUser = {
 		id: newId,

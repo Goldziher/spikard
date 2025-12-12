@@ -8,8 +8,6 @@ use spikard_core::parameters::ParameterValidator;
 use std::collections::HashMap;
 
 // ============================================================================
-// HEADER VALIDATION TESTS
-// ============================================================================
 
 #[test]
 fn test_required_header_present() {
@@ -184,7 +182,6 @@ fn test_multiple_headers_validation() {
     let mut headers = HashMap::new();
     headers.insert("x-api-key".to_string(), "key123".to_string());
     headers.insert("x-request-id".to_string(), "not-a-number".to_string());
-    // X-Version is missing
 
     let result =
         validator.validate_and_extract(&json!({}), &HashMap::new(), &HashMap::new(), &headers, &HashMap::new());
@@ -197,10 +194,6 @@ fn test_multiple_headers_validation() {
     assert!(error_types.contains(&"int_parsing"));
     assert!(error_types.contains(&"missing"));
 }
-
-// ============================================================================
-// COOKIE VALIDATION TESTS
-// ============================================================================
 
 #[test]
 fn test_required_cookie_present() {
@@ -313,10 +306,6 @@ fn test_cookie_type_coercion() {
     let extracted = result.unwrap();
     assert_eq!(extracted["preferences"], 42);
 }
-
-// ============================================================================
-// QUERY PARAMETER VALIDATION TESTS
-// ============================================================================
 
 #[test]
 fn test_query_param_type_coercion() {
@@ -571,10 +560,6 @@ fn test_query_param_string_format_invalid_date() {
     assert_eq!(err.errors[0].error_type, "date_parsing");
 }
 
-// ============================================================================
-// PATH PARAMETER VALIDATION TESTS
-// ============================================================================
-
 #[test]
 fn test_path_param_string() {
     let schema = json!({
@@ -636,10 +621,6 @@ fn test_path_param_integer() {
     let extracted = result.unwrap();
     assert_eq!(extracted["post_id"], 123);
 }
-
-// ============================================================================
-// COMBINED PARAMETER VALIDATION TESTS
-// ============================================================================
 
 #[test]
 fn test_combined_header_query_cookie_validation() {

@@ -367,27 +367,20 @@ mod tests {
         assert_eq!(result, json!({ "name": "test&value=123" }));
     }
 
-    // ==================== NEW COMPREHENSIVE TESTS ====================
-
-    // ===== INVALID PERCENT ENCODING TESTS =====
-
     #[test]
     fn test_malformed_percent_single_char() {
-        // Lone percent at end of string - should preserve as literal
         let result = parse_query_string(b"key=%", '&');
         assert_eq!(result, vec![(String::from("key"), String::from("%"))]);
     }
 
     #[test]
     fn test_malformed_percent_single_hex_only() {
-        // Percent with only one hex digit
         let result = parse_query_string(b"key=%2", '&');
         assert_eq!(result, vec![(String::from("key"), String::from("%2"))]);
     }
 
     #[test]
     fn test_malformed_percent_invalid_hex_chars() {
-        // Percent with non-hex characters
         let result = parse_query_string(b"key=%GG&other=value", '&');
         assert_eq!(
             result,
@@ -400,7 +393,6 @@ mod tests {
 
     #[test]
     fn test_malformed_percent_mixed_invalid_hex() {
-        // Percent with one valid and one invalid hex digit
         let result = parse_query_string(b"key=%2G&other=value", '&');
         assert_eq!(
             result,
@@ -413,7 +405,6 @@ mod tests {
 
     #[test]
     fn test_percent_encoding_lowercase_hex() {
-        // Valid percent encoding with lowercase hex
         let result = parse_query_string(b"key=%2f&other=test", '&');
         assert_eq!(
             result,
@@ -426,7 +417,6 @@ mod tests {
 
     #[test]
     fn test_percent_encoding_uppercase_hex() {
-        // Valid percent encoding with uppercase hex
         let result = parse_query_string(b"key=%2F&other=test", '&');
         assert_eq!(
             result,
@@ -439,12 +429,9 @@ mod tests {
 
     #[test]
     fn test_percent_encoding_mixed_case_hex() {
-        // Valid percent encoding with mixed case hex (0x3D is '=', 0x4A is 'J')
         let result = parse_query_string(b"key=%2f%3D%4A", '&');
         assert_eq!(result, vec![(String::from("key"), String::from("/=J"))]);
     }
-
-    // ===== PLUS/SPACE HANDLING TESTS =====
 
     #[test]
     fn test_plus_as_space_in_value() {
@@ -460,7 +447,6 @@ mod tests {
 
     #[test]
     fn test_percent_encoded_space_vs_plus() {
-        // %20 should decode to space, + should also decode to space
         let result = parse_query_string(b"a=%20space&b=+plus", '&');
         assert_eq!(
             result,
@@ -473,12 +459,9 @@ mod tests {
 
     #[test]
     fn test_mixed_plus_and_percent_encoded_space() {
-        // Both + and %20 decode to space, so we get "hello  world" (two spaces total)
         let result = parse_query_string(b"text=hello+%20world", '&');
         assert_eq!(result, vec![(String::from("text"), String::from("hello  world"))]);
     }
-
-    // ===== SPECIAL CHARACTER HANDLING =====
 
     #[test]
     fn test_ampersand_in_value_encoded() {
@@ -510,8 +493,6 @@ mod tests {
         assert_eq!(result, vec![(String::from("text"), String::from("&=?#"))]);
     }
 
-    // ===== EDGE CASES =====
-
     #[test]
     fn test_empty_query_string() {
         let result = parse_query_string(b"", '&');
@@ -520,7 +501,6 @@ mod tests {
 
     #[test]
     fn test_multiple_consecutive_separators() {
-        // &&& should skip empty values
         let result = parse_query_string(b"a=1&&&b=2", '&');
         assert_eq!(
             result,
@@ -539,21 +519,18 @@ mod tests {
 
     #[test]
     fn test_key_without_equals() {
-        // Key with no = sign should have empty value
         let result = parse_query_string(b"key", '&');
         assert_eq!(result, vec![(String::from("key"), String::from(""))]);
     }
 
     #[test]
     fn test_value_without_key() {
-        // =value should have empty key
         let result = parse_query_string(b"=value", '&');
         assert_eq!(result, vec![(String::from(""), String::from("value"))]);
     }
 
     #[test]
     fn test_multiple_equals_in_pair() {
-        // key=val=more should treat first = as separator
         let result = parse_query_string(b"key=val=more", '&');
         assert_eq!(result, vec![(String::from("key"), String::from("val=more"))]);
     }
@@ -575,8 +552,6 @@ mod tests {
         let result = parse_query_string(b"&key=value&", '&');
         assert_eq!(result, vec![(String::from("key"), String::from("value"))]);
     }
-
-    // ===== ARRAY PARAMETER TESTS =====
 
     #[test]
     fn test_multiple_values_same_key() {
@@ -605,8 +580,6 @@ mod tests {
         );
     }
 
-    // ===== JSON CONVERSION EDGE CASES =====
-
     #[test]
     fn test_json_conversion_empty_key() {
         let result = parse_query_string_to_json(b"=value", false);
@@ -621,30 +594,25 @@ mod tests {
 
     #[test]
     fn test_json_conversion_malformed_json_object() {
-        // Invalid JSON object should fallback to string
         let result = parse_query_string_to_json(b"data={invalid", false);
         assert_eq!(result, json!({ "data": "{invalid" }));
     }
 
     #[test]
     fn test_json_conversion_malformed_json_array() {
-        // Invalid JSON array should fallback to string
         let result = parse_query_string_to_json(b"items=[1,2,", false);
         assert_eq!(result, json!({ "items": "[1,2," }));
     }
 
     #[test]
     fn test_json_conversion_with_quotes_in_value() {
-        // Quotes should be stripped
         let result = parse_query_string_to_json(b"text=\"hello\"", false);
         assert_eq!(result, json!({ "text": "hello" }));
     }
 
     #[test]
     fn test_json_conversion_single_quotes_in_object() {
-        // Single quotes in JSON object should be normalized to double quotes
         let result = parse_query_string_to_json(b"obj={'key':'value'}", false);
-        // Should try to parse with quote normalization
         let value = result.get("obj");
         assert!(value.is_some());
     }
@@ -661,7 +629,6 @@ mod tests {
 
     #[test]
     fn test_boolean_with_numbers_no_parse() {
-        // Without parse_numbers, 1 and 0 should still convert to boolean
         assert_eq!(parse_query_string_to_json(b"a=1", false), json!({"a": true}));
         assert_eq!(parse_query_string_to_json(b"a=0", false), json!({"a": false}));
     }
@@ -694,14 +661,11 @@ mod tests {
 
     #[test]
     fn test_array_mixed_types_without_number_parsing() {
-        // Without number parsing: "1" -> true, "2.5" stays as string (not a valid boolean), "true" -> true, "test" -> string
         assert_eq!(
             parse_query_string_to_json(b"vals=1&vals=2.5&vals=true&vals=test", false),
             json!({"vals": [true, "2.5", true, "test"]})
         );
     }
-
-    // ===== UTF-8 AND UNICODE TESTS =====
 
     #[test]
     fn test_utf8_chinese_characters() {
@@ -720,8 +684,6 @@ mod tests {
         let result = parse_query_string("text=hello%20中文".as_bytes(), '&');
         assert_eq!(result, vec![(String::from("text"), String::from("hello 中文"))]);
     }
-
-    // ===== CUSTOM SEPARATOR TESTS =====
 
     #[test]
     fn test_custom_separator_semicolon() {
@@ -749,11 +711,8 @@ mod tests {
         );
     }
 
-    // ===== ENCODING BOUNDARY TESTS =====
-
     #[test]
     fn test_percent_encoding_all_byte_values() {
-        // Test encoding of various special bytes
         let result = parse_query_string(b"space=%20&at=%40&hash=%23&dollar=%24", '&');
         assert_eq!(
             result,
@@ -768,16 +727,13 @@ mod tests {
 
     #[test]
     fn test_high_byte_values_in_percent_encoding() {
-        // Test percent encoding of high byte values (0xFF, 0xFE, etc.)
         let result = parse_query_string(b"high=%ff%fe%fd", '&');
-        // These are valid UTF-8 sequences for the encoded bytes
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].0, "high");
     }
 
     #[test]
     fn test_very_long_query_string() {
-        // Test handling of long query strings
         let mut long_query = String::from("key=");
         long_query.push_str(&"a".repeat(10000));
         let result = parse_query_string(long_query.as_bytes(), '&');
@@ -788,7 +744,6 @@ mod tests {
 
     #[test]
     fn test_very_large_number_of_parameters() {
-        // Test handling many parameters
         let mut query = String::new();
         for i in 0..100 {
             if i > 0 {
@@ -801,8 +756,6 @@ mod tests {
         assert_eq!(result[0].0, "param0");
         assert_eq!(result[99].0, "param99");
     }
-
-    // ===== WHITESPACE HANDLING =====
 
     #[test]
     fn test_literal_space_in_value() {

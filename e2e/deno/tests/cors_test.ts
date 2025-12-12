@@ -55,9 +55,9 @@ Deno.test("cors: CORS Vary header for proper caching", async () => {
 	assert(Object.hasOwn(responseData, "data"));
 	assertEquals(responseData.data, "cacheable resource");
 	const responseHeaders = response.headers();
+	assertEquals(responseHeaders["access-control-allow-origin"], "https://app.example.com");
 	assertEquals(responseHeaders["cache-control"], "public, max-age=3600");
 	assertEquals(responseHeaders.vary, "Origin");
-	assertEquals(responseHeaders["access-control-allow-origin"], "https://app.example.com");
 });
 
 Deno.test("cors: CORS preflight for PUT method", async () => {
@@ -65,19 +65,19 @@ Deno.test("cors: CORS preflight for PUT method", async () => {
 	const client = new TestClient(app);
 
 	const headers = {
-		"Access-Control-Request-Method": "PUT",
 		Origin: "https://app.example.com",
+		"Access-Control-Request-Method": "PUT",
 		"Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
 	};
 	const response = await client.options("/api/resource/123", { headers });
 
 	assertEquals(response.statusCode, 204);
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders.vary, "Origin");
 	assertEquals(responseHeaders["access-control-allow-methods"], "GET, POST, PUT, PATCH, DELETE");
-	assertEquals(responseHeaders["access-control-allow-headers"], "Content-Type, X-Custom-Header");
 	assertEquals(responseHeaders["access-control-max-age"], "3600");
+	assertEquals(responseHeaders.vary, "Origin");
 	assertEquals(responseHeaders["access-control-allow-origin"], "https://app.example.com");
+	assertEquals(responseHeaders["access-control-allow-headers"], "Content-Type, X-Custom-Header");
 });
 
 Deno.test("cors: CORS preflight for DELETE method", async () => {
@@ -92,10 +92,10 @@ Deno.test("cors: CORS preflight for DELETE method", async () => {
 
 	assertEquals(response.statusCode, 204);
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders.vary, "Origin");
-	assertEquals(responseHeaders["access-control-max-age"], "3600");
 	assertEquals(responseHeaders["access-control-allow-origin"], "https://app.example.com");
+	assertEquals(responseHeaders.vary, "Origin");
 	assertEquals(responseHeaders["access-control-allow-methods"], "GET, POST, PUT, PATCH, DELETE");
+	assertEquals(responseHeaders["access-control-max-age"], "3600");
 });
 
 Deno.test("cors: CORS multiple allowed origins", async () => {
@@ -112,8 +112,8 @@ Deno.test("cors: CORS multiple allowed origins", async () => {
 	assert(Object.hasOwn(responseData, "data"));
 	assertEquals(responseData.data, "resource data");
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders["access-control-allow-origin"], "https://admin.example.com");
 	assertEquals(responseHeaders.vary, "Origin");
+	assertEquals(responseHeaders["access-control-allow-origin"], "https://admin.example.com");
 });
 
 Deno.test("cors: CORS preflight request", async () => {
@@ -121,18 +121,18 @@ Deno.test("cors: CORS preflight request", async () => {
 	const client = new TestClient(app);
 
 	const headers = {
+		"Access-Control-Request-Method": "POST",
 		"Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
 		Origin: "https://example.com",
-		"Access-Control-Request-Method": "POST",
 	};
 	const response = await client.options("/items/", { headers });
 
 	assertEquals(response.statusCode, 200);
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders["access-control-max-age"], "600");
 	assertEquals(responseHeaders["access-control-allow-origin"], "https://example.com");
-	assertEquals(responseHeaders["access-control-allow-methods"], "GET, POST, PUT, DELETE, OPTIONS");
 	assertEquals(responseHeaders["access-control-allow-headers"], "Content-Type, X-Custom-Header");
+	assertEquals(responseHeaders["access-control-max-age"], "600");
+	assertEquals(responseHeaders["access-control-allow-methods"], "GET, POST, PUT, DELETE, OPTIONS");
 });
 
 Deno.test("cors: CORS with credentials", async () => {
@@ -150,8 +150,8 @@ Deno.test("cors: CORS with credentials", async () => {
 	assert(Object.hasOwn(responseData, "username"));
 	assertEquals(responseData.username, "john");
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders.vary, "Origin");
 	assertEquals(responseHeaders["access-control-allow-credentials"], "true");
+	assertEquals(responseHeaders.vary, "Origin");
 	assertEquals(responseHeaders["access-control-allow-origin"], "https://app.example.com");
 });
 
@@ -178,9 +178,9 @@ Deno.test("cors: 08_cors_max_age", async () => {
 	const client = new TestClient(app);
 
 	const headers = {
+		"Access-Control-Request-Headers": "Content-Type",
 		Origin: "https://example.com",
 		"Access-Control-Request-Method": "POST",
-		"Access-Control-Request-Headers": "Content-Type",
 	};
 	const response = await client.options("/api/data", { headers });
 
@@ -226,10 +226,10 @@ Deno.test("cors: CORS safelisted headers without preflight", async () => {
 	const client = new TestClient(app);
 
 	const headers = {
-		"Content-Type": "text/plain",
-		"Accept-Language": "en-US",
 		Accept: "application/json",
+		"Accept-Language": "en-US",
 		Origin: "https://app.example.com",
+		"Content-Type": "text/plain",
 	};
 	const response = await client.post("/api/form", { headers });
 
@@ -238,8 +238,8 @@ Deno.test("cors: CORS safelisted headers without preflight", async () => {
 	assert(Object.hasOwn(responseData, "message"));
 	assertEquals(responseData.message, "Success");
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders["access-control-allow-origin"], "https://app.example.com");
 	assertEquals(responseHeaders.vary, "Origin");
+	assertEquals(responseHeaders["access-control-allow-origin"], "https://app.example.com");
 });
 
 Deno.test("cors: CORS Private Network Access", async () => {
@@ -248,15 +248,15 @@ Deno.test("cors: CORS Private Network Access", async () => {
 
 	const headers = {
 		"Access-Control-Request-Private-Network": "true",
-		"Access-Control-Request-Method": "GET",
 		Origin: "https://public.example.com",
+		"Access-Control-Request-Method": "GET",
 	};
 	const response = await client.options("/api/local-resource", { headers });
 
 	assertEquals(response.statusCode, 204);
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders["access-control-allow-origin"], "https://public.example.com");
 	assertEquals(responseHeaders.vary, "Origin");
+	assertEquals(responseHeaders["access-control-allow-origin"], "https://public.example.com");
 	assertEquals(responseHeaders["access-control-allow-private-network"], "true");
 	assertEquals(responseHeaders["access-control-allow-methods"], "GET, POST");
 });
@@ -316,10 +316,10 @@ Deno.test("cors: 09_cors_expose_headers", async () => {
 
 	assertEquals(response.statusCode, 200);
 	const responseHeaders = response.headers();
+	assertEquals(responseHeaders["x-request-id"], "abc123");
 	assertEquals(responseHeaders["access-control-expose-headers"], "X-Total-Count, X-Request-Id");
 	assertEquals(responseHeaders["access-control-allow-origin"], "https://example.com");
 	assertEquals(responseHeaders["x-total-count"], "42");
-	assertEquals(responseHeaders["x-request-id"], "abc123");
 });
 
 Deno.test("cors: 06_cors_preflight_method_not_allowed", async () => {
@@ -327,9 +327,9 @@ Deno.test("cors: 06_cors_preflight_method_not_allowed", async () => {
 	const client = new TestClient(app);
 
 	const headers = {
-		"Access-Control-Request-Method": "DELETE",
-		"Access-Control-Request-Headers": "Content-Type",
 		Origin: "https://example.com",
+		"Access-Control-Request-Headers": "Content-Type",
+		"Access-Control-Request-Method": "DELETE",
 	};
 	const response = await client.options("/api/data", { headers });
 

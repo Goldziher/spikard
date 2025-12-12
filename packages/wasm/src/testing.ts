@@ -105,9 +105,7 @@ async function loadWasmBindings(): Promise<WasmBindings> {
 		for (const candidate of candidates) {
 			try {
 				return (await import(candidate)) as unknown as WasmBindings;
-			} catch {
-				// Try next candidate.
-			}
+			} catch {}
 		}
 
 		throw new Error("Failed to load WASM bindings (runtime, dist-web, dist-node).");
@@ -490,19 +488,19 @@ function normalizeRoute(route: string): string {
 function contentTypeForPath(path: string): string {
 	const lower = path.toLowerCase();
 	if (lower.endsWith(".html")) {
-		return "text/html; charset=utf-8";
+		return "text/html";
 	}
 	if (lower.endsWith(".txt")) {
-		return "text/plain; charset=utf-8";
+		return "text/plain";
 	}
 	if (lower.endsWith(".css")) {
-		return "text/css; charset=utf-8";
+		return "text/css";
 	}
 	if (lower.endsWith(".js") || lower.endsWith(".mjs")) {
-		return "application/javascript; charset=utf-8";
+		return "application/javascript";
 	}
 	if (lower.endsWith(".json")) {
-		return "application/json; charset=utf-8";
+		return "application/json";
 	}
 	if (lower.endsWith(".svg")) {
 		return "image/svg+xml";
@@ -631,9 +629,7 @@ async function buildStaticManifest(configs: StaticFilesConfig[]): Promise<Static
 					if (!prefix.endsWith("/")) {
 						manifest.push({ route: `${prefix}/`, headers: { ...headers }, body });
 					}
-				} catch {
-					// ignore missing index.html
-				}
+				} catch {}
 			}
 		}
 		return manifest;
@@ -957,7 +953,6 @@ class WasmRequest implements Request {
 		} else {
 			throw new Error("Request body is not JSON");
 		}
-		// Normalize Maps to plain objects (from serde_wasm_bindgen conversion)
 		return normalizeJsonValue(value) as T;
 	}
 

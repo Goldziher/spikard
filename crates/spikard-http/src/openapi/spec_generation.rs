@@ -214,7 +214,6 @@ mod tests {
         }
     }
 
-    // HTTP Method Coverage Tests
     #[test]
     fn test_route_to_path_item_get() {
         let route = make_route("GET", "/users");
@@ -283,7 +282,6 @@ mod tests {
         }
     }
 
-    // OpenAPI Spec Assembly Tests
     #[test]
     fn test_assemble_openapi_spec_minimal() {
         let config = super::super::OpenApiConfig {
@@ -391,7 +389,6 @@ mod tests {
         assert_eq!(servers.len(), 2);
     }
 
-    // Security Scheme Detection Tests
     #[test]
     fn test_assemble_openapi_spec_with_jwt_auth() {
         let config = super::super::OpenApiConfig {
@@ -406,16 +403,13 @@ mod tests {
         assert!(result.is_ok());
         let spec = result.unwrap();
 
-        // Verify JWT security scheme is added
         assert!(spec.components.is_some());
         let components = spec.components.unwrap();
         assert!(components.security_schemes.get("bearerAuth").is_some());
 
-        // Verify global security requirement
         assert!(spec.security.is_some());
         let security_reqs = spec.security.unwrap();
         assert!(!security_reqs.is_empty());
-        // Verify that at least one security requirement was added for bearerAuth
         assert_eq!(security_reqs.len(), 1);
     }
 
@@ -433,16 +427,13 @@ mod tests {
         assert!(result.is_ok());
         let spec = result.unwrap();
 
-        // Verify API Key security scheme is added
         assert!(spec.components.is_some());
         let components = spec.components.unwrap();
         assert!(components.security_schemes.get("apiKeyAuth").is_some());
 
-        // Verify global security requirement
         assert!(spec.security.is_some());
         let security_reqs = spec.security.unwrap();
         assert!(!security_reqs.is_empty());
-        // Verify that at least one security requirement was added for apiKeyAuth
         assert_eq!(security_reqs.len(), 1);
     }
 
@@ -465,7 +456,6 @@ mod tests {
         assert!(result.is_ok());
         let spec = result.unwrap();
 
-        // Verify both security schemes are added
         assert!(spec.components.is_some());
         let components = spec.components.unwrap();
         assert!(components.security_schemes.get("bearerAuth").is_some());
@@ -502,7 +492,6 @@ mod tests {
         assert!(components.security_schemes.get("oauth2").is_some());
     }
 
-    // Route Integration Tests
     #[test]
     fn test_assemble_openapi_spec_with_multiple_routes() {
         let routes: Vec<RouteMetadata> = vec![
@@ -524,7 +513,6 @@ mod tests {
         assert!(result.is_ok());
         let spec = result.unwrap();
 
-        // Verify paths are included
         assert!(!spec.paths.paths.is_empty());
         assert!(spec.paths.paths.contains_key("/users"));
         assert!(spec.paths.paths.contains_key("/users/{id}"));
@@ -627,7 +615,6 @@ mod tests {
         assert!(result.is_ok());
         let spec = result.unwrap();
 
-        // All routes should be present
         assert!(spec.paths.paths.contains_key("/a"));
         assert!(spec.paths.paths.contains_key("/b"));
         assert!(spec.paths.paths.contains_key("/c"));
@@ -644,7 +631,6 @@ mod tests {
 
         let result = assemble_openapi_spec(&[], &config, None);
         assert!(result.is_ok());
-        // No security schemes should be auto-detected
         let spec = result.unwrap();
         if let Some(components) = spec.components {
             assert!(!components.security_schemes.contains_key("bearerAuth"));
@@ -674,7 +660,6 @@ mod tests {
         assert!(result.is_ok());
         let operation = result.unwrap();
         assert!(operation.request_body.is_none());
-        // Default 200 response should still exist
         assert!(operation.responses.responses.contains_key("200"));
     }
 }

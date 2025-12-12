@@ -59,14 +59,7 @@ pub struct PhpHandler {
     pub handler_index: usize,
 }
 
-// Registry for PHP callables referenced by Handler index.
-//
-// We store Zval instead of ZendCallable directly because ZendCallable has
-// a lifetime parameter that prevents it from being stored in a static.
-// We reconstruct the ZendCallable from the Zval when invoking.
-//
 // NOTE: This is thread_local because Zval is not Send/Sync (contains raw pointers
-// to PHP's internal structures which are single-threaded).
 thread_local! {
     static PHP_HANDLER_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = const {
         std::cell::RefCell::new(Vec::new())
@@ -86,7 +79,6 @@ impl PhpHandler {
         method: String,
         path: String,
     ) -> Result<Self, String> {
-        // Verify it's actually callable before storing
         if !callable_zval.is_callable() {
             return Err(format!("Handler '{}' is not callable", handler_name));
         }
@@ -99,7 +91,6 @@ impl PhpHandler {
                 return Err("Handler registry is full; refusing to register more handlers".to_string());
             }
 
-            // Clone the Zval for storage
             let zval_copy = callable_zval.shallow_clone();
             registry.push(zval_copy);
             Ok(idx)
@@ -122,8 +113,6 @@ impl Handler for PhpHandler {
         _req: Request<Body>,
         request_data: RequestData,
     ) -> Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
-        // All PHP invocation is performed synchronously before returning the future
-        // to avoid capturing non-Send PHP types across .await boundaries.
         let result = invoke_php_handler(self.handler_index, &self.inner.handler_name, &request_data);
         Box::pin(async move { result })
     }
@@ -132,7 +121,6 @@ impl Handler for PhpHandler {
 /// Invoke the PHP callable registered at index and return a HandlerResult.
 fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &RequestData) -> HandlerResult {
     let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
-        // Build PhpRequest from RequestData and convert to Zval
         let php_request = crate::php::request::PhpRequest::from_request_data(request_data);
         let request_zval = php_request.into_zval(false).map_err(|e| {
             ErrorResponseBuilder::structured_error(
@@ -142,7 +130,6 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
             )
         })?;
 
-        // Invoke PHP callable synchronously from thread-local registry
         let response_zval =
             PHP_HANDLER_REGISTRY.with(|registry| -> Result<ext_php_rs::types::Zval, (StatusCode, String)> {
                 let registry = registry.borrow();
@@ -154,7 +141,6 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
                     ));
                 };
 
-                // Reconstruct ZendCallable from stored Zval
                 let callable = ZendCallable::new(callable_zval).map_err(|e| {
                     ErrorResponseBuilder::structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
@@ -172,7 +158,6 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
                 })
             })?;
 
-        // Interpret PHP response into HandlerResult
         crate::php::server::interpret_php_response(&response_zval, handler_name)
     }));
 

@@ -488,9 +488,7 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // ========================================
     // SECURITY TESTS: CORS Attack Vectors
-    // ========================================
 
     /// SECURITY TEST: Verify credentials=true with wildcard is caught
     /// This is a critical vulnerability - RFC 6454 forbids this
@@ -505,8 +503,6 @@ mod tests {
             allow_credentials: Some(true), // SECURITY BUG: This should not be allowed with wildcard
         };
 
-        // The current implementation does NOT validate this at config time
-        // This test documents that the vulnerability exists
         let mut headers = HeaderMap::new();
         headers.insert("origin", HeaderValue::from_static("https://evil.com"));
         headers.insert("access-control-request-method", HeaderValue::from_static("GET"));
@@ -514,8 +510,6 @@ mod tests {
         let result = handle_preflight(&headers, &config);
 
         // BUG: This should return 500 or reject the config, but instead succeeds
-        // The response includes both Access-Control-Allow-Credentials: true and origin: *
-        // which violates RFC 6454
         if let Ok(response) = result {
             let resp_headers = response.headers();
             let has_credentials = resp_headers
@@ -524,13 +518,9 @@ mod tests {
                 .unwrap_or(false);
             let origin_header = resp_headers.get("access-control-allow-origin");
 
-            // This should be rejected but currently is not
-            // Either credentials should be false OR origin should not be wildcard
             if has_credentials && origin_header.is_some() {
-                // Check if the vulnerability exists
                 let origin_val = origin_header.unwrap().to_str().unwrap_or("");
                 if origin_val == "*" {
-                    // VULNERABILITY CONFIRMED: credentials + wildcard allowed
                     panic!("SECURITY VULNERABILITY: credentials=true with origin=* allowed");
                 }
             }
@@ -550,7 +540,6 @@ mod tests {
             allow_credentials: None,
         };
 
-        // Attack: subdomain enumeration
         assert!(!is_origin_allowed("https://api.example.com", &config.allowed_origins));
         assert!(!is_origin_allowed("https://evil.example.com", &config.allowed_origins));
         assert!(!is_origin_allowed(
@@ -558,7 +547,6 @@ mod tests {
             &config.allowed_origins
         ));
 
-        // Only exact match should pass
         assert!(is_origin_allowed("https://example.com", &config.allowed_origins));
     }
 
@@ -575,12 +563,10 @@ mod tests {
             allow_credentials: None,
         };
 
-        // Attack: port enumeration
         assert!(!is_origin_allowed("http://localhost:3001", &config.allowed_origins));
         assert!(!is_origin_allowed("http://localhost:8080", &config.allowed_origins));
         assert!(!is_origin_allowed("http://localhost:443", &config.allowed_origins));
 
-        // Only exact match should pass
         assert!(is_origin_allowed("http://localhost:3000", &config.allowed_origins));
     }
 
@@ -597,12 +583,10 @@ mod tests {
             allow_credentials: None,
         };
 
-        // Attack: downgrade HTTPS to HTTP
         assert!(!is_origin_allowed("http://example.com", &config.allowed_origins));
         assert!(!is_origin_allowed("ws://example.com", &config.allowed_origins));
         assert!(!is_origin_allowed("wss://example.com", &config.allowed_origins));
 
-        // Only exact match should pass
         assert!(is_origin_allowed("https://example.com", &config.allowed_origins));
     }
 
@@ -610,8 +594,6 @@ mod tests {
     /// Origins should match exactly (including case)
     #[test]
     fn test_case_sensitive_origin_matching() {
-        // Note: Domain names are case-insensitive in DNS, but for CORS origin
-        // the entire origin string should match exactly
         let config = CorsConfig {
             allowed_origins: vec!["https://Example.Com".to_string()],
             allowed_methods: vec!["GET".to_string()],
@@ -621,11 +603,9 @@ mod tests {
             allow_credentials: None,
         };
 
-        // These should NOT match due to case differences in domain
         assert!(!is_origin_allowed("https://example.com", &config.allowed_origins));
         assert!(!is_origin_allowed("https://EXAMPLE.COM", &config.allowed_origins));
 
-        // Only exact case match
         assert!(is_origin_allowed("https://Example.Com", &config.allowed_origins));
     }
 
@@ -642,10 +622,8 @@ mod tests {
             allow_credentials: None,
         };
 
-        // Trailing slash creates different origin
         assert!(!is_origin_allowed("https://example.com/", &config.allowed_origins));
 
-        // Exact match required
         assert!(is_origin_allowed("https://example.com", &config.allowed_origins));
     }
 
@@ -665,11 +643,8 @@ mod tests {
         };
 
         // SECURITY NOTE: "null" origin is allowed by wildcard in current implementation
-        // This could be tightened to explicitly reject "null" as a security improvement
-        // For now, document the behavior
         assert!(is_origin_allowed("null", &config.allowed_origins));
 
-        // Explicit "null" origin can be allowed
         let with_explicit_null = CorsConfig {
             allowed_origins: vec!["null".to_string()],
             allowed_methods: vec!["GET".to_string()],
@@ -678,14 +653,12 @@ mod tests {
             max_age: None,
             allow_credentials: None,
         };
-        // Explicitly allowing "null" origin via exact match
         assert!(is_origin_allowed("null", &with_explicit_null.allowed_origins));
     }
 
     /// SECURITY TEST: Empty origin is always rejected
     #[test]
     fn test_empty_origin_always_rejected() {
-        // Empty origin should NEVER be allowed, even with wildcard
         let config_with_wildcard = CorsConfig {
             allowed_origins: vec!["*".to_string()],
             allowed_methods: vec!["GET".to_string()],
@@ -696,7 +669,6 @@ mod tests {
         };
         assert!(!is_origin_allowed("", &config_with_wildcard.allowed_origins));
 
-        // Empty origin should NOT be allowed in explicit list
         let config_with_explicit = CorsConfig {
             allowed_origins: vec!["https://example.com".to_string()],
             allowed_methods: vec!["GET".to_string()],
@@ -735,11 +707,9 @@ mod tests {
             allow_credentials: None,
         };
 
-        // Exact matches pass
         assert!(is_origin_allowed("https://trusted1.com", &config.allowed_origins));
         assert!(is_origin_allowed("https://trusted2.com", &config.allowed_origins));
 
-        // Partial/similar origins fail
         assert!(!is_origin_allowed(
             "https://trusted1.com.evil.com",
             &config.allowed_origins
@@ -757,15 +727,13 @@ mod tests {
             allowed_headers: vec![],
             expose_headers: None,
             max_age: None,
-            allow_credentials: None, // Correctly false with wildcard
+            allow_credentials: None,
         };
 
-        // Wildcard should allow any origin
         assert!(is_origin_allowed("https://example.com", &config.allowed_origins));
         assert!(is_origin_allowed("https://evil.com", &config.allowed_origins));
         assert!(is_origin_allowed("http://localhost:3000", &config.allowed_origins));
 
-        // But NOT empty origin
         assert!(!is_origin_allowed("", &config.allowed_origins));
     }
 
@@ -795,13 +763,11 @@ mod tests {
         let response = result.unwrap();
         let resp_headers = response.headers();
 
-        // Response origin should match request origin (when allowed)
         assert_eq!(
             resp_headers.get("access-control-allow-origin").unwrap(),
             "https://trusted.com"
         );
 
-        // Methods should be present
         assert!(
             resp_headers
                 .get("access-control-allow-methods")
@@ -819,7 +785,6 @@ mod tests {
                 .contains("POST")
         );
 
-        // Credentials should NOT be present when false
         assert!(resp_headers.get("access-control-allow-credentials").is_none());
     }
 
@@ -836,11 +801,11 @@ mod tests {
         };
 
         let test_cases = vec![
-            "https://trusted.com",      // Valid
-            "https://evil.com",         // Invalid
-            "https://trusted.com.evil", // Invalid (similar but different)
-            "http://trusted.com",       // Invalid (protocol mismatch)
-            "",                         // Invalid (empty)
+            "https://trusted.com",
+            "https://evil.com",
+            "https://trusted.com.evil",
+            "http://trusted.com",
+            "",
         ];
 
         for origin in test_cases {
@@ -874,11 +839,11 @@ mod tests {
         };
 
         let test_cases = vec![
-            ("content-type", true),                // Allowed
-            ("authorization", true),               // Allowed
-            ("content-type, authorization", true), // Both allowed
-            ("x-custom-header", false),            // Not allowed
-            ("content-type, x-custom", false),     // One not allowed
+            ("content-type", true),
+            ("authorization", true),
+            ("content-type, authorization", true),
+            ("x-custom-header", false),
+            ("content-type, x-custom", false),
         ];
 
         for (headers_str, should_pass) in test_cases {
@@ -922,7 +887,6 @@ mod tests {
 
         let mut response = Response::new(Body::empty());
 
-        // Add headers for trusted origin
         add_cors_headers(&mut response, "https://trusted.com", &config);
 
         let headers = response.headers();
@@ -946,17 +910,14 @@ mod tests {
             allow_credentials: None,
         };
 
-        // Test allowed origin
         let mut headers = HeaderMap::new();
         headers.insert("origin", HeaderValue::from_static("https://trusted.com"));
         assert!(validate_cors_request(&headers, &config).is_ok());
 
-        // Test disallowed origin
         let mut headers = HeaderMap::new();
         headers.insert("origin", HeaderValue::from_static("https://evil.com"));
         assert!(validate_cors_request(&headers, &config).is_err());
 
-        // Test missing origin (allowed for non-CORS requests)
         let headers = HeaderMap::new();
         assert!(validate_cors_request(&headers, &config).is_ok());
     }
@@ -967,10 +928,8 @@ mod tests {
         let config = make_cors_config();
         let mut headers = HeaderMap::new();
         headers.insert("origin", HeaderValue::from_static("https://example.com"));
-        // Missing access-control-request-method
 
         let result = handle_preflight(&headers, &config);
-        // Empty method is allowed if not present (browser optimizations)
         assert!(result.is_ok());
     }
 
@@ -1029,7 +988,6 @@ mod tests {
     /// *.example.com style patterns are not supported (good!)
     #[test]
     fn test_wildcard_patterns_not_supported() {
-        // This tests that wildcard patterns like *.example.com don't partially match
         let config = CorsConfig {
             allowed_origins: vec!["*.example.com".to_string()],
             allowed_methods: vec!["GET".to_string()],
@@ -1039,11 +997,9 @@ mod tests {
             allow_credentials: None,
         };
 
-        // *.example.com literal string should only match if origin is exactly "*.example.com"
         assert!(!is_origin_allowed("https://api.example.com", &config.allowed_origins));
         assert!(!is_origin_allowed("https://example.com", &config.allowed_origins));
 
-        // Only exact literal match (which would be strange)
         assert!(is_origin_allowed("*.example.com", &config.allowed_origins));
     }
 }

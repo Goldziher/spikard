@@ -55,11 +55,8 @@ impl Handler for NodeHandler {
         request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            // Convert RequestData directly to HandlerInput (structured object)
-            // This eliminates JSON serialization: no String intermediate
             let input = HandlerInput::from(&request_data);
 
-            // Call handler with structured input, receive structured output
             let output = self
                 .handler_fn
                 .call_async(input)
@@ -80,8 +77,6 @@ impl Handler for NodeHandler {
                     )
                 })?;
 
-            // Convert HandlerOutput directly to Response
-            // This eliminates JSON parsing: no serde_json::from_str
             let response = output.into_response().map_err(|e| {
                 ErrorResponseBuilder::structured_error(
                     StatusCode::INTERNAL_SERVER_ERROR,

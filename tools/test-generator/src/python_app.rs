@@ -525,14 +525,12 @@ fn append_jsonrpc_factories(
     code.push_str("# JSON-RPC Method Handlers with State Management\n");
     code.push_str("# ============================================================\n\n");
 
-    // Add module-level state storage for user data
     code.push_str("import uuid\n");
     code.push_str("import re\n");
     code.push_str("from datetime import datetime\n\n");
     code.push_str("# Module-level user storage (persists across requests)\n");
     code.push_str("_user_store: dict[str, dict] = {}\n\n");
 
-    // Pre-populate with example users from fixtures
     code.push_str("def _init_user_store():\n");
     code.push_str("    \"\"\"Initialize user store with example users.\"\"\"\n");
     code.push_str("    global _user_store\n");
@@ -553,7 +551,6 @@ fn append_jsonrpc_factories(
     code.push_str("        },\n");
     code.push_str("    }\n\n");
 
-    // Add validation helpers
     code.push_str("def _is_valid_email(email: str) -> bool:\n");
     code.push_str("    \"\"\"Validate email format.\"\"\"\n");
     code.push_str("    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'\n");
@@ -592,7 +589,6 @@ fn append_jsonrpc_factories(
         let factory_name = sanitize_identifier(&fixture.name);
         let method_name = &fixture.method;
 
-        // Generate msgspec DTOs for params
         code.push_str(&format!(
             "\nclass {}Params(msgspec.Struct):\n",
             to_pascal_case(&fixture.name)
@@ -649,7 +645,6 @@ fn append_jsonrpc_factories(
 
         code.push_str(&params_class);
 
-        // Generate msgspec DTOs for result
         code.push_str(&format!(
             "\nclass {}Result(msgspec.Struct):\n",
             to_pascal_case(&fixture.name)
@@ -706,9 +701,7 @@ fn append_jsonrpc_factories(
 
         code.push_str(&result_class);
 
-        // Generate handler function with full business logic
         let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
-        // NO decorator here - register route in factory where app instance exists
         code.push_str("\n");
         code.push_str(&format!(
             "async def handle_{}(request: dict) -> Response:\n",
@@ -723,7 +716,6 @@ fn append_jsonrpc_factories(
         code.push_str("            headers={'Content-Type': 'application/json'}\n");
         code.push_str("        )\n\n");
 
-        // Generate method-specific logic based on the method name
         if method_name.contains("user.create") {
             code.push_str("    try:\n");
             code.push_str("        params_dict = request.get('params', {})\n");
@@ -956,7 +948,6 @@ fn append_jsonrpc_factories(
             code.push_str("        return Response(status_code=200, body=json.dumps(error_resp), headers={'Content-Type': 'application/json'})\n\n");
         }
 
-        // Generate app factory
         code.push_str(&format!("def create_app_{}() -> Spikard:\n", factory_name));
         code.push_str("    \"\"\"Create app with initialized user store.\"\"\"\n");
         code.push_str("    _init_user_store()\n");
@@ -995,7 +986,6 @@ fn generate_dependency_factory_python(dep: &Dependency, fixture_id: &str) -> Res
     let mut code = String::new();
 
     if is_async && is_cleanup {
-        // Async factory with cleanup (generator pattern)
         code.push_str(&format!("\nasync def {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -1023,7 +1013,6 @@ fn generate_dependency_factory_python(dep: &Dependency, fixture_id: &str) -> Res
             fixture_id
         ));
     } else if is_async {
-        // Async factory without cleanup
         code.push_str(&format!("\nasync def {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -1034,7 +1023,6 @@ fn generate_dependency_factory_python(dep: &Dependency, fixture_id: &str) -> Res
         code.push_str(") -> Any:\n");
         code.push_str(&format!("    \"\"\"Async factory for {}.\"\"\"\n", dep.key));
 
-        // Generate factory logic based on dependency name
         if dep.key.contains("db") || dep.key.contains("database") {
             code.push_str("    # Simulate async DB connection\n");
             if !dep.depends_on.is_empty() {
@@ -1065,7 +1053,6 @@ fn generate_dependency_factory_python(dep: &Dependency, fixture_id: &str) -> Res
             ));
         }
     } else if is_cleanup {
-        // Sync factory with cleanup
         code.push_str(&format!("\ndef {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -1086,7 +1073,6 @@ fn generate_dependency_factory_python(dep: &Dependency, fixture_id: &str) -> Res
         code.push_str("        # Cleanup resource\n");
         code.push_str("        resource[\"active\"] = False\n");
     } else {
-        // Sync factory without cleanup
         code.push_str(&format!("\ndef {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -1097,7 +1083,6 @@ fn generate_dependency_factory_python(dep: &Dependency, fixture_id: &str) -> Res
         code.push_str(") -> Any:\n");
         code.push_str(&format!("    \"\"\"Factory for {}.\"\"\"\n", dep.key));
 
-        // Generate factory logic based on dependency name
         if dep.key.contains("auth") {
             code.push_str("    # Create auth service\n");
             let deps_str = if !dep.depends_on.is_empty() {
@@ -1111,7 +1096,6 @@ fn generate_dependency_factory_python(dep: &Dependency, fixture_id: &str) -> Res
             };
             code.push_str(&format!("    return {{\"{}_enabled\": True, {}}}\n", dep.key, deps_str));
         } else if dep.singleton {
-            // Singleton factory with persistent state
             code.push_str("    # Singleton with counter\n");
             code.push_str(&format!("    if \"singleton_{}\" not in BACKGROUND_STATE:\n", dep.key));
             code.push_str(&format!("        BACKGROUND_STATE[\"singleton_{}\"] = {{\n", dep.key));
@@ -1124,7 +1108,6 @@ fn generate_dependency_factory_python(dep: &Dependency, fixture_id: &str) -> Res
             ));
             code.push_str(&format!("    return BACKGROUND_STATE[\"singleton_{}\"]\n", dep.key));
         } else {
-            // Generic factory
             code.push_str(&format!(
                 "    return {{\"id\": str(UUID(int={})), \"timestamp\": str(datetime.now())}}\n",
                 dep.key.len()
@@ -1144,17 +1127,13 @@ fn generate_dependency_registration_python(di_config: &DependencyConfig, fixture
     let mut code = String::new();
     code.push_str("\n    # Register dependencies\n");
 
-    // Get all dependencies in resolution order
     let all_deps = di_config.all_dependencies();
 
-    // Register each dependency
     for (key, dep) in all_deps.iter() {
         if dep.is_value() {
-            // Value dependency
             let value = python_dependency_value(dep)?;
             code.push_str(&format!("    app.provide(\"{}\", {})\n", key, value));
         } else {
-            // Factory dependency
             let factory_name = dep.factory.as_ref().unwrap_or(key);
             let deps_arg = if dep.depends_on.is_empty() {
                 String::new()
@@ -1186,7 +1165,6 @@ fn generate_all_dependency_factories_python(di_config: &DependencyConfig, fixtur
 
     let all_deps = di_config.all_dependencies();
 
-    // Generate factory functions for non-value dependencies
     for dep in all_deps.values() {
         if !dep.is_value() {
             code.push_str(&generate_dependency_factory_python(dep, fixture_id)?);
@@ -1272,12 +1250,10 @@ fn generate_fixture_handler_and_app_python(
         String::new()
     };
 
-    // Parse DI configuration
     let di_config = DependencyConfig::from_fixture(fixture)?;
 
     let mut handler_code = String::new();
 
-    // Generate dependency factory functions
     if let Some(ref di_cfg) = di_config {
         let factories = generate_all_dependency_factories_python(di_cfg, fixture_id)?;
         if !factories.is_empty() {
@@ -1300,7 +1276,6 @@ fn generate_fixture_handler_and_app_python(
         handler_code.push_str(&generate_background_state_handler_python(handler_name, fixture_id, bg));
     }
 
-    // Generate cleanup state handler if DI has cleanup
     if let Some(ref di_cfg) = di_config {
         if has_cleanup(di_cfg) {
             handler_code.push_str("\n\n");
@@ -1410,7 +1385,6 @@ fn generate_fixture_handler_and_app_python(
         String::new()
     };
 
-    // Add cleanup state route registration for DI fixtures
     let di_state_route_registration = if let Some(ref di_cfg) = di_config {
         if has_cleanup(di_cfg) {
             format!(
@@ -1452,7 +1426,6 @@ fn generate_fixture_handler_and_app_python(
         }
     }
 
-    // Generate DI registration code
     let di_registration = if let Some(ref di_cfg) = di_config {
         generate_dependency_registration_python(di_cfg, fixture_id)?
     } else {
@@ -1553,7 +1526,6 @@ fn generate_handler_function_for_fixture(
 ) -> Result<String> {
     let handler_opt = fixture.handler.as_ref();
 
-    // Parse DI configuration
     let di_config = DependencyConfig::from_fixture(fixture)?;
 
     let params = if let Some(handler) = handler_opt {
@@ -1627,7 +1599,6 @@ fn generate_handler_function_for_fixture(
         }
     }
 
-    // Add DI parameters (deduplicated to avoid duplicate function parameters)
     if let Some(ref di_cfg) = di_config {
         let mut seen = std::collections::HashSet::new();
         for dep_key in &di_cfg.handler_dependencies {
@@ -1797,7 +1768,6 @@ fn generate_handler_function_for_fixture(
             }
         }
 
-        // Add DI dependencies to result (deduplicated)
         if let Some(ref di_cfg) = di_config {
             let mut seen = std::collections::HashSet::new();
             for dep_key in &di_cfg.handler_dependencies {

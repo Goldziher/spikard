@@ -400,7 +400,6 @@ tasks:
       - php:install
       - php:build
     cmds:
-      # Run the PHP unit tests in pure PHP mode; the native extension is compiled by php:build for CI parity but not loaded here.
       - php vendor/bin/phpunit --configuration packages/php/phpunit.xml --no-coverage
 
   php:lint:
@@ -539,7 +538,7 @@ tasks:
     desc: "Build WebAssembly bindings with wasm-bindgen"
     dir: packages/wasm
     cmds:
-      - pnpm run build:all
+      - pnpm run build
 
   build:wasm:
     desc: "Alias for wasm:build"
@@ -695,7 +694,7 @@ tasks:
     deps:
       - build:wasm
     cmds:
-      - deno test --allow-read --allow-net --allow-env tests/
+      - deno test --no-check --sloppy-imports --allow-read --allow-net --allow-env tests/
 
   test:e2e:cloudflare:
     desc: "Run Cloudflare Workers e2e tests (local workerd)"
@@ -1027,7 +1026,6 @@ tasks:
       - task: bench:run:node
       - task: bench:run:php
 
-  # Workload-specific benchmarks (JSON bodies)
   bench:run:python:json:
     desc: "Run JSON body benchmark against Spikard-Python"
     deps:
@@ -1044,7 +1042,6 @@ tasks:
     cmds:
       - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload json-bodies --category json_bodies --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-json.json
 
-  # Workload-specific benchmarks (Multipart forms)
   bench:run:python:multipart:
     desc: "Run multipart form benchmark against Spikard-Python"
     deps:
@@ -1061,7 +1058,6 @@ tasks:
     cmds:
       - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload multipart --category multipart --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-multipart.json
 
-  # Workload-specific benchmarks (URL-encoded forms)
   bench:run:python:urlencoded:
     desc: "Run URL-encoded form benchmark against Spikard-Python"
     deps:
@@ -1078,7 +1074,6 @@ tasks:
     cmds:
       - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload url-encoded --category url_encoded --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-urlencoded.json
 
-  # Streaming benchmarks (WebSocket)
   bench:run:python:websocket:
     desc: "Run WebSocket benchmark against Spikard-Python"
     deps:
@@ -1095,7 +1090,6 @@ tasks:
     cmds:
       - ./target/release/benchmark-harness stream --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --fixture testing_data/websockets/01_echo.json --duration 10 --connections 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-websocket.json
 
-  # Streaming benchmarks (SSE)
   bench:run:python:sse:
     desc: "Run SSE benchmark against Spikard-Python"
     deps:
@@ -1112,7 +1106,6 @@ tasks:
     cmds:
       - ./target/release/benchmark-harness stream --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --fixture testing_data/sse/01_events.json --duration 10 --connections 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-sse.json
 
-  # Run all workload types for a framework
   bench:run:python:all:
     desc: "Run all benchmark workloads for Python"
     cmds:

@@ -33,11 +33,6 @@ def load_fixture_from_subdir(subdir: str, filename: str) -> dict[str, object]:
         return {}
 
 
-# ============================================================================
-# BATCH REQUEST FIXTURE TESTS
-# ============================================================================
-
-
 class TestBatchRequestsFixture:
     """Validate batch_requests.json fixture structure."""
 
@@ -82,11 +77,6 @@ class TestBatchRequestsFixture:
             assert expected_name in example_names, f"Missing example: {expected_name}"
 
 
-# ============================================================================
-# EMPTY BATCH FIXTURE TESTS
-# ============================================================================
-
-
 class TestEmptyBatchFixture:
     """Validate empty_batch.json fixture structure."""
 
@@ -107,13 +97,7 @@ class TestEmptyBatchFixture:
             assert "name" in error_case_dict
             assert "description" in error_case_dict
             assert "request" in error_case_dict
-            # Check for either error or result field (fixture structure inconsistency)
             assert "error" in error_case_dict or "result" in error_case_dict
-
-
-# ============================================================================
-# INVALID JSON FIXTURE TESTS
-# ============================================================================
 
 
 class TestInvalidJsonFixture:
@@ -140,11 +124,6 @@ class TestInvalidJsonFixture:
             assert error_dict["message"] == "Parse error"
 
 
-# ============================================================================
-# INVALID PARAMS FIXTURE TESTS
-# ============================================================================
-
-
 class TestInvalidParamsFixture:
     """Validate invalid_params.json fixture structure."""
 
@@ -165,11 +144,6 @@ class TestInvalidParamsFixture:
             assert "error" in error_case_dict
             error_dict = cast("dict[str, object]", error_case_dict["error"])
             assert error_dict["code"] == -32602
-
-
-# ============================================================================
-# INVALID REQUEST FIXTURE TESTS
-# ============================================================================
 
 
 class TestInvalidRequestFixture:
@@ -194,11 +168,6 @@ class TestInvalidRequestFixture:
             assert error_dict["code"] == -32600
 
 
-# ============================================================================
-# NOTIFICATIONS FIXTURE TESTS
-# ============================================================================
-
-
 class TestNotificationsFixture:
     """Validate notifications.json fixture structure."""
 
@@ -220,19 +189,11 @@ class TestNotificationsFixture:
             assert "request" in example_dict
             request = example_dict["request"]
             if isinstance(request, dict):
-                # Single notification
                 assert "id" not in request
             elif isinstance(request, list):
-                # Batch with notifications
                 for req in request:
                     if "id" not in req:
-                        # This is a notification, verify no id
                         assert True
-
-
-# ============================================================================
-# NULL VALUES FIXTURE TESTS
-# ============================================================================
 
 
 class TestNullValuesFixture:
@@ -254,13 +215,7 @@ class TestNullValuesFixture:
             example_dict = cast("dict[str, object]", example)
             assert "name" in example_dict
             assert "description" in example_dict
-            # Check for request or params field (fixture structure varies)
             assert "request" in example_dict or "params" in example_dict
-
-
-# ============================================================================
-# UNICODE FIXTURE TESTS
-# ============================================================================
 
 
 class TestUnicodeEdgeCasesFixture:
@@ -284,11 +239,6 @@ class TestUnicodeEdgeCasesFixture:
             assert "description" in example_dict
 
 
-# ============================================================================
-# LARGE PAYLOADS FIXTURE TESTS
-# ============================================================================
-
-
 class TestLargePayloadsFixture:
     """Validate large_payloads.json fixture structure."""
 
@@ -299,11 +249,6 @@ class TestLargePayloadsFixture:
         assert "examples" in fixture
         examples = cast("list[object]", fixture["examples"])
         assert len(examples) > 0
-
-
-# ============================================================================
-# METHOD NOT FOUND FIXTURE TESTS
-# ============================================================================
 
 
 class TestMethodNotFoundFixture:
@@ -326,11 +271,6 @@ class TestMethodNotFoundFixture:
             assert "error" in error_case_dict
             error_dict = cast("dict[str, object]", error_case_dict["error"])
             assert error_dict["code"] == -32601
-
-
-# ============================================================================
-# STANDARD ERRORS FIXTURE TESTS
-# ============================================================================
 
 
 class TestStandardErrorsFixture:
@@ -358,15 +298,9 @@ class TestStandardErrorsFixture:
                     code = error_dict["code"]
                     error_codes.add(code)
 
-        # Verify standard JSON-RPC error codes are present
         expected_codes = {-32700, -32600, -32601, -32602, -32603}
         for code in expected_codes:
             assert code in error_codes, f"Missing error code {code}"
-
-
-# ============================================================================
-# CUSTOM ERRORS FIXTURE TESTS
-# ============================================================================
 
 
 class TestCustomErrorsFixture:
@@ -385,11 +319,6 @@ class TestCustomErrorsFixture:
             scenario_dict = cast("dict[str, object]", scenario)
             assert "request" in scenario_dict
             assert "expected_response" in scenario_dict
-
-
-# ============================================================================
-# ERROR DATA FIXTURE TESTS
-# ============================================================================
 
 
 class TestErrorDataFixture:
@@ -411,16 +340,9 @@ class TestErrorDataFixture:
                 response_dict = cast("dict[str, object]", expected_response)
                 error_obj = response_dict.get("error")
                 if error_obj is not None:
-                    # Most error_data scenarios should have a data field
                     error = cast("dict[str, object]", error_obj)
-                    # error.data is optional but recommended for detailed error info
                     assert "code" in error
                     assert "message" in error
-
-
-# ============================================================================
-# CORE METHOD FIXTURES TESTS
-# ============================================================================
 
 
 class TestUserCreateFixture:
@@ -482,11 +404,6 @@ class TestUserDeleteFixture:
         assert "error_cases" in fixture
 
 
-# ============================================================================
-# FIXTURE COVERAGE SUMMARY
-# ============================================================================
-
-
 class TestFixtureCoverageSummary:
     """Verify all expected fixtures exist and are testable."""
 
@@ -540,10 +457,7 @@ class TestFixtureCoverageSummary:
 
     def test_fixture_total_count(self) -> None:
         """Test that we have sufficient fixture coverage."""
-        # Count total fixtures
         all_files = list(FIXTURES_DIR.glob("**/*.json"))
-        # Exclude schema.json files
         fixture_files = [f for f in all_files if f.name != "schema.json"]
 
-        # We expect at least 20 fixtures (5 core + 10 edge cases + 3 error + optional validation)
         assert len(fixture_files) >= 18, f"Expected at least 18 fixtures, found {len(fixture_files)}"

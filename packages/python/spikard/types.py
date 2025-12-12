@@ -24,6 +24,6 @@ class Route:
     parameter_schema: dict[str, Any] | None = None
     file_params: dict[str, Any] | None = None
     is_async: bool = False
-    body_param_name: str | None = None  # Name of the body parameter (default: "body")
-    handler_dependencies: list[str] | None = None  # List of dependency keys for DI
-    jsonrpc_method: JsonRpcMethodInfo | None = None  # JSON-RPC method metadata
+    body_param_name: str | None = None
+    handler_dependencies: list[str] | None = None
+    jsonrpc_method: JsonRpcMethodInfo | None = None

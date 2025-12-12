@@ -43,7 +43,6 @@ pub fn sanitize_identifier(name: &str) -> String {
 /// Sanitize identifier for Ruby (handle special naming conventions)
 #[allow(dead_code)]
 pub fn sanitize_ruby_identifier(name: &str) -> String {
-    // Ruby uses snake_case, already handled by sanitize_identifier
     sanitize_identifier(name)
 }
 
@@ -51,7 +50,6 @@ pub fn sanitize_ruby_identifier(name: &str) -> String {
 #[allow(dead_code)]
 pub fn sanitize_php_identifier(name: &str) -> String {
     let mut ident = sanitize_identifier(name);
-    // PHP class/function names should start with underscore or letter
     if ident.is_empty() {
         return "handler".to_string();
     }

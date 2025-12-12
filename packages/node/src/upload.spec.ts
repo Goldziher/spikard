@@ -97,7 +97,7 @@ describe("UploadFile API", () => {
 			const content = Buffer.from("Hi");
 			const file = new UploadFile("test.txt", content);
 
-			file.read(); // Read everything
+			file.read();
 			expect(file.read().length).toBe(0);
 		});
 
@@ -112,7 +112,7 @@ describe("UploadFile API", () => {
 			const content = Buffer.from("Hello, World!");
 			const file = new UploadFile("test.txt", content);
 
-			file.seek(7); // Seek to position 7 ("World!")
+			file.seek(7);
 			expect(file.read().toString()).toBe("World!");
 		});
 
@@ -120,8 +120,8 @@ describe("UploadFile API", () => {
 			const content = Buffer.from("Hello, World!");
 			const file = new UploadFile("test.txt", content);
 
-			file.read(5); // Position is now 5
-			file.seek(2, 1); // Seek 2 bytes forward relative
+			file.read(5);
+			file.seek(2, 1);
 			expect(file.tell()).toBe(7);
 		});
 
@@ -129,7 +129,7 @@ describe("UploadFile API", () => {
 			const content = Buffer.from("Hello, World!");
 			const file = new UploadFile("test.txt", content);
 
-			file.seek(-6, 2); // Seek 6 bytes from end
+			file.seek(-6, 2);
 			expect(file.read().toString()).toBe("World!");
 		});
 
@@ -137,10 +137,10 @@ describe("UploadFile API", () => {
 			const content = Buffer.from("Hello");
 			const file = new UploadFile("test.txt", content);
 
-			file.seek(-100); // Try to seek before start
+			file.seek(-100);
 			expect(file.tell()).toBe(0);
 
-			file.seek(1000); // Try to seek past end
+			file.seek(1000);
 			expect(file.tell()).toBe(5);
 		});
 
@@ -163,7 +163,6 @@ describe("UploadFile API", () => {
 		it("should handle close() as no-op", () => {
 			const file = new UploadFile("test.txt", Buffer.from("data"));
 
-			// Should not throw
 			file.close();
 			expect(file.tell()).toBe(0);
 		});
@@ -198,7 +197,6 @@ describe("UploadFile API", () => {
 		it("should support async close", async () => {
 			const file = new UploadFile("test.txt", Buffer.from("data"));
 
-			// Should not throw
 			await file.closeAsync();
 			expect(file.tell()).toBe(0);
 		});
@@ -549,7 +547,6 @@ describe("UploadFile Handler Integration", () => {
 
 			app.handlers.uploadMixed = async (request) => {
 				const body = request.json<MixedRequest>();
-				// Parse numeric field
 				const age = typeof body.age === "string" ? parseInt(body.age, 10) : body.age;
 				return {
 					filename: body.file.filename,
@@ -596,7 +593,6 @@ describe("UploadFile Handler Integration", () => {
 
 			app.handlers.uploadNested = async (request) => {
 				const body = request.json<Record<string, unknown>>();
-				// Since form data uses dotted keys, access file by the dotted key
 				const file =
 					(body["metadata.file"] as UploadFile) ||
 					(typeof body.metadata === "object" && body.metadata !== null
@@ -663,7 +659,6 @@ describe("UploadFile Handler Integration", () => {
 
 			const client = new TestClient(app);
 
-			// Create a 1MB file
 			const largeContent = Buffer.alloc(1024 * 1024).toString("base64");
 
 			const response = await client.post("/upload-large", {
@@ -747,7 +742,6 @@ describe("UploadFile Handler Integration", () => {
 
 			const client = new TestClient(app);
 
-			// Create binary data: [0xFF, 0xD8, 0xFF, 0xE0, ...] (JPEG header)
 			const binaryData = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
 			const base64Content = binaryData.toString("base64");
 
@@ -799,14 +793,12 @@ describe("UploadFile Handler Integration", () => {
 
 			const client = new TestClient(app);
 
-			// Send request without file
 			const response = await client.post("/upload-required", {
 				multipart: {
 					fields: {},
 				},
 			});
 
-			// Handler should return error response
 			expect(response.statusCode).toBe(400);
 			const body = response.json() as unknown;
 			expect((body as Record<string, unknown>).error).toBe("File is required");
@@ -831,12 +823,11 @@ describe("UploadFile Handler Integration", () => {
 
 			const client = new TestClient(app);
 
-			// Send file with wrong field name
 			const response = await client.post("/upload-wrong-field", {
 				multipart: {
 					files: [
 						{
-							name: "document", // Wrong field name
+							name: "document",
 							filename: "test.txt",
 							content: "data",
 						},
@@ -881,7 +872,7 @@ describe("UploadFile Handler Integration", () => {
 						},
 					],
 					fields: {
-						metadata: { key: "value" }, // Valid JSON object
+						metadata: { key: "value" },
 					},
 				},
 			});
@@ -904,14 +895,11 @@ describe("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			// This handler does NOT manually call JSON.parse - it just uses request.json()
 			app.handlers.uploadNoParse = async (request) => {
 				const body = request.json<UploadRequest>();
-				// No manual JSON.parse needed - request.json() handles it
 				const file = body.file as UploadFile;
 				return {
 					filename: file.filename,
-					// Access properties directly, no manual parsing needed
 					description: body.description,
 				};
 			};
@@ -954,7 +942,6 @@ describe("UploadFile Handler Integration", () => {
 
 			app.handlers.uploadTyped = async (request) => {
 				const body = request.json<TypedRequest>();
-				// TypeScript knows these properties exist
 				const filename: string = body.file.filename;
 				const size: number = body.file.size;
 				const contentType: string = body.file.contentType;
@@ -1008,7 +995,6 @@ describe("UploadFile Handler Integration", () => {
 
 			app.handlers.uploadAutoConvert = async (request) => {
 				const body = request.json<RequestWithFile>();
-				// file should be an UploadFile instance, not raw metadata
 				const isUploadFile =
 					body.file &&
 					typeof body.file.filename === "string" &&
@@ -1059,7 +1045,6 @@ describe("UploadFile Handler Integration", () => {
 
 			app.handlers.uploadAsyncOps = async (request) => {
 				const body = request.json<UploadRequest>();
-				// Can use async operations naturally
 				const text = await body.file.textAsync();
 				await body.file.seekAsync(0);
 				const position = body.file.tell();
@@ -1109,7 +1094,6 @@ describe("UploadFile Handler Integration", () => {
 
 			app.handlers.uploadTypedFields = async (request) => {
 				const body = request.json<TypedRequest>();
-				// Parse fields since form data converts everything to strings
 				const count = typeof body.count === "string" ? parseInt(body.count, 10) : body.count;
 				const enabled = typeof body.enabled === "string" ? body.enabled === "true" : body.enabled;
 				const tags = Array.isArray(body.tags) ? body.tags : typeof body.tags === "string" ? [body.tags] : [];

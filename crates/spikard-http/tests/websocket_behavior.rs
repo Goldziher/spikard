@@ -35,8 +35,6 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::time::sleep;
 
-// ===== Test Handlers =====
-
 /// Handler that echoes messages back to the client
 #[derive(Debug, Clone)]
 struct EchoHandler;
@@ -106,7 +104,6 @@ impl SchemaValidationHandler {
 
 impl WebSocketHandler for SchemaValidationHandler {
     async fn handle_message(&self, message: Value) -> Option<Value> {
-        // Only accept messages with a "type" field
         if message.get("type").is_some() {
             Some(json!({"status": "ok", "echo": message}))
         } else {
@@ -136,7 +133,6 @@ impl WebSocketHandler for ErrorHandler {
     async fn handle_message(&self, message: Value) -> Option<Value> {
         if self.should_error.load(Ordering::SeqCst) {
             self.error_count.fetch_add(1, Ordering::SeqCst);
-            // Return None to simulate error (no response)
             None
         } else {
             Some(message)
@@ -186,24 +182,19 @@ impl BufferingHandler {
 impl WebSocketHandler for BufferingHandler {
     async fn handle_message(&self, message: Value) -> Option<Value> {
         self.processed.fetch_add(1, Ordering::SeqCst);
-        // Simulate processing delay
         sleep(Duration::from_millis(1)).await;
         Some(json!({"processed": message, "total": self.processed.load(Ordering::SeqCst)}))
     }
 }
 
-// ===== Test 1: WebSocket Connection Lifecycle =====
-
 #[tokio::test]
 async fn test_websocket_connection_initialization() {
     let handler = LifecycleHandler::new();
 
-    // Initially, no events should have fired
     assert!(!handler.connect_called.load(Ordering::SeqCst));
     assert!(!handler.disconnect_called.load(Ordering::SeqCst));
     assert_eq!(handler.message_count.load(Ordering::SeqCst), 0);
 
-    // Verify state can be created
     let _state: WebSocketState<LifecycleHandler> = WebSocketState::new(handler.clone());
 }
 
@@ -212,16 +203,13 @@ async fn test_websocket_connection_lifecycle_state_transitions() {
     let handler = LifecycleHandler::new();
     handler.reset();
 
-    // Simulate connection lifecycle
     handler.on_connect().await;
     assert!(handler.connect_called.load(Ordering::SeqCst));
     assert!(!handler.disconnect_called.load(Ordering::SeqCst));
 
-    // Process some messages
     let msg = json!({"test": "data"});
     let _resp = handler.handle_message(msg).await;
 
-    // Simulate disconnection
     handler.on_disconnect().await;
     assert!(handler.connect_called.load(Ordering::SeqCst));
     assert!(handler.disconnect_called.load(Ordering::SeqCst));
@@ -235,8 +223,6 @@ async fn test_websocket_sends_and_receives_single_message() {
 
     assert_eq!(response, Some(msg));
 }
-
-// ===== Test 2: Concurrent Messages from Multiple Clients =====
 
 #[tokio::test]
 async fn test_multiple_messages_from_same_connection() {
@@ -258,7 +244,6 @@ async fn test_multiple_messages_from_same_connection() {
 async fn test_concurrent_message_processing() {
     let handler = Arc::new(LifecycleHandler::new());
 
-    // Simulate concurrent message processing
     let mut handles = vec![];
 
     for i in 0..10 {
@@ -270,7 +255,6 @@ async fn test_concurrent_message_processing() {
         handles.push(handle);
     }
 
-    // Wait for all to complete
     for handle in handles {
         let _ = handle.await;
     }
@@ -287,7 +271,6 @@ async fn test_multiple_concurrent_connections_isolation() {
     handler1.reset();
     handler2.reset();
 
-    // Simulate messages from two different connections
     let msg1 = json!({"connection": 1, "seq": 1});
     let msg2 = json!({"connection": 2, "seq": 1});
 
@@ -297,18 +280,14 @@ async fn test_multiple_concurrent_connections_isolation() {
     assert_eq!(handler1.message_count.load(Ordering::SeqCst), 1);
     assert_eq!(handler2.message_count.load(Ordering::SeqCst), 1);
 
-    // Ensure each handler only got its own messages
     assert_eq!(handler1.messages.lock().unwrap()[0].get("connection").unwrap(), 1);
     assert_eq!(handler2.messages.lock().unwrap()[0].get("connection").unwrap(), 2);
 }
-
-// ===== Test 3: Message Ordering Guarantees =====
 
 #[tokio::test]
 async fn test_message_ordering_sequential_delivery() {
     let handler = OrderingHandler::new();
 
-    // Send messages with sequence numbers
     for seq in 0..10 {
         let msg = json!({"sequence": seq});
         let _response = handler.handle_message(msg).await;
@@ -324,7 +303,6 @@ async fn test_message_ordering_sequential_delivery() {
 async fn test_message_ordering_concurrent_arrival() {
     let handler = Arc::new(OrderingHandler::new());
 
-    // Send messages concurrently
     let mut handles = vec![];
     for seq in 0..20 {
         let handler_clone = handler.clone();
@@ -335,7 +313,6 @@ async fn test_message_ordering_concurrent_arrival() {
         handles.push(handle);
     }
 
-    // Wait for all to complete
     for handle in handles {
         let _ = handle.await;
     }
@@ -343,7 +320,6 @@ async fn test_message_ordering_concurrent_arrival() {
     let messages = handler.messages.lock().unwrap();
     assert_eq!(messages.len(), 20);
 
-    // Verify all sequence numbers are present (order may vary in concurrent)
     let mut sorted = messages.clone();
     sorted.sort();
     let expected: Vec<usize> = (0..20).collect();
@@ -354,7 +330,6 @@ async fn test_message_ordering_concurrent_arrival() {
 async fn test_message_ordering_with_delays() {
     let handler = OrderingHandler::new();
 
-    // Send messages with small delays between them
     for seq in 0..5 {
         let msg = json!({"sequence": seq});
         let _response = handler.handle_message(msg).await;
@@ -367,14 +342,11 @@ async fn test_message_ordering_with_delays() {
     assert_eq!(*messages, expected);
 }
 
-// ===== Test 4: Connection Abort Handling =====
-
 #[tokio::test]
 async fn test_handler_disconnect_on_normal_close() {
     let handler = LifecycleHandler::new();
     handler.reset();
 
-    // Simulate normal disconnect
     handler.on_disconnect().await;
 
     assert!(handler.disconnect_called.load(Ordering::SeqCst));
@@ -389,7 +361,6 @@ async fn test_handler_continues_after_failed_message() {
     let resp1 = handler.handle_message(valid_msg).await;
     assert!(resp1.is_some());
 
-    // Handler should continue working after processing
     let another_msg = json!({"data": "another"});
     let resp2 = handler.handle_message(another_msg).await;
     assert!(resp2.is_some());
@@ -401,28 +372,22 @@ async fn test_handler_continues_after_failed_message() {
 async fn test_handler_state_after_error() {
     let handler = ErrorHandler::new();
 
-    // Set handler to error mode
     handler.should_error.store(true, Ordering::SeqCst);
 
     let msg1 = json!({"test": 1});
     let resp1 = handler.handle_message(msg1).await;
 
-    // Error response should be None
     assert!(resp1.is_none());
     assert_eq!(handler.error_count.load(Ordering::SeqCst), 1);
 
-    // Disable error mode and verify handler recovers
     handler.should_error.store(false, Ordering::SeqCst);
 
     let msg2 = json!({"test": 2});
     let resp2 = handler.handle_message(msg2).await;
 
-    // Should now respond normally
     assert!(resp2.is_some());
     assert_eq!(handler.error_count.load(Ordering::SeqCst), 1);
 }
-
-// ===== Test 5: Schema Validation Rejection =====
 
 #[tokio::test]
 async fn test_schema_validation_accepts_valid_message() {
@@ -440,14 +405,11 @@ async fn test_schema_validation_accepts_valid_message() {
 async fn test_schema_validation_rejects_invalid_message() {
     let handler = SchemaValidationHandler::new();
 
-    // Message missing required "type" field
     let invalid_msg = json!({"data": "content"});
     let response = handler.handle_message(invalid_msg.clone()).await;
 
-    // Handler returns None for invalid messages
     assert!(response.is_none());
 
-    // Verify invalid message was recorded
     assert_eq!(handler.invalid_messages.lock().unwrap().len(), 1);
 }
 
@@ -456,9 +418,9 @@ async fn test_schema_validation_multiple_validations() {
     let handler = SchemaValidationHandler::new();
 
     let valid1 = json!({"type": "cmd", "action": "start"});
-    let invalid1 = json!({"action": "start"}); // missing type
+    let invalid1 = json!({"action": "start"});
     let valid2 = json!({"type": "query", "params": {}});
-    let invalid2 = json!({"id": 123}); // missing type
+    let invalid2 = json!({"id": 123});
 
     let r1 = handler.handle_message(valid1).await;
     let r2 = handler.handle_message(invalid1).await;
@@ -477,15 +439,11 @@ async fn test_schema_validation_multiple_validations() {
 async fn test_schema_validation_type_checking() {
     let handler = SchemaValidationHandler::new();
 
-    // Message with type field but wrong type
     let msg_with_number_type = json!({"type": 123});
     let response = handler.handle_message(msg_with_number_type).await;
 
-    // Should accept because we only check for presence of "type" field
     assert!(response.is_some());
 }
-
-// ===== Test 6: Handler Error Propagation =====
 
 #[tokio::test]
 async fn test_handler_error_state_preservation() {
@@ -493,13 +451,11 @@ async fn test_handler_error_state_preservation() {
 
     handler.should_error.store(true, Ordering::SeqCst);
 
-    // Send multiple messages while in error state
     for i in 0..5 {
         let msg = json!({"id": i});
         let _resp = handler.handle_message(msg).await;
     }
 
-    // All should have failed
     assert_eq!(handler.error_count.load(Ordering::SeqCst), 5);
 }
 
@@ -507,18 +463,15 @@ async fn test_handler_error_state_preservation() {
 async fn test_handler_error_recovery_transitions() {
     let handler = ErrorHandler::new();
 
-    // Normal operation
     let msg1 = json!({"id": 1});
     let resp1 = handler.handle_message(msg1).await;
     assert!(resp1.is_some());
 
-    // Transition to error state
     handler.should_error.store(true, Ordering::SeqCst);
     let msg2 = json!({"id": 2});
     let resp2 = handler.handle_message(msg2).await;
     assert!(resp2.is_none());
 
-    // Transition back to normal
     handler.should_error.store(false, Ordering::SeqCst);
     let msg3 = json!({"id": 3});
     let resp3 = handler.handle_message(msg3).await;
@@ -529,19 +482,16 @@ async fn test_handler_error_recovery_transitions() {
 async fn test_selective_error_handling() {
     let handler = ErrorHandler::new();
 
-    // Normal then error
     handler.should_error.store(false, Ordering::SeqCst);
     let msg1 = json!({"id": 1});
     let resp1 = handler.handle_message(msg1).await;
     assert!(resp1.is_some());
 
-    // Error state
     handler.should_error.store(true, Ordering::SeqCst);
     let msg2 = json!({"id": 2});
     let resp2 = handler.handle_message(msg2).await;
     assert!(resp2.is_none());
 
-    // Another normal
     handler.should_error.store(false, Ordering::SeqCst);
     let msg3 = json!({"id": 3});
     let resp3 = handler.handle_message(msg3).await;
@@ -550,13 +500,10 @@ async fn test_selective_error_handling() {
     assert_eq!(handler.error_count.load(Ordering::SeqCst), 1);
 }
 
-// ===== Test 7: Message Buffering Under High Load =====
-
 #[tokio::test]
 async fn test_message_buffering_rapid_succession() {
     let handler = BufferingHandler::new();
 
-    // Send messages rapidly
     for i in 0..50 {
         let msg = json!({"id": i, "timestamp": "2024-01-01T00:00:00Z"});
         let _response = handler.handle_message(msg).await;
@@ -571,7 +518,6 @@ async fn test_message_buffering_concurrent_load() {
 
     let mut handles = vec![];
 
-    // Spawn 10 concurrent tasks, each sending 10 messages
     for task_id in 0..10 {
         let handler_clone = handler.clone();
         let handle = tokio::spawn(async move {
@@ -591,7 +537,6 @@ async fn test_message_buffering_concurrent_load() {
         let _ = handle.await;
     }
 
-    // Should have processed all messages from all tasks
     assert_eq!(handler.processed.load(Ordering::SeqCst), 100);
 }
 
@@ -599,12 +544,10 @@ async fn test_message_buffering_concurrent_load() {
 async fn test_message_buffering_response_correctness_under_load() {
     let handler = BufferingHandler::new();
 
-    // Send burst of messages and verify responses are sensible
     for i in 0..20 {
         let msg = json!({"burst_id": i, "data": "test"});
         let response = handler.handle_message(msg.clone()).await;
 
-        // Verify response structure
         assert!(response.is_some());
         let resp = response.unwrap();
         assert!(resp.get("processed").is_some());
@@ -620,7 +563,6 @@ async fn test_message_buffering_maintains_order_under_load() {
 
     let mut handles = vec![];
 
-    // Send 100 messages from a single task to ensure ordering
     let handler_clone = handler.clone();
     let handle = tokio::spawn(async move {
         for seq in 0..100 {
@@ -639,13 +581,10 @@ async fn test_message_buffering_maintains_order_under_load() {
     assert_eq!(*messages, expected);
 }
 
-// ===== Additional Edge Cases =====
-
 #[tokio::test]
 async fn test_large_payload_handling() {
     let handler = EchoHandler;
 
-    // Create a large JSON payload
     let large_array: Vec<i32> = (0..1000).collect();
     let large_msg = json!({
         "type": "large_payload",
@@ -665,7 +604,6 @@ async fn test_large_payload_handling() {
 async fn test_deeply_nested_message_handling() {
     let handler = EchoHandler;
 
-    // Create deeply nested JSON
     let mut nested = json!({"value": "deep"});
     for _ in 0..50 {
         nested = json!({"level": nested});

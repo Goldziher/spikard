@@ -14,10 +14,6 @@ use spikard_core::Route;
 use spikard_http::{Handler, server::handler::ValidatingHandler};
 use std::sync::Arc;
 
-// ============================================================================
-// ValidatingHandler Tests
-// ============================================================================
-
 mod validating_handler {
     use super::*;
 
@@ -104,7 +100,7 @@ mod validating_handler {
         let (request, request_data) = RequestBuilder::new()
             .method(axum::http::Method::POST)
             .path("/users")
-            .json_body(json!({"name": "Alice"})) // Missing required "email"
+            .json_body(json!({"name": "Alice"}))
             .build();
 
         let result = validator_handler.call(request, request_data).await;
@@ -113,7 +109,6 @@ mod validating_handler {
         let (status, body) = result.unwrap_err();
         assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
 
-        // Verify error structure contains validation details
         let error: serde_json::Value = serde_json::from_str(&body).unwrap();
         assert!(error["errors"].is_array());
     }
@@ -153,7 +148,7 @@ mod validating_handler {
 
         let (request, request_data) = RequestBuilder::new()
             .method(axum::http::Method::POST)
-            .json_body(json!({"age": 25})) // Missing required "name"
+            .json_body(json!({"age": 25}))
             .build();
 
         let result = validator_handler.call(request, request_data).await;
@@ -200,7 +195,7 @@ mod validating_handler {
 
         let (request, request_data) = RequestBuilder::new()
             .method(axum::http::Method::POST)
-            .json_body(json!({"count": "not_a_number"})) // String instead of integer
+            .json_body(json!({"count": "not_a_number"}))
             .build();
 
         let result = validator_handler.call(request, request_data).await;
@@ -248,7 +243,7 @@ mod validating_handler {
 
         let (request, request_data) = RequestBuilder::new()
             .method(axum::http::Method::POST)
-            .json_body(json!({"name": "Test"})) // description is optional
+            .json_body(json!({"name": "Test"}))
             .build();
 
         let result = validator_handler.call(request, request_data).await;
@@ -298,7 +293,7 @@ mod validating_handler {
 
         let (request, request_data) = RequestBuilder::new()
             .method(axum::http::Method::POST)
-            .json_body(json!({"user": {}})) // Missing required nested "name"
+            .json_body(json!({"user": {}}))
             .build();
 
         let result = validator_handler.call(request, request_data).await;
@@ -346,10 +341,6 @@ mod validating_handler {
     }
 }
 
-// ============================================================================
-// DependencyInjectingHandler Tests (when DI feature enabled)
-// ============================================================================
-
 #[cfg(feature = "di")]
 mod dependency_injecting_handler {
     use super::*;
@@ -387,7 +378,7 @@ mod dependency_injecting_handler {
     /// Test 9: Missing dependency returns 500 with resolution error
     #[tokio::test]
     async fn test_di_handler_resolution_failure_returns_500() {
-        let container = DependencyContainer::new(); // Empty container
+        let container = DependencyContainer::new();
 
         let inner_handler = HandlerBuilder::new().build();
         let di_handler =
@@ -397,7 +388,7 @@ mod dependency_injecting_handler {
 
         let result = di_handler.call(request, request_data).await;
 
-        assert!(result.is_ok()); // Returns response (error is in response, not in Result)
+        assert!(result.is_ok());
         let response = result.unwrap();
         assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
@@ -451,7 +442,6 @@ mod dependency_injecting_handler {
         let di_handler =
             DependencyInjectingHandler::new(inner_handler, Arc::new(container), vec!["request_id".to_string()]);
 
-        // First request
         let (request1, request_data1) = RequestBuilder::new()
             .method(axum::http::Method::GET)
             .path("/request/1")
@@ -460,7 +450,6 @@ mod dependency_injecting_handler {
         let result1 = di_handler.call(request1, request_data1).await;
         assert!(result1.is_ok());
 
-        // Second request - should have independent dependency scope
         let (request2, request_data2) = RequestBuilder::new()
             .method(axum::http::Method::GET)
             .path("/request/2")
@@ -469,7 +458,6 @@ mod dependency_injecting_handler {
         let result2 = di_handler.call(request2, request_data2).await;
         assert!(result2.is_ok());
 
-        // Both requests should succeed independently
         assert_eq!(result1.unwrap().status(), StatusCode::OK);
         assert_eq!(result2.unwrap().status(), StatusCode::OK);
     }

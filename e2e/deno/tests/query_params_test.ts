@@ -481,7 +481,7 @@ Deno.test("query_params: Query parameter with special characters - URL encoding"
 	const app = createAppQueryParamsQueryParameterWithSpecialCharactersUrlEncoding();
 	const client = new TestClient(app);
 
-	const response = await client.get("/test?email=x%40test.com&special=%26%40A.ac");
+	const response = await client.get("/test?special=%26%40A.ac&email=x%40test.com");
 
 	assertEquals(response.statusCode, 200);
 	const responseData = response.json();

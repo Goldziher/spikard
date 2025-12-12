@@ -187,7 +187,6 @@ pub fn parse_openrpc_schema(path: &Path) -> Result<OpenRpcSpec> {
             .with_context(|| format!("Failed to parse OpenRPC YAML from {}", path.display()))?
     };
 
-    // Validate OpenRPC version
     if !spec.openrpc.starts_with("1.3") {
         anyhow::bail!("Unsupported OpenRPC version: {}. Expected 1.3.x", spec.openrpc);
     }

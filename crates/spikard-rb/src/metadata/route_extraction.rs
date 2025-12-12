@@ -86,7 +86,6 @@ pub fn build_route_metadata(
         jsonrpc_method,
     };
 
-    // Validate schemas and parameter validator during build to fail fast
     let registry = SchemaRegistry::new();
     let route = Route::from_metadata(metadata.clone(), &registry).map_err(|err| {
         Error::new(

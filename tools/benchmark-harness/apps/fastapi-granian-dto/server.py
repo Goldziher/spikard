@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# /// script
-# dependencies = [
-#     "fastapi",
-#     "pydantic",
-#     "uvicorn[standard]",
-# ]
-# ///
 """FastAPI benchmark server with Granian for workload comparison.
 
 Uses ORJSONResponse for optimal JSON performance + Granian Rust server.
@@ -19,11 +11,6 @@ from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel
 
 app = FastAPI(default_response_class=ORJSONResponse)
-
-
-# ============================================================================
-# Pydantic Models for JSON Validation
-# ============================================================================
 
 
 class SmallPayload(BaseModel):
@@ -81,11 +68,6 @@ class VeryLargePayload(BaseModel):
     metadata: dict[str, Any]
 
 
-# ============================================================================
-# JSON Body Workloads
-# ============================================================================
-
-
 @app.post("/json/small")
 async def post_json_small(body: SmallPayload) -> SmallPayload:
     """Small JSON body (~100 bytes)."""
@@ -110,11 +92,6 @@ async def post_json_very_large(body: VeryLargePayload) -> VeryLargePayload:
     return body
 
 
-# ============================================================================
-# Multipart Form Workloads
-# ============================================================================
-
-
 @app.post("/multipart/small")
 async def post_multipart_small() -> dict[str, Any]:
     """Small multipart form (~1KB)."""
@@ -133,11 +110,6 @@ async def post_multipart_large() -> dict[str, Any]:
     return {"files_received": 5, "total_bytes": 102400}
 
 
-# ============================================================================
-# URL Encoded Form Workloads
-# ============================================================================
-
-
 @app.post("/urlencoded/simple")
 async def post_urlencoded_simple(request: Request) -> dict[str, Any]:
     """Simple URL-encoded form."""
@@ -150,11 +122,6 @@ async def post_urlencoded_complex(request: Request) -> dict[str, Any]:
     """Complex URL-encoded form."""
     body = await request.json()
     return body
-
-
-# ============================================================================
-# Path Parameter Workloads
-# ============================================================================
 
 
 @app.get("/path/simple/{id}")
@@ -199,11 +166,6 @@ async def get_path_date(date: str) -> dict[str, Any]:
     return {"date": date}
 
 
-# ============================================================================
-# Query Parameter Workloads
-# ============================================================================
-
-
 @app.get("/query/few")
 async def get_query_few(request: Request) -> dict[str, Any]:
     """Few query parameters (1-2)."""
@@ -222,11 +184,6 @@ async def get_query_many(request: Request) -> dict[str, Any]:
     return dict(request.query_params)
 
 
-# ============================================================================
-# Health Check
-# ============================================================================
-
-
 @app.get("/health")
 async def health() -> dict[str, Any]:
     """Health check endpoint."""
@@ -238,10 +195,6 @@ async def root() -> dict[str, Any]:
     """Root endpoint."""
     return {"status": "ok"}
 
-
-# ============================================================================
-# Server Startup
-# ============================================================================
 
 if __name__ == "__main__":
     import uvicorn

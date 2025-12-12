@@ -63,7 +63,6 @@ fn create_method_router(
     let expects_body = method_expects_body(method);
 
     if expects_body {
-        // POST, PUT, PATCH - need to handle body
         if has_path_params {
             let handler_clone = handler.clone();
             let hooks_clone = hooks.clone();
@@ -143,141 +142,133 @@ fn create_method_router(
                 }
             }
         }
-    } else {
-        // GET, DELETE, HEAD, TRACE - no body handling
-        if has_path_params {
-            let handler_clone = handler.clone();
-            let hooks_clone = hooks.clone();
-            match method {
-                "GET" => axum::routing::get(
-                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                        let request_data = request_extraction::create_request_data_without_body(
-                            req.uri(),
-                            req.method(),
-                            req.headers(),
-                            path_params.0,
-                        );
-                        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
-                            .await
-                    },
-                ),
-                "DELETE" => axum::routing::delete(
-                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                        let request_data = request_extraction::create_request_data_without_body(
-                            req.uri(),
-                            req.method(),
-                            req.headers(),
-                            path_params.0,
-                        );
-                        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
-                            .await
-                    },
-                ),
-                "HEAD" => axum::routing::head(
-                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                        let request_data = request_extraction::create_request_data_without_body(
-                            req.uri(),
-                            req.method(),
-                            req.headers(),
-                            path_params.0,
-                        );
-                        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
-                            .await
-                    },
-                ),
-                "TRACE" => axum::routing::trace(
-                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                        let request_data = request_extraction::create_request_data_without_body(
-                            req.uri(),
-                            req.method(),
-                            req.headers(),
-                            path_params.0,
-                        );
-                        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
-                            .await
-                    },
-                ),
-                "OPTIONS" => axum::routing::options(
-                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                        let request_data = request_extraction::create_request_data_without_body(
-                            req.uri(),
-                            req.method(),
-                            req.headers(),
-                            path_params.0,
-                        );
-                        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
-                            .await
-                    },
-                ),
-                _ => {
-                    eprintln!(
-                        "[spikard-router] unsupported HTTP method with path params: {} (defaulting to 405)",
-                        method
+    } else if has_path_params {
+        let handler_clone = handler.clone();
+        let hooks_clone = hooks.clone();
+        match method {
+            "GET" => axum::routing::get(
+                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                    let request_data = request_extraction::create_request_data_without_body(
+                        req.uri(),
+                        req.method(),
+                        req.headers(),
+                        path_params.0,
                     );
-                    MethodRouter::new()
-                }
+                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                        .await
+                },
+            ),
+            "DELETE" => axum::routing::delete(
+                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                    let request_data = request_extraction::create_request_data_without_body(
+                        req.uri(),
+                        req.method(),
+                        req.headers(),
+                        path_params.0,
+                    );
+                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                        .await
+                },
+            ),
+            "HEAD" => axum::routing::head(
+                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                    let request_data = request_extraction::create_request_data_without_body(
+                        req.uri(),
+                        req.method(),
+                        req.headers(),
+                        path_params.0,
+                    );
+                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                        .await
+                },
+            ),
+            "TRACE" => axum::routing::trace(
+                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                    let request_data = request_extraction::create_request_data_without_body(
+                        req.uri(),
+                        req.method(),
+                        req.headers(),
+                        path_params.0,
+                    );
+                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                        .await
+                },
+            ),
+            "OPTIONS" => axum::routing::options(
+                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                    let request_data = request_extraction::create_request_data_without_body(
+                        req.uri(),
+                        req.method(),
+                        req.headers(),
+                        path_params.0,
+                    );
+                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                        .await
+                },
+            ),
+            _ => {
+                eprintln!(
+                    "[spikard-router] unsupported HTTP method with path params: {} (defaulting to 405)",
+                    method
+                );
+                MethodRouter::new()
             }
-        } else {
-            let handler_clone = handler.clone();
-            let hooks_clone = hooks.clone();
-            match method {
-                "GET" => axum::routing::get(move |req: axum::extract::Request| async move {
-                    let request_data = request_extraction::create_request_data_without_body(
-                        req.uri(),
-                        req.method(),
-                        req.headers(),
-                        HashMap::new(),
-                    );
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
-                        .await
-                }),
-                "DELETE" => axum::routing::delete(move |req: axum::extract::Request| async move {
-                    let request_data = request_extraction::create_request_data_without_body(
-                        req.uri(),
-                        req.method(),
-                        req.headers(),
-                        HashMap::new(),
-                    );
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
-                        .await
-                }),
-                "HEAD" => axum::routing::head(move |req: axum::extract::Request| async move {
-                    let request_data = request_extraction::create_request_data_without_body(
-                        req.uri(),
-                        req.method(),
-                        req.headers(),
-                        HashMap::new(),
-                    );
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
-                        .await
-                }),
-                "TRACE" => axum::routing::trace(move |req: axum::extract::Request| async move {
-                    let request_data = request_extraction::create_request_data_without_body(
-                        req.uri(),
-                        req.method(),
-                        req.headers(),
-                        HashMap::new(),
-                    );
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
-                        .await
-                }),
-                "OPTIONS" => axum::routing::options(move |req: axum::extract::Request| async move {
-                    let request_data = request_extraction::create_request_data_without_body(
-                        req.uri(),
-                        req.method(),
-                        req.headers(),
-                        HashMap::new(),
-                    );
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
-                        .await
-                }),
-                _ => {
-                    eprintln!(
-                        "[spikard-router] unsupported HTTP method without path params: {} (defaulting to 405)",
-                        method
-                    );
-                    MethodRouter::new()
-                }
+        }
+    } else {
+        let handler_clone = handler.clone();
+        let hooks_clone = hooks.clone();
+        match method {
+            "GET" => axum::routing::get(move |req: axum::extract::Request| async move {
+                let request_data = request_extraction::create_request_data_without_body(
+                    req.uri(),
+                    req.method(),
+                    req.headers(),
+                    HashMap::new(),
+                );
+                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
+            }),
+            "DELETE" => axum::routing::delete(move |req: axum::extract::Request| async move {
+                let request_data = request_extraction::create_request_data_without_body(
+                    req.uri(),
+                    req.method(),
+                    req.headers(),
+                    HashMap::new(),
+                );
+                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
+            }),
+            "HEAD" => axum::routing::head(move |req: axum::extract::Request| async move {
+                let request_data = request_extraction::create_request_data_without_body(
+                    req.uri(),
+                    req.method(),
+                    req.headers(),
+                    HashMap::new(),
+                );
+                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
+            }),
+            "TRACE" => axum::routing::trace(move |req: axum::extract::Request| async move {
+                let request_data = request_extraction::create_request_data_without_body(
+                    req.uri(),
+                    req.method(),
+                    req.headers(),
+                    HashMap::new(),
+                );
+                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
+            }),
+            "OPTIONS" => axum::routing::options(move |req: axum::extract::Request| async move {
+                let request_data = request_extraction::create_request_data_without_body(
+                    req.uri(),
+                    req.method(),
+                    req.headers(),
+                    HashMap::new(),
+                );
+                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
+            }),
+            _ => {
+                eprintln!(
+                    "[spikard-router] unsupported HTTP method without path params: {} (defaulting to 405)",
+                    method
+                );
+                MethodRouter::new()
             }
         }
     }
@@ -495,17 +486,14 @@ pub fn build_router_with_handlers_and_config(
     }
     let hooks = config.lifecycle_hooks.clone();
 
-    // Prepare JSON-RPC registry if enabled (must be done before routes are moved)
     let jsonrpc_registry = if let Some(ref jsonrpc_config) = config.jsonrpc {
         if jsonrpc_config.enabled {
             let registry = Arc::new(crate::jsonrpc::JsonRpcMethodRegistry::new());
 
-            // Register JSON-RPC methods from application handlers
             for (route, handler) in &routes {
                 if let Some(ref jsonrpc_info) = route.jsonrpc_method {
                     let method_name = jsonrpc_info.method_name.clone();
 
-                    // Build method metadata from route's JSON-RPC info
                     let metadata = crate::jsonrpc::MethodMetadata::new(&method_name)
                         .with_params_schema(jsonrpc_info.params_schema.clone().unwrap_or(serde_json::json!({})))
                         .with_result_schema(jsonrpc_info.result_schema.clone().unwrap_or(serde_json::json!({})));
@@ -527,7 +515,6 @@ pub fn build_router_with_handlers_and_config(
                         metadata = metadata.with_tag(tag.clone());
                     }
 
-                    // Register the method with the registry
                     if let Err(e) = registry.register(&method_name, Arc::clone(handler), metadata) {
                         tracing::warn!(
                             "Failed to register JSON-RPC method '{}' for route {}: {}",
@@ -725,33 +712,27 @@ pub fn build_router_with_handlers_and_config(
         tracing::info!("OpenAPI documentation enabled at {}", openapi_json_path);
     }
 
-    // Wire up JSON-RPC endpoint if configured
     if let Some(ref jsonrpc_config) = config.jsonrpc
         && jsonrpc_config.enabled
+        && let Some(registry) = jsonrpc_registry
     {
-        // Use the pre-built registry from earlier
-        if let Some(registry) = jsonrpc_registry {
-            // Create router
-            let jsonrpc_router = Arc::new(crate::jsonrpc::JsonRpcRouter::new(
-                registry,
-                jsonrpc_config.enable_batch,
-                jsonrpc_config.max_batch_size,
-            ));
+        let jsonrpc_router = Arc::new(crate::jsonrpc::JsonRpcRouter::new(
+            registry,
+            jsonrpc_config.enable_batch,
+            jsonrpc_config.max_batch_size,
+        ));
 
-            // Create state
-            let state = Arc::new(crate::jsonrpc::JsonRpcState { router: jsonrpc_router });
+        let state = Arc::new(crate::jsonrpc::JsonRpcState { router: jsonrpc_router });
 
-            // Add main endpoint
-            let endpoint_path = jsonrpc_config.endpoint_path.clone();
-            app = app.route(&endpoint_path, post(crate::jsonrpc::handle_jsonrpc).with_state(state));
+        let endpoint_path = jsonrpc_config.endpoint_path.clone();
+        app = app.route(&endpoint_path, post(crate::jsonrpc::handle_jsonrpc).with_state(state));
 
-            // TODO: Add per-method routes if enabled
-            // TODO: Add WebSocket endpoint if enabled
-            // TODO: Add SSE endpoint if enabled
-            // TODO: Add OpenRPC spec endpoint if enabled
+        // TODO: Add per-method routes if enabled
+        // TODO: Add WebSocket endpoint if enabled
+        // TODO: Add SSE endpoint if enabled
+        // TODO: Add OpenRPC spec endpoint if enabled
 
-            tracing::info!("JSON-RPC endpoint enabled at {}", endpoint_path);
-        }
+        tracing::info!("JSON-RPC endpoint enabled at {}", endpoint_path);
     }
 
     Ok(app)
@@ -908,7 +889,6 @@ mod tests {
     use std::pin::Pin;
     use std::sync::Arc;
 
-    // Mock handler for testing
     struct TestHandler;
 
     impl Handler for TestHandler {
@@ -921,7 +901,6 @@ mod tests {
         }
     }
 
-    // Test helper function to build Route structs
     fn build_test_route(path: &str, method: &str, handler_name: &str, expects_json_body: bool) -> crate::Route {
         use std::str::FromStr;
         crate::Route {
@@ -941,7 +920,6 @@ mod tests {
         }
     }
 
-    // Test helper function to build Route structs with CORS
     fn build_test_route_with_cors(
         path: &str,
         method: &str,
@@ -966,10 +944,6 @@ mod tests {
             handler_dependencies: vec![],
         }
     }
-
-    // ============================================================================
-    // Helper Function Tests: method_expects_body()
-    // ============================================================================
 
     #[test]
     fn test_method_expects_body_post() {
@@ -1013,19 +987,13 @@ mod tests {
 
     #[test]
     fn test_method_expects_body_connect() {
-        // CONNECT is not explicitly handled, should return false
         assert!(!method_expects_body("CONNECT"));
     }
 
     #[test]
     fn test_method_expects_body_custom_method() {
-        // Custom HTTP methods not in the pattern should return false
         assert!(!method_expects_body("CUSTOM"));
     }
-
-    // ============================================================================
-    // Request ID Generation Tests
-    // ============================================================================
 
     #[test]
     fn test_make_request_uuid_generates_valid_uuid() {
@@ -1036,10 +1004,8 @@ mod tests {
 
         assert!(id.is_some());
         let id_val = id.unwrap();
-        // RequestId wraps a HeaderValue, extract and verify it's not empty
         let id_str = id_val.header_value().to_str().expect("valid utf8");
         assert!(!id_str.is_empty());
-        // Verify it's a valid UUID format
         assert!(Uuid::parse_str(id_str).is_ok());
     }
 
@@ -1051,7 +1017,6 @@ mod tests {
         let id1 = maker.make_request_id(&request).unwrap();
         let id2 = maker.make_request_id(&request).unwrap();
 
-        // Each call should generate a different UUID
         let id1_str = id1.header_value().to_str().expect("valid utf8");
         let id2_str = id2.header_value().to_str().expect("valid utf8");
         assert_ne!(id1_str, id2_str);
@@ -1065,7 +1030,6 @@ mod tests {
         let id = maker.make_request_id(&request).unwrap();
         let id_str = id.header_value().to_str().expect("valid utf8");
 
-        // UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
         let uuid = Uuid::parse_str(id_str).expect("valid UUID");
         assert_eq!(uuid.get_version(), Some(uuid::Version::Random));
     }
@@ -1083,7 +1047,6 @@ mod tests {
             maker2.make_request_id(&request).unwrap()
         };
 
-        // Different maker instances should generate different UUIDs
         let id1_str = id1.header_value().to_str().expect("valid utf8");
         let id2_str = id2.header_value().to_str().expect("valid utf8");
         assert_ne!(id1_str, id2_str);
@@ -1098,15 +1061,10 @@ mod tests {
         let id1 = maker1.make_request_id(&request).unwrap();
         let id2 = maker2.make_request_id(&request).unwrap();
 
-        // Cloned makers should still generate different UUIDs
         let id1_str = id1.header_value().to_str().expect("valid utf8");
         let id2_str = id2.header_value().to_str().expect("valid utf8");
         assert_ne!(id1_str, id2_str);
     }
-
-    // ============================================================================
-    // Server Configuration Tests
-    // ============================================================================
 
     #[test]
     fn test_server_creation() {
@@ -1165,14 +1123,9 @@ mod tests {
         build_router_with_handlers(routes, hooks)
     }
 
-    // ============================================================================
-    // Route Registration Tests
-    // ============================================================================
-
     #[test]
     fn test_route_registry_empty_routes() {
         let routes: Vec<(crate::Route, Arc<dyn Handler>)> = vec![];
-        // Should not panic with empty routes
         let _result = build_router_for_tests(routes, None);
     }
 
@@ -1180,7 +1133,6 @@ mod tests {
     fn test_route_registry_single_route() {
         let route = build_test_route("/test", "GET", "test_handler", false);
 
-        // Create a mock handler
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
@@ -1234,10 +1186,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // ============================================================================
-    // Path Parameter Tests
-    // ============================================================================
-
     #[test]
     fn test_route_with_single_path_parameter() {
         let route = build_test_route("/users/{id}", "GET", "get_user", false);
@@ -1281,10 +1229,6 @@ mod tests {
         let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
-
-    // ============================================================================
-    // HTTP Method Coverage Tests
-    // ============================================================================
 
     #[test]
     fn test_route_post_method_with_body() {
@@ -1352,10 +1296,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // ============================================================================
-    // CORS Configuration Tests
-    // ============================================================================
-
     #[test]
     fn test_route_with_cors_config() {
         let cors_config = crate::CorsConfig {
@@ -1397,10 +1337,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // ============================================================================
-    // Route Sorting and Ordering Tests
-    // ============================================================================
-
     #[test]
     fn test_routes_sorted_by_path() {
         let zebra_route = build_test_route("/zebra", "GET", "get_zebra", false);
@@ -1409,7 +1345,6 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(zebra_route, handler.clone()), (alpha_route, handler)];
 
-        // Should handle routes out of order without error
         let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
@@ -1425,10 +1360,6 @@ mod tests {
         let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
-
-    // ============================================================================
-    // Lifecycle Hooks Tests
-    // ============================================================================
 
     #[test]
     fn test_routes_with_lifecycle_hooks() {
@@ -1454,10 +1385,6 @@ mod tests {
         let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
-
-    // ============================================================================
-    // Edge Cases and Error Scenarios
-    // ============================================================================
 
     #[test]
     fn test_route_with_trailing_slash() {
@@ -1486,7 +1413,6 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let mut routes = vec![];
 
-        // Create 50 different routes
         for i in 0..50 {
             let route = build_test_route(&format!("/route{}", i), "GET", &format!("handler_{}", i), false);
             routes.push((route, handler.clone()));
@@ -1498,7 +1424,6 @@ mod tests {
 
     #[test]
     fn test_route_with_query_params_in_path_definition() {
-        // Query params should be in the path definition (though normally handled at handler level)
         let route = build_test_route("/search", "GET", "search", false);
 
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);

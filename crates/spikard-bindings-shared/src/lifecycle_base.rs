@@ -101,16 +101,14 @@ mod tests {
         set.insert(LifecycleHookType::PreHandler);
         set.insert(LifecycleHookType::OnRequest);
 
-        assert_eq!(set.len(), 2); // OnRequest should only be added once
+        assert_eq!(set.len(), 2);
     }
 
     #[test]
     fn test_hook_result_continue() {
         let result = HookResult::Continue;
         match result {
-            HookResult::Continue => {
-                // Expected
-            }
+            HookResult::Continue => {}
             HookResult::ShortCircuit(_) => panic!("Expected Continue"),
         }
     }
@@ -219,7 +217,6 @@ mod tests {
         config.register(hook1);
         config.register(hook2);
 
-        // Multiple calls should return independent clones
         let hooks1 = config.get_hooks(LifecycleHookType::OnResponse);
         let hooks2 = config.get_hooks(LifecycleHookType::OnResponse);
 
@@ -239,9 +236,7 @@ mod tests {
 
         assert!(result.is_ok());
         match result.unwrap() {
-            HookResult::Continue => {
-                // Expected
-            }
+            HookResult::Continue => {}
             HookResult::ShortCircuit(_) => panic!("Expected Continue"),
         }
     }
@@ -276,7 +271,6 @@ mod tests {
             config.register(hook);
         }
 
-        // Verify all types are registered
         for hook_type in hook_types {
             let hooks = config.get_hooks(hook_type);
             assert_eq!(hooks.len(), 1);

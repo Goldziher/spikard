@@ -320,7 +320,6 @@ impl ConfigExtractor {
         _source: &dyn ConfigSource,
     ) -> Result<HashMap<String, SecuritySchemeInfo>, String> {
         // TODO: Implement when bindings support iterating HashMap-like structures
-        // For now, return empty map as default
         Ok(HashMap::new())
     }
 

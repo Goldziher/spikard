@@ -280,10 +280,6 @@ mod tests {
     use axum::body::Body;
     use axum::http::Request;
 
-    // ============================================================================
-    // ROUTE INFO TESTS (3 tests)
-    // ============================================================================
-
     #[test]
     fn test_route_info_creation() {
         let info = RouteInfo {
@@ -307,10 +303,6 @@ mod tests {
         };
         assert_eq!(info.expects_json_body, false);
     }
-
-    // ============================================================================
-    // ROUTE REGISTRY TESTS (4 tests)
-    // ============================================================================
 
     #[test]
     fn test_route_registry_empty() {
@@ -369,14 +361,9 @@ mod tests {
         assert!(!registry.contains_key(&key));
     }
 
-    // ============================================================================
-    // CONTENT-LENGTH EDGE CASES (5 tests)
-    // ============================================================================
-
     #[test]
     fn test_request_with_zero_content_length() {
         let headers = axum::http::HeaderMap::new();
-        // No content-length header - should pass
         assert!(headers.get(axum::http::header::CONTENT_LENGTH).is_none());
     }
 
@@ -388,19 +375,16 @@ mod tests {
             axum::http::header::CONTENT_LENGTH,
             axum::http::HeaderValue::from_str(&large_size.to_string()).unwrap(),
         );
-        // Just verify it doesn't panic
         assert!(headers.get(axum::http::header::CONTENT_LENGTH).is_some());
     }
 
     #[test]
     fn test_request_body_smaller_than_declared_length() {
-        // Test that size mismatch is caught
         let mut headers = axum::http::HeaderMap::new();
         headers.insert(
             axum::http::header::CONTENT_LENGTH,
             axum::http::HeaderValue::from_static("1000"),
         );
-        // Actual body is 500 bytes
         let result = super::validation::validate_content_length(&headers, 500);
         assert!(
             result.is_err(),
@@ -410,13 +394,11 @@ mod tests {
 
     #[test]
     fn test_request_body_larger_than_declared_length() {
-        // Test that size mismatch is caught
         let mut headers = axum::http::HeaderMap::new();
         headers.insert(
             axum::http::header::CONTENT_LENGTH,
             axum::http::HeaderValue::from_static("500"),
         );
-        // Actual body is 1000 bytes
         let result = super::validation::validate_content_length(&headers, 1000);
         assert!(
             result.is_err(),
@@ -424,13 +406,8 @@ mod tests {
         );
     }
 
-    // ============================================================================
-    // HTTP METHOD VALIDATION (5 tests)
-    // ============================================================================
-
     #[test]
     fn test_get_request_no_body_validation() {
-        // GET requests should not trigger body validation
         let request = Request::builder()
             .method(axum::http::Method::GET)
             .uri("/api/users")
@@ -443,7 +420,6 @@ mod tests {
 
     #[test]
     fn test_delete_request_no_body_validation() {
-        // DELETE requests should not require strict body validation
         let request = Request::builder()
             .method(axum::http::Method::DELETE)
             .uri("/api/users/1")
@@ -490,10 +466,6 @@ mod tests {
         assert_eq!(parts.method, axum::http::Method::PATCH);
     }
 
-    // ============================================================================
-    // HEADER CASE SENSITIVITY (3 tests)
-    // ============================================================================
-
     #[test]
     fn test_content_type_header_case_insensitive() {
         let mut headers = axum::http::HeaderMap::new();
@@ -502,8 +474,6 @@ mod tests {
             axum::http::HeaderValue::from_static("application/json"),
         );
 
-        // HTTP header names are case-insensitive per spec
-        // axum normalizes them internally
         assert!(headers.get(axum::http::header::CONTENT_TYPE).is_some());
     }
 
@@ -526,10 +496,6 @@ mod tests {
 
         assert!(headers.get(&custom_header).is_some());
     }
-
-    // ============================================================================
-    // BOUNDARY PARAMETER EDGE CASES (4 tests)
-    // ============================================================================
 
     #[test]
     fn test_multipart_boundary_minimal() {
@@ -576,21 +542,14 @@ mod tests {
         );
 
         let _result = super::validation::validate_content_type_headers(&headers, 0);
-        // Empty boundary should still be present (mime crate may accept it)
-        // The actual validation happens during parsing
         assert!(headers.get(axum::http::header::CONTENT_TYPE).is_some());
     }
-
-    // ============================================================================
-    // JSON PARSING ERROR HANDLING (3 tests)
-    // ============================================================================
 
     #[test]
     fn test_invalid_json_body_detection() {
         let invalid_json = r#"{"invalid": json without quotes}"#;
         let _mime = "application/json".parse::<mime::Mime>().unwrap();
 
-        // Test that invalid JSON would be caught by serde
         let result = serde_json::from_str::<serde_json::Value>(invalid_json);
         assert!(result.is_err(), "Invalid JSON should fail parsing");
     }
@@ -611,10 +570,6 @@ mod tests {
         assert!(value.is_object());
         assert_eq!(value.as_object().unwrap().len(), 0);
     }
-
-    // ============================================================================
-    // MIME TYPE RECOGNITION (4 tests)
-    // ============================================================================
 
     #[test]
     fn test_form_data_mime_type() {

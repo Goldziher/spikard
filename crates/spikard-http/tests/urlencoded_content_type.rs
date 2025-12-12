@@ -15,7 +15,6 @@ fn build_router(registry: RouteRegistry) -> Router {
         .route(
             "/forms",
             post(|headers: HeaderMap, body: axum::body::Bytes| async move {
-                // Echo the transformed JSON body and resulting content-type for assertions.
                 let content_type = headers
                     .get(axum::http::header::CONTENT_TYPE)
                     .and_then(|h| h.to_str().ok())

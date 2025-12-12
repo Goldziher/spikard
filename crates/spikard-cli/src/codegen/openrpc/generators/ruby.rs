@@ -13,7 +13,6 @@ impl OpenRpcGenerator for RubyOpenRpcGenerator {
     fn generate_handler_app(&self, spec: &OpenRpcSpec) -> Result<String> {
         let mut code = String::new();
 
-        // Header
         code.push_str("#!/usr/bin/env ruby\n");
         code.push_str("# frozen_string_literal: true\n\n");
         code.push_str("# JSON-RPC 2.0 handlers generated from OpenRPC specification.\n");
@@ -24,11 +23,9 @@ impl OpenRpcGenerator for RubyOpenRpcGenerator {
         code.push_str(&spec.info.version);
         code.push_str("\n\n");
 
-        // Requires
         code.push_str("require 'json'\n");
         code.push_str("require 'async'\n\n");
 
-        // Generate handler classes
         code.push_str("# ============================================================================\n");
         code.push_str("# JSON-RPC Method Handlers\n");
         code.push_str("# ============================================================================\n\n");
@@ -37,7 +34,6 @@ impl OpenRpcGenerator for RubyOpenRpcGenerator {
             generate_ruby_handler(&mut code, method)?;
         }
 
-        // Generate handler registry
         code.push_str("# ============================================================================\n");
         code.push_str("# Handler Registry\n");
         code.push_str("# ============================================================================\n\n");
@@ -49,7 +45,6 @@ impl OpenRpcGenerator for RubyOpenRpcGenerator {
         }
         code.push_str("}.freeze\n\n");
 
-        // Generate method router
         code.push_str("# ============================================================================\n");
         code.push_str("# Method Router\n");
         code.push_str("# ============================================================================\n\n");
@@ -83,7 +78,6 @@ impl OpenRpcGenerator for RubyOpenRpcGenerator {
         code.push_str("  end\n");
         code.push_str("end\n\n");
 
-        // Example usage
         code.push_str("# ============================================================================\n");
         code.push_str("# Example Usage\n");
         code.push_str("# ============================================================================\n\n");
@@ -130,7 +124,6 @@ fn generate_ruby_handler(
     }
     code.push_str("  def execute(params)\n");
 
-    // Validate params
     if !method.params.is_empty() {
         code.push_str("    validate_params(params)\n");
     }
@@ -143,7 +136,6 @@ fn generate_ruby_handler(
     code.push_str("    # 3. Return result as Hash matching schema\n");
     code.push_str("    # 4. Raise appropriate JSON-RPC errors on failure\n\n");
 
-    // Placeholder return
     code.push_str("    # Example return structure (update with real data):\n");
     code.push_str("    result = {}\n");
     if let Some(properties) = method.result.schema.get("properties")
@@ -156,7 +148,6 @@ fn generate_ruby_handler(
     code.push_str("    result\n");
     code.push_str("  end\n");
 
-    // Parameter validation
     if !method.params.is_empty() {
         code.push_str("\n  private\n\n");
         code.push_str("  def validate_params(params)\n");

@@ -60,7 +60,6 @@ jobs:
           path: target/release/benchmark-harness
           retention-days: 1
 
-  # Spikard bindings (5 frameworks)
   bench-spikard-rust:
     name: spikard-rust
     needs: build-harness
@@ -166,7 +165,6 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Python frameworks (3 frameworks with DTO validation)
   bench-fastapi-uvicorn-dto:
     name: fastapi-uvicorn-dto
     needs: build-harness
@@ -230,7 +228,6 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Python raw variants (3 frameworks - no validation/serialization)
   bench-spikard-raw:
     name: spikard-raw
     needs: build-harness
@@ -315,7 +312,6 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # TypeScript frameworks (6 frameworks)
   bench-fastify-dto:
     name: fastify-dto
     needs: build-harness
@@ -484,7 +480,6 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Ruby frameworks (4 frameworks)
   bench-hanami-api-dto:
     name: hanami-api-dto
     needs: build-harness
@@ -569,7 +564,6 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # PHP frameworks (4 frameworks)
   bench-phalcon-raw:
     name: phalcon-raw
     needs: build-harness

@@ -31,9 +31,7 @@ impl Handler for DependencyAccessHandler {
         let dependency_name = self.dependency_name.clone();
 
         Box::pin(async move {
-            // Check if dependencies are present
             if let Some(deps) = &request_data.dependencies {
-                // Try to get the dependency
                 if let Some(value) = deps.get::<String>(&dependency_name) {
                     let response = Response::builder()
                         .status(StatusCode::OK)
@@ -58,7 +56,6 @@ impl Handler for DependencyAccessHandler {
 
 #[tokio::test]
 async fn test_di_value_injection() {
-    // Setup: Create container with a value dependency
     let mut container = DependencyContainer::new();
     container
         .register(
@@ -67,14 +64,12 @@ async fn test_di_value_injection() {
         )
         .unwrap();
 
-    // Create handler that accesses the config dependency
     let handler = Arc::new(DependencyAccessHandler {
         dependency_name: "config".to_string(),
     });
 
     let di_handler = DependencyInjectingHandler::new(handler, Arc::new(container), vec!["config".to_string()]);
 
-    // Execute
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
@@ -92,7 +87,6 @@ async fn test_di_value_injection() {
 
     let result = di_handler.call(request, request_data).await;
 
-    // Verify
     let response = match result {
         Ok(r) => r,
         Err((status, msg)) => {
@@ -101,7 +95,6 @@ async fn test_di_value_injection() {
     };
     assert_eq!(response.status(), StatusCode::OK);
 
-    // Read body
     use http_body_util::BodyExt;
     let body_bytes = response.into_body().collect().await.unwrap().to_bytes();
     let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
@@ -110,7 +103,6 @@ async fn test_di_value_injection() {
 
 #[tokio::test]
 async fn test_di_missing_dependency_error() {
-    // Setup: Empty container, but handler requires "database"
     let container = DependencyContainer::new();
 
     let handler = Arc::new(DependencyAccessHandler {
@@ -119,7 +111,6 @@ async fn test_di_missing_dependency_error() {
 
     let di_handler = DependencyInjectingHandler::new(handler, Arc::new(container), vec!["database".to_string()]);
 
-    // Execute
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
@@ -137,7 +128,6 @@ async fn test_di_missing_dependency_error() {
 
     let result = di_handler.call(request, request_data).await;
 
-    // Verify: should return structured error response
     assert!(result.is_ok());
     let response = result.unwrap();
     assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
@@ -145,7 +135,6 @@ async fn test_di_missing_dependency_error() {
 
 #[tokio::test]
 async fn test_di_multiple_value_dependencies() {
-    // Setup: Create container with multiple value dependencies
     let mut container = DependencyContainer::new();
 
     container
@@ -162,14 +151,12 @@ async fn test_di_multiple_value_dependencies() {
         )
         .unwrap();
 
-    // Handler accesses cache_url
     let handler = Arc::new(DependencyAccessHandler {
         dependency_name: "cache_url".to_string(),
     });
 
     let di_handler = DependencyInjectingHandler::new(handler, Arc::new(container), vec!["cache_url".to_string()]);
 
-    // Execute
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
@@ -187,7 +174,6 @@ async fn test_di_multiple_value_dependencies() {
 
     let result = di_handler.call(request, request_data).await;
 
-    // Verify
     let response = match result {
         Ok(r) => r,
         Err((status, msg)) => {

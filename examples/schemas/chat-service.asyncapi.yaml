@@ -41,7 +41,6 @@ servers:
     description: Local development server
 
 channels:
-  # Main chat channel - bidirectional messaging
   chat:
     address: /chat/{roomId}
     title: Chat Messages
@@ -82,7 +81,6 @@ channels:
             - "550e8400-e29b-41d4-a716-446655440000"
 
     messages:
-      # Incoming client messages
       chatMessage:
         $ref: '#/components/messages/chatMessage'
       typingIndicator:
@@ -90,7 +88,6 @@ channels:
       presenceRequest:
         $ref: '#/components/messages/presenceRequest'
 
-      # Outgoing server messages
       chatMessageBroadcast:
         $ref: '#/components/messages/chatMessageBroadcast'
       chatAck:
@@ -111,7 +108,6 @@ channels:
         $ref: '#/components/messages/connectionClosed'
 
 operations:
-  # Client -> Server operations
   publishChatMessage:
     action: send
     channel:
@@ -151,7 +147,6 @@ operations:
     messages:
       - $ref: '#/components/messages/presenceRequest'
 
-  # Server -> Client operations
   receiveChatMessage:
     action: receive
     channel:
@@ -263,7 +258,6 @@ operations:
 
 components:
   messages:
-    # Client -> Server Messages
     chatMessage:
       name: chatMessage
       title: Chat Message
@@ -353,7 +347,6 @@ components:
             type: string
             const: presence_request
 
-    # Server -> Client Messages
     chatMessageBroadcast:
       name: chatMessageBroadcast
       title: Chat Message Broadcast

@@ -88,15 +88,9 @@ class Spikard:
             sig = inspect.signature(func)
             wrapped_func = func
 
-            # Extract handler dependencies FIRST (all parameter names that could be dependencies)
-            # We do this before extracting body_param_name so we can skip DI parameters
-            # We include ALL non-standard parameters, not just registered ones, so that
-            # the DI handler can properly return "dependency not found" errors for missing deps
             standard_params = {"self", "cls", "path_params", "query_params", "headers", "cookies"}
             potential_dependencies = [param_name for param_name in sig.parameters if param_name not in standard_params]
 
-            # Parameters already bound to the request (headers/query/path/cookies/files/body) are
-            # NOT DI dependencies. Derive them from the parameter schema, file params, and ParamBase defaults.
             request_bound_params = set()
             provided_parameter_schema = parameter_schema is not None
             if extracted_parameter_schema:
@@ -113,12 +107,8 @@ class Spikard:
                 if isinstance(param.default, ParamBase):
                     request_bound_params.add(param_name)
 
-            # Never treat registered dependencies as request-bound
             request_bound_params.difference_update(self._dependencies.keys())
 
-            # For methods with no body schema, assume first non-standard param that's NOT a
-            # path/query/header/cookie param is likely a DI dependency, not a body parameter
-            # The body parameter should be explicitly named "body" or have a body schema
             handler_dependencies = []
             body_param_name = None
             if method.upper() not in {"GET", "DELETE", "HEAD", "OPTIONS"}:
@@ -129,11 +119,9 @@ class Spikard:
                         handler_dependencies.append(param_name)
                         continue
                     if body_param_name is None:
-                        # First unbound param is treated as the body
                         body_param_name = param_name
                     else:
                         handler_dependencies.append(param_name)
-            # Any param that is not request-bound and not the body is treated as a DI dependency
             handler_dependencies.extend(
                 [p for p in potential_dependencies if p != body_param_name and p not in request_bound_params]
             )
@@ -259,7 +247,6 @@ class Spikard:
         """
         return self._routes.copy()
 
-    # HTTP verb decorators (FastAPI/Litestar pattern)
     def get(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a GET route.
 

@@ -166,10 +166,6 @@ fn try_build_upload_file(
 /// Accepts either String or Array of bytes.
 pub fn ruby_value_to_bytes(value: Value) -> Result<Bytes, std::io::Error> {
     if let Ok(str_value) = RString::try_convert(value) {
-        // SAFETY: Magnus guarantees RString::as_slice() returns valid UTF-8 (or binary)
-        // bytes for the lifetime of the RString. The slice is only used within this
-        // function scope to copy into a Bytes buffer, and does not outlive the RString
-        // reference. The copy_from_slice operation is safe for the borrowed data.
         let slice = unsafe { str_value.as_slice() };
         return Ok(Bytes::copy_from_slice(slice));
     }

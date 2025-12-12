@@ -29,7 +29,6 @@ impl WebSocketHandler for PythonWebSocketHandler {
         let handler = Arc::clone(&self.handler);
         let message = message.clone();
 
-        // First, call the handler and get the result (sync or coroutine)
         let result_py = Python::attach(|py| -> PyResult<Py<PyAny>> {
             let py_message = json_to_python(py, &message)?;
             let result_or_coroutine = handler.bind(py).call_method1("handle_message", (py_message,))?;

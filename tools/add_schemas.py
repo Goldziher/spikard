@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Add explicit schemas to all fixture files."""
 
 import json

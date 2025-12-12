@@ -126,9 +126,7 @@ class MockWebSocketConnection {
 		return this.receive_json();
 	}
 
-	async close(): Promise<void> {
-		// no-op for mock
-	}
+	async close(): Promise<void> {}
 }
 
 type NativeClientConstructor = new (
@@ -159,8 +157,6 @@ let nativeTestClient: NativeClientConstructor | null = null;
 
 const loadNativeTestClient = (): NativeClientConstructor | null => {
 	try {
-		// createRequire allows us to require CommonJS modules from ESM context
-		// This is necessary to load the NAPI binding which is a .node file loaded via CommonJS
 		const require = createRequire(import.meta.url);
 		const binding = require("../index.js") as NativeBinding;
 		return binding.TestClient;
@@ -455,9 +451,7 @@ class JsNativeClient implements NativeClient {
 							: JSON.stringify(parsed.body);
 					return new JsTestResponse(statusCode, parsed.headers ?? {}, Buffer.from(textBody));
 				}
-			} catch {
-				// fall through to treat as plain text
-			}
+			} catch {}
 			return new JsTestResponse(200, {}, Buffer.from(result));
 		}
 

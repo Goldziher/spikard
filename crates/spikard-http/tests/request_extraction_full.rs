@@ -20,10 +20,6 @@ use std::sync::Arc;
 
 use crate::common::test_builders::RequestBuilder;
 
-// ============================================================================
-// Query Parameter Tests
-// ============================================================================
-
 /// Test single query parameter extraction
 ///
 /// Query: `?name=john`
@@ -61,7 +57,6 @@ fn test_query_params_multiple_values() {
     assert_eq!(ids[1], "2");
     assert_eq!(ids[2], "3");
 
-    // Type-converted query params should be an array
     assert!(request_data.query_params["id"].is_array());
 }
 
@@ -149,7 +144,6 @@ fn test_query_params_numeric_values_as_strings() {
         .query_param("limit", "50")
         .build();
 
-    // Raw params are always strings
     let page = request_data.raw_query_params.get("page").unwrap();
     assert_eq!(page[0], "1");
 
@@ -172,23 +166,16 @@ fn test_query_params_mixed_types_and_counts() {
         .query_param("search", "hello world")
         .build();
 
-    // Single values
     assert_eq!(request_data.raw_query_params.get("page").unwrap()[0], "1");
     assert_eq!(request_data.raw_query_params.get("active").unwrap()[0], "true");
 
-    // Multiple values for same key
     let tags = request_data.raw_query_params.get("tags").unwrap();
     assert_eq!(tags.len(), 2);
     assert_eq!(tags[0], "rust");
     assert_eq!(tags[1], "web");
 
-    // Value with space
     assert_eq!(request_data.raw_query_params.get("search").unwrap()[0], "hello world");
 }
-
-// ============================================================================
-// Cookie Tests
-// ============================================================================
 
 /// Test single cookie extraction
 ///
@@ -262,10 +249,6 @@ fn test_cookies_numeric_values() {
     assert_eq!(request_data.cookies.get("version"), Some(&"2".to_string()));
 }
 
-// ============================================================================
-// Path Parameter Tests
-// ============================================================================
-
 /// Test single path parameter extraction
 ///
 /// Route: `/users/:id` with path `/users/123`
@@ -277,7 +260,6 @@ fn test_path_params_single() {
 
     let (_request, request_data) = RequestBuilder::new().path("/users/123").build();
 
-    // RequestBuilder doesn't set path_params directly, but we verify the path
     assert_eq!(request_data.path, "/users/123");
 }
 
@@ -291,7 +273,6 @@ fn test_path_params_multiple() {
     path_params.insert("post_id".to_string(), "42".to_string());
     path_params.insert("comment_id".to_string(), "789".to_string());
 
-    // Build request with path containing parameter placeholders
     let (_request, request_data) = RequestBuilder::new().path("/posts/42/comments/789").build();
 
     assert_eq!(request_data.path, "/posts/42/comments/789");
@@ -307,10 +288,6 @@ fn test_path_params_with_special_chars() {
 
     assert_eq!(request_data.path, "/files/document-2025-12-10.log");
 }
-
-// ============================================================================
-// Header Tests
-// ============================================================================
 
 /// Test single header extraction
 ///
@@ -402,10 +379,6 @@ fn test_headers_bearer_token() {
     assert!(auth_header.contains(token));
 }
 
-// ============================================================================
-// Body Parsing Tests
-// ============================================================================
-
 /// Test JSON body is stored for deferred parsing
 ///
 /// Content-Type: application/json, Body: `{"name": "Alice"}`
@@ -420,7 +393,6 @@ fn test_body_json_stored() {
         .json_body(body_json.clone())
         .build();
 
-    // Verify body is in RequestData
     assert_eq!(request_data.body, body_json);
 }
 
@@ -458,10 +430,6 @@ fn test_body_large_json() {
     assert_eq!(request_data.body, large_body);
 }
 
-// ============================================================================
-// Integrated Request Tests (Multiple Components)
-// ============================================================================
-
 /// Test complete request with path, query, headers, cookies, and body
 ///
 /// Combines all extraction scenarios
@@ -481,26 +449,21 @@ fn test_complete_request_with_all_components() {
         .json_body(body.clone())
         .build();
 
-    // Verify all components
     assert_eq!(request_data.method, "POST");
     assert_eq!(request_data.path, "/api/v1/users");
 
-    // Query params
     assert_eq!(request_data.raw_query_params.get("limit").unwrap()[0], "10");
     assert_eq!(request_data.raw_query_params.get("filter").unwrap()[0], "active");
 
-    // Headers
     assert!(request_data.headers.get("authorization").is_some());
     assert_eq!(
         request_data.headers.get("content-type"),
         Some(&"application/json".to_string())
     );
 
-    // Cookies
     assert_eq!(request_data.cookies.get("session"), Some(&"xyz789".to_string()));
     assert_eq!(request_data.cookies.get("preferences"), Some(&"dark_mode".to_string()));
 
-    // Body
     assert_eq!(request_data.body, body);
 }
 
@@ -518,10 +481,8 @@ fn test_request_data_arc_cloning() {
         .cookie("session", "abc123")
         .build();
 
-    // Clone the request data
     let cloned = request_data.clone();
 
-    // Verify Arc pointers are the same (cheap clone)
     assert!(Arc::ptr_eq(&request_data.headers, &cloned.headers));
     assert!(Arc::ptr_eq(&request_data.cookies, &cloned.cookies));
     assert!(Arc::ptr_eq(&request_data.raw_query_params, &cloned.raw_query_params));

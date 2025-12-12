@@ -313,7 +313,6 @@ impl RequestContext {
 
         let options_obj = Object::new();
 
-        // Handle headers in options (for content-type detection)
         if let Some(headers_obj) = value.get("headers").and_then(|v| v.as_object()) {
             let headers_js = Object::new();
             for (key, val) in headers_obj.iter() {
@@ -328,26 +327,20 @@ impl RequestContext {
                 .map_err(|_| JsValue::from_str("Failed to set headers in options"))?;
         }
 
-        // Handle body - try to parse as JSON first, otherwise store as form_raw
         if let Some(body_val) = value.get("body") {
             match body_val {
-                serde_json::Value::Null => {
-                    // No body
-                }
+                serde_json::Value::Null => {}
                 serde_json::Value::String(s) => {
-                    // Try to parse as JSON, fallback to form_raw
                     if let Ok(json_val) = serde_json::from_str::<serde_json::Value>(s) {
                         serde_wasm_bindgen::to_value(&json_val)
                             .ok()
                             .and_then(|js_val| Reflect::set(&options_obj, &JsValue::from_str("json"), &js_val).ok());
                     } else {
-                        // Store as form_raw if not valid JSON
                         Reflect::set(&options_obj, &JsValue::from_str("formRaw"), &JsValue::from_str(s))
                             .map_err(|_| JsValue::from_str("Failed to set formRaw"))?;
                     }
                 }
                 _ => {
-                    // Try to convert to JS value
                     serde_wasm_bindgen::to_value(body_val)
                         .ok()
                         .and_then(|js_val| Reflect::set(&options_obj, &JsValue::from_str("json"), &js_val).ok());
@@ -1320,8 +1313,6 @@ fn enforce_auth(
     let authorization = header_value(headers, "authorization");
     let api_key_candidate = api_key.and_then(|cfg| extract_api_key(headers, raw_query, cfg));
 
-    // If an Authorization header is present and JWT auth is enabled, validate it and
-    // do not fall back to API key authentication (prevents downgrade attacks).
     if let Some(jwt_cfg) = jwt {
         if let Some(auth_header) = authorization {
             match validate_jwt_from_authorization(auth_header, jwt_cfg) {
@@ -1340,7 +1331,6 @@ fn enforce_auth(
         }
     }
 
-    // Missing credentials.
     if jwt.is_some() {
         let problem = unauthorized_problem(
             "Missing or invalid Authorization header",

@@ -52,15 +52,12 @@ impl Handler for ExampleHandler {
         Box::pin(async move {
             #[cfg(feature = "di")]
             {
-                // Access injected dependencies
                 if let Some(ref dependencies) = request_data.dependencies {
-                    // Get app_name
                     let app_name: Option<Arc<String>> = dependencies.get("app_name");
                     if let Some(name) = app_name {
                         println!("App name from DI: {}", name);
                     }
 
-                    // Get database pool
                     let db: Option<Arc<DatabasePool>> = dependencies.get("db");
                     if let Some(pool) = db {
                         let users = pool
@@ -98,7 +95,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     #[cfg(feature = "di")]
     {
-        // Example 1: Simple value dependencies
         println!("1. Simple Value Dependencies");
         println!("------------------------------");
 
@@ -112,7 +108,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("✓ Registered value dependencies: app_name, version, max_connections");
         println!("  Container exists: {}\n", config1.di_container.is_some());
 
-        // Example 2: Factory dependencies
         println!("2. Factory Dependencies");
         println!("------------------------");
 
@@ -121,7 +116,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .provide_value("db_url", "postgresql://localhost/mydb".to_string())
             .provide_value("max_connections", 100)
             .provide_factory("db", |resolved| async move {
-                // Access other dependencies
                 let db_url = resolved
                     .get::<String>("db_url")
                     .ok_or("db_url not found")?;
@@ -134,7 +128,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("  - URL: {}", db_url);
                 println!("  - Max connections: {}", max_conn);
 
-                // Simulate async database connection
                 let pool = DatabasePool::connect(&db_url, *max_conn)
                     .await
                     .map_err(|e| format!("Failed to connect to database: {}", e))?;
@@ -146,19 +139,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("✓ Registered factory dependency: db");
         println!("  Container exists: {}\n", config2.di_container.is_some());
 
-        // Example 3: Multiple dependencies with relationships
         println!("3. Multiple Dependencies");
         println!("-------------------------");
 
         let config3 = ServerConfig::builder()
             .port(3002)
-            // Base configuration
             .provide_value("app_name", "ProductionApp".to_string())
             .provide_value("environment", "production".to_string())
-            // Database configuration
             .provide_value("db_url", "postgresql://prod-db/myapp".to_string())
             .provide_value("db_max_connections", 200)
-            // Database pool factory
             .provide_factory("db_pool", |resolved| async move {
                 let url = resolved.get::<String>("db_url").ok_or("Missing db_url")?;
                 let max_conn = resolved
@@ -172,7 +161,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("✓ Registered multiple dependencies with relationships");
         println!("  Container exists: {}\n", config3.di_container.is_some());
 
-        // Example 4: Advanced - custom dependency
         println!("4. Advanced: Custom Dependency");
         println!("--------------------------------");
 
@@ -192,7 +180,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("✓ Registered custom dependency using provide()");
         println!("  Container exists: {}\n", config4.di_container.is_some());
 
-        // Summary
         println!("=== Summary ===");
         println!("✓ All examples completed successfully");
         println!("\nKey Concepts Demonstrated:");

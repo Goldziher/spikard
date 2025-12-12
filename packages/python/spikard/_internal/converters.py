@@ -46,8 +46,6 @@ DecoderFunc = Callable[[type, Any], Any]
 
 _CUSTOM_DECODERS: list[DecoderFunc] = []
 
-# Cache of msgspec.json.Decoder instances per type
-# Performance optimization: reuse decoders instead of creating new ones per request
 _MSGSPEC_DECODER_CACHE: dict[type, msgspec.json.Decoder[typing.Any]] = {}
 
 
@@ -160,7 +158,6 @@ def _get_upload_file_fields(target_type: type) -> dict[str, bool]:
         Dict mapping field names to whether they're UploadFile types
         Example: {"avatar": True, "username": False}
     """
-    # Only analyze structured types
     if not (is_dataclass(target_type) or hasattr(target_type, "model_fields") or isinstance(target_type, type)):
         return {}
 
@@ -218,16 +215,13 @@ def _process_upload_file_fields(value: Any, file_fields: dict[str, bool]) -> Any
 
         field_value = result[field_name]
 
-        # Skip None values
         if field_value is None:
             continue
 
-        # Handle list[UploadFile]
         if isinstance(field_value, list):
             result[field_name] = [
                 _convert_file_json_to_upload_file(f) if isinstance(f, dict) else f for f in field_value
             ]
-        # Handle single UploadFile
         elif isinstance(field_value, dict) and "filename" in field_value:
             result[field_name] = _convert_file_json_to_upload_file(field_value)
 
@@ -250,32 +244,25 @@ def needs_conversion(handler_func: Callable[..., Any]) -> bool:
         sig = inspect.signature(handler_func)
         type_hints = get_type_hints(handler_func)
     except (AttributeError, NameError, TypeError, ValueError):
-        # Can't inspect - be conservative and convert
         return True
 
-    # If no parameters, no conversion needed
     if not sig.parameters:
         return False
 
-    # Check if any parameter needs conversion (not dict/Any)
     for param_name in sig.parameters:
         if param_name not in type_hints:
             continue
         target_type = type_hints[param_name]
         origin = get_origin(target_type)
 
-        # dict and Any don't need conversion
         if target_type in (dict, Any) or origin is dict:
             continue
 
-        # TypedDict doesn't need conversion (runtime is dict)
         if _is_typed_dict(target_type):
             continue
 
-        # If we get here, parameter needs conversion
         return True
 
-    # All parameters are dict/Any or no parameters
     return False
 
 
@@ -329,14 +316,11 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
     first_param_name = None
     if sig:
         handler_params = set(sig.parameters.keys())
-        # Find the first non-self/non-cls parameter (this is the body parameter)
         for param_name in sig.parameters:
             if param_name not in ("self", "cls"):
                 first_param_name = param_name
                 break
 
-    # If Rust passed "body" but handler uses a different parameter name,
-    # rename it to match the handler's first parameter
     if "body" in params and first_param_name and first_param_name != "body" and first_param_name not in params:
         params = params.copy()
         params[first_param_name] = params.pop("body")
@@ -355,8 +339,6 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
         args = get_args(target_type)
         value = raw_value
 
-        # For body parameter with bytes, decode JSON first
-        # Body parameter is the first non-self/non-cls parameter
         is_body_param = key == first_param_name and isinstance(value, bytes)
         if is_body_param:
             if not value:
@@ -367,25 +349,20 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 converted[key] = value
                 continue
 
-            # Decode JSON bytes to dict/list for further processing
             try:
                 decoded_value = msgspec.json.decode(value)
 
-                # For raw UploadFile/list[UploadFile], unwrap from {"param_name": value} wrapper
-                # Rust wraps multipart form fields in an object: {"files": [...]}
                 if isinstance(decoded_value, dict) and key in decoded_value and _is_upload_file_type(target_type):
                     value = decoded_value[key]
                 else:
                     value = decoded_value
 
-                # Don't continue - fall through to UploadFile/dataclass processing
             except (msgspec.DecodeError, ValueError):
                 if strict:
                     raise
                 converted[key] = value
                 continue
 
-        # Handle direct UploadFile or list[UploadFile] parameters
         if _is_upload_file_type(target_type):
             if origin is Union and any(arg is UploadFile for arg in args) and isinstance(value, dict):
                 converted[key] = _convert_file_json_to_upload_file(value)
@@ -397,11 +374,8 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 converted[key] = [_convert_file_json_to_upload_file(f) if isinstance(f, dict) else f for f in value]
                 continue
 
-        # Now check if this type has UploadFile fields (for multipart/form data)
-        # This happens AFTER JSON decoding so value is a dict
         file_fields = _get_upload_file_fields(target_type)
         if file_fields and isinstance(value, dict):
-            # Process file fields: convert JSON file representations to UploadFile instances
             processed_value = _process_upload_file_fields(value, file_fields)
             value = processed_value
 
@@ -415,14 +389,12 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
 
         if is_dataclass(target_type) and isinstance(value, dict):
             try:
-                # Add missing optional fields with None
                 type_hints_for_dc = get_type_hints(target_type)
                 value_with_defaults = value.copy()
 
                 for field in dataclasses.fields(target_type):
                     if field.name not in value_with_defaults:
                         field_type = type_hints_for_dc.get(field.name, field.type)
-                        # Check if field is Optional
                         origin = get_origin(field_type)
                         if origin in (Union, types.UnionType) and type(None) in get_args(field_type):
                             value_with_defaults[field.name] = None
@@ -445,15 +417,12 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 converted[key] = value
                 continue
 
-        # Handle msgspec.Struct: use fast decoder path if we have raw JSON bytes
         if isinstance(target_type, type) and isinstance(value, (dict, bytes)):
             try:
                 if issubclass(target_type, msgspec.Struct):
-                    # Fast path: decode directly from JSON bytes using cached decoder
                     if isinstance(value, bytes) and params.get("_raw_json"):
                         decoder = _get_or_create_decoder(target_type)
                         converted[key] = decoder.decode(value)
-                    # Fallback: construct from dict (after Rust validation)
                     elif isinstance(value, dict):
                         converted[key] = target_type(**value)
                     else:
@@ -467,7 +436,6 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 converted[key] = value
                 continue
 
-        # Pydantic BaseModel support
         if BaseModel is not None and isinstance(target_type, type) and issubclass(target_type, BaseModel):
             try:
                 if (

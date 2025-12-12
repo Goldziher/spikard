@@ -61,7 +61,6 @@ impl ParameterValidator {
     fn extract_parameter_defs(schema: &Value) -> Result<Vec<ParameterDef>, String> {
         let mut defs = Vec::new();
 
-        // Allow empty schemas - if no properties exist, return empty parameter definitions
         let properties = schema
             .get("properties")
             .and_then(|p| p.as_object())
@@ -721,8 +720,6 @@ mod tests {
         assert_eq!(params, json!({"flag": false}));
     }
 
-    // === ERROR PATH TESTS - COMPREHENSIVE COVERAGE ===
-
     #[test]
     fn test_integer_coercion_invalid_format_returns_error() {
         let schema = json!({
@@ -800,7 +797,7 @@ mod tests {
         });
 
         let validator = ParameterValidator::new(schema).unwrap();
-        let too_large = "9223372036854775808"; // i64::MAX + 1
+        let too_large = "9223372036854775808";
         let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
         raw_query_params.insert("big_num".to_string(), vec![too_large.to_string()]);
 
@@ -831,7 +828,7 @@ mod tests {
         });
 
         let validator = ParameterValidator::new(schema).unwrap();
-        let too_small = "-9223372036854775809"; // i64::MIN - 1
+        let too_small = "-9223372036854775809";
         let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
         raw_query_params.insert("small_num".to_string(), vec![too_small.to_string()]);
 
@@ -935,8 +932,6 @@ mod tests {
             &HashMap::new(),
         );
 
-        // Current behavior: returns false instead of error
-        // This may be intentional but is worth testing
         assert!(result.is_ok());
         let extracted = result.unwrap();
         assert_eq!(extracted["flag"], json!(false));
@@ -1091,7 +1086,6 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.errors[0].error_type, "missing");
-        // Header names are normalized: underscores to dashes, lowercase
         assert_eq!(
             err.errors[0].loc,
             vec!["headers".to_string(), "authorization".to_string()]
@@ -1348,16 +1342,12 @@ mod tests {
 
     #[test]
     fn test_time_validation_string_passthrough() {
-        // Note: The time format validation happens during coercion, but the JSON Schema
-        // validator may have stricter validation. This test verifies that we can pass through
-        // a string parameter that the schema doesn't enforce format validation on.
         let schema = json!({
             "type": "object",
             "properties": {
                 "start_time": {
                     "type": "string",
                     "source": "query"
-                    // No format field, just plain string
                 }
             },
             "required": ["start_time"]
@@ -1427,7 +1417,7 @@ mod tests {
         });
 
         let validator = ParameterValidator::new(schema).unwrap();
-        let valid_duration = "PT5M"; // 5 minutes
+        let valid_duration = "PT5M";
         let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
         raw_query_params.insert("timeout".to_string(), vec![valid_duration.to_string()]);
 
@@ -1457,7 +1447,6 @@ mod tests {
 
         let validator = ParameterValidator::new(schema).unwrap();
         let mut headers = HashMap::new();
-        // Headers are normalized: underscores to dashes, lowercase
         headers.insert("x-custom-header".to_string(), "value".to_string());
 
         let result =
@@ -1483,7 +1472,6 @@ mod tests {
 
         let validator = ParameterValidator::new(schema).unwrap();
         let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
-        // Multiple values provided - should use first
         raw_query_params.insert("id".to_string(), vec!["123".to_string(), "456".to_string()]);
 
         let result = validator.validate_and_extract(
@@ -1496,7 +1484,6 @@ mod tests {
 
         assert!(result.is_ok(), "Should accept first value of multiple query params");
         let extracted = result.unwrap();
-        // Only first value is extracted
         assert_eq!(extracted["id"], json!(123));
     }
 
@@ -1507,7 +1494,6 @@ mod tests {
             "properties": {
                 "param": {
                     "type": "string"
-                    // Missing required "source" field
                 }
             },
             "required": []
@@ -1571,7 +1557,6 @@ mod tests {
 
         assert!(result.is_err());
         let err = result.unwrap_err();
-        // Should report all three missing parameters
         assert_eq!(err.errors.len(), 3);
         assert!(err.errors.iter().all(|e| e.error_type == "missing"));
     }
@@ -1604,7 +1589,6 @@ mod tests {
 
         assert!(result.is_err());
         let err = result.unwrap_err();
-        // Error should include the actual invalid input
         assert_eq!(err.errors[0].input, json!(invalid_value));
     }
 
@@ -1722,7 +1706,6 @@ mod tests {
             &HashMap::new(),
         );
 
-        // Empty array should be accepted
         assert!(result.is_ok());
         let extracted = result.unwrap();
         assert_eq!(extracted["tags"], json!([]));
@@ -1778,7 +1761,6 @@ mod tests {
             &HashMap::new(),
         );
 
-        // i64::from_str accepts "+123"
         assert!(result.is_ok());
         let extracted = result.unwrap();
         assert_eq!(extracted["count"], json!(123));
@@ -1809,7 +1791,6 @@ mod tests {
             &HashMap::new(),
         );
 
-        // f64::from_str accepts ".5"
         assert!(result.is_ok());
         let extracted = result.unwrap();
         assert_eq!(extracted["ratio"], json!(0.5));
@@ -1840,7 +1821,6 @@ mod tests {
             &HashMap::new(),
         );
 
-        // f64::from_str accepts "5."
         assert!(result.is_ok());
     }
 

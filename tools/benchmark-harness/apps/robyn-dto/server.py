@@ -1,15 +1,7 @@
-#!/usr/bin/env python3
 """Robyn benchmark server for workload comparison.
 
 Robyn is a Rust-based Python web framework with high performance.
 """
-# /// script
-# requires-python = ">=3.11,<3.14"
-# dependencies = [
-#     "robyn>=0.39",
-#     "pydantic>=2",
-# ]
-# ///
 
 import sys
 from typing import Any
@@ -18,11 +10,6 @@ from pydantic import BaseModel
 from robyn import Robyn, Request, jsonify
 
 app = Robyn(__file__)
-
-
-# ============================================================================
-# Pydantic Models for Validation
-# ============================================================================
 
 
 class SmallPayload(BaseModel):
@@ -80,11 +67,6 @@ class VeryLargePayload(BaseModel):
     summary: dict[str, Any]
 
 
-# ============================================================================
-# JSON Body Workloads
-# ============================================================================
-
-
 @app.post("/json/small")
 async def post_json_small(request: Request):
     """Small JSON body (~100 bytes)."""
@@ -117,11 +99,6 @@ async def post_json_very_large(request: Request):
     return jsonify(payload.model_dump())
 
 
-# ============================================================================
-# Multipart Form Workloads
-# ============================================================================
-
-
 @app.post("/multipart/small")
 async def post_multipart_small():
     """Small multipart form (~1KB)."""
@@ -140,11 +117,6 @@ async def post_multipart_large():
     return jsonify({"files_received": 5, "total_bytes": 102400})
 
 
-# ============================================================================
-# URL Encoded Form Workloads
-# ============================================================================
-
-
 @app.post("/urlencoded/simple")
 async def post_urlencoded_simple(request: Request):
     """Simple URL-encoded form."""
@@ -157,11 +129,6 @@ async def post_urlencoded_complex(request: Request):
     """Complex URL-encoded form."""
     body = request.json()
     return jsonify(body)
-
-
-# ============================================================================
-# Path Parameter Workloads
-# ============================================================================
 
 
 @app.get("/path/simple/:id")
@@ -213,11 +180,6 @@ async def get_path_date(request: Request):
     return jsonify({"date": request.path_params["date"]})
 
 
-# ============================================================================
-# Query Parameter Workloads
-# ============================================================================
-
-
 @app.get("/query/few")
 async def get_query_few(request: Request):
     """Few query parameters (1-2)."""
@@ -236,11 +198,6 @@ async def get_query_many(request: Request):
     return jsonify(dict(request.query_params))
 
 
-# ============================================================================
-# Health Check
-# ============================================================================
-
-
 @app.get("/health")
 async def health():
     """Health check endpoint."""
@@ -252,10 +209,6 @@ async def root():
     """Root endpoint."""
     return jsonify({"status": "ok"})
 
-
-# ============================================================================
-# Server Startup
-# ============================================================================
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000

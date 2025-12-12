@@ -124,10 +124,6 @@ mod tests {
     use axum::http::{HeaderMap, HeaderValue, Method, Uri};
     use serde_json::json;
 
-    // ============================================================================
-    // Tests for extract_query_params
-    // ============================================================================
-
     #[test]
     fn test_extract_query_params_empty() {
         let uri: Uri = "/path".parse().unwrap();
@@ -191,10 +187,6 @@ mod tests {
         assert_eq!(result, json!({"key": ""}));
     }
 
-    // ============================================================================
-    // Tests for extract_raw_query_params
-    // ============================================================================
-
     #[test]
     fn test_extract_raw_query_params_empty() {
         let uri: Uri = "/path".parse().unwrap();
@@ -231,10 +223,6 @@ mod tests {
         let result = extract_raw_query_params(&uri);
         assert_eq!(result.get("email"), Some(&vec!["test@example.com".to_string()]));
     }
-
-    // ============================================================================
-    // Tests for extract_headers
-    // ============================================================================
 
     #[test]
     fn test_extract_headers_empty() {
@@ -287,10 +275,6 @@ mod tests {
         assert_eq!(result.get("x-request-id"), Some(&"req-12345".to_string()));
     }
 
-    // ============================================================================
-    // Tests for extract_cookies
-    // ============================================================================
-
     #[test]
     fn test_extract_cookies_no_cookie_header() {
         let headers = HeaderMap::new();
@@ -331,7 +315,7 @@ mod tests {
         );
 
         let result = extract_cookies(&headers);
-        assert!(result.len() >= 1); // Parser is lenient
+        assert!(result.len() >= 1);
     }
 
     #[test]
@@ -342,10 +326,6 @@ mod tests {
         let result = extract_cookies(&headers);
         assert_eq!(result.get("empty"), Some(&String::new()));
     }
-
-    // ============================================================================
-    // Tests for create_request_data_without_body
-    // ============================================================================
 
     #[test]
     fn test_create_request_data_without_body_minimal() {
@@ -441,10 +421,6 @@ mod tests {
         }
     }
 
-    // ============================================================================
-    // Tests for create_request_data_with_body (async)
-    // ============================================================================
-
     #[tokio::test]
     async fn test_create_request_data_with_body_empty() {
         let parts = axum::http::request::Request::builder()
@@ -484,7 +460,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(result.method, "POST");
-        assert_eq!(result.body, Value::Null); // Body not parsed yet
+        assert_eq!(result.body, Value::Null);
         assert!(result.raw_body.is_some());
         assert_eq!(result.raw_body.as_ref().unwrap().as_ref(), br#"{"key":"value"}"#);
     }
@@ -618,10 +594,8 @@ mod tests {
 
         let request_data = create_request_data_without_body(&uri, &method, &headers, path_params.clone());
 
-        // Clone the request data - this should be cheap because Arc is used
         let cloned = request_data.clone();
 
-        // Verify Arc pointers are the same
         assert!(Arc::ptr_eq(&request_data.path_params, &cloned.path_params));
         assert!(Arc::ptr_eq(&request_data.headers, &cloned.headers));
         assert!(Arc::ptr_eq(&request_data.cookies, &cloned.cookies));

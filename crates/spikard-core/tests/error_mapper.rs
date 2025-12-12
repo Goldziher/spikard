@@ -8,10 +8,6 @@ use serde_json::json;
 use spikard_core::problem::ProblemDetails;
 use spikard_core::validation::SchemaValidator;
 
-// ============================================================================
-// SINGLE ERROR MAPPING TESTS
-// ============================================================================
-
 #[test]
 fn test_single_string_too_short_error() {
     let schema = json!({
@@ -113,7 +109,6 @@ fn test_single_type_error_string_instead_of_integer() {
     assert!(result.is_err(), "Validation should fail for type mismatch");
 
     let err = result.unwrap_err();
-    // Type mismatch on integer field maps to int_parsing error code
     assert_eq!(err.errors[0].error_type, "int_parsing");
     assert!(err.errors[0].msg.to_lowercase().contains("integer"));
 }
@@ -269,10 +264,6 @@ fn test_single_maximum_constraint_error() {
     assert!(err.errors[0].msg.contains("less than or equal to"));
 }
 
-// ============================================================================
-// MULTIPLE VALIDATION ERRORS TESTS
-// ============================================================================
-
 #[test]
 fn test_multiple_validation_errors_different_fields() {
     let schema = json!({
@@ -341,10 +332,6 @@ fn test_multiple_missing_required_fields() {
     assert_eq!(err.errors.len(), 3);
     assert!(err.errors.iter().all(|e| e.error_type == "missing"));
 }
-
-// ============================================================================
-// NESTED OBJECT ERROR PATH TESTS
-// ============================================================================
 
 #[test]
 fn test_nested_object_error_path() {
@@ -429,10 +416,6 @@ fn test_nested_object_missing_required_field() {
     assert_eq!(err.errors[0].loc, vec!["body", "user", "contact", "phone"]);
 }
 
-// ============================================================================
-// ERROR CONTEXT AND DETAILS TESTS
-// ============================================================================
-
 #[test]
 fn test_error_has_input_value() {
     let schema = json!({
@@ -510,10 +493,6 @@ fn test_error_context_for_enum() {
     let err = result.unwrap_err();
     assert!(err.errors[0].ctx.is_some());
 }
-
-// ============================================================================
-// PROBLEM DETAILS GENERATION TESTS
-// ============================================================================
 
 #[test]
 fn test_problem_details_structure() {
@@ -599,10 +578,6 @@ fn test_problem_details_serialization() {
     assert_eq!(serialized["detail"], "Validation failed");
 }
 
-// ============================================================================
-// ERROR SANITIZATION TESTS
-// ============================================================================
-
 #[test]
 fn test_error_messages_do_not_leak_schema_paths() {
     let schema = json!({
@@ -659,10 +634,6 @@ fn test_error_messages_are_user_friendly() {
     assert!(!msg.contains("$"));
 }
 
-// ============================================================================
-// ARRAY VALIDATION ERROR TESTS
-// ============================================================================
-
 #[test]
 fn test_array_too_few_items_error() {
     let schema = json!({
@@ -716,10 +687,6 @@ fn test_array_item_type_validation() {
     assert_eq!(err.errors[0].error_type, "type_error");
 }
 
-// ============================================================================
-// DATETIME FORMAT VALIDATION TESTS
-// ============================================================================
-
 #[test]
 fn test_datetime_format_error() {
     let schema = json!({
@@ -766,10 +733,6 @@ fn test_datetime_format_success() {
     let result = validator.validate(&data);
     assert!(result.is_ok(), "Validation should succeed for valid ISO 8601 datetime");
 }
-
-// ============================================================================
-// ADDITIONAL PROPERTIES ERROR TESTS
-// ============================================================================
 
 #[test]
 fn test_additional_properties_error() {

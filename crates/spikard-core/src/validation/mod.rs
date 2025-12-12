@@ -204,10 +204,8 @@ impl SchemaValidator {
                     format!("/properties/{}", param_name)
                 };
 
-                // Use table-driven error mapping
                 let mut error_condition = ErrorCondition::from_schema_error(schema_path_str, &error_msg);
 
-                // Enrich condition with extracted values from schema
                 error_condition = match error_condition {
                     ErrorCondition::TypeMismatch { .. } => {
                         let expected_type = self

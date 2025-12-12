@@ -397,8 +397,6 @@ mod tests {
         assert!(cookie.contains("Max-Age=-1"));
     }
 
-    // Additional defensive tests for edge cases and regressions
-
     #[test]
     fn response_various_status_codes() {
         let status_codes = vec![
@@ -477,7 +475,6 @@ mod tests {
         let response_with_null = Response::new(Some(null_value.clone()));
         let response_with_none = Response::new(None);
 
-        // These should be different: Some(null) vs None
         assert_eq!(response_with_null.content, Some(null_value));
         assert_eq!(response_with_none.content, None);
         assert_ne!(response_with_null.content, response_with_none.content);
@@ -505,7 +502,6 @@ mod tests {
     #[test]
     fn response_header_case_sensitivity() {
         let mut response = Response::new(None);
-        // HashMap is case-sensitive, so these are different keys
         response.set_header("Content-Type".to_string(), "application/json".to_string());
         response.set_header("content-type".to_string(), "text/plain".to_string());
 
@@ -547,8 +543,6 @@ mod tests {
             false,
             None,
         );
-        // Note: Due to HashMap implementation, this overwrites the previous cookie
-        // This test documents the current behavior
         let cookie_count = response.headers.iter().filter(|(k, _)| *k == "set-cookie").count();
         assert_eq!(cookie_count, 1);
     }
@@ -602,9 +596,8 @@ mod tests {
         );
         let cookie = response.headers.get("set-cookie").unwrap();
 
-        // Verify order: name=value; Max-Age; Domain; Path; Secure; HttpOnly; SameSite
         let parts: Vec<&str> = cookie.split("; ").collect();
-        assert_eq!(parts.len(), 7); // name=value + 6 attributes
+        assert_eq!(parts.len(), 7);
         assert!(parts[0].starts_with("test="));
         assert!(parts[1].starts_with("Max-Age="));
         assert!(parts[2].starts_with("Domain="));
@@ -635,7 +628,7 @@ mod tests {
     #[test]
     fn response_cookie_max_age_large_value() {
         let mut response = Response::new(None);
-        let max_age_value = 86400 * 365; // One year in seconds
+        let max_age_value = 86400 * 365;
         response.set_cookie(
             "session".to_string(),
             "token".to_string(),

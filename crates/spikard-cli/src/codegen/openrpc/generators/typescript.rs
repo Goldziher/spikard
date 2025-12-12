@@ -14,7 +14,6 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
     fn generate_handler_app(&self, spec: &OpenRpcSpec) -> Result<String> {
         let mut code = String::new();
 
-        // Header
         code.push_str("#!/usr/bin/env node\n");
         code.push_str("/**\n");
         code.push_str(" * JSON-RPC 2.0 handlers generated from OpenRPC specification.\n");
@@ -26,10 +25,8 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
         code.push('\n');
         code.push_str(" */\n\n");
 
-        // Imports
         code.push_str("import { z } from \"zod\";\n\n");
 
-        // Generate Zod schemas for each method
         code.push_str("// ============================================================================\n");
         code.push_str("// Zod Validation Schemas\n");
         code.push_str("// ============================================================================\n\n");
@@ -38,7 +35,6 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
             generate_typescript_schemas(&mut code, method)?;
         }
 
-        // Generate handler types
         code.push_str("// ============================================================================\n");
         code.push_str("// Handler Types\n");
         code.push_str("// ============================================================================\n\n");
@@ -47,7 +43,6 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
             generate_typescript_types(&mut code, method)?;
         }
 
-        // Generate handlers
         code.push_str("// ============================================================================\n");
         code.push_str("// JSON-RPC Method Handlers\n");
         code.push_str("// ============================================================================\n\n");
@@ -56,7 +51,6 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
             generate_typescript_handler(&mut code, method)?;
         }
 
-        // Generate method router
         code.push_str("// ============================================================================\n");
         code.push_str("// Method Router\n");
         code.push_str("// ============================================================================\n\n");
@@ -105,7 +99,6 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
         code.push_str("  }\n");
         code.push_str("}\n\n");
 
-        // Example usage
         code.push_str("// ============================================================================\n");
         code.push_str("// Example Usage\n");
         code.push_str("// ============================================================================\n\n");
@@ -148,7 +141,6 @@ fn generate_typescript_schemas(
     code: &mut String,
     method: &crate::codegen::openrpc::spec_parser::OpenRpcMethod,
 ) -> Result<()> {
-    // Generate params schema
     if !method.params.is_empty() {
         let schema_name = format!("{}ParamsSchema", pascal_case(&method.name));
         code.push_str(&format!("const {} = z.object({{\n", schema_name));
@@ -158,7 +150,6 @@ fn generate_typescript_schemas(
         code.push_str("});\n\n");
     }
 
-    // Generate result schema
     let result_schema_name = format!("{}ResultSchema", pascal_case(&method.name));
     code.push_str(&format!("const {} = z.object({{\n", result_schema_name));
     if let Some(properties) = method.result.schema.get("properties")
@@ -177,14 +168,12 @@ fn generate_typescript_types(
     code: &mut String,
     method: &crate::codegen::openrpc::spec_parser::OpenRpcMethod,
 ) -> Result<()> {
-    // Generate params type
     if !method.params.is_empty() {
         let type_name = format!("{}Params", pascal_case(&method.name));
         let schema_name = format!("{}ParamsSchema", pascal_case(&method.name));
         code.push_str(&format!("type {} = z.infer<typeof {}>;\n", type_name, schema_name));
     }
 
-    // Generate result type
     let result_type_name = format!("{}Result", pascal_case(&method.name));
     let result_schema_name = format!("{}ResultSchema", pascal_case(&method.name));
     code.push_str(&format!(
@@ -221,7 +210,6 @@ fn generate_typescript_handler(
     code.push_str("   * @throws JSONRPCError on validation or execution failure\n");
     code.push_str("   */\n");
 
-    // Parse params
     if !method.params.is_empty() {
         let schema_name = format!("{}ParamsSchema", pascal_case(&method.name));
         code.push_str(&format!("  const parsedParams = {}.parse(params);\n\n", schema_name));
@@ -235,7 +223,6 @@ fn generate_typescript_handler(
     code.push_str("  // 3. Return result matching schema\n");
     code.push_str("  // 4. Throw appropriate JSON-RPC errors on failure\n\n");
 
-    // Placeholder return
     code.push_str("  // Example return structure (update with real data):\n");
     code.push_str("  const result: Record<string, unknown> = {};\n");
     if let Some(properties) = method.result.schema.get("properties")

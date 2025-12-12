@@ -1,16 +1,8 @@
-#!/usr/bin/env python3
 """FastAPI + Granian benchmark server (raw/no validation).
 
 Uses FastAPI with Granian Rust server for optimal performance without Pydantic validation.
 Direct JSON passthrough using Request.json() for minimal overhead.
 """
-# /// script
-# dependencies = [
-#     "fastapi",
-#     "granian",
-#     "orjson",
-# ]
-# ///
 
 import sys
 from typing import Any
@@ -19,11 +11,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
 
 app = FastAPI(default_response_class=ORJSONResponse)
-
-
-# ============================================================================
-# JSON Body Workloads (No Validation)
-# ============================================================================
 
 
 @app.post("/json/small")
@@ -54,11 +41,6 @@ async def post_json_very_large(request: Request) -> dict[str, Any]:
     return body
 
 
-# ============================================================================
-# Multipart Form Workloads
-# ============================================================================
-
-
 @app.post("/multipart/small")
 async def post_multipart_small() -> dict[str, Any]:
     """Small multipart form (~1KB)."""
@@ -77,11 +59,6 @@ async def post_multipart_large() -> dict[str, Any]:
     return {"files_received": 5, "total_bytes": 102400}
 
 
-# ============================================================================
-# URL Encoded Form Workloads
-# ============================================================================
-
-
 @app.post("/urlencoded/simple")
 async def post_urlencoded_simple(request: Request) -> dict[str, Any]:
     """Simple URL-encoded form."""
@@ -94,11 +71,6 @@ async def post_urlencoded_complex(request: Request) -> dict[str, Any]:
     """Complex URL-encoded form."""
     body = await request.json()
     return body
-
-
-# ============================================================================
-# Path Parameter Workloads
-# ============================================================================
 
 
 @app.get("/path/simple/{id}")
@@ -143,11 +115,6 @@ async def get_path_date(date: str) -> dict[str, Any]:
     return {"date": date}
 
 
-# ============================================================================
-# Query Parameter Workloads
-# ============================================================================
-
-
 @app.get("/query/few")
 async def get_query_few(request: Request) -> dict[str, Any]:
     """Few query parameters (1-2)."""
@@ -166,11 +133,6 @@ async def get_query_many(request: Request) -> dict[str, Any]:
     return dict(request.query_params)
 
 
-# ============================================================================
-# Health Check
-# ============================================================================
-
-
 @app.get("/health")
 async def health() -> dict[str, Any]:
     """Health check endpoint."""
@@ -182,10 +144,6 @@ async def root() -> dict[str, Any]:
     """Root endpoint."""
     return {"status": "ok"}
 
-
-# ============================================================================
-# Server Startup
-# ============================================================================
 
 if __name__ == "__main__":
     from granian import Granian
