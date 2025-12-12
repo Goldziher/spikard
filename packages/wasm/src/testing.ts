@@ -94,8 +94,13 @@ async function loadWasmBindings(): Promise<WasmBindings> {
 		try {
 			return (await import("../runtime/spikard_wasm.js")) as unknown as WasmBindings;
 		} catch {
-			const fallback = "../../crates/spikard-wasm/dist-node/" + "spikard_wasm.js";
-			return (await import(fallback)) as unknown as WasmBindings;
+			const webFallback = "../../crates/spikard-wasm/dist-web/" + "spikard_wasm.js";
+			try {
+				return (await import(webFallback)) as unknown as WasmBindings;
+			} catch {
+				const nodeFallback = "../../crates/spikard-wasm/dist-node/" + "spikard_wasm.js";
+				return (await import(nodeFallback)) as unknown as WasmBindings;
+			}
 		}
 	})();
 	return wasmBindingsPromise;

@@ -432,6 +432,7 @@ jobs:
         run: |
           cd "$GITHUB_WORKSPACE/crates/spikard-wasm"
           pnpm run build:node
+          pnpm run build:web
           cd "$GITHUB_WORKSPACE/packages/wasm"
           pnpm run build
 

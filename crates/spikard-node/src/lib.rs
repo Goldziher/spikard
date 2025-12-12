@@ -424,7 +424,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
         let tsfn = js_handler
             .build_threadsafe_function()
-            .build_callback(|_ctx| Ok(vec![()]))
+            .build_callback(|ctx| Ok(vec![ctx.value]))
             .map_err(|e| {
                 Error::from_reason(format!(
                     "Failed to build ThreadsafeFunction for '{}': {}",
