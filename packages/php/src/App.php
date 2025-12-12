@@ -377,7 +377,9 @@ final class App
 
         $configPayload = $this->configToNative($configToUse);
         $lifecyclePayload = $this->hooks ? $this->hooksToNative($this->hooks) : [];
-        $dependenciesPayload = $this->dependencies ? (object) $this->dependencies->getDependencies() : new \stdClass();
+        $dependenciesPayload = (object) [
+            'dependencies' => $this->dependencies ? $this->dependencies->getDependencies() : [],
+        ];
 
         // Extension entrypoint is guaranteed by the guard above; call directly.
         $routes = $this->nativeRoutes();
