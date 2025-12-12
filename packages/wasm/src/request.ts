@@ -1,4 +1,4 @@
-import type { JsonValue } from "./types.ts";
+import type { JsonValue } from "./types";
 
 /**
  * Request type for Spikard handlers

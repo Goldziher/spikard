@@ -3,7 +3,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { run } from "./background.ts";
+import { run } from "./background";
 
 describe("background.run()", () => {
 	// Add unhandledRejection handler to suppress errors from our error tests

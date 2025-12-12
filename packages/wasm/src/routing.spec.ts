@@ -3,8 +3,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { JsonSchema, RouteMetadata } from "./index.ts";
-import { del, get, patch, post, put, route } from "./routing.ts";
+import type { JsonSchema, RouteMetadata } from "./index";
+import { del, get, patch, post, put, route } from "./routing";
 
 /**
  * Extract route metadata from a decorated handler function.

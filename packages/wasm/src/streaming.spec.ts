@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { isStreamingResponse, StreamingResponse } from "./streaming.ts";
+import { isStreamingResponse, StreamingResponse } from "./streaming";
 
 describe("StreamingResponse", () => {
 	describe("Constructor and initialization", () => {

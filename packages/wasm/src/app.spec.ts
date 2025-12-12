@@ -3,8 +3,8 @@
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { type LifecycleHookFunction, Spikard } from "./app.ts";
-import type { RouteMetadata, SpikardApp } from "./index.ts";
+import { type LifecycleHookFunction, Spikard } from "./app";
+import type { RouteMetadata, SpikardApp } from "./index";
 
 describe("Spikard", () => {
 	let app: Spikard;

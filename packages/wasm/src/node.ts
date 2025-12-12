@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
-import type { StaticFilesConfig, StaticManifestEntry } from "./config.ts";
-import type { SpikardApp } from "./index.ts";
-import { __setGunzipImplementation, TestClient as BaseTestClient } from "./testing.ts";
+import type { StaticFilesConfig, StaticManifestEntry } from "./config";
+import type { SpikardApp } from "./index";
+import { __setGunzipImplementation, TestClient as BaseTestClient } from "./testing";
 
 __setGunzipImplementation((bytes) => new Uint8Array(gunzipSync(bytes)));
 
@@ -14,8 +14,8 @@ class NodeTestClient extends BaseTestClient {
 }
 
 export const TestClient = NodeTestClient;
-export { type LifecycleHookFunction, type LifecycleHooks, Spikard } from "./app.ts";
-export * as background from "./background.ts";
+export { type LifecycleHookFunction, type LifecycleHooks, Spikard } from "./app";
+export * as background from "./background";
 export type {
 	ApiKeyConfig,
 	CompressionConfig,
@@ -28,14 +28,14 @@ export type {
 	ServerConfig,
 	ServerInfo,
 	StaticFilesConfig,
-} from "./config.ts";
-export type { CorsConfig, FileParam, JsonSchema, RouteMetadata, SpikardApp } from "./index.ts";
-export type { Body, Path, Query, QueryDefault } from "./params.ts";
-export type { Request } from "./request.ts";
-export { del, get, patch, post, put, type RouteOptions, route } from "./routing.ts";
-export { createFetchHandler, runServer, type ServerOptions } from "./server.ts";
-export { StreamingResponse, type StreamingResponseInit } from "./streaming.ts";
-export type { TestResponse } from "./testing.ts";
+} from "./config";
+export type { CorsConfig, FileParam, JsonSchema, RouteMetadata, SpikardApp } from "./index";
+export type { Body, Path, Query, QueryDefault } from "./params";
+export type { Request } from "./request";
+export { del, get, patch, post, put, type RouteOptions, route } from "./routing";
+export { createFetchHandler, runServer, type ServerOptions } from "./server";
+export { StreamingResponse, type StreamingResponseInit } from "./streaming";
+export type { TestResponse } from "./testing";
 export type {
 	Base64EncodedBody,
 	HandlerFunction,
@@ -46,7 +46,7 @@ export type {
 	JsonValue,
 	MaybePromise,
 	StructuredHandlerResponse,
-} from "./types.ts";
+} from "./types";
 
 function withStaticManifest(app: SpikardApp): SpikardApp {
 	const config = app.config;
