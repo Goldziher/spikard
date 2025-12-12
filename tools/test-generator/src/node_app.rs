@@ -216,7 +216,9 @@ fn generate_deno_config(target: &TypeScriptTarget) -> String {
 	"nodeModulesDir": "auto",
 	"compilerOptions": {{
 		"lib": ["deno.ns", "deno.window", "dom", "dom.iterable", "esnext"],
-		"types": ["node"]
+		"types": ["node"],
+		"strict": false,
+		"noImplicitAny": false
 	}},
 	"tasks": {{
 		"test": "deno test --allow-net --allow-read --allow-env tests/"
@@ -355,14 +357,12 @@ fn generate_app_file_per_fixture(
             {
                 streaming_has_binary_chunks = true;
             }
-            if !needs_di {
-                if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
-                    if di_config.has_dependencies() {
-                        needs_di = true;
-                        if has_cleanup(&di_config) {
-                            needs_di_cleanup_state = true;
-                        }
-                    }
+            if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
+                if di_config.has_dependencies() {
+                    needs_di = true;
+                }
+                if has_cleanup(&di_config) {
+                    needs_di_cleanup_state = true;
                 }
             }
         }
