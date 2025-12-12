@@ -619,7 +619,12 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
 
     let request_json = serde_json::to_string(&request_payload)
         .map_err(|err| JsValue::from_str(&format!("Failed to serialize request: {err}")))?;
-    let request_object = js_sys::Object::new();
+    let request_value = serde_json::to_value(&request_payload)
+        .map_err(|err| JsValue::from_str(&format!("Failed to serialize request value: {err}")))?;
+    let request_js = safe_json_to_js(&request_value);
+    let request_object: Object = request_js
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("Failed to build request object"))?;
     Reflect::set(
         &request_object,
         &JsValue::from_str("__spikard_raw_request__"),
@@ -1241,6 +1246,47 @@ fn header_value<'a>(headers: &'a HashMap<String, String>, name: &str) -> Option<
             None
         }
     })
+}
+
+fn safe_json_to_js(value: &Value) -> JsValue {
+    const MAX_SAFE_INT: i64 = 9_007_199_254_740_991;
+
+    match value {
+        Value::Null => JsValue::NULL,
+        Value::Bool(value) => JsValue::from_bool(*value),
+        Value::String(text) => JsValue::from_str(text),
+        Value::Number(number) => {
+            if let Some(i) = number.as_i64() {
+                if i.unsigned_abs() > (MAX_SAFE_INT as u64) {
+                    JsValue::from_str(&i.to_string())
+                } else {
+                    JsValue::from_f64(i as f64)
+                }
+            } else if let Some(u) = number.as_u64() {
+                if u > (MAX_SAFE_INT as u64) {
+                    JsValue::from_str(&u.to_string())
+                } else {
+                    JsValue::from_f64(u as f64)
+                }
+            } else {
+                number.as_f64().map(JsValue::from_f64).unwrap_or(JsValue::NULL)
+            }
+        }
+        Value::Array(items) => {
+            let array = Array::new();
+            for item in items {
+                array.push(&safe_json_to_js(item));
+            }
+            array.into()
+        }
+        Value::Object(map) => {
+            let obj = Object::new();
+            for (key, value) in map {
+                let _ = Reflect::set(&obj, &JsValue::from_str(key), &safe_json_to_js(value));
+            }
+            obj.into()
+        }
+    }
 }
 
 fn is_json_content_type(content_type: Option<&str>) -> bool {
