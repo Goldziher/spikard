@@ -1149,6 +1149,22 @@ mod tests {
         assert_eq!(config.host, "0.0.0.0");
     }
 
+    #[cfg(feature = "di")]
+    fn build_router_for_tests(
+        routes: Vec<(crate::Route, Arc<dyn Handler>)>,
+        hooks: Option<Arc<crate::LifecycleHooks>>,
+    ) -> Result<AxumRouter, String> {
+        build_router_with_handlers(routes, hooks, None)
+    }
+
+    #[cfg(not(feature = "di"))]
+    fn build_router_for_tests(
+        routes: Vec<(crate::Route, Arc<dyn Handler>)>,
+        hooks: Option<Arc<crate::LifecycleHooks>>,
+    ) -> Result<AxumRouter, String> {
+        build_router_with_handlers(routes, hooks)
+    }
+
     // ============================================================================
     // Route Registration Tests
     // ============================================================================
@@ -1157,7 +1173,7 @@ mod tests {
     fn test_route_registry_empty_routes() {
         let routes: Vec<(crate::Route, Arc<dyn Handler>)> = vec![];
         // Should not panic with empty routes
-        let _result = build_router_with_handlers(routes, None);
+        let _result = build_router_for_tests(routes, None);
     }
 
     #[test]
@@ -1168,7 +1184,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1179,7 +1195,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1190,7 +1206,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1202,7 +1218,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(get_route, handler.clone()), (post_route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1214,7 +1230,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(users_route, handler.clone()), (posts_route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1229,7 +1245,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1240,7 +1256,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1251,7 +1267,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1262,7 +1278,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1277,7 +1293,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1288,7 +1304,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1299,7 +1315,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1310,7 +1326,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1321,7 +1337,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1332,7 +1348,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1356,7 +1372,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1377,7 +1393,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(get_route, handler.clone()), (post_route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1394,7 +1410,7 @@ mod tests {
         let routes = vec![(zebra_route, handler.clone()), (alpha_route, handler)];
 
         // Should handle routes out of order without error
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1406,7 +1422,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(parent_route, handler.clone()), (child_route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1424,7 +1440,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, Some(hooks));
+        let result = build_router_for_tests(routes, Some(hooks));
         assert!(result.is_ok());
     }
 
@@ -1435,7 +1451,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1450,7 +1466,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1461,7 +1477,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1476,7 +1492,7 @@ mod tests {
             routes.push((route, handler.clone()));
         }
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1488,7 +1504,7 @@ mod tests {
         let handler: Arc<dyn Handler> = Arc::new(TestHandler);
         let routes = vec![(route, handler)];
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 
@@ -1504,7 +1520,7 @@ mod tests {
             routes.push((route, handler.clone()));
         }
 
-        let result = build_router_with_handlers(routes, None);
+        let result = build_router_for_tests(routes, None);
         assert!(result.is_ok());
     }
 }

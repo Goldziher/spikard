@@ -313,11 +313,11 @@ export class Spikard implements SpikardApp {
 	 */
 	getLifecycleHooks(): LifecycleHooks {
 		return {
-			onRequest: [...this.lifecycleHooks.onRequest],
-			preValidation: [...this.lifecycleHooks.preValidation],
-			preHandler: [...this.lifecycleHooks.preHandler],
-			onResponse: [...this.lifecycleHooks.onResponse],
-			onError: [...this.lifecycleHooks.onError],
+			onRequest: [...(this.lifecycleHooks.onRequest ?? [])],
+			preValidation: [...(this.lifecycleHooks.preValidation ?? [])],
+			preHandler: [...(this.lifecycleHooks.preHandler ?? [])],
+			onResponse: [...(this.lifecycleHooks.onResponse ?? [])],
+			onError: [...(this.lifecycleHooks.onError ?? [])],
 		};
 	}
 }
