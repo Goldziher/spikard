@@ -175,7 +175,6 @@ type SystemAlertMessage = {
 
 const BACKGROUND_STATE: Record<string, unknown[]> = {};
 
-// Cleanup state tracking for DI fixtures
 const CLEANUP_STATE: Record<string, string[]> = {};
 
 /**
@@ -11541,12 +11540,10 @@ export function createAppDiRouteLevelDependencyOverrideSuccess(): SpikardApp {
 }
 
 function diCircularDependencyDetectionErrorServiceB(serviceA): unknown {
-	// Factory for service_b
 	return { _factory: "service_b", _random: Math.random() };
 }
 
 function diCircularDependencyDetectionErrorServiceA(serviceB): unknown {
-	// Factory for service_a
 	return { _factory: "service_a", _random: Math.random() };
 }
 
@@ -11597,7 +11594,6 @@ export function createAppDiCircularDependencyDetectionError(): SpikardApp {
 }
 
 function diFactoryDependencySuccessTimestampGenerator(): unknown {
-	// Factory for timestamp_generator
 	return { _factory: "timestamp_generator", _random: Math.random() };
 }
 
@@ -11719,19 +11715,14 @@ export function createAppDiNodeJsObjectDestructuringInjectionSuccess(): SpikardA
 }
 
 async function diNestedDependencies3LevelsSuccessCache(config): Promise<unknown> {
-	// Async factory for cache
-	// Simulate async cache connection
 	return { ready: true, cacheId: Math.random().toString() };
 }
 
 function diNestedDependencies3LevelsSuccessAuthService(dbPool, cache): unknown {
-	// Factory for auth_service
 	return { _factory: "auth_service", _random: Math.random() };
 }
 
 async function diNestedDependencies3LevelsSuccessDbPool(config): Promise<unknown> {
-	// Async factory for db_pool
-	// Simulate async DB connection
 	return { connected: true, poolId: Math.random().toString() };
 }
 
@@ -11914,14 +11905,12 @@ export function createAppDiPythonParameterNameBasedInjectionSuccess(): SpikardAp
 async function diDependencyInjectionInLifecycleHooksSuccessLogRequestOnRequest0(
 	request: HookRequest,
 ): Promise<HookResult> {
-	// Mock onRequest hook: log_request
 	return request;
 }
 
 async function diDependencyInjectionInLifecycleHooksSuccessAuthCheckPreHandler0(
 	request: HookRequest,
 ): Promise<HookResult> {
-	// Mock preHandler hook: auth_check
 	return request;
 }
 
@@ -12007,17 +11996,13 @@ export function createAppDiRubyKeywordArgumentInjectionSuccess(): SpikardApp {
 }
 
 async function* diMultipleDependenciesWithCleanupSuccessDbConnection(): AsyncGenerator<unknown, void, unknown> {
-	// Factory for db_connection with cleanup
-	// Initialize cleanup state
 	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] =
 		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
 	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("session_opened");
-	// Create resource
 	const resource = { id: "00000000-0000-0000-0000-00000000002d", opened: true };
 	try {
 		yield resource;
 	} finally {
-		// Cleanup resource
 		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("session_closed");
 	}
 }
@@ -12026,33 +12011,25 @@ async function* diMultipleDependenciesWithCleanupSuccessSession(
 	dbConnection,
 	cacheConnection,
 ): AsyncGenerator<unknown, void, unknown> {
-	// Factory for session with cleanup
-	// Initialize cleanup state
 	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] =
 		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
 	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("session_opened");
-	// Create resource
 	const resource = { id: "00000000-0000-0000-0000-00000000002d", opened: true };
 	try {
 		yield resource;
 	} finally {
-		// Cleanup resource
 		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("session_closed");
 	}
 }
 
 async function* diMultipleDependenciesWithCleanupSuccessCacheConnection(): AsyncGenerator<unknown, void, unknown> {
-	// Factory for cache_connection with cleanup
-	// Initialize cleanup state
 	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] =
 		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
 	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("session_opened");
-	// Create resource
 	const resource = { id: "00000000-0000-0000-0000-00000000002d", opened: true };
 	try {
 		yield resource;
 	} finally {
-		// Cleanup resource
 		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("session_closed");
 	}
 }
@@ -12087,7 +12064,6 @@ async function diMultipleDependenciesWithCleanupSuccessBackgroundState(): Promis
 }
 
 async function diMultipleDependenciesWithCleanupSuccessCleanupState(): Promise<string> {
-	// Return cleanup events
 	const cleanupEvents = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
 	const response: HandlerResponse = { status: 200 };
 	response.headers = { "content-type": "application/json" };
@@ -12146,12 +12122,10 @@ export function createAppDiMultipleDependenciesWithCleanupSuccess(): SpikardApp 
 }
 
 function diMixedSingletonAndPerRequestCachingSuccessDbPool(appConfig): unknown {
-	// Factory for db_pool
 	return { _factory: "db_pool", _random: Math.random() };
 }
 
 function diMixedSingletonAndPerRequestCachingSuccessRequestContext(dbPool): unknown {
-	// Factory for request_context
 	return { _factory: "request_context", _random: Math.random() };
 }
 
@@ -12197,17 +12171,13 @@ export function createAppDiMixedSingletonAndPerRequestCachingSuccess(): SpikardA
 }
 
 async function* diResourceCleanupAfterRequestSuccessDbSession(): AsyncGenerator<unknown, void, unknown> {
-	// Factory for db_session with cleanup
-	// Initialize cleanup state
 	CLEANUP_STATE["di_resource_cleanup_after_request_success"] =
 		CLEANUP_STATE["di_resource_cleanup_after_request_success"] || [];
 	CLEANUP_STATE["di_resource_cleanup_after_request_success"].push("session_opened");
-	// Create resource
 	const resource = { id: "00000000-0000-0000-0000-000000000029", opened: true };
 	try {
 		yield resource;
 	} finally {
-		// Cleanup resource
 		CLEANUP_STATE["di_resource_cleanup_after_request_success"].push("session_closed");
 	}
 }
@@ -12242,7 +12212,6 @@ async function diResourceCleanupAfterRequestSuccessBackgroundState(): Promise<st
 }
 
 async function diResourceCleanupAfterRequestSuccessCleanupState(): Promise<string> {
-	// Return cleanup events
 	const cleanupEvents = CLEANUP_STATE["di_resource_cleanup_after_request_success"] || [];
 	const response: HandlerResponse = { status: 200 };
 	response.headers = { "content-type": "application/json" };
@@ -12337,7 +12306,6 @@ export function createAppDiPythonTypeAnnotationBasedInjectionSuccess(): SpikardA
 }
 
 function diPerRequestDependencyCachingSuccessRequestIdGenerator(): unknown {
-	// Factory for request_id_generator
 	return { _factory: "request_id_generator", _random: Math.random() };
 }
 
@@ -12379,7 +12347,6 @@ export function createAppDiPerRequestDependencyCachingSuccess(): SpikardApp {
 }
 
 function diSingletonDependencyCachingSuccessAppCounter(): unknown {
-	// Factory for app_counter
 	return { _factory: "app_counter", _random: Math.random() };
 }
 
@@ -12421,8 +12388,6 @@ export function createAppDiSingletonDependencyCachingSuccess(): SpikardApp {
 }
 
 async function diAsyncFactoryDependencySuccessDbPool(): Promise<unknown> {
-	// Async factory for db_pool
-	// Simulate async DB connection
 	return { connected: true, poolId: Math.random().toString() };
 }
 
@@ -14060,7 +14025,6 @@ export function createAppCompressionCompressionGzipApplied(): SpikardApp {
 async function lifecycleHooksOnresponseSecurityHeadersSecurityHeadersOnResponse0(
 	response: HookResponse,
 ): Promise<HookResponse> {
-	// onResponse hook: security_headers - Adds security headers
 	if (!response.headers) response.headers = {};
 	response.headers["X-Content-Type-Options"] = "nosniff";
 	response.headers["X-Frame-Options"] = "DENY";
@@ -14114,7 +14078,6 @@ export function createAppLifecycleHooksOnresponseSecurityHeaders(): SpikardApp {
 async function lifecycleHooksPrehandlerAuthenticationFailedShortCircuitAuthenticatorPreHandler0(
 	_request: HookRequest,
 ): Promise<HookResult> {
-	// preHandler hook: authenticator - Short circuits with 401
 	return {
 		statusCode: 401,
 		body: {
@@ -14164,14 +14127,12 @@ export function createAppLifecycleHooksPrehandlerAuthenticationFailedShortCircui
 async function lifecycleHooksPrehandlerAuthorizationCheckAuthenticatorPreHandler0(
 	request: HookRequest,
 ): Promise<HookResult> {
-	// Mock preHandler hook: authenticator
 	return request;
 }
 
 async function lifecycleHooksPrehandlerAuthorizationCheckAuthorizerPreHandler1(
 	request: HookRequest,
 ): Promise<HookResult> {
-	// Mock preHandler hook: authorizer
 	return request;
 }
 
@@ -14217,7 +14178,6 @@ export function createAppLifecycleHooksPrehandlerAuthorizationCheck(): SpikardAp
 async function lifecycleHooksPrehandlerAuthenticationSuccessAuthenticatorPreHandler0(
 	request: HookRequest,
 ): Promise<HookResult> {
-	// Mock preHandler hook: authenticator
 	return request;
 }
 
@@ -14260,7 +14220,6 @@ export function createAppLifecycleHooksPrehandlerAuthenticationSuccess(): Spikar
 async function lifecycleHooksPrevalidationRateLimitExceededShortCircuitRateLimiterPreValidation0(
 	_request: HookRequest,
 ): Promise<HookResult> {
-	// preValidation hook: rate_limiter - Short circuits with 429
 	return {
 		statusCode: 429,
 		body: {
@@ -14312,14 +14271,12 @@ export function createAppLifecycleHooksPrevalidationRateLimitExceededShortCircui
 }
 
 async function lifecycleHooksOnerrorErrorLoggingErrorLoggerOnError0(response: HookResponse): Promise<HookResponse> {
-	// onError hook: error_logger - Format error response
 	if (!response.headers) response.headers = {};
 	response.headers["Content-Type"] = "application/json";
 	return response;
 }
 
 async function lifecycleHooksOnerrorErrorLoggingErrorFormatterOnError1(response: HookResponse): Promise<HookResponse> {
-	// onError hook: error_formatter - Format error response
 	if (!response.headers) response.headers = {};
 	response.headers["Content-Type"] = "application/json";
 	return response;
@@ -14366,38 +14323,32 @@ export function createAppLifecycleHooksOnerrorErrorLogging(): SpikardApp {
 }
 
 async function lifecycleHooksMultipleHooksAllPhasesRequestLoggerOnRequest0(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: request_logger
 	return request;
 }
 
 async function lifecycleHooksMultipleHooksAllPhasesRequestIdGeneratorOnRequest1(
 	request: HookRequest,
 ): Promise<HookResult> {
-	// Mock onRequest hook: request_id_generator
 	return request;
 }
 
 async function lifecycleHooksMultipleHooksAllPhasesRateLimiterPreValidation0(
 	request: HookRequest,
 ): Promise<HookResult> {
-	// Mock preValidation hook: rate_limiter
 	return request;
 }
 
 async function lifecycleHooksMultipleHooksAllPhasesAuthenticatorPreHandler0(request: HookRequest): Promise<HookResult> {
-	// Mock preHandler hook: authenticator
 	return request;
 }
 
 async function lifecycleHooksMultipleHooksAllPhasesAuthorizerPreHandler1(request: HookRequest): Promise<HookResult> {
-	// Mock preHandler hook: authorizer
 	return request;
 }
 
 async function lifecycleHooksMultipleHooksAllPhasesSecurityHeadersOnResponse0(
 	response: HookResponse,
 ): Promise<HookResponse> {
-	// onResponse hook: security_headers - Adds security headers
 	if (!response.headers) response.headers = {};
 	response.headers["X-Content-Type-Options"] = "nosniff";
 	response.headers["X-Frame-Options"] = "DENY";
@@ -14409,7 +14360,6 @@ async function lifecycleHooksMultipleHooksAllPhasesSecurityHeadersOnResponse0(
 async function lifecycleHooksMultipleHooksAllPhasesResponseTimerOnResponse1(
 	response: HookResponse,
 ): Promise<HookResponse> {
-	// onResponse hook: response_timer - Adds timing header
 	if (!response.headers) response.headers = {};
 	response.headers["X-Response-Time"] = "0ms";
 	return response;
@@ -14418,12 +14368,10 @@ async function lifecycleHooksMultipleHooksAllPhasesResponseTimerOnResponse1(
 async function lifecycleHooksMultipleHooksAllPhasesAuditLoggerOnResponse2(
 	response: HookResponse,
 ): Promise<HookResponse> {
-	// Mock onResponse hook: audit_logger
 	return response;
 }
 
 async function lifecycleHooksMultipleHooksAllPhasesErrorLoggerOnError0(response: HookResponse): Promise<HookResponse> {
-	// onError hook: error_logger - Format error response
 	if (!response.headers) response.headers = {};
 	response.headers["Content-Type"] = "application/json";
 	return response;
@@ -14495,17 +14443,14 @@ export function createAppLifecycleHooksMultipleHooksAllPhases(): SpikardApp {
 }
 
 async function lifecycleHooksHookExecutionOrderFirstHookOnRequest0(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: first_hook
 	return request;
 }
 
 async function lifecycleHooksHookExecutionOrderSecondHookOnRequest1(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: second_hook
 	return request;
 }
 
 async function lifecycleHooksHookExecutionOrderThirdHookOnRequest2(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: third_hook
 	return request;
 }
 
@@ -14553,14 +14498,12 @@ export function createAppLifecycleHooksHookExecutionOrder(): SpikardApp {
 }
 
 async function lifecycleHooksOnresponseResponseTimingStartTimerOnRequest0(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: start_timer
 	return request;
 }
 
 async function lifecycleHooksOnresponseResponseTimingResponseTimerOnResponse0(
 	response: HookResponse,
 ): Promise<HookResponse> {
-	// onResponse hook: response_timer - Adds timing header
 	if (!response.headers) response.headers = {};
 	response.headers["X-Response-Time"] = "0ms";
 	return response;
@@ -14607,7 +14550,6 @@ export function createAppLifecycleHooksOnresponseResponseTiming(): SpikardApp {
 async function lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthenticatorPreHandler0(
 	_request: HookRequest,
 ): Promise<HookResult> {
-	// preHandler hook: authenticator - Short circuits with 403
 	return {
 		statusCode: 403,
 		body: {
@@ -14620,7 +14562,6 @@ async function lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthent
 async function lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthorizerPreHandler1(
 	_request: HookRequest,
 ): Promise<HookResult> {
-	// preHandler hook: authorizer - Short circuits with 403
 	return {
 		statusCode: 403,
 		body: {
@@ -14671,14 +14612,12 @@ export function createAppLifecycleHooksPrehandlerAuthorizationForbiddenShortCirc
 }
 
 async function lifecycleHooksOnrequestRequestLoggingRequestLoggerOnRequest0(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: request_logger
 	return request;
 }
 
 async function lifecycleHooksOnrequestRequestLoggingRequestIdGeneratorOnRequest1(
 	request: HookRequest,
 ): Promise<HookResult> {
-	// Mock onRequest hook: request_id_generator
 	return request;
 }
 
@@ -14725,7 +14664,6 @@ export function createAppLifecycleHooksOnrequestRequestLogging(): SpikardApp {
 async function lifecycleHooksPrevalidationRateLimitingRateLimiterPreValidation0(
 	request: HookRequest,
 ): Promise<HookResult> {
-	// Mock preValidation hook: rate_limiter
 	return request;
 }
 
@@ -18303,450 +18241,6 @@ export function createAppWebsocketChat(): SpikardApp {
 		},
 	};
 }
-// App factory functions:
-// - createAppEdgeCases19EmojiInStrings() for edge_cases / 19_emoji_in_strings
-// - createAppEdgeCases12PercentEncodedSpecialChars() for edge_cases / 12_percent_encoded_special_chars
-// - createAppEdgeCasesSpecialStringValuesAndEscaping() for edge_cases / Special string values and escaping
-// - createAppEdgeCases15FloatPrecisionPreservation() for edge_cases / 15_float_precision_preservation
-// - createAppEdgeCases13EmptyStringQueryParamPreserved() for edge_cases / 13_empty_string_query_param_preserved
-// - createAppEdgeCases24ArrayWithHoles() for edge_cases / 24_array_with_holes
-// - createAppEdgeCases21ScientificNotationNumber() for edge_cases / 21_scientific_notation_number
-// - createAppEdgeCasesFloatPrecisionAndRounding() for edge_cases / Float precision and rounding
-// - createAppEdgeCasesUnicodeAndEmojiHandling() for edge_cases / Unicode and emoji handling
-// - createAppEdgeCases17ExtremelyLongString() for edge_cases / 17_extremely_long_string
-// - createAppEdgeCases11Utf8QueryParameter() for edge_cases / 11_utf8_query_parameter
-// - createAppEdgeCases18UnicodeNormalization() for edge_cases / 18_unicode_normalization
-// - createAppEdgeCases20NullByteInString() for edge_cases / 20_null_byte_in_string
-// - createAppEdgeCases23DeeplyNestedJsonLimit() for edge_cases / 23_deeply_nested_json_limit
-// - createAppEdgeCases14LargeIntegerBoundary() for edge_cases / 14_large_integer_boundary
-// - createAppEdgeCases22LeadingZerosInteger() for edge_cases / 22_leading_zeros_integer
-// - createAppEdgeCasesLargeIntegerBoundaryValues() for edge_cases / Large integer boundary values
-// - createAppEdgeCasesDeeplyNestedStructure10Levels() for edge_cases / Deeply nested structure (10+ levels)
-// - createAppEdgeCasesEmptyAndNullValueHandling() for edge_cases / Empty and null value handling
-// - createAppEdgeCases16NegativeZeroHandling() for edge_cases / 16_negative_zero_handling
-// - createAppPathParamsBooleanPathParameterTrue() for path_params / Boolean path parameter - True
-// - createAppPathParams29DecimalPathParamSuccess() for path_params / 29_decimal_path_param_success
-// - createAppPathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess() for path_params / Integer path parameter with combined lt and gt constraints - success
-// - createAppPathParams33StringPatternPathSuccess() for path_params / 33_string_pattern_path_success
-// - createAppPathParams31StringMinlengthPathFailure() for path_params / 31_string_minlength_path_failure
-// - createAppPathParams35NegativeIntegerPathParam() for path_params / 35_negative_integer_path_param
-// - createAppPathParamsEnumPathParameterInvalidValue() for path_params / Enum path parameter - invalid value
-// - createAppPathParams27DatetimeFormatPathParamSuccess() for path_params / 27_datetime_format_path_param_success
-// - createAppPathParams25DateFormatInvalidFailure() for path_params / 25_date_format_invalid_failure
-// - createAppPathParamsIntegerPathParameterWithLtConstraintSuccess() for path_params / Integer path parameter with lt constraint - success
-// - createAppPathParamsIntegerPathParameterWithGtConstraintSuccess() for path_params / Integer path parameter with gt constraint - success
-// - createAppPathParams28DurationFormatPathParamSuccess() for path_params / 28_duration_format_path_param_success
-// - createAppPathParamsPathParameterTypeSyntaxWithOverride() for path_params / Path parameter type syntax with override
-// - createAppPathParams20UuidV3PathParamSuccess() for path_params / 20_uuid_v3_path_param_success
-// - createAppPathParamsIntegerPathParameterInvalidString() for path_params / Integer path parameter - invalid string
-// - createAppPathParams30StringMinlengthPathSuccess() for path_params / 30_string_minlength_path_success
-// - createAppPathParamsIntegerPathParameterWithLeConstraintSuccess() for path_params / Integer path parameter with le constraint - success
-// - createAppPathParamsPathParameterTypeSyntaxInvalidUuid() for path_params / Path parameter type syntax - invalid UUID
-// - createAppPathParamsPathTypeParameterFilePath() for path_params / Path type parameter - file path
-// - createAppPathParamsPathParameterWithTypeSyntaxUuid() for path_params / Path parameter with type syntax - UUID
-// - createAppPathParams32StringMaxlengthPathFailure() for path_params / 32_string_maxlength_path_failure
-// - createAppPathParamsIntegerPathParameterSuccess() for path_params / Integer path parameter - success
-// - createAppPathParams34StringPatternPathFailure() for path_params / 34_string_pattern_path_failure
-// - createAppPathParams21UuidV5PathParamSuccess() for path_params / 21_uuid_v5_path_param_success
-// - createAppPathParamsStringPathParameterWithMaxLengthFailure() for path_params / String path parameter with max_length - failure
-// - createAppPathParamsStringPathParameterWithMinLengthFailure() for path_params / String path parameter with min_length - failure
-// - createAppPathParamsMultiplePathParametersSuccess() for path_params / Multiple path parameters - success
-// - createAppPathParamsDatePathParameterSuccess() for path_params / Date path parameter - success
-// - createAppPathParamsIntegerPathParameterWithGtConstraintFailure() for path_params / Integer path parameter with gt constraint - failure
-// - createAppPathParams24DateFormatPathParamSuccess() for path_params / 24_date_format_path_param_success
-// - createAppPathParamsFloatPathParameterSuccess() for path_params / Float path parameter - success
-// - createAppPathParamsPathParameterWithTypeSyntaxInteger() for path_params / Path parameter with type syntax - integer
-// - createAppPathParamsStringPathParameterSuccess() for path_params / String path parameter - success
-// - createAppPathParamsUuidPathParameterSuccess() for path_params / UUID path parameter - success
-// - createAppPathParamsIntegerPathParameterWithGeConstraintSuccess() for path_params / Integer path parameter with ge constraint - success
-// - createAppPathParamsEnumPathParameterSuccess() for path_params / Enum path parameter - success
-// - createAppPathParamsBooleanPathParameterNumeric1() for path_params / Boolean path parameter - numeric 1
-// - createAppStreamingStreamJsonLines() for streaming / Stream JSON lines
-// - createAppStreamingBinaryLogDownload() for streaming / Binary log download
-// - createAppStreamingChunkedCsvExport() for streaming / Chunked CSV export
-// - createAppUrlEncodedSimpleFormSubmissionSuccess() for url_encoded / Simple form submission - success
-// - createAppUrlEncoded15SpecialCharactersFieldNames() for url_encoded / 15_special_characters_field_names
-// - createAppUrlEncodedPatternValidationFail() for url_encoded / Pattern validation - fail
-// - createAppUrlEncoded22AdditionalPropertiesStrictFailure() for url_encoded / 22_additional_properties_strict_failure
-// - createAppUrlEncoded17PatternValidationFailure() for url_encoded / 17_pattern_validation_failure
-// - createAppUrlEncoded20FormatEmailValidationFailure() for url_encoded / 20_format_email_validation_failure
-// - createAppUrlEncodedMultipleValuesForSameField() for url_encoded / Multiple values for same field
-// - createAppUrlEncodedRequiredFieldMissingValidationError() for url_encoded / Required field missing - validation error
-// - createAppUrlEncoded13ArrayFieldSuccess() for url_encoded / 13_array_field_success
-// - createAppUrlEncodedNumericFieldTypeConversion() for url_encoded / Numeric field type conversion
-// - createAppUrlEncodedSpecialCharactersEncoding() for url_encoded / Special characters encoding
-// - createAppUrlEncodedBooleanFieldConversion() for url_encoded / Boolean field conversion
-// - createAppUrlEncodedEmptyStringValue() for url_encoded / Empty string value
-// - createAppUrlEncodedOauth2PasswordGrantFlow() for url_encoded / OAuth2 password grant flow
-// - createAppUrlEncoded19ArrayMinitemsValidationFailure() for url_encoded / 19_array_minitems_validation_failure
-// - createAppUrlEncodedOptionalFieldMissingSuccess() for url_encoded / Optional field missing - success
-// - createAppUrlEncoded14NestedObjectBracketNotation() for url_encoded / 14_nested_object_bracket_notation
-// - createAppUrlEncodedStringMaxLengthValidationFail() for url_encoded / String max_length validation - fail
-// - createAppUrlEncoded18IntegerMinimumValidationFailure() for url_encoded / 18_integer_minimum_validation_failure
-// - createAppUrlEncoded21IntegerTypeCoercionFailure() for url_encoded / 21_integer_type_coercion_failure
-// - createAppUrlEncoded16MinlengthValidationFailure() for url_encoded / 16_minlength_validation_failure
-// - createAppUrlEncodedStringMinLengthValidationFail() for url_encoded / String min_length validation - fail
-// - createAppQueryParamsStringValidationWithRegexSuccess() for query_params / String validation with regex - success
-// - createAppQueryParams49IntegerGtConstraintSuccess() for query_params / 49_integer_gt_constraint_success
-// - createAppQueryParamsEnumQueryParameterInvalidValue() for query_params / Enum query parameter - invalid value
-// - createAppQueryParams68ArrayUniqueitemsSuccess() for query_params / 68_array_uniqueitems_success
-// - createAppQueryParams47PatternValidationEmailSuccess() for query_params / 47_pattern_validation_email_success
-// - createAppQueryParamsRequiredIntegerQueryParameterSuccess() for query_params / Required integer query parameter - success
-// - createAppQueryParamsRequiredStringQueryParameterMissing() for query_params / Required string query parameter - missing
-// - createAppQueryParams57BooleanEmptyStringCoercion() for query_params / 57_boolean_empty_string_coercion
-// - createAppQueryParams52IntegerLeConstraintBoundary() for query_params / 52_integer_le_constraint_boundary
-// - createAppQueryParamsListWithDefaultEmptyArrayNoValuesProvided() for query_params / List with default empty array - no values provided
-// - createAppQueryParamsDateQueryParameterSuccess() for query_params / Date query parameter - success
-// - createAppQueryParamsStringQueryParamWithMaxLengthConstraintFail() for query_params / String query param with max_length constraint - fail
-// - createAppQueryParams45StringMinlengthValidationFailure() for query_params / 45_string_minlength_validation_failure
-// - createAppQueryParamsIntegerWithDefaultValueOverride() for query_params / Integer with default value - override
-// - createAppQueryParams67MultipleofConstraintFailure() for query_params / 67_multipleof_constraint_failure
-// - createAppQueryParams58FormatEmailSuccess() for query_params / 58_format_email_success
-// - createAppQueryParamsIntegerQueryParamWithGeConstraintBoundary() for query_params / Integer query param with ge constraint - boundary
-// - createAppQueryParamsIntegerQueryParamWithGtConstraintValid() for query_params / Integer query param with gt constraint - valid
-// - createAppQueryParamsRequiredIntegerQueryParameterInvalidType() for query_params / Required integer query parameter - invalid type
-// - createAppQueryParamsRequiredIntegerQueryParameterFloatValue() for query_params / Required integer query parameter - float value
-// - createAppQueryParamsQueryParameterWithUrlEncodedSpecialCharacters() for query_params / Query parameter with URL encoded special characters
-// - createAppQueryParams59FormatEmailFailure() for query_params / 59_format_email_failure
-// - createAppQueryParams43ScientificNotationFloat() for query_params / 43_scientific_notation_float
-// - createAppQueryParams63FormatUriSuccess() for query_params / 63_format_uri_success
-// - createAppQueryParamsBooleanQueryParameterNumeric1() for query_params / Boolean query parameter - numeric 1
-// - createAppQueryParamsStringQueryParamWithMinLengthConstraintFail() for query_params / String query param with min_length constraint - fail
-// - createAppQueryParamsOptionalStringQueryParameterProvided() for query_params / Optional string query parameter - provided
-// - createAppQueryParamsListOfIntegersMultipleValues() for query_params / List of integers - multiple values
-// - createAppQueryParamsIntegerQueryParamWithLtConstraintValid() for query_params / Integer query param with lt constraint - valid
-// - createAppQueryParams42NegativeIntegerQueryParam() for query_params / 42_negative_integer_query_param
-// - createAppQueryParams46StringMaxlengthValidationFailure() for query_params / 46_string_maxlength_validation_failure
-// - createAppQueryParams56ArrayMaxitemsConstraintFailure() for query_params / 56_array_maxitems_constraint_failure
-// - createAppQueryParamsStringQueryParamWithRegexPatternFail() for query_params / String query param with regex pattern - fail
-// - createAppQueryParams44StringMinlengthValidationSuccess() for query_params / 44_string_minlength_validation_success
-// - createAppQueryParams61FormatIpv4Failure() for query_params / 61_format_ipv4_failure
-// - createAppQueryParams48PatternValidationEmailFailure() for query_params / 48_pattern_validation_email_failure
-// - createAppQueryParamsRequiredIntegerQueryParameterMissing() for query_params / Required integer query parameter - missing
-// - createAppQueryParamsQueryParameterWithSpecialCharactersUrlEncoding() for query_params / Query parameter with special characters - URL encoding
-// - createAppQueryParamsListQueryParameterRequiredButMissing() for query_params / List query parameter - required but missing
-// - createAppQueryParamsRequiredStringQueryParameterSuccess() for query_params / Required string query parameter - success
-// - createAppQueryParams66MultipleofConstraintSuccess() for query_params / 66_multipleof_constraint_success
-// - createAppQueryParams53IntegerLeConstraintFailure() for query_params / 53_integer_le_constraint_failure
-// - createAppQueryParamsMultipleQueryParametersWithDifferentTypes() for query_params / Multiple query parameters with different types
-// - createAppQueryParams71ArraySeparatorSemicolon() for query_params / 71_array_separator_semicolon
-// - createAppQueryParams70ArraySeparatorPipe() for query_params / 70_array_separator_pipe
-// - createAppQueryParamsIntegerWithDefaultValueNotProvided() for query_params / Integer with default value - not provided
-// - createAppQueryParamsBooleanQueryParameterTrue() for query_params / Boolean query parameter - true
-// - createAppQueryParamsIntegerQueryParamWithLeConstraintBoundary() for query_params / Integer query param with le constraint - boundary
-// - createAppQueryParamsFloatQueryParamWithGeConstraintSuccess() for query_params / Float query param with ge constraint - success
-// - createAppQueryParams51IntegerGeConstraintBoundary() for query_params / 51_integer_ge_constraint_boundary
-// - createAppQueryParamsOptionalIntegerQueryParameterMissing() for query_params / Optional integer query parameter - missing
-// - createAppQueryParams69ArrayUniqueitemsFailure() for query_params / 69_array_uniqueitems_failure
-// - createAppQueryParams72ArraySeparatorSpace() for query_params / 72_array_separator_space
-// - createAppQueryParamsStringValidationWithRegexFailure() for query_params / String validation with regex - failure
-// - createAppQueryParams65FormatHostnameSuccess() for query_params / 65_format_hostname_success
-// - createAppQueryParamsQueryParameterWithUrlEncodedSpace() for query_params / Query parameter with URL encoded space
-// - createAppQueryParamsListOfStringsMultipleValues() for query_params / List of strings - multiple values
-// - createAppQueryParamsOptionalQueryParameterWithDefaultValue() for query_params / Optional query parameter with default value
-// - createAppQueryParams62FormatIpv6Success() for query_params / 62_format_ipv6_success
-// - createAppQueryParamsArrayQueryParameterSingleValue() for query_params / Array query parameter - single value
-// - createAppQueryParamsOptionalStringQueryParameterMissing() for query_params / Optional string query parameter - missing
-// - createAppQueryParamsDatetimeQueryParameterSuccess() for query_params / Datetime query parameter - success
-// - createAppQueryParamsUuidQueryParameterInvalidFormat() for query_params / UUID query parameter - invalid format
-// - createAppQueryParamsArrayQueryParameterEmptyArray() for query_params / Array query parameter - empty array
-// - createAppQueryParamsEnumQueryParameterSuccess() for query_params / Enum query parameter - success
-// - createAppQueryParamsUuidQueryParameterSuccess() for query_params / UUID query parameter - success
-// - createAppQueryParams50IntegerGtConstraintFailure() for query_params / 50_integer_gt_constraint_failure
-// - createAppQueryParams64FormatUriFailure() for query_params / 64_format_uri_failure
-// - createAppQueryParams54ArrayMinitemsConstraintSuccess() for query_params / 54_array_minitems_constraint_success
-// - createAppQueryParams55ArrayMinitemsConstraintFailure() for query_params / 55_array_minitems_constraint_failure
-// - createAppQueryParams60FormatIpv4Success() for query_params / 60_format_ipv4_success
-// - createAppStaticFilesStaticFileServerReturnsTextFile() for static_files / Static file server returns text file
-// - createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory() for static_files / Static server returns index.html for directory
-// - createAppHeadersHeaderRegexValidationSuccess() for headers / Header regex validation - success
-// - createAppHeaders33ApiKeyHeaderValid() for headers / 33_api_key_header_valid
-// - createAppHeadersContentTypeHeaderApplicationJson() for headers / Content-Type header - application/json
-// - createAppHeadersAcceptLanguageHeader() for headers / Accept-Language header
-// - createAppHeadersXApiKeyRequiredHeaderSuccess() for headers / X-API-Key required header - success
-// - createAppHeadersHeaderValidationMaxLengthConstraintFail() for headers / Header validation - max_length constraint fail
-// - createAppHeadersXApiKeyRequiredHeaderMissing() for headers / X-API-Key required header - missing
-// - createAppHeadersOriginHeader() for headers / Origin header
-// - createAppHeadersUserAgentHeaderDefaultValue() for headers / User-Agent header - default value
-// - createAppHeaders32BearerTokenMissingPrefix() for headers / 32_bearer_token_missing_prefix
-// - createAppHeadersOptionalHeaderWithNoneDefaultMissing() for headers / Optional header with None default - missing
-// - createAppHeadersHeaderRegexValidationFail() for headers / Header regex validation - fail
-// - createAppHeaders31BearerTokenFormatInvalid() for headers / 31_bearer_token_format_invalid
-// - createAppHeadersXApiKeyOptionalHeaderSuccess() for headers / X-API-Key optional header - success
-// - createAppHeadersAuthorizationHeaderSuccess() for headers / Authorization header - success
-// - createAppHeaders30BearerTokenFormatValid() for headers / 30_bearer_token_format_valid
-// - createAppHeadersAuthorizationHeaderMissing() for headers / Authorization header - missing
-// - createAppHeadersAcceptHeaderJson() for headers / Accept header - JSON
-// - createAppHeadersAcceptEncodingHeader() for headers / Accept-Encoding header
-// - createAppHeadersAuthorizationHeaderWrongScheme() for headers / Authorization header - wrong scheme
-// - createAppHeadersHeaderValidationMinLengthConstraint() for headers / Header validation - min_length constraint
-// - createAppHeadersBasicAuthenticationSuccess() for headers / Basic authentication - success
-// - createAppHeadersBearerTokenAuthenticationMissing() for headers / Bearer token authentication - missing
-// - createAppHeadersXApiKeyOptionalHeaderMissing() for headers / X-API-Key optional header - missing
-// - createAppHeadersMultipleHeaderValuesXToken() for headers / Multiple header values - X-Token
-// - createAppHeadersMultipleCustomHeaders() for headers / Multiple custom headers
-// - createAppHeaders34ApiKeyHeaderInvalid() for headers / 34_api_key_header_invalid
-// - createAppHeadersBearerTokenAuthenticationSuccess() for headers / Bearer token authentication - success
-// - createAppHeadersHostHeader() for headers / Host header
-// - createAppHeadersRefererHeader() for headers / Referer header
-// - createAppHeadersHeaderWithUnderscoreConversionExplicit() for headers / Header with underscore conversion - explicit
-// - createAppHeadersHeaderCaseInsensitivityAccess() for headers / Header case insensitivity - access
-// - createAppHeadersUserAgentHeaderCustomValue() for headers / User-Agent header - custom value
-// - createAppBackgroundBackgroundEventLoggingSecondPayload() for background / Background event logging - second payload
-// - createAppBackgroundBackgroundEventLogging() for background / Background event logging
-// - createAppValidationErrorsInvalidUuidFormat() for validation_errors / Invalid UUID format
-// - createAppValidationErrorsInvalidBooleanValue() for validation_errors / Invalid boolean value
-// - createAppValidationErrorsMissingRequiredQueryParameter() for validation_errors / Missing required query parameter
-// - createAppValidationErrorsArrayMaxItemsConstraintViolation() for validation_errors / Array max_items constraint violation
-// - createAppValidationErrorsNumericConstraintViolationGtGreaterThan() for validation_errors / Numeric constraint violation - gt (greater than)
-// - createAppValidationErrorsStringRegexPatternMismatch() for validation_errors / String regex pattern mismatch
-// - createAppValidationErrorsInvalidEnumValue() for validation_errors / Invalid enum value
-// - createAppValidationErrorsStringMinLengthConstraintViolation() for validation_errors / String min_length constraint violation
-// - createAppValidationErrorsMultipleValidationErrors() for validation_errors / Multiple validation errors
-// - createAppValidationErrorsStringMaxLengthConstraintViolation() for validation_errors / String max_length constraint violation
-// - createAppValidationErrorsNestedObjectValidationError() for validation_errors / Nested object validation error
-// - createAppValidationErrors10NestedErrorPath() for validation_errors / 10_nested_error_path
-// - createAppValidationErrorsInvalidDatetimeFormat() for validation_errors / Invalid datetime format
-// - createAppValidationErrorsArrayItemValidationError() for validation_errors / Array item validation error
-// - createAppValidationErrorsMissingRequiredBodyField() for validation_errors / Missing required body field
-// - createAppValidationErrorsBodyFieldTypeErrorStringForFloat() for validation_errors / Body field type error - string for float
-// - createAppValidationErrorsMalformedJsonBody() for validation_errors / Malformed JSON body
-// - createAppValidationErrorsQueryParamTypeErrorStringProvidedForInt() for validation_errors / Query param type error - string provided for int
-// - createAppValidationErrorsHeaderValidationError() for validation_errors / Header validation error
-// - createAppValidationErrors09MultipleValidationErrors() for validation_errors / 09_multiple_validation_errors
-// - createAppValidationErrorsNumericConstraintViolationLeLessThanOrEqual() for validation_errors / Numeric constraint violation - le (less than or equal)
-// - createAppValidationErrorsArrayMinItemsConstraintViolation() for validation_errors / Array min_items constraint violation
-// - createAppCors07CorsPreflightHeaderNotAllowed() for cors / 07_cors_preflight_header_not_allowed
-// - createAppCorsCorsVaryHeaderForProperCaching() for cors / CORS Vary header for proper caching
-// - createAppCorsCorsPreflightForPutMethod() for cors / CORS preflight for PUT method
-// - createAppCorsCorsPreflightForDeleteMethod() for cors / CORS preflight for DELETE method
-// - createAppCorsCorsMultipleAllowedOrigins() for cors / CORS multiple allowed origins
-// - createAppCorsCorsPreflightRequest() for cors / CORS preflight request
-// - createAppCorsCorsWithCredentials() for cors / CORS with credentials
-// - createAppCorsCorsRegexPatternMatchingForOrigins() for cors / CORS regex pattern matching for origins
-// - createAppCors08CorsMaxAge() for cors / 08_cors_max_age
-// - createAppCors10CorsOriginNull() for cors / 10_cors_origin_null
-// - createAppCorsCorsWildcardOrigin() for cors / CORS wildcard origin
-// - createAppCorsCorsSafelistedHeadersWithoutPreflight() for cors / CORS safelisted headers without preflight
-// - createAppCorsCorsPrivateNetworkAccess() for cors / CORS Private Network Access
-// - createAppCorsCorsOriginCaseSensitivity() for cors / CORS origin case sensitivity
-// - createAppCorsCorsRequestBlocked() for cors / CORS request blocked
-// - createAppCorsSimpleCorsRequest() for cors / Simple CORS request
-// - createAppCors09CorsExposeHeaders() for cors / 09_cors_expose_headers
-// - createAppCors06CorsPreflightMethodNotAllowed() for cors / 06_cors_preflight_method_not_allowed
-// - createAppJsonBodiesUuidFieldInvalidFormat() for json_bodies / UUID field - invalid format
-// - createAppJsonBodies44ConstValidationFailure() for json_bodies / 44_const_validation_failure
-// - createAppJsonBodiesBooleanFieldSuccess() for json_bodies / Boolean field - success
-// - createAppJsonBodiesNumericLeValidationSuccess() for json_bodies / Numeric le validation - success
-// - createAppJsonBodiesDeeplyNestedObjects() for json_bodies / Deeply nested objects
-// - createAppJsonBodiesOptionalFieldsOmitted() for json_bodies / Optional fields - omitted
-// - createAppJsonBodiesUuidFieldSuccess() for json_bodies / UUID field - success
-// - createAppJsonBodiesDateFieldSuccess() for json_bodies / Date field - success
-// - createAppJsonBodies47MaxpropertiesValidationFailure() for json_bodies / 47_maxproperties_validation_failure
-// - createAppJsonBodies46MinpropertiesValidationFailure() for json_bodies / 46_minproperties_validation_failure
-// - createAppJsonBodiesStringMinLengthValidationFail() for json_bodies / String min_length validation - fail
-// - createAppJsonBodiesFieldTypeValidationInvalidType() for json_bodies / Field type validation - invalid type
-// - createAppJsonBodies36OneofSchemaMultipleMatchFailure() for json_bodies / 36_oneof_schema_multiple_match_failure
-// - createAppJsonBodiesNestedObjectSuccess() for json_bodies / Nested object - success
-// - createAppJsonBodies41NotSchemaSuccess() for json_bodies / 41_not_schema_success
-// - createAppJsonBodiesStringMaxLengthValidationFail() for json_bodies / String max_length validation - fail
-// - createAppJsonBodies50DeepNesting4Levels() for json_bodies / 50_deep_nesting_4_levels
-// - createAppJsonBodies48DependenciesValidationSuccess() for json_bodies / 48_dependencies_validation_success
-// - createAppJsonBodiesPatchPartialUpdate() for json_bodies / PATCH partial update
-// - createAppJsonBodies30NestedObjectMissingField() for json_bodies / 30_nested_object_missing_field
-// - createAppJsonBodiesDatetimeFieldSuccess() for json_bodies / Datetime field - success
-// - createAppJsonBodiesStringPatternValidationSuccess() for json_bodies / String pattern validation - success
-// - createAppJsonBodiesExtraFieldsIgnoredNoAdditionalproperties() for json_bodies / Extra fields ignored (no additionalProperties)
-// - createAppJsonBodies40AnyofSchemaFailure() for json_bodies / 40_anyof_schema_failure
-// - createAppJsonBodies39AnyofSchemaMultipleMatchSuccess() for json_bodies / 39_anyof_schema_multiple_match_success
-// - createAppJsonBodiesArrayOfPrimitiveValues() for json_bodies / Array of primitive values
-// - createAppJsonBodiesNumericGeValidationFail() for json_bodies / Numeric ge validation - fail
-// - createAppJsonBodies37OneofSchemaNoMatchFailure() for json_bodies / 37_oneof_schema_no_match_failure
-// - createAppJsonBodiesEmptyArrayValidationFail() for json_bodies / Empty array validation - fail
-// - createAppJsonBodies38AnyofSchemaSuccess() for json_bodies / 38_anyof_schema_success
-// - createAppJsonBodiesEmptyJsonObject() for json_bodies / Empty JSON object
-// - createAppJsonBodiesStringPatternValidationFail() for json_bodies / String pattern validation - fail
-// - createAppJsonBodies49DependenciesValidationFailure() for json_bodies / 49_dependencies_validation_failure
-// - createAppJsonBodiesSimpleJsonObjectSuccess() for json_bodies / Simple JSON object - success
-// - createAppJsonBodiesRequiredFieldMissingValidationError() for json_bodies / Required field missing - validation error
-// - createAppJsonBodies35OneofSchemaSuccess() for json_bodies / 35_oneof_schema_success
-// - createAppJsonBodiesEnumFieldInvalidValue() for json_bodies / Enum field - invalid value
-// - createAppJsonBodiesEnumFieldSuccess() for json_bodies / Enum field - success
-// - createAppJsonBodies33AllofSchemaComposition() for json_bodies / 33_allof_schema_composition
-// - createAppJsonBodies45MinpropertiesValidationSuccess() for json_bodies / 45_minproperties_validation_success
-// - createAppJsonBodiesBodyWithQueryParameters() for json_bodies / Body with query parameters
-// - createAppJsonBodies42NotSchemaFailure() for json_bodies / 42_not_schema_failure
-// - createAppJsonBodies43ConstValidationSuccess() for json_bodies / 43_const_validation_success
-// - createAppJsonBodies32SchemaRefDefinitions() for json_bodies / 32_schema_ref_definitions
-// - createAppJsonBodies29NestedObjectValidationSuccess() for json_bodies / 29_nested_object_validation_success
-// - createAppJsonBodies34AdditionalPropertiesFalse() for json_bodies / 34_additional_properties_false
-// - createAppJsonBodiesNullValueForOptionalField() for json_bodies / Null value for optional field
-// - createAppJsonBodies31NullablePropertyNullValue() for json_bodies / 31_nullable_property_null_value
-// - createAppJsonBodiesArrayOfObjectsSuccess() for json_bodies / Array of objects - success
-// - createAppRequestTimeoutRequestExceedsTimeout() for request_timeout / Request exceeds timeout
-// - createAppRequestTimeoutRequestCompletesBeforeTimeout() for request_timeout / Request completes before timeout
-// - createAppDiRouteLevelDependencyOverrideSuccess() for di / Route-level dependency override - success
-// - createAppDiCircularDependencyDetectionError() for di / Circular dependency detection - error
-// - createAppDiFactoryDependencySuccess() for di / Factory dependency - success
-// - createAppDiValueDependencyInjectionSuccess() for di / Value dependency injection - success
-// - createAppDiNodeJsObjectDestructuringInjectionSuccess() for di / Node.js object destructuring injection - success
-// - createAppDiNestedDependencies3LevelsSuccess() for di / Nested dependencies (3 levels) - success
-// - createAppDiTypeMismatchInDependencyResolutionError() for di / Type mismatch in dependency resolution - error
-// - createAppDiMissingDependencyError() for di / Missing dependency - error
-// - createAppDiPythonParameterNameBasedInjectionSuccess() for di / Python parameter name-based injection - success
-// - createAppDiDependencyInjectionInLifecycleHooksSuccess() for di / Dependency injection in lifecycle hooks - success
-// - createAppDiRubyKeywordArgumentInjectionSuccess() for di / Ruby keyword argument injection - success
-// - createAppDiMultipleDependenciesWithCleanupSuccess() for di / Multiple dependencies with cleanup - success
-// - createAppDiMixedSingletonAndPerRequestCachingSuccess() for di / Mixed singleton and per-request caching - success
-// - createAppDiResourceCleanupAfterRequestSuccess() for di / Resource cleanup after request - success
-// - createAppDiPythonTypeAnnotationBasedInjectionSuccess() for di / Python type annotation-based injection - success
-// - createAppDiPerRequestDependencyCachingSuccess() for di / Per-request dependency caching - success
-// - createAppDiSingletonDependencyCachingSuccess() for di / Singleton dependency caching - success
-// - createAppDiAsyncFactoryDependencySuccess() for di / Async factory dependency - success
-// - createAppRequestIdRequestIdHeaderIsPreserved() for request_id / Request ID header is preserved
-// - createAppRequestIdRequestIdMiddlewareCanBeDisabled() for request_id / Request ID middleware can be disabled
-// - createAppRequestIdRequestIdIsGeneratedWhenNotProvided() for request_id / Request ID is generated when not provided
-// - createAppHttpMethodsOptionsCorsPreflightRequest() for http_methods / OPTIONS - CORS preflight request
-// - createAppHttpMethodsDeleteRemoveResource() for http_methods / DELETE - Remove resource
-// - createAppHttpMethodsPutCreateResourceIfDoesnTExist() for http_methods / PUT - Create resource if doesn't exist
-// - createAppHttpMethodsPatchUpdateMultipleFields() for http_methods / PATCH - Update multiple fields
-// - createAppHttpMethodsPutValidationError() for http_methods / PUT - Validation error
-// - createAppHttpMethodsHeadGetMetadataWithoutBody() for http_methods / HEAD - Get metadata without body
-// - createAppHttpMethodsDeleteWithResponseBody() for http_methods / DELETE - With response body
-// - createAppHttpMethodsPutMissingRequiredField() for http_methods / PUT - Missing required field
-// - createAppHttpMethodsPatchPartialUpdate() for http_methods / PATCH - Partial update
-// - createAppHttpMethodsDeleteResourceNotFound() for http_methods / DELETE - Resource not found
-// - createAppHttpMethodsPutIdempotentOperation() for http_methods / PUT - Idempotent operation
-// - createAppHttpMethodsPutCompleteResourceReplacement() for http_methods / PUT - Complete resource replacement
-// - createAppRateLimitRateLimitBelowThresholdSucceeds() for rate_limit / Rate limit below threshold succeeds
-// - createAppRateLimitRateLimitExceededReturns429() for rate_limit / Rate limit exceeded returns 429
-// - createAppMultipartMultipleValuesForSameFieldName() for multipart / Multiple values for same field name
-// - createAppMultipart19FileMimeSpoofingPngAsJpeg() for multipart / 19_file_mime_spoofing_png_as_jpeg
-// - createAppMultipart20FileMimeSpoofingJpegAsPng() for multipart / 20_file_mime_spoofing_jpeg_as_png
-// - createAppMultipart21FilePdfMagicNumberSuccess() for multipart / 21_file_pdf_magic_number_success
-// - createAppMultipartContentTypeValidationInvalidType() for multipart / Content-Type validation - invalid type
-// - createAppMultipartPdfFileUpload() for multipart / PDF file upload
-// - createAppMultipartFileListUploadArrayOfFiles() for multipart / File list upload (array of files)
-// - createAppMultipartOptionalFileUploadProvided() for multipart / Optional file upload - provided
-// - createAppMultipartFileSizeValidationTooLarge() for multipart / File size validation - too large
-// - createAppMultipartMixedFilesAndFormData() for multipart / Mixed files and form data
-// - createAppMultipartSimpleFileUpload() for multipart / Simple file upload
-// - createAppMultipartEmptyFileUpload() for multipart / Empty file upload
-// - createAppMultipartOptionalFileUploadMissing() for multipart / Optional file upload - missing
-// - createAppMultipartFileUploadWithoutFilename() for multipart / File upload without filename
-// - createAppMultipart18FileMagicNumberJpegSuccess() for multipart / 18_file_magic_number_jpeg_success
-// - createAppMultipart22FileEmptyBuffer() for multipart / 22_file_empty_buffer
-// - createAppMultipart17FileMagicNumberPngSuccess() for multipart / 17_file_magic_number_png_success
-// - createAppMultipartFormDataWithoutFiles() for multipart / Form data without files
-// - createAppMultipartMultipleFileUploads() for multipart / Multiple file uploads
-// - createAppMultipartFileUploadWithCustomHeaders() for multipart / File upload with custom headers
-// - createAppMultipartRequiredFileUploadMissing() for multipart / Required file upload - missing
-// - createAppMultipartImageFileUpload() for multipart / Image file upload
-// - createAppCompressionCompressionPayloadBelowMinSizeIsNotCompressed() for compression / Compression - payload below min_size is not compressed
-// - createAppCompressionCompressionGzipApplied() for compression / Compression - gzip applied
-// - createAppLifecycleHooksOnresponseSecurityHeaders() for lifecycle_hooks / onResponse - Security Headers
-// - createAppLifecycleHooksPrehandlerAuthenticationFailedShortCircuit() for lifecycle_hooks / preHandler - Authentication Failed (Short Circuit)
-// - createAppLifecycleHooksPrehandlerAuthorizationCheck() for lifecycle_hooks / preHandler - Authorization Check
-// - createAppLifecycleHooksPrehandlerAuthenticationSuccess() for lifecycle_hooks / preHandler - Authentication Success
-// - createAppLifecycleHooksPrevalidationRateLimitExceededShortCircuit() for lifecycle_hooks / preValidation - Rate Limit Exceeded (Short Circuit)
-// - createAppLifecycleHooksOnerrorErrorLogging() for lifecycle_hooks / onError - Error Logging
-// - createAppLifecycleHooksMultipleHooksAllPhases() for lifecycle_hooks / Multiple Hooks - All Phases
-// - createAppLifecycleHooksHookExecutionOrder() for lifecycle_hooks / Hook Execution Order
-// - createAppLifecycleHooksOnresponseResponseTiming() for lifecycle_hooks / onResponse - Response Timing
-// - createAppLifecycleHooksPrehandlerAuthorizationForbiddenShortCircuit() for lifecycle_hooks / preHandler - Authorization Forbidden (Short Circuit)
-// - createAppLifecycleHooksOnrequestRequestLogging() for lifecycle_hooks / onRequest - Request Logging
-// - createAppLifecycleHooksPrevalidationRateLimiting() for lifecycle_hooks / preValidation - Rate Limiting
-// - createAppStatusCodes408RequestTimeout() for status_codes / 408 Request Timeout
-// - createAppStatusCodes404NotFoundResourceNotFound() for status_codes / 404 Not Found - Resource not found
-// - createAppStatusCodes503ServiceUnavailableServerOverload() for status_codes / 503 Service Unavailable - Server overload
-// - createAppStatusCodes422UnprocessableEntityValidationError() for status_codes / 422 Unprocessable Entity - Validation error
-// - createAppStatusCodes302FoundTemporaryRedirect() for status_codes / 302 Found - Temporary redirect
-// - createAppStatusCodes304NotModifiedCachedContentValid() for status_codes / 304 Not Modified - Cached content valid
-// - createAppStatusCodes400BadRequestInvalidRequest() for status_codes / 400 Bad Request - Invalid request
-// - createAppStatusCodes22501NotImplemented() for status_codes / 22_501_not_implemented
-// - createAppStatusCodes204NoContentSuccessWithNoBody() for status_codes / 204 No Content - Success with no body
-// - createAppStatusCodes301MovedPermanentlyPermanentRedirect() for status_codes / 301 Moved Permanently - Permanent redirect
-// - createAppStatusCodes201CreatedResourceCreated() for status_codes / 201 Created - Resource created
-// - createAppStatusCodes202AcceptedRequestAcceptedForProcessing() for status_codes / 202 Accepted - Request accepted for processing
-// - createAppStatusCodes307TemporaryRedirectMethodPreserved() for status_codes / 307 Temporary Redirect - Method preserved
-// - createAppStatusCodes500InternalServerErrorServerError() for status_codes / 500 Internal Server Error - Server error
-// - createAppStatusCodes20414UriTooLong() for status_codes / 20_414_uri_too_long
-// - createAppStatusCodes401UnauthorizedMissingAuthentication() for status_codes / 401 Unauthorized - Missing authentication
-// - createAppStatusCodes23503ServiceUnavailable() for status_codes / 23_503_service_unavailable
-// - createAppStatusCodes19413PayloadTooLarge() for status_codes / 19_413_payload_too_large
-// - createAppStatusCodes403ForbiddenInsufficientPermissions() for status_codes / 403 Forbidden - Insufficient permissions
-// - createAppStatusCodes21431RequestHeaderFieldsTooLarge() for status_codes / 21_431_request_header_fields_too_large
-// - createAppStatusCodes429TooManyRequests() for status_codes / 429 Too Many Requests
-// - createAppStatusCodes200OkSuccess() for status_codes / 200 OK - Success
-// - createAppStatusCodes206PartialContent() for status_codes / 206 Partial Content
-// - createAppCookies25CookieSamesiteLax() for cookies / 25_cookie_samesite_lax
-// - createAppCookiesOptionalCookieParameterSuccess() for cookies / Optional cookie parameter - success
-// - createAppCookiesCookieRegexPatternValidationFail() for cookies / Cookie regex pattern validation - fail
-// - createAppCookiesResponseSessionCookieNoMaxAge() for cookies / Response - session cookie (no max_age)
-// - createAppCookies27CookieHttponlyFlag() for cookies / 27_cookie_httponly_flag
-// - createAppCookiesResponseCookieWithAttributes() for cookies / Response cookie with attributes
-// - createAppCookies24CookieSamesiteStrict() for cookies / 24_cookie_samesite_strict
-// - createAppCookiesApikeyCookieAuthenticationSuccess() for cookies / APIKey cookie authentication - success
-// - createAppCookiesCookieValidationMinLengthConstraintSuccess() for cookies / Cookie validation - min_length constraint success
-// - createAppCookiesCookieValidationMinLengthFailure() for cookies / Cookie validation - min_length failure
-// - createAppCookiesCookieValidationMaxLengthConstraintFail() for cookies / Cookie validation - max_length constraint fail
-// - createAppCookiesRequiredCookieMissing() for cookies / Required cookie - missing
-// - createAppCookiesOptionalCookieParameterMissing() for cookies / Optional cookie parameter - missing
-// - createAppCookiesApikeyCookieAuthenticationMissing() for cookies / APIKey cookie authentication - missing
-// - createAppCookiesResponseMultipleCookies() for cookies / Response - multiple cookies
-// - createAppCookiesResponseCookieWithSamesiteLax() for cookies / Response cookie with SameSite=Lax
-// - createAppCookiesResponseDeleteCookie() for cookies / Response - delete cookie
-// - createAppCookiesResponseCookieWithPathAttribute() for cookies / Response cookie with path attribute
-// - createAppCookiesOptionalApikeyCookieMissing() for cookies / Optional APIKey cookie - missing
-// - createAppCookiesResponseCookieWithSamesiteStrict() for cookies / Response cookie with SameSite=Strict
-// - createAppCookiesResponseCookieWithSamesiteNone() for cookies / Response cookie with SameSite=None
-// - createAppCookiesCookieRegexPatternValidationSuccess() for cookies / Cookie regex pattern validation - success
-// - createAppCookiesResponseSetCookieBasic() for cookies / Response set cookie - basic
-// - createAppCookiesMultipleCookiesSuccess() for cookies / Multiple cookies - success
-// - createAppCookies26CookieSecureFlag() for cookies / 26_cookie_secure_flag
-// - createAppCookiesResponseCookieWithDomainAttribute() for cookies / Response cookie with domain attribute
-// - createAppBodyLimitsBodyUnderLimitSucceeds() for body_limits / Body under limit succeeds
-// - createAppBodyLimitsBodyOverLimitReturns413() for body_limits / Body over limit returns 413
-// - createAppAuthJwtMalformedTokenFormat() for auth / JWT malformed token format
-// - createAppAuthBearerTokenWithoutPrefix() for auth / Bearer token without prefix
-// - createAppAuthJwtAuthenticationValidToken() for auth / JWT authentication - valid token
-// - createAppAuthApiKeyRotationOldKeyStillValid() for auth / API key rotation - old key still valid
-// - createAppAuthJwtInvalidIssuer() for auth / JWT invalid issuer
-// - createAppAuthJwtWithMultipleAudiences() for auth / JWT with multiple audiences
-// - createAppAuthApiKeyInQueryParameter() for auth / API key in query parameter
-// - createAppAuthJwtAuthenticationExpiredToken() for auth / JWT authentication - expired token
-// - createAppAuthApiKeyAuthenticationInvalidKey() for auth / API key authentication - invalid key
-// - createAppAuthJwtNotBeforeClaimInFuture() for auth / JWT not before claim in future
-// - createAppAuthMultipleAuthenticationSchemesJwtPrecedence() for auth / Multiple authentication schemes - JWT precedence
-// - createAppAuthJwtMissingRequiredCustomClaims() for auth / JWT missing required custom claims
-// - createAppAuthApiKeyAuthenticationValidKey() for auth / API key authentication - valid key
-// - createAppAuthApiKeyWithCustomHeaderName() for auth / API key with custom header name
-// - createAppAuthApiKeyAuthenticationMissingHeader() for auth / API key authentication - missing header
-// - createAppAuthJwtAuthenticationInvalidSignature() for auth / JWT authentication - invalid signature
-// - createAppAuthJwtAuthenticationMissingAuthorizationHeader() for auth / JWT authentication - missing Authorization header
-// - createAppAuthJwtAuthenticationInvalidAudience() for auth / JWT authentication - invalid audience
-// - createAppContentTypes415UnsupportedMediaType() for content_types / 415 Unsupported Media Type
-// - createAppContentTypesXmlResponseApplicationXml() for content_types / XML response - application/xml
-// - createAppContentTypes14ContentTypeCaseInsensitive() for content_types / 14_content_type_case_insensitive
-// - createAppContentTypesJsonWithUtf8Charset() for content_types / JSON with UTF-8 charset
-// - createAppContentTypes16TextPlainNotAccepted() for content_types / 16_text_plain_not_accepted
-// - createAppContentTypesPdfResponseApplicationPdf() for content_types / PDF response - application/pdf
-// - createAppContentTypes20ContentLengthMismatch() for content_types / 20_content_length_mismatch
-// - createAppContentTypes17VendorJsonAccepted() for content_types / 17_vendor_json_accepted
-// - createAppContentTypes13JsonWithCharsetUtf16() for content_types / 13_json_with_charset_utf16
-// - createAppContentTypesJsonResponseApplicationJson() for content_types / JSON response - application/json
-// - createAppContentTypes15MultipartBoundaryRequired() for content_types / 15_multipart_boundary_required
-// - createAppContentTypesContentNegotiationAcceptHeader() for content_types / Content negotiation - Accept header
-// - createAppContentTypesHtmlResponseTextHtml() for content_types / HTML response - text/html
-// - createAppContentTypesJpegImageResponseImageJpeg() for content_types / JPEG image response - image/jpeg
-// - createAppContentTypes19MissingContentTypeDefaultJson() for content_types / 19_missing_content_type_default_json
-// - createAppContentTypesPngImageResponseImagePng() for content_types / PNG image response - image/png
-// - createAppContentTypesPlainTextResponseTextPlain() for content_types / Plain text response - text/plain
-// - createAppContentTypes18ContentTypeWithMultipleParams() for content_types / 18_content_type_with_multiple_params
-// - createAppContentTypesCsvResponseTextCsv() for content_types / CSV response - text/csv
-// - createAppContentTypesBinaryResponseApplicationOctetStream() for content_types / Binary response - application/octet-stream
-// - createAppSseNotifications() for asyncapi_sse / /notifications
-// - createAppWebsocketChat() for asyncapi_websocket / /chat
 
 export {
 	UserJoinedMessageSchema,
