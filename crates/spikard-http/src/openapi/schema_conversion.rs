@@ -306,8 +306,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Edge Case Tests: Circular References & Self-References
-
     #[test]
     fn test_circular_reference_simple_cycle() {
         let schema_json = serde_json::json!({
@@ -335,8 +333,6 @@ mod tests {
         let result = json_value_to_schema(&schema_json);
         assert!(result.is_ok());
     }
-
-    // Edge Case Tests: Deep Nesting
 
     #[test]
     fn test_deeply_nested_object_10_levels() {
@@ -419,8 +415,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Edge Case Tests: Type Coercion
-
     #[test]
     fn test_type_coercion_integer_to_number() {
         let schema_json = serde_json::json!({
@@ -462,8 +456,6 @@ mod tests {
             ));
         }
     }
-
-    // Edge Case Tests: Nullable & Required
 
     #[test]
     fn test_nullable_property_in_object() {
@@ -510,8 +502,6 @@ mod tests {
             assert!(!obj.required.contains(&"optional".to_string()));
         }
     }
-
-    // Edge Case Tests: Format Preservation
 
     #[test]
     fn test_format_uuid() {
@@ -586,8 +576,6 @@ mod tests {
         assert!(result.is_ok(), "Unknown formats should be gracefully handled");
     }
 
-    // Edge Case Tests: Array of Complex Objects
-
     #[test]
     fn test_array_of_objects() {
         let schema_json = serde_json::json!({
@@ -629,8 +617,6 @@ mod tests {
         let result = json_value_to_schema(&schema_json);
         assert!(result.is_ok());
     }
-
-    // Edge Case Tests: Additional Properties
 
     #[test]
     fn test_object_with_additional_properties_true() {
@@ -674,8 +660,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Edge Case Tests: Empty Schemas
-
     #[test]
     fn test_empty_schema() {
         let schema_json = serde_json::json!({});
@@ -707,8 +691,6 @@ mod tests {
         let result = json_value_to_schema(&schema_json);
         assert!(result.is_ok());
     }
-
-    // Edge Case Tests: Mixed Composite Schemas
 
     #[test]
     fn test_object_with_mixed_property_types() {
@@ -764,8 +746,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Edge Case Tests: Unsupported Types
-
     #[test]
     fn test_unsupported_type_error() {
         let schema_json = serde_json::json!({
@@ -778,8 +758,6 @@ mod tests {
             assert!(err.contains("Unsupported schema type"));
         }
     }
-
-    // Edge Case Tests: Required Array Validation
 
     #[test]
     fn test_required_with_non_string_elements() {
@@ -865,11 +843,6 @@ mod tests {
         }
     }
 
-    // ============================================================================
-    // ADDITIONAL COMPREHENSIVE TESTS (20+ new tests)
-    // ============================================================================
-
-    // Test 1: Multiple formats on string type
     #[test]
     fn test_string_format_datetime_creates_string_type() {
         let schema_json = serde_json::json!({
@@ -888,7 +861,6 @@ mod tests {
         }
     }
 
-    // Test 2: String with email format
     #[test]
     fn test_string_format_email_creates_string_type() {
         let schema_json = serde_json::json!({
@@ -907,7 +879,6 @@ mod tests {
         }
     }
 
-    // Test 3: String with uri format
     #[test]
     fn test_string_format_uri_creates_string_type() {
         let schema_json = serde_json::json!({
@@ -926,7 +897,6 @@ mod tests {
         }
     }
 
-    // Test 4: Array of nested arrays with mixed types
     #[test]
     fn test_array_nested_with_mixed_object_types() {
         let schema_json = serde_json::json!({
@@ -951,7 +921,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Test 5: Object with deeply nested arrays
     #[test]
     fn test_object_with_deeply_nested_arrays() {
         let schema_json = serde_json::json!({
@@ -976,7 +945,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Test 6: Object with many properties (50+)
     #[test]
     fn test_object_with_many_properties() {
         let mut properties = serde_json::Map::new();
@@ -1000,7 +968,6 @@ mod tests {
         }
     }
 
-    // Test 7: Required field that doesn't exist in properties
     #[test]
     fn test_required_field_not_in_properties() {
         let schema_json = serde_json::json!({
@@ -1020,7 +987,6 @@ mod tests {
         }
     }
 
-    // Test 8: Empty object with required fields
     #[test]
     fn test_empty_object_with_required_fields() {
         let schema_json = serde_json::json!({
@@ -1038,7 +1004,6 @@ mod tests {
         }
     }
 
-    // Test 9: Array items with null schema
     #[test]
     fn test_array_items_missing_completely() {
         let schema_json = serde_json::json!({
@@ -1049,13 +1014,11 @@ mod tests {
         assert!(result.is_ok());
 
         if let Ok(RefOr::T(Schema::Array(_arr))) = result {
-            // Array without items schema is valid
         } else {
             panic!("Expected Array schema");
         }
     }
 
-    // Test 10: Nested object with mixed required fields across levels
     #[test]
     fn test_nested_object_mixed_required_across_levels() {
         let schema_json = serde_json::json!({
@@ -1086,7 +1049,6 @@ mod tests {
         }
     }
 
-    // Test 11: Test all format strings are handled correctly
     #[test]
     fn test_string_format_all_known_formats() {
         let formats = vec!["date-time", "date", "email", "uri"];
@@ -1102,7 +1064,6 @@ mod tests {
         }
     }
 
-    // Test 12: Request body with nested complex object
     #[test]
     fn test_request_body_complex_nested_structure() {
         let schema_json = serde_json::json!({
@@ -1142,7 +1103,6 @@ mod tests {
         assert!(matches!(request_body.required, Some(utoipa::openapi::Required::True)));
     }
 
-    // Test 13: Response with array of complex objects
     #[test]
     fn test_response_array_of_complex_objects() {
         let schema_json = serde_json::json!({
@@ -1166,7 +1126,6 @@ mod tests {
         assert_eq!(response.description, "Successful response");
     }
 
-    // Test 14: Object properties with format-only fields (no explicit type but has format)
     #[test]
     fn test_object_property_with_format_but_type_string() {
         let schema_json = serde_json::json!({
@@ -1192,7 +1151,6 @@ mod tests {
         }
     }
 
-    // Test 15: Duplicate required fields
     #[test]
     fn test_duplicate_required_fields() {
         let schema_json = serde_json::json!({
@@ -1213,7 +1171,6 @@ mod tests {
         }
     }
 
-    // Test 16: Very long property names
     #[test]
     fn test_object_with_very_long_property_names() {
         let long_name = "very_long_property_name_that_is_256_characters_or_more_\
@@ -1237,7 +1194,6 @@ mod tests {
         }
     }
 
-    // Test 17: Array of primitives with all types
     #[test]
     fn test_arrays_of_all_primitive_types() {
         let types = vec!["string", "integer", "number", "boolean"];
@@ -1253,7 +1209,6 @@ mod tests {
         }
     }
 
-    // Test 18: Mixed required and optional in large object
     #[test]
     fn test_large_object_with_mixed_required_optional() {
         let mut properties = serde_json::Map::new();
@@ -1281,7 +1236,6 @@ mod tests {
         }
     }
 
-    // Test 19: Object without properties but with required
     #[test]
     fn test_object_no_properties_with_required() {
         let schema_json = serde_json::json!({
@@ -1298,7 +1252,6 @@ mod tests {
         }
     }
 
-    // Test 20: Request body with all optional fields
     #[test]
     fn test_request_body_all_optional_fields() {
         let schema_json = serde_json::json!({
@@ -1317,7 +1270,6 @@ mod tests {
         assert!(request_body.content.contains_key("application/json"));
     }
 
-    // Test 21: Numeric min/max values (if supported by schema)
     #[test]
     fn test_integer_with_min_max_values() {
         let schema_json = serde_json::json!({
@@ -1330,7 +1282,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Test 22: String with min/max length
     #[test]
     fn test_string_with_length_constraints() {
         let schema_json = serde_json::json!({
@@ -1343,7 +1294,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Test 23: Array with min/max items
     #[test]
     fn test_array_with_item_count_constraints() {
         let schema_json = serde_json::json!({
@@ -1357,7 +1307,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Test 24: Object with pattern properties
     #[test]
     fn test_object_with_pattern_properties() {
         let schema_json = serde_json::json!({
@@ -1374,7 +1323,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Test 25: Deeply nested object with 15 levels
     #[test]
     fn test_deeply_nested_object_15_levels() {
         let mut schema = serde_json::json!({ "type": "string" });
@@ -1392,7 +1340,6 @@ mod tests {
         assert!(result.is_ok(), "15-level deep nesting should not cause stack overflow");
     }
 
-    // Test 26: Unicode property names
     #[test]
     fn test_object_with_unicode_property_names() {
         let schema_json = serde_json::json!({

@@ -104,7 +104,6 @@ pub async fn handle_jsonrpc(
     uri: axum::http::Uri,
     body: String,
 ) -> AxumResponse {
-    // Validate Content-Type header
     if !validate_content_type(&headers) {
         return create_error_response(
             StatusCode::UNSUPPORTED_MEDIA_TYPE,
@@ -112,7 +111,6 @@ pub async fn handle_jsonrpc(
         );
     }
 
-    // Parse request (single or batch)
     let request = match JsonRpcRouter::parse_request(&body) {
         Ok(req) => req,
         Err(error_response) => {
@@ -121,17 +119,14 @@ pub async fn handle_jsonrpc(
         }
     };
 
-    // Create a minimal RequestData from the HTTP request context
     let request_data = create_jsonrpc_request_data(&headers, &uri);
 
-    // Create HTTP request for handler invocation
     let http_request = Request::builder()
         .method("POST")
         .uri(uri.clone())
         .body(Body::empty())
         .unwrap_or_else(|_| Request::builder().method("POST").uri("/").body(Body::empty()).unwrap());
 
-    // Route request based on type
     let response = match request {
         JsonRpcRequestOrBatch::Single(req) => {
             let response = state.router.route_single(req, http_request, &request_data).await;
@@ -191,7 +186,7 @@ fn create_jsonrpc_request_data(headers: &HeaderMap, uri: &axum::http::Uri) -> Re
 /// `false` if Content-Type is present but not JSON
 fn validate_content_type(headers: &HeaderMap) -> bool {
     match headers.get(header::CONTENT_TYPE) {
-        None => true, // Default to JSON if not specified
+        None => true,
         Some(value) => {
             if let Ok(ct) = value.to_str() {
                 ct.to_lowercase().contains("application/json")
@@ -285,10 +280,8 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should return 200 OK
         assert_eq!(response.status(), StatusCode::OK);
 
-        // Should have JSON content type
         let content_type = response.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap();
         assert!(content_type.contains("application/json"));
     }
@@ -306,10 +299,8 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should return 200 OK
         assert_eq!(response.status(), StatusCode::OK);
 
-        // Should have JSON content type
         let content_type = response.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap();
         assert!(content_type.contains("application/json"));
     }
@@ -323,10 +314,8 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should return 415 Unsupported Media Type
         assert_eq!(response.status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
 
-        // Should have plain text content type for error
         let content_type = response.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap();
         assert!(content_type.contains("text/plain"));
     }
@@ -340,7 +329,6 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should return 200 OK (no Content-Type is valid, defaults to JSON)
         assert_eq!(response.status(), StatusCode::OK);
     }
 
@@ -353,7 +341,6 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should return 200 OK with parse error in JSON-RPC response
         assert_eq!(response.status(), StatusCode::OK);
     }
 
@@ -362,7 +349,6 @@ mod tests {
         let state = create_test_state();
         let headers = create_json_headers();
         let uri = create_test_uri();
-        // Batch with both regular requests and a notification
         let body = r#"[
             {"jsonrpc":"2.0","method":"test","params":{},"id":1},
             {"jsonrpc":"2.0","method":"test","params":{}},
@@ -372,7 +358,6 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should return 200 OK
         assert_eq!(response.status(), StatusCode::OK);
     }
 
@@ -400,7 +385,6 @@ mod tests {
     #[test]
     fn test_validate_content_type_missing() {
         let headers = HeaderMap::new();
-        // Missing Content-Type defaults to valid
         assert!(validate_content_type(&headers));
     }
 
@@ -432,14 +416,13 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should return 200 OK with error in response
         assert_eq!(response.status(), StatusCode::OK);
     }
 
     #[tokio::test]
     async fn test_batch_disabled() {
         let registry = Arc::new(JsonRpcMethodRegistry::new());
-        let router = Arc::new(JsonRpcRouter::new(registry, false, 100)); // batch disabled
+        let router = Arc::new(JsonRpcRouter::new(registry, false, 100));
         let state = Arc::new(JsonRpcState { router });
         let headers = create_json_headers();
         let uri = create_test_uri();
@@ -450,14 +433,13 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should return 200 OK with batch error in response
         assert_eq!(response.status(), StatusCode::OK);
     }
 
     #[tokio::test]
     async fn test_batch_size_exceeded() {
         let registry = Arc::new(JsonRpcMethodRegistry::new());
-        let router = Arc::new(JsonRpcRouter::new(registry, true, 2)); // max 2 requests
+        let router = Arc::new(JsonRpcRouter::new(registry, true, 2));
         let state = Arc::new(JsonRpcState { router });
         let headers = create_json_headers();
         let uri = create_test_uri();
@@ -470,7 +452,6 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should return 200 OK with batch size error in response
         assert_eq!(response.status(), StatusCode::OK);
     }
 
@@ -483,7 +464,6 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should return 200 OK with empty batch error in response
         assert_eq!(response.status(), StatusCode::OK);
     }
 
@@ -516,7 +496,6 @@ mod tests {
 
         let response = handle_jsonrpc(State(state), headers, uri, body).await;
 
-        // Should work with different case
         assert_eq!(response.status(), StatusCode::OK);
     }
 }

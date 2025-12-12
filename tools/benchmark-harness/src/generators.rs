@@ -1,4 +1,3 @@
-// /// Test data generators for different workload types.
 //!
 //! Generates realistic test payloads for benchmarking across different payload sizes and
 //! structures.
@@ -42,8 +41,6 @@ pub fn generate_json_medium() -> Value {
 /// Generate a large JSON payload (~10-100KB)
 pub fn generate_json_large() -> Value {
     let items: Vec<Value> = (0..200).map(|_| generate_json_small()).collect();
-    // Add deterministic padding to keep payload size comfortably above 10KB while
-    // staying well under the 100KB upper bound used in tests.
     let padding = "X".repeat(12_000);
 
     json!({
@@ -61,8 +58,6 @@ pub fn generate_json_large() -> Value {
 /// Generate a very large JSON payload (~100KB-1MB)
 pub fn generate_json_very_large() -> Value {
     let items: Vec<Value> = (0..2000).map(|_| generate_json_small()).collect();
-    // Add a larger deterministic padding block so the serialized payload reliably
-    // exceeds 100KB without approaching the 1MB ceiling.
     let padding = "Y".repeat(50_000);
 
     json!({

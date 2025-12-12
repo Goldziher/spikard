@@ -260,8 +260,6 @@ function parseRequest(payload: unknown): ParsedRequest {
 	}
 	if (payload && typeof payload === "object") {
 		const request = payload as ParsedRequest;
-		// If it doesn't have a json() method but has a body, create one
-		// (for backwards compatibility with plain object payloads)
 		if (!request.json && request.body !== undefined) {
 			request.json = () => request.body;
 		}

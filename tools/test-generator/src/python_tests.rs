@@ -122,7 +122,6 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
         if should_skip_due_to_http_client(fixture) {
             needs_pytest_import = true;
         }
-        // Check for DI cleanup fixtures
         if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
             if has_cleanup(&di_config) {
                 needs_time_import = true;
@@ -493,9 +492,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         return Ok(code);
     }
 
-    // Check for DI-specific test patterns
     if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
-        // Handle singleton caching tests - requires multiple requests
         if requires_multi_request_test(&di_config) {
             code.push_str("\n");
             code.push_str("        # Second request to verify singleton caching\n");
@@ -522,7 +519,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             return Ok(code);
         }
 
-        // Handle cleanup tests - poll cleanup state endpoint
         if has_cleanup(&di_config) {
             code.push_str("\n");
             code.push_str("        # Allow async cleanup to complete\n");
@@ -1060,7 +1056,6 @@ fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Res
         let factory_name = sanitize_identifier(&fixture.name);
         let method_name = &fixture.method;
 
-        // Success tests from examples
         for (idx, example) in fixture.examples.iter().enumerate() {
             code.push_str("@pytest.mark.asyncio\n");
             code.push_str(&format!("async def test_{}_success_{}():\n", factory_name, idx + 1));
@@ -1089,7 +1084,6 @@ fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Res
             code.push_str("        assert isinstance(result, dict)\n\n");
         }
 
-        // Error tests
         for error_case in &fixture.error_cases {
             let error_test_name = sanitize_identifier(&error_case.name);
             code.push_str("@pytest.mark.asyncio\n");
@@ -1129,7 +1123,6 @@ fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Res
             code.push_str("        assert data[\"id\"] == 1\n\n");
         }
 
-        // Batch request test (if multiple examples)
         if fixture.examples.len() > 1 {
             code.push_str("@pytest.mark.asyncio\n");
             code.push_str(&format!("async def test_{}_batch_request():\n", factory_name));

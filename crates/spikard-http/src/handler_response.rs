@@ -346,7 +346,6 @@ mod tests {
         let body = axum_response.into_body().collect().await.unwrap();
         let bytes = body.to_bytes();
 
-        // Verify we got all chunks
         assert!(bytes.len() > 1000);
         for i in 0..150 {
             let expected = format!("chunk{} ", i);
@@ -369,7 +368,6 @@ mod tests {
         let axum_response = handler_response.into_response();
         let result = axum_response.into_body().collect().await;
 
-        // Error should propagate when collecting
         assert!(result.is_err());
     }
 
@@ -382,7 +380,6 @@ mod tests {
             .unwrap();
         let handler_response = HandlerResponse::from(axum_response);
 
-        // Calling with_status on Response variant should be no-op
         let result = handler_response.with_status(StatusCode::NOT_FOUND);
 
         match result {
@@ -403,7 +400,6 @@ mod tests {
             .unwrap();
         let handler_response = HandlerResponse::from(axum_response);
 
-        // Calling with_header on Response variant should be no-op
         let result = handler_response.with_header(header::CACHE_CONTROL, HeaderValue::from_static("max-age=3600"));
 
         match result {
@@ -444,7 +440,6 @@ mod tests {
         let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from("data"))];
         let stream = futures::stream::iter(chunks);
 
-        // Replace the same header twice - second should win
         let handler_response = HandlerResponse::stream(stream)
             .with_header(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))
             .with_header(header::CONTENT_TYPE, HeaderValue::from_static("application/x-ndjson"));
@@ -530,10 +525,6 @@ mod tests {
         assert_eq!(body.to_bytes(), "roundtrip test");
     }
 
-    // ============================================================================
-    // Edge Case Tests: Streaming Response Handling
-    // ============================================================================
-
     /// Test 18: Single chunk stream (minimal data)
     #[tokio::test]
     async fn test_single_chunk_stream() {
@@ -564,7 +555,6 @@ mod tests {
         let body = axum_response.into_body().collect().await.unwrap();
         let bytes = body.to_bytes();
 
-        // Verify we got all chunks
         assert_eq!(bytes.len(), chunk_count);
     }
 
@@ -572,10 +562,10 @@ mod tests {
     #[tokio::test]
     async fn test_stream_with_varying_chunk_sizes() {
         let chunks: Vec<Result<Bytes, Box<dyn std::error::Error + Send + Sync>>> = vec![
-            Ok(Bytes::from("x")),                 // 1 byte
-            Ok(Bytes::from("xx".repeat(100))),    // 200 bytes
-            Ok(Bytes::from("x".repeat(10_000))),  // 10KB
-            Ok(Bytes::from("x".repeat(100_000))), // 100KB
+            Ok(Bytes::from("x")),
+            Ok(Bytes::from("xx".repeat(100))),
+            Ok(Bytes::from("x".repeat(10_000))),
+            Ok(Bytes::from("x".repeat(100_000))),
         ];
 
         let stream = futures::stream::iter(chunks);
@@ -585,7 +575,6 @@ mod tests {
         let body = axum_response.into_body().collect().await.unwrap();
         let bytes = body.to_bytes();
 
-        // Total: 1 + 200 + 10000 + 100000
         assert_eq!(bytes.len(), 110_201);
     }
 
@@ -608,7 +597,6 @@ mod tests {
         let axum_response = handler_response.into_response();
         let result = axum_response.into_body().collect().await;
 
-        // Error should be propagated
         assert!(result.is_err());
     }
 
@@ -673,10 +661,9 @@ mod tests {
         let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from("data"))];
         let stream = futures::stream::iter(chunks);
 
-        // Create with 200 OK, change to 206 Partial Content
         let handler_response = HandlerResponse::stream(stream)
             .with_status(StatusCode::OK)
-            .with_status(StatusCode::PARTIAL_CONTENT); // Override
+            .with_status(StatusCode::PARTIAL_CONTENT);
 
         match handler_response {
             HandlerResponse::Stream { status, .. } => {
@@ -703,7 +690,6 @@ mod tests {
         let body = axum_response.into_body().collect().await.unwrap();
         let body_bytes = body.to_bytes();
 
-        // Verify chunked encoding format is preserved
         assert!(std::str::from_utf8(&body_bytes).unwrap().contains("hello"));
     }
 
@@ -726,7 +712,6 @@ mod tests {
         let body = axum_response.into_body().collect().await.unwrap();
         let bytes = body.to_bytes();
 
-        // Verify binary data integrity
         assert_eq!(bytes[0], 0xFF);
         assert_eq!(bytes[1], 0xD8);
         assert_eq!(bytes[2], 0xFF);
@@ -764,7 +749,6 @@ mod tests {
 
         let mut handler_response = HandlerResponse::stream(stream);
 
-        // Add many headers
         for i in 0..50 {
             let header_name = format!("x-custom-{}", i);
             handler_response = handler_response.with_header(
@@ -806,7 +790,6 @@ mod tests {
 
         match handler_response {
             HandlerResponse::Stream { headers, .. } => {
-                // Last value should win
                 assert_eq!(headers.get(header::CONTENT_TYPE).unwrap(), "application/xml");
             }
             HandlerResponse::Response(_) => panic!("Expected Stream variant"),
@@ -816,7 +799,7 @@ mod tests {
     /// Test 31: Stream with extremely long chunk
     #[tokio::test]
     async fn test_stream_with_extremely_long_chunk() {
-        let large_chunk = "x".repeat(10_000_000); // 10MB single chunk
+        let large_chunk = "x".repeat(10_000_000);
         let chunks = vec![Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Bytes::from(
             large_chunk,
         ))];
@@ -836,9 +819,9 @@ mod tests {
     async fn test_stream_with_zero_length_chunks() {
         let chunks: Vec<Result<Bytes, Box<dyn std::error::Error + Send + Sync>>> = vec![
             Ok(Bytes::from("hello")),
-            Ok(Bytes::new()), // Empty chunk
+            Ok(Bytes::new()),
             Ok(Bytes::from("world")),
-            Ok(Bytes::new()), // Another empty chunk
+            Ok(Bytes::new()),
             Ok(Bytes::from("!")),
         ];
 
@@ -849,7 +832,6 @@ mod tests {
         let body = axum_response.into_body().collect().await.unwrap();
         let bytes = body.to_bytes();
 
-        // Empty chunks should be handled gracefully
         assert_eq!(bytes, "helloworld!");
     }
 
@@ -863,7 +845,6 @@ mod tests {
 
         let handler_response = HandlerResponse::from(axum_response);
 
-        // Try to override (should be ignored for Response variant)
         let result = handler_response
             .with_status(StatusCode::OK)
             .with_status(StatusCode::INTERNAL_SERVER_ERROR);

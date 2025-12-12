@@ -405,10 +405,6 @@ mod tests {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
-    // ============================================================================
-    // Test Producers
-    // ============================================================================
-
     struct TestProducer {
         count: AtomicUsize,
     }
@@ -507,7 +503,6 @@ mod tests {
         async fn next_event(&self) -> Option<SseEvent> {
             let was_sent: bool = self.sent.swap(true, Ordering::Relaxed);
             if !was_sent {
-                // Create a 100KB payload
                 let large_string: String = "x".repeat(100_000);
                 Some(SseEvent::new(serde_json::json!({
                     "payload": large_string
@@ -581,10 +576,6 @@ mod tests {
             None
         }
     }
-
-    // ============================================================================
-    // Tests: Event Creation & Formatting
-    // ============================================================================
 
     #[test]
     fn test_sse_event_creation_minimal() {
@@ -664,10 +655,6 @@ mod tests {
         assert!(axum_event.is_ok());
     }
 
-    // ============================================================================
-    // Tests: Stream Lifecycle
-    // ============================================================================
-
     #[test]
     fn test_sse_state_creation() {
         let producer: TestProducer = TestProducer {
@@ -716,10 +703,6 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // ============================================================================
-    // Tests: Connection Lifecycle Hooks
-    // ============================================================================
-
     #[tokio::test]
     async fn test_sse_lifecycle_on_connect_called() {
         let connect_count: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(0));
@@ -743,10 +726,6 @@ mod tests {
         producer.on_disconnect().await;
         assert_eq!(disconnect_count.load(Ordering::Relaxed), 1);
     }
-
-    // ============================================================================
-    // Tests: Event Ordering & Delivery
-    // ============================================================================
 
     #[tokio::test]
     async fn test_sse_event_ordering_preserved() {
@@ -777,10 +756,6 @@ mod tests {
 
         assert_eq!(count, 100);
     }
-
-    // ============================================================================
-    // Tests: Edge Cases & Error Handling
-    // ============================================================================
 
     #[test]
     fn test_sse_event_with_empty_data_object() {
@@ -840,10 +815,6 @@ mod tests {
         assert!(debug_str.contains("SseEvent"));
     }
 
-    // ============================================================================
-    // Tests: Concurrent Stream Handling
-    // ============================================================================
-
     #[tokio::test]
     async fn test_sse_multiple_producers_independent() {
         let producer1: TestProducer = TestProducer {
@@ -862,10 +833,6 @@ mod tests {
         assert_eq!(count1, 1);
         assert_eq!(count2, 1);
     }
-
-    // ============================================================================
-    // Tests: Validation & Schema
-    // ============================================================================
 
     #[test]
     fn test_sse_state_cloning_preserves_schema() {
@@ -891,10 +858,6 @@ mod tests {
             _ => panic!("Schema should be preserved in clone"),
         }
     }
-
-    // ============================================================================
-    // Tests: Payload & Data Integrity
-    // ============================================================================
 
     #[tokio::test]
     async fn test_sse_large_payload_integrity() {
@@ -958,10 +921,6 @@ mod tests {
             assert_eq!(evt.data.get("count").and_then(|v| v.as_i64()), Some(42));
         }
     }
-
-    // ============================================================================
-    // Tests: Event Formatting & Protocol Compliance
-    // ============================================================================
 
     #[test]
     fn test_sse_event_to_axum_preserves_data() {
@@ -1031,16 +990,10 @@ mod tests {
 
     #[test]
     fn test_sse_event_comment_only_structure() {
-        // SSE protocol allows comments starting with ':'
-        // Test that we can serialize events with minimal content
         let event = SseEvent::new(serde_json::json!({"comment": "this is a comment"}));
         let axum_event = event.into_axum_event();
         assert!(axum_event.is_ok());
     }
-
-    // ============================================================================
-    // Tests: Field Validation
-    // ============================================================================
 
     #[test]
     fn test_sse_event_type_with_spaces() {
@@ -1097,7 +1050,7 @@ mod tests {
 
     #[test]
     fn test_sse_event_retry_large_value() {
-        let large_retry = u64::MAX / 2; // Half of max u64
+        let large_retry = u64::MAX / 2;
         let event = SseEvent::new(serde_json::json!({"data": "test"})).with_retry(large_retry);
         assert_eq!(event.retry, Some(large_retry));
 
@@ -1117,10 +1070,6 @@ mod tests {
             assert!(axum_event.is_ok());
         }
     }
-
-    // ============================================================================
-    // Tests: Protocol Compliance & UTF-8
-    // ============================================================================
 
     #[test]
     fn test_sse_event_utf8_emoji_in_data() {
@@ -1176,15 +1125,8 @@ mod tests {
         let axum_event = event.into_axum_event();
         assert!(axum_event.is_ok());
 
-        // The result should be valid UTF-8 (implicit in String)
-        if let Ok(_evt) = axum_event {
-            // If conversion succeeds, UTF-8 is guaranteed
-        }
+        if let Ok(_evt) = axum_event {}
     }
-
-    // ============================================================================
-    // Tests: Edge Cases - Large Payloads
-    // ============================================================================
 
     #[test]
     fn test_sse_event_64kb_payload() {
@@ -1275,13 +1217,8 @@ mod tests {
         assert!(axum_event.is_ok());
     }
 
-    // ============================================================================
-    // Tests: Edge Cases - Connection & Streaming
-    // ============================================================================
-
     #[tokio::test]
     async fn test_sse_last_event_id_header_simulation() {
-        // Simulate client reconnection with Last-Event-ID
         let producer = RapidEventProducer::new(5);
 
         let mut events = Vec::new();
@@ -1314,11 +1251,9 @@ mod tests {
             .with_id("id-1")
             .with_retry(3000);
 
-        // Verify chaining worked
         assert_eq!(event.id, Some("id-1".to_string()));
         assert_eq!(event.retry, Some(3000));
 
-        // Can also chain with_type via with_type constructor
         let event2 = SseEvent::with_type("msg", serde_json::json!({"x": 1}))
             .with_id("id-2")
             .with_retry(5000);
@@ -1334,8 +1269,6 @@ mod tests {
             .with_id("id-original")
             .with_retry(1000);
 
-        // Note: with_id/with_retry consume and return, so we can't really
-        // "overwrite" in place, but we test that setting works correctly
         assert_eq!(event.id, Some("id-original".to_string()));
         assert_eq!(event.retry, Some(1000));
     }
@@ -1358,10 +1291,6 @@ mod tests {
         assert!(axum_event.is_ok());
     }
 
-    // ============================================================================
-    // Tests: Multiple Events & Batching
-    // ============================================================================
-
     #[tokio::test]
     async fn test_sse_event_sequence_maintains_order() {
         let producer = RapidEventProducer::new(10);
@@ -1375,7 +1304,6 @@ mod tests {
             }
         }
 
-        // Verify ordering
         for i in 0..event_ids.len() {
             assert_eq!(event_ids[i], i as i64, "Event order should match insertion order");
         }
@@ -1400,7 +1328,6 @@ mod tests {
     async fn test_sse_event_batching_simulation() {
         let producer = RapidEventProducer::new(20);
 
-        // Simulate batch processing
         let mut batch_size = 0;
         let mut batch_count = 0;
 
@@ -1422,13 +1349,8 @@ mod tests {
             }
         }
 
-        // 20 events / 5 per batch = 4 full batches
         assert!(batch_count >= 4, "Should have processed at least 4 batches");
     }
-
-    // ============================================================================
-    // Tests: State & Arc Handling
-    // ============================================================================
 
     #[test]
     fn test_sse_state_arc_sharing() {
@@ -1439,7 +1361,6 @@ mod tests {
         let state2 = state1.clone();
         let state3 = state2.clone();
 
-        // All should share the same Arc pointer
         assert!(Arc::ptr_eq(&state1.producer, &state2.producer));
         assert!(Arc::ptr_eq(&state2.producer, &state3.producer));
     }
@@ -1456,7 +1377,6 @@ mod tests {
         let state1 = SseState::with_schema(producer, Some(schema)).expect("schema should be valid");
         let state2 = state1.clone();
 
-        // Schemas should share Arc
         match (&state1.event_schema, &state2.event_schema) {
             (Some(s1), Some(s2)) => {
                 assert!(Arc::ptr_eq(s1, s2));
@@ -1464,10 +1384,6 @@ mod tests {
             _ => panic!("Both states should have schema"),
         }
     }
-
-    // ============================================================================
-    // Tests: Conversion & Serialization
-    // ============================================================================
 
     #[test]
     fn test_sse_event_into_axum_event_numeric_data() {

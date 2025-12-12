@@ -61,7 +61,7 @@ fn spec_with_params(name: &str, param_count: usize) -> OpenRpcSpec {
         .map(|i| OpenRpcParam {
             name: format!("param{}", i),
             description: Some(format!("Parameter {}", i)),
-            required: i == 0, // First param is required
+            required: i == 0,
             schema: json!({"type": "string"}),
         })
         .collect();
@@ -86,10 +86,6 @@ fn spec_with_errors(name: &str) -> OpenRpcSpec {
     ];
     spec
 }
-
-// ============================================================================
-// PYTHON GENERATOR TESTS
-// ============================================================================
 
 #[test]
 fn test_python_generator_imports_msgspec() {
@@ -184,7 +180,6 @@ fn test_python_generator_empty_spec() {
     let generator = PythonOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    // Should generate valid Python even with no methods
     assert!(
         output.contains("async def handle_jsonrpc_call"),
         "Should generate router even with no methods"
@@ -248,7 +243,6 @@ fn test_python_generator_complex_param_schemas() {
     let generator = PythonOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    // Should handle nested schemas
     assert!(
         output.contains("config: Dict[str, Any]"),
         "Should map nested objects to Dict"
@@ -261,7 +255,6 @@ fn test_python_generator_executable_imports() {
     let generator = PythonOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    // Verify the generated code is syntactically valid Python
     assert!(
         output.starts_with("#!/usr/bin/env python3"),
         "Should have Python shebang"
@@ -269,10 +262,6 @@ fn test_python_generator_executable_imports() {
     assert!(output.contains("\"\"\"JSON-RPC 2.0 handlers"), "Should have docstring");
     assert!(output.contains("if __name__ == \"__main__\""), "Should have main block");
 }
-
-// ============================================================================
-// TYPESCRIPT GENERATOR TESTS
-// ============================================================================
 
 #[test]
 fn test_typescript_generator_zod_schemas() {
@@ -341,7 +330,6 @@ fn test_typescript_generator_async_handlers() {
     let generator = TypeScriptOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    // Includes main handleJsonRpcCall + 3 individual handlers = 4 total
     let async_count = output.matches("async function handle").count();
     assert_eq!(
         async_count, 4,
@@ -355,7 +343,6 @@ fn test_typescript_generator_strict_typing() {
     let generator = TypeScriptOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    // Check that generated types use zod inference, not any
     assert!(output.contains("z.infer"), "Should use zod.infer for type safety");
     // The TODO comment may mention 'any' but the actual types shouldn't
     assert!(
@@ -384,16 +371,11 @@ fn test_typescript_generator_compiles() {
     let generator = TypeScriptOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    // Verify structural validity
     assert!(output.starts_with("#!/usr/bin/env node"), "Should have node shebang");
     assert!(output.contains("/**"), "Should have JSDoc comments");
     assert!(output.contains("type JSONRPCRequest"), "Should define JSON-RPC types");
     assert!(output.contains("type JSONRPCResponse"), "Should define response types");
 }
-
-// ============================================================================
-// PHP GENERATOR TESTS
-// ============================================================================
 
 #[test]
 fn test_php_generator_declare_strict_types() {
@@ -401,7 +383,6 @@ fn test_php_generator_declare_strict_types() {
     let generator = PhpOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    // Should be first line after opening tag
     assert!(output.contains("<?php"), "Should start with PHP opening tag");
     let lines: Vec<&str> = output.lines().collect();
     let strict_found = lines.iter().any(|line| line.contains("declare(strict_types=1)"));
@@ -521,15 +502,10 @@ fn test_php_generator_valid_syntax() {
     assert!(output.starts_with("<?php"), "Should start with PHP tag");
     assert!(output.contains("namespace"), "Should have namespace");
     assert!(output.contains("class"), "Should have classes");
-    // Count opening and closing braces (rough check)
     let open_braces = output.matches('{').count();
     let close_braces = output.matches('}').count();
     assert_eq!(open_braces, close_braces, "Braces should be balanced");
 }
-
-// ============================================================================
-// RUBY GENERATOR TESTS
-// ============================================================================
 
 #[test]
 fn test_ruby_generator_module_definition() {
@@ -595,7 +571,6 @@ fn test_ruby_generator_symbol_method_names() {
     let generator = RubyOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    // Ruby uses "hash: value" syntax
     assert!(
         output.contains("jsonrpc:") || output.contains("\"jsonrpc\""),
         "Should use symbol or string keys"
@@ -620,15 +595,10 @@ fn test_ruby_generator_valid_syntax() {
     );
     assert!(output.contains("require"), "Should have requires");
     assert!(output.contains("class"), "Should have classes");
-    // Basic structural validation
     let open_braces = output.matches('{').count();
     let close_braces = output.matches('}').count();
     assert_eq!(open_braces, close_braces, "Braces should be balanced");
 }
-
-// ============================================================================
-// CROSS-LANGUAGE PARITY TESTS
-// ============================================================================
 
 #[test]
 fn test_generators_same_spec_produces_equivalent_behavior() {
@@ -645,7 +615,6 @@ fn test_generators_same_spec_produces_equivalent_behavior() {
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
 
-    // All should generate non-empty output
     assert!(!py_out.is_empty(), "Python should generate output");
     assert!(!ts_out.is_empty(), "TypeScript should generate output");
     assert!(!php_out.is_empty(), "PHP should generate output");
@@ -666,7 +635,6 @@ fn test_generators_error_codes_consistent() {
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
 
-    // All should use same error codes
     for output in &[&py_out, &ts_out, &php_out, &ruby_out] {
         assert!(output.contains("-32601"), "All should have -32601 (method not found)");
         assert!(output.contains("-32603"), "All should have -32603 (internal error)");
@@ -692,7 +660,6 @@ fn test_generators_method_dispatch_correct_method() {
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
 
-    // All should dispatch to each method
     for (output, lang) in &[
         (&py_out, "Python"),
         (&ts_out, "TypeScript"),
@@ -719,7 +686,6 @@ fn test_generators_parameter_validation_consistent() {
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
 
-    // All should include parameter handling
     assert!(
         py_out.contains("param0") || py_out.contains("Params"),
         "Python should handle params"
@@ -752,7 +718,6 @@ fn test_generators_response_structure_identical() {
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
 
-    // All should structure responses the same way
     for (output, lang) in &[
         (&py_out, "Python"),
         (&ts_out, "TypeScript"),
@@ -767,10 +732,6 @@ fn test_generators_response_structure_identical() {
     }
 }
 
-// ============================================================================
-// EDGE CASE TESTS
-// ============================================================================
-
 #[test]
 fn test_generator_with_many_methods() {
     let mut spec = minimal_spec();
@@ -784,13 +745,11 @@ fn test_generator_with_many_methods() {
     let php_gen = PhpOpenRpcGenerator;
     let ruby_gen = RubyOpenRpcGenerator;
 
-    // All should handle multiple methods
     let py_out = py_gen.generate_handler_app(&spec).unwrap();
     let ts_out = ts_gen.generate_handler_app(&spec).unwrap();
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
 
-    // Rough check that all handlers are generated
     assert!(py_out.matches("def handle_method").count() >= 10);
     assert!(ts_out.matches("async function handle").count() >= 10);
     assert!(php_out.matches("final class Handle").count() >= 10);
@@ -830,7 +789,6 @@ fn test_generator_with_complex_result_schemas() {
     let php_gen = PhpOpenRpcGenerator;
     let ruby_gen = RubyOpenRpcGenerator;
 
-    // All should handle complex schemas without errors
     assert!(py_gen.generate_handler_app(&spec).is_ok());
     assert!(ts_gen.generate_handler_app(&spec).is_ok());
     assert!(php_gen.generate_handler_app(&spec).is_ok());
@@ -856,7 +814,6 @@ fn test_generator_with_array_result_schema() {
     let php_gen = PhpOpenRpcGenerator;
     let ruby_gen = RubyOpenRpcGenerator;
 
-    // All should handle array schemas
     assert!(py_gen.generate_handler_app(&spec).is_ok());
     assert!(ts_gen.generate_handler_app(&spec).is_ok());
     assert!(php_gen.generate_handler_app(&spec).is_ok());
@@ -904,7 +861,6 @@ fn test_generator_with_various_param_types() {
     let php_gen = PhpOpenRpcGenerator;
     let ruby_gen = RubyOpenRpcGenerator;
 
-    // All should handle all parameter types
     assert!(py_gen.generate_handler_app(&spec).is_ok());
     assert!(ts_gen.generate_handler_app(&spec).is_ok());
     assert!(php_gen.generate_handler_app(&spec).is_ok());
@@ -959,7 +915,6 @@ fn test_ruby_generator_param_validation_method() {
 fn test_all_generators_callable_by_trait() {
     let spec = single_method_spec("test");
 
-    // Test that all generators implement the trait correctly
     let generators: Vec<&dyn OpenRpcGenerator> = vec![
         &PythonOpenRpcGenerator,
         &TypeScriptOpenRpcGenerator,
@@ -989,7 +944,6 @@ fn test_generator_handles_empty_method_params() {
     let generator = PythonOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    // Should handle methods with no parameters
     assert!(
         output.contains("async def handle_no_params"),
         "Should generate handler without params"
@@ -1011,7 +965,6 @@ fn test_generator_handles_method_with_dots_in_name() {
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
 
-    // All should preserve the method name in routing
     assert!(py_out.contains("namespace.subspace.method"));
     assert!(ts_out.contains("namespace.subspace.method"));
     assert!(php_out.contains("namespace.subspace.method"));

@@ -9,10 +9,6 @@ import Fastify from "fastify";
 
 const fastify = Fastify({ logger: false });
 
-// ============================================================================
-// JSON Schema Definitions
-// ============================================================================
-
 const smallPayloadSchema = {
 	type: "object",
 	required: ["name", "description", "price"],
@@ -107,10 +103,6 @@ const urlencodedComplexSchema = {
 	additionalProperties: true,
 } as const;
 
-// ============================================================================
-// JSON Body Workloads
-// ============================================================================
-
 fastify.post("/json/small", {
 	schema: {
 		body: smallPayloadSchema,
@@ -147,28 +139,17 @@ fastify.post("/json/very-large", {
 	},
 });
 
-// ============================================================================
-// Multipart Form Workloads
-// ============================================================================
-
 fastify.post("/multipart/small", async (request, reply) => {
-	// Mock response for multipart form (~1KB)
 	return { files_received: 1, total_bytes: 1024 };
 });
 
 fastify.post("/multipart/medium", async (request, reply) => {
-	// Mock response for multipart form (~10KB)
 	return { files_received: 2, total_bytes: 10240 };
 });
 
 fastify.post("/multipart/large", async (request, reply) => {
-	// Mock response for multipart form (~100KB)
 	return { files_received: 5, total_bytes: 102400 };
 });
-
-// ============================================================================
-// URL Encoded Form Workloads
-// ============================================================================
 
 fastify.post("/urlencoded/simple", {
 	schema: {
@@ -187,10 +168,6 @@ fastify.post("/urlencoded/complex", {
 		return request.body;
 	},
 });
-
-// ============================================================================
-// Path Parameter Workloads
-// ============================================================================
 
 fastify.get("/path/simple/:id", async (request, reply) => {
 	const { id } = request.params as { id: string };
@@ -231,28 +208,17 @@ fastify.get("/path/date/:date", async (request, reply) => {
 	return { date };
 });
 
-// ============================================================================
-// Query Parameter Workloads
-// ============================================================================
-
 fastify.get("/query/few", async (request, reply) => {
-	// Few query parameters (1-2)
 	return request.query;
 });
 
 fastify.get("/query/medium", async (request, reply) => {
-	// Medium query parameters (3-5)
 	return request.query;
 });
 
 fastify.get("/query/many", async (request, reply) => {
-	// Many query parameters (6-10)
 	return request.query;
 });
-
-// ============================================================================
-// Health Check
-// ============================================================================
 
 fastify.get("/health", async (request, reply) => {
 	return { status: "ok" };
@@ -261,10 +227,6 @@ fastify.get("/health", async (request, reply) => {
 fastify.get("/", async (request, reply) => {
 	return { status: "ok" };
 });
-
-// ============================================================================
-// Server Startup
-// ============================================================================
 
 const port = process.argv[2] ? parseInt(process.argv[2], 10) : process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 

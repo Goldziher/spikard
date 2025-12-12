@@ -229,14 +229,12 @@ mod tests {
         };
         let resolved = ResolvedDependencies::new();
 
-        // First call
         let result1 = bridge.resolve(&request, &request_data, &resolved).await;
         assert!(result1.is_ok());
         let value1 = result1.unwrap();
         let count1 = *value1.downcast_ref::<usize>().unwrap();
         assert_eq!(count1, 1);
 
-        // Second call - factory is invoked again
         let result2 = bridge.resolve(&request, &request_data, &resolved).await;
         assert!(result2.is_ok());
         let value2 = result2.unwrap();

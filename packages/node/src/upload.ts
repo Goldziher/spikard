@@ -134,13 +134,13 @@ export class UploadFile {
 	 */
 	seek(offset: number, whence: number = 0): number {
 		switch (whence) {
-			case 0: // Absolute
+			case 0:
 				this._position = Math.max(0, Math.min(offset, this._content.length));
 				break;
-			case 1: // Relative
+			case 1:
 				this._position = Math.max(0, Math.min(this._position + offset, this._content.length));
 				break;
-			case 2: // From end
+			case 2:
 				this._position = Math.max(0, Math.min(this._content.length + offset, this._content.length));
 				break;
 			default:
@@ -181,16 +181,12 @@ export class UploadFile {
 	/**
 	 * Close the file (no-op for in-memory files, provided for API compatibility)
 	 */
-	close(): void {
-		// No-op for in-memory buffers, but provided for API compatibility
-	}
+	close(): void {}
 
 	/**
 	 * Close the file asynchronously (no-op, provided for API compatibility)
 	 */
-	async closeAsync(): Promise<void> {
-		// No-op for in-memory buffers
-	}
+	async closeAsync(): Promise<void> {}
 
 	/**
 	 * String representation of the upload file

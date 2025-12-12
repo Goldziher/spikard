@@ -55,17 +55,14 @@ const MAX_METHOD_NAME_LENGTH: usize = 255;
 /// assert!(validate_method_name("a".repeat(256)).is_err());  // Too long
 /// ```
 pub fn validate_method_name(method_name: &str) -> Result<(), String> {
-    // Check for empty method name
     if method_name.is_empty() {
         return Err("Method name cannot be empty".to_string());
     }
 
-    // Check for leading or trailing whitespace
     if method_name.starts_with(char::is_whitespace) || method_name.ends_with(char::is_whitespace) {
         return Err("Method name cannot have leading or trailing whitespace".to_string());
     }
 
-    // Check length
     if method_name.len() > MAX_METHOD_NAME_LENGTH {
         return Err(format!(
             "Method name exceeds maximum length of {} characters (got {})",
@@ -74,27 +71,18 @@ pub fn validate_method_name(method_name: &str) -> Result<(), String> {
         ));
     }
 
-    // Check for invalid characters
-    // Valid: alphanumeric, dot, underscore, hyphen
-    // Invalid: control characters and other special characters
     for ch in method_name.chars() {
         match ch {
-            // Allow alphanumeric
             'a'..='z' | 'A'..='Z' | '0'..='9' => {}
-            // Allow dot (namespace separator)
             '.' => {}
-            // Allow underscore
             '_' => {}
-            // Allow hyphen
             '-' => {}
-            // Reject control characters (0x00-0x1F and 0x7F)
             c if (c as u32) < 0x20 || (c as u32) == 0x7F => {
                 return Err(format!(
                     "Method name contains invalid control character: 0x{:02X}",
                     c as u32
                 ));
             }
-            // Reject all other special characters
             c => {
                 return Err(format!(
                     "Method name contains invalid character: '{}' (0x{:02X}). \
@@ -597,12 +585,9 @@ mod tests {
             json!(1),
         ));
 
-        // Verify we can serialize both variants
         let _success_json = serde_json::to_value(&success_resp).unwrap();
         let _error_json = serde_json::to_value(&error_resp).unwrap();
     }
-
-    // ============= Method Name Validation Tests =============
 
     #[test]
     fn test_validate_method_name_valid_simple() {
@@ -795,8 +780,6 @@ mod tests {
         assert!(validate_method_name(".").is_ok());
     }
 
-    // ============= JSON-RPC 2.0 Spec Compliance Tests =============
-
     #[test]
     fn test_request_with_null_id_is_notification() {
         let json = json!({
@@ -893,8 +876,6 @@ mod tests {
         assert!(serialized.get("result").is_some());
     }
 
-    // ============= Parameter Type Coverage Tests =============
-
     #[test]
     fn test_params_array_type() {
         let json = json!({
@@ -935,7 +916,6 @@ mod tests {
 
     #[test]
     fn test_params_null_type() {
-        // When params is not present, it's None
         let json_no_params = json!({
             "jsonrpc": "2.0",
             "method": "test",
@@ -944,9 +924,6 @@ mod tests {
 
         let request: JsonRpcRequest = serde_json::from_value(json_no_params).unwrap();
         assert!(request.params.is_none());
-
-        // When params is explicitly null in JSON, serde also treats it as None
-        // This is correct behavior per JSON-RPC spec
     }
 
     #[test]
@@ -1045,8 +1022,6 @@ mod tests {
         assert_eq!(params["special"], "café ñ ü");
     }
 
-    // ============= Response Serialization Edge Cases Tests =============
-
     #[test]
     fn test_response_result_with_null_valid() {
         let response = JsonRpcResponse::success(json!(null), json!(1));
@@ -1130,8 +1105,6 @@ mod tests {
         }
     }
 
-    // ============= ID Handling Tests =============
-
     #[test]
     fn test_notification_has_no_id_field() {
         let notif = JsonRpcRequest::new("notify", None, None);
@@ -1195,8 +1168,6 @@ mod tests {
 
         assert_eq!(request.id, Some(json!(large_id)));
     }
-
-    // ============= Error Response Structure Tests =============
 
     #[test]
     fn test_error_always_has_code() {

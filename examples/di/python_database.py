@@ -17,7 +17,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Simulated database pool (singleton - shared across requests)
 class DatabasePool:
     """Simulated database connection pool."""
 
@@ -47,7 +46,6 @@ class DatabasePool:
         return DatabaseSession(self, self.connection_count)
 
 
-# Simulated database session (per-request with cleanup)
 class DatabaseSession:
     """Simulated database session."""
 
@@ -130,10 +128,8 @@ async def create_db_session(db_pool: DatabasePool) -> AsyncGenerator[DatabaseSes
     logger.info("[Factory] Creating database session...")
     session = await db_pool.create_session()
 
-    # Yield the session to the handler
     yield session
 
-    # Cleanup runs after the handler completes
     logger.info("[Factory] Cleaning up database session...")
     await session.close()
 
@@ -142,7 +138,6 @@ def main() -> None:
     """Run the database example application."""
     app = Spikard()
 
-    # Register configuration (static value)
     app.provide(
         "config",
         {
@@ -151,25 +146,21 @@ def main() -> None:
         },
     )
 
-    # Register database pool factory (singleton)
-    # This will be created once and shared across all requests
     app.provide(
         "db_pool",
         Provide(
             create_db_pool,
             depends_on=["config"],
-            singleton=True,  # Share across all requests
+            singleton=True,
         ),
     )
 
-    # Register database session factory (per-request with cleanup)
-    # This will be created fresh for each request and cleaned up after
     app.provide(
         "db_session",
         Provide(
             create_db_session,
             depends_on=["db_pool"],
-            use_cache=True,  # Cache within request (but not across requests)
+            use_cache=True,
         ),
     )
 

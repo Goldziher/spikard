@@ -394,7 +394,6 @@ mod tests {
             path_params,
         );
 
-        // Verify all fields
         assert_eq!(data.path, "/api/users/user_99");
         assert_eq!(data.method, "PUT");
         assert_eq!(data.path_params.get("id"), Some(&"user_99".to_string()));
@@ -643,7 +642,6 @@ mod tests {
             path_params,
         );
 
-        // Should not panic during serialization
         let serialized = serde_json::to_string(&data);
         assert!(serialized.is_ok());
     }
@@ -710,7 +708,6 @@ mod tests {
             HashMap::new(),
         );
 
-        // HashMap stores both with different cases
         assert_eq!(data.headers.get("Content-Type"), Some(&"application/json".to_string()));
         assert_eq!(data.headers.get("content-type"), Some(&"text/plain".to_string()));
     }

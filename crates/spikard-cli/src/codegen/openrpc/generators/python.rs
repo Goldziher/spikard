@@ -14,7 +14,6 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
     fn generate_handler_app(&self, spec: &OpenRpcSpec) -> Result<String> {
         let mut code = String::new();
 
-        // Header
         code.push_str("#!/usr/bin/env python3\n");
         code.push_str("\"\"\"JSON-RPC 2.0 handlers generated from OpenRPC specification.\n\n");
         code.push_str("Generated from: ");
@@ -23,12 +22,10 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str(&spec.info.version);
         code.push_str("\n\"\"\"\n\n");
 
-        // Imports
         code.push_str("from typing import Any, Dict, Optional, Union\n");
         code.push_str("import json\n");
         code.push_str("import msgspec\n\n");
 
-        // Generate DTO classes for each method
         code.push_str("# ============================================================================\n");
         code.push_str("# Data Transfer Objects (DTOs)\n");
         code.push_str("# ============================================================================\n\n");
@@ -37,7 +34,6 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
             generate_python_dtos(&mut code, method)?;
         }
 
-        // Generate handler functions
         code.push_str("# ============================================================================\n");
         code.push_str("# JSON-RPC Method Handlers\n");
         code.push_str("# ============================================================================\n\n");
@@ -46,7 +42,6 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
             generate_python_handler(&mut code, method)?;
         }
 
-        // Generate method router
         code.push_str("# ============================================================================\n");
         code.push_str("# Method Router\n");
         code.push_str("# ============================================================================\n\n");
@@ -89,7 +84,6 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str("            \"id\": request_id,\n");
         code.push_str("        }\n\n");
 
-        // Generate example usage
         code.push_str("# ============================================================================\n");
         code.push_str("# Example Usage\n");
         code.push_str("# ============================================================================\n\n");
@@ -119,7 +113,6 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
 }
 
 fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
-    // Generate params DTO
     if !method.params.is_empty() {
         let params_class = get_python_params_class_name(&method.name);
         code.push_str(&format!("class {}(msgspec.Struct, frozen=True):\n", params_class));
@@ -138,7 +131,6 @@ fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()>
         code.push_str("\n\n");
     }
 
-    // Generate result DTO
     let result_class = get_python_result_class_name(&method.name);
     code.push_str(&format!("class {}(msgspec.Struct, frozen=True):\n", result_class));
     code.push_str("    \"\"\"\n");
@@ -149,7 +141,6 @@ fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()>
     }
     code.push_str("    \"\"\"\n");
 
-    // Extract fields from result schema
     if let Some(properties) = method.result.schema.get("properties")
         && let Some(props) = properties.as_object()
     {
@@ -193,7 +184,6 @@ fn generate_python_handler(code: &mut String, method: &OpenRpcMethod) -> Result<
     }
     code.push_str("    \"\"\"\n");
 
-    // Parse params
     if !method.params.is_empty() {
         code.push_str(&format!(
             "    parsed_params = msgspec.convert(params, type={})\n",
@@ -209,7 +199,6 @@ fn generate_python_handler(code: &mut String, method: &OpenRpcMethod) -> Result<
     code.push_str("    # 3. Return result as dict matching schema\n");
     code.push_str("    # 4. Raise appropriate JSON-RPC errors on failure\n\n");
 
-    // Placeholder return
     code.push_str("    # Example return structure (update with real data):\n");
     code.push_str("    result_data = {}\n");
     if let Some(properties) = method.result.schema.get("properties")

@@ -261,7 +261,7 @@ fn extract_jsonrpc_method(route_obj: &Object) -> Option<serde_json::Value> {
                 None
             }
         },
-        Err(_) => None, // jsonrpcMethod is optional
+        Err(_) => None,
     }
 }
 
@@ -437,7 +437,6 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         handler_map.insert(route.handler_name.clone(), handler);
     }
 
-    // Extract dependency container if DI is enabled
     #[cfg(feature = "di")]
     let dependency_container = di::extract_dependency_container(&app)?;
     #[cfg(not(feature = "di"))]

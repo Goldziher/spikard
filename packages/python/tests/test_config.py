@@ -73,8 +73,6 @@ class TestSecuritySchemeInfo:
 
     def test_security_scheme_apikey_invalid_locations(self) -> None:
         """Test various invalid locations."""
-        # Only test non-empty invalid locations
-        # Empty string is caught by "location and name are required" check first
         invalid_locations = ["body", "path", "form", "jwt"]
         for location in invalid_locations:
             with pytest.raises(

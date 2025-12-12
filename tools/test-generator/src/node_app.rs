@@ -70,7 +70,6 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
     )?;
     fs::write(app_dir.join("main.ts"), app_content).context("Failed to write main.ts")?;
 
-    // Generate runtime-specific config files
     match target.runtime {
         crate::ts_target::Runtime::Node | crate::ts_target::Runtime::NodeWasm => {
             let package_json = generate_package_json(target);
@@ -125,7 +124,6 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
         }
     }
 
-    // Skip biome formatting for Deno (it doesn't understand Deno.test syntax)
     if !matches!(target.runtime, crate::ts_target::Runtime::Deno) {
         format_generated_ts(output_dir)?;
     }
@@ -205,10 +203,8 @@ fn generate_minimal_package_json(target: &TypeScriptTarget) -> String {
 /// Generate deno.json for Deno configuration
 fn generate_deno_config(target: &TypeScriptTarget) -> String {
     let wasm_import = if target.dependency_package == "@spikard/wasm" {
-        // Use tracked TypeScript sources to stay in sync with the repo API.
         "../../packages/wasm/src/index.ts".to_string()
     } else {
-        // Fall back to npm for other packages.
         format!("npm:{}", target.dependency_package)
     };
     format!(
@@ -656,7 +652,6 @@ fn generate_fixture_handler_and_app_node(
 
     let app_factory_name = format!("createApp{}", to_pascal_case(handler_name));
 
-    // Generate DI factory functions if needed
     let di_factories = if let Some(di_cfg) = di_config {
         generate_all_dependency_factories_ts(di_cfg, fixture_id)?
     } else {
@@ -696,14 +691,12 @@ fn generate_fixture_handler_and_app_node(
     let raw_middleware = fixture.handler.as_ref().and_then(|handler| handler.middleware.as_ref());
     let config_code = generate_server_config_ts(metadata, raw_middleware, fixture_id)?;
 
-    // Generate DI providers registration
     let di_providers = if let Some(di_cfg) = di_config {
         generate_di_providers_ts(di_cfg, fixture_id)?
     } else {
         String::new()
     };
 
-    // Generate cleanup state handler if needed
     let cleanup_state_handler = if let Some(di_cfg) = di_config {
         if has_cleanup(di_cfg) {
             Some(generate_cleanup_state_handler_ts(handler_name, fixture_id))
@@ -774,7 +767,6 @@ fn generate_fixture_handler_and_app_node(
     let mut app_factory_code = String::new();
     app_factory_code.push_str(&format!("export function {}(): SpikardApp {{\n", app_factory_name));
 
-    // If we have DI providers, we need to create an app instance first
     let needs_app_instance = !di_providers.is_empty();
     if needs_app_instance {
         app_factory_code.push_str("\tconst app = new Spikard();\n\n");
@@ -788,7 +780,6 @@ fn generate_fixture_handler_and_app_node(
         app_factory_code.push('\n');
     }
 
-    // Add DI providers if present
     if !di_providers.is_empty() {
         app_factory_code.push_str(&di_providers);
         if !di_providers.ends_with('\n') {
@@ -816,13 +807,9 @@ fn generate_fixture_handler_and_app_node(
     }
 
     if needs_app_instance {
-        // When using DI, set properties on the app instance and return it
         app_factory_code.push_str(&format!("\tapp.routes = {};\n", routes_literal));
         app_factory_code.push_str(&format!("\tapp.handlers = {};\n", handlers_literal));
         if !hooks_registration.is_empty() {
-            // Extract lifecycle hooks object from registration string and assign to app
-            // hooks_registration is like: "\tlifecycleHooks: {\n\t\tonRequest: [...],\n\t},\n"
-            // We need to convert it to: "\tapp.lifecycleHooks = {\n\t\tonRequest: [...],\n\t};\n"
             let hooks_obj = hooks_registration
                 .trim()
                 .strip_prefix("lifecycleHooks:")
@@ -836,7 +823,6 @@ fn generate_fixture_handler_and_app_node(
         }
         app_factory_code.push_str("\treturn app;\n");
     } else {
-        // When not using DI, return a plain object
         app_factory_code.push_str("\treturn {\n");
         app_factory_code.push_str(&format!("\t\troutes: {},\n", routes_literal));
         app_factory_code.push_str(&format!("\t\thandlers: {},\n", handlers_literal));
@@ -852,7 +838,6 @@ fn generate_fixture_handler_and_app_node(
 
     let mut full_handler_code = String::new();
 
-    // Add DI factories first
     if !di_factories.is_empty() {
         full_handler_code.push_str(&di_factories);
     }
@@ -942,7 +927,6 @@ fn generate_handler_function(
     let params_var = if uses_params { "params" } else { "_params" };
     code.push_str(&format!("\tconst {} = request.params ?? {{}};\n", params_var));
 
-    // Extract DI dependencies if present (deduplicated)
     if let Ok(Some(di_cfg)) = DependencyConfig::from_fixture(fixture) {
         let mut seen = std::collections::HashSet::new();
         for dep_key in &di_cfg.handler_dependencies {
@@ -2225,10 +2209,9 @@ fn generate_all_dependency_factories_ts(di_config: &DependencyConfig, fixture_id
     let mut code = String::new();
     let all_deps = di_config.all_dependencies();
 
-    // Generate factory functions for non-value dependencies
     for dep in all_deps.values() {
         if dep.is_value() {
-            continue; // Values are registered directly, no factory needed
+            continue;
         }
 
         let factory_code = generate_dependency_factory_ts(dep, fixture_id)?;
@@ -2250,7 +2233,6 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
     let mut code = String::new();
 
     if has_cleanup {
-        // Generator function for cleanup (async generator)
         code.push_str(&format!("async function* {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -2285,7 +2267,6 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
         code.push_str("\t}\n");
         code.push('}');
     } else if is_async {
-        // Async factory without cleanup
         code.push_str(&format!("async function {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -2296,7 +2277,6 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
         code.push_str("): Promise<unknown> {\n");
         code.push_str(&format!("\t// Async factory for {}\n", dep.key));
 
-        // Generate factory logic based on dependency name
         if dep.key.contains("db") || dep.key.contains("database") {
             code.push_str("\t// Simulate async DB connection\n");
             code.push_str("\treturn { connected: true, poolId: Math.random().toString() };\n");
@@ -2314,7 +2294,6 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
         }
         code.push('}');
     } else {
-        // Sync factory
         code.push_str(&format!("function {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -2339,13 +2318,9 @@ fn generate_di_providers_ts(di_config: &DependencyConfig, fixture_id: &str) -> R
     let mut code = String::new();
     let all_deps = di_config.all_dependencies();
 
-    // Sort dependencies by resolution order
-    // If circular dependency is detected, skip DI generation (this is intentional for error test fixtures)
     let resolution_order = match di_config.compute_resolution_order() {
         Ok(order) => order,
         Err(_) => {
-            // Circular dependency detected - skip DI registration for this fixture
-            // The fixture is likely testing circular dependency error handling
             return Ok(String::new());
         }
     };
@@ -2356,13 +2331,11 @@ fn generate_di_providers_ts(di_config: &DependencyConfig, fixture_id: &str) -> R
                 let camel_key = to_camel_case(&key);
 
                 if dep.is_value() {
-                    // Direct value registration
                     if let Some(value) = &dep.value {
                         let value_literal = json_value_to_ts_literal(value);
                         code.push_str(&format!("\tapp.provide(\"{}\", {});\n", camel_key, value_literal));
                     }
                 } else {
-                    // Factory registration - pass factory function and options to app.provide()
                     let factory_name = to_camel_case(&format!("{}_{}", fixture_id, &key));
                     let mut options = Vec::new();
 

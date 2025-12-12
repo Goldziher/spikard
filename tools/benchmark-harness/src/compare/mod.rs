@@ -13,5 +13,4 @@ mod runner;
 pub use analyzer::{CompareAnalyzer, ComparisonAnalysis};
 pub use runner::{CompareConfig, CompareRunner};
 
-// Re-export schema types for convenience
 pub use crate::schema::compare::{CompareResult, CompareSummary, EffectSize, StatisticalTest};

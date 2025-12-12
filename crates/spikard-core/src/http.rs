@@ -160,7 +160,6 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    // Method::as_str() tests
     #[test]
     fn test_method_as_str_get() {
         assert_eq!(Method::Get.as_str(), "GET");
@@ -201,7 +200,6 @@ mod tests {
         assert_eq!(Method::Trace.as_str(), "TRACE");
     }
 
-    // Display trait tests
     #[test]
     fn test_method_display_get() {
         assert_eq!(Method::Get.to_string(), "GET");
@@ -242,7 +240,6 @@ mod tests {
         assert_eq!(Method::Trace.to_string(), "TRACE");
     }
 
-    // FromStr trait tests - valid methods
     #[test]
     fn test_from_str_get() {
         assert_eq!(Method::from_str("GET"), Ok(Method::Get));
@@ -283,7 +280,6 @@ mod tests {
         assert_eq!(Method::from_str("TRACE"), Ok(Method::Trace));
     }
 
-    // FromStr trait tests - case insensitive
     #[test]
     fn test_from_str_lowercase() {
         assert_eq!(Method::from_str("get"), Ok(Method::Get));
@@ -294,7 +290,6 @@ mod tests {
         assert_eq!(Method::from_str("PoSt"), Ok(Method::Post));
     }
 
-    // FromStr trait tests - invalid methods
     #[test]
     fn test_from_str_invalid_method() {
         let result = Method::from_str("INVALID");
@@ -309,7 +304,6 @@ mod tests {
         assert_eq!(result.unwrap_err(), "Unknown HTTP method: ");
     }
 
-    // CompressionConfig default tests
     #[test]
     fn test_compression_config_default() {
         let config = CompressionConfig::default();
@@ -334,7 +328,6 @@ mod tests {
         assert_eq!(default_compression_quality(), 6);
     }
 
-    // RateLimitConfig default tests
     #[test]
     fn test_rate_limit_config_default() {
         let config = RateLimitConfig::default();
@@ -343,7 +336,6 @@ mod tests {
         assert!(config.ip_based);
     }
 
-    // Method equality and hashing tests
     #[test]
     fn test_method_equality() {
         assert_eq!(Method::Get, Method::Get);
@@ -357,7 +349,6 @@ mod tests {
         assert_eq!(method, cloned);
     }
 
-    // CompressionConfig custom values test
     #[test]
     fn test_compression_config_custom_values() {
         let config = CompressionConfig {
@@ -372,7 +363,6 @@ mod tests {
         assert_eq!(config.quality, 11);
     }
 
-    // RateLimitConfig custom values test
     #[test]
     fn test_rate_limit_config_custom_values() {
         let config = RateLimitConfig {
@@ -385,7 +375,6 @@ mod tests {
         assert!(!config.ip_based);
     }
 
-    // CorsConfig test for basic construction
     #[test]
     fn test_cors_config_construction() {
         let cors = CorsConfig {
@@ -401,7 +390,6 @@ mod tests {
         assert_eq!(cors.allowed_headers.len(), 0);
     }
 
-    // RouteMetadata test for basic construction
     #[test]
     fn test_route_metadata_construction() {
         let metadata = RouteMetadata {

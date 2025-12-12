@@ -341,7 +341,6 @@ mod tests {
         assert!(try_parse_float("10.0").is_some());
         assert!(try_parse_float("-2.5").is_some());
         assert!(try_parse_float("abc").is_none());
-        // Note: integers parse as floats too (f64::parse accepts "123")
         assert!(try_parse_float("123").is_some());
     }
 
@@ -371,7 +370,6 @@ mod tests {
 
     #[test]
     fn test_deeply_nested_objects() {
-        // Test single level nesting - serde_qs supports profile[name] style
         let data = b"user[profile]=test&user[id]=123";
         let result = parse_urlencoded_to_json(data).unwrap();
 
@@ -447,7 +445,6 @@ mod tests {
         let data = b"code=00123&id=007";
         let result = parse_urlencoded_to_json(data).unwrap();
 
-        // These should parse as integers, stripping leading zeros
         assert!(result["code"].is_number());
         assert!(result["id"].is_number());
     }
@@ -491,7 +488,6 @@ mod tests {
 
     #[test]
     fn test_plus_vs_space_encoding() {
-        // Plus signs should be converted to spaces
         let data = b"message=Hello+World&greeting=Hi%20There";
         let result = parse_urlencoded_to_json(data).unwrap();
 

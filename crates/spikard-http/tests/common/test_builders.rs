@@ -271,7 +271,6 @@ impl RequestBuilder {
     /// The Request can be passed directly to handler.call(). RequestData contains
     /// all extracted request information (params, body, headers, etc.).
     pub fn build(self) -> (Request<Body>, RequestData) {
-        // Build the hyper Request
         let body = if self.body.is_null() {
             Body::empty()
         } else {
@@ -280,14 +279,12 @@ impl RequestBuilder {
 
         let mut request_builder = Request::builder().method(self.method.clone()).uri(&self.path);
 
-        // Add headers to the request
         for (name, value) in &self.headers {
             request_builder = request_builder.header(name, value);
         }
 
         let request = request_builder.body(body).unwrap();
 
-        // Build RequestData
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: build_query_json(&self.query_params),
@@ -320,20 +317,14 @@ fn build_query_json(raw_params: &HashMap<String, Vec<String>>) -> Value {
         if values.is_empty() {
             map.insert(key.clone(), json!(null));
         } else if values.len() == 1 {
-            // Single value: store as string
             map.insert(key.clone(), json!(values[0].clone()));
         } else {
-            // Multiple values: store as array
             map.insert(key.clone(), json!(values.clone()));
         }
     }
 
     Value::Object(map)
 }
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
 
 /// Load a JSON fixture from the testing_data directory
 ///
@@ -354,7 +345,6 @@ fn build_query_json(raw_params: &HashMap<String, Vec<String>>) -> Value {
 pub fn load_fixture(relative_path: &str) -> Result<Value, Box<dyn std::error::Error>> {
     use std::path::PathBuf;
 
-    // Try to find the project root by looking for Cargo.toml
     let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     while root.pop() {
         if root.join("Cargo.toml").exists() {
@@ -407,7 +397,6 @@ pub async fn parse_json_body(response: &mut Response<Body>) -> Result<Value, Box
     use axum::body::to_bytes;
     use std::mem;
 
-    // Extract the body from the response
     let body = mem::take(response.body_mut());
     let bytes = to_bytes(body, usize::MAX).await?;
     let value = serde_json::from_slice(&bytes)?;
@@ -630,7 +619,6 @@ mod tests {
 
     #[test]
     fn test_query_params_conversion() {
-        // Single value
         let mut params = HashMap::new();
         params.insert("single".to_string(), vec!["value".to_string()]);
 

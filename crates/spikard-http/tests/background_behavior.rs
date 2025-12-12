@@ -22,10 +22,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
-// ============================================================================
-// Test 1: Graceful Shutdown Drains In-Flight Tasks
-// ============================================================================
-
 /// Verifies that shutdown waits for all in-flight tasks to complete gracefully.
 /// Observable behavior: all spawned tasks complete before shutdown returns Ok.
 #[tokio::test]
@@ -42,7 +38,6 @@ async fn test_graceful_shutdown_drains_all_spawned_tasks() {
     let completion_count = Arc::new(AtomicU64::new(0));
     let task_count = 20;
 
-    // Spawn multiple tasks with realistic delays
     for _ in 0..task_count {
         let count = completion_count.clone();
         handle
@@ -57,17 +52,14 @@ async fn test_graceful_shutdown_drains_all_spawned_tasks() {
             .expect("spawn failed");
     }
 
-    // Wait briefly for tasks to begin
     tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // Graceful shutdown should wait for all tasks
     let shutdown_result = runtime.shutdown().await;
     assert!(
         shutdown_result.is_ok(),
         "shutdown should succeed when draining in-flight tasks"
     );
 
-    // Observable outcome: all tasks completed
     assert_eq!(
         completion_count.load(Ordering::SeqCst),
         task_count,
@@ -81,7 +73,7 @@ async fn test_graceful_shutdown_drains_all_spawned_tasks() {
 async fn test_graceful_shutdown_processes_both_inflight_and_queued_tasks() {
     let config = BackgroundTaskConfig {
         max_queue_size: 100,
-        max_concurrent_tasks: 2, // Low concurrency to force queueing
+        max_concurrent_tasks: 2,
         drain_timeout_secs: 10,
     };
 
@@ -91,7 +83,6 @@ async fn test_graceful_shutdown_processes_both_inflight_and_queued_tasks() {
     let completion_count = Arc::new(AtomicU64::new(0));
     let task_count = 15;
 
-    // Spawn tasks that will queue due to concurrency limit
     for _ in 0..task_count {
         let count = completion_count.clone();
         handle
@@ -106,7 +97,6 @@ async fn test_graceful_shutdown_processes_both_inflight_and_queued_tasks() {
             .expect("spawn failed");
     }
 
-    // Immediate shutdown should drain all queued tasks
     let shutdown_result = runtime.shutdown().await;
     assert!(
         shutdown_result.is_ok(),
@@ -120,10 +110,6 @@ async fn test_graceful_shutdown_processes_both_inflight_and_queued_tasks() {
     );
 }
 
-// ============================================================================
-// Test 2: Shutdown Timeout Leaves Incomplete Tasks
-// ============================================================================
-
 /// Verifies that shutdown times out when tasks exceed drain timeout.
 /// Observable behavior: shutdown returns error, incomplete tasks remain unfinished.
 #[tokio::test]
@@ -131,7 +117,7 @@ async fn test_shutdown_timeout_with_long_running_task() {
     let config = BackgroundTaskConfig {
         max_queue_size: 10,
         max_concurrent_tasks: 2,
-        drain_timeout_secs: 1, // Very short timeout
+        drain_timeout_secs: 1,
     };
 
     let runtime = BackgroundRuntime::start(config).await;
@@ -140,7 +126,6 @@ async fn test_shutdown_timeout_with_long_running_task() {
     let task_completed = Arc::new(AtomicBool::new(false));
     let completed_clone = task_completed.clone();
 
-    // Spawn a task that takes longer than drain timeout
     handle
         .spawn(move || {
             let c = completed_clone.clone();
@@ -154,14 +139,12 @@ async fn test_shutdown_timeout_with_long_running_task() {
 
     tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // Observable behavior: shutdown times out
     let shutdown_result = runtime.shutdown().await;
     assert!(
         shutdown_result.is_err(),
         "shutdown should timeout with incomplete long-running task"
     );
 
-    // Observable behavior: task was not completed before timeout
     assert!(
         !task_completed.load(Ordering::SeqCst),
         "incomplete task should not complete after shutdown timeout"
@@ -182,7 +165,6 @@ async fn test_shutdown_timeout_duration_respected() {
     let runtime = BackgroundRuntime::start(config).await;
     let handle = runtime.handle();
 
-    // Spawn a very long-running task
     handle
         .spawn(|| async {
             tokio::time::sleep(Duration::from_secs(30)).await;
@@ -192,12 +174,10 @@ async fn test_shutdown_timeout_duration_respected() {
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    // Measure shutdown time
     let shutdown_start = Instant::now();
     let _ = runtime.shutdown().await;
     let shutdown_elapsed = shutdown_start.elapsed();
 
-    // Observable behavior: shutdown duration is ~drain_timeout (±1 second tolerance)
     assert!(
         shutdown_elapsed >= Duration::from_secs(drain_timeout_secs - 1),
         "shutdown should wait at least drain_timeout"
@@ -207,10 +187,6 @@ async fn test_shutdown_timeout_duration_respected() {
         "shutdown should not wait much longer than drain_timeout"
     );
 }
-
-// ============================================================================
-// Test 3: Task Success/Failure Observable Outcomes
-// ============================================================================
 
 /// Verifies that successful tasks complete without affecting other tasks.
 /// Observable behavior: task runs to completion, no side effects on runtime.
@@ -236,13 +212,11 @@ async fn test_task_success_completes_cleanly() {
 
     tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // Observable behavior: task succeeded and flag set
     assert!(
         success_flag.load(Ordering::SeqCst),
         "successful task should execute and set flag"
     );
 
-    // Shutdown should complete normally
     let shutdown_result = runtime.shutdown().await;
     assert!(shutdown_result.is_ok(), "shutdown should succeed after successful task");
 }
@@ -258,7 +232,6 @@ async fn test_task_failure_doesnt_crash_runtime() {
     let failure_count = Arc::new(AtomicU64::new(0));
     let success_count = Arc::new(AtomicU64::new(0));
 
-    // Spawn a failing task
     {
         let f = failure_count.clone();
         handle
@@ -274,7 +247,6 @@ async fn test_task_failure_doesnt_crash_runtime() {
 
     tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // Spawn another task after failure
     {
         let s = success_count.clone();
         handle
@@ -290,7 +262,6 @@ async fn test_task_failure_doesnt_crash_runtime() {
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    // Observable behavior: both tasks ran despite first one failing
     assert_eq!(failure_count.load(Ordering::SeqCst), 1, "failed task should execute");
     assert_eq!(
         success_count.load(Ordering::SeqCst),
@@ -351,7 +322,6 @@ async fn test_shutdown_drains_mixed_success_and_failure_tasks() {
     let shutdown_result = runtime.shutdown().await;
     assert!(shutdown_result.is_ok(), "shutdown should drain all tasks");
 
-    // Observable behavior: all tasks executed
     assert_eq!(
         success_count.load(Ordering::SeqCst),
         10,
@@ -363,10 +333,6 @@ async fn test_shutdown_drains_mixed_success_and_failure_tasks() {
         "all failing tasks should execute"
     );
 }
-
-// ============================================================================
-// Test 4: High-Volume Task Queue (10K+ tasks)
-// ============================================================================
 
 /// Verifies that high-volume queues are processed without resource exhaustion.
 /// Observable behavior: 10K tasks all complete within drain timeout.
@@ -384,7 +350,6 @@ async fn test_high_volume_queue_10k_tasks() {
 
     let completion_count = Arc::new(AtomicU64::new(0));
 
-    // Spawn 10K tasks
     for _ in 0..task_count {
         let count = completion_count.clone();
         let result = handle.spawn(move || {
@@ -397,11 +362,9 @@ async fn test_high_volume_queue_10k_tasks() {
         assert!(result.is_ok(), "spawn should succeed for high-volume queue");
     }
 
-    // Shutdown should drain all 10K tasks
     let shutdown_result = runtime.shutdown().await;
     assert!(shutdown_result.is_ok(), "shutdown should complete high-volume queue");
 
-    // Observable behavior: all 10K tasks completed
     assert_eq!(
         completion_count.load(Ordering::SeqCst),
         task_count as u64,
@@ -425,7 +388,6 @@ async fn test_high_volume_queue_overflow_behavior() {
     let blocking_counter = Arc::new(AtomicU64::new(0));
     let spawned_count = Arc::new(AtomicU64::new(0));
 
-    // Try to fill queue with more tasks than capacity
     let mut overflow_error_count = 0;
     for _ in 0..50 {
         let counter = blocking_counter.clone();
@@ -435,7 +397,6 @@ async fn test_high_volume_queue_overflow_behavior() {
             let s = spawned.clone();
             async move {
                 s.fetch_add(1, Ordering::SeqCst);
-                // Sleep briefly to keep tasks in flight
                 tokio::time::sleep(Duration::from_millis(100)).await;
                 c.fetch_add(1, Ordering::SeqCst);
                 Ok(())
@@ -447,19 +408,13 @@ async fn test_high_volume_queue_overflow_behavior() {
         }
     }
 
-    // Observable behavior: queue full errors when capacity exceeded
     assert!(
         overflow_error_count > 0,
         "should see queue full errors when exceeding capacity"
     );
 
-    // Shutdown should drain remaining tasks
     runtime.shutdown().await.expect("shutdown should succeed");
 }
-
-// ============================================================================
-// Test 5: Task Execution Order Guarantees
-// ============================================================================
 
 /// Verifies that multiple tasks execute to completion (order not guaranteed, but all complete).
 /// Observable behavior: all tasks execute despite concurrent nature.
@@ -489,10 +444,8 @@ async fn test_task_execution_order_all_complete() {
 
     let log = execution_log.lock().await;
 
-    // Observable behavior: all tasks executed
     assert_eq!(log.len(), task_count, "all spawned tasks should execute");
 
-    // Observable behavior: each task ran exactly once
     for i in 0..task_count {
         let count = log.iter().filter(|&&x| x == i).count();
         assert_eq!(count, 1, "task {} should execute exactly once", i);
@@ -507,7 +460,7 @@ async fn test_task_execution_order_all_complete() {
 async fn test_sequential_execution_with_single_concurrency() {
     let config = BackgroundTaskConfig {
         max_queue_size: 100,
-        max_concurrent_tasks: 1, // Force sequential execution
+        max_concurrent_tasks: 1,
         drain_timeout_secs: 30,
     };
 
@@ -536,16 +489,8 @@ async fn test_sequential_execution_with_single_concurrency() {
 
     let order = execution_order.lock().await;
 
-    // Observable behavior: all tasks executed
     assert_eq!(order.len(), task_count, "all tasks should execute");
-
-    // With single concurrency, tasks may not strictly execute in order due to async
-    // scheduling, but they should all complete
 }
-
-// ============================================================================
-// Test 6: Concurrent Task Execution
-// ============================================================================
 
 /// Verifies that concurrent limit is respected during execution.
 /// Observable behavior: peak concurrent tasks <= configured limit.
@@ -574,10 +519,8 @@ async fn test_concurrent_execution_respects_limit() {
                 let p = peak.clone();
 
                 async move {
-                    // Increment active count
                     let current = a.fetch_add(1, Ordering::SeqCst) + 1;
 
-                    // Update peak
                     let mut peak_val = p.load(Ordering::SeqCst);
                     while current > peak_val {
                         if p.compare_exchange(peak_val, current, Ordering::SeqCst, Ordering::SeqCst)
@@ -588,7 +531,6 @@ async fn test_concurrent_execution_respects_limit() {
                         peak_val = p.load(Ordering::SeqCst);
                     }
 
-                    // Hold task for a bit to measure peak
                     tokio::time::sleep(Duration::from_millis(100)).await;
                     a.fetch_sub(1, Ordering::SeqCst);
                     Ok(())
@@ -597,12 +539,10 @@ async fn test_concurrent_execution_respects_limit() {
             .expect("spawn failed");
     }
 
-    // Wait for tasks to execute and measure peak
     tokio::time::sleep(Duration::from_millis(300)).await;
 
     let peak = peak_count.load(Ordering::SeqCst);
 
-    // Observable behavior: peak concurrent never exceeds limit
     assert!(
         peak <= 5,
         "peak concurrent tasks ({}) should not exceed limit of 5",
@@ -634,7 +574,6 @@ async fn test_concurrent_tasks_safe_interaction() {
             .spawn(move || {
                 let v = val.clone();
                 async move {
-                    // Safe concurrent increment via atomic
                     v.fetch_add(1, Ordering::SeqCst);
                     Ok(())
                 }
@@ -644,7 +583,6 @@ async fn test_concurrent_tasks_safe_interaction() {
 
     tokio::time::sleep(Duration::from_millis(200)).await;
 
-    // Observable behavior: all concurrent increments succeeded
     assert_eq!(
         shared_value.load(Ordering::SeqCst),
         task_count as u64,
@@ -654,10 +592,6 @@ async fn test_concurrent_tasks_safe_interaction() {
     runtime.shutdown().await.expect("shutdown should succeed");
 }
 
-// ============================================================================
-// Test 7: Task Cancellation Propagation
-// ============================================================================
-
 /// Verifies that shutdown immediately stops accepting new tasks.
 /// Observable behavior: spawn after shutdown signal returns error.
 #[tokio::test]
@@ -666,16 +600,12 @@ async fn test_spawn_fails_after_shutdown_initiated() {
     let runtime = BackgroundRuntime::start(config).await;
     let handle = runtime.handle();
 
-    // Clone handle before shutdown
     let handle_clone = handle.clone();
 
-    // Shutdown the runtime
     runtime.shutdown().await.expect("shutdown should succeed");
 
-    // Brief delay to ensure shutdown is complete
     tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // Observable behavior: spawn after shutdown returns error
     let result = handle_clone.spawn(|| async { Ok(()) });
     assert!(result.is_err(), "spawn after shutdown should fail");
 }
@@ -713,15 +643,12 @@ async fn test_incomplete_task_cancelled_on_timeout() {
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    // Task started before shutdown
     assert!(task_started.load(Ordering::SeqCst), "task should have started");
 
     let shutdown_result = runtime.shutdown().await;
 
-    // Observable behavior: shutdown timed out
     assert!(shutdown_result.is_err(), "shutdown should timeout with incomplete task");
 
-    // Observable behavior: task was not allowed to complete
     assert!(
         !task_completed.load(Ordering::SeqCst),
         "incomplete task should not complete after shutdown timeout"
@@ -735,7 +662,7 @@ async fn test_task_cancellation_doesnt_affect_others() {
     let config = BackgroundTaskConfig {
         max_queue_size: 100,
         max_concurrent_tasks: 5,
-        drain_timeout_secs: 1, // Short timeout
+        drain_timeout_secs: 1,
     };
 
     let runtime = BackgroundRuntime::start(config).await;
@@ -744,7 +671,6 @@ async fn test_task_cancellation_doesnt_affect_others() {
     let short_task_completed = Arc::new(AtomicBool::new(false));
     let long_task_started = Arc::new(AtomicBool::new(false));
 
-    // Spawn a short task that will complete
     {
         let c = short_task_completed.clone();
         handle
@@ -759,7 +685,6 @@ async fn test_task_cancellation_doesnt_affect_others() {
             .expect("spawn failed");
     }
 
-    // Spawn a long task that will be cancelled
     {
         let s = long_task_started.clone();
         handle
@@ -776,11 +701,9 @@ async fn test_task_cancellation_doesnt_affect_others() {
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    // Shutdown with timeout
     let shutdown_result = runtime.shutdown().await;
     assert!(shutdown_result.is_err(), "shutdown should timeout due to long task");
 
-    // Observable behavior: short task completed, long task started but not completed
     assert!(
         short_task_completed.load(Ordering::SeqCst),
         "short task should have completed before timeout"
@@ -790,10 +713,6 @@ async fn test_task_cancellation_doesnt_affect_others() {
         "long task should have started before timeout"
     );
 }
-
-// ============================================================================
-// Additional Coverage: Resource Cleanup & Edge Cases
-// ============================================================================
 
 /// Verifies immediate shutdown with no tasks.
 /// Observable behavior: shutdown succeeds quickly with empty queue.
@@ -806,7 +725,6 @@ async fn test_shutdown_with_no_tasks() {
     let result = runtime.shutdown().await;
     let elapsed = start.elapsed();
 
-    // Observable behavior: shutdown succeeds and completes quickly
     assert!(result.is_ok(), "shutdown should succeed with no tasks");
     assert!(
         elapsed < Duration::from_secs(1),
@@ -839,7 +757,6 @@ async fn test_task_metadata_preserved_execution() {
 
     tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // Observable behavior: task with metadata executed
     assert!(executed.load(Ordering::SeqCst), "task with metadata should execute");
 
     runtime.shutdown().await.expect("shutdown should succeed");
@@ -856,7 +773,6 @@ async fn test_multiple_handle_clones_spawn_independently() {
 
     let count = Arc::new(AtomicU64::new(0));
 
-    // Spawn via first handle
     {
         let c = count.clone();
         handle1
@@ -870,7 +786,6 @@ async fn test_multiple_handle_clones_spawn_independently() {
             .expect("spawn failed");
     }
 
-    // Spawn via second handle
     {
         let c = count.clone();
         handle2
@@ -886,7 +801,6 @@ async fn test_multiple_handle_clones_spawn_independently() {
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    // Observable behavior: tasks from both handles executed
     assert_eq!(
         count.load(Ordering::SeqCst),
         2,
@@ -914,6 +828,5 @@ async fn test_resource_cleanup_after_shutdown() {
     let shutdown_result = runtime.shutdown().await;
     assert!(shutdown_result.is_ok(), "shutdown should complete successfully");
 
-    // Observable behavior: dropping runtime after shutdown is safe (no double-free, panics)
     drop(handle);
 }

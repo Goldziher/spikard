@@ -113,9 +113,7 @@ describe("content_types", () => {
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=document.pdf");
 	});
 
-	test.skip("20_content_length_mismatch", async () => {
-		// Not supported by the in-memory HTTP client
-	});
+	test.skip("20_content_length_mismatch", async () => {});
 
 	test("17_vendor_json_accepted", async () => {
 		const app = createAppContentTypes17VendorJsonAccepted();

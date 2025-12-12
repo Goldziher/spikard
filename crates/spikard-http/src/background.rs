@@ -212,7 +212,6 @@ async fn run_executor(
     let mut join_set = JoinSet::new();
     let token_clone = token.clone();
 
-    // Phase 1: Accept new jobs until shutdown signal
     loop {
         tokio::select! {
             maybe_job = rx.recv() => {
@@ -223,8 +222,6 @@ async fn run_executor(
                         let metrics_clone = metrics.clone();
                         join_set.spawn(async move {
                             let BackgroundJob { future, metadata } = job;
-                            // Acquire permit - this may block if at max concurrency
-                            // During shutdown, the drain will wait for all spawned tasks
                             match semaphore.acquire_owned().await {
                                 Ok(_permit) => {
                                     metrics_clone.inc_running();
@@ -235,8 +232,6 @@ async fn run_executor(
                                     metrics_clone.dec_running();
                                 }
                                 Err(_) => {
-                                    // Semaphore acquisition failed - this task will never run
-                                    // We already decremented queued above, so metrics are consistent
                                     metrics_clone.inc_failed();
                                     tracing::warn!(target = "spikard::background", "failed to acquire semaphore permit for background task");
                                 }
@@ -247,15 +242,11 @@ async fn run_executor(
                 }
             }
             _ = token_clone.cancelled() => {
-                // Shutdown signal received; exit phase 1 and begin phase 2 (draining)
                 break;
             }
         }
     }
 
-    // Phase 2: Drain remaining queued jobs without the cancel token check.
-    // The shutdown() function drops its handle copy, but handle clones may still exist,
-    // so we use try_recv in a loop to check for remaining messages without blocking forever.
     let mut drain_attempts = 0;
     loop {
         match rx.try_recv() {
@@ -283,8 +274,6 @@ async fn run_executor(
                 drain_attempts = 0;
             }
             Err(mpsc::error::TryRecvError::Empty) => {
-                // Queue is empty but sender might still be held by clones in user code.
-                // Wait a bit and retry, but give up after ~1 second of empty checks.
                 drain_attempts += 1;
                 if drain_attempts > 100 {
                     break;
@@ -292,13 +281,11 @@ async fn run_executor(
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
             Err(mpsc::error::TryRecvError::Disconnected) => {
-                // All senders dropped; nothing more to drain
                 break;
             }
         }
     }
 
-    // Wait for all spawned tasks to complete before returning
     while join_set.join_next().await.is_some() {}
 }
 
@@ -394,7 +381,6 @@ mod tests {
         let runtime = BackgroundRuntime::start(config).await;
         let handle = runtime.handle();
 
-        // Spawn slow tasks to fill the queue and keep them running
         let blocking_barrier = Arc::new(tokio::sync::Barrier::new(3));
 
         for _ in 0..2 {
@@ -411,7 +397,6 @@ mod tests {
                 .expect("spawn failed");
         }
 
-        // Now queue is full, next spawn should fail
         let result = handle.spawn(move || async { Ok(()) });
         assert!(matches!(result, Err(BackgroundSpawnError::QueueFull)));
 
@@ -429,7 +414,6 @@ mod tests {
         let success_count = Arc::new(AtomicU64::new(0));
         let success_count_clone = success_count.clone();
 
-        // Spawn a failing task
         handle
             .spawn(move || {
                 let s = success_count_clone.clone();
@@ -441,7 +425,6 @@ mod tests {
             .expect("spawn failed");
 
         tokio::time::sleep(Duration::from_millis(100)).await;
-        // Success count still increments (it ran), but failure metrics increment too
         assert_eq!(success_count.load(Ordering::SeqCst), 1);
 
         runtime.shutdown().await.expect("shutdown failed");
@@ -486,7 +469,6 @@ mod tests {
                 .expect("spawn failed");
         }
 
-        // Wait for all tasks to start and monitor max concurrent
         tokio::time::sleep(Duration::from_millis(700)).await;
         let max_concurrent_observed = max_concurrent.load(Ordering::SeqCst);
         assert!(
@@ -525,7 +507,6 @@ mod tests {
 
         tokio::time::sleep(Duration::from_millis(200)).await;
 
-        // Shutdown should have already completed tasks
         let result = runtime.shutdown().await;
         assert!(result.is_ok());
         assert_eq!(counter.load(Ordering::SeqCst), 1);
@@ -542,7 +523,6 @@ mod tests {
         let runtime = BackgroundRuntime::start(config).await;
         let handle = runtime.handle();
 
-        // Spawn a task that takes longer than the drain timeout
         handle
             .spawn(|| async {
                 tokio::time::sleep(Duration::from_secs(5)).await;
@@ -553,7 +533,6 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(100)).await;
 
         let result = runtime.shutdown().await;
-        // Should timeout
         assert!(result.is_err());
     }
 
@@ -595,7 +574,6 @@ mod tests {
         let started_count = Arc::new(AtomicU64::new(0));
         let _completed_count = Arc::new(AtomicU64::new(0));
 
-        // Spawn a task that won't complete
         let started = started_count.clone();
 
         handle
@@ -603,7 +581,6 @@ mod tests {
                 let s = started.clone();
                 async move {
                     s.fetch_add(1, Ordering::SeqCst);
-                    // Simulate a long-running operation
                     tokio::time::sleep(Duration::from_secs(10)).await;
                     Ok(())
                 }
@@ -613,14 +590,11 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(100)).await;
         assert_eq!(started_count.load(Ordering::SeqCst), 1);
 
-        // Shutdown with short timeout - should not wait for the full 10 seconds
         let shutdown_start = std::time::Instant::now();
         let result = runtime.shutdown().await;
         let shutdown_elapsed = shutdown_start.elapsed();
 
-        // Should return error due to timeout
         assert!(result.is_err());
-        // Should be close to the 1 second drain_timeout
         assert!(shutdown_elapsed < Duration::from_secs(3));
     }
 
@@ -637,7 +611,6 @@ mod tests {
 
         let blocking_barrier = Arc::new(tokio::sync::Barrier::new(4));
 
-        // Fill the queue with 3 blocking tasks
         for _ in 0..3 {
             let b = blocking_barrier.clone();
             handle
@@ -652,14 +625,12 @@ mod tests {
                 .expect("spawn failed");
         }
 
-        // 4th attempt should fail with QueueFull
         let result = handle.spawn(|| async { Ok(()) });
         assert!(matches!(result, Err(BackgroundSpawnError::QueueFull)));
 
         blocking_barrier.wait().await;
         tokio::time::sleep(Duration::from_millis(200)).await;
 
-        // After queue drains, we should be able to spawn again
         let result = handle.spawn(|| async { Ok(()) });
         assert!(result.is_ok());
 
@@ -689,9 +660,7 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(200)).await;
 
         let order = execution_order.lock().await;
-        // Verify all tasks executed
         assert_eq!(order.len(), 5);
-        // Verify each task ran exactly once
         for i in 0..5 {
             assert!(order.contains(&i));
         }
@@ -765,13 +734,10 @@ mod tests {
         assert_eq!(config.drain_timeout_secs, 30);
     }
 
-    // ========== SHUTDOWN EDGE CASES AND CONCURRENCY TESTS ==========
-
     #[tokio::test]
     async fn test_shutdown_with_zero_pending_tasks() {
         let runtime = BackgroundRuntime::start(BackgroundTaskConfig::default()).await;
 
-        // Shutdown immediately without spawning anything
         let result = runtime.shutdown().await;
         assert!(result.is_ok(), "shutdown should succeed with no tasks");
     }
@@ -806,10 +772,8 @@ mod tests {
             })
             .unwrap();
 
-        // Wait for task to start
         tokio::time::sleep(Duration::from_millis(20)).await;
 
-        // Shutdown should wait for running task
         let result = runtime.shutdown().await;
         assert!(result.is_ok(), "shutdown should succeed and wait for running tasks");
         assert!(
@@ -819,9 +783,6 @@ mod tests {
     }
 
     // TODO: FAILING TEST - Architectural Issue
-    // This test and 27 others fail due to shutdown/semaphore deadlock issue
-    // documented at line 217. Tests correctly identify the bug - graceful drain
-    // doesn't work with semaphore-limited concurrency. Will fix in separate cycle.
     #[tokio::test]
     async fn test_shutdown_drains_queued_tasks() {
         let config = BackgroundTaskConfig {
@@ -834,7 +795,6 @@ mod tests {
 
         let execution_count: Arc<AtomicU64> = Arc::new(AtomicU64::new(0));
 
-        // Spawn multiple tasks that queue up due to semaphore limit
         for _ in 0..10 {
             let count = execution_count.clone();
             handle
@@ -849,7 +809,6 @@ mod tests {
                 .unwrap();
         }
 
-        // Shutdown should drain all queued tasks
         let result = runtime.shutdown().await;
         assert!(result.is_ok());
         assert_eq!(
@@ -889,7 +848,6 @@ mod tests {
         let result = runtime.shutdown().await;
         let elapsed = shutdown_start.elapsed();
 
-        // Should timeout, not wait full 10 seconds
         assert!(result.is_err(), "shutdown should timeout");
         assert!(
             elapsed < Duration::from_secs(3),
@@ -905,12 +863,8 @@ mod tests {
     async fn test_multiple_shutdown_calls_idempotent() {
         let runtime = BackgroundRuntime::start(BackgroundTaskConfig::default()).await;
 
-        // First shutdown succeeds
         let result1 = runtime.shutdown().await;
         assert!(result1.is_ok(), "first shutdown should succeed");
-
-        // Runtime is consumed, so we can't call shutdown again
-        // This test validates that shutdown takes ownership (consumes self)
     }
 
     #[tokio::test]
@@ -919,20 +873,11 @@ mod tests {
         let runtime = BackgroundRuntime::start(config).await;
         let handle = runtime.handle();
 
-        // Shutdown consumes the runtime and drops its handle copy.
-        // After shutdown, existing handle clones will still be able to send
-        // to a closed channel, which results in TrySendError::Closed.
         runtime.shutdown().await.expect("shutdown should succeed");
 
-        // Give executor time to fully shut down
         tokio::time::sleep(Duration::from_millis(50)).await;
 
-        // Now the sender is fully closed. Spawn should fail with a send error.
-        // However, the actual behavior depends on whether any other handle clones exist.
-        // In this test, we're the only holder, so the sender is closed.
-        // The behavior is a closed channel error, but our API wraps it as QueueFull.
         let result = handle.spawn(|| async { Ok(()) });
-        // The result should be an error since the channel is closed
         assert!(result.is_err(), "spawn should fail after all senders are dropped");
     }
 
@@ -962,7 +907,6 @@ mod tests {
                     let p = peak.clone();
                     async move {
                         let current = r.fetch_add(1, Ordering::SeqCst) + 1;
-                        // Update peak
                         let mut peak_val = p.load(Ordering::SeqCst);
                         while current > peak_val {
                             if p.compare_exchange(peak_val, current, Ordering::SeqCst, Ordering::SeqCst)
@@ -1018,7 +962,6 @@ mod tests {
             .unwrap();
         spawned_count += 1;
 
-        // Spawn another task after the failing one to verify executor continues
         let after_flag = after_panic_executed.clone();
         handle
             .spawn(move || {
@@ -1067,7 +1010,6 @@ mod tests {
                 .unwrap();
         }
 
-        // Queue is now at 2/2 capacity
         let overflow_result = handle.spawn(|| async { Ok(()) });
         assert!(matches!(overflow_result, Err(BackgroundSpawnError::QueueFull)));
 
@@ -1132,7 +1074,6 @@ mod tests {
                 .unwrap();
         }
 
-        // Shutdown should wait for all slow tasks to complete
         let result = runtime.shutdown().await;
         assert!(result.is_ok());
         assert_eq!(completed_count.load(Ordering::SeqCst), 5);
@@ -1165,7 +1106,6 @@ mod tests {
                 .unwrap();
         }
 
-        // Shutdown should complete without deadlock
         let result = runtime.shutdown().await;
         assert!(result.is_ok());
 
@@ -1178,7 +1118,7 @@ mod tests {
         let config = BackgroundTaskConfig {
             max_queue_size: 10,
             max_concurrent_tasks: 2,
-            drain_timeout_secs: 1, // Short timeout to force expiration
+            drain_timeout_secs: 1,
         };
         let runtime = BackgroundRuntime::start(config).await;
         let handle = runtime.handle();
@@ -1205,7 +1145,6 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(50)).await;
         assert!(started.load(std::sync::atomic::Ordering::SeqCst));
 
-        // Shutdown should timeout due to the long-running task
         let result = runtime.shutdown().await;
         assert!(result.is_err(), "shutdown should timeout due to long task");
         assert!(
@@ -1226,7 +1165,6 @@ mod tests {
 
         let count: Arc<AtomicU64> = Arc::new(AtomicU64::new(0));
 
-        // Rapidly spawn many tasks
         for _ in 0..100 {
             let c = count.clone();
             let _ = handle.spawn(move || {
@@ -1238,7 +1176,6 @@ mod tests {
             });
         }
 
-        // Immediate shutdown
         let result = runtime.shutdown().await;
         assert!(result.is_ok());
 
@@ -1300,7 +1237,6 @@ mod tests {
 
         let mut join_handles = vec![];
 
-        // Spawn 3 concurrent tasks that each spawn background jobs
         for _ in 0..3 {
             let h = handle.clone();
             let c = count.clone();
@@ -1343,7 +1279,6 @@ mod tests {
 
         let barrier: Arc<tokio::sync::Barrier> = Arc::new(tokio::sync::Barrier::new(3));
 
-        // Fill queue
         for _ in 0..2 {
             let b = barrier.clone();
             handle
@@ -1358,11 +1293,9 @@ mod tests {
                 .unwrap();
         }
 
-        // Attempt to overflow - should fail gracefully
         let result = handle.spawn(|| async { Ok(()) });
         assert!(matches!(result, Err(BackgroundSpawnError::QueueFull)));
 
-        // After first task completes, we should be able to spawn again
         barrier.wait().await;
         tokio::time::sleep(Duration::from_millis(100)).await;
 
@@ -1377,7 +1310,6 @@ mod tests {
 
         let count: Arc<AtomicU64> = Arc::new(AtomicU64::new(0));
 
-        // Use same handle multiple times
         for _ in 0..5 {
             let c = count.clone();
             handle
@@ -1409,7 +1341,6 @@ mod tests {
 
         let completion_count: Arc<AtomicU64> = Arc::new(AtomicU64::new(0));
 
-        // Fill queue to capacity
         for _ in 0..5 {
             let c = completion_count.clone();
             handle
@@ -1424,7 +1355,6 @@ mod tests {
                 .unwrap();
         }
 
-        // Shutdown should drain all tasks despite queue being at capacity
         let result = runtime.shutdown().await;
         assert!(result.is_ok());
         assert_eq!(completion_count.load(Ordering::SeqCst), 5);
@@ -1461,7 +1391,7 @@ mod tests {
         let config = BackgroundTaskConfig {
             max_queue_size: 10,
             max_concurrent_tasks: 2,
-            drain_timeout_secs: 0, // Immediate timeout
+            drain_timeout_secs: 0,
         };
         let runtime = BackgroundRuntime::start(config).await;
         let handle = runtime.handle();
@@ -1475,7 +1405,6 @@ mod tests {
 
         tokio::time::sleep(Duration::from_millis(10)).await;
 
-        // Should timeout immediately
         let result = runtime.shutdown().await;
         assert!(result.is_err());
     }
@@ -1492,7 +1421,6 @@ mod tests {
 
         let count: Arc<AtomicU64> = Arc::new(AtomicU64::new(0));
 
-        // Spawn many tasks that will queue and drain sequentially
         for _ in 0..50 {
             let c = count.clone();
             handle
@@ -1507,7 +1435,6 @@ mod tests {
                 .unwrap();
         }
 
-        // Shutdown should drain all 50 tasks
         let result = runtime.shutdown().await;
         assert!(result.is_ok());
         assert_eq!(count.load(Ordering::SeqCst), 50);
@@ -1542,7 +1469,6 @@ mod tests {
         barrier.wait().await;
         tokio::time::sleep(Duration::from_millis(100)).await;
 
-        // Should not deadlock
         let result = runtime.shutdown().await;
         assert!(result.is_ok());
     }
@@ -1560,17 +1486,8 @@ mod tests {
         assert_eq!(error.message, "borrowed message");
     }
 
-    // ========== UNCOVERED LINE COVERAGE TESTS ==========
-    // These tests specifically target the 4 uncovered lines identified by tarpaulin.
-    // Target: lines ~237-241 (semaphore acquisition failure in phase 1)
-    // Target: lines ~277-279 (semaphore acquisition failure in phase 2/drain)
-
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn test_phase1_semaphore_acquisition_with_concurrent_load() {
-        // This test verifies semaphore-based concurrency control works correctly
-        // during phase 1 (active acceptance loop). It ensures that even with
-        // semaphore limits, spawned tasks execute and metrics are tracked properly.
-
         let config = BackgroundTaskConfig {
             max_queue_size: 50,
             max_concurrent_tasks: 1,
@@ -1582,7 +1499,6 @@ mod tests {
 
         let execution_count = Arc::new(AtomicU64::new(0));
 
-        // Spawn a blocking task to occupy the semaphore
         let blocking_barrier = Arc::new(tokio::sync::Barrier::new(2));
         let barrier_clone = blocking_barrier.clone();
 
@@ -1597,10 +1513,8 @@ mod tests {
             })
             .unwrap();
 
-        // Give blocking task time to acquire semaphore
         tokio::time::sleep(Duration::from_millis(50)).await;
 
-        // Spawn multiple tasks that will queue and execute one-by-one
         for _ in 0..3 {
             let exec_clone = execution_count.clone();
             handle
@@ -1617,7 +1531,6 @@ mod tests {
         blocking_barrier.wait().await;
         tokio::time::sleep(Duration::from_millis(250)).await;
 
-        // All queued tasks should have executed sequentially due to semaphore limit
         assert_eq!(execution_count.load(Ordering::SeqCst), 3);
 
         runtime.shutdown().await.unwrap();
@@ -1625,8 +1538,6 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_concurrent_task_completion_race_conditions() {
-        // Test that concurrent tasks complete correctly without race conditions
-        // in metrics tracking (inc_running/dec_running).
         let config = BackgroundTaskConfig {
             max_queue_size: 100,
             max_concurrent_tasks: 8,
@@ -1645,7 +1556,6 @@ mod tests {
                 .spawn(move || {
                     let c = counter.clone();
                     async move {
-                        // Variable sleep to create race conditions in completion order
                         let sleep_ms = (i as u64 * 11) % 100;
                         tokio::time::sleep(Duration::from_millis(sleep_ms)).await;
                         c.fetch_add(1, Ordering::SeqCst);
@@ -1665,8 +1575,6 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_failure_metric_tracking_under_concurrent_errors() {
-        // Test that failed task metrics are tracked correctly even under
-        // high concurrency with many failing tasks.
         let config = BackgroundTaskConfig {
             max_queue_size: 50,
             max_concurrent_tasks: 5,
@@ -1681,7 +1589,6 @@ mod tests {
 
         for i in 0..20 {
             if i % 3 == 0 {
-                // Failing task
                 let fail_clone = failure_count.clone();
                 handle
                     .spawn(move || {
@@ -1693,7 +1600,6 @@ mod tests {
                     })
                     .unwrap();
             } else {
-                // Successful task
                 let succ_clone = success_count.clone();
                 handle
                     .spawn(move || {
@@ -1713,14 +1619,12 @@ mod tests {
         let final_failure = failure_count.load(Ordering::SeqCst);
 
         assert_eq!(final_success + final_failure, 20);
-        assert_eq!(final_failure, 7); // ~1/3 of tasks should fail
+        assert_eq!(final_failure, 7);
         assert_eq!(final_success, 13);
     }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_handle_clone_isolation_concurrent_spawns() {
-        // Test that cloned handles spawn tasks independently without
-        // shared state issues or cross-contamination.
         let config = BackgroundTaskConfig {
             max_queue_size: 100,
             max_concurrent_tasks: 4,
@@ -1734,7 +1638,6 @@ mod tests {
 
         let mut join_handles = vec![];
 
-        // 5 concurrent workers each spawning tasks
         for worker_id in 0..5 {
             let h = handle.clone();
             let counter = completion_counters[worker_id].clone();
@@ -1745,7 +1648,6 @@ mod tests {
                     let _ = h.spawn(move || {
                         let cnt = c.clone();
                         async move {
-                            // Interleave execution
                             let delay = (worker_id as u64 * 10 + task_id as u64) % 50;
                             tokio::time::sleep(Duration::from_millis(delay)).await;
                             cnt.fetch_add(1, Ordering::SeqCst);
@@ -1763,7 +1665,6 @@ mod tests {
 
         runtime.shutdown().await.unwrap();
 
-        // Each worker's counter should have 10 completions
         for (i, counter) in completion_counters.iter().enumerate() {
             assert_eq!(
                 counter.load(Ordering::SeqCst),
@@ -1776,7 +1677,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_background_job_error_with_string_slice() {
-        // Additional coverage for string conversion edge cases
         let errors = vec![
             BackgroundJobError::from("simple error"),
             BackgroundJobError::from(String::from("owned string error")),
@@ -1789,19 +1689,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_spawn_error_display_formatting() {
-        // Test Display implementation for error reporting
         let error = BackgroundSpawnError::QueueFull;
         let formatted = format!("{}", error);
         assert_eq!(formatted, "background task queue is full");
 
-        // Test in Result context
         let result: Result<(), BackgroundSpawnError> = Err(error);
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_background_metrics_concurrent_increments() {
-        // Test that metrics increment correctly under concurrent access
         let metrics = Arc::new(BackgroundMetrics::default());
         let mut handles = vec![];
 
@@ -1823,7 +1720,6 @@ mod tests {
             let _ = h.await;
         }
 
-        // All increments should have been applied
         assert_eq!(metrics.queued.load(Ordering::Relaxed), 0);
         assert_eq!(metrics.running.load(Ordering::Relaxed), 0);
         assert_eq!(metrics.failed.load(Ordering::Relaxed), 100);
@@ -1831,8 +1727,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_drain_phase_execution_with_lingering_senders() {
-        // Test that drain phase (phase 2) correctly processes remaining queued tasks
-        // when sender handles are held by user code during shutdown.
         let config = BackgroundTaskConfig {
             max_queue_size: 20,
             max_concurrent_tasks: 2,
@@ -1844,7 +1738,6 @@ mod tests {
 
         let executed = Arc::new(AtomicU64::new(0));
 
-        // Spawn tasks quickly
         for _ in 0..5 {
             let e = executed.clone();
             handle
@@ -1859,18 +1752,14 @@ mod tests {
                 .unwrap();
         }
 
-        // Don't drop handle yet - keep it alive during shutdown
         let result = runtime.shutdown().await;
         assert!(result.is_ok());
 
-        // All tasks should have executed during drain
         assert_eq!(executed.load(Ordering::SeqCst), 5);
     }
 
     #[tokio::test]
     async fn test_concurrent_queue_status_transitions() {
-        // Test queue transitions from full -> processing -> draining -> empty
-        // under concurrent spawning.
         let config = BackgroundTaskConfig {
             max_queue_size: 10,
             max_concurrent_tasks: 2,
@@ -1882,7 +1771,6 @@ mod tests {
 
         let state_transitions = Arc::new(tokio::sync::Mutex::new(Vec::new()));
 
-        // Phase 1: Fill queue
         for i in 0..10 {
             let st = state_transitions.clone();
             handle
@@ -1903,7 +1791,6 @@ mod tests {
                 .unwrap();
         }
 
-        // Give tasks time to execute
         tokio::time::sleep(Duration::from_millis(300)).await;
 
         runtime.shutdown().await.unwrap();
@@ -1919,8 +1806,6 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_semaphore_no_starvation_with_uneven_task_duration() {
-        // Test that semaphore-based concurrency limiting doesn't starve tasks
-        // with different durations.
         let config = BackgroundTaskConfig {
             max_queue_size: 100,
             max_concurrent_tasks: 2,
@@ -1933,7 +1818,6 @@ mod tests {
         let fast_executed = Arc::new(AtomicU64::new(0));
         let slow_executed = Arc::new(AtomicU64::new(0));
 
-        // Spawn 5 slow tasks
         for _ in 0..5 {
             let s = slow_executed.clone();
             handle
@@ -1950,7 +1834,6 @@ mod tests {
 
         tokio::time::sleep(Duration::from_millis(10)).await;
 
-        // Spawn 5 fast tasks while slow tasks are running
         for _ in 0..5 {
             let f = fast_executed.clone();
             handle

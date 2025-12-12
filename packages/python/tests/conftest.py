@@ -37,7 +37,6 @@ class PytestConfig(Protocol):
 
 def pytest_configure(config: object) -> None:
     """Configure pytest with custom markers."""
-    # Type narrowing: config is a pytest.Config-like object
     addinivalue_line: object = getattr(config, "addinivalue_line", None)
     if callable(addinivalue_line):
         addinivalue_line("markers", "fixture_category(category): Mark test with fixture category")
@@ -55,8 +54,6 @@ def discover_fixture_files(category: str, exclude_schema: bool = True) -> list[P
     Returns:
         Sorted list of fixture file paths
     """
-    # Resolve from conftest location: tests/conftest.py -> packages/python/tests/
-    # Then up to packages/python -> packages -> workspace root
     conftest_dir = Path(__file__).parent
     testing_data_root = conftest_dir.parent.parent.parent / "testing_data"
     category_dir = testing_data_root / category
@@ -370,8 +367,6 @@ def fixture_validator(testing_data_root: Path) -> FixtureValidator:
             return True, []
 
         except Exception:
-            # If validation fails for any reason, still return True
-            # This allows tests to run even if schema validation has issues
             return True, []
 
     return validate_fixture

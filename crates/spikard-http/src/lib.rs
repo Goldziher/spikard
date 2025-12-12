@@ -368,24 +368,16 @@ impl ServerConfigBuilder {
 
         let key_str = key.into();
 
-        // Get or create DI container (mutable)
         let container = if let Some(container) = self.config.di_container.take() {
-            // Try to get mutable access - this will only work if we're the only owner
-            Arc::try_unwrap(container).unwrap_or_else(|_arc| {
-                // If we can't unwrap, we lose existing dependencies
-                // This is a fallback that shouldn't happen in normal builder usage (linear chaining)
-                DependencyContainer::new()
-            })
+            Arc::try_unwrap(container).unwrap_or_else(|_arc| DependencyContainer::new())
         } else {
             DependencyContainer::new()
         };
 
         let mut container = container;
 
-        // Create ValueDependency
         let dep = ValueDependency::new(key_str.clone(), value);
 
-        // Register (panic on error for builder pattern)
         container
             .register(key_str, Arc::new(dep))
             .expect("Failed to register dependency");
@@ -441,7 +433,6 @@ impl ServerConfigBuilder {
 
         let key_str = key.into();
 
-        // Get or create DI container (mutable)
         let container = if let Some(container) = self.config.di_container.take() {
             Arc::try_unwrap(container).unwrap_or_else(|_| DependencyContainer::new())
         } else {
@@ -450,10 +441,8 @@ impl ServerConfigBuilder {
 
         let mut container = container;
 
-        // Clone factory for the closure
         let factory_clone = factory.clone();
 
-        // Create FactoryDependency using builder
         let dep = FactoryDependency::builder(key_str.clone())
             .factory(
                 move |_req: &axum::http::Request<()>,
@@ -509,7 +498,6 @@ impl ServerConfigBuilder {
 
         let key = dependency.key().to_string();
 
-        // Get or create DI container (mutable)
         let container = if let Some(container) = self.config.di_container.take() {
             Arc::try_unwrap(container).unwrap_or_else(|_| DependencyContainer::new())
         } else {

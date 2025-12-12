@@ -31,7 +31,6 @@ async def test_user_create_success_1():
         assert data["jsonrpc"] == "2.0"
         assert "result" in data
         assert data["id"] == 1
-        # Result should match expected structure
         result = data["result"]
         assert isinstance(result, dict)
 
@@ -126,7 +125,6 @@ async def test_user_delete_success_1():
         assert data["jsonrpc"] == "2.0"
         assert "result" in data
         assert data["id"] == 1
-        # Result should match expected structure
         result = data["result"]
         assert isinstance(result, dict)
 
@@ -196,7 +194,6 @@ async def test_user_getbyid_success_1():
         assert data["jsonrpc"] == "2.0"
         assert "result" in data
         assert data["id"] == 1
-        # Result should match expected structure
         result = data["result"]
         assert isinstance(result, dict)
 
@@ -220,7 +217,6 @@ async def test_user_getbyid_success_2():
         assert data["jsonrpc"] == "2.0"
         assert "result" in data
         assert data["id"] == 1
-        # Result should match expected structure
         result = data["result"]
         assert isinstance(result, dict)
 
@@ -292,7 +288,6 @@ async def test_user_getbyid_batch_request():
         ]
         response = await client.post("/rpc", json=batch_request)
         assert response.status_code == 200
-        # Batch requests return array of responses
         responses = response.json()
         assert isinstance(responses, list)
         assert len(responses) >= 1
@@ -317,7 +312,6 @@ async def test_user_list_success_1():
         assert data["jsonrpc"] == "2.0"
         assert "result" in data
         assert data["id"] == 1
-        # Result should match expected structure
         result = data["result"]
         assert isinstance(result, dict)
 
@@ -341,7 +335,6 @@ async def test_user_list_success_2():
         assert data["jsonrpc"] == "2.0"
         assert "result" in data
         assert data["id"] == 1
-        # Result should match expected structure
         result = data["result"]
         assert isinstance(result, dict)
 
@@ -413,7 +406,6 @@ async def test_user_list_batch_request():
         ]
         response = await client.post("/rpc", json=batch_request)
         assert response.status_code == 200
-        # Batch requests return array of responses
         responses = response.json()
         assert isinstance(responses, list)
         assert len(responses) >= 1
@@ -438,7 +430,6 @@ async def test_user_update_success_1():
         assert data["jsonrpc"] == "2.0"
         assert "result" in data
         assert data["id"] == 1
-        # Result should match expected structure
         result = data["result"]
         assert isinstance(result, dict)
 
@@ -465,7 +456,6 @@ async def test_user_update_success_2():
         assert data["jsonrpc"] == "2.0"
         assert "result" in data
         assert data["id"] == 1
-        # Result should match expected structure
         result = data["result"]
         assert isinstance(result, dict)
 
@@ -540,7 +530,6 @@ async def test_user_update_batch_request():
         ]
         response = await client.post("/rpc", json=batch_request)
         assert response.status_code == 200
-        # Batch requests return array of responses
         responses = response.json()
         assert isinstance(responses, list)
         assert len(responses) >= 1

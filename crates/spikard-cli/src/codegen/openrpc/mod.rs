@@ -47,7 +47,6 @@ mod tests {
 
     #[test]
     fn test_openrpc_module_exports() {
-        // Verify module exports are available
         let _: fn(&OpenRpcSpec) -> Result<String> = generate_python_handler_app;
         let _: fn(&OpenRpcSpec) -> Result<String> = generate_typescript_handler_app;
         let _: fn(&OpenRpcSpec) -> Result<String> = generate_ruby_handler_app;

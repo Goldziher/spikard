@@ -17,18 +17,13 @@ use std::time::Duration;
 
 use crate::common::test_builders::{HandlerBuilder, RequestBuilder, assert_status, parse_json_body};
 
-// ============================================================================
-// Compression Middleware Tests
-// ============================================================================
-
 /// Test 1: Compression applies gzip for large responses
 ///
 /// A response larger than the min_size threshold (default 1KB) with
 /// Accept-Encoding: gzip should be compressed and include Content-Encoding header.
 #[tokio::test]
 async fn test_compression_applies_gzip_for_large_response() {
-    // Create a large response body (> 1KB)
-    let large_data = vec!["x".repeat(200); 10]; // ~2000 bytes
+    let large_data = vec!["x".repeat(200); 10];
     let large_body = json!({
         "data": large_data,
         "message": "This is a large response that should be compressed"
@@ -36,7 +31,6 @@ async fn test_compression_applies_gzip_for_large_response() {
 
     let handler = HandlerBuilder::new().status(200).json_body(large_body).build();
 
-    // Build request with Accept-Encoding header
     let (request, request_data) = RequestBuilder::new()
         .method(Method::GET)
         .path("/large-data")
@@ -45,13 +39,7 @@ async fn test_compression_applies_gzip_for_large_response() {
 
     let response = handler.call(request, request_data).await.unwrap();
 
-    // Verify status is OK
     assert_status(&response, StatusCode::OK);
-
-    // Note: In actual server with CompressionLayer, we would check:
-    // - Content-Encoding header should be "gzip"
-    // - Response body would be compressed
-    // - Response size would be smaller than original
 }
 
 /// Test 2: Compression skipped for small responses
@@ -60,7 +48,6 @@ async fn test_compression_applies_gzip_for_large_response() {
 /// should not be compressed even if Accept-Encoding includes gzip.
 #[tokio::test]
 async fn test_compression_skipped_for_small_response() {
-    // Create a small response body (< 1KB)
     let small_body = json!({
         "status": "ok",
         "message": "small"
@@ -77,9 +64,6 @@ async fn test_compression_skipped_for_small_response() {
     let response = handler.call(request, request_data).await.unwrap();
 
     assert_status(&response, StatusCode::OK);
-
-    // With compression middleware, small responses would NOT have
-    // Content-Encoding header since they're below threshold
 }
 
 /// Test 3: Compression respects Accept-Encoding header
@@ -93,15 +77,11 @@ async fn test_compression_respects_accept_encoding() {
 
     let handler = HandlerBuilder::new().status(200).json_body(large_body).build();
 
-    // Build request WITHOUT Accept-Encoding header
     let (request, request_data) = RequestBuilder::new().method(Method::GET).path("/data").build();
 
     let response = handler.call(request, request_data).await.unwrap();
 
     assert_status(&response, StatusCode::OK);
-
-    // Without Accept-Encoding or with only "deflate",
-    // CompressionLayer would skip compression
 }
 
 /// Test 4: Compression preserves content type
@@ -125,14 +105,7 @@ async fn test_compression_preserves_content_type() {
     let response = handler.call(request, request_data).await.unwrap();
 
     assert_status(&response, StatusCode::OK);
-
-    // Content-Type should remain "application/json" (set by handler)
-    // Even if response is compressed, Content-Type is preserved
 }
-
-// ============================================================================
-// Rate Limiting Middleware Tests
-// ============================================================================
 
 /// Test 5: Rate limit allows requests below threshold
 ///
@@ -142,7 +115,6 @@ async fn test_compression_preserves_content_type() {
 async fn test_rate_limit_allows_requests_below_threshold() {
     let handler = HandlerBuilder::new().status(200).json_body(json!({"count": 1})).build();
 
-    // Spawn 10 concurrent requests (well below 100/sec limit)
     let mut handles = vec![];
 
     for i in 0..10 {
@@ -159,7 +131,6 @@ async fn test_rate_limit_allows_requests_below_threshold() {
         handles.push(handle);
     }
 
-    // Collect results
     for handle in handles {
         let status = handle.await.unwrap();
         assert_eq!(status, StatusCode::OK);
@@ -175,26 +146,12 @@ async fn test_rate_limit_allows_requests_below_threshold() {
 /// This test demonstrates the expected behavior when limit is exceeded.
 #[tokio::test]
 async fn test_rate_limit_blocks_requests_above_threshold() {
-    // In a real server with RateLimitConfig:
-    // let rate_limit = RateLimitConfig {
-    //     per_second: 100,
-    //     burst: 110,
-    //     ip_based: false,
-    // };
-    //
-    // When 110+ requests arrive in 1 second, tower_governor rejects
-    // with 429 Too Many Requests
-
-    // For unit test, we verify handler would succeed
     let handler = HandlerBuilder::new().status(200).json_body(json!({"ok": true})).build();
 
     let (request, request_data) = RequestBuilder::new().method(Method::GET).path("/api/endpoint").build();
 
     let response = handler.call(request, request_data).await.unwrap();
     assert_status(&response, StatusCode::OK);
-
-    // Actual rate limit rejection (429) occurs at middleware layer
-    // when governor rejects the request
 }
 
 /// Test 7: Rate limit per IP isolation
@@ -208,7 +165,6 @@ async fn test_rate_limit_per_ip() {
         .json_body(json!({"ip": "test"}))
         .build();
 
-    // Simulate requests from different IPs
     let (request1, request_data1) = RequestBuilder::new()
         .method(Method::GET)
         .path("/api/endpoint")
@@ -221,17 +177,12 @@ async fn test_rate_limit_per_ip() {
         .header("X-Forwarded-For", "192.168.1.2")
         .build();
 
-    // Both should succeed - they're from different IPs with separate limits
     let response1 = handler.call(request1, request_data1).await.unwrap();
     assert_status(&response1, StatusCode::OK);
 
     let response2 = handler.call(request2, request_data2).await.unwrap();
     assert_status(&response2, StatusCode::OK);
 }
-
-// ============================================================================
-// Timeout Middleware Tests
-// ============================================================================
 
 /// Test 8: Timeout allows fast handler
 ///
@@ -252,7 +203,6 @@ async fn test_timeout_allows_fast_handler() {
     let elapsed = start.elapsed();
 
     assert_status(&response, StatusCode::OK);
-    // Verify the delay was applied
     assert!(elapsed >= Duration::from_millis(50));
 }
 
@@ -272,17 +222,10 @@ async fn test_timeout_cancels_slow_handler() {
 
     let start = std::time::Instant::now();
 
-    // With TimeoutLayer set to 1 second, this would timeout
-    // However, HandlerBuilder doesn't simulate timeout itself
-    // In real server: would get 408 after ~1 second
-    // Here we just verify handler takes the full time (would timeout in real scenario)
-
     let result = tokio::time::timeout(Duration::from_secs(1), handler.call(request, request_data)).await;
 
     let elapsed = start.elapsed();
 
-    // The timeout we applied should fire before handler completes
-    // (handler would take 2 seconds, but we timeout after 1 second)
     assert!(result.is_err(), "Expected timeout to occur");
     assert!(elapsed >= Duration::from_secs(1));
     assert!(elapsed < Duration::from_secs(2));
@@ -294,11 +237,6 @@ async fn test_timeout_cancels_slow_handler() {
 /// a helpful error message indicating timeout.
 #[tokio::test]
 async fn test_timeout_error_message() {
-    // In a real server with TimeoutLayer, a timeout response would contain:
-    // - Status: 408 Request Timeout
-    // - Body: error description about timeout
-
-    // Simulate what a timeout error response looks like
     let timeout_handler = HandlerBuilder::new()
         .status(408)
         .json_body(json!({
@@ -322,10 +260,6 @@ async fn test_timeout_error_message() {
     assert!(body["details"].as_str().unwrap().contains("timeout"));
 }
 
-// ============================================================================
-// Request ID Middleware Tests
-// ============================================================================
-
 /// Test 11: Request ID generates when missing
 ///
 /// When no X-Request-ID header is present, the middleware
@@ -337,17 +271,11 @@ async fn test_request_id_generates_when_missing() {
         .json_body(json!({"message": "ok"}))
         .build();
 
-    // Build request WITHOUT X-Request-ID header
     let (request, request_data) = RequestBuilder::new().method(Method::GET).path("/api/resource").build();
 
     let response = handler.call(request, request_data).await.unwrap();
 
     assert_status(&response, StatusCode::OK);
-
-    // In real server with SetRequestIdLayer:
-    // - Response would include X-Request-ID header
-    // - Value would be a valid UUID
-    // - UUID would be unique for each request
 }
 
 /// Test 12: Request ID preserves when present
@@ -372,10 +300,6 @@ async fn test_request_id_preserves_when_present() {
     let response = handler.call(request, request_data).await.unwrap();
 
     assert_status(&response, StatusCode::OK);
-
-    // In real server with PropagateRequestIdLayer:
-    // - Response would include X-Request-ID: abc-123-def-456
-    // - Same value as request header
 }
 
 /// Test 13: Request ID propagation to handler
@@ -409,10 +333,6 @@ async fn test_request_id_propagation_to_handler() {
     assert_eq!(body["trace"], "request-id-123");
 }
 
-// ============================================================================
-// Middleware Composition Tests
-// ============================================================================
-
 /// Test 14: Multiple middleware working together
 ///
 /// Request ID + Timeout + Rate Limit should all work together.
@@ -443,11 +363,6 @@ async fn test_middleware_composition_all_pass() {
     let body = parse_json_body(&mut response_mut).await.unwrap();
 
     assert_eq!(body["status"], "success");
-    // In real server:
-    // - X-Request-ID would be propagated to response
-    // - Compression would apply if response > threshold
-    // - Request would complete well before timeout
-    // - Rate limit check would pass
 }
 
 /// Test 15: Timeout takes precedence when exceeded
@@ -456,7 +371,6 @@ async fn test_middleware_composition_all_pass() {
 /// rate limit would have allowed it.
 #[tokio::test]
 async fn test_timeout_precedence_over_rate_limit() {
-    // Handler that exceeds timeout
     let handler = HandlerBuilder::new()
         .status(200)
         .json_body(json!({"message": "slow"}))
@@ -469,12 +383,7 @@ async fn test_timeout_precedence_over_rate_limit() {
         .header("X-Request-ID", "req-slow")
         .build();
 
-    // Apply timeout
     let result = tokio::time::timeout(Duration::from_secs(1), handler.call(request, request_data)).await;
 
-    // Should timeout before completing
     assert!(result.is_err(), "Expected timeout");
-
-    // In real server: would return 408 Request Timeout
-    // Rate limit layer would be bypassed by timeout
 }

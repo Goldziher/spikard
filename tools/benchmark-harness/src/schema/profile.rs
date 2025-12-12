@@ -64,9 +64,9 @@ pub struct CategorySummary {
 /// Comparison with Rust baseline
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BaselineComparison {
-    pub baseline_framework: String, // "spikard-rust"
+    pub baseline_framework: String,
     pub workload_comparisons: Vec<WorkloadComparison>,
-    pub overall_ratio: f64, // Baseline RPS / This RPS
+    pub overall_ratio: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,5 +74,5 @@ pub struct WorkloadComparison {
     pub workload_name: String,
     pub baseline_requests_per_sec: f64,
     pub this_requests_per_sec: f64,
-    pub ratio: f64, // Baseline / This
+    pub ratio: f64,
 }

@@ -298,9 +298,7 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
         request_call
     ));
 
-    // Check for DI-specific test patterns
     if let Some(di_config) = DependencyConfig::from_fixture(fixture).expect("invalid DI config") {
-        // Handle singleton caching tests - requires multiple requests
         if requires_multi_request_test(&di_config) {
             example.push_str("\n");
             example.push_str("    # Second request to verify singleton caching\n");
@@ -326,7 +324,6 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
             return example;
         }
 
-        // Handle cleanup tests - poll cleanup state endpoint
         if has_cleanup(&di_config) {
             example.push_str("    expect(response.status_code).to eq(200)\n");
             example.push_str("\n");

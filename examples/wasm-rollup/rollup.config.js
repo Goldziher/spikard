@@ -8,7 +8,6 @@ const isProduction = process.env.NODE_ENV === "production";
  * @type {import('rollup').RollupOptions[]}
  */
 export default [
-	// ESM bundle for browsers and bundlers
 	{
 		input: "src/index.ts",
 		output: {
@@ -40,7 +39,6 @@ export default [
 		external: [],
 	},
 
-	// CommonJS bundle for Node.js
 	{
 		input: "src/index.ts",
 		output: {

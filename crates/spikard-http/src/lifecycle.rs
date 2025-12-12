@@ -426,14 +426,6 @@ mod tests {
         assert!(matches!(result, HookResult::Continue(_)));
     }
 
-    // ============================================================================
-    // COMPREHENSIVE LIFECYCLE HOOKS TESTS
-    // ============================================================================
-
-    // ============================================================================
-    // 1. HOOK CHAINING TESTS
-    // ============================================================================
-
     #[tokio::test]
     async fn test_hook_chaining_modifies_request_sequentially() {
         let hooks = LifecycleHooks::builder()
@@ -548,7 +540,6 @@ mod tests {
                 Ok(HookResult::Continue(req))
             }))
             .on_request(request_hook("add_session_id", |mut req| async move {
-                // This hook depends on the previous hook having set X-User-ID
                 if let Some(user_id) = req.headers().get("X-User-ID") {
                     if user_id == "123" {
                         req.headers_mut()
@@ -570,10 +561,6 @@ mod tests {
             HookResult::ShortCircuit(_) => panic!("Expected Continue"),
         }
     }
-
-    // ============================================================================
-    // 2. SHORT-CIRCUIT BEHAVIOR TESTS
-    // ============================================================================
 
     #[tokio::test]
     async fn test_pre_validation_short_circuit_stops_subsequent_hooks() {
@@ -691,10 +678,6 @@ mod tests {
         }
     }
 
-    // ============================================================================
-    // 3. ERROR HANDLING AND TRANSFORMATION TESTS
-    // ============================================================================
-
     #[tokio::test]
     async fn test_hook_error_propagates_through_chain() {
         let hooks = LifecycleHooks::builder()
@@ -737,12 +720,9 @@ mod tests {
     async fn test_on_error_hook_transforms_response() {
         let hooks = LifecycleHooks::builder()
             .on_error(response_hook("transform_error", |mut resp| async move {
-                // Add error transformation headers
                 resp.headers_mut()
                     .insert("X-Error-Handled", axum::http::HeaderValue::from_static("true"));
 
-                // Optionally change status (though on_error response processing treats
-                // ShortCircuit same as Continue, so status change applies)
                 let _status = resp.status();
                 Ok(HookResult::Continue(resp))
             }))
@@ -802,10 +782,6 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "Error in error hook");
     }
-
-    // ============================================================================
-    // 4. REQUEST/RESPONSE MODIFICATION TESTS
-    // ============================================================================
 
     #[tokio::test]
     async fn test_on_request_adds_multiple_headers() {
@@ -889,10 +865,6 @@ mod tests {
             HookResult::ShortCircuit(_) => panic!("Expected Continue"),
         }
     }
-
-    // ============================================================================
-    // 5. HOOK REGISTRATION AND COMPOSITION TESTS
-    // ============================================================================
 
     #[tokio::test]
     async fn test_register_multiple_hooks_different_types() {
@@ -1003,10 +975,6 @@ mod tests {
         }
     }
 
-    // ============================================================================
-    // 6. EDGE CASE AND INTEGRATION TESTS
-    // ============================================================================
-
     #[tokio::test]
     async fn test_first_hook_short_circuits_second_continues() {
         let hooks = LifecycleHooks::builder()
@@ -1035,7 +1003,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_all_hook_phases_in_sequence() {
-        // Simulate logging by using different status codes
         let hooks = LifecycleHooks::builder()
             .on_request(request_hook("on_request", |req| async move {
                 Ok(HookResult::Continue(req))
@@ -1054,7 +1021,6 @@ mod tests {
             }))
             .build();
 
-        // Execute all phases
         let req = Request::builder().body(Body::empty()).unwrap();
         let _ = hooks.execute_on_request(req).await;
 
@@ -1072,15 +1038,12 @@ mod tests {
             .body(Body::empty())
             .unwrap();
         let _ = hooks.execute_on_error(resp).await;
-
-        // All phases executed without error
     }
 
     #[tokio::test]
     async fn test_hook_with_complex_header_manipulation() {
         let hooks = LifecycleHooks::builder()
             .on_request(request_hook("parse_auth", |mut req| async move {
-                // Simulate parsing Authorization header
                 let has_auth = req.headers().contains_key("Authorization");
                 let auth_status = if has_auth { "authenticated" } else { "anonymous" };
                 req.headers_mut()
@@ -1101,7 +1064,6 @@ mod tests {
             }))
             .build();
 
-        // Test with authenticated request
         let auth_req = Request::builder()
             .header("Authorization", "Bearer token123")
             .body(Body::empty())
@@ -1110,7 +1072,6 @@ mod tests {
         let result = hooks.execute_on_request(auth_req).await.unwrap();
         assert!(matches!(result, HookResult::Continue(_)));
 
-        // Test with anonymous request
         let anon_req = Request::builder().body(Body::empty()).unwrap();
         let on_req_result = hooks.execute_on_request(anon_req).await.unwrap();
 
@@ -1118,7 +1079,6 @@ mod tests {
             HookResult::Continue(req) => {
                 assert_eq!(req.headers().get("X-Auth-Status").unwrap(), "anonymous");
 
-                // Now try validation
                 let val_result = hooks.execute_pre_validation(req).await.unwrap();
                 assert!(matches!(val_result, HookResult::ShortCircuit(_)));
             }
@@ -1131,7 +1091,6 @@ mod tests {
         let hooks = LifecycleHooks::new();
         assert!(hooks.is_empty());
 
-        // Empty hooks should pass through instantly
         let req = Request::builder().body(Body::empty()).unwrap();
         let result = hooks.execute_on_request(req).await.unwrap();
         assert!(matches!(result, HookResult::Continue(_)));
@@ -1147,12 +1106,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_response_hook_short_circuit_treated_as_continue() {
-        // Note: Response hooks treat ShortCircuit same as Continue (both update response)
         let hooks = LifecycleHooks::builder()
             .on_response(response_hook("hook_with_short_circuit", |mut resp| async move {
                 resp.headers_mut()
                     .insert("X-Processed", axum::http::HeaderValue::from_static("yes"));
-                // Even though we return ShortCircuit, response processing treats it same as Continue
                 Ok(HookResult::ShortCircuit(resp))
             }))
             .on_response(response_hook("second_hook", |mut resp| async move {
@@ -1166,7 +1123,6 @@ mod tests {
 
         let result = hooks.execute_on_response(resp).await.unwrap();
 
-        // Both hooks should have executed since response hooks don't truly short-circuit
         assert_eq!(result.headers().get("X-Processed").unwrap(), "yes");
         assert_eq!(result.headers().get("X-Second").unwrap(), "yes");
     }
@@ -1200,7 +1156,6 @@ mod tests {
             }))
             .build();
 
-        // Test missing auth
         let req = Request::builder().body(Body::empty()).unwrap();
         let result = hooks.execute_pre_validation(req).await.unwrap();
 
@@ -1211,7 +1166,6 @@ mod tests {
             HookResult::Continue(_) => panic!("Expected ShortCircuit for missing auth"),
         }
 
-        // Test with auth but missing content type on POST
         let req = Request::builder()
             .method(axum::http::Method::POST)
             .header("Authorization", "Bearer token")
@@ -1226,7 +1180,6 @@ mod tests {
             HookResult::Continue(_) => panic!("Expected ShortCircuit for missing content type"),
         }
 
-        // Test with auth and content type on POST
         let req = Request::builder()
             .method(axum::http::Method::POST)
             .header("Authorization", "Bearer token")

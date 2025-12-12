@@ -12,10 +12,6 @@ import { Hono } from "hono";
 
 const app = new Hono();
 
-// ============================================================================
-// JSON Body Workloads (NO VALIDATION)
-// ============================================================================
-
 app.post("/json/small", async (c) => {
 	const body = await c.req.json();
 	return c.json(body);
@@ -36,10 +32,6 @@ app.post("/json/very-large", async (c) => {
 	return c.json(body);
 });
 
-// ============================================================================
-// Multipart Form Workloads
-// ============================================================================
-
 app.post("/multipart/small", (c) => {
 	return c.json({ files_received: 1, total_bytes: 1024 });
 });
@@ -52,10 +44,6 @@ app.post("/multipart/large", (c) => {
 	return c.json({ files_received: 5, total_bytes: 102400 });
 });
 
-// ============================================================================
-// URL Encoded Form Workloads
-// ============================================================================
-
 app.post("/urlencoded/simple", async (c) => {
 	const body = await c.req.parseBody();
 	return c.json(body || {});
@@ -65,10 +53,6 @@ app.post("/urlencoded/complex", async (c) => {
 	const body = await c.req.parseBody();
 	return c.json(body || {});
 });
-
-// ============================================================================
-// Path Parameter Workloads
-// ============================================================================
 
 app.get("/path/simple/:id", (c) => {
 	const id = c.req.param("id");
@@ -105,10 +89,6 @@ app.get("/path/date/:date", (c) => {
 	return c.json({ date });
 });
 
-// ============================================================================
-// Query Parameter Workloads
-// ============================================================================
-
 app.get("/query/few", (c) => {
 	const query = c.req.query();
 	return c.json(query || {});
@@ -124,10 +104,6 @@ app.get("/query/many", (c) => {
 	return c.json(query || {});
 });
 
-// ============================================================================
-// Health Check
-// ============================================================================
-
 app.get("/health", (c) => {
 	return c.json({ status: "ok" });
 });
@@ -135,9 +111,5 @@ app.get("/health", (c) => {
 app.get("/", (c) => {
 	return c.json({ status: "ok" });
 });
-
-// ============================================================================
-// Server Startup
-// ============================================================================
 
 const port = process.argv[2] ? parseInt(process.argv[2], 10) : process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;

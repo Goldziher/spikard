@@ -425,7 +425,6 @@ where
 mod tests {
     use super::*;
 
-    // Test HookResult enum variants
     #[test]
     fn test_hook_result_continue_variant() {
         let result: HookResult<i32, String> = HookResult::Continue(42);
@@ -449,7 +448,6 @@ mod tests {
         assert!(debug_str.contains("ShortCircuit"));
     }
 
-    // Test LifecycleHooks Default and creation
     #[test]
     fn test_lifecycle_hooks_default() {
         let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
@@ -484,7 +482,6 @@ mod tests {
         assert!(hooks2.is_empty());
     }
 
-    // Test builder pattern
     #[test]
     fn test_lifecycle_hooks_builder_new() {
         let builder: LifecycleHooksBuilder<String, String> = LifecycleHooksBuilder::new();
@@ -505,12 +502,10 @@ mod tests {
         assert!(hooks.is_empty());
     }
 
-    // Test add methods
     #[test]
     fn test_add_on_request_hook() {
         let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
 
-        // Create a simple hook that continues with modified request
         #[cfg(not(target_arch = "wasm32"))]
         let hook = Arc::new(TestRequestHook);
         #[cfg(target_arch = "wasm32")]
@@ -520,7 +515,6 @@ mod tests {
         assert!(!hooks.is_empty());
     }
 
-    // Simple test hook for request processing
     #[cfg(not(target_arch = "wasm32"))]
     struct TestRequestHook;
 
@@ -583,7 +577,6 @@ mod tests {
         assert!(!hooks.is_empty());
     }
 
-    // Test response hooks
     #[cfg(not(target_arch = "wasm32"))]
     struct TestResponseHook;
 
@@ -646,10 +639,8 @@ mod tests {
         assert!(!hooks.is_empty());
     }
 
-    // Test empty hook execution
     #[test]
     fn test_execute_on_request_no_hooks() {
-        // Just verify the hooks are empty when created
         let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
         assert!(hooks.is_empty());
     }
@@ -678,7 +669,6 @@ mod tests {
         assert!(hooks.is_empty());
     }
 
-    // Test short-circuit behavior
     #[cfg(not(target_arch = "wasm32"))]
     struct TestShortCircuitHook;
 
@@ -754,7 +744,6 @@ mod tests {
         assert!(!hooks.is_empty());
     }
 
-    // Test response hook short-circuit behavior (treated same as continue)
     #[cfg(not(target_arch = "wasm32"))]
     struct TestResponseShortCircuitHook;
 
@@ -817,7 +806,6 @@ mod tests {
         assert!(!hooks.is_empty());
     }
 
-    // Test multiple hooks in sequence
     #[test]
     fn test_multiple_on_request_hooks_in_sequence() {
         let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
@@ -930,7 +918,6 @@ mod tests {
         }
     }
 
-    // Test builder chaining
     #[test]
     fn test_builder_chain_multiple_hooks() {
         #[cfg(not(target_arch = "wasm32"))]
@@ -954,7 +941,6 @@ mod tests {
         assert!(!hooks.is_empty());
     }
 
-    // Test hook error propagation
     #[cfg(not(target_arch = "wasm32"))]
     struct TestErrorHook;
 
@@ -1056,7 +1042,6 @@ mod tests {
         assert!(!hooks.is_empty());
     }
 
-    // Test debug format with hooks
     #[test]
     fn test_debug_format_with_hooks() {
         let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
@@ -1071,7 +1056,6 @@ mod tests {
         assert!(debug_str.contains("1"));
     }
 
-    // Test that request hooks cannot be called with response
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn test_request_hook_called_with_response_returns_error() {
@@ -1079,7 +1063,6 @@ mod tests {
         assert_eq!(hook.name(), "test_request_hook");
     }
 
-    // Test that response hooks cannot be called with request
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn test_response_hook_called_with_request_returns_error() {
@@ -1087,7 +1070,6 @@ mod tests {
         assert_eq!(hook.name(), "test_response_hook");
     }
 
-    // Test hook name accessor
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn test_request_hook_name() {
@@ -1102,7 +1084,6 @@ mod tests {
         assert_eq!(hook.name(), "test_response_hook");
     }
 
-    // Test first hook in chain short-circuits
     #[test]
     fn test_first_hook_short_circuits_subsequent_hooks_not_executed() {
         let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
@@ -1121,7 +1102,6 @@ mod tests {
         assert_eq!(hooks.on_request.len(), 2);
     }
 
-    // Additional accessor tests for hook counts
     #[test]
     fn test_hook_count_accessors() {
         let hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
@@ -1132,7 +1112,6 @@ mod tests {
         assert_eq!(hooks.on_error.len(), 0);
     }
 
-    // Test that clone preserves structure
     #[test]
     fn test_lifecycle_hooks_clone_with_hooks() {
         let mut hooks1: LifecycleHooks<String, String> = LifecycleHooks::new();
@@ -1147,7 +1126,6 @@ mod tests {
         assert!(!hooks2.is_empty());
     }
 
-    // Test LifecycleHooksBuilder as Default
     #[test]
     fn test_builder_as_default() {
         let builder = LifecycleHooksBuilder::<String, String>::default();
@@ -1155,7 +1133,6 @@ mod tests {
         assert!(hooks.is_empty());
     }
 
-    // Test is_empty checks all fields
     #[test]
     fn test_is_empty_comprehensive() {
         let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
@@ -1169,7 +1146,6 @@ mod tests {
         assert!(!hooks.is_empty());
     }
 
-    // Test struct field visibility
     #[test]
     fn test_hook_result_enum_value() {
         let val1: HookResult<String, String> = HookResult::Continue(String::from("test"));

@@ -10,11 +10,6 @@ use serde_json::Value;
 use spikard_http::WebSocketHandler;
 use tracing::{debug, error};
 
-// Registry for PHP WebSocket handler callables.
-//
-// We store Zval instead of ZendCallable because ZendCallable has a lifetime parameter
-// that prevents storage in static. We reconstruct ZendCallable when invoking.
-//
 // NOTE: thread_local because Zval is not Send/Sync (PHP is single-threaded).
 thread_local! {
     static PHP_WS_HANDLER_REGISTRY: std::cell::RefCell<Vec<PhpWebSocketHandlerCallables>> = const { std::cell::RefCell::new(Vec::new()) };
@@ -61,13 +56,10 @@ impl PhpWebSocketHandler {
     /// # Returns
     /// Result containing the handler or an error string if method extraction fails
     pub fn register(handler_obj: &Zval, handler_name: String) -> Result<Self, String> {
-        // Extract the three required methods from the PHP handler object
-        // extract_method now returns Zval directly instead of ZendCallable
         let on_connect = extract_method_as_zval(handler_obj, "onConnect")?;
         let on_message = extract_method_as_zval(handler_obj, "onMessage")?;
         let on_close = extract_method_as_zval(handler_obj, "onClose")?;
 
-        // Store Zvals in registry and get index
         let idx = PHP_WS_HANDLER_REGISTRY.with(|registry| {
             let mut registry = registry.borrow_mut();
             let idx = registry.len();
@@ -117,14 +109,11 @@ impl PhpWebSocketHandler {
                 _ => return Err(format!("Unknown WebSocket method: {}", method_name)),
             };
 
-            // Reconstruct ZendCallable from stored Zval
             let callable = ZendCallable::new(callable_zval)
                 .map_err(|e| format!("Failed to reconstruct PHP callable for {}: {:?}", method_name, e))?;
 
-            // Convert Zval refs for try_call - need to cast to &dyn IntoZvalDyn
             let arg_refs: Vec<&dyn IntoZvalDyn> = args.iter().map(|z| z as &dyn IntoZvalDyn).collect();
 
-            // Invoke the PHP callable
             let result = callable
                 .try_call(arg_refs)
                 .map_err(|e| format!("PHP {} failed: {:?}", method_name, e))?;
@@ -138,7 +127,6 @@ impl WebSocketHandler for PhpWebSocketHandler {
     async fn handle_message(&self, message: Value) -> Option<Value> {
         debug!("PHP WebSocket handler '{}': handle_message", self.handler_name);
 
-        // Convert JSON message to PHP Zval
         let message_str = match serde_json::to_string(&message) {
             Ok(s) => s,
             Err(e) => {
@@ -150,20 +138,16 @@ impl WebSocketHandler for PhpWebSocketHandler {
         let handler_index = self.handler_index;
         let handler_name = self.handler_name.clone();
 
-        // Execute PHP handler in blocking context
         let result = tokio::task::spawn_blocking(move || {
-            // Create argument: string $message
             let mut msg_zval = Zval::new();
             if msg_zval.set_string(&message_str, false).is_err() {
                 error!("Failed to create message Zval");
                 return None;
             }
 
-            // Call onMessage($message)
             match Self::invoke_php_method_sync(handler_index, "onMessage", vec![msg_zval]) {
                 Ok(_) => {
                     debug!("PHP WebSocket handler '{}': onMessage completed", handler_name);
-                    // PHP handlers return void, no response to send back
                     None
                 }
                 Err(e) => {
@@ -190,7 +174,6 @@ impl WebSocketHandler for PhpWebSocketHandler {
         let handler_name = self.handler_name.clone();
 
         let _ = tokio::task::spawn_blocking(move || {
-            // Call onConnect() with no arguments
             match Self::invoke_php_method_sync(handler_index, "onConnect", vec![]) {
                 Ok(_) => debug!("PHP WebSocket handler '{}': onConnect completed", handler_name),
                 Err(e) => error!("PHP WebSocket onConnect error: {}", e),
@@ -206,12 +189,10 @@ impl WebSocketHandler for PhpWebSocketHandler {
         let handler_name = self.handler_name.clone();
 
         let _ = tokio::task::spawn_blocking(move || {
-            // Call onClose(1000, null) - normal closure
             let mut code_zval = Zval::new();
-            code_zval.set_long(1000); // Normal closure code
+            code_zval.set_long(1000);
 
             let reason_zval = Zval::new();
-            // Leave reason as null
 
             match Self::invoke_php_method_sync(handler_index, "onClose", vec![code_zval, reason_zval]) {
                 Ok(_) => debug!("PHP WebSocket handler '{}': onClose completed", handler_name),
@@ -234,31 +215,24 @@ impl WebSocketHandler for PhpWebSocketHandler {
 /// # Returns
 /// Result containing the callable Zval or error string
 fn extract_method_as_zval(obj: &Zval, method_name: &str) -> Result<Zval, String> {
-    // Verify object is actually an object
     obj.object()
         .ok_or_else(|| format!("Handler must be an object to extract method '{}'", method_name))?;
 
-    // Create callable array [object, method_name]
     let mut callable_array = ext_php_rs::types::ZendHashTable::new();
 
-    // Create a copy of the object Zval
     let obj_copy = obj.shallow_clone();
 
-    // Push object reference
     callable_array
         .push(obj_copy)
         .map_err(|e| format!("Failed to add object to callable array: {:?}", e))?;
 
-    // Push method name
     callable_array
         .push(method_name)
         .map_err(|e| format!("Failed to add method name to callable array: {:?}", e))?;
 
-    // Create Zval from array
     let mut array_zval = Zval::new();
     array_zval.set_hashtable(callable_array);
 
-    // Verify it's callable before returning
     if !array_zval.is_callable() {
         return Err(format!("Method '{}' is not callable", method_name));
     }
@@ -299,10 +273,8 @@ pub fn create_websocket_state(
 ) -> Result<spikard_http::WebSocketState<PhpWebSocketHandler>, String> {
     let name = handler_name.unwrap_or_else(|| "PhpWebSocketHandler".to_string());
 
-    // Register the PHP handler
     let php_handler = PhpWebSocketHandler::register(handler_obj, name)?;
 
-    // Create WebSocketState with optional schemas
     if message_schema.is_some() || response_schema.is_some() {
         spikard_http::WebSocketState::with_schemas(php_handler, message_schema, response_schema)
     } else {
@@ -313,9 +285,5 @@ pub fn create_websocket_state(
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_websocket_handler_clone() {
-        // Since we can't easily create PHP objects in Rust tests,
-        // we just verify the struct is Clone
-        // Real testing happens through PHP integration tests
-    }
+    fn test_websocket_handler_clone() {}
 }

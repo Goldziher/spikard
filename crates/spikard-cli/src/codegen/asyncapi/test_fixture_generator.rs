@@ -128,7 +128,6 @@ mod tests {
             examples: vec![serde_json::json!({"id": "123"})],
         };
 
-        // Test the JSON serialization works correctly
         let fixture = serde_json::json!({
             "name": msg.name,
             "description": format!("Test fixture for {} message", msg.name),

@@ -164,7 +164,6 @@ mod tests {
     /// Test 1: Handler with no validators passes through to inner handler
     #[tokio::test]
     async fn test_no_validation_passes_through() {
-        // Create a Route with no validators
         let route = spikard_core::Route {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
@@ -285,7 +284,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Missing required "name" field
         let request_data = create_request_data(json!({"age": 30}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -298,7 +296,6 @@ mod tests {
             "Should return 422 for validation error"
         );
 
-        // Verify ProblemDetails JSON structure
         let problem: serde_json::Value = serde_json::from_str(&body).expect("Should parse as JSON");
         assert_eq!(problem["type"], "https://spikard.dev/errors/validation-error");
         assert_eq!(problem["title"], "Request Validation Failed");
@@ -347,7 +344,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Invalid JSON bytes
         let request_data = create_request_data_with_raw_body(b"{invalid json}".to_vec());
 
         let result = validator_handler.call(request, request_data).await;
@@ -391,14 +387,12 @@ mod tests {
 
         let request_data = create_request_data(json!({}));
 
-        // This should NOT panic; instead, it should catch the panic and return error
         let result = validator_handler.call(request, request_data).await;
 
         assert!(result.is_err(), "Panicking handler should return error");
         let (status, body) = result.unwrap_err();
         assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR, "Panic should return 500");
 
-        // Verify panic error structure
         let error: serde_json::Value = serde_json::from_str(&body).expect("Should parse as JSON");
         assert_eq!(error["code"], "panic");
         assert_eq!(error["error"], "Unexpected panic in handler");
@@ -442,7 +436,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Create request data with raw body but null parsed body
         let raw_body_json = br#"{"name":"Bob"}"#;
         let request_data = create_request_data_with_raw_body(raw_body_json.to_vec());
 
@@ -493,7 +486,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Missing name and email, age is negative
         let request_data = create_request_data(json!({"age": -5}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -549,7 +541,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // age is string instead of integer
         let request_data = create_request_data(json!({"age": "thirty"}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -642,7 +633,6 @@ mod tests {
 
         let result = validator_handler.call(request, request_data).await;
 
-        // With empty parameter validator, should still execute handler
         assert!(result.is_ok());
     }
 
@@ -683,7 +673,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Create request_data with null body and no raw_body
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
@@ -700,7 +689,6 @@ mod tests {
 
         let result = validator_handler.call(request, request_data).await;
 
-        // With null body and no raw_body, validator should reject
         assert!(result.is_err(), "Null body with no raw_body should fail");
     }
 
@@ -740,7 +728,6 @@ mod tests {
         let (status, body) = result.unwrap_err();
         assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
 
-        // Verify the panic error has correct fields
         let error: serde_json::Value = serde_json::from_str(&body).expect("Should parse as JSON");
         assert!(error.get("error").is_some(), "Should have 'error' field");
         assert!(error.get("code").is_some(), "Should have 'code' field");
@@ -823,7 +810,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Create request with null body and raw JSON bytes
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
@@ -967,7 +953,6 @@ mod tests {
         let result = validator_handler.call(request, request_data).await;
 
         assert!(result.is_ok());
-        // Arc pointer should be identical (same underlying allocation)
         assert_eq!(Arc::as_ptr(&inner), original_arc_ptr);
     }
 
@@ -1006,8 +991,6 @@ mod tests {
         assert!(result.is_err());
         let (_status, body) = result.unwrap_err();
 
-        // Should either be the serialized panic error or the fallback
-        // Both are valid JSON containing panic information
         assert!(
             body.contains("panic") || body.contains("Unexpected"),
             "Body should contain panic-related information"
@@ -1059,7 +1042,6 @@ mod tests {
         assert!(result.is_err());
         let (_status, body) = result.unwrap_err();
 
-        // Body must be valid JSON
         let parsed: serde_json::Value = serde_json::from_str(&body).expect("Validation error body must be valid JSON");
         assert!(parsed.is_object(), "Validation error body should be a JSON object");
     }
@@ -1148,7 +1130,6 @@ mod tests {
 
         let result = validator_handler.call(request, request_data).await;
 
-        // Should execute successfully with all request data sources populated
         assert!(result.is_ok());
     }
 
@@ -1227,7 +1208,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Valid JSON but price exceeds maximum
         let request_data = create_request_data(json!({"price": 2000.0}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -1271,7 +1251,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Empty bytes array should fail JSON parsing
         let request_data = create_request_data_with_raw_body(vec![]);
 
         let result = validator_handler.call(request, request_data).await;
@@ -1369,7 +1348,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Missing required name in nested user object
         let request_data = create_request_data(json!({"user": {"age": 30}}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -1423,7 +1401,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Valid array of strings
         let request_data = create_request_data(json!({"items": ["a", "b", "c"]}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -1472,7 +1449,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Array with non-string items
         let request_data = create_request_data(json!({"tags": ["tag1", 42, "tag3"]}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -1506,7 +1482,6 @@ mod tests {
 
         let mut join_handles = vec![];
 
-        // Spawn multiple concurrent requests
         for i in 0..5 {
             let shared_handler = validator_handler.clone();
             let handle = tokio::spawn(async move {
@@ -1578,7 +1553,6 @@ mod tests {
         assert!(result.is_err());
         let (status, body) = result.unwrap_err();
 
-        // ProblemDetails::from_validation_error should produce status_code()
         assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
 
         let problem: serde_json::Value = serde_json::from_str(&body).expect("Should parse as JSON");

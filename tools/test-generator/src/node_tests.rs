@@ -109,7 +109,6 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
         println!("  ✓ Generated tests/{}", websocket_file);
     }
 
-    // Skip biome formatting for Deno (it doesn't understand Deno.test syntax)
     if !matches!(target.runtime, crate::ts_target::Runtime::Deno) {
         format_generated_ts(output_dir)?;
     }
@@ -170,7 +169,6 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
 
     code.push_str("});\n");
 
-    // For Deno, convert vitest syntax to Deno.test()
     if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
         code = convert_to_deno_syntax(&code, category);
     }
@@ -283,9 +281,7 @@ fn generate_sse_test_file(
     file_content.push_str(&test_blocks);
     file_content.push_str("});\n");
 
-    // For Deno, convert vitest syntax to Deno.test()
     if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
-        // Don't use convert_to_deno_syntax for async API tests - just do simple replacements
         file_content = file_content
             .replace(
                 "import { describe, expect, test } from \"vitest\";\n",
@@ -318,7 +314,6 @@ fn generate_sse_test_file(
                 "expect(response.statusCode).toBe(200);",
                 "assertEquals(response.statusCode, 200);",
             );
-        // Remove trailing });\n
         if file_content.ends_with("\n});\n") {
             file_content = file_content[..file_content.len() - 5].to_string();
         }
@@ -433,9 +428,7 @@ fn generate_websocket_test_file(
     file_content.push_str(&test_blocks);
     file_content.push_str("});\n");
 
-    // For Deno, convert vitest syntax to Deno.test()
     if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
-        // Don't use convert_to_deno_syntax for async API tests - just do simple replacements
         file_content = file_content
             .replace(
                 "import { describe, expect, test } from \"vitest\";\n",
@@ -476,7 +469,6 @@ fn generate_websocket_test_file(
                 "expect(response.validated).toBe(true);",
                 "assertEquals(response.validated, true);",
             );
-        // Remove trailing });\n
         if file_content.ends_with("\n});\n") {
             file_content = file_content[..file_content.len() - 5].to_string();
         }
@@ -670,9 +662,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         return Ok(code);
     }
 
-    // Check for DI-specific test patterns
     if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
-        // Handle singleton caching tests - requires multiple requests
         if requires_multi_request_test(&di_config) {
             code.push_str("\n");
             code.push_str("\t\t// Second request to verify singleton caching\n");
@@ -692,7 +682,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             return Ok(code);
         }
 
-        // Handle cleanup tests - poll cleanup state endpoint
         if has_cleanup(&di_config) {
             code.push_str("\n");
             code.push_str("\t\t// Allow async cleanup to complete\n");
@@ -1284,7 +1273,6 @@ fn format_generated_ts(dir: &Path) -> Result<()> {
 fn convert_to_deno_syntax(code: &str, category: &str) -> String {
     let mut result = code.to_string();
 
-    // Remove outer describe wrapper line(s) for Deno.
     let mut filtered_lines: Vec<&str> = result
         .lines()
         .filter(|line| {
@@ -1292,7 +1280,6 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
             !trimmed.starts_with(&format!("describe(\"{}\"", category))
         })
         .collect();
-    // Drop trailing describe close if present.
     while matches!(filtered_lines.last(), Some(l) if l.trim().is_empty()) {
         filtered_lines.pop();
     }
@@ -1301,8 +1288,6 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
     }
     result = filtered_lines.join("\n");
 
-    // Convert vitest-style `test.skip()` blocks into Deno `ignore` tests.
-    // Deno 2 does not provide `Deno.test.ignore`/`Deno.test.skip`.
     let mut rewritten: Vec<String> = Vec::new();
     let mut in_skip_block = false;
     let mut skip_indent = String::new();
@@ -1326,7 +1311,6 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
             continue;
         }
 
-        // Inside a skip block, shift indentation by one extra tab so it sits under `fn: ... {`.
         if line.trim() == "});" {
             rewritten.push(format!("{skip_indent}\t}},"));
             rewritten.push(format!("{skip_indent}}});"));
@@ -1339,14 +1323,11 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
     }
     result = rewritten.join("\n");
 
-    // Convert test() to Deno.test() with category prefix
     let lines: Vec<String> = result
         .lines()
         .map(|line| {
             if line.contains("test(\"") || line.contains("Deno.test(\"") {
-                // Already converted or needs conversion
                 if !line.contains("Deno.test(\"") && line.contains("test(\"") {
-                    // Extract test name between quotes
                     if let Some(start) = line.find("test(\"") {
                         if let Some(end) = line[start + 6..].find("\"") {
                             let test_name = &line[start + 6..start + 6 + end];
@@ -1364,8 +1345,6 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
     result = lines.join("\n");
 
     // Convert all expect() calls to Deno std/assert helpers.
-    // Supported: toBe, toEqual, toStrictEqual, toBeGreaterThan, toBeUndefined, toBeDefined,
-    // toHaveProperty, toMatch.
     loop {
         let mut modified = false;
 
@@ -1394,7 +1373,6 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
                 let expr = &after_expect[..expr_end];
                 let after_expr = &after_expect[expr_end + 1..];
 
-                // Matchers without arguments.
                 if after_expr.starts_with(".toBeUndefined()") {
                     let original_len = 7 + expr_end + 1 + ".toBeUndefined()".len();
                     let original = &result[expect_pos..expect_pos + original_len];
@@ -1408,7 +1386,6 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
                     result = result.replacen(original, &replacement, 1);
                     modified = true;
                 } else {
-                    // Matchers with arguments.
                     let matcher_prefixes = [
                         (".toBe(", "eq"),
                         (".toEqual(", "eq"),
@@ -1427,7 +1404,6 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
                     }
 
                     if let Some((prefix, kind, method_match)) = matched {
-                        // Find the closing parenthesis for the argument
                         let mut depth2 = 1;
                         let mut arg_end = 0;
 
@@ -1476,7 +1452,6 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
         }
     }
 
-    // Replace vitest imports with Deno std/assert.
     let mut lines: Vec<String> = Vec::new();
     let mut has_std_assert = false;
     for line in result.lines() {
@@ -1495,7 +1470,6 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
         lines.push(line.to_string());
     }
     if !has_std_assert {
-        // Insert std/assert import after TestClient import if possible.
         let mut inserted = false;
         let mut new_lines = Vec::with_capacity(lines.len() + 1);
         for line in lines {
@@ -1509,7 +1483,6 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
     }
     result = lines.join("\n");
 
-    // Cleanup any stray braces from prior conversions.
     result = result.replace("})});", "});");
 
     result

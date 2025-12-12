@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Select and install the appropriate Python wheel from the dist/ directory.
 
 This script intelligently picks the correct wheel based on the current platform,
@@ -6,7 +7,7 @@ architecture, and Python version. It supports both Unix-like systems (Linux, mac
 and Windows.
 
 Usage:
-    python scripts/ci/python/select-and-install-wheel.py [--dist-dir DIST_DIR]
+    python scripts/ci/python/select_and_install_wheel.py [--dist-dir DIST_DIR]
 
 Environment:
     DIST_DIR: Override the distribution directory (default: dist/)
@@ -28,7 +29,6 @@ def get_platform_identifier() -> tuple[str, list[str]]:
     plat = sys.platform
     arch = platform.machine().lower()
 
-    # Map architecture names to potential wheel filename patterns
     arch_aliases = {
         "x86_64": ["x86_64", "amd64"],
         "aarch64": ["aarch64", "arm64"],
@@ -66,7 +66,6 @@ def pick_wheel(candidates: list[str], platform_type: str, arch_matches: list[str
         cand_lower = candidate.lower()
         return any(arch in cand_lower for arch in arch_matches)
 
-    # Platform-specific selection with fallback
     platform_markers = {
         "linux": (["manylinux", "linux"],),
         "darwin": (["macosx"],),
@@ -101,29 +100,23 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    # Resolve the distribution directory
     dist_dir = Path(args.dist_dir).resolve()
 
     if not dist_dir.exists():
         return 1
 
-    # Find all wheel files
     candidates = [str(p) for p in dist_dir.glob("*.whl")]
 
     if not candidates:
         return 1
 
-    # Get platform information
     platform_type, arch_matches = get_platform_identifier()
 
-    # Pick the best wheel
     chosen = pick_wheel(candidates, platform_type, arch_matches)
 
     if chosen is None:
-        # Fallback to first candidate if no match found
         chosen = candidates[0]
 
-    # Print the chosen wheel (to be captured by shell)
     print(chosen)  # noqa: T201
     return 0
 

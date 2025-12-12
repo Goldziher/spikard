@@ -332,9 +332,7 @@ function wrapFactory(factory: DependencyFactory): (dependenciesJson: string) => 
 				if (typeof generator.return === "function") {
 					await generator.return(undefined);
 				}
-			} catch {
-				// ignore cleanup errors
-			}
+			} catch {}
 			return JSON.stringify(value ?? null);
 		}
 

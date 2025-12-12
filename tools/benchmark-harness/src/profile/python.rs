@@ -28,11 +28,9 @@ struct PythonMetricsFile {
 
 /// Start Python profiler for the given PID
 pub fn start_profiler(pid: u32) -> Result<PythonProfiler> {
-    // Try py-spy first
     if which::which("py-spy").is_ok() {
         let output_path = format!("/tmp/py-spy-{}.json", pid);
 
-        // Start py-spy in record mode with JSON output
         match Command::new("py-spy")
             .arg("record")
             .arg("--pid")
@@ -42,7 +40,7 @@ pub fn start_profiler(pid: u32) -> Result<PythonProfiler> {
             .arg("--format")
             .arg("speedscope")
             .arg("--rate")
-            .arg("100") // Sample 100 times per second
+            .arg("100")
             .arg("--nonblocking")
             .spawn()
         {
@@ -63,7 +61,6 @@ pub fn start_profiler(pid: u32) -> Result<PythonProfiler> {
         eprintln!("  → Profiling will be limited to application metrics");
     }
 
-    // Fallback to metrics-only profiling
     Ok(PythonProfiler {
         process: None,
         output_path: String::new(),
@@ -84,10 +81,8 @@ impl PythonProfiler {
     /// Stop the profiler and collect final metrics
     pub fn stop(mut self) -> ProfilingData {
         if let Some(mut process) = self.process.take() {
-            // Send termination signal to py-spy to finish writing output
             #[cfg(unix)]
             {
-                // Use SIGTERM to allow graceful shutdown
                 unsafe {
                     libc::kill(process.id() as i32, libc::SIGTERM);
                 }
@@ -95,18 +90,16 @@ impl PythonProfiler {
 
             #[cfg(not(unix))]
             {
-                // On Windows, kill the process
                 let _ = process.kill();
             }
 
-            // Wait for process to finish writing output (up to 3 seconds)
             use std::time::{Duration, Instant};
             let start = Instant::now();
             let timeout = Duration::from_secs(3);
 
             loop {
                 match process.try_wait() {
-                    Ok(Some(_)) => break, // Process exited
+                    Ok(Some(_)) => break,
                     Ok(None) => {
                         if start.elapsed() > timeout {
                             eprintln!("  ⚠ Profiler did not exit within timeout, killing");
@@ -120,7 +113,6 @@ impl PythonProfiler {
             }
         }
 
-        // Load application metrics from instrumentation file
         let metrics_path = format!("/tmp/python-metrics-{}.json", self.pid);
         let app_metrics = self.load_metrics_file(&metrics_path);
 
@@ -131,7 +123,7 @@ impl PythonProfiler {
             handler_time_ms: app_metrics.as_ref().and_then(|m| m.handler_time_ms),
             serialization_time_ms: app_metrics.as_ref().and_then(|m| m.serialization_time_ms),
             ffi_overhead_ms: app_metrics.as_ref().and_then(|m| m.ffi_overhead_ms),
-            gil_wait_time_ms: None, // Will be extracted from py-spy data in future
+            gil_wait_time_ms: None,
             gil_contention_percent: None,
         }
     }
@@ -149,10 +141,7 @@ impl PythonProfiler {
                     None
                 }
             },
-            Err(_) => {
-                // Metrics file not present - application may not have instrumentation
-                None
-            }
+            Err(_) => None,
         }
     }
 }

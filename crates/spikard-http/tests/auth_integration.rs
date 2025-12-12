@@ -28,10 +28,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::common::test_builders::{HandlerBuilder, RequestBuilder, assert_status, load_fixture, parse_json_body};
 
-// ============================================================================
-// JWT Integration Tests
-// ============================================================================
-
 /// Test 1: Valid JWT token allows access
 ///
 /// Fixture: 01_jwt_valid_token.json
@@ -40,26 +36,22 @@ use crate::common::test_builders::{HandlerBuilder, RequestBuilder, assert_status
 async fn test_jwt_valid_token_allows_access() {
     let fixture = load_fixture("testing_data/auth/01_jwt_valid_token.json").expect("Failed to load fixture");
 
-    // Extract request details from fixture
     let req_path = fixture["request"]["path"].as_str().unwrap_or("/");
     let auth_header = fixture["request"]["headers"]["Authorization"]
         .as_str()
         .expect("Authorization header not in fixture");
 
-    // Create handler that returns success
     let handler = HandlerBuilder::new()
         .status(200)
         .json_body(json!({"message": "Access granted", "user_id": "user123"}))
         .build();
 
-    // Build request with Authorization header
     let (request, request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path(req_path)
         .header("Authorization", auth_header)
         .build();
 
-    // Call handler and verify
     let response = handler.call(request, request_data).await.unwrap();
     assert_status(&response, StatusCode::OK);
 
@@ -80,14 +72,11 @@ async fn test_jwt_missing_header_returns_401() {
     let req_path = fixture["request"]["path"].as_str().unwrap_or("/");
     let expected_error = fixture["expected_response"]["body"]["title"].as_str().unwrap();
 
-    // Build request WITHOUT Authorization header
     let (_request, _request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path(req_path)
         .build();
 
-    // In real scenario, middleware would reject before handler is called
-    // For testing, we verify what the error would be
     assert!(expected_error.contains("Missing or invalid Authorization header"));
 }
 
@@ -105,14 +94,12 @@ async fn test_jwt_expired_token_returns_401() {
         .expect("Authorization header not in fixture");
     let expected_detail = fixture["expected_response"]["body"]["detail"].as_str().unwrap();
 
-    // Build request with expired token
     let (_request, _request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path(req_path)
         .header("Authorization", auth_header)
         .build();
 
-    // Verify fixture contains expected error message
     assert!(expected_detail.contains("Token has expired"));
 }
 
@@ -129,14 +116,12 @@ async fn test_jwt_invalid_signature_returns_401() {
         .expect("Authorization header not in fixture");
     let expected_detail = fixture["expected_response"]["body"]["detail"].as_str().unwrap();
 
-    // Build request with invalid signature token
     let (_request, _request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path("/protected/user")
         .header("Authorization", auth_header)
         .build();
 
-    // Verify fixture contains expected error message
     assert!(expected_detail.contains("invalid"));
 }
 
@@ -154,14 +139,12 @@ async fn test_jwt_invalid_audience_returns_401() {
     let expected_detail = fixture["expected_response"]["body"]["detail"].as_str().unwrap();
     let expected_status = fixture["expected_response"]["status_code"].as_u64().unwrap();
 
-    // Build request with token having wrong audience
     let (_request, _request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path("/protected/user")
         .header("Authorization", auth_header)
         .build();
 
-    // Verify fixture contains expected error
     assert_eq!(expected_status, 401);
     assert!(expected_detail.contains("audience"));
 }
@@ -179,14 +162,12 @@ async fn test_jwt_invalid_issuer_returns_401() {
         .expect("Authorization header not in fixture");
     let expected_detail = fixture["expected_response"]["body"]["detail"].as_str().unwrap();
 
-    // Build request with token having wrong issuer
     let (_request, _request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path("/api/protected")
         .header("Authorization", auth_header)
         .build();
 
-    // Verify fixture contains expected error
     assert!(expected_detail.contains("issuer") || expected_detail.contains("Invalid"));
 }
 
@@ -203,14 +184,12 @@ async fn test_jwt_not_before_future_returns_401() {
         .expect("Authorization header not in fixture");
     let expected_detail = fixture["expected_response"]["body"]["detail"].as_str().unwrap();
 
-    // Build request with future nbf token
     let (_request, _request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path("/api/protected")
         .header("Authorization", auth_header)
         .build();
 
-    // Verify fixture contains expected error message
     assert!(expected_detail.contains("not valid yet") || expected_detail.contains("future"));
 }
 
@@ -332,14 +311,12 @@ async fn test_jwt_malformed_token_returns_401() {
     let expected_detail = fixture["expected_response"]["body"]["detail"].as_str().unwrap();
     let expected_title = fixture["expected_response"]["body"]["title"].as_str().unwrap();
 
-    // Build request with malformed token
     let (_request, _request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path("/api/protected")
         .header("Authorization", auth_header)
         .build();
 
-    // Verify fixture contains expected error messages
     assert!(expected_title.contains("Malformed"));
     assert!(expected_detail.contains("3 parts") || expected_detail.contains("expected"));
 }
@@ -358,20 +335,14 @@ async fn test_bearer_token_without_prefix_returns_401() {
         .expect("Authorization header not in fixture");
     let expected_title = fixture["expected_response"]["body"]["title"].as_str().unwrap();
 
-    // Build request with token lacking Bearer prefix
     let (_request, _request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path("/api/protected")
         .header("Authorization", auth_header)
         .build();
 
-    // Verify fixture expects format error
     assert!(expected_title.contains("Invalid Authorization header format"));
 }
-
-// ============================================================================
-// API Key Integration Tests
-// ============================================================================
 
 /// Test 10: Valid API key allows access
 ///
@@ -386,20 +357,17 @@ async fn test_api_key_valid_allows_access() {
         .as_str()
         .expect("X-API-Key header not in fixture");
 
-    // Create handler that returns success
     let handler = HandlerBuilder::new()
         .status(200)
         .json_body(json!({"message": "Access granted", "data": "sensitive information"}))
         .build();
 
-    // Build request with valid API key
     let (request, request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path(req_path)
         .header("X-API-Key", api_key)
         .build();
 
-    // Call handler and verify
     let response = handler.call(request, request_data).await.unwrap();
     assert_status(&response, StatusCode::OK);
 
@@ -422,14 +390,12 @@ async fn test_api_key_invalid_returns_401() {
         .expect("X-API-Key header not in fixture");
     let expected_detail = fixture["expected_response"]["body"]["detail"].as_str().unwrap();
 
-    // Build request with invalid API key
     let (_request, _request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path(req_path)
         .header("X-API-Key", api_key)
         .build();
 
-    // Verify fixture contains expected error message
     assert!(expected_detail.contains("not valid"));
 }
 
@@ -444,13 +410,11 @@ async fn test_api_key_missing_returns_401() {
     let req_path = fixture["request"]["path"].as_str().unwrap_or("/");
     let expected_detail = fixture["expected_response"]["body"]["detail"].as_str().unwrap();
 
-    // Build request WITHOUT API key header
     let (_request, _request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path(req_path)
         .build();
 
-    // Verify fixture contains expected error message
     assert!(expected_detail.contains("Missing") || expected_detail.contains("api_key"));
 }
 
@@ -465,34 +429,26 @@ async fn test_api_key_query_parameter_allows_access() {
     let req_path = fixture["request"]["path"].as_str().unwrap_or("/");
     let expected_status = fixture["expected_response"]["status_code"].as_u64().unwrap();
 
-    // Create handler that returns success
     let handler = HandlerBuilder::new()
         .status(200)
         .json_body(json!({"message": "Access granted", "data": "sensitive information"}))
         .build();
 
-    // Build request with API key in query parameter
     let (request, request_data) = RequestBuilder::new()
         .method(axum::http::Method::GET)
         .path(req_path)
         .query_param("api_key", "sk_test_123456")
         .build();
 
-    // Call handler and verify
     let response = handler.call(request, request_data).await.unwrap();
     assert_eq!(response.status().as_u16() as u64, expected_status);
 
-    // If successful, verify response body
     if expected_status == 200 {
         let mut response_mut = response;
         let body = parse_json_body(&mut response_mut).await.unwrap();
         assert_eq!(body["message"], "Access granted");
     }
 }
-
-// ============================================================================
-// Helper Traits and Implementations
-// ============================================================================
 
 /// Mock handler for testing
 /// Used internally to test request/response flow without actual authentication
@@ -519,10 +475,6 @@ impl Handler for MockHandler {
         })
     }
 }
-
-// ============================================================================
-// Observable Behavior Tests - Fixture Structure Validation
-// ============================================================================
 
 /// Verify all auth fixtures are properly structured
 #[test]
@@ -579,10 +531,6 @@ fn test_api_key_query_parameter_fixture_structure() {
     assert_eq!(fixture["expected_response"]["status_code"], 200);
 }
 
-// ============================================================================
-// Error Response Format Tests
-// ============================================================================
-
 /// Verify auth errors follow RFC 9457 Problem Details format
 #[test]
 fn test_jwt_error_response_format() {
@@ -590,17 +538,14 @@ fn test_jwt_error_response_format() {
 
     let body = &fixture["expected_response"]["body"];
 
-    // Must have RFC 9457 Problem Details fields
     assert!(body["type"].is_string());
     assert!(body["title"].is_string());
     assert!(body["status"].is_number());
     assert!(body["detail"].is_string());
 
-    // Verify standard error type URI
     let type_str = body["type"].as_str().unwrap();
     assert!(type_str.contains("spikard.dev/errors"));
 
-    // Status code must match body status
     assert_eq!(fixture["expected_response"]["status_code"], body["status"]);
 }
 
@@ -610,20 +555,14 @@ fn test_api_key_error_response_format() {
 
     let body = &fixture["expected_response"]["body"];
 
-    // Must have RFC 9457 Problem Details fields
     assert!(body["type"].is_string());
     assert!(body["title"].is_string());
     assert!(body["status"].is_number());
     assert!(body["detail"].is_string());
 
-    // Verify standard error type URI
     let type_str = body["type"].as_str().unwrap();
     assert!(type_str.contains("spikard.dev/errors"));
 }
-
-// ============================================================================
-// Cross-Fixture Consistency Tests
-// ============================================================================
 
 /// Verify all JWT fixtures use consistent error type URIs
 #[test]

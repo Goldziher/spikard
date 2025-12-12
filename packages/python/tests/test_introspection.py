@@ -31,10 +31,6 @@ from spikard.introspection import (
     extract_parameter_schema,
 )
 
-# ============================================================================
-# Test Fixtures: Structured Types
-# ============================================================================
-
 
 @dataclass
 class SampleDataClass:
@@ -65,7 +61,6 @@ class MsgspecStruct(msgspec.Struct):
     age: int = 0
 
 
-# Try importing attrs if available
 try:
     import attrs
 
@@ -97,11 +92,6 @@ class CustomToDict:
         return {}
 
 
-# ============================================================================
-# Tests for extract_parameter_schema()
-# ============================================================================
-
-
 class TestExtractParameterSchema:
     """Tests for the main extract_parameter_schema function."""
 
@@ -120,7 +110,6 @@ class TestExtractParameterSchema:
         assert result is not None
         assert "properties" in result
         assert "q" in result["properties"]
-        # Default source for non-path param is 'query'
         assert result["properties"]["q"].get("source") == "query"
 
     def test_multiple_simple_parameters(self) -> None:
@@ -132,7 +121,6 @@ class TestExtractParameterSchema:
         result = extract_parameter_schema(handler, path=None)
         assert result is not None
         properties = result.get("properties", {})
-        # Should include all parameters
         param_names = set(properties.keys())
         assert len(param_names) >= 3
 
@@ -183,8 +171,6 @@ class TestExtractParameterSchema:
             pass
 
         result = extract_parameter_schema(handler, path="/")
-        # Dataclass as first param should be excluded
-        # Result should either be None or not include 'body' property
         if result is not None:
             assert "body" not in result.get("properties", {})
 
@@ -195,7 +181,6 @@ class TestExtractParameterSchema:
             pass
 
         result = extract_parameter_schema(handler, path="/")
-        # UploadFile as first param should be excluded
         if result is not None:
             assert "file" not in result.get("properties", {})
 
@@ -206,7 +191,6 @@ class TestExtractParameterSchema:
             pass
 
         result = extract_parameter_schema(handler, path="/")
-        # list[UploadFile] as first param should be excluded
         if result is not None:
             assert "files" not in result.get("properties", {})
 
@@ -230,7 +214,6 @@ class TestExtractParameterSchema:
         result = extract_parameter_schema(handler, path="/")
         assert result is not None
         required = result.get("required", [])
-        # Should not be in required if it has a default
         assert len(required) == 0 or "optional_param" not in required
 
     def test_self_and_cls_parameters_excluded(self) -> None:
@@ -240,7 +223,6 @@ class TestExtractParameterSchema:
             pass
 
         result = extract_parameter_schema(method, path="/")
-        # 'self' should be excluded
         if result is not None:
             assert "self" not in result.get("properties", {})
 
@@ -253,7 +235,6 @@ class TestExtractParameterSchema:
         result = extract_parameter_schema(handler, path="/")
         assert result is not None
         properties = result.get("properties", {})
-        # Underscore should be stripped
         assert "private" in properties or "_private" in properties
 
     def test_body_parameter_excluded_by_name(self) -> None:
@@ -264,7 +245,6 @@ class TestExtractParameterSchema:
 
         result = extract_parameter_schema(handler, path="/")
         if result is not None:
-            # 'body' should be excluded, 'param' should remain
             assert "body" not in result.get("properties", {})
             assert "param" in result.get("properties", {})
 
@@ -286,8 +266,6 @@ class TestExtractParameterSchema:
             pass
 
         result = extract_parameter_schema(handler, path="/")
-        # If only body is present, should return None (no query params)
-        # or properties should be empty
         if result is not None:
             assert len(result.get("properties", {})) == 0 or result is None
 
@@ -317,11 +295,6 @@ class TestExtractParameterSchema:
         assert properties["project"].get("source") == "path"
 
 
-# ============================================================================
-# Tests for _is_upload_file_type()
-# ============================================================================
-
-
 class TestIsUploadFileType:
     """Tests for UploadFile type detection."""
 
@@ -337,9 +310,7 @@ class TestIsUploadFileType:
     def test_upload_file_in_union_not_detected(self) -> None:
         """Test Union[UploadFile, str] is not directly recognized as upload file type."""
         union_type = UploadFile | str
-        # Union is not the same as UploadFile, so should return False
         result = _is_upload_file_type(union_type)
-        # This should be False since it's a Union, not a direct UploadFile type
         assert result is False
 
     def test_string_type_not_upload_file(self) -> None:
@@ -370,20 +341,13 @@ class TestIsUploadFileType:
         """Test Optional[UploadFile] is not directly recognized as upload file type."""
         optional_upload = UploadFile | None
         result = _is_upload_file_type(optional_upload)
-        # Optional is Union[T, None], not a direct UploadFile
         assert result is False
 
     def test_tuple_upload_file_not_detected(self) -> None:
         """Test tuple[UploadFile] is not recognized as UploadFile list."""
         tuple_type = tuple[UploadFile]
         result = _is_upload_file_type(tuple_type)
-        # Only list[UploadFile] should be detected, not tuple
         assert result is False
-
-
-# ============================================================================
-# Tests for _is_structured_type()
-# ============================================================================
 
 
 class TestIsStructuredType:
@@ -399,12 +363,8 @@ class TestIsStructuredType:
 
     def test_namedtuple_type_not_detected_without_field_types(self) -> None:
         """Test NamedTuple is not detected as structured (missing _field_types)."""
-        # NamedTuple from typing module has _fields but not _field_types in Python 3.10+
-        # The introspection only detects if it has BOTH _fields and _field_types
         result = _is_structured_type(SampleNamedTuple)
-        # Python 3.10+ NamedTuple doesn't have _field_types, so should not be detected by this check
-        # It might be detected by other checks (model_dump, to_dict, etc.)
-        assert result is False or result is True  # Implementation dependent
+        assert result is False or result is True
 
     def test_class_with_both_fields_and_field_types(self) -> None:
         """Test class with both _fields and _field_types is detected."""
@@ -416,7 +376,6 @@ class TestIsStructuredType:
             _field_types = {"a": str, "b": int}
 
         result = _is_structured_type(ClassicNamedTuple)
-        # Should be detected with both attributes
         assert result is True
 
     def test_msgspec_struct_type_detected(self) -> None:
@@ -456,14 +415,12 @@ class TestIsStructuredType:
         """Test Union type is not a structured type (not a class)."""
         union_type = str | int
         result = _is_structured_type(union_type)
-        # Union is a special form, not a class
         assert result is False
 
     def test_optional_type_not_structured(self) -> None:
         """Test Optional type is not a structured type."""
         optional_type = str | None
         result = _is_structured_type(optional_type)
-        # Optional is Union, not a class
         assert result is False
 
     def test_generic_list_not_structured(self) -> None:
@@ -471,7 +428,6 @@ class TestIsStructuredType:
 
         list_type = list[str]
         result = _is_structured_type(list_type)
-        # Generic list is not a class
         assert result is False
 
     def test_none_type_not_structured(self) -> None:
@@ -483,7 +439,6 @@ class TestIsStructuredType:
         """Test string literal (not a type) is not structured."""
         non_type: object = "not a type"
         result = _is_structured_type(non_type)
-        # String is not a type
         assert result is False
 
     def test_plain_object_class_not_structured(self) -> None:
@@ -496,8 +451,6 @@ class TestIsStructuredType:
                 self.value = 42
 
         result = _is_structured_type(PlainClass)
-        # Plain class without dataclass/TypedDict/model_dump/to_dict is not structured
-        # It only checks for those specific attributes
         assert result is False
 
     def test_class_with_only_init_not_structured(self) -> None:
@@ -510,23 +463,16 @@ class TestIsStructuredType:
                 self.value = value
 
         result = _is_structured_type(SimpleClass)
-        # No special attributes, should be False
         assert result is False
 
     def test_class_that_triggers_msgspec_issubclass_check(self) -> None:
         """Test msgspec.Struct detection path is exercised."""
-        # This test ensures the msgspec issubclass check is called
-        # MsgspecStruct should be recognized as a structured type
         result = _is_structured_type(MsgspecStruct)
         assert result is True
 
     def test_class_that_fails_msgspec_issubclass_with_special_type(self) -> None:
         """Test class that would fail msgspec issubclass check."""
-        # Create a class that passes isinstance(annotation, type) but fails issubclass
-        # This is tricky - most things that are types work with issubclass
-        # But certain special types might trigger the exception handler
 
-        # Custom metaclass that might cause issues
         class SpecialMeta(type):
             """Metaclass that could potentially cause issues with issubclass."""
 
@@ -534,24 +480,16 @@ class TestIsStructuredType:
             """Class using special metaclass."""
 
         result = _is_structured_type(SpecialClass)
-        # Should handle gracefully without raising exception
-        # It won't be detected as structured type
-        assert result is False or result is True  # Just verify no crash
+        assert result is False or result is True
 
     def test_msgspec_issubclass_exception_handler_is_resilient(self) -> None:
         """Test that exception handling in msgspec check works correctly."""
-        # The exception handler in the introspection module catches
-        # ImportError, TypeError, and AttributeError when checking issubclass
-        # This test verifies the code doesn't crash when these occur
 
         class ClassThatCouldFail:
             """A class that should still be handled gracefully."""
 
-        # Even if issubclass could fail, _is_structured_type should not raise
         result = _is_structured_type(ClassThatCouldFail)
-        # Result should be boolean
         assert isinstance(result, bool)
-        # It should be False since this class has no special attributes
         assert result is False
 
     def test_class_with_both_model_dump_and_to_dict(self) -> None:
@@ -569,13 +507,7 @@ class TestIsStructuredType:
                 return {}
 
         result = _is_structured_type(BothMethods)
-        # Should detect via model_dump first
         assert result is True
-
-
-# ============================================================================
-# Edge Cases and Integration Tests
-# ============================================================================
 
 
 class TestEdgeCases:
@@ -612,7 +544,6 @@ class TestEdgeCases:
             pass
 
         result = extract_parameter_schema(handler, path="/")
-        # Should handle Optional correctly
         if result is not None:
             assert "value" not in result.get("required", [])
 
@@ -640,13 +571,7 @@ class TestEdgeCases:
         result = extract_parameter_schema(handler, path="/items/{item_id}")
         assert result is not None
         properties = result.get("properties", {})
-        # Both should be present
         assert "id" in properties or len(properties) > 0
-
-
-# ============================================================================
-# Type Checking and Annotation Tests
-# ============================================================================
 
 
 class TestTypeAnnotationHandling:
@@ -659,19 +584,16 @@ class TestTypeAnnotationHandling:
             pass
 
         result = extract_parameter_schema(handler, path="/")
-        # Should handle complex generics
         assert result is None or isinstance(result, dict)
 
     def test_upload_file_and_dataclass_detection_priority(self) -> None:
         """Test that UploadFile is prioritized over other types."""
 
-        # First parameter is UploadFile
         def handler(file: UploadFile, query: str) -> None:
             pass
 
         result = extract_parameter_schema(handler, path="/")
         assert result is not None
         properties = result.get("properties", {})
-        # file should be excluded, query should be included
         assert "file" not in properties
         assert "query" in properties

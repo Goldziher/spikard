@@ -4,45 +4,33 @@ use std::process::Command;
 fn main() {
     let php_config = env::var("PHP_CONFIG").unwrap_or_else(|_| "php-config".to_string());
 
-    // macOS-specific configuration for PHP extension building
     #[cfg(target_os = "macos")]
     {
-        // CRITICAL: Allow PHP Zend symbols to be resolved at runtime
-        // PHP extensions are plugins - symbols exist in the PHP interpreter, not at link time
-        // Without this, linking fails with "Undefined symbols" errors
-        // See: https://github.com/rust-lang/rust/pull/66204
         println!("cargo:rustc-link-arg=-undefined");
         println!("cargo:rustc-link-arg=dynamic_lookup");
 
-        // Set deployment target to match modern macOS (GitHub Actions uses macOS 14+)
-        // Prevents "object file was built for newer macOS version" warnings
         if env::var("MACOSX_DEPLOYMENT_TARGET").is_err() {
             println!("cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=14.0");
         }
     }
 
-    // Add OpenSSL library path from environment (set by setup-openssl action in CI)
     if let Ok(openssl_lib_dir) = env::var("OPENSSL_LIB_DIR") {
         println!("cargo:rustc-link-search=native={}", openssl_lib_dir);
     }
     println!("cargo:rerun-if-env-changed=OPENSSL_LIB_DIR");
 
-    // On macOS with Homebrew, auto-detect OpenSSL location
     #[cfg(target_os = "macos")]
     {
-        if env::var("OPENSSL_LIB_DIR").is_err() {
-            // Try to find Homebrew's OpenSSL installation
-            if let Ok(output) = Command::new("brew").arg("--prefix").arg("openssl@3").output()
-                && output.status.success()
-            {
-                let openssl_prefix = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let openssl_lib = format!("{}/lib", openssl_prefix);
-                println!("cargo:rustc-link-search=native={}", openssl_lib);
-            }
+        if env::var("OPENSSL_LIB_DIR").is_err()
+            && let Ok(output) = Command::new("brew").arg("--prefix").arg("openssl@3").output()
+            && output.status.success()
+        {
+            let openssl_prefix = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            let openssl_lib = format!("{}/lib", openssl_prefix);
+            println!("cargo:rustc-link-search=native={}", openssl_lib);
         }
     }
 
-    // Get PHP includes (for header validation, not linking)
     if let Ok(output) = Command::new(&php_config).arg("--includes").output()
         && output.status.success()
     {
@@ -54,11 +42,6 @@ fn main() {
         }
     }
 
-    // Get PHP libs
-    // On macOS, PHP extensions use -undefined dynamic_lookup (set in .cargo/config.toml)
-    // to defer symbol resolution to runtime when the extension is loaded by PHP.
-    // We do NOT explicitly link against the PHP library on macOS.
-    // On other platforms, we use a whitelist approach to avoid linking optional/missing extensions.
     #[cfg(not(target_os = "macos"))]
     {
         let essential_libs = ["php", "m", "c", "pthread", "resolv", "xml2", "z", "ssl", "crypto"];
@@ -71,7 +54,6 @@ fn main() {
                 if let Some(path) = lib.strip_prefix("-L") {
                     println!("cargo:rustc-link-search=native={}", path);
                 } else if let Some(name) = lib.strip_prefix("-l") {
-                    // Only link essential PHP core libraries (whitelist approach)
                     if essential_libs.contains(&name) {
                         println!("cargo:rustc-link-lib=dylib={}", name);
                     }
@@ -80,11 +62,8 @@ fn main() {
         }
     }
 
-    // On macOS, we rely on -undefined dynamic_lookup from .cargo/config.toml
-    // PHP symbols will be resolved at runtime when the extension is loaded
     #[cfg(target_os = "macos")]
     {
-        // Get ldflags for library search paths only (not -l flags)
         if let Ok(output) = Command::new(&php_config).arg("--ldflags").output()
             && output.status.success()
         {
@@ -97,7 +76,6 @@ fn main() {
         }
     }
 
-    // Get PHP version for informational purposes
     if let Ok(output) = Command::new(&php_config).arg("--version").output()
         && output.status.success()
     {

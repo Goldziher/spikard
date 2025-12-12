@@ -531,8 +531,6 @@ describe("converters", () => {
 						{
 							name: "avatar",
 							content: "image data",
-							// No filename provided
-							// No contentType provided
 						},
 					],
 				},
@@ -543,7 +541,7 @@ describe("converters", () => {
 			expect(result.name).toBe("John");
 			expect(result.avatar).toBeInstanceOf(UploadFile);
 			const file = result.avatar as UploadFile;
-			expect(file.filename).toBe("avatar"); // Falls back to field name
+			expect(file.filename).toBe("avatar");
 		});
 
 		it("should process nested structures within multipart fields", () => {
@@ -627,7 +625,7 @@ describe("converters", () => {
 		});
 
 		it("should handle large file content", () => {
-			const largeContent = "x".repeat(1024 * 1024); // 1MB of x's
+			const largeContent = "x".repeat(1024 * 1024);
 			const metadata: FileMetadata = {
 				filename: "large.txt",
 				content: largeContent,
@@ -663,7 +661,6 @@ describe("converters", () => {
 
 			const file = convertFileMetadataToUploadFile(metadata);
 
-			// Should compute size from content
 			expect(file.size).toBe(12);
 		});
 	});

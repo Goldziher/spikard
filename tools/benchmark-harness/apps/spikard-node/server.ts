@@ -12,7 +12,6 @@ const require = createRequire(import.meta.url);
 const native = require("../../../../packages/node/index.js") as { runServer: (app: unknown, config: unknown) => void };
 import { z } from "zod";
 
-// Route registration arrays
 type HandlerInput = {
 	method: string;
 	path: string;
@@ -34,7 +33,6 @@ type HandlerFunction = (input: HandlerInput) => Promise<HandlerOutput>;
 const routes: Array<{ method: string; path: string; handler_name: string; is_async: boolean }> = [];
 const handlers: Record<string, HandlerFunction> = {};
 
-// Helper functions to register routes
 function registerRoute(method: string, path: string, handler: HandlerFunction): HandlerFunction {
 	const metadata = {
 		method: method.toUpperCase(),
@@ -58,10 +56,6 @@ function post(path: string): (handler: HandlerFunction) => HandlerFunction {
 function ok(body: unknown): HandlerOutput {
 	return { status: 200, body };
 }
-
-// ============================================================================
-// Zod Schemas for Validation
-// ============================================================================
 
 const SmallPayloadSchema = z.object({
 	name: z.string(),
@@ -106,10 +100,6 @@ const VeryLargePayloadSchema = z.object({
 	metadata: z.record(z.any()),
 });
 
-// ============================================================================
-// JSON Body Workloads
-// ============================================================================
-
 async function post_json_small(request: HandlerInput): Promise<HandlerOutput> {
 	const validated = SmallPayloadSchema.parse(request.body);
 	return ok(validated);
@@ -130,10 +120,6 @@ async function post_json_very_large(request: HandlerInput): Promise<HandlerOutpu
 	return ok(validated);
 }
 
-// ============================================================================
-// Multipart Form Workloads
-// ============================================================================
-
 async function post_multipart_small(_request: HandlerInput): Promise<HandlerOutput> {
 	return ok({ files_received: 1, total_bytes: 1024 });
 }
@@ -146,10 +132,6 @@ async function post_multipart_large(_request: HandlerInput): Promise<HandlerOutp
 	return ok({ files_received: 5, total_bytes: 102400 });
 }
 
-// ============================================================================
-// URL Encoded Form Workloads
-// ============================================================================
-
 async function post_urlencoded_simple(request: HandlerInput): Promise<HandlerOutput> {
 	return ok(request.body ?? {});
 }
@@ -157,10 +139,6 @@ async function post_urlencoded_simple(request: HandlerInput): Promise<HandlerOut
 async function post_urlencoded_complex(request: HandlerInput): Promise<HandlerOutput> {
 	return ok(request.body ?? {});
 }
-
-// ============================================================================
-// Path Parameter Workloads
-// ============================================================================
 
 async function get_path_simple(request: HandlerInput): Promise<HandlerOutput> {
 	return ok({ id: request.path_params.id });
@@ -195,10 +173,6 @@ async function get_path_date(request: HandlerInput): Promise<HandlerOutput> {
 	return ok({ date: request.path_params.date });
 }
 
-// ============================================================================
-// Query Parameter Workloads
-// ============================================================================
-
 async function get_query_few(request: HandlerInput): Promise<HandlerOutput> {
 	return ok(request.query_params ?? {});
 }
@@ -211,10 +185,6 @@ async function get_query_many(request: HandlerInput): Promise<HandlerOutput> {
 	return ok(request.query_params ?? {});
 }
 
-// ============================================================================
-// Health Check
-// ============================================================================
-
 async function get_health(_request: HandlerInput): Promise<HandlerOutput> {
 	return ok({ status: "ok" });
 }
@@ -223,7 +193,6 @@ async function get_root(_request: HandlerInput): Promise<HandlerOutput> {
 	return ok({ status: "ok" });
 }
 
-// Register all routes
 post("/json/small")(post_json_small);
 post("/json/medium")(post_json_medium);
 post("/json/large")(post_json_large);
@@ -250,23 +219,19 @@ get("/query/many")(get_query_many);
 get("/health")(get_health);
 get("/")(get_root);
 
-// Create app object
 const app = {
 	routes,
 	handlers,
 };
 
-// Parse port from command line or environment
 const port = process.argv[2] ? parseInt(process.argv[2], 10) : process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 
-// Start the server
 console.error(`[spikard-node] Starting server on port ${port}`);
 const config = {
 	host: "0.0.0.0",
 	port,
 };
 try {
-	// runServer is fire-and-forget; any error is thrown synchronously before background thread starts.
 	native.runServer(app, config);
 	console.error(`[spikard-node] runServer dispatched successfully`);
 } catch (err) {

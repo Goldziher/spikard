@@ -31,9 +31,8 @@ class TestUploadFileAPI:
         upload = UploadFile(filename="test.txt", content=content)
 
         assert upload.read() == content
-        assert upload.read() == b""  # EOF reached
+        assert upload.read() == b""
 
-        # Seek back and read again
         upload.seek(0)
         assert upload.read() == content
 
@@ -50,7 +49,7 @@ class TestUploadFileAPI:
         """Test writing to file."""
         upload = UploadFile(filename="test.txt", content=b"Initial")
 
-        upload.seek(0, 2)  # Seek to end
+        upload.seek(0, 2)
         bytes_written = upload.write(b" content")
         assert bytes_written == 8
 
@@ -170,7 +169,6 @@ class TestMultipartUpload:
             }
 
         async with TestClient(app) as client:
-            # With file
             response = await client.post(
                 "/upload-optional",
                 files={"file": ("test.txt", b"data")},
@@ -181,7 +179,6 @@ class TestMultipartUpload:
             assert data["has_file"] is True
             assert data["filename"] == "test.txt"
 
-            # Without file
             response = await client.post("/upload-optional", data={"name": "Test"})
             if response.status_code != 200:
                 pass

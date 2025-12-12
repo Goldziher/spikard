@@ -19,8 +19,6 @@ use spikard_http::sse::{SseEvent, SseEventProducer};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
-// ===== Test Producers for Full Behavior Testing =====
-
 /// Producer that yields multiple numbered events in sequence
 #[derive(Debug, Clone)]
 struct MultiEventProducer {
@@ -107,12 +105,11 @@ impl SseEventProducer for RetryTimeoutProducer {
     async fn next_event(&self) -> Option<SseEvent> {
         let idx = self.current_idx.fetch_add(1, Ordering::SeqCst);
         if idx < self.event_count {
-            // Alternate between events with and without retry timeout
             if idx % 2 == 0 {
                 Some(
                     SseEvent::new(serde_json::json!({"index": idx, "with_retry": true}))
                         .with_id(format!("event-{}", idx))
-                        .with_retry(3000), // 3 second retry
+                        .with_retry(3000),
                 )
             } else {
                 Some(
@@ -146,14 +143,12 @@ impl SseEventProducer for KeepAliveProducer {
     async fn next_event(&self) -> Option<SseEvent> {
         let idx = self.current_idx.fetch_add(1, Ordering::SeqCst);
         if idx < self.event_count {
-            // Alternate between real events and keep-alive events
             if idx % 3 == 0 {
                 Some(
                     SseEvent::with_type("data", serde_json::json!({"index": idx, "type": "real_event"}))
                         .with_id(format!("event-{}", idx)),
                 )
             } else {
-                // Keep-alive event (no data)
                 Some(SseEvent::new(serde_json::json!({"index": idx, "type": "keep_alive"})))
             }
         } else {
@@ -277,7 +272,6 @@ impl SseEventProducer for LargePayloadProducer {
     async fn next_event(&self) -> Option<SseEvent> {
         let idx = self.current_idx.fetch_add(1, Ordering::SeqCst);
         if idx < self.event_count {
-            // Create a large payload (100KB+)
             let large_data: Vec<i32> = (0..25000).collect();
             Some(
                 SseEvent::new(serde_json::json!({
@@ -319,7 +313,6 @@ impl ErrorProducer {
 impl SseEventProducer for ErrorProducer {
     async fn next_event(&self) -> Option<SseEvent> {
         if self.should_error.load(Ordering::SeqCst) {
-            // Producer error: return None to end stream
             None
         } else {
             let idx = self.event_count.fetch_add(1, Ordering::SeqCst);
@@ -327,8 +320,6 @@ impl SseEventProducer for ErrorProducer {
         }
     }
 }
-
-// ===== Test 1: Event Streaming with Multiple Events =====
 
 #[tokio::test]
 async fn test_sse_event_streaming_multiple_events() {
@@ -342,7 +333,6 @@ async fn test_sse_event_streaming_multiple_events() {
         }
     }
 
-    // Verify all events received in order
     assert_eq!(events_received.len(), 5);
 
     for (idx, event) in events_received.iter().enumerate() {
@@ -350,11 +340,8 @@ async fn test_sse_event_streaming_multiple_events() {
         assert_eq!(event.id, Some(format!("event-{}", idx)));
     }
 
-    // Stream should end
     assert!(producer.next_event().await.is_none());
 }
-
-// ===== Test 2: Event with ID =====
 
 #[tokio::test]
 async fn test_sse_event_with_id() {
@@ -364,7 +351,6 @@ async fn test_sse_event_with_id() {
         ("id-3".to_string(), serde_json::json!({"data": "event3"})),
     ]);
 
-    // Collect all events
     let mut events = Vec::new();
     loop {
         match producer.next_event().await {
@@ -373,13 +359,10 @@ async fn test_sse_event_with_id() {
         }
     }
 
-    // Verify IDs are sequential and traceable
     assert_eq!(events[0].id, Some("id-1".to_string()));
     assert_eq!(events[1].id, Some("id-2".to_string()));
     assert_eq!(events[2].id, Some("id-3".to_string()));
 }
-
-// ===== Test 3: Client Reconnection with Last-Event-ID =====
 
 #[tokio::test]
 async fn test_sse_client_reconnection_with_last_event_id() {
@@ -392,7 +375,6 @@ async fn test_sse_client_reconnection_with_last_event_id() {
 
     let producer = IdTrackedEventProducer::new(events);
 
-    // First connection: consume 2 events
     let event1 = producer.next_event().await.unwrap();
     let event2 = producer.next_event().await.unwrap();
 
@@ -400,20 +382,14 @@ async fn test_sse_client_reconnection_with_last_event_id() {
     assert_eq!(event2.id, Some("id-2".to_string()));
     assert_eq!(producer.get_current_idx(), 2);
 
-    // Simulate reconnection - producer continues from index 2
-    // In real scenario, client sends Last-Event-ID: id-2
     let event3 = producer.next_event().await.unwrap();
     let event4 = producer.next_event().await.unwrap();
 
-    // Should get events 3 and 4
     assert_eq!(event3.id, Some("id-3".to_string()));
     assert_eq!(event4.id, Some("id-4".to_string()));
 
-    // Stream should end
     assert!(producer.next_event().await.is_none());
 }
-
-// ===== Test 4: Event Retry Timeout =====
 
 #[tokio::test]
 async fn test_sse_event_retry_timeout() {
@@ -427,7 +403,6 @@ async fn test_sse_event_retry_timeout() {
         }
     }
 
-    // Verify alternating retry timeouts
     assert_eq!(events[0].retry, Some(3000));
     assert_eq!(events[1].retry, None);
     assert_eq!(events[2].retry, Some(3000));
@@ -435,8 +410,6 @@ async fn test_sse_event_retry_timeout() {
     assert_eq!(events[4].retry, Some(3000));
     assert_eq!(events[5].retry, None);
 }
-
-// ===== Test 5: Comment Events and Keep-Alive =====
 
 #[tokio::test]
 async fn test_sse_comment_events() {
@@ -458,35 +431,26 @@ async fn test_sse_comment_events() {
         }
     }
 
-    // Should have 3 real events (indices 0, 3, 6) and 6 keep-alive
     assert_eq!(real_events, 3);
     assert_eq!(keep_alive_events, 6);
 }
-
-// ===== Test 6: Connection Cleanup on Disconnect =====
 
 #[tokio::test]
 async fn test_sse_connection_cleanup() {
     let producer = DisconnectTrackingProducer::new(3);
 
-    // Simulate connection
     producer.on_connect().await;
     assert_eq!(producer.get_connect_count(), 1);
 
-    // Consume some events
     let _ = producer.next_event().await;
     let _ = producer.next_event().await;
 
-    // Simulate disconnect
     producer.on_disconnect().await;
     assert_eq!(producer.get_disconnect_count(), 1);
 
-    // Verify cleanup was called
     assert_eq!(producer.get_connect_count(), 1);
     assert_eq!(producer.get_disconnect_count(), 1);
 }
-
-// ===== Test 7: Event with Multiple Data Lines =====
 
 #[tokio::test]
 async fn test_sse_event_with_multiple_data_lines() {
@@ -502,15 +466,12 @@ async fn test_sse_event_with_multiple_data_lines() {
 
     let event = producer.next_event().await.unwrap();
 
-    // Verify all data is present
     assert!(event.data.get("line1").is_some());
     assert!(event.data.get("line2").is_some());
     assert!(event.data.get("line3").is_some());
     assert!(event.data.get("multiline").is_some());
     assert_eq!(event.id, Some("id-1".to_string()));
 }
-
-// ===== Test 8: Event Custom Event Type =====
 
 #[tokio::test]
 async fn test_sse_event_custom_event_type() {
@@ -528,7 +489,6 @@ async fn test_sse_event_custom_event_type() {
         }
     }
 
-    // Verify pattern of event types
     assert_eq!(event_types[0], "user_update");
     assert_eq!(event_types[1], "status_change");
     assert_eq!(event_types[2], "notification");
@@ -536,56 +496,43 @@ async fn test_sse_event_custom_event_type() {
     assert_eq!(event_types.len(), 9);
 }
 
-// ===== Test 9: Large Event Data =====
-
 #[tokio::test]
 async fn test_sse_large_event_data() {
     let producer = LargePayloadProducer::new(1);
 
     let event = producer.next_event().await.unwrap();
 
-    // Verify large data is present
     assert!(event.data.get("large_array").is_some());
     let array = event.data.get("large_array").unwrap();
 
-    // Should be an array with 25000 elements
     if let Some(arr) = array.as_array() {
         assert_eq!(arr.len(), 25000);
     } else {
         panic!("Expected array");
     }
 
-    // Verify serialization works
     let serialized = event.data.to_string();
-    assert!(serialized.len() > 100000); // > 100KB
+    assert!(serialized.len() > 100000);
 }
-
-// ===== Test 10: Producer Error =====
 
 #[tokio::test]
 async fn test_sse_producer_error() {
     let producer = ErrorProducer::new();
 
-    // Normal operation
     let event1 = producer.next_event().await;
     assert!(event1.is_some());
 
     let event2 = producer.next_event().await;
     assert!(event2.is_some());
 
-    // Enable error mode
     producer.enable_error();
 
-    // Should end stream
     let event3 = producer.next_event().await;
     assert!(event3.is_none());
 
-    // Stream should remain closed
     let event4 = producer.next_event().await;
     assert!(event4.is_none());
 }
-
-// ===== Additional Edge Cases =====
 
 #[tokio::test]
 async fn test_sse_rapid_event_generation() {
@@ -603,7 +550,6 @@ async fn test_sse_rapid_event_generation() {
 
     let duration = start.elapsed();
 
-    // Should generate 100 events very quickly
     assert_eq!(count, 100);
     assert!(duration.as_secs() < 1, "Should generate 100 events in < 1 second");
 }
@@ -632,7 +578,6 @@ async fn test_sse_event_data_integrity() {
         }
     }
 
-    // Verify data integrity
     assert_eq!(received[0].data, events[0].1);
     assert_eq!(received[1].data, events[1].1);
     assert_eq!(received[2].data, events[2].1);

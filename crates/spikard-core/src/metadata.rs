@@ -191,14 +191,12 @@ pub fn parse_parameter_schema(schema: &Value) -> Result<Vec<ParameterMetadata>, 
     for (param_name, param_schema) in props {
         let is_required = required.contains(param_name);
 
-        // Extract source from schema
         let source = param_schema
             .get("source")
             .and_then(|s| s.as_str())
             .and_then(|s| s.parse().ok())
             .unwrap_or(ParameterSource::Query);
 
-        // Extract type
         let schema_type = param_schema
             .get("type")
             .and_then(|t| t.as_str())
@@ -220,13 +218,11 @@ pub fn parse_parameter_schema(schema: &Value) -> Result<Vec<ParameterMetadata>, 
 pub fn validate_metadata(metadata: &ExtractedRouteMetadata) -> Result<(), Vec<String>> {
     let mut errors = Vec::new();
 
-    // Validate parameter names are not empty
     for param in &metadata.parameters {
         if param.name.is_empty() {
             errors.push("Parameter name cannot be empty".to_string());
         }
 
-        // Validate schema if present
         if let Some(schema) = &param.schema {
             if !schema.is_object() {
                 errors.push(format!("Parameter schema for '{}' must be an object", param.name));
@@ -234,14 +230,12 @@ pub fn validate_metadata(metadata: &ExtractedRouteMetadata) -> Result<(), Vec<St
         }
     }
 
-    // Validate request schema structure if present
     if let Some(schema) = &metadata.request_schema {
         if !schema.is_object() {
             errors.push("Request schema must be an object".to_string());
         }
     }
 
-    // Validate response schema structure if present
     if let Some(schema) = &metadata.response_schema {
         if !schema.is_object() {
             errors.push("Response schema must be an object".to_string());
@@ -265,12 +259,10 @@ pub fn merge_parameters(
 ) -> Result<Vec<ParameterMetadata>, String> {
     let mut merged: HashMap<String, ParameterMetadata> = HashMap::new();
 
-    // Add path parameters first
     for param in path_params {
         merged.insert(param.name.clone(), param);
     }
 
-    // Merge with schema parameters (schema takes precedence)
     if let Some(schema_obj) = schema {
         let schema_params = parse_parameter_schema(schema_obj)?;
         for param in schema_params {
