@@ -1,4 +1,3 @@
-import { init as initWasm, TestClient as NativeTestClient } from "../runtime/spikard_wasm.js";
 import type { LifecycleHookFunction, LifecycleHookPayload, LifecycleHooks } from "./app";
 import type { HandlerFunction, SpikardApp } from "./index";
 import type { Request } from "./request";
@@ -7,6 +6,8 @@ import type { HandlerBody, HandlerPayload, JsonValue, StructuredHandlerResponse 
 
 type HeaderMap = Record<string, string>;
 type HeaderInput = HeaderMap | Map<string, string> | null | undefined;
+
+const globalAny = globalThis as unknown as { Buffer?: unknown };
 
 export interface MultipartFile {
 	name: string;
@@ -39,7 +40,16 @@ type NativeRequestOptions = {
 	binary?: string;
 };
 
-type NativeClient = InstanceType<typeof NativeTestClient>;
+interface NativeClient {
+	get(path: string, headers: HeaderMap | null): Promise<NativeSnapshot>;
+	delete(path: string, headers: HeaderMap | null): Promise<NativeSnapshot>;
+	head(path: string, headers: HeaderMap | null): Promise<NativeSnapshot>;
+	options(path: string, headers: HeaderMap | null): Promise<NativeSnapshot>;
+	trace(path: string, headers: HeaderMap | null): Promise<NativeSnapshot>;
+	post(path: string, options: NativeRequestOptions | null): Promise<NativeSnapshot>;
+	put(path: string, options: NativeRequestOptions | null): Promise<NativeSnapshot>;
+	patch(path: string, options: NativeRequestOptions | null): Promise<NativeSnapshot>;
+}
 
 type NativeLifecycleHookResult =
 	| { type: "request"; payload: InternalRequestPayload }
@@ -61,8 +71,47 @@ type NativeClientFactory = (
 	dependencies: Record<string, unknown> | null,
 ) => Promise<NativeClient>;
 
-const defaultNativeClientFactory: NativeClientFactory = (routesJson, handlers, config, lifecycleHooks, dependencies) =>
-	wasmInitPromise.then(() => new NativeTestClient(routesJson, handlers, config, lifecycleHooks, dependencies));
+type NativeTestClientConstructor = new (
+	routesJson: string,
+	handlers: Record<string, HandlerFunction>,
+	config: string | null,
+	lifecycleHooks: NativeLifecycleHooksPayload | null,
+	dependencies: Record<string, unknown> | null,
+) => NativeClient;
+
+type WasmBindings = {
+	init: () => unknown;
+	TestClient: NativeTestClientConstructor;
+};
+
+let wasmBindingsPromise: Promise<WasmBindings> | null = null;
+
+async function loadWasmBindings(): Promise<WasmBindings> {
+	if (wasmBindingsPromise) {
+		return wasmBindingsPromise;
+	}
+	wasmBindingsPromise = (async () => {
+		try {
+			return (await import("../runtime/spikard_wasm.js")) as unknown as WasmBindings;
+		} catch {
+			const fallback = "../../crates/spikard-wasm/dist-node/" + "spikard_wasm.js";
+			return (await import(fallback)) as unknown as WasmBindings;
+		}
+	})();
+	return wasmBindingsPromise;
+}
+
+const defaultNativeClientFactory: NativeClientFactory = async (
+	routesJson,
+	handlers,
+	config,
+	lifecycleHooks,
+	dependencies,
+) => {
+	const bindings = await loadWasmBindings();
+	await Promise.resolve(bindings.init());
+	return new bindings.TestClient(routesJson, handlers, config, lifecycleHooks, dependencies);
+};
 
 let nativeClientFactory: NativeClientFactory = defaultNativeClientFactory;
 
@@ -79,7 +128,6 @@ interface NativeSnapshot {
 const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
 const RAW_REQUEST_KEY = "__spikard_raw_request__";
-const wasmInitPromise = Promise.resolve(initWasm());
 const EMPTY_HOOKS: LifecycleHooks = {
 	onRequest: [],
 	preValidation: [],
@@ -135,8 +183,10 @@ export class TestResponse {
 
 	bytes(): Uint8Array {
 		const decoded = this.getDecodedBody();
-		if (typeof globalThis.Buffer !== "undefined") {
-			return globalThis.Buffer.from(decoded);
+		const bufferCtor = globalAny.Buffer as { from: (data: Uint8Array) => Uint8Array } | undefined;
+		if (bufferCtor) {
+			const buf = bufferCtor.from(decoded);
+			return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
 		}
 		return decoded.slice();
 	}
@@ -486,9 +536,6 @@ function toUint8Array(value: ArrayBuffer | ArrayLike<number> | Uint8Array): Uint
 	if (value instanceof Uint8Array) {
 		return value;
 	}
-	if (typeof globalThis.Buffer !== "undefined" && value instanceof globalThis.Buffer) {
-		return new Uint8Array(value);
-	}
 	if (ArrayBuffer.isView(value)) {
 		return new Uint8Array(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
 	}
@@ -510,8 +557,11 @@ function gunzipBytes(data: Uint8Array): Uint8Array {
 }
 
 function bufferToBase64(bytes: Uint8Array): string {
-	if (typeof globalThis.Buffer !== "undefined") {
-		return globalThis.Buffer.from(bytes).toString("base64");
+	const bufferCtor = globalAny.Buffer as
+		| { from: (data: Uint8Array) => { toString: (encoding: string) => string } }
+		| undefined;
+	if (bufferCtor) {
+		return bufferCtor.from(bytes).toString("base64");
 	}
 	let binary = "";
 	for (const byte of bytes) {
@@ -579,7 +629,7 @@ class WasmRequest implements Request {
 	private readonly textBody: string | undefined;
 	private bodyMetadata: BodyMetadata | null = null;
 	private bodyDirty = false;
-	private _body: Buffer | Uint8Array | null;
+	private _body: Uint8Array | null;
 
 	constructor(payload: InternalRequestPayload, rawJson: string) {
 		this.rawJson = rawJson;
@@ -610,11 +660,11 @@ class WasmRequest implements Request {
 		this._body = applied.buffer;
 	}
 
-	get body(): Buffer | Uint8Array | null {
+	get body(): Uint8Array | null {
 		return this._body;
 	}
 
-	set body(value: Buffer | Uint8Array | null) {
+	set body(value: Uint8Array | null) {
 		this._body = value;
 		this.bodyDirty = true;
 	}
@@ -690,16 +740,6 @@ class WasmRequest implements Request {
 				default:
 					return null;
 			}
-		}
-		if (typeof currentBody === "string") {
-			return currentBody;
-		}
-		if (
-			typeof globalThis.Buffer !== "undefined" &&
-			typeof globalThis.Buffer === "function" &&
-			currentBody instanceof globalThis.Buffer
-		) {
-			return { __spikard_base64__: bufferToBase64(toUint8Array(currentBody)) };
 		}
 		if (currentBody instanceof Uint8Array) {
 			return { __spikard_base64__: bufferToBase64(currentBody) };
@@ -791,8 +831,10 @@ function buildRawQueryMap(queryString: string): Record<string, string[]> {
 }
 
 function base64ToUint8Array(base64: string): Uint8Array {
-	if (typeof globalThis.Buffer !== "undefined") {
-		return new Uint8Array(globalThis.Buffer.from(base64, "base64"));
+	const bufferCtor = globalAny.Buffer as { from: (data: string, encoding: string) => Uint8Array } | undefined;
+	if (bufferCtor) {
+		const buf = bufferCtor.from(base64, "base64");
+		return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
 	}
 	if (typeof atob === "function") {
 		const binary = atob(base64);
@@ -819,12 +861,14 @@ function decodeFormValues(values: Record<string, JsonValue>): Record<string, str
 	return form;
 }
 
-function buildBuffer(bytes: Uint8Array | null): Buffer | Uint8Array | null {
+function buildBuffer(bytes: Uint8Array | null): Uint8Array | null {
 	if (!bytes) {
 		return null;
 	}
-	if (typeof globalThis.Buffer !== "undefined") {
-		return globalThis.Buffer.from(bytes);
+	const bufferCtor = globalAny.Buffer as { from: (data: Uint8Array) => Uint8Array } | undefined;
+	if (bufferCtor) {
+		const buf = bufferCtor.from(bytes);
+		return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
 	}
 	return bytes;
 }
@@ -834,14 +878,14 @@ function applyBodyMetadata(
 	payloadBody: JsonValue | null | undefined,
 ): {
 	kind: RequestBodyKind;
-	buffer: Buffer | Uint8Array | null;
+	buffer: Uint8Array | null;
 	jsonValue: JsonValue | undefined;
 	formValue: Record<string, string> | undefined;
 	textValue: string | undefined;
 	files: MultipartFile[] | undefined;
 } {
 	const kind = normalizeRequestBodyKind(metadata?.kind);
-	let buffer: Buffer | Uint8Array | null = null;
+	let buffer: Uint8Array | null = null;
 	if (metadata?.rawBase64) {
 		buffer = buildBuffer(base64ToUint8Array(metadata.rawBase64));
 	}
