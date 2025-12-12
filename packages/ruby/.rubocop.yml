@@ -2,6 +2,11 @@ AllCops:
   NewCops: enable
   TargetRubyVersion: 3.2
   Exclude:
+    - "ext/**"
+    - "tmp/**/*"
+    - "vendor/**"
+    - "**/Gemfile.ext"
+    - "**/Gemfile.ext.lock"
     - "packages/ruby/ext/**"
     - "packages/ruby/tmp/**/*"
     - "packages/ruby/vendor/**"
