@@ -25,7 +25,7 @@ use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD as BASE64_URL_SAFE_NO_PAD;
 use hmac::{Hmac, Mac};
 use http::StatusCode;
-use js_sys::{Date as JsDate, Function, JSON, Object, Promise, Reflect, Symbol, Uint8Array};
+use js_sys::{Array, Date as JsDate, Function, JSON, Object, Promise, Reflect, Symbol, Uint8Array};
 use serde_json::{Map as JsonMap, Value};
 use sha2::Sha256;
 use spikard_core::RouteMetadata;
@@ -39,7 +39,9 @@ use spikard_core::schema_registry::SchemaRegistry;
 use spikard_core::validation::{SchemaValidator, ValidationError};
 use std::collections::HashMap;
 use std::sync::Arc;
+use uuid::Uuid;
 use wasm_bindgen::JsCast;
+use wasm_bindgen::closure::Closure;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
 
@@ -477,6 +479,9 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         return Ok(snapshot);
     }
 
+    let max_body_size = context.config.max_body_size.filter(|max| *max > 0);
+    let request_timeout_seconds = context.config.request_timeout.filter(|seconds| *seconds > 0);
+
     let (route, path_params, path_without_query, query) = match_route(&context.routes, &context.method, &context.path)
         .map_err(|e| js_error_from_jsvalue("route_match_failed", e))?;
 
@@ -519,6 +524,23 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
     }
 
     let mut body_payload = request_options.body_payload();
+    if let Some(max_bytes) = max_body_size {
+        if let Some(encoded) = body_payload.metadata.raw_base64.as_deref() {
+            let raw_len = match BASE64_STANDARD.decode(encoded) {
+                Ok(decoded) => decoded.len(),
+                Err(_) => 0,
+            };
+            if raw_len > max_bytes {
+                let problem = ProblemDetails::new(
+                    "https://spikard.dev/errors/payload-too-large",
+                    "Payload Too Large",
+                    StatusCode::PAYLOAD_TOO_LARGE,
+                )
+                .with_detail(format!("Request body exceeded limit of {max_bytes} bytes"));
+                return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+            }
+        }
+    }
     if let Some(request_validator) = validators.request.as_ref() {
         if matches!(body_payload.metadata.kind, BodyKind::Form | BodyKind::Multipart) {
             if let Some(value) = body_payload.value.take() {
@@ -593,10 +615,26 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
     let promise: Promise = js_promise
         .dyn_into()
         .map_err(|_| JsValue::from_str("Handler must return a Promise"))?;
-    let result = wasm_bindgen_futures::JsFuture::from(promise).await;
+
+    let raced = if let Some(seconds) = request_timeout_seconds {
+        let timeout_promise = build_timeout_promise(seconds)?;
+        Promise::race(&Array::of2(&promise, &timeout_promise))
+    } else {
+        promise
+    };
+
+    let result = wasm_bindgen_futures::JsFuture::from(raced).await;
 
     let response_value = match result {
         Ok(value) => {
+            if is_timeout_marker(&value) {
+                let problem = ProblemDetails::new(
+                    "https://spikard.dev/errors/request-timeout",
+                    "Request Timeout",
+                    StatusCode::REQUEST_TIMEOUT,
+                );
+                return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+            }
             let normalized = normalize_handler_result(value).await?;
             lifecycle_runner.run_response_hooks(normalized).await?
         }
@@ -744,6 +782,36 @@ fn parse_dependencies(dependencies: JsValue) -> Result<HashMap<String, Dependenc
     }
 
     Ok(dep_map)
+}
+
+fn is_timeout_marker(value: &JsValue) -> bool {
+    if !value.is_object() {
+        return false;
+    }
+    let obj = Object::from(value.clone());
+    Reflect::get(&obj, &JsValue::from_str("__spikard_timeout__"))
+        .ok()
+        .and_then(|marker| marker.as_bool())
+        .unwrap_or(false)
+}
+
+fn build_timeout_promise(seconds: u64) -> Result<Promise, JsValue> {
+    let global = js_sys::global();
+    let set_timeout = Reflect::get(&global, &JsValue::from_str("setTimeout"))?
+        .dyn_into::<Function>()
+        .map_err(|_| JsValue::from_str("setTimeout is not a function"))?;
+
+    Ok(Promise::new(&mut |resolve, _reject| {
+        let resolve_fn = resolve.clone();
+        let callback = Closure::once_into_js(move || {
+            let marker = Object::new();
+            let _ = Reflect::set(&marker, &JsValue::from_str("__spikard_timeout__"), &JsValue::TRUE);
+            let _ = resolve_fn.call1(&JsValue::UNDEFINED, &marker);
+        });
+
+        let delay_ms = JsValue::from_f64((seconds as f64) * 1000.0);
+        let _ = set_timeout.call2(&global, &callback, &delay_ms);
+    }))
 }
 
 async fn resolve_dependency_map(
@@ -1079,6 +1147,14 @@ impl ResponseSnapshot {
     }
 
     fn from_raw(mut raw: RawResponse, request_headers: &HashMap<String, String>, config: &ServerConfig) -> Self {
+        if config.enable_request_id {
+            let request_id = request_headers
+                .get("x-request-id")
+                .cloned()
+                .unwrap_or_else(|| Uuid::new_v4().to_string());
+            raw.headers.insert("x-request-id".to_string(), request_id);
+        }
+
         if let Some(compression) = &config.compression {
             let http_config = spikard_core::CompressionConfig {
                 gzip: compression.gzip,

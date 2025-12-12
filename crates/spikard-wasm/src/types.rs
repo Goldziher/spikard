@@ -34,13 +34,10 @@ pub struct ServerConfig {
     #[serde(default)]
     pub api_key_auth: Option<ApiKeyConfig>,
     #[serde(default = "default_true")]
-    #[allow(dead_code)]
     pub enable_request_id: bool,
     #[serde(rename = "maxBodySize", default)]
-    #[allow(dead_code)]
     pub max_body_size: Option<usize>,
     #[serde(rename = "requestTimeout", default)]
-    #[allow(dead_code)]
     pub request_timeout: Option<u64>,
     #[serde(rename = "__wasmStaticManifest", default)]
     pub wasm_static_manifest: Vec<StaticManifestEntry>,
