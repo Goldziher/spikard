@@ -136,6 +136,11 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
 fn generate_package_json(target: &TypeScriptTarget) -> String {
     match target.runtime {
         crate::ts_target::Runtime::CloudflareWorkers => {
+            let dep_version = if target.dependency_package == "@spikard/wasm" {
+                "latest"
+            } else {
+                "workspace:*"
+            };
             format!(
                 r#"{{
 	"name": "{name}",
@@ -145,20 +150,21 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 	"scripts": {{
 		"test": "vitest run",
 		"test:watch": "vitest"
-	}},
-		"devDependencies": {{
-			"{dependency}": "workspace:*",
-			"@cloudflare/vitest-pool-workers": "^0.7.0",
-			"@cloudflare/workers-types": "^4.20250106.0",
-			"@vitest/coverage-v8": "^4.0.6",
+		}},
+			"devDependencies": {{
+				"{dependency}": "{dep_version}",
+				"@cloudflare/vitest-pool-workers": "^0.7.0",
+				"@cloudflare/workers-types": "^4.20250106.0",
+				"@vitest/coverage-v8": "^4.0.6",
 			"typescript": "^5.9.3",
 			"vitest": "^4.0.6",
 			"wrangler": "^3.100.0"
 		}}
 }}
-"#,
+	"#,
                 name = target.e2e_package_name,
-                dependency = target.dependency_package
+                dependency = target.dependency_package,
+                dep_version = dep_version
             )
         }
         _ => {

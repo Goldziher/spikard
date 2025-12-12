@@ -1265,41 +1265,22 @@ fn format_generated_ts(dir: &Path) -> Result<()> {
 fn convert_to_deno_syntax(code: &str, category: &str) -> String {
     let mut result = code.to_string();
 
-    // Remove describe wrapper - find the opening and matching closing brace
-    let describe_pattern = format!("describe(\"{}\", () => {{", category);
-    if let Some(start_pos) = result.find(&describe_pattern) {
-        // Find the matching closing brace
-        let after_open = &result[start_pos + describe_pattern.len()..];
-        let mut depth = 1;
-        let mut close_pos = 0;
-        for (i, ch) in after_open.chars().enumerate() {
-            if ch == '{' {
-                depth += 1;
-            } else if ch == '}' {
-                depth -= 1;
-                if depth == 0 {
-                    close_pos = i;
-                    break;
-                }
-            }
-        }
-        if close_pos > 0 {
-            // Extract the content between the braces
-            let content = after_open[..close_pos].trim();
-            // Replace the entire describe block with just the content
-            let before_describe = &result[..start_pos];
-            let after_closing = &result[start_pos + describe_pattern.len() + close_pos + 1..];
-            result = format!(
-                "{}{}{}",
-                before_describe.trim_end(),
-                content,
-                after_closing
-                    .trim_start()
-                    .trim_start_matches(");\n")
-                    .trim_start_matches(");")
-            );
-        }
+    // Remove outer describe wrapper line(s) for Deno.
+    let mut filtered_lines: Vec<&str> = result
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim_start();
+            !trimmed.starts_with(&format!("describe(\"{}\"", category))
+        })
+        .collect();
+    // Drop trailing describe close if present.
+    while matches!(filtered_lines.last(), Some(l) if l.trim().is_empty()) {
+        filtered_lines.pop();
     }
+    if matches!(filtered_lines.last(), Some(l) if l.trim() == "});") {
+        filtered_lines.pop();
+    }
+    result = filtered_lines.join("\n");
 
     // Convert test() to Deno.test() with category prefix
     let lines: Vec<String> = result
@@ -1325,8 +1306,9 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
         .collect();
     result = lines.join("\n");
 
-    // Convert all expect() calls to assertEquals()
-    // Handle expect().toBe() and expect().toEqual()
+    // Convert all expect() calls to Deno std/assert helpers.
+    // Supported: toBe, toEqual, toStrictEqual, toBeGreaterThan, toBeUndefined, toBeDefined,
+    // toHaveProperty, toMatch.
     loop {
         let mut modified = false;
 
@@ -1337,13 +1319,13 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
             let mut depth = 1;
             let mut expr_end = 0;
 
-            for (i, ch) in after_expect.chars().enumerate() {
+            for (byte_i, ch) in after_expect.char_indices() {
                 match ch {
                     '(' => depth += 1,
                     ')' => {
                         depth -= 1;
                         if depth == 0 {
-                            expr_end = i;
+                            expr_end = byte_i;
                             break;
                         }
                     }
@@ -1355,40 +1337,78 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
                 let expr = &after_expect[..expr_end];
                 let after_expr = &after_expect[expr_end + 1..];
 
-                // Check for .toBe( or .toEqual(
-                if let Some(method_match) = after_expr
-                    .strip_prefix(".toBe(")
-                    .or_else(|| after_expr.strip_prefix(".toEqual("))
-                {
-                    // Find the closing parenthesis for the argument
-                    let mut depth2 = 1;
-                    let mut arg_end = 0;
+                // Matchers without arguments.
+                if after_expr.starts_with(".toBeUndefined()") {
+                    let original_len = 7 + expr_end + 1 + ".toBeUndefined()".len();
+                    let original = &result[expect_pos..expect_pos + original_len];
+                    let replacement = format!("assertEquals({}, undefined)", expr);
+                    result = result.replacen(original, &replacement, 1);
+                    modified = true;
+                } else if after_expr.starts_with(".toBeDefined()") {
+                    let original_len = 7 + expr_end + 1 + ".toBeDefined()".len();
+                    let original = &result[expect_pos..expect_pos + original_len];
+                    let replacement = format!("assert({} !== undefined && {} !== null)", expr, expr);
+                    result = result.replacen(original, &replacement, 1);
+                    modified = true;
+                } else {
+                    // Matchers with arguments.
+                    let matcher_prefixes = [
+                        (".toBe(", "eq"),
+                        (".toEqual(", "eq"),
+                        (".toStrictEqual(", "eq"),
+                        (".toBeGreaterThan(", "gt"),
+                        (".toHaveProperty(", "hasprop"),
+                        (".toMatch(", "match"),
+                    ];
 
-                    for (i, ch) in method_match.chars().enumerate() {
-                        match ch {
-                            '(' => depth2 += 1,
-                            ')' => {
-                                depth2 -= 1;
-                                if depth2 == 0 {
-                                    arg_end = i;
-                                    break;
-                                }
-                            }
-                            _ => {}
+                    let mut matched: Option<(&str, &str, &str)> = None;
+                    for (prefix, kind) in matcher_prefixes {
+                        if let Some(rest) = after_expr.strip_prefix(prefix) {
+                            matched = Some((prefix, kind, rest));
+                            break;
                         }
                     }
 
-                    if arg_end > 0 {
-                        let arg = &method_match[..arg_end];
-                        let replacement = format!("assertEquals({}, {})", expr, arg);
+                    if let Some((prefix, kind, method_match)) = matched {
+                        // Find the closing parenthesis for the argument
+                        let mut depth2 = 1;
+                        let mut arg_end = 0;
 
-                        // Calculate the full length of the original expression
-                        let method_name_len = if after_expr.starts_with(".toBe(") { 6 } else { 8 };
-                        let original_len = 7 + expr_end + 1 + method_name_len + arg_end + 1; // "expect(" + expr + ")" + ".toBe(" or ".toEqual(" + arg + ")"
-                        let original = &result[expect_pos..expect_pos + original_len];
+                        for (byte_i, ch) in method_match.char_indices() {
+                            match ch {
+                                '(' => depth2 += 1,
+                                ')' => {
+                                    depth2 -= 1;
+                                    if depth2 == 0 {
+                                        arg_end = byte_i;
+                                        break;
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
 
-                        result = result.replacen(original, &replacement, 1);
-                        modified = true;
+                        if arg_end > 0 {
+                            let arg = &method_match[..arg_end];
+                            let replacement = match kind {
+                                "eq" => format!("assertEquals({}, {})", expr, arg),
+                                "gt" => format!("assert({} > {})", expr, arg),
+                                "hasprop" => format!("assert(Object.hasOwn({}, {}))", expr, arg),
+                                "match" => {
+                                    if arg.trim_start().starts_with('/') {
+                                        format!("assert({}.test({}))", arg, expr)
+                                    } else {
+                                        format!("assert({}.includes({}))", expr, arg)
+                                    }
+                                }
+                                _ => unreachable!("Unsupported matcher kind"),
+                            };
+
+                            let original_len = 7 + expr_end + 1 + prefix.len() + arg_end + 1;
+                            let original = &result[expect_pos..expect_pos + original_len];
+                            result = result.replacen(original, &replacement, 1);
+                            modified = true;
+                        }
                     }
                 }
             }
@@ -1399,7 +1419,36 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
         }
     }
 
-    // Cleanup stray braces from syntax conversion.
+    // Replace vitest imports with Deno std/assert.
+    let mut lines: Vec<String> = Vec::new();
+    let mut has_std_assert = false;
+    for line in result.lines() {
+        if line.contains("from \"vitest\"") {
+            continue;
+        }
+        if line.contains("from \"@std/assert\"") {
+            has_std_assert = true;
+            lines.push("import { assert, assertEquals } from \"@std/assert\";".to_string());
+            continue;
+        }
+        lines.push(line.to_string());
+    }
+    if !has_std_assert {
+        // Insert std/assert import after TestClient import if possible.
+        let mut inserted = false;
+        let mut new_lines = Vec::with_capacity(lines.len() + 1);
+        for line in lines {
+            new_lines.push(line.clone());
+            if !inserted && line.contains("TestClient") && line.contains("@spikard/wasm") {
+                new_lines.push("import { assert, assertEquals } from \"@std/assert\";".to_string());
+                inserted = true;
+            }
+        }
+        lines = new_lines;
+    }
+    result = lines.join("\n");
+
+    // Cleanup any stray braces from prior conversions.
     result = result.replace("})});", "});");
 
     result
