@@ -524,7 +524,7 @@ function normalizeJsonValue(value: unknown): JsonValue {
 		return value.map((entry) => normalizeJsonValue(entry)) as JsonValue;
 	}
 	if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-		return value;
+		return value as JsonValue;
 	}
 	if (typeof value === "object" && value) {
 		const result: Record<string, JsonValue> = {};

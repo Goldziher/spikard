@@ -67,18 +67,16 @@ function wrapIterator(iterator: AsyncIterator<StreamChunk>): AsyncIteratorLike<S
 	};
 }
 
-function normalizeChunk(chunk: StreamChunk): Uint8Array {
+function normalizeChunk(chunk: unknown): Uint8Array {
 	if (typeof chunk === "string") {
 		return new TextEncoder().encode(chunk);
 	}
 	if (chunk instanceof Uint8Array) {
 		return chunk;
 	}
-	if (typeof Buffer !== "undefined" && chunk instanceof Buffer) {
-		return new Uint8Array(chunk);
-	}
 	if (ArrayBuffer.isView(chunk)) {
-		return new Uint8Array(chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength));
+		const view = chunk as ArrayBufferView;
+		return new Uint8Array(view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength));
 	}
 	if (chunk instanceof ArrayBuffer) {
 		return new Uint8Array(chunk);
