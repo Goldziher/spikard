@@ -59,8 +59,8 @@ function toAsyncIterator(
 function wrapIterator(iterator: AsyncIterator<StreamChunk>): AsyncIteratorLike<StreamChunk> {
 	return {
 		next: iterator.next.bind(iterator),
-		throw: iterator.throw ? iterator.throw.bind(iterator) : undefined,
-		return: iterator.return ? iterator.return.bind(iterator) : undefined,
+		...(iterator.throw ? { throw: iterator.throw.bind(iterator) } : {}),
+		...(iterator.return ? { return: iterator.return.bind(iterator) } : {}),
 		[Symbol.asyncIterator]() {
 			return this;
 		},
@@ -91,7 +91,7 @@ function normalizeChunk(chunk: StreamChunk): Uint8Array {
 
 function concatChunks(chunks: Uint8Array[]): Uint8Array {
 	if (chunks.length === 1) {
-		return chunks[0];
+		return chunks[0] ?? new Uint8Array();
 	}
 
 	const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
