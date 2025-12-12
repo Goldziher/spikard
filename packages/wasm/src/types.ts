@@ -1,5 +1,5 @@
-import type { Request } from "./request";
-import type { StreamingResponse } from "./streaming";
+import type { Request } from "./request.ts";
+import type { StreamingResponse } from "./streaming.ts";
 
 export type JsonPrimitive = string | number | boolean | null;
 

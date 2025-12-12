@@ -1,4 +1,4 @@
-import type { HandlerResult, JsonValue } from "./types";
+import type { HandlerResult, JsonValue } from "./types.ts";
 
 const STREAM_HANDLE_PROP = Symbol.for("spikard.streaming.handle");
 

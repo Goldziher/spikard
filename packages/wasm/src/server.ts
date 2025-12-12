@@ -1,6 +1,6 @@
-import type { ServerConfig } from "./config";
-import type { SpikardApp } from "./index";
-import { type MultipartFile, TestClient, type TestResponse } from "./testing";
+import type { ServerConfig } from "./config.ts";
+import type { SpikardApp } from "./index.ts";
+import { type MultipartFile, TestClient, type TestResponse } from "./testing.ts";
 
 export interface ServerOptions {
 	host?: string;
