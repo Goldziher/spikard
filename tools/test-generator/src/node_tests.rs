@@ -1301,6 +1301,44 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
     }
     result = filtered_lines.join("\n");
 
+    // Convert vitest-style `test.skip()` blocks into Deno `ignore` tests.
+    // Deno 2 does not provide `Deno.test.ignore`/`Deno.test.skip`.
+    let mut rewritten: Vec<String> = Vec::new();
+    let mut in_skip_block = false;
+    let mut skip_indent = String::new();
+    for line in result.lines() {
+        if !in_skip_block {
+            if let Some(pos) = line.find("test.skip(\"") {
+                let indent = line[..pos].to_string();
+                let after = &line[pos + "test.skip(\"".len()..];
+                if let Some(end_quote) = after.find('"') {
+                    let test_name = &after[..end_quote];
+                    rewritten.push(format!("{indent}Deno.test({{"));
+                    rewritten.push(format!("{indent}\tname: \"{category}: {test_name}\","));
+                    rewritten.push(format!("{indent}\tignore: true,"));
+                    rewritten.push(format!("{indent}\tfn: async () => {{"));
+                    in_skip_block = true;
+                    skip_indent = indent;
+                    continue;
+                }
+            }
+            rewritten.push(line.to_string());
+            continue;
+        }
+
+        // Inside a skip block, shift indentation by one extra tab so it sits under `fn: ... {`.
+        if line.trim() == "});" {
+            rewritten.push(format!("{skip_indent}\t}},"));
+            rewritten.push(format!("{skip_indent}}});"));
+            in_skip_block = false;
+            skip_indent.clear();
+            continue;
+        }
+
+        rewritten.push(format!("{skip_indent}\t{}", line.trim_start()));
+    }
+    result = rewritten.join("\n");
+
     // Convert test() to Deno.test() with category prefix
     let lines: Vec<String> = result
         .lines()

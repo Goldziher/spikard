@@ -29,8 +29,44 @@ pub struct ServerConfig {
     pub compression: Option<CompressionConfig>,
     #[serde(default)]
     pub rate_limit: Option<RateLimitConfig>,
+    #[serde(default)]
+    pub jwt_auth: Option<JwtConfig>,
+    #[serde(default)]
+    pub api_key_auth: Option<ApiKeyConfig>,
+    #[serde(default = "default_true")]
+    pub enable_request_id: bool,
+    #[serde(rename = "maxBodySize", default)]
+    pub max_body_size: Option<usize>,
+    #[serde(rename = "requestTimeout", default)]
+    pub request_timeout: Option<u64>,
     #[serde(rename = "__wasmStaticManifest", default)]
     pub wasm_static_manifest: Vec<StaticManifestEntry>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JwtConfig {
+    pub secret: String,
+    #[serde(default)]
+    pub audience: Vec<String>,
+    #[serde(default)]
+    pub issuer: Option<String>,
+    #[serde(default)]
+    pub algorithm: Option<String>,
+    #[serde(default)]
+    pub leeway: u64,
+}
+
+fn default_api_key_header() -> String {
+    "X-API-Key".to_string()
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApiKeyConfig {
+    pub keys: Vec<String>,
+    #[serde(default = "default_api_key_header")]
+    pub header_name: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -222,50 +258,103 @@ impl RequestOptions {
     }
 
     pub fn body_payload(&self) -> BodyPayload {
-        let value = if let Some(multipart) = &self.multipart {
-            let files = multipart
-                .files
-                .iter()
-                .map(|file| {
-                    json!({
-                        "name": file.name,
-                        "filename": file.filename,
-                        "content": file.content,
-                        "contentType": file.content_type,
-                    })
-                })
-                .collect::<Vec<_>>();
-            Some(json!({
-                "__spikard_multipart__": {
-                    "fields": multipart.fields,
-                    "files": files
+        if let Some(multipart) = &self.multipart {
+            let mut body = JsonMap::new();
+            let mut fields_only = JsonMap::new();
+
+            // Fields first.
+            for (key, value) in &multipart.fields {
+                body.insert(key.clone(), value.clone());
+                fields_only.insert(key.clone(), value.clone());
+            }
+
+            // Group files by field name.
+            let mut grouped: HashMap<String, Vec<Value>> = HashMap::new();
+            for file in &multipart.files {
+                let filename = file.filename.clone().unwrap_or_default();
+                let content_type = file.content_type.clone().unwrap_or_default();
+                let size = file.content.as_bytes().len();
+
+                let file_obj = json!({
+                    "filename": filename,
+                    "size": size,
+                    "content": file.content,
+                    "content_type": content_type,
+                });
+
+                grouped.entry(file.name.clone()).or_default().push(file_obj);
+            }
+
+            for (name, values) in grouped {
+                if values.len() == 1 {
+                    body.insert(name, values.into_iter().next().unwrap_or(Value::Null));
+                } else {
+                    body.insert(name, Value::Array(values));
                 }
-            }))
-        } else if let Some(form) = &self.form {
-            Some(json!({
-                "__spikard_form__": form
-            }))
-        } else if let Some(raw) = &self.form_raw
-            && let Some(parsed) = parse_form_raw(raw)
-        {
-            Some(parsed)
-        } else if self.json.is_some() {
-            self.json.clone()
-        } else if let Some(binary) = &self.binary {
-            Some(json!({ "__spikard_base64__": binary }))
-        } else {
-            None
-        };
+            }
 
-        let metadata = BodyMetadata::from_body_value(value.as_ref());
-        BodyPayload { value, metadata }
+            let form = normalize_form_values(&fields_only);
+            let metadata = BodyMetadata {
+                kind: BodyKind::Multipart,
+                form: Some(form.clone()),
+                files: Some(multipart.files.clone()),
+                raw_base64: Some(encode_form_bytes(&form)),
+                ..Default::default()
+            };
+
+            return BodyPayload {
+                value: Some(Value::Object(body)),
+                metadata,
+            };
+        }
+
+        if let Some(form) = &self.form {
+            let value = serde_json::to_value(form).ok();
+            let form_strings = match value.as_ref().and_then(|v| v.as_object()) {
+                Some(obj) => normalize_form_values(obj),
+                None => HashMap::new(),
+            };
+            let metadata = BodyMetadata {
+                kind: BodyKind::Form,
+                form: Some(form_strings.clone()),
+                raw_base64: Some(encode_form_bytes(&form_strings)),
+                ..Default::default()
+            };
+            return BodyPayload { value, metadata };
+        }
+
+        if let Some(raw) = &self.form_raw {
+            let value = serde_qs::from_str::<Value>(raw).ok();
+            let form_strings = match value.as_ref().and_then(|v| v.as_object()) {
+                Some(obj) => normalize_form_values(obj),
+                None => HashMap::new(),
+            };
+            let metadata = BodyMetadata {
+                kind: BodyKind::Form,
+                form: Some(form_strings.clone()),
+                raw_base64: Some(encode_form_bytes(&form_strings)),
+                ..Default::default()
+            };
+            return BodyPayload { value, metadata };
+        }
+
+        if self.json.is_some() {
+            let value = self.json.clone();
+            let metadata = BodyMetadata::from_body_value(value.as_ref());
+            return BodyPayload { value, metadata };
+        }
+
+        if let Some(binary) = &self.binary {
+            let value = Some(json!({ "__spikard_base64__": binary }));
+            let metadata = BodyMetadata::from_body_value(value.as_ref());
+            return BodyPayload { value, metadata };
+        }
+
+        BodyPayload {
+            value: None,
+            metadata: BodyMetadata::default(),
+        }
     }
-}
-
-fn parse_form_raw(raw: &str) -> Option<Value> {
-    serde_qs::from_str::<Value>(raw)
-        .map(|value| json!({ "__spikard_form__": value }))
-        .ok()
 }
 
 fn encode_json_base64(value: &Value) -> String {
@@ -342,6 +431,7 @@ impl RequestPayload {
         path: &str,
         path_params: HashMap<String, String>,
         headers: &HashMap<String, String>,
+        cookies: HashMap<String, String>,
         query: crate::matching::QueryParams,
         params: HashMap<String, Value>,
         body: Option<Value>,
@@ -354,7 +444,7 @@ impl RequestPayload {
             query: query.normalized,
             raw_query: query.raw,
             headers: headers.clone(),
-            cookies: HashMap::new(),
+            cookies,
             params,
             dependencies: None,
             body,

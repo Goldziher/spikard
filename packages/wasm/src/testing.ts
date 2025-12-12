@@ -1,8 +1,10 @@
 import type { LifecycleHookFunction, LifecycleHooks } from "./app";
+import type { StaticFilesConfig, StaticManifestEntry } from "./config";
 import type { HandlerFunction, SpikardApp } from "./index";
 import type { Request } from "./request";
 import { isStreamingResponse } from "./streaming";
 import type { HandlerBody, HandlerPayload, JsonValue, StructuredHandlerResponse } from "./types";
+import { gunzipSync } from "fflate";
 
 type HeaderMap = Record<string, string>;
 type HeaderInput = HeaderMap | Map<string, string> | null | undefined;
@@ -49,6 +51,7 @@ interface NativeClient {
 	post(path: string, options: NativeRequestOptions | null): Promise<NativeSnapshot>;
 	put(path: string, options: NativeRequestOptions | null): Promise<NativeSnapshot>;
 	patch(path: string, options: NativeRequestOptions | null): Promise<NativeSnapshot>;
+	handle_request(requestJson: string): Promise<NativeSnapshot>;
 }
 
 type NativeLifecycleHookResult =
@@ -96,11 +99,14 @@ async function loadWasmBindings(): Promise<WasmBindings> {
 			return (await import("../runtime/spikard_wasm.js")) as unknown as WasmBindings;
 		} catch {
 			const webFallback = "../../../crates/spikard-wasm/dist-web/" + "spikard_wasm.js";
+			const nodeFallback = "../../../crates/spikard-wasm/dist-node/" + "spikard_wasm.js";
+			const preferNode = isNodeLikeEnvironment();
+			const first = preferNode ? nodeFallback : webFallback;
+			const second = preferNode ? webFallback : nodeFallback;
 			try {
-				return (await import(webFallback)) as unknown as WasmBindings;
+				return (await import(first)) as unknown as WasmBindings;
 			} catch {
-				const nodeFallback = "../../../crates/spikard-wasm/dist-node/" + "spikard_wasm.js";
-				return (await import(nodeFallback)) as unknown as WasmBindings;
+				return (await import(second)) as unknown as WasmBindings;
 			}
 		}
 	})();
@@ -239,47 +245,44 @@ export class TestClient {
 		const routesJson = JSON.stringify(app.routes);
 		const lifecycleHooks = normalizeLifecycleHooks(app.lifecycleHooks);
 		const wrappedHandlers = wrapHandlers(this.websocketHandlers);
-		const configString = app.config && Object.keys(app.config).length > 0 ? JSON.stringify(app.config) : null;
 		const dependencies = (app as SpikardApp & { dependencies?: Record<string, unknown> }).dependencies ?? null;
-
 		const nativeLifecycleHooks = createNativeLifecycleHooks(lifecycleHooks);
 
-		this.nativeClientPromise = nativeClientFactory(
-			routesJson,
-			wrappedHandlers,
-			configString,
-			nativeLifecycleHooks,
-			dependencies,
-		);
+		this.nativeClientPromise = (async () => {
+			const resolvedApp = await withStaticManifest(app);
+			const configString =
+				resolvedApp.config && Object.keys(resolvedApp.config).length > 0 ? JSON.stringify(resolvedApp.config) : null;
+			return nativeClientFactory(routesJson, wrappedHandlers, configString, nativeLifecycleHooks, dependencies);
+		})();
 	}
 
 	async get(path: string, headers?: Record<string, string>): Promise<TestResponse> {
 		const native = await this.nativeClientPromise;
-		const snapshot = await native.get(path, headers ?? null);
+		const snapshot = await this.dispatchWithHeaders(native, "GET", path, headers);
 		return this.responseFromNative(snapshot);
 	}
 
 	async delete(path: string, headers?: Record<string, string>): Promise<TestResponse> {
 		const native = await this.nativeClientPromise;
-		const snapshot = await native.delete(path, headers ?? null);
+		const snapshot = await this.dispatchWithHeaders(native, "DELETE", path, headers);
 		return this.responseFromNative(snapshot);
 	}
 
 	async head(path: string, headers?: Record<string, string>): Promise<TestResponse> {
 		const native = await this.nativeClientPromise;
-		const snapshot = await native.head(path, headers ?? null);
+		const snapshot = await this.dispatchWithHeaders(native, "HEAD", path, headers);
 		return this.responseFromNative(snapshot);
 	}
 
 	async options(path: string, headers?: Record<string, string>): Promise<TestResponse> {
 		const native = await this.nativeClientPromise;
-		const snapshot = await native.options(path, headers ?? null);
+		const snapshot = await this.dispatchWithHeaders(native, "OPTIONS", path, headers);
 		return this.responseFromNative(snapshot);
 	}
 
 	async trace(path: string, headers?: Record<string, string>): Promise<TestResponse> {
 		const native = await this.nativeClientPromise;
-		const snapshot = await native.trace(path, headers ?? null);
+		const snapshot = await this.dispatchWithHeaders(native, "TRACE", path, headers);
 		return this.responseFromNative(snapshot);
 	}
 
@@ -316,6 +319,49 @@ export class TestClient {
 	private responseFromNative(snapshot: NativeSnapshot) {
 		const headers = normalizeRecord(snapshot.headers);
 		return new TestResponse(snapshot.status, headers, snapshot.body);
+	}
+
+	private dispatchWithHeaders(
+		native: NativeClient,
+		method: string,
+		path: string,
+		headers?: Record<string, string>,
+	): Promise<NativeSnapshot> {
+		const normalizedHeaders = normalizeHeaderInput(headers);
+		if (!normalizedHeaders) {
+			switch (method) {
+				case "GET":
+					return native.get(path, null);
+				case "DELETE":
+					return native.delete(path, null);
+				case "HEAD":
+					return native.head(path, null);
+				case "OPTIONS":
+					return native.options(path, null);
+				case "TRACE":
+					return native.trace(path, null);
+				default:
+					return native.get(path, null);
+			}
+		}
+		const maybeHandleRequest = (native as unknown as { handle_request?: unknown }).handle_request;
+		if (typeof maybeHandleRequest === "function") {
+			return native.handle_request(JSON.stringify({ method, path, headers: normalizedHeaders }));
+		}
+		switch (method) {
+			case "GET":
+				return native.get(path, normalizedHeaders);
+			case "DELETE":
+				return native.delete(path, normalizedHeaders);
+			case "HEAD":
+				return native.head(path, normalizedHeaders);
+			case "OPTIONS":
+				return native.options(path, normalizedHeaders);
+			case "TRACE":
+				return native.trace(path, normalizedHeaders);
+			default:
+				return native.get(path, normalizedHeaders);
+		}
 	}
 
 	private buildNativeOptions(options?: RequestOptions): NativeRequestOptions | null {
@@ -359,7 +405,7 @@ export class TestClient {
 		if (!options?.headers || Object.keys(options.headers).length === 0) {
 			return null;
 		}
-		return options.headers;
+		return normalizeHeaderInput(options.headers);
 	}
 
 	private findRoute(
@@ -377,6 +423,221 @@ export class TestClient {
 		}
 		return undefined;
 	}
+}
+
+function normalizeHeaderInput(headers?: Record<string, string> | null): HeaderMap | null {
+	if (!headers) {
+		return null;
+	}
+	const normalized: HeaderMap = {};
+	for (const [key, value] of Object.entries(headers)) {
+		normalized[key] = String(value);
+	}
+	return normalized;
+}
+
+async function withStaticManifest(app: SpikardApp): Promise<SpikardApp> {
+	const config = app.config;
+	if (!config || !config.staticFiles || config.staticFiles.length === 0) {
+		return app;
+	}
+	if (Array.isArray(config.__wasmStaticManifest) && config.__wasmStaticManifest.length > 0) {
+		return app;
+	}
+
+	const manifest = await buildStaticManifest(config.staticFiles);
+	if (manifest.length === 0) {
+		return app;
+	}
+	return {
+		...app,
+		config: {
+			...config,
+			__wasmStaticManifest: manifest,
+		},
+	};
+}
+
+function isNodeLikeEnvironment(): boolean {
+	const processValue = (globalThis as Record<string, unknown>)["process"];
+	if (!processValue || typeof processValue !== "object") {
+		return false;
+	}
+	const versionsValue = (processValue as Record<string, unknown>)["versions"];
+	if (!versionsValue || typeof versionsValue !== "object") {
+		return false;
+	}
+	return typeof (versionsValue as Record<string, unknown>)["node"] === "string";
+}
+
+function hasDeno(): boolean {
+	return typeof (globalThis as Record<string, unknown>)["Deno"] === "object";
+}
+
+function normalizeRoute(route: string): string {
+	let normalized = route.replaceAll("\\", "/");
+	while (normalized.includes("//")) {
+		normalized = normalized.replaceAll("//", "/");
+	}
+	if (!normalized.startsWith("/")) {
+		normalized = `/${normalized}`;
+	}
+	return normalized;
+}
+
+function contentTypeForPath(path: string): string {
+	const lower = path.toLowerCase();
+	if (lower.endsWith(".html")) {
+		return "text/html; charset=utf-8";
+	}
+	if (lower.endsWith(".txt")) {
+		return "text/plain; charset=utf-8";
+	}
+	if (lower.endsWith(".css")) {
+		return "text/css; charset=utf-8";
+	}
+	if (lower.endsWith(".js") || lower.endsWith(".mjs")) {
+		return "application/javascript; charset=utf-8";
+	}
+	if (lower.endsWith(".json")) {
+		return "application/json; charset=utf-8";
+	}
+	if (lower.endsWith(".svg")) {
+		return "image/svg+xml";
+	}
+	if (lower.endsWith(".png")) {
+		return "image/png";
+	}
+	if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+		return "image/jpeg";
+	}
+	return "application/octet-stream";
+}
+
+function buildStaticHeaders(filePath: string, cacheControl?: string | null): Record<string, string> {
+	const headers: Record<string, string> = {
+		"content-type": contentTypeForPath(filePath),
+	};
+	if (cacheControl) {
+		headers["cache-control"] = cacheControl;
+	}
+	return headers;
+}
+
+async function buildStaticManifest(configs: StaticFilesConfig[]): Promise<StaticManifestEntry[]> {
+	if (isNodeLikeEnvironment()) {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+		const manifest: StaticManifestEntry[] = [];
+		for (const config of configs) {
+			if (!config.directory || !config.routePrefix) {
+				continue;
+			}
+			if (!fs.existsSync(config.directory)) {
+				continue;
+			}
+
+			const stack: string[] = [config.directory];
+			while (stack.length > 0) {
+				const current = stack.pop();
+				if (!current) {
+					continue;
+				}
+				const stats = fs.statSync(current);
+				if (stats.isDirectory()) {
+					for (const child of fs.readdirSync(current)) {
+						stack.push(path.join(current, child));
+					}
+					continue;
+				}
+
+				const relative = path.relative(config.directory, current).split(path.sep).join("/");
+				let prefix = config.routePrefix;
+				while (prefix.endsWith("/")) {
+					prefix = prefix.slice(0, -1);
+				}
+				const route = normalizeRoute(`${prefix}/${relative}`);
+				const headers = buildStaticHeaders(current, config.cacheControl ?? null);
+				const body = bufferToBase64(new Uint8Array(fs.readFileSync(current)));
+				manifest.push({ route, headers, body });
+			}
+
+			if (config.indexFile ?? true) {
+				const indexPath = path.join(config.directory, "index.html");
+				if (fs.existsSync(indexPath)) {
+					const headers = buildStaticHeaders(indexPath, config.cacheControl ?? null);
+					const body = bufferToBase64(new Uint8Array(fs.readFileSync(indexPath)));
+					const prefix = normalizeRoute(config.routePrefix);
+					manifest.push({ route: prefix, headers: { ...headers }, body });
+					if (!prefix.endsWith("/")) {
+						manifest.push({ route: `${prefix}/`, headers: { ...headers }, body });
+					}
+				}
+			}
+		}
+		return manifest;
+	}
+
+	if (hasDeno()) {
+		const deno = (globalThis as Record<string, unknown>)["Deno"] as {
+			readDir: (path: string) => AsyncIterable<{ name: string; isFile: boolean; isDirectory: boolean }>;
+			readFile: (path: string) => Promise<Uint8Array>;
+		};
+
+		const manifest: StaticManifestEntry[] = [];
+		for (const config of configs) {
+			if (!config.directory || !config.routePrefix) {
+				continue;
+			}
+			const root = config.directory.replaceAll("\\", "/").replace(/\/+$/, "");
+
+			const stack: string[] = [root];
+			while (stack.length > 0) {
+				const current = stack.pop();
+				if (!current) {
+					continue;
+				}
+				for await (const entry of deno.readDir(current)) {
+					const entryPath = `${current}/${entry.name}`;
+					if (entry.isDirectory) {
+						stack.push(entryPath);
+						continue;
+					}
+					if (!entry.isFile) {
+						continue;
+					}
+					const relative = entryPath.startsWith(`${root}/`) ? entryPath.slice(root.length + 1) : entry.name;
+					let prefix = config.routePrefix;
+					while (prefix.endsWith("/")) {
+						prefix = prefix.slice(0, -1);
+					}
+					const route = normalizeRoute(`${prefix}/${relative}`);
+					const headers = buildStaticHeaders(entryPath, config.cacheControl ?? null);
+					const body = bufferToBase64(await deno.readFile(entryPath));
+					manifest.push({ route, headers, body });
+				}
+			}
+
+			if (config.indexFile ?? true) {
+				const indexPath = `${root}/index.html`;
+				try {
+					const bytes = await deno.readFile(indexPath);
+					const headers = buildStaticHeaders(indexPath, config.cacheControl ?? null);
+					const body = bufferToBase64(bytes);
+					const prefix = normalizeRoute(config.routePrefix);
+					manifest.push({ route: prefix, headers: { ...headers }, body });
+					if (!prefix.endsWith("/")) {
+						manifest.push({ route: `${prefix}/`, headers: { ...headers }, body });
+					}
+				} catch {
+					// ignore missing index.html
+				}
+			}
+		}
+		return manifest;
+	}
+
+	return [];
 }
 
 export class WebSocketTestConnection {
@@ -561,7 +822,11 @@ function gunzipBytes(data: Uint8Array): Uint8Array {
 			return data;
 		}
 	}
-	return data;
+	try {
+		return gunzipSync(data);
+	} catch {
+		return data;
+	}
 }
 
 function bufferToBase64(bytes: Uint8Array): string {
