@@ -205,8 +205,8 @@ fn generate_minimal_package_json(target: &TypeScriptTarget) -> String {
 /// Generate deno.json for Deno configuration
 fn generate_deno_config(target: &TypeScriptTarget) -> String {
     let wasm_import = if target.dependency_package == "@spikard/wasm" {
-        // Use the workspace-built ESM bundle to stay in sync with the repo API.
-        "../../packages/wasm/dist/index.mjs".to_string()
+        // Use the TypeScript sources (tracked) to stay in sync with the repo API.
+        "../../packages/wasm/src/index.ts".to_string()
     } else {
         // Fall back to npm for other packages.
         format!("npm:{}", target.dependency_package)
@@ -223,12 +223,13 @@ fn generate_deno_config(target: &TypeScriptTarget) -> String {
 	"tasks": {{
 		"test": "deno test --allow-net --allow-read --allow-env tests/"
 	}},
-	"imports": {{
-		"{pkg}": "{wasm_import}",
-		"@std/assert": "jsr:@std/assert@1",
-		"@std/path": "jsr:@std/path@1"
+		"imports": {{
+			"{pkg}": "{wasm_import}",
+			"@std/assert": "jsr:@std/assert@1",
+			"@std/path": "jsr:@std/path@1",
+			"zod": "npm:zod"
+		}}
 	}}
-}}
 "#,
         pkg = target.dependency_package,
         wasm_import = wasm_import
