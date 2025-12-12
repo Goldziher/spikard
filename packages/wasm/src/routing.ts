@@ -2,9 +2,9 @@
  * Routing decorators and utilities for Spikard
  */
 
-import type { CorsConfig, HandlerFunction, JsonSchema, RouteMetadata } from "./index.ts";
-import type { Request } from "./request.ts";
-import type { HandlerResult, JsonValue, MaybePromise } from "./types.ts";
+import type { CorsConfig, HandlerFunction, JsonSchema, RouteMetadata } from "./index";
+import type { Request } from "./request";
+import type { HandlerResult, JsonValue, MaybePromise } from "./types";
 
 /**
  * Route configuration options

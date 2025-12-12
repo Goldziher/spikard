@@ -1,9 +1,9 @@
 import { init as initWasm, TestClient as NativeTestClient } from "../runtime/spikard_wasm.js";
-import type { LifecycleHookFunction, LifecycleHookPayload, LifecycleHooks } from "./app.ts";
-import type { HandlerFunction, SpikardApp } from "./index.ts";
-import type { Request } from "./request.ts";
-import { isStreamingResponse } from "./streaming.ts";
-import type { HandlerBody, HandlerPayload, JsonValue, StructuredHandlerResponse } from "./types.ts";
+import type { LifecycleHookFunction, LifecycleHookPayload, LifecycleHooks } from "./app";
+import type { HandlerFunction, SpikardApp } from "./index";
+import type { Request } from "./request";
+import { isStreamingResponse } from "./streaming";
+import type { HandlerBody, HandlerPayload, JsonValue, StructuredHandlerResponse } from "./types";
 
 type HeaderMap = Record<string, string>;
 type HeaderInput = HeaderMap | Map<string, string> | null | undefined;

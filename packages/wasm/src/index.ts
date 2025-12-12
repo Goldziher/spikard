@@ -4,10 +4,10 @@
  * Type-safe routing, validation, and testing powered by Rust core.
  */
 
-import type { HandlerFunction, JsonValue } from "./types.ts";
+import type { HandlerFunction, JsonValue } from "./types";
 
-export { type LifecycleHookFunction, type LifecycleHooks, Spikard } from "./app.ts";
-export * as background from "./background.ts";
+export { type LifecycleHookFunction, type LifecycleHooks, Spikard } from "./app";
+export * as background from "./background";
 export type {
 	ApiKeyConfig,
 	CompressionConfig,
@@ -20,13 +20,13 @@ export type {
 	ServerConfig,
 	ServerInfo,
 	StaticFilesConfig,
-} from "./config.ts";
-export type { Body, Path, Query, QueryDefault } from "./params.ts";
-export type { Request } from "./request.ts";
-export { del, get, patch, post, put, type RouteOptions, route } from "./routing.ts";
-export { createFetchHandler, runServer, type ServerOptions } from "./server.ts";
-export { StreamingResponse, type StreamingResponseInit } from "./streaming.ts";
-export { TestClient, type TestResponse } from "./testing.ts";
+} from "./config";
+export type { Body, Path, Query, QueryDefault } from "./params";
+export type { Request } from "./request";
+export { del, get, patch, post, put, type RouteOptions, route } from "./routing";
+export { createFetchHandler, runServer, type ServerOptions } from "./server";
+export { StreamingResponse, type StreamingResponseInit } from "./streaming";
+export { TestClient, type TestResponse } from "./testing";
 export type {
 	Base64EncodedBody,
 	HandlerFunction,
@@ -37,7 +37,7 @@ export type {
 	JsonValue,
 	MaybePromise,
 	StructuredHandlerResponse,
-} from "./types.ts";
+} from "./types";
 
 /**
  * JSON schema definition for validation

@@ -2,10 +2,10 @@
  * Spikard application class
  */
 
-import type { HandlerFunction, RouteMetadata, SpikardApp } from "./index.ts";
-import type { Request } from "./request.ts";
-import { runServer, type ServerOptions } from "./server.ts";
-import type { MaybePromise, StructuredHandlerResponse } from "./types.ts";
+import type { HandlerFunction, RouteMetadata, SpikardApp } from "./index";
+import type { Request } from "./request";
+import { runServer, type ServerOptions } from "./server";
+import type { MaybePromise, StructuredHandlerResponse } from "./types";
 
 /**
  * Payload type provided to lifecycle hooks
