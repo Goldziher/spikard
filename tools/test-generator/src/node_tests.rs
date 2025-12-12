@@ -118,7 +118,7 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
 
     match target.runtime {
         crate::ts_target::Runtime::Deno => {
-            code.push_str("import { assertEquals } from \"@std/assert\";\n");
+            code.push_str("import { assertEquals } from \"jsr:@std/assert@1\";\n");
         }
         _ => {
             code.push_str("import { describe, expect, test } from \"vitest\";\n");
@@ -278,12 +278,12 @@ fn generate_sse_test_file(
         file_content = file_content
             .replace(
                 "import { describe, expect, test } from \"vitest\";\n",
-                "import { assertEquals } from \"@std/assert\";\n",
+                "import { assertEquals } from \"jsr:@std/assert@1\";\n",
             )
             .replace("import { readFileSync } from \"node:fs\";\n", "")
             .replace(
                 "import path from \"node:path\";\n",
-                "import { join, resolve } from \"@std/path\";\n",
+                "import { join, resolve } from \"jsr:@std/path@1\";\n",
             )
             .replace("__dirname", "new URL(\".\", import.meta.url).pathname")
             .replace("path.resolve(", "resolve(")
@@ -424,12 +424,12 @@ fn generate_websocket_test_file(
         file_content = file_content
             .replace(
                 "import { describe, expect, test } from \"vitest\";\n",
-                "import { assertEquals } from \"@std/assert\";\n",
+                "import { assertEquals } from \"jsr:@std/assert@1\";\n",
             )
             .replace("import { readFileSync } from \"node:fs\";\n", "")
             .replace(
                 "import path from \"node:path\";\n",
-                "import { join, resolve } from \"@std/path\";\n",
+                "import { join, resolve } from \"jsr:@std/path@1\";\n",
             )
             .replace("__dirname", "new URL(\".\", import.meta.url).pathname")
             .replace("path.resolve(", "resolve(")
@@ -1426,9 +1426,13 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
         if line.contains("from \"vitest\"") {
             continue;
         }
-        if line.contains("from \"@std/assert\"") {
+        if line.contains("from \"@std/assert\"") || line.contains("from \"jsr:@std/assert") {
             has_std_assert = true;
-            lines.push("import { assert, assertEquals } from \"@std/assert\";".to_string());
+            lines.push("import { assert, assertEquals } from \"jsr:@std/assert@1\";".to_string());
+            continue;
+        }
+        if line.contains("from \"@std/path\"") {
+            lines.push("import { join, resolve } from \"jsr:@std/path@1\";".to_string());
             continue;
         }
         lines.push(line.to_string());
@@ -1440,7 +1444,7 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
         for line in lines {
             new_lines.push(line.clone());
             if !inserted && line.contains("TestClient") && line.contains("@spikard/wasm") {
-                new_lines.push("import { assert, assertEquals } from \"@std/assert\";".to_string());
+                new_lines.push("import { assert, assertEquals } from \"jsr:@std/assert@1\";".to_string());
                 inserted = true;
             }
         }
