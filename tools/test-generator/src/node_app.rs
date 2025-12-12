@@ -146,15 +146,16 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 		"test": "vitest run",
 		"test:watch": "vitest"
 	}},
-	"devDependencies": {{
-		"{dependency}": "workspace:*",
-		"@cloudflare/vitest-pool-workers": "^0.7.0",
-		"@cloudflare/workers-types": "^4.20250106.0",
-		"@vitest/coverage-v8": "^4.0.6",
-		"typescript": "^5.9.3",
-		"vitest": "^4.0.6",
-		"wrangler": "^3.100.0"
-	}}
+		"devDependencies": {{
+			"{dependency}": "workspace:*",
+			"@biomejs/biome": "^2.3.8",
+			"@cloudflare/vitest-pool-workers": "^0.7.0",
+			"@cloudflare/workers-types": "^4.20250106.0",
+			"@vitest/coverage-v8": "^4.0.6",
+			"typescript": "^5.9.3",
+			"vitest": "^4.0.6",
+			"wrangler": "^3.100.0"
+		}}
 }}
 "#,
                 name = target.e2e_package_name,
@@ -172,13 +173,14 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 		"test": "vitest run",
 		"test:watch": "vitest"
 	}},
-	"devDependencies": {{
-		"{dependency}": "workspace:*",
-        "@types/node": "^24.9.2",
-		"@vitest/coverage-v8": "^4.0.6",
-		"typescript": "^5.9.3",
-		"vitest": "^4.0.6"
-	}}
+		"devDependencies": {{
+			"{dependency}": "workspace:*",
+			"@biomejs/biome": "^2.3.8",
+	        "@types/node": "^24.9.2",
+			"@vitest/coverage-v8": "^4.0.6",
+			"typescript": "^5.9.3",
+			"vitest": "^4.0.6"
+		}}
 }}
 "#,
                 name = target.e2e_package_name,
@@ -259,12 +261,12 @@ fn generate_tsconfig(target: &TypeScriptTarget) -> String {
 fn format_generated_ts(dir: &Path) -> Result<()> {
     let status = Command::new("pnpm")
         .current_dir(dir)
-        .args(["biome", "check", "--write", "--unsafe", "."])
+        .args(["dlx", "@biomejs/biome@2.3.8", "check", "--write", "--unsafe", "."])
         .status()
-        .context("Failed to run `pnpm biome check --write .` in e2e/node app")?;
+        .context("Failed to run `pnpm dlx @biomejs/biome check --write .` in e2e/node app")?;
     ensure!(
         status.success(),
-        "`pnpm biome check --write .` exited with non-zero status"
+        "`pnpm dlx @biomejs/biome check --write .` exited with non-zero status"
     );
 
     Ok(())

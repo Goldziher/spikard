@@ -119,7 +119,7 @@ module Spikard
 
     HTTP_METHODS = %w[GET POST PUT PATCH DELETE OPTIONS HEAD TRACE].freeze
     SUPPORTED_OPTIONS = %i[request_schema response_schema parameter_schema file_params is_async cors
-                           body_param_name].freeze
+                           body_param_name jsonrpc_method].freeze
 
     attr_reader :routes
 
@@ -149,6 +149,7 @@ module Spikard
                      options.fetch(:is_async, false),
                      options[:cors],
                      options[:body_param_name]&.to_s,
+                     options[:jsonrpc_method],
                      block
                    )
                  else

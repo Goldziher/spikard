@@ -1229,12 +1229,12 @@ fn path_contains_segment(path: &str, segment: &str) -> bool {
 fn format_generated_ts(dir: &Path) -> Result<()> {
     let status = Command::new("pnpm")
         .current_dir(dir)
-        .args(["biome", "check", "--write", "."])
+        .args(["dlx", "@biomejs/biome@2.3.8", "check", "--write", "."])
         .status()
-        .context("Failed to run `pnpm biome check --write .` in e2e/node")?;
+        .context("Failed to run `pnpm dlx @biomejs/biome check --write .` in e2e/node")?;
     ensure!(
         status.success(),
-        "`pnpm biome check --write .` exited with non-zero status"
+        "`pnpm dlx @biomejs/biome check --write .` exited with non-zero status"
     );
 
     Ok(())
