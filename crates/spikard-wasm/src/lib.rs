@@ -469,10 +469,11 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         .map_err(|e| js_error_from_jsvalue("request_options_invalid", e))?;
     if !request_options.headers.is_empty() {
         for (key, value) in &request_options.headers {
-            headers.insert(key.to_ascii_lowercase(), value.clone());
+            headers.insert(key.clone(), value.clone());
         }
     }
 
+    let lowered_headers = lowercase_header_keys(&headers);
     let cookies = parse_cookie_header(&headers);
 
     if let Some(snapshot) = serve_static_from_manifest(&context.method, &context.path, &headers, &context.config) {
@@ -489,10 +490,9 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         return Ok(snapshot);
     }
 
-    let rate_limit_id = headers
-        .get("x-forwarded-for")
-        .cloned()
-        .or_else(|| headers.get("x-real-ip").cloned());
+    let rate_limit_id = header_value(&headers, "x-forwarded-for")
+        .map(|value| value.to_string())
+        .or_else(|| header_value(&headers, "x-real-ip").map(|value| value.to_string()));
 
     if let Some(snapshot) = enforce_rate_limit(&route.handler_name, &context.config, &context.rate_state, rate_limit_id)
     {
@@ -505,14 +505,20 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         .cloned()
         .unwrap_or_default();
 
-    let mut params = build_params(&path_params, &query.normalized, &headers);
+    let mut params = build_params(&path_params, &query.normalized, &lowered_headers);
     if let Some(parameter_validator) = validators.parameter.clone() {
         let mut query_map = JsonMap::new();
         for (key, value) in &query.normalized {
             query_map.insert(key.clone(), value.clone());
         }
         let query_value = Value::Object(query_map);
-        match parameter_validator.validate_and_extract(&query_value, &query.raw, &path_params, &headers, &cookies) {
+        match parameter_validator.validate_and_extract(
+            &query_value,
+            &query.raw,
+            &path_params,
+            &lowered_headers,
+            &cookies,
+        ) {
             Ok(value) => {
                 params = value_to_param_map(value);
             }
@@ -1040,11 +1046,19 @@ fn read_headers(value: JsValue) -> Result<HashMap<String, String>, JsValue> {
             let value = js_sys::Reflect::get(&obj, &JsValue::from(&key))
                 .map_err(|_| JsValue::from_str("Failed to read header value"))?;
             if let Some(string_val) = value.as_string() {
-                headers.insert(key.to_ascii_lowercase(), string_val);
+                headers.insert(key, string_val);
             }
         }
     }
     Ok(headers)
+}
+
+fn lowercase_header_keys(headers: &HashMap<String, String>) -> HashMap<String, String> {
+    let mut lowered = HashMap::new();
+    for (key, value) in headers {
+        lowered.insert(key.to_ascii_lowercase(), value.clone());
+    }
+    lowered
 }
 
 fn enforce_rate_limit(
@@ -1148,9 +1162,8 @@ impl ResponseSnapshot {
 
     fn from_raw(mut raw: RawResponse, request_headers: &HashMap<String, String>, config: &ServerConfig) -> Self {
         if config.enable_request_id {
-            let request_id = request_headers
-                .get("x-request-id")
-                .cloned()
+            let request_id = header_value(request_headers, "x-request-id")
+                .map(|value| value.to_string())
                 .unwrap_or_else(|| Uuid::new_v4().to_string());
             raw.headers.insert("x-request-id".to_string(), request_id);
         }
@@ -1304,7 +1317,7 @@ fn enforce_auth(
         return None;
     }
 
-    let authorization = headers.get("authorization").map(|s| s.as_str());
+    let authorization = header_value(headers, "authorization");
     let api_key_candidate = api_key.and_then(|cfg| extract_api_key(headers, raw_query, cfg));
 
     // If an Authorization header is present and JWT auth is enabled, validate it and
@@ -1355,10 +1368,8 @@ fn extract_api_key(
     raw_query: &HashMap<String, Vec<String>>,
     config: &ApiKeyConfig,
 ) -> Option<String> {
-    let header_key = config.header_name.to_ascii_lowercase();
-    headers
-        .get(&header_key)
-        .cloned()
+    header_value(headers, &config.header_name)
+        .map(|value| value.to_string())
         .or_else(|| raw_query.get("api_key").and_then(|vals| vals.first().cloned()))
 }
 
