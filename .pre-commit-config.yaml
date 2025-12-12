@@ -90,8 +90,18 @@ repos:
     rev: v1.81.7
     hooks:
       - id: rubocop
-        args: ["--autocorrect", "--config", "packages/ruby/.rubocop.yml"]
+        args:
+          [
+            "--autocorrect",
+            "--force-exclusion",
+            "--config",
+            "packages/ruby/.rubocop.yml",
+            "packages/ruby/lib",
+            "packages/ruby/spec",
+            "packages/ruby/spikard.gemspec",
+          ]
         files: ^packages/ruby/
+        pass_filenames: false
   - repo: local
     hooks:
       - id: mypy
@@ -100,6 +110,8 @@ repos:
         require_serial: true
         language: system
         types: [python]
+        pass_filenames: false
+        args: ["packages/python"]
       - id: phpstan
         name: PHPStan
         entry: phpstan analyse --memory-limit=2G --no-progress --configuration packages/php/phpstan.neon packages/php/src packages/php/tests

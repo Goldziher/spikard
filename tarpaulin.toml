@@ -44,6 +44,9 @@ exclude-files = [
     # Exclude examples (not part of core library)
     "examples/**",
     "tools/**",
+
+    # Exclude vendored copies (bindings packaging)
+    "packages/**",
 ]
 
 # Crates to exclude from coverage
