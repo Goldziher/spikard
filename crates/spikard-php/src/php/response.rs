@@ -1,5 +1,7 @@
 //! PHP-visible HTTP response struct.
 
+#![allow(non_snake_case)]
+
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendHashTable;
@@ -35,15 +37,11 @@ impl PhpResponse {
     ) -> PhpResult<Self> {
         let body_value = match body {
             None => Value::Null,
-            Some(v) => crate::php::zval_to_json(v)
-                .map_err(PhpException::default)?,
+            Some(v) => crate::php::zval_to_json(v).map_err(PhpException::default)?,
         };
 
         let mut headers = headers.unwrap_or_default();
-        headers = headers
-            .into_iter()
-            .map(|(k, v)| (k.to_ascii_lowercase(), v))
-            .collect();
+        headers = headers.into_iter().map(|(k, v)| (k.to_ascii_lowercase(), v)).collect();
 
         Ok(Self {
             status_code: statusCode.unwrap_or(200),
@@ -114,18 +112,29 @@ impl PhpResponse {
 
     /// Create a JSON response.
     #[php(name = "json")]
-    pub fn json_response(data: &Zval, status: Option<i64>, headers: Option<HashMap<String, String>>) -> PhpResult<Self> {
+    pub fn json_response(
+        data: &Zval,
+        status: Option<i64>,
+        headers: Option<HashMap<String, String>>,
+    ) -> PhpResult<Self> {
         let mut response = Self::new(Some(data), status, headers, None)?;
-        response.headers.insert("content-type".to_string(), "application/json".to_string());
+        response
+            .headers
+            .insert("content-type".to_string(), "application/json".to_string());
         Ok(response)
     }
 
     /// Create a text response.
     #[php(name = "text")]
-    pub fn text_response(body: String, status: Option<i64>, headers: Option<HashMap<String, String>>) -> PhpResult<Self> {
+    pub fn text_response(
+        body: String,
+        status: Option<i64>,
+        headers: Option<HashMap<String, String>>,
+    ) -> PhpResult<Self> {
         let mut response = Self::new(None, status, headers, None)?;
         response.body = Value::String(body);
-        response.headers
+        response
+            .headers
             .insert("content-type".to_string(), "text/plain; charset=utf-8".to_string());
         Ok(response)
     }

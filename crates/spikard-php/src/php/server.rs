@@ -4,17 +4,14 @@
 //! to create and run an HTTP server with Spikard's middleware stack.
 
 use axum::body::Body;
-use axum::http::{HeaderName, HeaderValue, Request, Response, StatusCode};
+use axum::http::{HeaderName, HeaderValue, Response, StatusCode};
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use spikard_http::ParameterValidator;
-use spikard_http::RequestData;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, Route, Router, SchemaRegistry, ServerConfig};
 use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::php::handler::PhpHandler;
