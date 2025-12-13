@@ -543,10 +543,10 @@ impl ParameterValidator {
         let base_time = time_part.split('.').next().unwrap_or(time_part);
         jiff::civil::Time::strptime("%H:%M:%S", base_time).map_err(|e| format!("Invalid time format: {}", e))?;
 
-        if let Some((_, frac)) = time_part.split_once('.') {
-            if frac.is_empty() || frac.len() > 9 || !frac.chars().all(|c| c.is_ascii_digit()) {
-                return Err("Invalid time format: fractional seconds must be 1-9 digits".to_string());
-            }
+        if let Some((_, frac)) = time_part.split_once('.')
+            && (frac.is_empty() || frac.len() > 9 || !frac.chars().all(|c| c.is_ascii_digit()))
+        {
+            return Err("Invalid time format: fractional seconds must be 1-9 digits".to_string());
         }
 
         if offset_part != "Z" {
