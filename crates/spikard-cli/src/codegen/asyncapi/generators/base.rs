@@ -1,11 +1,7 @@
-//! Shared helpers and base functionality for AsyncAPI code generators.
+//! Shared helpers for AsyncAPI code generators.
 //!
 //! This module provides common utilities used by all language-specific generators,
-//! including identifier sanitization and schema conversion helpers.
-
-use crate::codegen::ts_schema::{TypeScriptDto, generate_typescript_dto};
-use anyhow::Result;
-use std::collections::HashMap;
+//! including identifier sanitization helpers.
 
 /// Sanitize an identifier to be valid in the target language
 ///
@@ -40,25 +36,6 @@ pub fn sanitize_identifier(name: &str) -> String {
     ident
 }
 
-/// Sanitize identifier for Ruby (handle special naming conventions)
-#[allow(dead_code)]
-pub fn sanitize_ruby_identifier(name: &str) -> String {
-    sanitize_identifier(name)
-}
-
-/// Sanitize identifier for PHP (handle special naming conventions)
-#[allow(dead_code)]
-pub fn sanitize_php_identifier(name: &str) -> String {
-    let mut ident = sanitize_identifier(name);
-    if ident.is_empty() {
-        return "handler".to_string();
-    }
-    if !ident.chars().next().unwrap().is_ascii_alphabetic() && !ident.starts_with('_') {
-        ident.insert(0, '_');
-    }
-    ident
-}
-
 /// Sanitize identifier for TypeScript (handle camelCase conversion)
 pub fn sanitize_typescript_identifier(name: &str) -> String {
     let identifier = sanitize_identifier(name);
@@ -75,17 +52,6 @@ pub fn sanitize_typescript_identifier(name: &str) -> String {
         }
     }
     result
-}
-
-/// Build TypeScript DTOs from message schemas
-#[allow(dead_code)]
-pub fn build_typescript_dtos(messages: &HashMap<String, super::Message>) -> Result<HashMap<String, TypeScriptDto>> {
-    let mut map = HashMap::new();
-    for (name, message) in messages {
-        let dto = generate_typescript_dto(name, &message.schema)?;
-        map.insert(name.clone(), dto);
-    }
-    Ok(map)
 }
 
 #[cfg(test)]
@@ -106,12 +72,6 @@ mod tests {
         assert_eq!(sanitize_typescript_identifier("hello_world"), "helloWorld");
         assert_eq!(sanitize_typescript_identifier("my_handler"), "myHandler");
         assert_eq!(sanitize_typescript_identifier("simple"), "simple");
-    }
-
-    #[test]
-    fn test_sanitize_php_identifier() {
-        let result = sanitize_php_identifier("123start");
-        assert!(result.starts_with('_'));
     }
 
     #[test]

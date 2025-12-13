@@ -8,9 +8,7 @@
 //! how OpenAPI describes REST APIs.
 
 pub mod generators;
-pub mod message_processor;
 pub mod spec_parser;
-pub mod test_fixture_generator;
 
 pub use generators::{
     AsyncApiGenerator, ChannelInfo, PhpAsyncApiGenerator, PythonAsyncApiGenerator, RubyAsyncApiGenerator,
@@ -134,7 +132,7 @@ pub fn generate_python_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
     };
 
     let generator = PythonAsyncApiGenerator;
-    generator.generate_test_app(&channels, &[], protocol_str)
+    generator.generate_test_app(&channels, protocol_str)
 }
 
 /// Generate Node.js test application from AsyncAPI spec
@@ -147,7 +145,7 @@ pub fn generate_nodejs_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
     };
 
     let generator = TypeScriptAsyncApiGenerator;
-    generator.generate_test_app(&channels, &[], protocol_str)
+    generator.generate_test_app(&channels, protocol_str)
 }
 
 /// Generate Ruby test application from AsyncAPI spec
@@ -160,7 +158,7 @@ pub fn generate_ruby_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Resu
     };
 
     let generator = RubyAsyncApiGenerator;
-    generator.generate_test_app(&channels, &[], protocol_str)
+    generator.generate_test_app(&channels, protocol_str)
 }
 
 /// Generate Python handler scaffolding from AsyncAPI spec
@@ -173,7 +171,7 @@ pub fn generate_python_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) ->
     };
 
     let generator = PythonAsyncApiGenerator;
-    generator.generate_handler_app(&channels, &[], protocol_str)
+    generator.generate_handler_app(&channels, protocol_str)
 }
 
 /// Generate Node.js handler scaffolding from AsyncAPI spec
@@ -186,7 +184,7 @@ pub fn generate_nodejs_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) ->
     };
 
     let generator = TypeScriptAsyncApiGenerator;
-    generator.generate_handler_app(&channels, &[], protocol_str)
+    generator.generate_handler_app(&channels, protocol_str)
 }
 
 /// Generate Ruby handler scaffolding from AsyncAPI spec
@@ -199,7 +197,7 @@ pub fn generate_ruby_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> R
     };
 
     let generator = RubyAsyncApiGenerator;
-    generator.generate_handler_app(&channels, &[], protocol_str)
+    generator.generate_handler_app(&channels, protocol_str)
 }
 
 /// Generate Rust handler scaffolding from AsyncAPI spec
@@ -212,7 +210,7 @@ pub fn generate_rust_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> R
     };
 
     let generator = RustAsyncApiGenerator;
-    generator.generate_handler_app(&channels, &[], protocol_str)
+    generator.generate_handler_app(&channels, protocol_str)
 }
 
 /// Generate PHP handler scaffolding from AsyncAPI spec
@@ -225,7 +223,7 @@ pub fn generate_php_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
     };
 
     let generator = PhpAsyncApiGenerator;
-    generator.generate_handler_app(&channels, &[], protocol_str)
+    generator.generate_handler_app(&channels, protocol_str)
 }
 
 #[cfg(test)]

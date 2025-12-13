@@ -266,7 +266,7 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
                             "type": "error",
                             "message": "Invalid JSON"
                         });
-                        let error_text = serde_json::to_string(&error_msg).unwrap();
+                        let error_text = serde_json::to_string(&error_msg).unwrap_or_else(|_| "{}".to_string());
                         let _ = socket.send(Message::Text(error_text.into())).await;
                     }
                 }
