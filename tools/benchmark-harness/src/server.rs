@@ -115,7 +115,7 @@ pub struct ServerConfig {
 /// - Server fails health check within timeout
 pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     let port = config.port;
-    let base_url = format!("http://localhost:{}", port);
+    let base_url = format!("http://127.0.0.1:{}", port);
 
     let framework_config = match &config.framework {
         Some(name) => get_framework(name).ok_or_else(|| Error::FrameworkNotFound(name.clone()))?,
