@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 /// PHP-visible HTTP request mirroring `RequestData`.
 #[php_class]
-#[php(name = "Spikard\\Internal\\Request")]
+#[php(name = "Spikard\\Http\\Request")]
 pub struct PhpRequest {
     #[php(prop)]
     pub(crate) method: String,
@@ -32,6 +32,31 @@ pub struct PhpRequest {
 
 #[php_impl]
 impl PhpRequest {
+    #[php(constructor)]
+    pub fn __construct(
+        method: String,
+        path: String,
+        body: Option<&Zval>,
+        headers: Option<HashMap<String, String>>,
+        cookies: Option<HashMap<String, String>>,
+        queryParams: Option<HashMap<String, Vec<String>>>,
+        pathParams: Option<HashMap<String, String>>,
+        files: Option<&Zval>,
+        dependencies: Option<&Zval>,
+    ) -> PhpResult<Self> {
+        Self::new(
+            method,
+            path,
+            body,
+            headers,
+            cookies,
+            queryParams,
+            pathParams,
+            files,
+            dependencies,
+        )
+    }
+
     /// Create a new request.
     ///
     /// This intentionally matches `packages/php/src/Http/Request.php` so PHP code can use named
@@ -94,16 +119,13 @@ impl PhpRequest {
         }
     }
 
-    /// PHP property getter for `body`.
-    #[php(getter, name = "body")]
-    pub fn body_prop(&self) -> PhpResult<Zval> {
-        crate::php::json_to_zval(&self.body)
-    }
-
-    /// PHP property getter for `files`.
-    #[php(getter, name = "files")]
-    pub fn files_prop(&self) -> PhpResult<Zval> {
-        crate::php::json_to_zval(&self.files)
+    #[php(name = "__get")]
+    pub fn __get(&self, name: String) -> PhpResult<Zval> {
+        match name.as_str() {
+            "body" => crate::php::json_to_zval(&self.body),
+            "files" => crate::php::json_to_zval(&self.files),
+            _ => Ok(Zval::new()),
+        }
     }
 
     /// Get raw body bytes.

@@ -24,6 +24,16 @@ pub struct PhpResponse {
 
 #[php_impl]
 impl PhpResponse {
+    #[php(constructor)]
+    pub fn __construct(
+        body: Option<&Zval>,
+        statusCode: Option<i64>,
+        headers: Option<HashMap<String, String>>,
+        cookies: Option<HashMap<String, String>>,
+    ) -> PhpResult<Self> {
+        Self::new(body, statusCode, headers, cookies)
+    }
+
     /// Create a new response.
     ///
     /// This intentionally matches `packages/php/src/Http/Response.php` so PHP code can use named

@@ -386,6 +386,7 @@ mod tests {
     use crate::handler_trait::{HandlerResult, RequestData};
     use axum::body::Body;
     use axum::http::Request;
+    use std::panic;
 
     /// Mock handler for testing
     struct MockHandler;
@@ -623,5 +624,25 @@ mod tests {
         assert_eq!(metadata.examples.len(), 1);
         assert_eq!(metadata.examples[0].name, "example1");
         assert_eq!(metadata.examples[0].description, Some("Test example".to_string()));
+    }
+
+    #[test]
+    fn test_registry_errors_on_poisoned_lock() {
+        let registry = create_test_registry();
+        let _ = panic::catch_unwind(|| {
+            let _guard = registry.methods.write().expect("lock write");
+            panic!("poison the lock");
+        });
+
+        let handler = create_mock_handler();
+        let err = registry
+            .register("method", handler, MethodMetadata::new("method"))
+            .expect_err("poisoned lock should error");
+        assert!(err.to_string().contains("lock was poisoned"));
+
+        match registry.get("method") {
+            Err(err) => assert!(err.to_string().contains("lock was poisoned")),
+            Ok(_) => panic!("expected poisoned lock error"),
+        }
     }
 }
