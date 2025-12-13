@@ -45,6 +45,8 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
   CARGO_PROFILE_DEV_DEBUG: 0
+  BENCH_DURATION: ${{ github.event_name == 'pull_request' && '10' || '30' }}
+  BENCH_WARMUP: ${{ github.event_name == 'pull_request' && '250' || '1000' }}
 
 defaults:
   run:
@@ -81,7 +83,7 @@ jobs:
     name: Benchmark spikard-rust
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v6
 
@@ -115,9 +117,9 @@ jobs:
             --framework spikard-rust \
             --app-dir tools/benchmark-harness/apps/spikard-rust \
             --suite all \
-            --duration 30 \
+            --duration "$BENCH_DURATION" \
             --concurrency 100 \
-            --warmup 1000 \
+            --warmup "$BENCH_WARMUP" \
             --output results/spikard-rust
 
       - name: Upload benchmark results
@@ -132,7 +134,7 @@ jobs:
     name: Benchmark spikard-python
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v6
 
@@ -175,9 +177,9 @@ jobs:
             --framework spikard-python \
             --app-dir tools/benchmark-harness/apps/spikard-python \
             --suite all \
-            --duration 30 \
+            --duration "$BENCH_DURATION" \
             --concurrency 100 \
-            --warmup 1000 \
+            --warmup "$BENCH_WARMUP" \
             --output results/spikard-python
 
       - name: Upload benchmark results
@@ -192,7 +194,7 @@ jobs:
     name: Benchmark spikard-node
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v6
 
@@ -234,9 +236,9 @@ jobs:
             --framework spikard-node \
             --app-dir tools/benchmark-harness/apps/spikard-node \
             --suite all \
-            --duration 30 \
+            --duration "$BENCH_DURATION" \
             --concurrency 100 \
-            --warmup 1000 \
+            --warmup "$BENCH_WARMUP" \
             --output results/spikard-node
 
       - name: Upload benchmark results
@@ -251,7 +253,7 @@ jobs:
     name: Benchmark spikard-ruby
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v6
 
@@ -295,9 +297,9 @@ jobs:
             --framework spikard-ruby \
             --app-dir tools/benchmark-harness/apps/spikard-ruby \
             --suite all \
-            --duration 30 \
+            --duration "$BENCH_DURATION" \
             --concurrency 100 \
-            --warmup 1000 \
+            --warmup "$BENCH_WARMUP" \
             --output results/spikard-ruby
 
       - name: Upload benchmark results
@@ -312,7 +314,7 @@ jobs:
     name: Benchmark spikard-php
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v6
 
@@ -382,9 +384,9 @@ jobs:
             --framework spikard-php \
             --app-dir tools/benchmark-harness/apps/spikard-php \
             --suite all \
-            --duration 30 \
+            --duration "$BENCH_DURATION" \
             --concurrency 100 \
-            --warmup 1000 \
+            --warmup "$BENCH_WARMUP" \
             --output results/spikard-php
 
       - name: Upload benchmark results
@@ -399,7 +401,7 @@ jobs:
     name: Benchmark spikard-wasm
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v6
 
@@ -450,9 +452,9 @@ jobs:
             --framework spikard-wasm \
             --app-dir tools/benchmark-harness/apps/spikard-wasm \
             --suite all \
-            --duration 30 \
+            --duration "$BENCH_DURATION" \
             --concurrency 100 \
-            --warmup 1000 \
+            --warmup "$BENCH_WARMUP" \
             --output results/spikard-wasm
 
       - name: Upload benchmark results
