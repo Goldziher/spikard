@@ -4,7 +4,7 @@ export declare class SseEvent {
 	/** Get the data field of the event */
 	getData(): string;
 	/** Parse the event data as JSON */
-	asJson(): any;
+	asJson(): unknown;
 }
 
 /** Node.js wrapper for SSE stream */
@@ -14,7 +14,7 @@ export declare class SseStream {
 	/** Get all events from the stream */
 	events(): Array<SseEvent>;
 	/** Get events as JSON values */
-	eventsAsJson(): Array<any>;
+	eventsAsJson(): Array<unknown>;
 }
 
 /** HTTP Response wrapper */
@@ -22,11 +22,11 @@ export declare class TestResponse {
 	/** Get the HTTP status code */
 	get statusCode(): number;
 	/** Get response headers as JSON */
-	headers(): any;
+	headers(): Record<string, string>;
 	/** Get response body as text */
 	text(): string;
 	/** Parse response body as JSON */
-	json(): any;
+	json(): unknown;
 	/** Get raw response body bytes */
 	bytes(): Buffer;
 }
@@ -36,7 +36,7 @@ export declare class WebSocketMessage {
 	/** Get message as text if it's a text message */
 	asText(): string | null;
 	/** Get message as JSON if it's a text message containing JSON */
-	asJson(): any | null;
+	asJson(): unknown | null;
 	/** Get message as binary if it's a binary message */
 	asBinary(): Buffer | null;
 	/** Check if this is a close message */
@@ -48,11 +48,11 @@ export declare class WebSocketTestConnection {
 	/** Send a text message */
 	sendText(text: string): Promise<void>;
 	/** Send a JSON message */
-	sendJson(obj: any): Promise<void>;
+	sendJson(obj: unknown): Promise<void>;
 	/** Receive a text message */
 	receiveText(): Promise<string>;
 	/** Receive and parse a JSON message */
-	receiveJson(): Promise<any>;
+	receiveJson(): Promise<unknown>;
 	/** Receive raw bytes */
 	receiveBytes(): Promise<Buffer>;
 	/** Receive a message and return WebSocketMessage */
@@ -79,9 +79,9 @@ export interface HandlerInput {
 	/** HTTP cookies as a map */
 	cookies: Record<string, string>;
 	/** Parsed query parameters */
-	queryParams: any;
+	queryParams: Record<string, unknown>;
 	/** Parsed request body */
-	body: any;
+	body: unknown;
 	/** Extracted path parameters */
 	pathParams: Record<string, string>;
 }
@@ -98,7 +98,7 @@ export interface HandlerOutput {
 	/** Response headers as a map */
 	headers?: Record<string, string>;
 	/** Response body as JSON value */
-	body?: any;
+	body?: unknown;
 }
 
 /**

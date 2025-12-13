@@ -113,3 +113,5 @@ app.get("/", (c) => {
 });
 
 const port = process.argv[2] ? parseInt(process.argv[2], 10) : process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
+
+serve({ fetch: app.fetch, port });

@@ -196,17 +196,19 @@ describe("di", () => {
 
 		expect(response.statusCode).toBe(200);
 
+		// Second request to verify caching behavior
 		const response2 = await client.get("/api/mixed-caching");
 		expect(response2.statusCode).toBe(200);
 		const data1 = response.json();
 		const data2 = response2.json();
 
-		expect(data1.id).toBeDefined();
-		expect(data2.id).toBeDefined();
-		expect(data1.id).toBe(data2.id);
-		if (data1.count !== undefined && data2.count !== undefined) {
-			expect(data2.count).toBeGreaterThan(data1.count);
-		}
+		// pool_id is singleton; context_id is per-request
+		expect(data1.pool_id).toBeDefined();
+		expect(data2.pool_id).toBeDefined();
+		expect(data1.pool_id).toBe(data2.pool_id);
+		expect(data1.context_id).toBeDefined();
+		expect(data2.context_id).toBeDefined();
+		expect(data1.context_id).not.toBe(data2.context_id);
 	});
 
 	test("Resource cleanup after request - success", async () => {
@@ -257,17 +259,17 @@ describe("di", () => {
 
 		expect(response.statusCode).toBe(200);
 
+		// Second request to verify caching behavior
 		const response2 = await client.get("/api/app-counter");
 		expect(response2.statusCode).toBe(200);
 		const data1 = response.json();
 		const data2 = response2.json();
 
-		expect(data1.id).toBeDefined();
-		expect(data2.id).toBeDefined();
-		expect(data1.id).toBe(data2.id);
-		if (data1.count !== undefined && data2.count !== undefined) {
-			expect(data2.count).toBeGreaterThan(data1.count);
-		}
+		// Singleton counter should have stable counter_id and incremented count
+		expect(data1.counter_id).toBeDefined();
+		expect(data2.counter_id).toBeDefined();
+		expect(data1.counter_id).toBe(data2.counter_id);
+		expect(data2.count).toBeGreaterThan(data1.count);
 	});
 
 	test("Async factory dependency - success", async () => {

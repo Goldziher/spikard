@@ -481,7 +481,7 @@ Deno.test("query_params: Query parameter with special characters - URL encoding"
 	const app = createAppQueryParamsQueryParameterWithSpecialCharactersUrlEncoding();
 	const client = new TestClient(app);
 
-	const response = await client.get("/test?special=%26%40A.ac&email=x%40test.com");
+	const response = await client.get("/test?email=x%40test.com&special=%26%40A.ac");
 
 	assertEquals(response.statusCode, 200);
 	const responseData = response.json();
@@ -536,7 +536,7 @@ Deno.test("query_params: Multiple query parameters with different types", async 
 	const app = createAppQueryParamsMultipleQueryParametersWithDifferentTypes();
 	const client = new TestClient(app);
 
-	const response = await client.get("/query/multi-type?name=john&active=true&score=95.5&age=30");
+	const response = await client.get("/query/multi-type?name=john&age=30&active=true&score=95.5");
 
 	assertEquals(response.statusCode, 200);
 	const responseData = response.json();

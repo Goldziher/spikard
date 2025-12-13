@@ -3,7 +3,14 @@ import type { StaticFilesConfig, StaticManifestEntry } from "./config";
 import type { HandlerFunction, SpikardApp } from "./index";
 import type { Request } from "./request";
 import { isStreamingResponse } from "./streaming";
-import type { HandlerBody, HandlerPayload, JsonValue, StructuredHandlerResponse } from "./types";
+import type {
+	AbortSignalLike,
+	HandlerBody,
+	HandlerContext,
+	HandlerPayload,
+	JsonValue,
+	StructuredHandlerResponse,
+} from "./types";
 import { gunzipSync } from "fflate";
 
 type HeaderMap = Record<string, string>;
@@ -143,6 +150,7 @@ interface NativeSnapshot {
 const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
 const RAW_REQUEST_KEY = "__spikard_raw_request__";
+const ABORT_SIGNAL_KEY = "__spikard_abort_signal__";
 const EMPTY_HOOKS: LifecycleHooks = {
 	onRequest: [],
 	preValidation: [],
@@ -305,6 +313,7 @@ export class TestClient {
 	}
 
 	async websocketConnect(path: string): Promise<WebSocketTestConnection> {
+		await this.nativeClientPromise;
 		const route = this.findRoute("GET", path);
 		if (!route) {
 			throw new Error(`WebSocket route not found for ${path}`);
@@ -317,8 +326,21 @@ export class TestClient {
 	}
 
 	private responseFromNative(snapshot: NativeSnapshot) {
-		const headers = normalizeRecord(snapshot.headers);
-		return new TestResponse(snapshot.status, headers, snapshot.body);
+		const rawHeaders = normalizeRecord(snapshot.headers);
+		const normalizedHeaders = lowerCaseHeaderKeys(rawHeaders);
+		const bodyBytes = toUint8Array(snapshot.body);
+		const unwrapped = tryUnwrapStructuredSnapshot(bodyBytes);
+		if (unwrapped) {
+			const flattened = flattenStructuredResponse(unwrapped);
+			const status = flattened.status ?? flattened.statusCode ?? snapshot.status;
+			const headers = lowerCaseHeaderKeys({
+				...normalizeRecord(flattened.headers ?? {}),
+				...normalizedHeaders,
+			});
+			const body = flattened.body ?? null;
+			return new TestResponse(status, headers, encodeBodyBytes(body));
+		}
+		return new TestResponse(snapshot.status, normalizedHeaders, bodyBytes);
 	}
 
 	private dispatchWithHeaders(
@@ -393,7 +415,7 @@ export class TestClient {
 			return native;
 		}
 		if ("json" in options) {
-			native.json = options.json ?? null;
+			native.json = options.json == null ? null : normalizeJsonValue(options.json);
 		}
 		if (options.binary) {
 			native.binary = options.binary;
@@ -789,6 +811,9 @@ function normalizeJsonValue(value: unknown): JsonValue {
 	if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
 		return value as JsonValue;
 	}
+	if (typeof value === "bigint") {
+		return value.toString();
+	}
 	if (typeof value === "object" && value) {
 		const result: Record<string, JsonValue> = {};
 		for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
@@ -797,6 +822,59 @@ function normalizeJsonValue(value: unknown): JsonValue {
 		return result;
 	}
 	return value as JsonValue;
+}
+
+function lowerCaseHeaderKeys(headers: HeaderMap): HeaderMap {
+	const lowered: HeaderMap = {};
+	for (const [key, value] of Object.entries(headers)) {
+		lowered[key.toLowerCase()] = value;
+	}
+	return lowered;
+}
+
+function tryUnwrapStructuredSnapshot(body: Uint8Array): StructuredHandlerResponse | null {
+	if (body.length === 0) {
+		return null;
+	}
+	const text = textDecoder.decode(body);
+	try {
+		const parsed = JSON.parse(text) as unknown;
+		if (!isStructuredResponseLike(parsed)) {
+			return null;
+		}
+		return parsed as StructuredHandlerResponse;
+	} catch {
+		return null;
+	}
+}
+
+function flattenStructuredResponse(response: StructuredHandlerResponse): StructuredHandlerResponse {
+	let current: StructuredHandlerResponse = response;
+	let mergedHeaders: HeaderMap = normalizeRecord(current.headers ?? {});
+
+	while (current.body && typeof current.body === "object" && isStructuredResponseLike(current.body)) {
+		const next = current.body as unknown as StructuredHandlerResponse;
+		mergedHeaders = {
+			...mergedHeaders,
+			...normalizeRecord(next.headers ?? {}),
+		};
+		current = next;
+	}
+
+	return {
+		...current,
+		headers: mergedHeaders,
+	};
+}
+
+function encodeBodyBytes(body: HandlerBody): Uint8Array {
+	if (body == null) {
+		return new Uint8Array();
+	}
+	if (typeof body === "string") {
+		return textEncoder.encode(body);
+	}
+	return textEncoder.encode(JSON.stringify(body));
 }
 
 function toUint8Array(value: ArrayBuffer | ArrayLike<number> | Uint8Array): Uint8Array {
@@ -844,6 +922,18 @@ function bufferToBase64(bytes: Uint8Array): string {
 	throw new Error("Base64 encoding is not supported in this environment");
 }
 
+function isAbortSignalLike(value: unknown): value is AbortSignalLike {
+	if (!value || typeof value !== "object") {
+		return false;
+	}
+	const candidate = value as AbortSignalLike;
+	return (
+		typeof candidate.aborted === "boolean" &&
+		typeof candidate.addEventListener === "function" &&
+		typeof candidate.removeEventListener === "function"
+	);
+}
+
 function wrapHandlers(handlers: Record<string, HandlerFunction>): Record<string, HandlerFunction> {
 	const wrapped: Record<string, HandlerFunction> = {};
 	for (const [name, handler] of Object.entries(handlers)) {
@@ -853,8 +943,13 @@ function wrapHandlers(handlers: Record<string, HandlerFunction>): Record<string,
 				request && typeof request === "object" && RAW_REQUEST_KEY in request
 					? String((request as { [RAW_REQUEST_KEY]?: unknown })[RAW_REQUEST_KEY] ?? "")
 					: JSON.stringify(request);
+			const maybeSignal =
+				request && typeof request === "object" && ABORT_SIGNAL_KEY in request
+					? (request as { [ABORT_SIGNAL_KEY]?: unknown })[ABORT_SIGNAL_KEY]
+					: undefined;
+			const context: HandlerContext | undefined = isAbortSignalLike(maybeSignal) ? { signal: maybeSignal } : undefined;
 			const normalizedRequest = maybeWrapRequestPayload(request);
-			return looksLikeStringHandler ? handler(rawJson) : handler(normalizedRequest);
+			return looksLikeStringHandler ? handler(rawJson, context) : handler(normalizedRequest, context);
 		};
 	}
 	return wrapped;
@@ -1342,11 +1437,14 @@ async function normalizeStructuredResponse(
 }
 
 function isStructuredResponseLike(value: unknown): value is StructuredHandlerResponse {
-	return (
-		!!value &&
-		typeof value === "object" &&
-		("status" in value || "statusCode" in value || "headers" in value || "body" in value)
-	);
+	if (!value || typeof value !== "object") {
+		return false;
+	}
+	const hasStatus = "status" in value || "statusCode" in value;
+	if (!hasStatus) {
+		return false;
+	}
+	return "headers" in value || "body" in value;
 }
 
 function matchPath(template: string, actual: string): Record<string, string> | null {

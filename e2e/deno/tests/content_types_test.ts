@@ -108,14 +108,16 @@ Deno.test("content_types: PDF response - application pdf", async () => {
 	const responseData = response.json();
 	assertEquals(responseData, "pdf_binary_data");
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders["content-type"], "application/pdf");
 	assertEquals(responseHeaders["content-disposition"], "attachment; filename=document.pdf");
+	assertEquals(responseHeaders["content-type"], "application/pdf");
 });
 
 Deno.test({
 	name: "content_types: 20_content_length_mismatch",
 	ignore: true,
-	fn: async () => {},
+	fn: async () => {
+		// Not supported by the in-memory HTTP client
+	},
 });
 
 Deno.test("content_types: 17_vendor_json_accepted", async () => {
@@ -299,6 +301,6 @@ Deno.test("content_types: Binary response - application octet-stream", async () 
 	const responseData = response.json();
 	assertEquals(responseData, "binary_data_placeholder");
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders["content-disposition"], "attachment; filename=file.bin");
 	assertEquals(responseHeaders["content-type"], "application/octet-stream");
+	assertEquals(responseHeaders["content-disposition"], "attachment; filename=file.bin");
 });

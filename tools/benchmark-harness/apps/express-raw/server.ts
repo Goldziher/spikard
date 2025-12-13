@@ -94,12 +94,16 @@ app.get("/query/many", (req: Request, res: Response) => {
 	res.json(req.query || {});
 });
 
-app.get("/health", (req: Request, res: Response) => {
+app.get("/health", (_req: Request, res: Response) => {
 	res.json({ status: "ok" });
 });
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (_req: Request, res: Response) => {
 	res.json({ status: "ok" });
 });
 
 const port = process.argv[2] ? parseInt(process.argv[2], 10) : process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
+
+app.listen(port, () => {
+	console.error(`[express] Starting server on port ${port}`);
+});

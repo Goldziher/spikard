@@ -561,11 +561,9 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
             }
         }
 
-        if matches!(body_payload.metadata.kind, BodyKind::Form | BodyKind::Multipart) {
-            if let Some(value) = body_payload.value.take() {
-                let coerced = coerce_value_against_schema(value, request_validator.schema());
-                body_payload.value = Some(coerced);
-            }
+        if let Some(value) = body_payload.value.take() {
+            let coerced = coerce_value_against_schema(value, request_validator.schema());
+            body_payload.value = Some(coerced);
         }
         if let Err(error) = request_validator.validate(body_payload.value.as_ref().unwrap_or(&Value::Null)) {
             let problem = ProblemDetails::from_validation_error(&error);
@@ -605,79 +603,128 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         }
     };
 
-    if !context.dependencies.is_empty() {
-        let resolved = resolve_dependency_map(&context.dependencies, &context.dependency_singletons).await?;
-        if !resolved.is_empty() {
-            request_payload.dependencies = Some(resolved);
-        }
-    }
+    let dependency_targets = route.handler_dependencies.clone();
+    let dependency_request_id = (!dependency_targets.is_empty()).then(|| Uuid::new_v4().to_string());
 
-    let handler_fn = context
-        .handlers
-        .get(&route.handler_name)
-        .ok_or_else(|| JsValue::from_str(&format!("Handler {} not registered", route.handler_name)))?;
-
-    let request_json = serde_json::to_string(&request_payload)
-        .map_err(|err| JsValue::from_str(&format!("Failed to serialize request: {err}")))?;
-    let request_value = serde_json::to_value(&request_payload)
-        .map_err(|err| JsValue::from_str(&format!("Failed to serialize request value: {err}")))?;
-    let request_js = safe_json_to_js(&request_value);
-    let request_object: Object = request_js
-        .dyn_into()
-        .map_err(|_| JsValue::from_str("Failed to build request object"))?;
-    Reflect::set(
-        &request_object,
-        &JsValue::from_str("__spikard_raw_request__"),
-        &JsValue::from_str(&request_json),
-    )
-    .map_err(|_| JsValue::from_str("Failed to attach raw request payload"))?;
-
-    let js_promise = handler_fn.call1(&JsValue::NULL, &request_object.into())?;
-
-    let promise: Promise = js_promise
-        .dyn_into()
-        .map_err(|_| JsValue::from_str("Handler must return a Promise"))?;
-
-    let raced = if let Some(seconds) = request_timeout_seconds {
-        let (timeout_promise, timeout_id) = build_timeout_promise(seconds)?;
-        let guarded = attach_clear_timeout(&promise, timeout_id)?;
-        Promise::race(&Array::of2(&guarded, &timeout_promise))
-    } else {
-        promise
-    };
-
-    let result = wasm_bindgen_futures::JsFuture::from(raced).await;
-
-    let response_value = match result {
-        Ok(value) => {
-            if is_timeout_marker(&value) {
-                let problem = ProblemDetails::new(
-                    "https://spikard.dev/errors/request-timeout",
-                    "Request Timeout",
-                    StatusCode::REQUEST_TIMEOUT,
-                );
+    if let Some(request_id) = dependency_request_id.as_deref() {
+        match resolve_dependency_map(
+            &context.dependencies,
+            &context.dependency_singletons,
+            request_id,
+            &dependency_targets,
+        )
+        .await
+        {
+            Ok(resolved) => {
+                if !resolved.is_empty() {
+                    request_payload.dependencies = Some(resolved);
+                }
+            }
+            Err(err) => {
+                let message = extract_error_message(&err);
+                let _ = run_dependency_cleanup(request_id).await;
+                let problem = ProblemDetails::internal_server_error(format!("Dependency resolution failed: {message}"));
                 return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
             }
-            let normalized = normalize_handler_result(value).await?;
-            lifecycle_runner.run_response_hooks(normalized).await?
-        }
-        Err(err) => {
-            let error_response = build_error_response(err);
-            lifecycle_runner.run_error_hooks(error_response).await?
-        }
-    };
-
-    if let Some(response_validator) = validators.response.as_ref() {
-        if let Err(error) = response_validator.validate(&response_value) {
-            let problem = response_validation_problem(&error);
-            return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
         }
     }
 
-    let response_payload = HandlerResponsePayload::from_value(response_value)?;
+    let response_result: Result<ResponseSnapshot, JsValue> = (async {
+        let handler_fn = context
+            .handlers
+            .get(&route.handler_name)
+            .ok_or_else(|| JsValue::from_str(&format!("Handler {} not registered", route.handler_name)))?;
 
-    let snapshot = ResponseSnapshot::from_handler(response_payload, &headers, &context.config);
-    Ok(snapshot)
+        let request_json = serde_json::to_string(&request_payload)
+            .map_err(|err| JsValue::from_str(&format!("Failed to serialize request: {err}")))?;
+        let request_value = serde_json::to_value(&request_payload)
+            .map_err(|err| JsValue::from_str(&format!("Failed to serialize request value: {err}")))?;
+        let request_js = safe_json_to_js(&request_value);
+        let request_object: Object = request_js
+            .dyn_into()
+            .map_err(|_| JsValue::from_str("Failed to build request object"))?;
+        Reflect::set(
+            &request_object,
+            &JsValue::from_str("__spikard_raw_request__"),
+            &JsValue::from_str(&request_json),
+        )
+        .map_err(|_| JsValue::from_str("Failed to attach raw request payload"))?;
+
+        let abort_controller = if request_timeout_seconds.is_some() {
+            create_abort_controller()?
+        } else {
+            None
+        };
+
+        if let Some(controller) = abort_controller.as_ref() {
+            Reflect::set(
+                &request_object,
+                &JsValue::from_str("__spikard_abort_signal__"),
+                &controller.signal,
+            )
+            .map_err(|_| JsValue::from_str("Failed to attach abort signal"))?;
+        }
+
+        let js_promise = handler_fn.call1(&JsValue::NULL, &request_object.into())?;
+
+        let promise: Promise = js_promise
+            .dyn_into()
+            .map_err(|_| JsValue::from_str("Handler must return a Promise"))?;
+
+        let raced = if let Some(seconds) = request_timeout_seconds {
+            let (timeout_promise, timeout_id) = build_timeout_promise(seconds)?;
+            let guarded = attach_clear_timeout(&promise, timeout_id)?;
+            Promise::race(&Array::of2(&guarded, &timeout_promise))
+        } else {
+            promise
+        };
+
+        let result = wasm_bindgen_futures::JsFuture::from(raced).await;
+
+        let response_value = match result {
+            Ok(value) => {
+                if is_timeout_marker(&value) {
+                    if let Some(controller) = abort_controller.as_ref() {
+                        controller.abort();
+                    }
+                    let problem = ProblemDetails::new(
+                        "https://spikard.dev/errors/request-timeout",
+                        "Request Timeout",
+                        StatusCode::REQUEST_TIMEOUT,
+                    );
+                    return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+                }
+                let normalized = normalize_handler_result(value).await?;
+                lifecycle_runner.run_response_hooks(normalized).await?
+            }
+            Err(err) => {
+                let error_response = build_error_response(err);
+                lifecycle_runner.run_error_hooks(error_response).await?
+            }
+        };
+
+        if let Some(response_validator) = validators.response.as_ref() {
+            if let Err(error) = response_validator.validate(&response_value) {
+                let problem = response_validation_problem(&error);
+                return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+            }
+        }
+
+        let response_payload = HandlerResponsePayload::from_value(response_value)?;
+
+        Ok(ResponseSnapshot::from_handler(
+            response_payload,
+            &headers,
+            &context.config,
+        ))
+    })
+    .await;
+
+    if let Some(request_id) = dependency_request_id.as_deref() {
+        let _ = run_dependency_cleanup(request_id).await;
+    }
+
+    response_result
 }
 
 async fn normalize_handler_result(result: JsValue) -> Result<Value, JsValue> {
@@ -818,6 +865,54 @@ fn is_timeout_marker(value: &JsValue) -> bool {
         .unwrap_or(false)
 }
 
+struct AbortControllerHandle {
+    controller: Object,
+    signal: JsValue,
+    abort_fn: Function,
+}
+
+impl AbortControllerHandle {
+    fn abort(&self) {
+        let _ = self.abort_fn.call0(&self.controller);
+    }
+}
+
+fn create_abort_controller() -> Result<Option<AbortControllerHandle>, JsValue> {
+    let global = js_sys::global();
+    let ctor = match Reflect::get(&global, &JsValue::from_str("AbortController")) {
+        Ok(value) => value,
+        Err(_) => return Ok(None),
+    };
+    if ctor.is_undefined() || ctor.is_null() {
+        return Ok(None);
+    }
+
+    let ctor_fn: Function = match ctor.dyn_into() {
+        Ok(value) => value,
+        Err(_) => return Ok(None),
+    };
+
+    let controller_value = js_sys::Reflect::construct(&ctor_fn, &Array::new())
+        .map_err(|_| JsValue::from_str("AbortController is not a constructable function (missing 'new')"))?;
+    let controller: Object = controller_value
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("AbortController constructor did not return an object"))?;
+
+    let signal = Reflect::get(&controller, &JsValue::from_str("signal"))
+        .map_err(|_| JsValue::from_str("AbortController missing signal property"))?;
+    let abort = Reflect::get(&controller, &JsValue::from_str("abort"))
+        .map_err(|_| JsValue::from_str("AbortController missing abort method"))?;
+    let abort_fn: Function = abort
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("AbortController abort is not a function"))?;
+
+    Ok(Some(AbortControllerHandle {
+        controller,
+        signal,
+        abort_fn,
+    }))
+}
+
 fn build_timeout_promise(seconds: u64) -> Result<(Promise, JsValue), JsValue> {
     use std::cell::RefCell;
     use std::rc::Rc;
@@ -869,17 +964,27 @@ fn attach_clear_timeout(promise: &Promise, timeout_id: JsValue) -> Result<Promis
 async fn resolve_dependency_map(
     registry: &HashMap<String, DependencyDescriptor>,
     singleton_cache: &std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
+    request_id: &str,
+    target_keys: &[String],
 ) -> Result<HashMap<String, Value>, JsValue> {
-    let mut keys: Vec<String> = registry.keys().cloned().collect();
+    let mut keys: Vec<String> = target_keys.to_vec();
     keys.sort();
+    keys.dedup();
 
     let mut resolving: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut request_cache: HashMap<String, String> = HashMap::new();
     let mut resolved_values: HashMap<String, Value> = HashMap::new();
 
     for key in keys {
-        let value_json =
-            resolve_dependency_key(&key, registry, singleton_cache, &mut resolving, &mut request_cache).await?;
+        let value_json = resolve_dependency_key(
+            &key,
+            registry,
+            singleton_cache,
+            request_id,
+            &mut resolving,
+            &mut request_cache,
+        )
+        .await?;
 
         let parsed = serde_json::from_str::<Value>(&value_json).unwrap_or(Value::String(value_json));
         resolved_values.insert(key, parsed);
@@ -892,6 +997,7 @@ fn resolve_dependency_key<'a>(
     key: &'a str,
     registry: &'a HashMap<String, DependencyDescriptor>,
     singleton_cache: &'a std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
+    request_id: &'a str,
     resolving: &'a mut std::collections::HashSet<String>,
     request_cache: &'a mut HashMap<String, String>,
 ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, JsValue>> + 'a>> {
@@ -917,10 +1023,15 @@ fn resolve_dependency_key<'a>(
             let mut dep_map = JsonMap::new();
             for dep_key in &descriptor.depends_on {
                 let dep_json =
-                    resolve_dependency_key(dep_key, registry, singleton_cache, resolving, request_cache).await?;
+                    resolve_dependency_key(dep_key, registry, singleton_cache, request_id, resolving, request_cache)
+                        .await?;
                 let dep_value = serde_json::from_str::<Value>(&dep_json).unwrap_or(Value::String(dep_json));
                 dep_map.insert(dep_key.clone(), dep_value);
             }
+            dep_map.insert(
+                "__spikard_request_id__".to_string(),
+                Value::String(request_id.to_string()),
+            );
             let deps_json =
                 serde_json::to_string(&Value::Object(dep_map)).map_err(|err| JsValue::from_str(&err.to_string()))?;
 
@@ -958,6 +1069,27 @@ fn resolve_dependency_key<'a>(
         resolving.remove(key);
         Ok(value_json)
     })
+}
+
+async fn run_dependency_cleanup(request_id: &str) -> Result<(), JsValue> {
+    let global = js_sys::global();
+    let value = Reflect::get(&global, &JsValue::from_str("__spikard_di_cleanup__")).unwrap_or(JsValue::UNDEFINED);
+    if value.is_null() || value.is_undefined() {
+        return Ok(());
+    }
+
+    let cleanup: Function = value
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("__spikard_di_cleanup__ must be a function"))?;
+    let result = cleanup.call1(&global, &JsValue::from_str(request_id))?;
+    if result.is_instance_of::<Promise>() {
+        let promise: Promise = result
+            .dyn_into()
+            .map_err(|_| JsValue::from_str("cleanup hook returned invalid Promise"))?;
+        wasm_bindgen_futures::JsFuture::from(promise).await?;
+        return Ok(());
+    }
+    Ok(())
 }
 
 fn parse_handler_value(result: JsValue) -> Result<Value, JsValue> {
@@ -1208,10 +1340,13 @@ impl ResponseSnapshot {
 
     fn from_raw(mut raw: RawResponse, request_headers: &HashMap<String, String>, config: &ServerConfig) -> Self {
         if config.enable_request_id {
-            let request_id = header_value(request_headers, "x-request-id")
-                .map(|value| value.to_string())
-                .unwrap_or_else(|| Uuid::new_v4().to_string());
-            raw.headers.insert("x-request-id".to_string(), request_id);
+            let has_request_id = raw.headers.keys().any(|key| key.eq_ignore_ascii_case("x-request-id"));
+            if !has_request_id {
+                let request_id = header_value(request_headers, "x-request-id")
+                    .map(|value| value.to_string())
+                    .unwrap_or_else(|| Uuid::new_v4().to_string());
+                raw.headers.insert("x-request-id".to_string(), request_id);
+            }
         }
 
         if let Some(compression) = &config.compression {
@@ -1375,6 +1510,32 @@ fn coerce_value_against_schema(value: Value, schema: &Value) -> Value {
             let coerced = items
                 .into_iter()
                 .map(|item| coerce_value_against_schema(item, items_schema))
+                .collect::<Vec<_>>();
+            Value::Array(coerced)
+        }
+        (Some("array"), Value::Object(obj)) => {
+            let Some(items_schema) = schema_obj.get("items") else {
+                return Value::Object(obj);
+            };
+
+            let mut original = JsonMap::new();
+            let mut numeric_entries = Vec::new();
+            for (key, value) in obj {
+                if let Ok(index) = key.parse::<usize>() {
+                    numeric_entries.push((index, value));
+                } else {
+                    original.insert(key, value);
+                }
+            }
+
+            if numeric_entries.is_empty() || !original.is_empty() {
+                return Value::Object(original);
+            }
+
+            numeric_entries.sort_by_key(|(idx, _)| *idx);
+            let coerced = numeric_entries
+                .into_iter()
+                .map(|(_, item)| coerce_value_against_schema(item, items_schema))
                 .collect::<Vec<_>>();
             Value::Array(coerced)
         }

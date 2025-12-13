@@ -4,16 +4,10 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{LifecycleHooks, Route};
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use tokio::sync::oneshot;
+use std::sync::Arc;
 
 use crate::php::handler::PhpHandler;
 use crate::php::hooks::{PhpErrorHook, PhpRequestHook, PhpResponseHook};
-
-/// Registry for graceful shutdown channels.
-/// Maps server handle IDs to oneshot senders that trigger shutdown.
-static SERVER_SHUTDOWN_REGISTRY: Mutex<Option<HashMap<u64, oneshot::Sender<()>>>> = Mutex::new(None);
 
 /// Payload for a registered route coming from PHP.
 #[derive(Debug, serde::Deserialize)]
@@ -21,10 +15,6 @@ pub struct RegisteredRoutePayload {
     pub method: String,
     pub path: String,
     pub handler_name: String,
-    #[serde(skip)]
-    #[allow(dead_code)]
-    /// Handler stored as Zval to avoid lifetime issues
-    pub handler: Option<ext_php_rs::types::Zval>,
     pub request_schema: Option<serde_json::Value>,
     pub response_schema: Option<serde_json::Value>,
     pub parameter_schema: Option<serde_json::Value>,
@@ -609,87 +599,72 @@ pub fn spikard_start_server_impl(
     let app = build_router_with_handlers_and_config(route_pairs, server_config.clone(), route_metadata)
         .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
 
-    let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| PhpException::default(format!("Failed to start Tokio runtime: {}", e)))?;
 
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-    use std::time::SystemTime;
+    let result: PhpResult<()> = runtime.block_on(async move {
+        let local = tokio::task::LocalSet::new();
 
-    let mut hasher = DefaultHasher::new();
-    SystemTime::now().hash(&mut hasher);
-    let id = hasher.finish();
+        local
+            .run_until(async move {
+                let addr = format!("{}:{}", server_config.host, server_config.port);
+                let listener = tokio::net::TcpListener::bind(&addr)
+                    .await
+                    .map_err(|e| PhpException::default(format!("Failed to bind to {}: {}", addr, e)))?;
 
-    {
-        let mut registry = SERVER_SHUTDOWN_REGISTRY
-            .lock()
-            .map_err(|e| PhpException::default(format!("Failed to lock shutdown registry: {}", e)))?;
+                let background_runtime = spikard_http::BackgroundRuntime::start(server_config.background_tasks.clone()).await;
+                crate::php::install_handle(background_runtime.handle());
 
-        if registry.is_none() {
-            *registry = Some(HashMap::new());
-        }
+                tokio::task::spawn_local(async {
+                    loop {
+                        crate::php::process_pending_tasks();
+                        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+                    }
+                });
 
-        if let Some(ref mut map) = *registry {
-            map.insert(id, shutdown_tx);
-        }
-    }
+                let shutdown_signal = async move {
+                    let ctrl_c = async {
+                        let _ = tokio::signal::ctrl_c().await;
+                    };
 
-    let handle = std::thread::spawn(move || {
-        let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
-        rt.block_on(async move {
-            let local = tokio::task::LocalSet::new();
-
-            local
-                .run_until(async move {
-                    let addr = format!("{}:{}", server_config.host, server_config.port);
-                    let listener = match tokio::net::TcpListener::bind(&addr).await {
-                        Ok(l) => l,
-                        Err(e) => {
-                            eprintln!("Failed to bind to {}: {}", addr, e);
-                            return;
+                    #[cfg(unix)]
+                    let terminate = async {
+                        if let Ok(mut stream) =
+                            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                        {
+                            let _ = stream.recv().await;
                         }
                     };
 
-                    let background_runtime =
-                        spikard_http::BackgroundRuntime::start(server_config.background_tasks.clone()).await;
-                    crate::php::install_handle(background_runtime.handle());
-
-                    tokio::task::spawn_local(async {
-                        loop {
-                            crate::php::process_pending_tasks();
-                            tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-                        }
-                    });
-
-                    let shutdown_signal = async move {
-                        let ctrl_c = async {
-                            tokio::signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
-                        };
-
-                        let channel_shutdown = async {
-                            let _ = shutdown_rx.await;
-                        };
-
-                        tokio::select! {
-                            _ = ctrl_c => {},
-                            _ = channel_shutdown => {},
-                        }
-                    };
-
-                    if let Err(e) = axum::serve(listener, app).with_graceful_shutdown(shutdown_signal).await {
-                        eprintln!("Server error: {}", e);
+                    #[cfg(unix)]
+                    tokio::select! {
+                        _ = ctrl_c => {},
+                        _ = terminate => {},
                     }
 
-                    crate::php::clear_handle();
-                    if let Err(e) = background_runtime.shutdown().await {
-                        eprintln!("Failed to drain background tasks during shutdown: {:?}", e);
-                    }
-                })
-                .await;
-        });
+                    #[cfg(not(unix))]
+                    ctrl_c.await;
+                };
+
+                axum::serve(listener, app)
+                    .with_graceful_shutdown(shutdown_signal)
+                    .await
+                    .map_err(|e| PhpException::default(format!("Server error: {}", e)))?;
+
+                crate::php::clear_handle();
+                if let Err(e) = background_runtime.shutdown().await {
+                    eprintln!("Failed to drain background tasks during shutdown: {:?}", e);
+                }
+
+                Ok(())
+            })
+            .await
     });
 
-    std::mem::forget(handle);
-    Ok(id as i64)
+    result?;
+    Ok(0)
 }
 
 /// Stop server by handle.
@@ -698,18 +673,6 @@ pub fn spikard_start_server_impl(
 /// This sends a signal through the shutdown channel, causing the server to
 /// stop accepting new connections and finish processing existing requests.
 pub fn spikard_stop_server_impl(handle: i64) -> PhpResult<()> {
-    let handle_u64 = handle as u64;
-
-    let mut registry = SERVER_SHUTDOWN_REGISTRY
-        .lock()
-        .map_err(|e| PhpException::default(format!("Failed to lock shutdown registry: {}", e)))?;
-
-    if let Some(ref mut map) = *registry
-        && let Some(shutdown_tx) = map.remove(&handle_u64)
-    {
-        let _ = shutdown_tx.send(());
-        return Ok(());
-    }
-
-    Err(PhpException::default(format!("Server handle {} not found", handle)))
+    let _ = handle;
+    Ok(())
 }

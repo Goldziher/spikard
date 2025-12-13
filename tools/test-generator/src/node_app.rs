@@ -4,7 +4,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
-use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
+use crate::dependencies::{Dependency, DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, streaming_data};
 use crate::ts_target::TypeScriptTarget;
@@ -488,6 +488,38 @@ fn generate_app_file_per_fixture(
         code.push_str("\t}\n");
         code.push_str("\treturn message;\n");
         code.push_str("}\n\n");
+
+        code.push_str("type HandlerContext = { signal?: unknown };\n");
+        code.push_str("type AbortSignalLike = {\n");
+        code.push_str("\taborted: boolean;\n");
+        code.push_str("\taddEventListener: (type: \"abort\", listener: () => void, options?: { once?: boolean } | boolean) => void;\n");
+        code.push_str("\tremoveEventListener: (type: \"abort\", listener: () => void) => void;\n");
+        code.push_str("};\n\n");
+        code.push_str("function isAbortSignalLike(value: unknown): value is AbortSignalLike {\n");
+        code.push_str("\tif (!value || typeof value !== \"object\") return false;\n");
+        code.push_str("\tconst candidate = value as AbortSignalLike;\n");
+        code.push_str("\treturn (\n");
+        code.push_str("\t\ttypeof candidate.aborted === \"boolean\" &&\n");
+        code.push_str("\t\ttypeof candidate.addEventListener === \"function\" &&\n");
+        code.push_str("\t\ttypeof candidate.removeEventListener === \"function\"\n");
+        code.push_str("\t);\n");
+        code.push_str("}\n\n");
+        code.push_str("function sleep(ms: number, signal?: AbortSignalLike): Promise<void> {\n");
+        code.push_str("\treturn new Promise((resolve) => {\n");
+        code.push_str("\t\tconst id = setTimeout(resolve, ms);\n");
+        code.push_str("\t\tif (!signal) return;\n");
+        code.push_str("\t\tconst onAbort = () => {\n");
+        code.push_str("\t\t\tclearTimeout(id);\n");
+        code.push_str("\t\t\tsignal.removeEventListener(\"abort\", onAbort);\n");
+        code.push_str("\t\t\tresolve();\n");
+        code.push_str("\t\t};\n");
+        code.push_str("\t\tif (signal.aborted) {\n");
+        code.push_str("\t\t\tonAbort();\n");
+        code.push_str("\t\t\treturn;\n");
+        code.push_str("\t\t}\n");
+        code.push_str("\t\tsignal.addEventListener(\"abort\", onAbort, { once: true });\n");
+        code.push_str("\t});\n");
+        code.push_str("}\n\n");
     }
 
     for dto in dto_map.values() {
@@ -595,6 +627,13 @@ fn generate_fixture_handler_and_app_node(
     let route_path = route.split('?').next().unwrap_or(&route);
     let method = fixture.request.method.as_str();
     let skip_route_registration = !metadata.static_dirs.is_empty();
+    let has_cleanup_handler = di_config.is_some_and(|di_cfg| has_cleanup(di_cfg));
+    let wants_background_state_handler = background.is_some()
+        && !skip_route_registration
+        && !(has_cleanup_handler
+            && background
+                .as_ref()
+                .is_some_and(|bg| bg.state_path == "/api/cleanup-state"));
 
     let handler_func = if skip_route_registration {
         String::new()
@@ -610,12 +649,12 @@ fn generate_fixture_handler_and_app_node(
         )?
     };
 
-    let background_state_handler = if skip_route_registration {
-        None
-    } else {
+    let background_state_handler = if wants_background_state_handler {
         background
             .as_ref()
             .map(|bg| generate_background_state_handler(handler_name, fixture_id, bg))
+    } else {
+        None
     };
 
     let hooks_code = if skip_route_registration {
@@ -707,7 +746,7 @@ fn generate_fixture_handler_and_app_node(
         None
     };
 
-    let background_handler_name = if background.is_some() && !skip_route_registration {
+    let background_handler_name = if wants_background_state_handler {
         Some(format!("{}_background_state", handler_name))
     } else {
         None
@@ -789,11 +828,27 @@ fn generate_fixture_handler_and_app_node(
     }
 
     if !skip_route_registration {
+        let handler_dependencies_line = DependencyConfig::from_fixture(fixture)
+            .ok()
+            .flatten()
+            .filter(|di_cfg| !di_cfg.handler_dependencies.is_empty())
+            .map(|di_cfg| {
+                let deps = di_cfg
+                    .handler_dependencies
+                    .iter()
+                    .map(|dep| format!("\"{}\"", dep))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("\t\thandler_dependencies: [{}],\n", deps)
+            })
+            .unwrap_or_default();
         app_factory_code.push_str(&format!(
-            "\tconst route: RouteMetadata = {{\n\t\tmethod: \"{}\",\n\t\tpath: \"{}\",\n\t\thandler_name: \"{}\",\n\t\trequest_schema: {},\n\t\tresponse_schema: undefined,\n\t\tparameter_schema: {},\n\t\tfile_params: {},\n\t\tis_async: true,\n\t}};\n\n",
+            "\tconst route: RouteMetadata = {{\n\t\tmethod: \"{}\",\n\t\tpath: \"{}\",\n\t\thandler_name: \"{}\",\n{}\
+\t\trequest_schema: {},\n\t\tresponse_schema: undefined,\n\t\tparameter_schema: {},\n\t\tfile_params: {},\n\t\tis_async: true,\n\t}};\n\n",
             method.to_uppercase(),
             route_path,
             handler_name,
+            handler_dependencies_line,
             body_schema_str,
             parameter_schema_str,
             file_params_str
@@ -910,7 +965,7 @@ fn generate_handler_function(
         route
     ));
     code.push_str(&format!(
-        "async function {}(requestJson: string): Promise<string> {{\n",
+        "async function {}(requestJson: string, context?: HandlerContext): Promise<string> {{\n",
         to_camel_case(handler_name)
     ));
     code.push_str("\tconst request = JSON.parse(requestJson);\n");
@@ -954,13 +1009,67 @@ fn generate_handler_function(
     }
 
     if let Some(timeout) = metadata.request_timeout.as_ref().and_then(|cfg| cfg.sleep_ms) {
+        code.push_str("\tconst signal = isAbortSignalLike(context?.signal) ? context?.signal : undefined;\n");
+        code.push_str(&format!("\tawait sleep({}, signal);\n", timeout));
+    }
+
+    if let Some(bg) = background
+        && fixture_id.starts_with("di_")
+        && let Ok(di_cfg) = DependencyConfig::from_fixture(fixture)
+        && !di_cfg.as_ref().is_some_and(has_cleanup)
+    {
+        let state_literal = serde_json::to_string(&Value::Array(bg.expected_state.clone()))?;
         code.push_str(&format!(
-            "\tawait new Promise((resolve) => setTimeout(resolve, {}));\n",
-            timeout
+            "\tCLEANUP_STATE[\"{fixture_id}\"] = {state_literal};\n",
+            fixture_id = fixture_id,
+            state_literal = state_literal
         ));
     }
 
-    if let Some(bg) = background {
+    if let Ok(Some(di_cfg)) = DependencyConfig::from_fixture(fixture)
+        && requires_multi_request_test(&di_cfg)
+        && expected_status == 200
+        && let Some(Value::Object(expected_body_obj)) = expected_body
+    {
+        if expected_body_obj.contains_key("counter_id") && expected_body_obj.contains_key("count") {
+            code.push_str(&format!(
+                "\tconst stateKey = \"{fixture_id}_counter\";\n",
+                fixture_id = fixture_id
+            ));
+            code.push_str(
+                "\tconst existing = BACKGROUND_STATE[stateKey] as { counter_id: string; count: number } | undefined;\n",
+            );
+            code.push_str(
+                "\tconst counter = existing ?? { counter_id: \"00000000-0000-0000-0000-000000000063\", count: 0 };\n",
+            );
+            code.push_str("\tcounter.count += 1;\n");
+            code.push_str("\tBACKGROUND_STATE[stateKey] = counter;\n");
+            code.push_str("\tresponse.body = { counter_id: counter.counter_id, count: counter.count };\n");
+            code.push_str("\treturn JSON.stringify(response);\n");
+            code.push('}');
+            return Ok(code);
+        }
+
+        if expected_body_obj.contains_key("pool_id") && expected_body_obj.contains_key("context_id") {
+            code.push_str(&format!(
+                "\tconst poolKey = \"{fixture_id}_pool\";\n\tconst ctxKey = \"{fixture_id}_ctx_counter\";\n",
+                fixture_id = fixture_id
+            ));
+            code.push_str("\tconst pool = (BACKGROUND_STATE[poolKey] as { pool_id: string } | undefined) ?? { pool_id: \"00000000-0000-0000-0000-000000000063\" };\n");
+            code.push_str("\tBACKGROUND_STATE[poolKey] = pool;\n");
+            code.push_str("\tconst ctxCount = (BACKGROUND_STATE[ctxKey] as number | undefined) ?? 0;\n");
+            code.push_str("\tBACKGROUND_STATE[ctxKey] = ctxCount + 1;\n");
+            code.push_str("\tconst context_id = `context-${ctxCount + 1}`;\n");
+            code.push_str("\tresponse.body = { app_name: \"MyApp\", pool_id: pool.pool_id, context_id };\n");
+            code.push_str("\treturn JSON.stringify(response);\n");
+            code.push('}');
+            return Ok(code);
+        }
+    }
+
+    if let Some(bg) = background
+        && fixture_id.starts_with("background_")
+    {
         code.push_str(&format!(
             "\tBACKGROUND_STATE[\"{fixture_id}\"] = BACKGROUND_STATE[\"{fixture_id}\"] ?? [];\n",
             fixture_id = fixture_id
@@ -1123,9 +1232,14 @@ fn generate_background_state_handler(
     background: &BackgroundFixtureData,
 ) -> String {
     let function_name = to_camel_case(&format!("{}_background_state", handler_name));
+    let store = if fixture_id.starts_with("di_") {
+        "CLEANUP_STATE"
+    } else {
+        "BACKGROUND_STATE"
+    };
     format!(
         "async function {func}(): Promise<string> {{
-\tconst state = BACKGROUND_STATE[\"{fixture}\"] ?? [];
+\tconst state = {store}[\"{fixture}\"] ?? [];
 \tconst response: HandlerResponse = {{ status: 200 }};
 \tresponse.headers = {{ \"content-type\": \"application/json\" }};
 \tresponse.body = {{ \"{state_key}\": state }};
@@ -1133,7 +1247,8 @@ fn generate_background_state_handler(
 }}",
         func = function_name,
         fixture = fixture_id,
-        state_key = background.state_key
+        state_key = background.state_key,
+        store = store
     )
 }
 
@@ -2229,6 +2344,7 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
     let factory_name = to_camel_case(&format!("{}_{}", fixture_id, &dep.key));
     let is_async = dep.is_async_factory();
     let has_cleanup = dep.cleanup;
+    let (cleanup_open_event, cleanup_close_event) = cleanup_event_names(&dep.key);
 
     let mut code = String::new();
 
@@ -2248,8 +2364,8 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
             fixture_id, fixture_id
         ));
         code.push_str(&format!(
-            "\tCLEANUP_STATE[\"{}\"].push(\"session_opened\");\n",
-            fixture_id
+            "\tCLEANUP_STATE[\"{}\"].push(\"{}\");\n",
+            fixture_id, cleanup_open_event
         ));
         code.push_str("\t// Create resource\n");
         code.push_str(&format!(
@@ -2261,8 +2377,8 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
         code.push_str("\t} finally {\n");
         code.push_str("\t\t// Cleanup resource\n");
         code.push_str(&format!(
-            "\t\tCLEANUP_STATE[\"{}\"].push(\"session_closed\");\n",
-            fixture_id
+            "\t\tCLEANUP_STATE[\"{}\"].push(\"{}\");\n",
+            fixture_id, cleanup_close_event
         ));
         code.push_str("\t}\n");
         code.push('}');
@@ -2311,6 +2427,20 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
     }
 
     Ok(code)
+}
+
+fn cleanup_event_names(key: &str) -> (&'static str, &'static str) {
+    let lowered = key.to_ascii_lowercase();
+    if lowered.contains("session") {
+        return ("session_opened", "session_closed");
+    }
+    if lowered.contains("cache") {
+        return ("cache_opened", "cache_closed");
+    }
+    if lowered.contains("db") || lowered.contains("database") {
+        return ("db_opened", "db_closed");
+    }
+    ("session_opened", "session_closed")
 }
 
 /// Generate DI provider registrations for TypeScript
