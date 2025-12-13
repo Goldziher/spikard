@@ -53,10 +53,10 @@ fn main() {
             for lib in libs.split_whitespace() {
                 if let Some(path) = lib.strip_prefix("-L") {
                     println!("cargo:rustc-link-search=native={}", path);
-                } else if let Some(name) = lib.strip_prefix("-l") {
-                    if essential_libs.contains(&name) {
-                        println!("cargo:rustc-link-lib=dylib={}", name);
-                    }
+                } else if let Some(name) = lib.strip_prefix("-l")
+                    && essential_libs.contains(&name)
+                {
+                    println!("cargo:rustc-link-lib=dylib={}", name);
                 }
             }
         }
