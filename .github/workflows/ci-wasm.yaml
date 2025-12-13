@@ -271,6 +271,7 @@ jobs:
         working-directory: e2e/deno
         run: |
           deno test --no-check --sloppy-imports --allow-read --allow-net --allow-env --coverage=coverage_profile/ tests/
+          mkdir -p coverage
           deno coverage coverage_profile/ --lcov --output=coverage/lcov.info
 
       - name: Upload coverage to Codecov
