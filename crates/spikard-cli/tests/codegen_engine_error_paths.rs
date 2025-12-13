@@ -47,3 +47,30 @@ fn codegen_engine_reports_asyncapi_unsupported_languages() {
     let err = CodegenEngine::execute(request).unwrap_err().to_string();
     assert!(err.contains("AsyncAPI test apps"), "{err}");
 }
+
+#[test]
+fn codegen_engine_asyncapi_all_writes_fixtures_and_apps() {
+    let out_dir = tempdir().unwrap();
+
+    let request = CodegenRequest {
+        schema_path: workspace_root().join("examples/schemas/chat-service.asyncapi.yaml"),
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncAll {
+            output: out_dir.path().to_path_buf(),
+        },
+        dto: None,
+    };
+
+    let outcome = CodegenEngine::execute(request).expect("engine run");
+    let assets = match outcome {
+        spikard_cli::codegen::CodegenOutcome::Files(files) => files,
+        other => panic!("expected files, got {other:?}"),
+    };
+
+    assert!(assets.iter().any(|a| a.description.contains("fixture")));
+    assert!(assets.iter().any(|a| a.description.contains("AsyncAPI test app")));
+
+    for asset in assets {
+        assert!(asset.path.exists(), "missing asset {}", asset.path.display());
+    }
+}

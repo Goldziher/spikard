@@ -151,3 +151,48 @@ fn extract_request_and_response_types_handle_refs_and_ranges() {
     assert_eq!(generator.extract_request_body_type(&op).as_deref(), Some("Widget"));
     assert_eq!(generator.extract_response_type(&op), "unknown");
 }
+
+#[test]
+fn iter_schemas_calls_callback_for_inline_schemas_only() {
+    let mut spec = OpenAPI::default();
+    let components = spec.components.get_or_insert_with(Default::default);
+    components
+        .schemas
+        .insert("Inline".to_string(), ReferenceOr::Item(empty_object_schema()));
+    components.schemas.insert(
+        "Ref".to_string(),
+        ReferenceOr::Reference {
+            reference: "#/components/schemas/Inline".to_string(),
+        },
+    );
+
+    let generator = DummyGenerator::new(spec);
+    let mut names = Vec::new();
+    generator
+        .iter_schemas(|name, _schema| {
+            names.push(name.to_string());
+            Ok(())
+        })
+        .unwrap();
+
+    assert_eq!(names, vec!["Inline".to_string()]);
+}
+
+#[test]
+fn extract_response_type_formats_reference_names() {
+    let spec = OpenAPI::default();
+    let generator = DummyGenerator::new(spec);
+
+    let response_ref = ReferenceOr::Reference {
+        reference: "#/components/responses/MyResponse".to_string(),
+    };
+
+    let mut op = Operation::default();
+    let mut responses = Responses::default();
+    responses
+        .responses
+        .insert(openapiv3::StatusCode::Code(200), response_ref);
+    op.responses = responses;
+
+    assert_eq!(generator.extract_response_type(&op), "MyResponse");
+}
