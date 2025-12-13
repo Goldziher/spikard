@@ -314,10 +314,63 @@ function getFactoryParameterNames(factory: DependencyFactory): string[] {
 		.filter((entry) => entry.length > 0 && !entry.startsWith("{") && !entry.startsWith("["));
 }
 
+type GeneratorWithReturn = AsyncGenerator<unknown, unknown, unknown> & { return?: (value?: unknown) => unknown };
+
+const DI_REQUEST_ID_KEY = "__spikard_request_id__";
+
+const globalDi = globalThis as unknown as {
+	__spikard_di_generators__?: Record<string, GeneratorWithReturn[]>;
+	__spikard_di_cleanup__?: (requestId: string) => Promise<void>;
+};
+
+function registerDependencyGenerator(requestId: string, generator: GeneratorWithReturn): void {
+	let registry = globalDi.__spikard_di_generators__;
+	if (!registry) {
+		registry = {};
+		globalDi.__spikard_di_generators__ = registry;
+	}
+
+	let generators = registry[requestId];
+	if (!generators) {
+		generators = [];
+		registry[requestId] = generators;
+	}
+
+	generators.push(generator);
+}
+
+async function cleanupDependencyGenerators(requestId: string): Promise<void> {
+	const registry = globalDi.__spikard_di_generators__;
+	if (!registry) {
+		return;
+	}
+	const generators = registry[requestId];
+	if (!generators || generators.length === 0) {
+		return;
+	}
+	for (let idx = generators.length - 1; idx >= 0; idx -= 1) {
+		const generator = generators[idx];
+		if (!generator) {
+			continue;
+		}
+		try {
+			if (typeof generator.return === "function") {
+				await generator.return(undefined);
+			}
+		} catch {}
+	}
+	delete registry[requestId];
+}
+
+if (!globalDi.__spikard_di_cleanup__) {
+	globalDi.__spikard_di_cleanup__ = cleanupDependencyGenerators;
+}
+
 function wrapFactory(factory: DependencyFactory): (dependenciesJson: string) => Promise<string> {
 	return async (dependenciesJson) => {
 		const depsUnknown = JSON.parse(dependenciesJson) as unknown;
 		const deps = typeof depsUnknown === "object" && depsUnknown ? (depsUnknown as Record<string, unknown>) : {};
+		const requestId = typeof deps[DI_REQUEST_ID_KEY] === "string" ? (deps[DI_REQUEST_ID_KEY] as string) : null;
 
 		const paramNames = getFactoryParameterNames(factory);
 		const args = paramNames.map((name) => deps[normalizeDependencyKey(name)]);
@@ -325,14 +378,18 @@ function wrapFactory(factory: DependencyFactory): (dependenciesJson: string) => 
 		const result = await factory(...args);
 
 		if (result && typeof result === "object" && Symbol.asyncIterator in (result as object)) {
-			const generator = result as AsyncGenerator<unknown, unknown, unknown> & { return?: (value?: unknown) => unknown };
+			const generator = result as GeneratorWithReturn;
 			const first = await generator.next();
 			const value = first.value;
-			try {
-				if (typeof generator.return === "function") {
-					await generator.return(undefined);
-				}
-			} catch {}
+			if (requestId) {
+				registerDependencyGenerator(requestId, generator);
+			} else {
+				try {
+					if (typeof generator.return === "function") {
+						await generator.return(undefined);
+					}
+				} catch {}
+			}
 			return JSON.stringify(value ?? null);
 		}
 

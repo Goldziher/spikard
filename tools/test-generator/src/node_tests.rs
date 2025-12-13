@@ -664,20 +664,44 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
     if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
         if requires_multi_request_test(&di_config) {
+            let expected_keys = fixture
+                .expected_response
+                .body
+                .as_ref()
+                .and_then(|v| v.as_object())
+                .map(|obj| obj.keys().cloned().collect::<std::collections::HashSet<_>>())
+                .unwrap_or_default();
+
             code.push_str("\n");
-            code.push_str("\t\t// Second request to verify singleton caching\n");
+            code.push_str("\t\t// Second request to verify caching behavior\n");
             code.push_str(&format!("\t\tconst response2 = {};\n", request_call));
             code.push_str("\t\texpect(response2.statusCode).toBe(200);\n");
             code.push_str("\t\tconst data1 = response.json();\n");
             code.push_str("\t\tconst data2 = response2.json();\n");
             code.push_str("\n");
-            code.push_str("\t\t// Singleton should have same ID but incremented count\n");
-            code.push_str("\t\texpect(data1.id).toBeDefined();\n");
-            code.push_str("\t\texpect(data2.id).toBeDefined();\n");
-            code.push_str("\t\texpect(data1.id).toBe(data2.id); // Same singleton instance\n");
-            code.push_str("\t\tif (data1.count !== undefined && data2.count !== undefined) {\n");
-            code.push_str("\t\t\texpect(data2.count).toBeGreaterThan(data1.count); // Count incremented\n");
-            code.push_str("\t\t}\n");
+            if expected_keys.contains("counter_id") && expected_keys.contains("count") {
+                code.push_str("\t\t// Singleton counter should have stable counter_id and incremented count\n");
+                code.push_str("\t\texpect(data1.counter_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data2.counter_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data1.counter_id).toBe(data2.counter_id);\n");
+                code.push_str("\t\texpect(data2.count).toBeGreaterThan(data1.count);\n");
+            } else if expected_keys.contains("pool_id") && expected_keys.contains("context_id") {
+                code.push_str("\t\t// pool_id is singleton; context_id is per-request\n");
+                code.push_str("\t\texpect(data1.pool_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data2.pool_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data1.pool_id).toBe(data2.pool_id);\n");
+                code.push_str("\t\texpect(data1.context_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data2.context_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data1.context_id).not.toBe(data2.context_id);\n");
+            } else {
+                code.push_str("\t\t// Singleton should have same ID but incremented count\n");
+                code.push_str("\t\texpect(data1.id).toBeDefined();\n");
+                code.push_str("\t\texpect(data2.id).toBeDefined();\n");
+                code.push_str("\t\texpect(data1.id).toBe(data2.id); // Same singleton instance\n");
+                code.push_str("\t\tif (data1.count !== undefined && data2.count !== undefined) {\n");
+                code.push_str("\t\t\texpect(data2.count).toBeGreaterThan(data1.count); // Count incremented\n");
+                code.push_str("\t\t}\n");
+            }
             code.push_str("\t});\n");
             return Ok(code);
         }
@@ -767,7 +791,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 if !expected_body_is_empty {
                     if needs_response_text {
                         code.push_str(&format!(
-                            "\t\texpect(responseText).toBe({});\n",
+                            "\t\texpect(responseText.trimEnd()).toBe({});\n",
                             json_to_typescript(expected_body)
                         ));
                     } else {
@@ -871,7 +895,15 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 }
                 _ => {
                     let escaped_value = escape_string(value);
-                    code.push_str(&format!("\t\texpect({}).toBe(\"{}\");\n", header_access, escaped_value));
+                    if looks_like_regex_pattern(value) {
+                        code.push_str(&format!(
+                            "\t\texpect({}).toMatch({});\n",
+                            header_access,
+                            regex_literal(value)
+                        ));
+                    } else {
+                        code.push_str(&format!("\t\texpect({}).toBe(\"{}\");\n", header_access, escaped_value));
+                    }
                 }
             }
         }
@@ -1053,12 +1085,23 @@ fn generate_echo_assertions(code: &mut String, sent_value: &serde_json::Value, p
                         generate_echo_assertions(code, value, &new_path, indent_level);
                     }
                     _ => {
-                        code.push_str(&format!(
-                            "{}expect({}).toBe({});\n",
-                            indent,
-                            new_path,
-                            json_to_typescript(value)
-                        ));
+                        if let serde_json::Value::String(text) = value
+                            && looks_like_regex_pattern(text)
+                        {
+                            code.push_str(&format!(
+                                "{}expect({}).toMatch({});\n",
+                                indent,
+                                new_path,
+                                regex_literal(text)
+                            ));
+                        } else {
+                            code.push_str(&format!(
+                                "{}expect({}).toBe({});\n",
+                                indent,
+                                new_path,
+                                json_to_typescript(value)
+                            ));
+                        }
                     }
                 }
             }
@@ -1071,12 +1114,23 @@ fn generate_echo_assertions(code: &mut String, sent_value: &serde_json::Value, p
             }
         }
         _ => {
-            code.push_str(&format!(
-                "{}expect({}).toBe({});\n",
-                indent,
-                path,
-                json_to_typescript(sent_value)
-            ));
+            if let serde_json::Value::String(text) = sent_value
+                && looks_like_regex_pattern(text)
+            {
+                code.push_str(&format!(
+                    "{}expect({}).toMatch({});\n",
+                    indent,
+                    path,
+                    regex_literal(text)
+                ));
+            } else {
+                code.push_str(&format!(
+                    "{}expect({}).toBe({});\n",
+                    indent,
+                    path,
+                    json_to_typescript(sent_value)
+                ));
+            }
         }
     }
 }
@@ -1121,12 +1175,23 @@ fn generate_body_assertions(
                             || (skip_error_fields && path == "responseData" && key == "detail");
 
                         if !skip_assertion {
-                            code.push_str(&format!(
-                                "{}expect({}).toBe({});\n",
-                                indent,
-                                new_path,
-                                json_to_typescript(value)
-                            ));
+                            if let serde_json::Value::String(text) = value
+                                && looks_like_regex_pattern(text)
+                            {
+                                code.push_str(&format!(
+                                    "{}expect({}).toMatch({});\n",
+                                    indent,
+                                    new_path,
+                                    regex_literal(text)
+                                ));
+                            } else {
+                                code.push_str(&format!(
+                                    "{}expect({}).toBe({});\n",
+                                    indent,
+                                    new_path,
+                                    json_to_typescript(value)
+                                ));
+                            }
                         }
                     }
                 }
@@ -1143,12 +1208,23 @@ fn generate_body_assertions(
             }
         }
         _ => {
-            code.push_str(&format!(
-                "{}expect({}).toBe({});\n",
-                indent,
-                path,
-                json_to_typescript(body)
-            ));
+            if let serde_json::Value::String(text) = body
+                && looks_like_regex_pattern(text)
+            {
+                code.push_str(&format!(
+                    "{}expect({}).toMatch({});\n",
+                    indent,
+                    path,
+                    regex_literal(text)
+                ));
+            } else {
+                code.push_str(&format!(
+                    "{}expect({}).toBe({});\n",
+                    indent,
+                    path,
+                    json_to_typescript(body)
+                ));
+            }
         }
     }
 }
@@ -1187,6 +1263,15 @@ fn json_to_typescript(value: &serde_json::Value) -> String {
             format!("{{ {} }}", items.join(", "))
         }
     }
+}
+
+fn looks_like_regex_pattern(value: &str) -> bool {
+    value.contains(".*")
+}
+
+fn regex_literal(pattern: &str) -> String {
+    let escaped = pattern.replace('/', "\\/");
+    format!("/{escaped}/")
 }
 
 fn is_large_integer(number: &serde_json::Number) -> bool {
@@ -1345,112 +1430,146 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
     result = lines.join("\n");
 
     // Convert all expect() calls to Deno std/assert helpers.
-    loop {
-        let mut modified = false;
+    let mut search_start = 0;
+    while let Some(rel_expect_pos) = result[search_start..].find("expect(") {
+        let expect_pos = search_start + rel_expect_pos;
+        let after_expect = &result[expect_pos + 7..];
+        let mut depth = 1;
+        let mut expr_end = 0;
 
-        // Find expect( patterns
-        if let Some(expect_pos) = result.find("expect(") {
-            // Find the matching closing parenthesis for expect()
-            let after_expect = &result[expect_pos + 7..];
-            let mut depth = 1;
-            let mut expr_end = 0;
+        for (byte_i, ch) in after_expect.char_indices() {
+            match ch {
+                '(' => depth += 1,
+                ')' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        expr_end = byte_i;
+                        break;
+                    }
+                }
+                _ => {}
+            }
+        }
 
-            for (byte_i, ch) in after_expect.char_indices() {
+        if expr_end == 0 {
+            search_start = expect_pos + 7;
+            continue;
+        }
+
+        let expr = &after_expect[..expr_end];
+        let after_expr = &after_expect[expr_end + 1..];
+
+        let mut replaced = false;
+
+        if after_expr.starts_with(".toBeUndefined()") {
+            let original_len = 7 + expr_end + 1 + ".toBeUndefined()".len();
+            let original = &result[expect_pos..expect_pos + original_len];
+            let replacement = format!("assertEquals({}, undefined)", expr);
+            result = result.replacen(original, &replacement, 1);
+            replaced = true;
+        } else if after_expr.starts_with(".toBeDefined()") {
+            let original_len = 7 + expr_end + 1 + ".toBeDefined()".len();
+            let original = &result[expect_pos..expect_pos + original_len];
+            let replacement = format!("assert({} !== undefined && {} !== null)", expr, expr);
+            result = result.replacen(original, &replacement, 1);
+            replaced = true;
+        } else if let Some(rest) = after_expr.strip_prefix(".not.toBe(") {
+            let mut depth2 = 1;
+            let mut arg_end = 0;
+            for (byte_i, ch) in rest.char_indices() {
                 match ch {
-                    '(' => depth += 1,
+                    '(' => depth2 += 1,
                     ')' => {
-                        depth -= 1;
-                        if depth == 0 {
-                            expr_end = byte_i;
+                        depth2 -= 1;
+                        if depth2 == 0 {
+                            arg_end = byte_i;
                             break;
                         }
                     }
                     _ => {}
                 }
             }
+            if arg_end > 0 {
+                let arg = &rest[..arg_end];
+                let replacement = format!("assert({} !== {})", expr, arg);
+                let original_len = 7 + expr_end + 1 + ".not.toBe(".len() + arg_end + 1;
+                let original = &result[expect_pos..expect_pos + original_len];
+                result = result.replacen(original, &replacement, 1);
+                replaced = true;
+            }
+        } else {
+            let matcher_prefixes = [
+                (".toBe(", "eq"),
+                (".toEqual(", "eq"),
+                (".toStrictEqual(", "eq"),
+                (".toBeGreaterThan(", "gt"),
+                (".toHaveProperty(", "hasprop"),
+                (".toMatch(", "match"),
+            ];
 
-            if expr_end > 0 {
-                let expr = &after_expect[..expr_end];
-                let after_expr = &after_expect[expr_end + 1..];
+            let mut matched: Option<(&str, &str, &str)> = None;
+            for (prefix, kind) in matcher_prefixes {
+                if let Some(rest) = after_expr.strip_prefix(prefix) {
+                    matched = Some((prefix, kind, rest));
+                    break;
+                }
+            }
 
-                if after_expr.starts_with(".toBeUndefined()") {
-                    let original_len = 7 + expr_end + 1 + ".toBeUndefined()".len();
-                    let original = &result[expect_pos..expect_pos + original_len];
-                    let replacement = format!("assertEquals({}, undefined)", expr);
-                    result = result.replacen(original, &replacement, 1);
-                    modified = true;
-                } else if after_expr.starts_with(".toBeDefined()") {
-                    let original_len = 7 + expr_end + 1 + ".toBeDefined()".len();
-                    let original = &result[expect_pos..expect_pos + original_len];
-                    let replacement = format!("assert({} !== undefined && {} !== null)", expr, expr);
-                    result = result.replacen(original, &replacement, 1);
-                    modified = true;
-                } else {
-                    let matcher_prefixes = [
-                        (".toBe(", "eq"),
-                        (".toEqual(", "eq"),
-                        (".toStrictEqual(", "eq"),
-                        (".toBeGreaterThan(", "gt"),
-                        (".toHaveProperty(", "hasprop"),
-                        (".toMatch(", "match"),
-                    ];
+            if let Some((prefix, kind, method_match)) = matched {
+                let mut depth2 = 1;
+                let mut arg_end = 0;
 
-                    let mut matched: Option<(&str, &str, &str)> = None;
-                    for (prefix, kind) in matcher_prefixes {
-                        if let Some(rest) = after_expr.strip_prefix(prefix) {
-                            matched = Some((prefix, kind, rest));
-                            break;
-                        }
-                    }
-
-                    if let Some((prefix, kind, method_match)) = matched {
-                        let mut depth2 = 1;
-                        let mut arg_end = 0;
-
-                        for (byte_i, ch) in method_match.char_indices() {
-                            match ch {
-                                '(' => depth2 += 1,
-                                ')' => {
-                                    depth2 -= 1;
-                                    if depth2 == 0 {
-                                        arg_end = byte_i;
-                                        break;
-                                    }
-                                }
-                                _ => {}
+                for (byte_i, ch) in method_match.char_indices() {
+                    match ch {
+                        '(' => depth2 += 1,
+                        ')' => {
+                            depth2 -= 1;
+                            if depth2 == 0 {
+                                arg_end = byte_i;
+                                break;
                             }
                         }
-
-                        if arg_end > 0 {
-                            let arg = &method_match[..arg_end];
-                            let replacement = match kind {
-                                "eq" => format!("assertEquals({}, {})", expr, arg),
-                                "gt" => format!("assert({} > {})", expr, arg),
-                                "hasprop" => format!("assert(Object.hasOwn({}, {}))", expr, arg),
-                                "match" => {
-                                    if arg.trim_start().starts_with('/') {
-                                        format!("assert({}.test({}))", arg, expr)
-                                    } else {
-                                        format!("assert({}.includes({}))", expr, arg)
-                                    }
-                                }
-                                _ => unreachable!("Unsupported matcher kind"),
-                            };
-
-                            let original_len = 7 + expr_end + 1 + prefix.len() + arg_end + 1;
-                            let original = &result[expect_pos..expect_pos + original_len];
-                            result = result.replacen(original, &replacement, 1);
-                            modified = true;
-                        }
+                        _ => {}
                     }
+                }
+
+                if arg_end > 0 {
+                    let arg = &method_match[..arg_end];
+                    let replacement = match kind {
+                        "eq" => format!("assertEquals({}, {})", expr, arg),
+                        "gt" => format!("assert({} > {})", expr, arg),
+                        "hasprop" => format!("assert(Object.hasOwn({}, {}))", expr, arg),
+                        "match" => {
+                            if arg.trim_start().starts_with('/') {
+                                format!("assert({}.test({}))", arg, expr)
+                            } else {
+                                format!("assert({}.includes({}))", expr, arg)
+                            }
+                        }
+                        _ => unreachable!("Unsupported matcher kind"),
+                    };
+
+                    let original_len = 7 + expr_end + 1 + prefix.len() + arg_end + 1;
+                    let original = &result[expect_pos..expect_pos + original_len];
+                    result = result.replacen(original, &replacement, 1);
+                    replaced = true;
                 }
             }
         }
 
-        if !modified {
-            break;
+        if replaced {
+            search_start = 0;
+        } else {
+            search_start = expect_pos + 7;
         }
     }
+
+    let wants_assert = result.contains("assert(");
+    let assert_import = if wants_assert {
+        "import { assert, assertEquals } from \"jsr:@std/assert@1\";"
+    } else {
+        "import { assertEquals } from \"jsr:@std/assert@1\";"
+    };
 
     let mut lines: Vec<String> = Vec::new();
     let mut has_std_assert = false;
@@ -1460,7 +1579,7 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
         }
         if line.contains("from \"@std/assert\"") || line.contains("from \"jsr:@std/assert") {
             has_std_assert = true;
-            lines.push("import { assert, assertEquals } from \"jsr:@std/assert@1\";".to_string());
+            lines.push(assert_import.to_string());
             continue;
         }
         if line.contains("from \"@std/path\"") {
@@ -1475,7 +1594,7 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
         for line in lines {
             new_lines.push(line.clone());
             if !inserted && line.contains("TestClient") && line.contains("@spikard/wasm") {
-                new_lines.push("import { assert, assertEquals } from \"jsr:@std/assert@1\";".to_string());
+                new_lines.push(assert_import.to_string());
                 inserted = true;
             }
         }

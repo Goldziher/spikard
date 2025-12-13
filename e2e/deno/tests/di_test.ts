@@ -155,8 +155,8 @@ Deno.test("di: Dependency injection in lifecycle hooks - success", async () => {
 	assert(Object.hasOwn(responseData, "logged"));
 	assertEquals(responseData.logged, true);
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders["x-auth-mode"], "strict");
 	assertEquals(responseHeaders["x-log-level"], "debug");
+	assertEquals(responseHeaders["x-auth-mode"], "strict");
 });
 
 Deno.test("di: Ruby keyword argument injection - success", async () => {
@@ -195,17 +195,19 @@ Deno.test("di: Mixed singleton and per-request caching - success", async () => {
 
 	assertEquals(response.statusCode, 200);
 
+	// Second request to verify caching behavior
 	const response2 = await client.get("/api/mixed-caching");
 	assertEquals(response2.statusCode, 200);
 	const data1 = response.json();
 	const data2 = response2.json();
 
-	assert(data1.id !== undefined && data1.id !== null);
-	assert(data2.id !== undefined && data2.id !== null);
-	assertEquals(data1.id, data2.id);
-	if (data1.count !== undefined && data2.count !== undefined) {
-		assert(data2.count > data1.count);
-	}
+	// pool_id is singleton; context_id is per-request
+	assert(data1.pool_id !== undefined && data1.pool_id !== null);
+	assert(data2.pool_id !== undefined && data2.pool_id !== null);
+	assertEquals(data1.pool_id, data2.pool_id);
+	assert(data1.context_id !== undefined && data1.context_id !== null);
+	assert(data2.context_id !== undefined && data2.context_id !== null);
+	assert(data1.context_id !== data2.context_id);
 });
 
 Deno.test("di: Resource cleanup after request - success", async () => {
@@ -256,17 +258,17 @@ Deno.test("di: Singleton dependency caching - success", async () => {
 
 	assertEquals(response.statusCode, 200);
 
+	// Second request to verify caching behavior
 	const response2 = await client.get("/api/app-counter");
 	assertEquals(response2.statusCode, 200);
 	const data1 = response.json();
 	const data2 = response2.json();
 
-	assert(data1.id !== undefined && data1.id !== null);
-	assert(data2.id !== undefined && data2.id !== null);
-	assertEquals(data1.id, data2.id);
-	if (data1.count !== undefined && data2.count !== undefined) {
-		assert(data2.count > data1.count);
-	}
+	// Singleton counter should have stable counter_id and incremented count
+	assert(data1.counter_id !== undefined && data1.counter_id !== null);
+	assert(data2.counter_id !== undefined && data2.counter_id !== null);
+	assertEquals(data1.counter_id, data2.counter_id);
+	assert(data2.count > data1.count);
 });
 
 Deno.test("di: Async factory dependency - success", async () => {

@@ -32,8 +32,8 @@ Deno.test("lifecycle_hooks: onResponse - Security Headers", async () => {
 	assertEquals(responseData.message, "Response with security headers");
 	const responseHeaders = response.headers();
 	assertEquals(responseHeaders["x-xss-protection"], "1; mode=block");
-	assertEquals(responseHeaders["x-frame-options"], "DENY");
 	assertEquals(responseHeaders["x-content-type-options"], "nosniff");
+	assertEquals(responseHeaders["x-frame-options"], "DENY");
 	assertEquals(responseHeaders["strict-transport-security"], "max-age=31536000; includeSubDomains");
 });
 
@@ -131,14 +131,14 @@ Deno.test("lifecycle_hooks: Multiple Hooks - All Phases", async () => {
 	assert(Object.hasOwn(responseData, "message"));
 	assertEquals(responseData.message, "Action completed successfully");
 	assert(Object.hasOwn(responseData, "request_id"));
-	assertEquals(responseData.request_id, ".*");
+	assert(/.*/.test(responseData.request_id));
 	assert(Object.hasOwn(responseData, "user_id"));
 	assertEquals(responseData.user_id, "user-123");
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders["x-frame-options"], "DENY");
-	assertEquals(responseHeaders["x-request-id"], ".*");
+	assert(/.*/.test(responseHeaders["x-request-id"]));
 	assertEquals(responseHeaders["x-content-type-options"], "nosniff");
-	assertEquals(responseHeaders["x-response-time"], ".*ms");
+	assert(/.*ms/.test(responseHeaders["x-response-time"]));
+	assertEquals(responseHeaders["x-frame-options"], "DENY");
 });
 
 Deno.test("lifecycle_hooks: Hook Execution Order", async () => {
@@ -169,7 +169,7 @@ Deno.test("lifecycle_hooks: onResponse - Response Timing", async () => {
 	assert(Object.hasOwn(responseData, "message"));
 	assertEquals(responseData.message, "Response with timing info");
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders["x-response-time"], ".*ms");
+	assert(/.*ms/.test(responseHeaders["x-response-time"]));
 });
 
 Deno.test("lifecycle_hooks: preHandler - Authorization Forbidden Short Circuit", async () => {
@@ -199,7 +199,7 @@ Deno.test("lifecycle_hooks: onRequest - Request Logging", async () => {
 	assert(Object.hasOwn(responseData, "request_logged"));
 	assertEquals(responseData.request_logged, true);
 	const responseHeaders = response.headers();
-	assertEquals(responseHeaders["x-request-id"], ".*");
+	assert(/.*/.test(responseHeaders["x-request-id"]));
 });
 
 Deno.test("lifecycle_hooks: preValidation - Rate Limiting", async () => {

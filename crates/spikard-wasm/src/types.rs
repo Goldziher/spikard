@@ -15,6 +15,8 @@ pub struct RouteDefinition {
     pub path: String,
     pub handler_name: String,
     #[serde(default)]
+    pub handler_dependencies: Vec<String>,
+    #[serde(default)]
     pub request_schema: Option<Value>,
     #[serde(default)]
     pub response_schema: Option<Value>,
@@ -24,7 +26,7 @@ pub struct RouteDefinition {
     pub jsonrpc_method: Option<Value>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ServerConfig {
     #[serde(default)]
@@ -43,6 +45,21 @@ pub struct ServerConfig {
     pub request_timeout: Option<u64>,
     #[serde(rename = "__wasmStaticManifest", default)]
     pub wasm_static_manifest: Vec<StaticManifestEntry>,
+}
+
+impl Default for ServerConfig {
+    fn default() -> Self {
+        Self {
+            compression: None,
+            rate_limit: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            enable_request_id: true,
+            max_body_size: None,
+            request_timeout: None,
+            wasm_static_manifest: Vec::new(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize)]

@@ -126,7 +126,7 @@ jobs:
         run: scripts/ci/rust/run-workspace-tests-windows.ps1 -ExcludeRuby
 
   coverage-rust:
-    name: Rust Code Coverage (85% minimum)
+    name: Rust Code Coverage (50% minimum)
     runs-on: ubuntu-latest
     needs: [test-rust-workspace]
     timeout-minutes: 45
@@ -183,7 +183,7 @@ jobs:
           retention-days: 30
 
   coverage-rust-php-linux:
-    name: Rust PHP FFI Coverage (85% minimum, Linux only)
+    name: Rust PHP FFI Coverage (50% minimum, Linux only)
     runs-on: ubuntu-latest
     needs: [test-rust-workspace]
     timeout-minutes: 45

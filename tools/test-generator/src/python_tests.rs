@@ -494,6 +494,14 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
     if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
         if requires_multi_request_test(&di_config) {
+            let expected_keys = fixture
+                .expected_response
+                .body
+                .as_ref()
+                .and_then(|v| v.as_object())
+                .map(|obj| obj.keys().cloned().collect::<std::collections::HashSet<_>>())
+                .unwrap_or_default();
+
             code.push_str("\n");
             code.push_str("        # Second request to verify singleton caching\n");
             let request_str = if request_kwargs.is_empty() {
@@ -511,11 +519,24 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             code.push_str("        data1 = response.json()\n");
             code.push_str("        data2 = response2.json()\n");
             code.push_str("\n");
-            code.push_str("        # Singleton should have same ID but incremented count\n");
-            code.push_str("        assert \"id\" in data1 and \"id\" in data2\n");
-            code.push_str("        assert data1[\"id\"] == data2[\"id\"]  # Same singleton instance\n");
-            code.push_str("        if \"count\" in data1 and \"count\" in data2:\n");
-            code.push_str("            assert data2[\"count\"] > data1[\"count\"]  # Count incremented\n");
+            if expected_keys.contains("counter_id") && expected_keys.contains("count") {
+                code.push_str("        # Singleton counter should have stable counter_id and incremented count\n");
+                code.push_str("        assert \"counter_id\" in data1 and \"counter_id\" in data2\n");
+                code.push_str("        assert data1[\"counter_id\"] == data2[\"counter_id\"]\n");
+                code.push_str("        assert data2[\"count\"] > data1[\"count\"]\n");
+            } else if expected_keys.contains("pool_id") && expected_keys.contains("context_id") {
+                code.push_str("        # pool_id is singleton; context_id is per-request\n");
+                code.push_str("        assert \"pool_id\" in data1 and \"pool_id\" in data2\n");
+                code.push_str("        assert data1[\"pool_id\"] == data2[\"pool_id\"]\n");
+                code.push_str("        assert \"context_id\" in data1 and \"context_id\" in data2\n");
+                code.push_str("        assert data1[\"context_id\"] != data2[\"context_id\"]\n");
+            } else {
+                code.push_str("        # Singleton should have same ID but incremented count\n");
+                code.push_str("        assert \"id\" in data1 and \"id\" in data2\n");
+                code.push_str("        assert data1[\"id\"] == data2[\"id\"]  # Same singleton instance\n");
+                code.push_str("        if \"count\" in data1 and \"count\" in data2:\n");
+                code.push_str("            assert data2[\"count\"] > data1[\"count\"]  # Count incremented\n");
+            }
             return Ok(code);
         }
 

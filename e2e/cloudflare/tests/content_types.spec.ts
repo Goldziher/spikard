@@ -109,11 +109,13 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("pdf_binary_data");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("application/pdf");
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=document.pdf");
+		expect(responseHeaders["content-type"]).toBe("application/pdf");
 	});
 
-	test.skip("20_content_length_mismatch", async () => {});
+	test.skip("20_content_length_mismatch", async () => {
+		// Not supported by the in-memory HTTP client
+	});
 
 	test("17_vendor_json_accepted", async () => {
 		const app = createAppContentTypes17VendorJsonAccepted();

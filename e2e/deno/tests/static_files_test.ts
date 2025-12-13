@@ -4,7 +4,7 @@
  */
 
 import { TestClient } from "@spikard/wasm";
-import { assert, assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "jsr:@std/assert@1";
 import {
 	createAppStaticFilesStaticFileServerReturnsTextFile,
 	createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory,
@@ -18,7 +18,7 @@ Deno.test("static_files: Static file server returns text file", async () => {
 
 	assertEquals(response.statusCode, 200);
 	const responseText = response.text();
-	assertEquals(responseText, "Hello from static storage");
+	assertEquals(responseText.trimEnd(), "Hello from static storage");
 	const responseHeaders = response.headers();
 	assertEquals(responseHeaders["content-type"], "text/plain");
 	assertEquals(responseHeaders["cache-control"], "public, max-age=60");
@@ -32,7 +32,7 @@ Deno.test("static_files: Static server returns index html for directory", async 
 
 	assertEquals(response.statusCode, 200);
 	const responseText = response.text();
-	assertEquals(responseText, "<!doctype html><h1>Welcome</h1>");
+	assertEquals(responseText.trimEnd(), "<!doctype html><h1>Welcome</h1>");
 	const responseHeaders = response.headers();
 	assertEquals(responseHeaders["content-type"], "text/html");
 });
