@@ -614,7 +614,8 @@ pub fn spikard_start_server_impl(
                     .await
                     .map_err(|e| PhpException::default(format!("Failed to bind to {}: {}", addr, e)))?;
 
-                let background_runtime = spikard_http::BackgroundRuntime::start(server_config.background_tasks.clone()).await;
+                let background_runtime =
+                    spikard_http::BackgroundRuntime::start(server_config.background_tasks.clone()).await;
                 crate::php::install_handle(background_runtime.handle());
 
                 tokio::task::spawn_local(async {
