@@ -562,40 +562,6 @@ fn parse_schema(schema: Option<String>) -> PhpResult<Option<serde_json::Value>> 
     }
 }
 
-/// Closure-based handler that captures the handler logic.
-///
-/// Since PHP callables can't be stored across threads, we use a different approach:
-/// The test client and server use a callback-based system where the actual PHP
-/// callable is invoked synchronously on the PHP thread.
-#[allow(dead_code)]
-pub struct ClosureHandler {
-    handler_fn: Arc<dyn Fn(RequestData) -> HandlerResult + Send + Sync>,
-}
-
-#[allow(dead_code)]
-impl ClosureHandler {
-    /// Create a new closure handler.
-    pub fn new<F>(f: F) -> Self
-    where
-        F: Fn(RequestData) -> HandlerResult + Send + Sync + 'static,
-    {
-        Self {
-            handler_fn: Arc::new(f),
-        }
-    }
-}
-
-impl Handler for ClosureHandler {
-    fn call(
-        &self,
-        _req: Request<Body>,
-        request_data: RequestData,
-    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        let result = (self.handler_fn)(request_data);
-        Box::pin(async move { result })
-    }
-}
-
 /// Helper to interpret a PHP response Zval into HandlerResult.
 pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerResult {
     if response.is_null() {
