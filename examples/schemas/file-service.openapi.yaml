@@ -750,7 +750,6 @@ paths:
 
 components:
   schemas:
-    # Upload/Download Responses
     FileUploadResponse:
       type: object
       description: Successful file upload response
@@ -936,7 +935,6 @@ components:
           type: integer
           description: Number of files
 
-    # Error Schemas
     ErrorResponse:
       type: object
       required:

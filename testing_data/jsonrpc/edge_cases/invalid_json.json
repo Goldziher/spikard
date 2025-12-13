@@ -1,0 +1,83 @@
+{
+	"name": "invalid_json",
+	"description": "Invalid JSON syntax handling - parse error cases",
+	"method": "parse_error",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "string",
+		"description": "Raw JSON string (may be invalid)"
+	},
+	"result_schema": {
+		"type": "object",
+		"description": "JSON-RPC error response"
+	},
+	"examples": [],
+	"error_cases": [
+		{
+			"name": "truncated_json",
+			"description": "Truncated JSON - missing closing brace",
+			"raw_request": "{\"jsonrpc\": \"2.0\", \"method\"",
+			"error": {
+				"code": -32700,
+				"message": "Parse error"
+			}
+		},
+		{
+			"name": "invalid_escape_sequence",
+			"description": "Invalid escape sequence in string",
+			"raw_request": "{\"jsonrpc\": \"2.0\", \"method\": \"test\\x\"}",
+			"error": {
+				"code": -32700,
+				"message": "Parse error"
+			}
+		},
+		{
+			"name": "unclosed_bracket",
+			"description": "Unclosed bracket in JSON object",
+			"raw_request": "{\"jsonrpc\": \"2.0\"",
+			"error": {
+				"code": -32700,
+				"message": "Parse error"
+			}
+		},
+		{
+			"name": "non_json_text",
+			"description": "Plain text instead of JSON",
+			"raw_request": "This is not JSON at all",
+			"error": {
+				"code": -32700,
+				"message": "Parse error"
+			}
+		},
+		{
+			"name": "empty_string",
+			"description": "Empty string input",
+			"raw_request": "",
+			"error": {
+				"code": -32700,
+				"message": "Parse error"
+			}
+		},
+		{
+			"name": "trailing_comma",
+			"description": "Trailing comma in array (invalid JSON)",
+			"raw_request": "{\"jsonrpc\": \"2.0\", \"method\": \"test\", \"params\": [1, 2, 3,]}",
+			"error": {
+				"code": -32700,
+				"message": "Parse error"
+			}
+		},
+		{
+			"name": "single_quotes",
+			"description": "Single quotes instead of double quotes (invalid JSON)",
+			"raw_request": "{'jsonrpc': '2.0', 'method': 'test'}",
+			"error": {
+				"code": -32700,
+				"message": "Parse error"
+			}
+		}
+	],
+	"tags": ["parse-error", "protocol", "edge-cases", "error-handling"]
+}

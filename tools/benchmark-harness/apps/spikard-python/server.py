@@ -16,7 +16,6 @@ import msgspec
 from spikard import Body, Path, Query, Spikard, get, post
 from spikard.config import ServerConfig
 
-# Enable profiling metrics collection
 profiling_module = PathLib(__file__).parent.parent.parent / "profiling" / "python_metrics.py"
 if profiling_module.exists():
     sys.path.insert(0, str(profiling_module.parent))
@@ -29,12 +28,6 @@ if profiling_module.exists():
 
 
 app = Spikard()
-
-
-# ============================================================================
-# JSON Body DTOs (msgspec.Struct for validation)
-# ============================================================================
-# These match the fixtures in testing_data/json_bodies/
 
 
 class SmallPayload(msgspec.Struct):
@@ -107,11 +100,6 @@ class VeryLargePayload(msgspec.Struct):
     tags: list[Tag]
 
 
-# ============================================================================
-# JSON Body Workloads
-# ============================================================================
-
-
 @post("/json/small")
 async def post_json_small(body: SmallPayload) -> SmallPayload:
     """Small JSON payload (~100-500 bytes)."""
@@ -136,12 +124,6 @@ async def post_json_very_large(body: VeryLargePayload) -> VeryLargePayload:
     return body
 
 
-# ============================================================================
-# Multipart Form Workloads
-# ============================================================================
-# Note: Multipart support needs to be verified in Spikard API
-
-
 @post("/multipart/small")
 async def post_multipart_small(body: dict[str, Any]) -> dict[str, Any]:
     """Small multipart form (~1KB)."""
@@ -160,11 +142,6 @@ async def post_multipart_large(body: dict[str, Any]) -> dict[str, Any]:
     return {"files_received": 5, "total_bytes": 102400}
 
 
-# ============================================================================
-# URL Encoded Form Workloads
-# ============================================================================
-
-
 @post("/urlencoded/simple")
 async def post_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
     """Simple URL-encoded form (3-5 fields)."""
@@ -175,11 +152,6 @@ async def post_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
 async def post_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
     """Complex URL-encoded form (10-20 fields)."""
     return body
-
-
-# ============================================================================
-# Path Parameter Workloads
-# ============================================================================
 
 
 @get("/path/simple/{id}")
@@ -230,11 +202,6 @@ async def get_path_date(date: str = Path()) -> dict[str, Any]:
     return {"date": date}
 
 
-# ============================================================================
-# Query Parameter Workloads
-# ============================================================================
-
-
 @get("/query/few")
 async def get_query_few(
     q: str | None = Query(default=None),
@@ -271,8 +238,6 @@ async def get_query_medium(
 
 @get("/query/many")
 async def get_query_many(
-    # Note: For many arbitrary parameters, we may need a different approach
-    # For now, use explicit parameters
     param1: str | None = Query(default=None),
     param2: str | None = Query(default=None),
     param3: str | None = Query(default=None),
@@ -309,20 +274,11 @@ async def get_query_many(
     }
 
 
-# ============================================================================
-# Health Check
-# ============================================================================
-
-
 @get("/health")
 async def health() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok"}
 
-
-# ============================================================================
-# Main Server Entry Point
-# ============================================================================
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
@@ -335,7 +291,7 @@ if __name__ == "__main__":
     config = ServerConfig(
         host="0.0.0.0",
         port=port,
-        workers=1,  # Single worker for consistent benchmarking
+        workers=1,
     )
 
     app.run(config=config)

@@ -183,7 +183,6 @@ jobs:
         shell: pwsh
         run: composer test
 
-  # PHP coverage enforcement (separate job)
   coverage-php:
     name: PHP Code Coverage (85% minimum)
     runs-on: ubuntu-latest

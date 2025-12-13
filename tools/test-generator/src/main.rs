@@ -8,6 +8,7 @@
 mod asyncapi;
 mod background;
 mod dependencies;
+mod jsonrpc;
 mod middleware;
 mod node_app;
 mod node_tests;

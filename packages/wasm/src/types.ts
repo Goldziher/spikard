@@ -11,6 +11,16 @@ export type BinaryLike = ArrayBuffer | ArrayBufferView | Uint8Array;
 
 export type MaybePromise<T> = T | Promise<T>;
 
+export interface AbortSignalLike {
+	readonly aborted: boolean;
+	addEventListener(type: "abort", listener: () => void, options?: { once?: boolean } | boolean): void;
+	removeEventListener(type: "abort", listener: () => void): void;
+}
+
+export interface HandlerContext {
+	signal?: AbortSignalLike;
+}
+
 export interface Base64EncodedBody {
 	__spikard_base64__: string;
 }
@@ -30,4 +40,5 @@ export type HandlerResult = StructuredHandlerResponse | JsonValue | StreamingRes
 
 export type HandlerFunction<TReturn extends HandlerResult = HandlerResult> = (
 	payload: HandlerPayload,
+	context?: HandlerContext,
 ) => MaybePromise<TReturn>;

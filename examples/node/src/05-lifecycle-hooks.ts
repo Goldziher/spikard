@@ -9,7 +9,6 @@ import { get, post, type Request, Spikard } from "@spikard/node";
 
 const app = new Spikard();
 
-// Simple user authentication store
 const authenticatedUsers = new Set(["alice", "bob"]);
 
 /**
@@ -35,10 +34,8 @@ app.onRequest(async (req) => {
 
 	console.log(`[REQUEST] ${request.method} ${request.path}`);
 
-	// Add request ID to context
 	const requestId = request.headers?.["x-request-id"] || Math.random().toString(36).substring(7);
 
-	// Store in request context for later use
 	return {
 		...request,
 		_request_id: requestId,
@@ -55,7 +52,6 @@ app.preValidation(async (req) => {
 	}
 	const request = req as Request;
 
-	// Check for required headers
 	if (request.method === "POST" || request.method === "PUT") {
 		if (!request.headers?.["content-type"]) {
 			return {
@@ -81,7 +77,6 @@ app.preHandler(async (req) => {
 	}
 	const request = req as Request & { _user?: { username: string } };
 
-	// Extract token from Authorization header
 	const authHeader = request.headers?.authorization;
 	if (authHeader) {
 		const parts = authHeader.split(" ");
@@ -89,7 +84,6 @@ app.preHandler(async (req) => {
 		const token = parts[1];
 
 		if (scheme === "Bearer" && token) {
-			// Simulate token validation (extract username from token)
 			const username = token.split(":")[0] || "";
 
 			if (!authenticatedUsers.has(username)) {
@@ -102,7 +96,6 @@ app.preHandler(async (req) => {
 				};
 			}
 
-			// Store user info in request
 			return {
 				...request,
 				_user: { username },
@@ -118,18 +111,15 @@ app.preHandler(async (req) => {
  * Useful for response transformation, adding headers, metrics
  */
 app.onResponse(async (payload) => {
-	// Check if this is a response object (StructuredHandlerResponse)
 	if (typeof payload !== "object" || payload === null || !("status" in payload)) {
 		return payload;
 	}
 
 	const res = payload as Record<string, unknown> & { headers?: Record<string, string> };
 
-	// Log successful response
 	const status = (res.status as number | undefined) || 200;
 	console.log(`[RESPONSE] ${status}`);
 
-	// Add custom headers
 	const headers = (res.headers as Record<string, string> | undefined) || {};
 	headers["X-Request-ID"] = "unknown";
 	headers["X-Response-Time"] = `${Math.random() * 100}ms`;

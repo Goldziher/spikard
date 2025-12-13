@@ -13,10 +13,6 @@ use std::collections::HashMap;
 use std::io;
 use std::str::FromStr;
 
-// Global registry for PHP Generator objects.
-//
-// Since Zval contains raw pointers to PHP's single-threaded structures,
-// we use thread-local storage similar to PhpHandler registry.
 thread_local! {
     static GENERATOR_REGISTRY: RefCell<Vec<GeneratorHandle>> = const { RefCell::new(Vec::new()) };
 }
@@ -57,7 +53,6 @@ pub fn register_generator(
     generator_zval: &Zval,
     config: Option<StreamingConfig>,
 ) -> Result<(usize, StreamingConfig), String> {
-    // Verify it's a Generator object
     if let Some(obj) = generator_zval.object() {
         if let Ok(class_name) = obj.get_class_name() {
             if !class_name.contains("Generator") {
@@ -96,7 +91,6 @@ pub fn generator_to_stream(
 ) -> impl futures::Stream<Item = Result<Bytes, Box<dyn std::error::Error + Send + Sync>>> {
     stream! {
         loop {
-            // Poll the generator directly (PHP is single-threaded, cannot use spawn_blocking)
             let result = poll_generator(generator_idx);
 
             match result {
@@ -104,7 +98,6 @@ pub fn generator_to_stream(
                     yield Ok(bytes);
                 }
                 Ok(None) => {
-                    // Generator exhausted
                     break;
                 }
                 Err(err) => {
@@ -138,7 +131,6 @@ fn poll_generator(generator_idx: usize) -> Result<Option<Bytes>, String> {
             .object()
             .ok_or_else(|| "Generator is not an object".to_string())?;
 
-        // Check if generator has more values: $generator->valid()
         let valid_result = obj
             .try_call_method("valid", vec![])
             .map_err(|e| format!("Failed to call valid(): {:?}", e))?;
@@ -152,15 +144,12 @@ fn poll_generator(generator_idx: usize) -> Result<Option<Bytes>, String> {
             return Ok(None);
         }
 
-        // Get current value: $generator->current()
         let current_result = obj
             .try_call_method("current", vec![])
             .map_err(|e| format!("Failed to call current(): {:?}", e))?;
 
-        // Convert chunk to bytes
         let bytes = convert_chunk_to_bytes(&current_result)?;
 
-        // Advance generator: $generator->next()
         obj.try_call_method("next", vec![])
             .map_err(|e| format!("Failed to call next(): {:?}", e))?;
 
@@ -174,12 +163,10 @@ fn poll_generator(generator_idx: usize) -> Result<Option<Bytes>, String> {
 /// - String chunks (UTF-8 encoded)
 /// - Array/object chunks (JSON encoded)
 fn convert_chunk_to_bytes(chunk: &Zval) -> Result<Bytes, String> {
-    // Try string first
     if let Some(s) = chunk.string() {
         return Ok(Bytes::from(s.to_string()));
     }
 
-    // Try array or object (serialize to JSON)
     if chunk.is_array() || chunk.is_object() {
         let json_val =
             crate::php::zval_to_json(chunk).map_err(|e| format!("Failed to convert chunk to JSON: {}", e))?;

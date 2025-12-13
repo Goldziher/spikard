@@ -269,7 +269,7 @@ wheels = [
 
 [[package]]
 name = "spikard"
-version = "0.3.7"
+version = "0.4.0"
 source = { editable = "../../../../packages/python" }
 dependencies = [
     { name = "cloudpickle" },
@@ -313,10 +313,10 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "cloudpickle", specifier = ">=3.1.2" },
-    { name = "granian", specifier = ">=2.6.0" },
+    { name = "granian", specifier = ">=2.6" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "httpx-sse", specifier = ">=0.4.3" },
-    { name = "msgspec", specifier = ">=0.20.0" },
+    { name = "msgspec", specifier = ">=0.20" },
     { name = "spikard", editable = "../../../../packages/python" },
     { name = "websockets", specifier = ">=15.0.1" },
 ]

@@ -3,13 +3,13 @@
 use anyhow::{Result, bail};
 
 use super::base::sanitize_identifier;
-use super::{AsyncApiGenerator, ChannelInfo, Message};
+use super::{AsyncApiGenerator, ChannelInfo};
 
 /// Python AsyncAPI code generator
 pub struct PythonAsyncApiGenerator;
 
 impl AsyncApiGenerator for PythonAsyncApiGenerator {
-    fn generate_test_app(&self, channels: &[ChannelInfo], _messages: &[Message], protocol: &str) -> Result<String> {
+    fn generate_test_app(&self, channels: &[ChannelInfo], protocol: &str) -> Result<String> {
         let mut code = String::new();
 
         code.push_str("#!/usr/bin/env python3\n");
@@ -79,7 +79,7 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
         Ok(code)
     }
 
-    fn generate_handler_app(&self, channels: &[ChannelInfo], _messages: &[Message], protocol: &str) -> Result<String> {
+    fn generate_handler_app(&self, channels: &[ChannelInfo], protocol: &str) -> Result<String> {
         if channels.is_empty() {
             bail!("AsyncAPI spec does not define any channels");
         }
@@ -144,10 +144,6 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
 
         Ok(code)
     }
-
-    fn language_name(&self) -> &'static str {
-        "python"
-    }
 }
 
 #[cfg(test)]
@@ -162,9 +158,8 @@ mod tests {
             path: "/chat".to_string(),
             messages: vec!["message".to_string()],
         }];
-        let messages = vec![];
 
-        let code = generator.generate_test_app(&channels, &messages, "websocket").unwrap();
+        let code = generator.generate_test_app(&channels, "websocket").unwrap();
         assert!(code.contains("import websockets"));
         assert!(code.contains("#!/usr/bin/env python3"));
         assert!(code.contains("/chat"));
@@ -178,11 +173,8 @@ mod tests {
             path: "/chat".to_string(),
             messages: vec!["message".to_string()],
         }];
-        let messages = vec![];
 
-        let code = generator
-            .generate_handler_app(&channels, &messages, "websocket")
-            .unwrap();
+        let code = generator.generate_handler_app(&channels, "websocket").unwrap();
         assert!(code.contains("@websocket"));
         assert!(code.contains("async def"));
     }

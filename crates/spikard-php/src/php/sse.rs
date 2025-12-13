@@ -40,11 +40,6 @@ pub struct PhpSseEventProducer {
     producer_index: usize,
 }
 
-// Registry for PHP SSE producer callables referenced by index.
-//
-// We store Zval instead of ZendCallable because ZendCallable has a lifetime parameter
-// that prevents storage in static. We reconstruct ZendCallable when invoking.
-//
 // NOTE: thread_local because Zval is not Send/Sync (PHP is single-threaded).
 thread_local! {
     static PHP_SSE_PRODUCER_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = const { std::cell::RefCell::new(Vec::new()) };
@@ -81,7 +76,6 @@ impl PhpSseEventProducer {
     /// This version takes a Zval directly, allowing us to clone it before
     /// it gets wrapped in ZendCallable with a lifetime constraint.
     pub fn new_from_zval(callable_zval: &ext_php_rs::types::Zval) -> Result<Self, String> {
-        // Verify it's callable
         if !callable_zval.is_callable() {
             return Err("SSE producer must be callable".to_string());
         }
@@ -90,7 +84,6 @@ impl PhpSseEventProducer {
             let mut registry = registry.borrow_mut();
             let idx = registry.len();
 
-            // Clone the Zval for storage
             let zval_copy = callable_zval.shallow_clone();
             registry.push(zval_copy);
             idx
@@ -117,20 +110,17 @@ impl PhpSseEventProducer {
         let value: Value =
             serde_json::from_str(json_str).map_err(|e| format!("Failed to parse SSE event JSON: {}", e))?;
 
-        // Extract required data field
         let data = value
             .get("data")
             .ok_or_else(|| "SSE event missing required 'data' field".to_string())?
             .clone();
 
-        // Extract optional fields
         let event_type = value.get("event_type").and_then(|v| v.as_str()).map(|s| s.to_string());
 
         let id = value.get("id").and_then(|v| v.as_str()).map(|s| s.to_string());
 
         let retry = value.get("retry").and_then(|v| v.as_u64());
 
-        // Build SseEvent with optional chaining
         let mut event = if let Some(et) = event_type {
             SseEvent::with_type(et, data)
         } else {
@@ -162,7 +152,6 @@ impl PhpSseEventProducer {
             let registry = registry.borrow();
             let callable_zval = registry.get(self.producer_index)?;
 
-            // Reconstruct ZendCallable from stored Zval
             let callable = match ZendCallable::new(callable_zval) {
                 Ok(c) => c,
                 Err(e) => {
@@ -171,9 +160,6 @@ impl PhpSseEventProducer {
                 }
             };
 
-            // Call the factory to get a fresh Generator instance
-            // We create a new generator for each next_event call since we can't
-            // safely store a Generator across async boundaries
             Some(callable.try_call(vec![]))
         })?;
 
@@ -185,7 +171,6 @@ impl PhpSseEventProducer {
             }
         };
 
-        // Check if the generator is valid (has a current value)
         let is_valid = match generator.try_call_method("valid", vec![]) {
             Ok(valid_zval) => valid_zval.bool().unwrap_or(false),
             Err(e) => {
@@ -199,7 +184,6 @@ impl PhpSseEventProducer {
             return None;
         }
 
-        // Get the current yielded value
         let current_value = match generator.try_call_method("current", vec![]) {
             Ok(val) => val,
             Err(e) => {
@@ -208,7 +192,6 @@ impl PhpSseEventProducer {
             }
         };
 
-        // Extract string from Zval
         let json_str = match current_value.string() {
             Some(s) => s.to_string(),
             None => {
@@ -217,13 +200,10 @@ impl PhpSseEventProducer {
             }
         };
 
-        // Advance the generator for next iteration
         if let Err(e) = generator.try_call_method("next", vec![]) {
             error!("Failed to call next() on PHP Generator: {:?}", e);
-            // Continue anyway, as we got the current value
         }
 
-        // Parse the JSON string into SseEvent
         match Self::parse_event_json(&json_str) {
             Ok(event) => {
                 debug!("PHP SSE producer: parsed event successfully");
@@ -241,10 +221,8 @@ impl SseEventProducer for PhpSseEventProducer {
     async fn next_event(&self) -> Option<SseEvent> {
         debug!("PHP SSE producer: next_event called");
 
-        // Clone producer_index for move into spawn_blocking
         let producer_index = self.producer_index;
 
-        // Run synchronously in spawn_blocking since PHP operations are not async
         let result = tokio::task::spawn_blocking(move || {
             let producer = PhpSseEventProducer { producer_index };
             producer.get_next_event_sync()
@@ -262,14 +240,10 @@ impl SseEventProducer for PhpSseEventProducer {
 
     async fn on_connect(&self) {
         debug!("PHP SSE producer: on_connect called");
-        // PHP interface doesn't define lifecycle hooks yet
-        // When added to SseEventProducerInterface, implement here similar to next_event
     }
 
     async fn on_disconnect(&self) {
         debug!("PHP SSE producer: on_disconnect called");
-        // PHP interface doesn't define lifecycle hooks yet
-        // When added to SseEventProducerInterface, implement here similar to next_event
     }
 }
 

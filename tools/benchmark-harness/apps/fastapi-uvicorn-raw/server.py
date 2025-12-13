@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-# /// script
-# dependencies = [
-#   "fastapi",
-#   "uvicorn[standard]",
-# ]
-# ///
 """FastAPI comparison server for benchmarking (raw/no validation)."""
 
 import sys

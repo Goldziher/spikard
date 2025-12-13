@@ -247,8 +247,6 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
 
     if isinstance(schema_source, type) and dataclasses.is_dataclass(schema_source):
         try:
-            # Build schema manually using resolved type hints
-            # This avoids msgspec's issues with forward references
             type_hints = get_type_hints(schema_source)
             properties = {}
             required = []
@@ -256,23 +254,19 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
             for field in dataclasses.fields(schema_source):
                 field_type = type_hints.get(field.name, field.type)
 
-                # Check if field is optional (has default or default_factory)
                 has_default = (
                     field.default is not dataclasses.MISSING or field.default_factory is not dataclasses.MISSING
                 )
 
-                # Check if type is Optional (Union with None)
                 is_optional_type = False
                 if get_origin(field_type) is Union:
                     args = get_args(field_type)
                     is_optional_type = type(None) in args
 
-                # Extract schema for the field type
                 field_schema = extract_json_schema(field_type)
                 if field_schema:
                     properties[field.name] = field_schema
 
-                # Field is required if it has no default AND is not Optional type
                 if not has_default and not is_optional_type:
                     required.append(field.name)
 

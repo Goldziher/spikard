@@ -52,7 +52,6 @@ pub enum ErrorCondition {
 impl ErrorCondition {
     /// Determine the error condition from schema path and error message
     pub fn from_schema_error(schema_path_str: &str, error_msg: &str) -> Self {
-        // Check schema path for specific constraint keywords
         match () {
             _ if schema_path_str.contains("minLength") => Self::StringTooShort { min_length: None },
             _ if schema_path_str.contains("maxLength") => Self::StringTooLong { max_length: None },

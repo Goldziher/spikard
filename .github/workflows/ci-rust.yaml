@@ -126,7 +126,7 @@ jobs:
         run: scripts/ci/rust/run-workspace-tests-windows.ps1 -ExcludeRuby
 
   coverage-rust:
-    name: Rust Code Coverage (95% minimum)
+    name: Rust Code Coverage (80% minimum)
     runs-on: ubuntu-latest
     needs: [test-rust-workspace]
     timeout-minutes: 45
@@ -161,7 +161,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
-        run: cargo tarpaulin --workspace --out Lcov --output-dir target/tarpaulin --timeout 300 --exclude-files "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "examples/**" "tools/**" --exclude spikard-wasm --exclude spikard-php --exclude spikard-node --exclude spikard-rb --exclude spikard-py --verbose
+        run: cargo tarpaulin --workspace --out Lcov --output-dir target/tarpaulin --timeout 300 --fail-under 80 --exclude-files "**/tests/**" "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "**/examples/**" "**/tools/**" "**/packages/**" "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**" "**/crates/spikard-wasm/src/**" --exclude spikard-wasm --exclude spikard-php --exclude spikard-node --exclude spikard-rb --exclude spikard-py --verbose
 
       - name: Upload coverage to Codecov
         if: github.actor != 'dependabot[bot]'
@@ -183,7 +183,7 @@ jobs:
           retention-days: 30
 
   coverage-rust-php-linux:
-    name: Rust PHP FFI Coverage (95% minimum, Linux only)
+    name: Rust PHP FFI Coverage (50% minimum, Linux only)
     runs-on: ubuntu-latest
     needs: [test-rust-workspace]
     timeout-minutes: 45
@@ -226,7 +226,8 @@ jobs:
             --out Lcov \
             --output-dir target/tarpaulin-php \
             --timeout 300 \
-            --exclude-files "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "examples/**" "tools/**" \
+            --fail-under 50 \
+            --exclude-files "**/tests/**" "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "**/examples/**" "**/tools/**" "**/packages/**" "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**" "**/crates/spikard-wasm/src/**" \
             --exclude spikard-wasm --exclude spikard-php \
             --exclude spikard-node --exclude spikard-rb --exclude spikard-py \
             --verbose

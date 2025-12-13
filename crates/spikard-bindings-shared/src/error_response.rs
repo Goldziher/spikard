@@ -392,12 +392,10 @@ mod tests {
 
     #[test]
     fn test_serialization_fallback() {
-        // Create an error with deeply nested details to test fallback
         let details = serde_json::Map::new();
         let (_status, body) =
             ErrorResponseBuilder::with_details(StatusCode::BAD_REQUEST, "test", "Test error", Value::Object(details));
 
-        // Verify we get valid JSON even if serialization fails
         assert!(serde_json::from_str::<Value>(&body).is_ok());
     }
 }

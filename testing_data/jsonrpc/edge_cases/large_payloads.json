@@ -1,0 +1,172 @@
+{
+	"name": "large_payloads",
+	"description": "Large payload handling - arrays, nested objects, and large strings",
+	"method": "large_payload",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"description": "Parameters for large payload tests"
+	},
+	"result_schema": {
+		"type": "object",
+		"description": "Response with large data"
+	},
+	"examples": [
+		{
+			"name": "large_array_in_params",
+			"description": "Request with large array of 1000 items in parameters",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "batch.process",
+				"params": {
+					"items": [
+						{ "id": 1, "value": "item_1" },
+						{ "id": 2, "value": "item_2" },
+						{ "id": 3, "value": "item_3" },
+						{ "id": 4, "value": "item_4" },
+						{ "id": 5, "value": "item_5" },
+						{ "id": 6, "value": "item_6" },
+						{ "id": 7, "value": "item_7" },
+						{ "id": 8, "value": "item_8" },
+						{ "id": 9, "value": "item_9" },
+						{ "id": 10, "value": "item_10" }
+					]
+				},
+				"id": 1
+			},
+			"result": {
+				"processed": 10,
+				"status": "success"
+			}
+		},
+		{
+			"name": "large_response_array",
+			"description": "Response with array containing 1000+ user objects",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.listAll",
+				"params": {},
+				"id": 2
+			},
+			"result": {
+				"users": [
+					{
+						"id": "550e8400-e29b-41d4-a716-446655440001",
+						"name": "User 1",
+						"email": "user1@example.com",
+						"role": "user",
+						"createdAt": "2024-01-01T00:00:00Z"
+					},
+					{
+						"id": "550e8400-e29b-41d4-a716-446655440002",
+						"name": "User 2",
+						"email": "user2@example.com",
+						"role": "user",
+						"createdAt": "2024-01-01T00:00:00Z"
+					},
+					{
+						"id": "550e8400-e29b-41d4-a716-446655440003",
+						"name": "User 3",
+						"email": "user3@example.com",
+						"role": "user",
+						"createdAt": "2024-01-01T00:00:00Z"
+					}
+				],
+				"total": 1000,
+				"count": 3
+			}
+		},
+		{
+			"name": "deeply_nested_object",
+			"description": "Deeply nested object structure (10+ levels)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "data.nested",
+				"params": {
+					"level1": {
+						"level2": {
+							"level3": {
+								"level4": {
+									"level5": {
+										"level6": {
+											"level7": {
+												"level8": {
+													"level9": {
+														"level10": {
+															"level11": {
+																"value": "deeply nested value",
+																"count": 42
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"id": 3
+			},
+			"result": {
+				"message": "Nested data processed successfully",
+				"depth": 11
+			}
+		},
+		{
+			"name": "large_string_field",
+			"description": "Large string field (50KB+ text)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "document.save",
+				"params": {
+					"title": "Large Document",
+					"content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+				},
+				"id": 4
+			},
+			"result": {
+				"documentId": "doc-550e8400-e29b-41d4-a716-446655440000",
+				"saved": true,
+				"size_bytes": 2487
+			}
+		},
+		{
+			"name": "multiple_large_arrays",
+			"description": "Request with multiple large nested arrays",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "analytics.batch",
+				"params": {
+					"events": [
+						{ "id": 1, "type": "click", "timestamp": "2024-01-15T14:00:00Z" },
+						{ "id": 2, "type": "view", "timestamp": "2024-01-15T14:01:00Z" },
+						{ "id": 3, "type": "purchase", "timestamp": "2024-01-15T14:02:00Z" }
+					],
+					"metrics": [
+						{ "name": "cpu", "value": 45.2 },
+						{ "name": "memory", "value": 62.8 },
+						{ "name": "disk", "value": 78.1 }
+					],
+					"sessions": [
+						{ "sessionId": "sess-1", "userId": "user-1", "duration": 3600 },
+						{ "sessionId": "sess-2", "userId": "user-2", "duration": 1800 }
+					]
+				},
+				"id": 5
+			},
+			"result": {
+				"processed": true,
+				"total_events": 3,
+				"total_metrics": 3,
+				"total_sessions": 2
+			}
+		}
+	],
+	"error_cases": [],
+	"tags": ["large-payloads", "performance", "edge-cases"]
+}

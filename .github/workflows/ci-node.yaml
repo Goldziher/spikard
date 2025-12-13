@@ -145,7 +145,6 @@ jobs:
         shell: pwsh
         run: pnpm test
 
-  # Node.js coverage enforcement (separate job)
   coverage-node:
     name: Node.js Code Coverage
     runs-on: ubuntu-latest

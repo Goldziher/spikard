@@ -13,7 +13,7 @@ import { UploadFile } from "./upload";
  */
 export interface FileMetadata {
 	filename: string;
-	content: string; // base64 encoded or raw string
+	content: string;
 	size?: number | undefined;
 	content_type?: string | undefined;
 	content_encoding?: "base64" | "text" | undefined;
@@ -35,13 +35,10 @@ function isFileMetadata(value: unknown): value is FileMetadata {
 export function convertFileMetadataToUploadFile(fileData: FileMetadata): UploadFile {
 	const { filename, content, size, content_type, content_encoding } = fileData;
 
-	// Convert content string to Buffer
 	let buffer: Buffer;
 	if (content_encoding === "base64") {
-		// Explicitly marked as base64 encoded binary content
 		buffer = Buffer.from(content, "base64");
 	} else {
-		// Treat as plain text by default (including test payloads)
 		buffer = Buffer.from(content, "utf-8");
 	}
 
@@ -58,34 +55,27 @@ export function convertFileMetadataToUploadFile(fileData: FileMetadata): UploadF
  * @returns Processed value with UploadFile instances
  */
 export function processUploadFileFields(value: JsonValue | undefined): unknown {
-	// Handle null/undefined
 	if (value === null || value === undefined) {
 		return value;
 	}
 
-	// Handle primitives (string, number, boolean)
 	if (typeof value !== "object") {
 		return value;
 	}
 
-	// Handle arrays - recursively process each element
 	if (Array.isArray(value)) {
 		return value.map((item) => {
-			// Check if this array item is file metadata
 			if (isFileMetadata(item)) {
 				return convertFileMetadataToUploadFile(item);
 			}
-			// Recursively process nested arrays/objects
 			return processUploadFileFields(item as JsonValue);
 		});
 	}
 
-	// Handle objects - check if it's file metadata first
 	if (isFileMetadata(value)) {
 		return convertFileMetadataToUploadFile(value);
 	}
 
-	// Otherwise, recursively process object properties
 	const result: Record<string, unknown> = {};
 	for (const [key, val] of Object.entries(value)) {
 		result[key] = processUploadFileFields(val as JsonValue);
@@ -104,12 +94,10 @@ function convertMultipartTestPayload(payload: {
 }): unknown {
 	const result: Record<string, unknown> = {};
 
-	// Add fields
 	if (payload.fields) {
 		Object.assign(result, payload.fields);
 	}
 
-	// Add files, grouping by field name
 	if (payload.files && payload.files.length > 0) {
 		const filesByName: Record<string, unknown[]> = {};
 
@@ -130,7 +118,6 @@ function convertMultipartTestPayload(payload: {
 			}
 		}
 
-		// Flatten single files, keep arrays for multiple files with same name
 		for (const [name, files] of Object.entries(filesByName)) {
 			result[name] = files.length === 1 ? files[0] : files;
 		}
@@ -154,7 +141,6 @@ function convertMultipartTestPayload(payload: {
  * @returns Processed body with UploadFile instances
  */
 export function convertHandlerBody(body: JsonValue | undefined): unknown {
-	// Handle TestClient multipart payload
 	if (
 		typeof body === "object" &&
 		body !== null &&

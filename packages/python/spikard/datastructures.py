@@ -18,7 +18,6 @@ from typing_extensions import Self
 __all__ = ("UploadFile",)
 
 
-# JSON Schema for UploadFile (used by msgspec)
 _UPLOAD_FILE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
@@ -33,7 +32,6 @@ _UPLOAD_FILE_JSON_SCHEMA = {
 }
 
 
-# Annotated version for use in type hints (msgspec will use the Meta for JSON schema)
 UploadFileType = Annotated[Any, msgspec.Meta(extra_json_schema=_UPLOAD_FILE_JSON_SCHEMA)]
 
 
@@ -86,7 +84,7 @@ class UploadFile:
         content_type: str | None = None,
         size: int | None = None,
         headers: dict[str, str] | None = None,
-        max_spool_size: int = 1024 * 1024,  # 1MB default
+        max_spool_size: int = 1024 * 1024,
     ) -> None:
         """Initialize an UploadFile instance.
 
@@ -104,7 +102,6 @@ class UploadFile:
         self.headers = headers or {}
         self._content = content
 
-        # Use SpooledTemporaryFile for automatic disk spooling of large files
         self._file: SpooledTemporaryFile[bytes] = SpooledTemporaryFile(max_size=max_spool_size, mode="w+b")  # noqa: SIM115
         self._file.write(content)
         self._file.seek(0)
@@ -142,8 +139,6 @@ class UploadFile:
             File contents as bytes
         """
         # TODO: For true async file I/O when rolled_to_disk, integrate with anyio/trio
-        # For now, since we already have the content in memory from Rust parsing,
-        # this is acceptable. Future optimization for large files.
         return self.read(size)
 
     def seek(self, offset: int, whence: int = 0) -> int:
@@ -180,7 +175,6 @@ class UploadFile:
         Returns:
             Number of bytes written
         """
-        # Update size tracking
         current_pos = self._file.tell()
         bytes_written = self._file.write(data)
         end_pos = self._file.tell()
@@ -243,7 +237,6 @@ class UploadFile:
         if hasattr(self, "_file") and not self._file.closed:
             self._file.close()
 
-    # Context manager support
     def __enter__(self) -> Self:
         """Enter context manager (sync)."""
         return self

@@ -135,10 +135,8 @@ impl BenchmarkRunner {
             Ok((oha_output, throughput)) => {
                 let latency = LatencyMetrics::from(oha_output.clone());
 
-                // Calculate error metrics from throughput data
                 let error_metrics = calculate_error_metrics(&throughput, &latency);
 
-                // Calculate serialization metrics from available data
                 let serialization_metrics = calculate_serialization_metrics(&throughput, &latency);
 
                 let route_types = if let Some(fixture) = fixture {
@@ -175,7 +173,6 @@ impl BenchmarkRunner {
                 })
             }
             Err(e) => {
-                // Create empty metrics for failed benchmarks
                 let empty_throughput = ThroughputMetrics {
                     total_requests: 0,
                     requests_per_sec: 0.0,
@@ -302,21 +299,15 @@ fn calculate_error_metrics(throughput: &ThroughputMetrics, latency: &LatencyMetr
         0.0
     };
 
-    // Estimate error distribution based on failure rate
-    // Assume roughly equal distribution across error types
     let _errors_per_type = if error_count > 0 { error_count / 3 } else { 0 };
 
-    // Use p99 latency as a baseline for error response latencies
-    // Error responses are typically faster (4xx/5xx early returns)
     let validation_error_latency = (latency.p99_ms * 0.6).max(1.0);
     let not_found_latency = (latency.p99_ms * 0.5).max(0.8);
     let server_error_latency = (latency.p99_ms * 0.8).min(latency.p99_ms);
 
-    // Error throughput is typically much lower than success throughput
     let error_throughput = throughput.requests_per_sec * error_rate;
 
-    // Estimate memory impact from errors (typically minimal)
-    let error_memory_impact = 0.01; // 10KB per error on average
+    let error_memory_impact = 0.01;
 
     ErrorMetrics {
         validation_error_p99_ms: validation_error_latency,
@@ -334,29 +325,24 @@ fn calculate_serialization_metrics(throughput: &ThroughputMetrics, latency: &Lat
     let total_requests = throughput.total_requests.max(1);
     let mean_latency = latency.mean_ms;
 
-    // Estimate JSON parsing overhead (typically 10-15% of total latency)
-    // For simple requests, it's lower; for complex ones, higher
     let json_parse_overhead = if mean_latency > 0.0 {
         (mean_latency * 0.12).max(0.1)
     } else {
         0.1
     };
 
-    // Estimate JSON serialization overhead (typically 8-12% of total latency)
     let json_serialize_overhead = if mean_latency > 0.0 {
         (mean_latency * 0.10).max(0.08)
     } else {
         0.08
     };
 
-    // Estimate validation overhead (typically 5-8% of total latency)
     let validation_overhead = if mean_latency > 0.0 {
         (mean_latency * 0.06).max(0.05)
     } else {
         0.05
     };
 
-    // Calculate total overhead as percentage of mean latency
     let total_serialization_overhead = json_parse_overhead + json_serialize_overhead + validation_overhead;
     let total_overhead_pct = if mean_latency > 0.0 {
         (total_serialization_overhead / mean_latency) * 100.0
@@ -558,9 +544,9 @@ mod tests {
         let metrics = calculate_error_metrics(&throughput, &latency);
 
         assert_eq!(metrics.total_errors, 50);
-        assert!(metrics.error_rate > 0.04 && metrics.error_rate < 0.06); // ~0.05
+        assert!(metrics.error_rate > 0.04 && metrics.error_rate < 0.06);
         assert!(metrics.error_throughput_rps > 0.0);
-        assert!(metrics.error_throughput_rps <= 100.0); // Can't exceed total RPS
+        assert!(metrics.error_throughput_rps <= 100.0);
     }
 
     #[test]
@@ -587,10 +573,8 @@ mod tests {
 
         let metrics = calculate_error_metrics(&throughput, &latency);
 
-        // Error responses should be faster than p99 latency
         assert!(metrics.validation_error_p99_ms < latency.p99_ms);
         assert!(metrics.not_found_p99_ms < latency.p99_ms);
-        // Server errors might be close to normal latency
         assert!(metrics.server_error_p99_ms <= latency.p99_ms);
     }
 
@@ -618,7 +602,6 @@ mod tests {
 
         let metrics = calculate_serialization_metrics(&throughput, &latency);
 
-        // Should provide sensible defaults even with zero latency
         assert!(metrics.json_parse_overhead_ms > 0.0);
         assert!(metrics.json_serialize_overhead_ms > 0.0);
         assert!(metrics.validation_overhead_ms > 0.0);
@@ -649,12 +632,10 @@ mod tests {
 
         let metrics = calculate_serialization_metrics(&throughput, &latency);
 
-        // Overhead should be proportional to latency
         assert!(metrics.json_parse_overhead_ms > 0.0);
         assert!(metrics.json_serialize_overhead_ms > 0.0);
         assert!(metrics.validation_overhead_ms > 0.0);
 
-        // Total overhead should be reasonable (10-30% of latency)
         assert!(metrics.total_overhead_pct > 10.0);
         assert!(metrics.total_overhead_pct < 50.0);
         assert_eq!(metrics.sample_count, 1000);
@@ -684,11 +665,9 @@ mod tests {
 
         let metrics = calculate_serialization_metrics(&throughput, &latency);
 
-        // Parsing should be > serialization > validation
         assert!(metrics.json_parse_overhead_ms > metrics.json_serialize_overhead_ms);
         assert!(metrics.json_serialize_overhead_ms > metrics.validation_overhead_ms);
 
-        // Sum of components should equal total
         let sum = metrics.json_parse_overhead_ms + metrics.json_serialize_overhead_ms + metrics.validation_overhead_ms;
         let expected_pct = (sum / latency.mean_ms) * 100.0;
         assert!((metrics.total_overhead_pct - expected_pct).abs() < 0.01);

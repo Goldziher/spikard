@@ -16,12 +16,18 @@ use crate::lifecycle::{
     response_into_value,
 };
 use crate::matching::match_route;
-use crate::types::{BodyPayload, HandlerResponsePayload, RequestPayload, RouteDefinition, ServerConfig, build_params};
+use crate::types::{
+    ApiKeyConfig, BodyKind, BodyMetadata, BodyPayload, HandlerResponsePayload, JwtConfig, RequestPayload,
+    RouteDefinition, ServerConfig, build_params,
+};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use base64::engine::general_purpose::URL_SAFE_NO_PAD as BASE64_URL_SAFE_NO_PAD;
+use hmac::{Hmac, Mac};
 use http::StatusCode;
-use js_sys::{Date as JsDate, Function, JSON, Object, Promise, Reflect, Symbol, Uint8Array};
+use js_sys::{Array, Date as JsDate, Function, JSON, Object, Promise, Reflect, Symbol, Uint8Array};
 use serde_json::{Map as JsonMap, Value};
+use sha2::Sha256;
 use spikard_core::RouteMetadata;
 use spikard_core::bindings::response::{RawResponse, StaticAsset};
 use spikard_core::errors::StructuredError;
@@ -33,7 +39,9 @@ use spikard_core::schema_registry::SchemaRegistry;
 use spikard_core::validation::{SchemaValidator, ValidationError};
 use std::collections::HashMap;
 use std::sync::Arc;
+use uuid::Uuid;
 use wasm_bindgen::JsCast;
+use wasm_bindgen::closure::Closure;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
 
@@ -51,6 +59,8 @@ pub struct TestClient {
     lifecycle_hooks: Option<Arc<WasmLifecycleHooks>>,
     route_validators: HashMap<String, RouteValidators>,
     rate_state: std::rc::Rc<std::cell::RefCell<HashMap<String, RateLimiterState>>>,
+    dependencies: HashMap<String, DependencyDescriptor>,
+    dependency_singletons: std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
 }
 
 #[derive(Default)]
@@ -66,6 +76,16 @@ struct RouteValidators {
     parameter: Option<ParameterValidator>,
     request: Option<Arc<SchemaValidator>>,
     response: Option<Arc<SchemaValidator>>,
+}
+
+#[derive(Clone)]
+struct DependencyDescriptor {
+    is_factory: bool,
+    value_json: Option<String>,
+    factory: Option<Function>,
+    depends_on: Vec<String>,
+    singleton: bool,
+    cacheable: bool,
 }
 
 impl Default for RouteValidators {
@@ -87,6 +107,7 @@ impl TestClient {
         handlers: JsValue,
         config: JsValue,
         lifecycle_hooks: Option<JsValue>,
+        dependencies: Option<JsValue>,
     ) -> Result<TestClient, JsValue> {
         let routes: Vec<RouteDefinition> = serde_json::from_str(routes_json)
             .map_err(|err| JsValue::from_str(&format!("Invalid routes JSON: {err}")))?;
@@ -135,6 +156,8 @@ impl TestClient {
         let lifecycle_hooks_value = lifecycle_hooks.unwrap_or(JsValue::UNDEFINED);
         let lifecycle_hooks = parse_hooks(&lifecycle_hooks_value)?.map(Arc::new);
 
+        let dependencies_map = parse_dependencies(dependencies.unwrap_or(JsValue::UNDEFINED))?;
+
         Ok(TestClient {
             routes,
             handlers: handler_map,
@@ -142,6 +165,8 @@ impl TestClient {
             lifecycle_hooks,
             route_validators: validator_map,
             rate_state: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
+            dependencies: dependencies_map,
+            dependency_singletons: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
         })
     }
 
@@ -224,6 +249,8 @@ impl TestClient {
             lifecycle_hooks: self.lifecycle_hooks.clone(),
             route_validators: self.route_validators.clone(),
             rate_state: self.rate_state.clone(),
+            dependencies: self.dependencies.clone(),
+            dependency_singletons: self.dependency_singletons.clone(),
         };
 
         future_to_promise(async move {
@@ -246,6 +273,8 @@ struct RequestContext {
     lifecycle_hooks: Option<Arc<WasmLifecycleHooks>>,
     route_validators: HashMap<String, RouteValidators>,
     rate_state: std::rc::Rc<std::cell::RefCell<HashMap<String, RateLimiterState>>>,
+    dependencies: HashMap<String, DependencyDescriptor>,
+    dependency_singletons: std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
 }
 
 impl RequestContext {
@@ -284,7 +313,6 @@ impl RequestContext {
 
         let options_obj = Object::new();
 
-        // Handle headers in options (for content-type detection)
         if let Some(headers_obj) = value.get("headers").and_then(|v| v.as_object()) {
             let headers_js = Object::new();
             for (key, val) in headers_obj.iter() {
@@ -299,26 +327,20 @@ impl RequestContext {
                 .map_err(|_| JsValue::from_str("Failed to set headers in options"))?;
         }
 
-        // Handle body - try to parse as JSON first, otherwise store as form_raw
         if let Some(body_val) = value.get("body") {
             match body_val {
-                serde_json::Value::Null => {
-                    // No body
-                }
+                serde_json::Value::Null => {}
                 serde_json::Value::String(s) => {
-                    // Try to parse as JSON, fallback to form_raw
                     if let Ok(json_val) = serde_json::from_str::<serde_json::Value>(s) {
                         serde_wasm_bindgen::to_value(&json_val)
                             .ok()
                             .and_then(|js_val| Reflect::set(&options_obj, &JsValue::from_str("json"), &js_val).ok());
                     } else {
-                        // Store as form_raw if not valid JSON
                         Reflect::set(&options_obj, &JsValue::from_str("formRaw"), &JsValue::from_str(s))
                             .map_err(|_| JsValue::from_str("Failed to set formRaw"))?;
                     }
                 }
                 _ => {
-                    // Try to convert to JS value
                     serde_wasm_bindgen::to_value(body_val)
                         .ok()
                         .and_then(|js_val| Reflect::set(&options_obj, &JsValue::from_str("json"), &js_val).ok());
@@ -337,6 +359,8 @@ impl RequestContext {
             lifecycle_hooks: None,
             route_validators: HashMap::new(),
             rate_state: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
+            dependencies: HashMap::new(),
+            dependency_singletons: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
         })
     }
 }
@@ -437,20 +461,31 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
     let request_options = types::RequestOptions::from_js(context.options)
         .map_err(|e| js_error_from_jsvalue("request_options_invalid", e))?;
     if !request_options.headers.is_empty() {
-        headers.extend(request_options.headers.clone());
+        for (key, value) in &request_options.headers {
+            headers.insert(key.clone(), value.clone());
+        }
     }
+
+    let lowered_headers = lowercase_header_keys(&headers);
+    let cookies = parse_cookie_header(&headers);
 
     if let Some(snapshot) = serve_static_from_manifest(&context.method, &context.path, &headers, &context.config) {
         return Ok(snapshot);
     }
 
+    let max_body_size = context.config.max_body_size.filter(|max| *max > 0);
+    let request_timeout_seconds = context.config.request_timeout.filter(|seconds| *seconds > 0);
+
     let (route, path_params, path_without_query, query) = match_route(&context.routes, &context.method, &context.path)
         .map_err(|e| js_error_from_jsvalue("route_match_failed", e))?;
 
-    let rate_limit_id = headers
-        .get("x-forwarded-for")
-        .cloned()
-        .or_else(|| headers.get("x-real-ip").cloned());
+    if let Some(snapshot) = enforce_auth(&headers, &query.raw, &context.config) {
+        return Ok(snapshot);
+    }
+
+    let rate_limit_id = header_value(&headers, "x-forwarded-for")
+        .map(|value| value.to_string())
+        .or_else(|| header_value(&headers, "x-real-ip").map(|value| value.to_string()));
 
     if let Some(snapshot) = enforce_rate_limit(&route.handler_name, &context.config, &context.rate_state, rate_limit_id)
     {
@@ -463,7 +498,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         .cloned()
         .unwrap_or_default();
 
-    let mut params = build_params(&path_params, &query.normalized, &headers);
+    let mut params = build_params(&path_params, &query.normalized, &lowered_headers);
     if let Some(parameter_validator) = validators.parameter.clone() {
         let mut query_map = JsonMap::new();
         for (key, value) in &query.normalized {
@@ -474,8 +509,8 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
             &query_value,
             &query.raw,
             &path_params,
-            &headers,
-            &HashMap::new(),
+            &lowered_headers,
+            &cookies,
         ) {
             Ok(value) => {
                 params = value_to_param_map(value);
@@ -487,8 +522,49 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         }
     }
 
-    let body_payload = request_options.body_payload();
+    let mut body_payload = request_options.body_payload();
+    if let Some(max_bytes) = max_body_size {
+        if let Some(encoded) = body_payload.metadata.raw_base64.as_deref() {
+            let raw_len = match BASE64_STANDARD.decode(encoded) {
+                Ok(decoded) => decoded.len(),
+                Err(_) => 0,
+            };
+            if raw_len > max_bytes {
+                let problem = ProblemDetails::new(
+                    "https://spikard.dev/errors/payload-too-large",
+                    "Payload Too Large",
+                    StatusCode::PAYLOAD_TOO_LARGE,
+                )
+                .with_detail(format!("Request body exceeded limit of {max_bytes} bytes"));
+                return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+            }
+        }
+    }
     if let Some(request_validator) = validators.request.as_ref() {
+        if body_payload.value.is_some() && !matches!(body_payload.metadata.kind, BodyKind::Form | BodyKind::Multipart) {
+            let content_type = header_value(&headers, "content-type");
+            if !is_json_content_type(content_type) {
+                let problem = ProblemDetails::new(
+                    "https://spikard.dev/errors/unsupported-media-type",
+                    "Unsupported Media Type",
+                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
+                )
+                .with_detail("Unsupported media type".to_string());
+                return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+            }
+
+            if let Some(Value::String(text)) = body_payload.value.clone() {
+                if let Ok(parsed) = serde_json::from_str::<Value>(&text) {
+                    body_payload.value = Some(parsed);
+                    body_payload.metadata = BodyMetadata::from_body_value(body_payload.value.as_ref());
+                }
+            }
+        }
+
+        if let Some(value) = body_payload.value.take() {
+            let coerced = coerce_value_against_schema(value, request_validator.schema());
+            body_payload.value = Some(coerced);
+        }
         if let Err(error) = request_validator.validate(body_payload.value.as_ref().unwrap_or(&Value::Null)) {
             let problem = ProblemDetails::from_validation_error(&error);
             return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
@@ -505,6 +581,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         &path_without_query,
         path_params,
         &headers,
+        cookies.clone(),
         query.clone(),
         params,
         body_value.clone(),
@@ -513,7 +590,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
 
     let lifecycle_runner = LifecycleRunner::new(context.lifecycle_hooks.clone());
 
-    let request_payload = match lifecycle_runner.run_before_handler(request_payload).await? {
+    let mut request_payload = match lifecycle_runner.run_before_handler(request_payload).await? {
         LifecycleRequestOutcome::Continue(payload) => payload,
         LifecycleRequestOutcome::Respond(response_value) => {
             let finalized = lifecycle_runner.run_response_hooks(response_value).await?;
@@ -526,52 +603,128 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         }
     };
 
-    let handler_fn = context
-        .handlers
-        .get(&route.handler_name)
-        .ok_or_else(|| JsValue::from_str(&format!("Handler {} not registered", route.handler_name)))?;
+    let dependency_targets = route.handler_dependencies.clone();
+    let dependency_request_id = (!dependency_targets.is_empty()).then(|| Uuid::new_v4().to_string());
 
-    let request_json = serde_json::to_string(&request_payload)
-        .map_err(|err| JsValue::from_str(&format!("Failed to serialize request: {err}")))?;
-    let request_value = serde_wasm_bindgen::to_value(&request_payload)
-        .map_err(|err| JsValue::from_str(&format!("Failed to build request object: {err}")))?;
-    let request_object = js_sys::Object::from(request_value);
-    Reflect::set(
-        &request_object,
-        &JsValue::from_str("__spikard_raw_request__"),
-        &JsValue::from_str(&request_json),
-    )
-    .map_err(|_| JsValue::from_str("Failed to attach raw request payload"))?;
-
-    let js_promise = handler_fn.call1(&JsValue::NULL, &request_object.into())?;
-
-    let promise: Promise = js_promise
-        .dyn_into()
-        .map_err(|_| JsValue::from_str("Handler must return a Promise"))?;
-    let result = wasm_bindgen_futures::JsFuture::from(promise).await;
-
-    let response_value = match result {
-        Ok(value) => {
-            let normalized = normalize_handler_result(value).await?;
-            lifecycle_runner.run_response_hooks(normalized).await?
-        }
-        Err(err) => {
-            let error_response = build_error_response(err);
-            lifecycle_runner.run_error_hooks(error_response).await?
-        }
-    };
-
-    if let Some(response_validator) = validators.response.as_ref() {
-        if let Err(error) = response_validator.validate(&response_value) {
-            let problem = response_validation_problem(&error);
-            return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+    if let Some(request_id) = dependency_request_id.as_deref() {
+        match resolve_dependency_map(
+            &context.dependencies,
+            &context.dependency_singletons,
+            request_id,
+            &dependency_targets,
+        )
+        .await
+        {
+            Ok(resolved) => {
+                if !resolved.is_empty() {
+                    request_payload.dependencies = Some(resolved);
+                }
+            }
+            Err(err) => {
+                let message = extract_error_message(&err);
+                let _ = run_dependency_cleanup(request_id).await;
+                let problem = ProblemDetails::internal_server_error(format!("Dependency resolution failed: {message}"));
+                return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+            }
         }
     }
 
-    let response_payload = HandlerResponsePayload::from_value(response_value)?;
+    let response_result: Result<ResponseSnapshot, JsValue> = (async {
+        let handler_fn = context
+            .handlers
+            .get(&route.handler_name)
+            .ok_or_else(|| JsValue::from_str(&format!("Handler {} not registered", route.handler_name)))?;
 
-    let snapshot = ResponseSnapshot::from_handler(response_payload, &headers, &context.config);
-    Ok(snapshot)
+        let request_json = serde_json::to_string(&request_payload)
+            .map_err(|err| JsValue::from_str(&format!("Failed to serialize request: {err}")))?;
+        let request_value = serde_json::to_value(&request_payload)
+            .map_err(|err| JsValue::from_str(&format!("Failed to serialize request value: {err}")))?;
+        let request_js = safe_json_to_js(&request_value);
+        let request_object: Object = request_js
+            .dyn_into()
+            .map_err(|_| JsValue::from_str("Failed to build request object"))?;
+        Reflect::set(
+            &request_object,
+            &JsValue::from_str("__spikard_raw_request__"),
+            &JsValue::from_str(&request_json),
+        )
+        .map_err(|_| JsValue::from_str("Failed to attach raw request payload"))?;
+
+        let abort_controller = if request_timeout_seconds.is_some() {
+            create_abort_controller()?
+        } else {
+            None
+        };
+
+        if let Some(controller) = abort_controller.as_ref() {
+            Reflect::set(
+                &request_object,
+                &JsValue::from_str("__spikard_abort_signal__"),
+                &controller.signal,
+            )
+            .map_err(|_| JsValue::from_str("Failed to attach abort signal"))?;
+        }
+
+        let js_promise = handler_fn.call1(&JsValue::NULL, &request_object.into())?;
+
+        let promise: Promise = js_promise
+            .dyn_into()
+            .map_err(|_| JsValue::from_str("Handler must return a Promise"))?;
+
+        let raced = if let Some(seconds) = request_timeout_seconds {
+            let (timeout_promise, timeout_id) = build_timeout_promise(seconds)?;
+            let guarded = attach_clear_timeout(&promise, timeout_id)?;
+            Promise::race(&Array::of2(&guarded, &timeout_promise))
+        } else {
+            promise
+        };
+
+        let result = wasm_bindgen_futures::JsFuture::from(raced).await;
+
+        let response_value = match result {
+            Ok(value) => {
+                if is_timeout_marker(&value) {
+                    if let Some(controller) = abort_controller.as_ref() {
+                        controller.abort();
+                    }
+                    let problem = ProblemDetails::new(
+                        "https://spikard.dev/errors/request-timeout",
+                        "Request Timeout",
+                        StatusCode::REQUEST_TIMEOUT,
+                    );
+                    return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+                }
+                let normalized = normalize_handler_result(value).await?;
+                lifecycle_runner.run_response_hooks(normalized).await?
+            }
+            Err(err) => {
+                let error_response = build_error_response(err);
+                lifecycle_runner.run_error_hooks(error_response).await?
+            }
+        };
+
+        if let Some(response_validator) = validators.response.as_ref() {
+            if let Err(error) = response_validator.validate(&response_value) {
+                let problem = response_validation_problem(&error);
+                return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+            }
+        }
+
+        let response_payload = HandlerResponsePayload::from_value(response_value)?;
+
+        Ok(ResponseSnapshot::from_handler(
+            response_payload,
+            &headers,
+            &context.config,
+        ))
+    })
+    .await;
+
+    if let Some(request_id) = dependency_request_id.as_deref() {
+        let _ = run_dependency_cleanup(request_id).await;
+    }
+
+    response_result
 }
 
 async fn normalize_handler_result(result: JsValue) -> Result<Value, JsValue> {
@@ -608,6 +761,335 @@ fn extract_error_message(error: &JsValue) -> String {
         .ok()
         .and_then(|val| val.as_string())
         .unwrap_or_else(|| "Internal Server Error".to_string())
+}
+
+fn parse_dependencies(dependencies: JsValue) -> Result<HashMap<String, DependencyDescriptor>, JsValue> {
+    if dependencies.is_undefined() || dependencies.is_null() {
+        return Ok(HashMap::new());
+    }
+
+    let deps_object: Object = dependencies
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("Dependencies must be an object map"))?;
+
+    let dep_keys = js_sys::Object::keys(&deps_object);
+    let mut dep_map = HashMap::new();
+
+    for idx in 0..dep_keys.length() {
+        let key = dep_keys.get(idx).as_string().unwrap_or_default();
+        if key.is_empty() {
+            continue;
+        }
+
+        let dep_val = Reflect::get(&deps_object, &JsValue::from_str(&key))
+            .map_err(|_| JsValue::from_str("Failed to read dependency descriptor"))?;
+        let dep_obj: Object = dep_val
+            .dyn_into()
+            .map_err(|_| JsValue::from_str("Dependency descriptor must be an object"))?;
+
+        let is_factory = Reflect::get(&dep_obj, &JsValue::from_str("isFactory"))
+            .ok()
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let singleton = Reflect::get(&dep_obj, &JsValue::from_str("singleton"))
+            .ok()
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        let cacheable = Reflect::get(&dep_obj, &JsValue::from_str("cacheable"))
+            .ok()
+            .and_then(|v| v.as_bool())
+            .unwrap_or(!is_factory);
+
+        let depends_on = Reflect::get(&dep_obj, &JsValue::from_str("dependsOn"))
+            .ok()
+            .and_then(|v| v.dyn_into::<js_sys::Array>().ok())
+            .map(|arr| {
+                (0..arr.length())
+                    .filter_map(|i| arr.get(i).as_string())
+                    .collect::<Vec<String>>()
+            })
+            .unwrap_or_default();
+
+        if is_factory {
+            let factory_val = Reflect::get(&dep_obj, &JsValue::from_str("factory"))
+                .map_err(|_| JsValue::from_str("Failed to read dependency factory"))?;
+            let factory: Function = factory_val
+                .dyn_into()
+                .map_err(|_| JsValue::from_str("Dependency factory must be a function"))?;
+
+            dep_map.insert(
+                key,
+                DependencyDescriptor {
+                    is_factory: true,
+                    value_json: None,
+                    factory: Some(factory),
+                    depends_on,
+                    singleton,
+                    cacheable,
+                },
+            );
+        } else {
+            let value_val = Reflect::get(&dep_obj, &JsValue::from_str("value"))
+                .map_err(|_| JsValue::from_str("Failed to read dependency value"))?;
+            let value_json = JSON::stringify(&value_val)
+                .ok()
+                .and_then(|v| v.as_string())
+                .unwrap_or_else(|| "null".to_string());
+
+            dep_map.insert(
+                key,
+                DependencyDescriptor {
+                    is_factory: false,
+                    value_json: Some(value_json),
+                    factory: None,
+                    depends_on: Vec::new(),
+                    singleton,
+                    cacheable,
+                },
+            );
+        }
+    }
+
+    Ok(dep_map)
+}
+
+fn is_timeout_marker(value: &JsValue) -> bool {
+    if !value.is_object() {
+        return false;
+    }
+    let obj = Object::from(value.clone());
+    Reflect::get(&obj, &JsValue::from_str("__spikard_timeout__"))
+        .ok()
+        .and_then(|marker| marker.as_bool())
+        .unwrap_or(false)
+}
+
+struct AbortControllerHandle {
+    controller: Object,
+    signal: JsValue,
+    abort_fn: Function,
+}
+
+impl AbortControllerHandle {
+    fn abort(&self) {
+        let _ = self.abort_fn.call0(&self.controller);
+    }
+}
+
+fn create_abort_controller() -> Result<Option<AbortControllerHandle>, JsValue> {
+    let global = js_sys::global();
+    let ctor = match Reflect::get(&global, &JsValue::from_str("AbortController")) {
+        Ok(value) => value,
+        Err(_) => return Ok(None),
+    };
+    if ctor.is_undefined() || ctor.is_null() {
+        return Ok(None);
+    }
+
+    let ctor_fn: Function = match ctor.dyn_into() {
+        Ok(value) => value,
+        Err(_) => return Ok(None),
+    };
+
+    let controller_value = js_sys::Reflect::construct(&ctor_fn, &Array::new())
+        .map_err(|_| JsValue::from_str("AbortController is not a constructable function (missing 'new')"))?;
+    let controller: Object = controller_value
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("AbortController constructor did not return an object"))?;
+
+    let signal = Reflect::get(&controller, &JsValue::from_str("signal"))
+        .map_err(|_| JsValue::from_str("AbortController missing signal property"))?;
+    let abort = Reflect::get(&controller, &JsValue::from_str("abort"))
+        .map_err(|_| JsValue::from_str("AbortController missing abort method"))?;
+    let abort_fn: Function = abort
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("AbortController abort is not a function"))?;
+
+    Ok(Some(AbortControllerHandle {
+        controller,
+        signal,
+        abort_fn,
+    }))
+}
+
+fn build_timeout_promise(seconds: u64) -> Result<(Promise, JsValue), JsValue> {
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    let global = js_sys::global();
+    let set_timeout = Reflect::get(&global, &JsValue::from_str("setTimeout"))?
+        .dyn_into::<Function>()
+        .map_err(|_| JsValue::from_str("setTimeout is not a function"))?;
+
+    let timeout_id_cell: Rc<RefCell<Option<JsValue>>> = Rc::new(RefCell::new(None));
+    let timeout_id_writer = timeout_id_cell.clone();
+
+    let promise = Promise::new(&mut |resolve, _reject| {
+        let resolve_fn = resolve.clone();
+        let callback = Closure::once_into_js(move || {
+            let marker = Object::new();
+            let _ = Reflect::set(&marker, &JsValue::from_str("__spikard_timeout__"), &JsValue::TRUE);
+            let _ = resolve_fn.call1(&JsValue::UNDEFINED, &marker);
+        });
+
+        let delay_ms = JsValue::from_f64((seconds as f64) * 1000.0);
+        let timeout_id = set_timeout
+            .call2(&global, &callback, &delay_ms)
+            .unwrap_or(JsValue::NULL);
+        *timeout_id_writer.borrow_mut() = Some(timeout_id);
+    });
+
+    let timeout_id = timeout_id_cell.borrow().as_ref().cloned().unwrap_or(JsValue::NULL);
+    Ok((promise, timeout_id))
+}
+
+fn attach_clear_timeout(promise: &Promise, timeout_id: JsValue) -> Result<Promise, JsValue> {
+    let global = js_sys::global();
+    let clear_timeout = Reflect::get(&global, &JsValue::from_str("clearTimeout"))?
+        .dyn_into::<Function>()
+        .map_err(|_| JsValue::from_str("clearTimeout is not a function"))?;
+
+    let global_finally = global.clone();
+    let timeout_id_finally = timeout_id.clone();
+    let on_finally = Closure::wrap(Box::new(move || {
+        let _ = clear_timeout.call1(&global_finally, &timeout_id_finally);
+    }) as Box<dyn FnMut()>);
+
+    let chained = promise.finally(&on_finally);
+    on_finally.forget();
+    Ok(chained)
+}
+
+async fn resolve_dependency_map(
+    registry: &HashMap<String, DependencyDescriptor>,
+    singleton_cache: &std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
+    request_id: &str,
+    target_keys: &[String],
+) -> Result<HashMap<String, Value>, JsValue> {
+    let mut keys: Vec<String> = target_keys.to_vec();
+    keys.sort();
+    keys.dedup();
+
+    let mut resolving: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut request_cache: HashMap<String, String> = HashMap::new();
+    let mut resolved_values: HashMap<String, Value> = HashMap::new();
+
+    for key in keys {
+        let value_json = resolve_dependency_key(
+            &key,
+            registry,
+            singleton_cache,
+            request_id,
+            &mut resolving,
+            &mut request_cache,
+        )
+        .await?;
+
+        let parsed = serde_json::from_str::<Value>(&value_json).unwrap_or(Value::String(value_json));
+        resolved_values.insert(key, parsed);
+    }
+
+    Ok(resolved_values)
+}
+
+fn resolve_dependency_key<'a>(
+    key: &'a str,
+    registry: &'a HashMap<String, DependencyDescriptor>,
+    singleton_cache: &'a std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
+    request_id: &'a str,
+    resolving: &'a mut std::collections::HashSet<String>,
+    request_cache: &'a mut HashMap<String, String>,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, JsValue>> + 'a>> {
+    Box::pin(async move {
+        if let Some(cached) = singleton_cache.borrow().get(key) {
+            return Ok(cached.clone());
+        }
+        if let Some(cached) = request_cache.get(key) {
+            return Ok(cached.clone());
+        }
+
+        if !resolving.insert(key.to_string()) {
+            return Err(JsValue::from_str(&format!("Circular dependency detected for '{key}'")));
+        }
+
+        let descriptor = registry
+            .get(key)
+            .ok_or_else(|| JsValue::from_str(&format!("Dependency '{key}' is not registered")))?;
+
+        let value_json = if !descriptor.is_factory {
+            descriptor.value_json.clone().unwrap_or_else(|| "null".to_string())
+        } else {
+            let mut dep_map = JsonMap::new();
+            for dep_key in &descriptor.depends_on {
+                let dep_json =
+                    resolve_dependency_key(dep_key, registry, singleton_cache, request_id, resolving, request_cache)
+                        .await?;
+                let dep_value = serde_json::from_str::<Value>(&dep_json).unwrap_or(Value::String(dep_json));
+                dep_map.insert(dep_key.clone(), dep_value);
+            }
+            dep_map.insert(
+                "__spikard_request_id__".to_string(),
+                Value::String(request_id.to_string()),
+            );
+            let deps_json =
+                serde_json::to_string(&Value::Object(dep_map)).map_err(|err| JsValue::from_str(&err.to_string()))?;
+
+            let factory = descriptor
+                .factory
+                .as_ref()
+                .ok_or_else(|| JsValue::from_str("Factory dependency missing function"))?;
+
+            let call_result = factory
+                .call1(&JsValue::NULL, &JsValue::from_str(&deps_json))
+                .map_err(|_| JsValue::from_str("Failed to invoke dependency factory"))?;
+
+            let maybe_promise: Result<Promise, _> = call_result.clone().dyn_into();
+            let result_val = match maybe_promise {
+                Ok(promise) => wasm_bindgen_futures::JsFuture::from(promise).await?,
+                Err(_) => call_result,
+            };
+
+            if let Some(text) = result_val.as_string() {
+                text
+            } else {
+                JSON::stringify(&result_val)
+                    .ok()
+                    .and_then(|v| v.as_string())
+                    .unwrap_or_else(|| "null".to_string())
+            }
+        };
+
+        if descriptor.singleton {
+            singleton_cache.borrow_mut().insert(key.to_string(), value_json.clone());
+        } else if descriptor.cacheable {
+            request_cache.insert(key.to_string(), value_json.clone());
+        }
+
+        resolving.remove(key);
+        Ok(value_json)
+    })
+}
+
+async fn run_dependency_cleanup(request_id: &str) -> Result<(), JsValue> {
+    let global = js_sys::global();
+    let value = Reflect::get(&global, &JsValue::from_str("__spikard_di_cleanup__")).unwrap_or(JsValue::UNDEFINED);
+    if value.is_null() || value.is_undefined() {
+        return Ok(());
+    }
+
+    let cleanup: Function = value
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("__spikard_di_cleanup__ must be a function"))?;
+    let result = cleanup.call1(&global, &JsValue::from_str(request_id))?;
+    if result.is_instance_of::<Promise>() {
+        let promise: Promise = result
+            .dyn_into()
+            .map_err(|_| JsValue::from_str("cleanup hook returned invalid Promise"))?;
+        wasm_bindgen_futures::JsFuture::from(promise).await?;
+        return Ok(());
+    }
+    Ok(())
 }
 
 fn parse_handler_value(result: JsValue) -> Result<Value, JsValue> {
@@ -749,6 +1231,14 @@ fn read_headers(value: JsValue) -> Result<HashMap<String, String>, JsValue> {
     Ok(headers)
 }
 
+fn lowercase_header_keys(headers: &HashMap<String, String>) -> HashMap<String, String> {
+    let mut lowered = HashMap::new();
+    for (key, value) in headers {
+        lowered.insert(key.to_ascii_lowercase(), value.clone());
+    }
+    lowered
+}
+
 fn enforce_rate_limit(
     handler_name: &str,
     config: &ServerConfig,
@@ -849,6 +1339,16 @@ impl ResponseSnapshot {
     }
 
     fn from_raw(mut raw: RawResponse, request_headers: &HashMap<String, String>, config: &ServerConfig) -> Self {
+        if config.enable_request_id {
+            let has_request_id = raw.headers.keys().any(|key| key.eq_ignore_ascii_case("x-request-id"));
+            if !has_request_id {
+                let request_id = header_value(request_headers, "x-request-id")
+                    .map(|value| value.to_string())
+                    .unwrap_or_else(|| Uuid::new_v4().to_string());
+                raw.headers.insert("x-request-id".to_string(), request_id);
+            }
+        }
+
         if let Some(compression) = &config.compression {
             let http_config = spikard_core::CompressionConfig {
                 gzip: compression.gzip,
@@ -858,6 +1358,12 @@ impl ResponseSnapshot {
             };
             raw.apply_compression(request_headers, &http_config);
         }
+
+        raw.headers = raw
+            .headers
+            .into_iter()
+            .map(|(key, value)| (key.to_ascii_lowercase(), value))
+            .collect();
 
         ResponseSnapshot {
             status: raw.status,
@@ -877,11 +1383,394 @@ fn header_value<'a>(headers: &'a HashMap<String, String>, name: &str) -> Option<
     })
 }
 
+fn safe_json_to_js(value: &Value) -> JsValue {
+    const MAX_SAFE_INT: i64 = 9_007_199_254_740_991;
+
+    match value {
+        Value::Null => JsValue::NULL,
+        Value::Bool(value) => JsValue::from_bool(*value),
+        Value::String(text) => JsValue::from_str(text),
+        Value::Number(number) => {
+            if let Some(i) = number.as_i64() {
+                if i.unsigned_abs() > (MAX_SAFE_INT as u64) {
+                    JsValue::from_str(&i.to_string())
+                } else {
+                    JsValue::from_f64(i as f64)
+                }
+            } else if let Some(u) = number.as_u64() {
+                if u > (MAX_SAFE_INT as u64) {
+                    JsValue::from_str(&u.to_string())
+                } else {
+                    JsValue::from_f64(u as f64)
+                }
+            } else {
+                number.as_f64().map(JsValue::from_f64).unwrap_or(JsValue::NULL)
+            }
+        }
+        Value::Array(items) => {
+            let array = Array::new();
+            for item in items {
+                array.push(&safe_json_to_js(item));
+            }
+            array.into()
+        }
+        Value::Object(map) => {
+            let obj = Object::new();
+            for (key, value) in map {
+                let _ = Reflect::set(&obj, &JsValue::from_str(key), &safe_json_to_js(value));
+            }
+            obj.into()
+        }
+    }
+}
+
+fn is_json_content_type(content_type: Option<&str>) -> bool {
+    let Some(value) = content_type else {
+        return true;
+    };
+    let media_type = value.split(';').next().unwrap_or("").trim().to_ascii_lowercase();
+    if media_type.is_empty() {
+        return true;
+    }
+    media_type == "application/json" || media_type.ends_with("+json")
+}
+
+fn parse_cookie_header(headers: &HashMap<String, String>) -> HashMap<String, String> {
+    let Some(value) = header_value(headers, "cookie") else {
+        return HashMap::new();
+    };
+    let mut cookies = HashMap::new();
+    for segment in value.split(';') {
+        let trimmed = segment.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        let Some((name, cookie_value)) = trimmed.split_once('=') else {
+            continue;
+        };
+        let name = name.trim();
+        if name.is_empty() {
+            continue;
+        }
+        cookies.insert(name.to_string(), cookie_value.trim().to_string());
+    }
+    cookies
+}
+
+fn coerce_value_against_schema(value: Value, schema: &Value) -> Value {
+    let Some(schema_obj) = schema.as_object() else {
+        return value;
+    };
+
+    if let Some(any_of) = schema_obj.get("anyOf").and_then(|v| v.as_array()) {
+        for candidate in any_of {
+            let coerced = coerce_value_against_schema(value.clone(), candidate);
+            if coerced != value {
+                return coerced;
+            }
+        }
+        return value;
+    }
+
+    if let Some(one_of) = schema_obj.get("oneOf").and_then(|v| v.as_array()) {
+        for candidate in one_of {
+            let coerced = coerce_value_against_schema(value.clone(), candidate);
+            if coerced != value {
+                return coerced;
+            }
+        }
+        return value;
+    }
+
+    let expected_type = schema_obj.get("type").and_then(|v| v.as_str());
+
+    match (expected_type, value) {
+        (Some("integer"), Value::String(text)) => text
+            .trim()
+            .parse::<i64>()
+            .map(serde_json::Number::from)
+            .map(Value::Number)
+            .unwrap_or(Value::String(text)),
+        (Some("number"), Value::String(text)) => text
+            .trim()
+            .parse::<f64>()
+            .ok()
+            .and_then(serde_json::Number::from_f64)
+            .map(Value::Number)
+            .unwrap_or(Value::String(text)),
+        (Some("boolean"), Value::String(text)) => match text.trim().to_ascii_lowercase().as_str() {
+            "true" | "1" | "yes" | "on" => Value::Bool(true),
+            "false" | "0" | "no" | "off" => Value::Bool(false),
+            _ => Value::String(text),
+        },
+        (Some("array"), Value::Array(items)) => {
+            let Some(items_schema) = schema_obj.get("items") else {
+                return Value::Array(items);
+            };
+            let coerced = items
+                .into_iter()
+                .map(|item| coerce_value_against_schema(item, items_schema))
+                .collect::<Vec<_>>();
+            Value::Array(coerced)
+        }
+        (Some("array"), Value::Object(obj)) => {
+            let Some(items_schema) = schema_obj.get("items") else {
+                return Value::Object(obj);
+            };
+
+            let mut original = JsonMap::new();
+            let mut numeric_entries = Vec::new();
+            for (key, value) in obj {
+                if let Ok(index) = key.parse::<usize>() {
+                    numeric_entries.push((index, value));
+                } else {
+                    original.insert(key, value);
+                }
+            }
+
+            if numeric_entries.is_empty() || !original.is_empty() {
+                return Value::Object(original);
+            }
+
+            numeric_entries.sort_by_key(|(idx, _)| *idx);
+            let coerced = numeric_entries
+                .into_iter()
+                .map(|(_, item)| coerce_value_against_schema(item, items_schema))
+                .collect::<Vec<_>>();
+            Value::Array(coerced)
+        }
+        (Some("object"), Value::Object(mut obj)) => {
+            let Some(properties) = schema_obj.get("properties").and_then(|v| v.as_object()) else {
+                return Value::Object(obj);
+            };
+            for (key, prop_schema) in properties {
+                if let Some(current) = obj.get(key).cloned() {
+                    obj.insert(key.clone(), coerce_value_against_schema(current, prop_schema));
+                }
+            }
+            Value::Object(obj)
+        }
+        (_, other) => other,
+    }
+}
+
 fn value_to_param_map(value: Value) -> HashMap<String, Value> {
     match value {
         Value::Object(map) => map.into_iter().collect(),
         _ => HashMap::new(),
     }
+}
+
+fn unauthorized_problem(title: &str, detail: impl Into<String>) -> ProblemDetails {
+    ProblemDetails::new(
+        "https://spikard.dev/errors/unauthorized",
+        title,
+        StatusCode::UNAUTHORIZED,
+    )
+    .with_detail(detail)
+}
+
+fn enforce_auth(
+    headers: &HashMap<String, String>,
+    raw_query: &HashMap<String, Vec<String>>,
+    config: &ServerConfig,
+) -> Option<ResponseSnapshot> {
+    let jwt = config.jwt_auth.as_ref();
+    let api_key = config.api_key_auth.as_ref();
+
+    if jwt.is_none() && api_key.is_none() {
+        return None;
+    }
+
+    let authorization = header_value(headers, "authorization");
+    let api_key_candidate = api_key.and_then(|cfg| extract_api_key(headers, raw_query, cfg));
+
+    if let Some(jwt_cfg) = jwt {
+        if let Some(auth_header) = authorization {
+            match validate_jwt_from_authorization(auth_header, jwt_cfg) {
+                Ok(()) => return None,
+                Err(problem) => return Some(ResponseSnapshot::from_problem(problem, headers, config)),
+            }
+        }
+    }
+
+    if let Some(api_cfg) = api_key {
+        if api_key_candidate.is_some() {
+            match validate_api_key(api_key_candidate, api_cfg) {
+                Ok(()) => return None,
+                Err(problem) => return Some(ResponseSnapshot::from_problem(problem, headers, config)),
+            }
+        }
+    }
+
+    if jwt.is_some() {
+        let problem = unauthorized_problem(
+            "Missing or invalid Authorization header",
+            "Expected 'Authorization: Bearer <token>'",
+        );
+        return Some(ResponseSnapshot::from_problem(problem, headers, config));
+    }
+
+    if let Some(api_cfg) = api_key {
+        let problem = unauthorized_problem(
+            "Missing API key",
+            format!(
+                "Expected '{}' header or 'api_key' query parameter with valid API key",
+                api_cfg.header_name
+            ),
+        );
+        return Some(ResponseSnapshot::from_problem(problem, headers, config));
+    }
+
+    None
+}
+
+fn extract_api_key(
+    headers: &HashMap<String, String>,
+    raw_query: &HashMap<String, Vec<String>>,
+    config: &ApiKeyConfig,
+) -> Option<String> {
+    header_value(headers, &config.header_name)
+        .map(|value| value.to_string())
+        .or_else(|| raw_query.get("api_key").and_then(|vals| vals.first().cloned()))
+}
+
+fn validate_api_key(candidate: Option<String>, config: &ApiKeyConfig) -> Result<(), ProblemDetails> {
+    let Some(value) = candidate else {
+        return Err(unauthorized_problem(
+            "Missing API key",
+            format!(
+                "Expected '{}' header or 'api_key' query parameter with valid API key",
+                config.header_name
+            ),
+        ));
+    };
+
+    if config.keys.iter().any(|key| key == &value) {
+        Ok(())
+    } else {
+        Err(unauthorized_problem(
+            "Invalid API key",
+            "The provided API key is not valid",
+        ))
+    }
+}
+
+fn validate_jwt_from_authorization(header: &str, config: &JwtConfig) -> Result<(), ProblemDetails> {
+    let trimmed = header.trim();
+    if !trimmed.to_ascii_lowercase().starts_with("bearer ") {
+        return Err(unauthorized_problem(
+            "Invalid Authorization header format",
+            "Authorization header must use Bearer scheme: 'Bearer <token>'",
+        ));
+    }
+    let token = trimmed[7..].trim();
+    if token.is_empty() {
+        return Err(unauthorized_problem(
+            "Missing or invalid Authorization header",
+            "Expected 'Authorization: Bearer <token>'",
+        ));
+    }
+    validate_jwt(token, config)
+}
+
+fn validate_jwt(token: &str, config: &JwtConfig) -> Result<(), ProblemDetails> {
+    let parts: Vec<&str> = token.split('.').collect();
+    if parts.len() != 3 {
+        return Err(unauthorized_problem(
+            "Malformed JWT token",
+            format!(
+                "Malformed JWT token: expected 3 parts separated by dots, found {}",
+                parts.len()
+            ),
+        ));
+    }
+
+    let signing_input = format!("{}.{}", parts[0], parts[1]);
+    let header_bytes = BASE64_URL_SAFE_NO_PAD
+        .decode(parts[0])
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+    let payload_bytes = BASE64_URL_SAFE_NO_PAD
+        .decode(parts[1])
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+    let signature_bytes = BASE64_URL_SAFE_NO_PAD
+        .decode(parts[2])
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+
+    let header_json: Value = serde_json::from_slice(&header_bytes)
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+    if let Some(expected_alg) = config.algorithm.as_deref() {
+        if let Some(actual) = header_json.get("alg").and_then(|v| v.as_str()) {
+            if actual != expected_alg {
+                return Err(unauthorized_problem("JWT validation failed", "Token is invalid"));
+            }
+        }
+    }
+
+    type HmacSha256 = Hmac<Sha256>;
+    let mut mac = HmacSha256::new_from_slice(config.secret.as_bytes())
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+    mac.update(signing_input.as_bytes());
+    let expected_sig = mac.finalize().into_bytes();
+    let expected_sig_bytes: &[u8] = expected_sig.as_ref();
+    if expected_sig_bytes != signature_bytes.as_slice() {
+        return Err(unauthorized_problem(
+            "JWT validation failed",
+            "Token signature is invalid",
+        ));
+    }
+
+    let claims: Value = serde_json::from_slice(&payload_bytes)
+        .map_err(|_| unauthorized_problem("JWT validation failed", "Token is invalid"))?;
+
+    let now = (JsDate::now() / 1000.0) as i64;
+    let leeway = config.leeway as i64;
+
+    if let Some(exp) = claims.get("exp").and_then(|v| v.as_i64()) {
+        if exp + leeway < now {
+            return Err(unauthorized_problem("JWT validation failed", "Token has expired"));
+        }
+    }
+
+    if let Some(nbf) = claims.get("nbf").and_then(|v| v.as_i64()) {
+        if nbf - leeway > now {
+            return Err(unauthorized_problem(
+                "JWT validation failed",
+                "JWT not valid yet, not before claim is in the future",
+            ));
+        }
+    }
+
+    if let Some(issuer) = config.issuer.as_deref() {
+        match claims.get("iss").and_then(|v| v.as_str()) {
+            Some(actual) if actual == issuer => {}
+            _ => {
+                return Err(unauthorized_problem(
+                    "JWT validation failed",
+                    format!("Token issuer is invalid, expected '{issuer}'"),
+                ));
+            }
+        }
+    }
+
+    if !config.audience.is_empty() {
+        let audiences: Vec<String> = match claims.get("aud") {
+            Some(Value::String(s)) => vec![s.clone()],
+            Some(Value::Array(arr)) => arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect(),
+            _ => Vec::new(),
+        };
+        let matches = audiences
+            .iter()
+            .any(|aud| config.audience.iter().any(|expected| expected == aud));
+        if !matches {
+            return Err(unauthorized_problem(
+                "JWT validation failed",
+                "Token audience is invalid",
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 fn js_error_structured(code: &str, details: impl ToString) -> JsValue {
@@ -917,6 +1806,9 @@ fn route_metadata_from_definition(def: &RouteDefinition) -> RouteMetadata {
         is_async: true,
         cors: None,
         body_param_name: None,
+        #[cfg(feature = "di")]
+        handler_dependencies: None,
+        jsonrpc_method: def.jsonrpc_method.clone(),
     }
 }
 

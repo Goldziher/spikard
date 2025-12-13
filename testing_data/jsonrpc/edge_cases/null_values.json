@@ -1,0 +1,164 @@
+{
+	"name": "null_values",
+	"description": "Null value handling in JSON-RPC requests, responses, and data structures",
+	"method": "null_test",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"description": "Parameters that may contain null values"
+	},
+	"result_schema": {
+		"type": "object",
+		"description": "Response that may contain null values"
+	},
+	"examples": [
+		{
+			"name": "null_params_field",
+			"description": "Request with null params field (valid in JSON-RPC 2.0)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "system.ping",
+				"params": null,
+				"id": 1
+			},
+			"result": {
+				"status": "pong"
+			}
+		},
+		{
+			"name": "missing_params_field",
+			"description": "Request without params field at all (valid in JSON-RPC 2.0)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "system.ping",
+				"id": 2
+			},
+			"result": {
+				"status": "pong"
+			}
+		},
+		{
+			"name": "null_result_response",
+			"description": "Valid response with null result value",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.getById",
+				"params": {
+					"id": "nonexistent-id"
+				},
+				"id": 3
+			},
+			"result": null
+		},
+		{
+			"name": "null_in_array",
+			"description": "Array containing null values mixed with other elements",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "array.process",
+				"params": {
+					"items": [1, null, 3, null, 5]
+				},
+				"id": 4
+			},
+			"result": {
+				"processed": [1, null, 3, null, 5],
+				"null_count": 2
+			}
+		},
+		{
+			"name": "null_in_object_field",
+			"description": "Object with null value for a field",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "John Doe",
+						"email": "john@example.com",
+						"password": "SecurePass123!",
+						"phone": null,
+						"company": null
+					}
+				},
+				"id": 5
+			},
+			"result": {
+				"id": "550e8400-e29b-41d4-a716-446655440000",
+				"name": "John Doe",
+				"email": "john@example.com",
+				"phone": null,
+				"company": null,
+				"role": "user",
+				"createdAt": "2024-01-15T14:00:00Z"
+			}
+		},
+		{
+			"name": "nested_null_values",
+			"description": "Nested object structure with null values at various levels",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "data.nested",
+				"params": {
+					"user": {
+						"name": "Alice",
+						"profile": {
+							"bio": null,
+							"avatar": null,
+							"preferences": {
+								"theme": "dark",
+								"notifications": null
+							}
+						}
+					}
+				},
+				"id": 6
+			},
+			"result": {
+				"status": "processed",
+				"nullFields": ["user.profile.bio", "user.profile.avatar", "user.profile.preferences.notifications"]
+			}
+		},
+		{
+			"name": "null_vs_empty_string",
+			"description": "Distinguishing between null and empty string",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "compare.nullVsEmpty",
+				"params": {
+					"null_value": null,
+					"empty_string": "",
+					"whitespace_string": " ",
+					"zero": 0,
+					"false_value": false
+				},
+				"id": 7
+			},
+			"result": {
+				"null_value": null,
+				"empty_string": "",
+				"whitespace_string": " ",
+				"zero": 0,
+				"false_value": false,
+				"all_different": true
+			}
+		},
+		{
+			"name": "null_id_field",
+			"description": "Request with null as the id value (valid in JSON-RPC 2.0)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "system.ping",
+				"params": {},
+				"id": null
+			},
+			"result": {
+				"status": "pong"
+			}
+		}
+	],
+	"error_cases": [],
+	"tags": ["null-values", "data-types", "edge-cases"]
+}

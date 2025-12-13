@@ -12,8 +12,8 @@
 		"@spikard/node": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/node": "^24.10.1",
-		"tsx": "^4.19.2",
+		"@types/node": "^25.0.1",
+		"tsx": "^4.21.0",
 		"typescript": "^5.9.3"
 	},
 	"engines": {

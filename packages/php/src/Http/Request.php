@@ -6,9 +6,8 @@ namespace Spikard\Http;
 
 use Spikard\DI\ResolvedDependencies;
 
-// When the native extension is loaded, alias the internal request to this class name.
-if (\class_exists(\Spikard\Internal\Request::class)) {
-    \class_alias(\Spikard\Internal\Request::class, __NAMESPACE__ . '\Request');
+// When the native extension is loaded, the Request class is provided by the extension.
+if (\class_exists(__NAMESPACE__ . '\Request', false)) {
     return;
 }
 

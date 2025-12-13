@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Sync versions across the repository to match the workspace version.
 
 Reads the version from the root Cargo.toml [workspace.package] unless an
@@ -115,17 +116,14 @@ def update_cargo_versions(path: Path, version: str) -> bool:
     original = path.read_text()
     content = original
 
-    # workspace.package (root Cargo.toml only)
     pattern_workspace = re.compile(
         r'(\[workspace\.package\][^\[]*?^version\s*=\s*")([^"]+)(")', re.MULTILINE | re.DOTALL
     )
     content, _ = pattern_workspace.subn(rf"\g<1>{version}\g<3>", content)
 
-    # package version
     pattern_package = re.compile(r'(\[package\][^\[]*?^version\s*=\s*")([^"]+)(")', re.MULTILINE | re.DOTALL)
     content, _ = pattern_package.subn(rf"\g<1>{version}\g<3>", content, count=1)
 
-    # workspace dependencies that pin internal crates (including _spikard alias)
     pattern_internal_dep = re.compile(
         r'^((?:_)?spikard(?:-[a-z]+)?\s*=\s*\{[^}]*version\s*=\s*")([^"]+)(")', re.MULTILINE
     )

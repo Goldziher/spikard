@@ -23,8 +23,8 @@ async def test_options_cors_preflight_request() -> None:
     async with TestClient(create_app_http_methods_options_cors_preflight_request()) as client:
         headers = {
             "Access-Control-Request-Headers": "Content-Type",
-            "Access-Control-Request-Method": "POST",
             "Origin": "https://example.com",
+            "Access-Control-Request-Method": "POST",
         }
         response = await client.options("/items/", headers=headers)
 
@@ -32,9 +32,9 @@ async def test_options_cors_preflight_request() -> None:
         response_data = response.json()
         response_headers = response.headers
         assert response_headers.get("access-control-allow-origin") == "https://example.com"
-        assert response_headers.get("access-control-allow-methods") == "GET, POST, PUT, DELETE, OPTIONS"
         assert response_headers.get("access-control-max-age") == "86400"
         assert response_headers.get("access-control-allow-headers") == "Content-Type"
+        assert response_headers.get("access-control-allow-methods") == "GET, POST, PUT, DELETE, OPTIONS"
 
 
 async def test_delete_remove_resource() -> None:
@@ -101,7 +101,6 @@ async def test_put_validation_error() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -113,8 +112,8 @@ async def test_head_get_metadata_without_body() -> None:
 
         assert response.status_code == 200
         response_headers = response.headers
-        assert response_headers.get("content-length") == "85"
         assert response_headers.get("content-type") == "application/json"
+        assert response_headers.get("content-length") == "85"
 
 
 async def test_delete_with_response_body() -> None:
@@ -145,7 +144,6 @@ async def test_put_missing_required_field() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 

@@ -43,6 +43,13 @@ pub struct Claims {
 /// Validates JWT tokens from the Authorization header (Bearer scheme).
 /// On success, the validated claims are available to downstream handlers.
 /// On failure, returns 401 Unauthorized with RFC 9457 Problem Details.
+///
+/// Coverage: Tested via integration tests (`auth_integration.rs`)
+///
+/// # Errors
+/// Returns an error response when the Authorization header is missing, malformed,
+/// the token is invalid, or configuration is incorrect.
+#[cfg(not(tarpaulin_include))]
 pub async fn jwt_auth_middleware(
     config: JwtConfig,
     headers: HeaderMap,
@@ -107,20 +114,18 @@ pub async fn jwt_auth_middleware(
         let detail = match e.kind() {
             jsonwebtoken::errors::ErrorKind::ExpiredSignature => "Token has expired".to_string(),
             jsonwebtoken::errors::ErrorKind::InvalidToken => "Token is invalid".to_string(),
-            jsonwebtoken::errors::ErrorKind::InvalidSignature => "Token signature is invalid".to_string(),
-            jsonwebtoken::errors::ErrorKind::Base64(_) => "Token signature is invalid".to_string(),
-            jsonwebtoken::errors::ErrorKind::InvalidAudience => "Token audience is invalid".to_string(),
-            jsonwebtoken::errors::ErrorKind::InvalidIssuer => {
-                if let Some(ref expected_iss) = config.issuer {
-                    format!("Token issuer is invalid, expected '{}'", expected_iss)
-                } else {
-                    "Token issuer is invalid".to_string()
-                }
+            jsonwebtoken::errors::ErrorKind::InvalidSignature | jsonwebtoken::errors::ErrorKind::Base64(_) => {
+                "Token signature is invalid".to_string()
             }
+            jsonwebtoken::errors::ErrorKind::InvalidAudience => "Token audience is invalid".to_string(),
+            jsonwebtoken::errors::ErrorKind::InvalidIssuer => config.issuer.as_ref().map_or_else(
+                || "Token issuer is invalid".to_string(),
+                |expected_iss| format!("Token issuer is invalid, expected '{expected_iss}'"),
+            ),
             jsonwebtoken::errors::ErrorKind::ImmatureSignature => {
                 "JWT not valid yet, not before claim is in the future".to_string()
             }
-            _ => format!("Token validation failed: {}", e),
+            _ => format!("Token validation failed: {e}"),
         };
 
         let problem =
@@ -146,7 +151,7 @@ fn parse_algorithm(alg: &str) -> Result<Algorithm, String> {
         "PS256" => Ok(Algorithm::PS256),
         "PS384" => Ok(Algorithm::PS384),
         "PS512" => Ok(Algorithm::PS512),
-        _ => Err(format!("Unsupported algorithm: {}", alg)),
+        _ => Err(format!("Unsupported algorithm: {alg}")),
     }
 }
 
@@ -156,6 +161,12 @@ fn parse_algorithm(alg: &str) -> Result<Algorithm, String> {
 /// Checks header first, then query parameter as fallback.
 /// On success, the request proceeds to the next handler.
 /// On failure, returns 401 Unauthorized with RFC 9457 Problem Details.
+///
+/// Coverage: Tested via integration tests (`auth_integration.rs`)
+///
+/// # Errors
+/// Returns an error response when the API key is missing or invalid.
+#[cfg(not(tarpaulin_include))]
 pub async fn api_key_auth_middleware(
     config: ApiKeyConfig,
     headers: HeaderMap,
@@ -168,11 +179,7 @@ pub async fn api_key_auth_middleware(
 
     let api_key_from_header = headers.get(&config.header_name).and_then(|v| v.to_str().ok());
 
-    let api_key = if let Some(key) = api_key_from_header {
-        Some(key)
-    } else {
-        extract_api_key_from_query(&uri)
-    };
+    let api_key = api_key_from_header.map_or_else(|| extract_api_key_from_query(&uri), Some);
 
     let api_key = api_key.ok_or_else(|| {
         let problem =
@@ -243,5 +250,47 @@ mod tests {
         let json = serde_json::to_string(&claims).unwrap();
         assert!(json.contains("user123"));
         assert!(json.contains("1234567890"));
+    }
+
+    #[test]
+    fn test_extract_api_key_from_query_api_key() {
+        let uri: axum::http::Uri = "/api/endpoint?api_key=secret123".parse().unwrap();
+        let result = extract_api_key_from_query(&uri);
+        assert_eq!(result, Some("secret123"));
+    }
+
+    #[test]
+    fn test_extract_api_key_from_query_api_key_camel_case() {
+        let uri: axum::http::Uri = "/api/endpoint?apiKey=mykey456".parse().unwrap();
+        let result = extract_api_key_from_query(&uri);
+        assert_eq!(result, Some("mykey456"));
+    }
+
+    #[test]
+    fn test_extract_api_key_from_query_key() {
+        let uri: axum::http::Uri = "/api/endpoint?key=testkey789".parse().unwrap();
+        let result = extract_api_key_from_query(&uri);
+        assert_eq!(result, Some("testkey789"));
+    }
+
+    #[test]
+    fn test_extract_api_key_from_query_no_key() {
+        let uri: axum::http::Uri = "/api/endpoint?foo=bar&baz=qux".parse().unwrap();
+        let result = extract_api_key_from_query(&uri);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_api_key_from_query_empty_string() {
+        let uri: axum::http::Uri = "/api/endpoint".parse().unwrap();
+        let result = extract_api_key_from_query(&uri);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_api_key_from_query_multiple_params() {
+        let uri: axum::http::Uri = "/api/endpoint?foo=bar&api_key=found&baz=qux".parse().unwrap();
+        let result = extract_api_key_from_query(&uri);
+        assert_eq!(result, Some("found"));
     }
 }

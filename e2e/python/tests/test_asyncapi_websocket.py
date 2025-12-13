@@ -32,7 +32,6 @@ async def test_websocket_chat() -> None:
     """WebSocket channel test for /chat."""
     async with TestClient(create_app_websocket_chat()) as client:
         async with client.websocket("/chat") as ws:
-            # chatMessage messages
             messages = load_fixture_examples(WEBSOCKET_FIXTURE_ROOT, "chatMessage")
             for payload in messages:
                 sent_message = json.loads(payload)
@@ -47,7 +46,6 @@ async def test_websocket_chat() -> None:
                 }
                 assert response == expected
 
-            # userLeft messages
             messages = load_fixture_examples(WEBSOCKET_FIXTURE_ROOT, "userLeft")
             for payload in messages:
                 sent_message = json.loads(payload)
@@ -58,7 +56,6 @@ async def test_websocket_chat() -> None:
                 for key, value in sent_message.items():
                     assert response.get(key) == value
 
-            # userJoined messages
             messages = load_fixture_examples(WEBSOCKET_FIXTURE_ROOT, "userJoined")
             for payload in messages:
                 sent_message = json.loads(payload)

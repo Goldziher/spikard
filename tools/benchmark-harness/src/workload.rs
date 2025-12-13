@@ -89,10 +89,10 @@ impl PayloadSize {
     /// Get approximate byte range for this size category
     pub fn byte_range(&self) -> (usize, usize) {
         match self {
-            Self::Small => (100, 1024),                   // 100B - 1KB
-            Self::Medium => (1024, 10 * 1024),            // 1KB - 10KB
-            Self::Large => (10 * 1024, 100 * 1024),       // 10KB - 100KB
-            Self::VeryLarge => (100 * 1024, 1024 * 1024), // 100KB - 1MB
+            Self::Small => (100, 1024),
+            Self::Medium => (1024, 10 * 1024),
+            Self::Large => (10 * 1024, 100 * 1024),
+            Self::VeryLarge => (100 * 1024, 1024 * 1024),
         }
     }
 }
@@ -118,7 +118,6 @@ impl JsonBodyWorkload {
 
     fn generate_nested(&self, depth: usize, fields: usize) -> Value {
         if depth == 0 {
-            // Flat object
             let mut obj = serde_json::Map::new();
             for i in 0..fields {
                 obj.insert(format!("field_{}", i), Value::String(format!("value_{}", i)));
@@ -137,7 +136,6 @@ impl JsonBodyWorkload {
 
             Value::Object(obj)
         } else {
-            // Nested object
             let mut obj = serde_json::Map::new();
             for i in 0..fields.min(5) {
                 obj.insert(format!("field_{}", i), Value::String(format!("value_{}", i)));
@@ -149,7 +147,6 @@ impl JsonBodyWorkload {
 
     /// Estimate the size in bytes
     pub fn estimate_size(&self) -> usize {
-        // Rough estimate: each field is ~20-30 bytes, nested adds overhead
         let base_size = self.field_count * 25;
         let nesting_overhead = self.depth * 50;
         let array_overhead = if self.include_arrays { 100 } else { 0 };
@@ -174,7 +171,7 @@ impl MultipartWorkload {
     /// Generate test file data
     pub fn generate_file_data(&self) -> Vec<u8> {
         let (min, max) = self.file_size.byte_range();
-        let size = (min + max) / 2; // Use middle of range
+        let size = (min + max) / 2;
         vec![b'A'; size]
     }
 
@@ -218,7 +215,7 @@ impl UrlEncodedWorkload {
 
     /// Estimate the encoded size
     pub fn estimate_size(&self) -> usize {
-        self.field_count * 30 // ~30 bytes per field on average
+        self.field_count * 30
     }
 }
 
@@ -295,7 +292,7 @@ impl QueryParamWorkload {
 
     /// Estimate URL length
     pub fn estimate_url_length(&self) -> usize {
-        50 + (self.param_count * 20) // Base URL + ~20 bytes per param
+        50 + (self.param_count * 20)
     }
 }
 
@@ -483,7 +480,6 @@ impl WorkloadPresets {
     /// Query parameter workloads: few to many parameters
     pub fn query_params() -> Vec<Workload> {
         vec![
-            // Few parameters (1-3)
             Workload::QueryParam(QueryParamWorkload {
                 param_count: 1,
                 param_types: vec![ParamType::String],
@@ -496,7 +492,6 @@ impl WorkloadPresets {
                 include_optional: true,
                 include_arrays: false,
             }),
-            // Medium parameters (5-10)
             Workload::QueryParam(QueryParamWorkload {
                 param_count: 5,
                 param_types: vec![ParamType::String, ParamType::Integer],
@@ -514,7 +509,6 @@ impl WorkloadPresets {
                 include_optional: true,
                 include_arrays: true,
             }),
-            // Many parameters (15-30)
             Workload::QueryParam(QueryParamWorkload {
                 param_count: 15,
                 param_types: vec![
@@ -580,9 +574,9 @@ mod tests {
     #[test]
     fn test_workload_presets() {
         let json_workloads = WorkloadPresets::json_bodies();
-        assert_eq!(json_workloads.len(), 4); // Small, medium, large, very large
+        assert_eq!(json_workloads.len(), 4);
 
         let query_workloads = WorkloadPresets::query_params();
-        assert_eq!(query_workloads.len(), 6); // 1, 3, 5, 10, 15, 30 params
+        assert_eq!(query_workloads.len(), 6);
     }
 }

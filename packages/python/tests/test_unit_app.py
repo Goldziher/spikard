@@ -64,7 +64,7 @@ def test_register_route_respects_parameter_override(monkeypatch: pytest.MonkeyPa
         return {"status": "ok"}
 
     route = app.get_routes()[-1]
-    assert route.request_schema is None  # GET should not infer a body schema
+    assert route.request_schema is None
     assert route.response_schema == {"resp": "ok"}
     assert route.parameter_schema == {"properties": {"forced": {"source": "header"}}}
     assert route.is_async is False

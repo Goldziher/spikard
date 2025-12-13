@@ -3,8 +3,8 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
+import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppLifecycleHooksHookExecutionOrder,
 	createAppLifecycleHooksMultipleHooksAllPhases,
@@ -32,10 +32,10 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Response with security headers");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");
-		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
-		expect(responseHeaders["x-frame-options"]).toBe("DENY");
 		expect(responseHeaders["x-xss-protection"]).toBe("1; mode=block");
+		expect(responseHeaders["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");
+		expect(responseHeaders["x-frame-options"]).toBe("DENY");
+		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
 	});
 
 	test("preHandler - Authentication Failed Short Circuit", async () => {
@@ -132,14 +132,14 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Action completed successfully");
 		expect(responseData).toHaveProperty("request_id");
-		expect(responseData.request_id).toBe(".*");
+		expect(responseData.request_id).toMatch(/.*/);
 		expect(responseData).toHaveProperty("user_id");
 		expect(responseData.user_id).toBe("user-123");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
-		expect(responseHeaders["x-request-id"]).toBe(".*");
 		expect(responseHeaders["x-frame-options"]).toBe("DENY");
-		expect(responseHeaders["x-response-time"]).toBe(".*ms");
+		expect(responseHeaders["x-request-id"]).toMatch(/.*/);
+		expect(responseHeaders["x-response-time"]).toMatch(/.*ms/);
+		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
 	});
 
 	test("Hook Execution Order", async () => {
@@ -170,7 +170,7 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Response with timing info");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-response-time"]).toBe(".*ms");
+		expect(responseHeaders["x-response-time"]).toMatch(/.*ms/);
 	});
 
 	test("preHandler - Authorization Forbidden Short Circuit", async () => {
@@ -200,7 +200,7 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("request_logged");
 		expect(responseData.request_logged).toBe(true);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-request-id"]).toBe(".*");
+		expect(responseHeaders["x-request-id"]).toMatch(/.*/);
 	});
 
 	test("preValidation - Rate Limiting", async () => {

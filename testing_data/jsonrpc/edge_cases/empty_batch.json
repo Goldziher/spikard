@@ -1,0 +1,45 @@
+{
+	"name": "empty_batch",
+	"description": "Empty batch request handling - invalid according to JSON-RPC 2.0 spec",
+	"method": "batch",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "array",
+		"description": "Array of JSON-RPC requests (may be empty)"
+	},
+	"result_schema": {
+		"type": "object",
+		"description": "JSON-RPC error response for invalid batch"
+	},
+	"examples": [],
+	"error_cases": [
+		{
+			"name": "empty_array_batch",
+			"description": "Empty array as batch request - invalid per JSON-RPC 2.0",
+			"request": [],
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request",
+				"data": {
+					"reason": "Batch request must contain at least one request object"
+				}
+			}
+		},
+		{
+			"name": "single_element_not_array",
+			"description": "Verify distinction: single request (object) vs array with one request",
+			"request": {
+				"jsonrpc": "2.0",
+				"method": "user.list",
+				"params": {},
+				"id": 1
+			},
+			"result": {
+				"users": []
+			}
+		}
+	],
+	"tags": ["batch", "protocol", "edge-cases", "error-handling"]
+}

@@ -298,10 +298,16 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
         request_call
     ));
 
-    // Check for DI-specific test patterns
     if let Some(di_config) = DependencyConfig::from_fixture(fixture).expect("invalid DI config") {
-        // Handle singleton caching tests - requires multiple requests
         if requires_multi_request_test(&di_config) {
+            let expected_keys = fixture
+                .expected_response
+                .body
+                .as_ref()
+                .and_then(|v| v.as_object())
+                .map(|obj| obj.keys().cloned().collect::<std::collections::HashSet<_>>())
+                .unwrap_or_default();
+
             example.push_str("\n");
             example.push_str("    # Second request to verify singleton caching\n");
             example.push_str(&format!("    response2 = {}\n", request_call));
@@ -310,13 +316,29 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
             example.push_str("    data1 = response.json\n");
             example.push_str("    data2 = response2.json\n");
             example.push_str("\n");
-            example.push_str("    # Singleton should have same ID but incremented count\n");
-            example.push_str("    expect(data1).to have_key('id')\n");
-            example.push_str("    expect(data2).to have_key('id')\n");
-            example.push_str("    expect(data1['id']).to eq(data2['id'])  # Same singleton instance\n");
-            example.push_str("    if data1.key?('count') && data2.key?('count')\n");
-            example.push_str("      expect(data2['count']).to be > data1['count']  # Count incremented\n");
-            example.push_str("    end\n");
+            if expected_keys.contains("counter_id") && expected_keys.contains("count") {
+                example.push_str("    # Singleton counter should have stable counter_id and incremented count\n");
+                example.push_str("    expect(data1).to have_key('counter_id')\n");
+                example.push_str("    expect(data2).to have_key('counter_id')\n");
+                example.push_str("    expect(data1['counter_id']).to eq(data2['counter_id'])\n");
+                example.push_str("    expect(data2['count']).to be > data1['count']\n");
+            } else if expected_keys.contains("pool_id") && expected_keys.contains("context_id") {
+                example.push_str("    # pool_id is singleton; context_id is per-request\n");
+                example.push_str("    expect(data1).to have_key('pool_id')\n");
+                example.push_str("    expect(data2).to have_key('pool_id')\n");
+                example.push_str("    expect(data1['pool_id']).to eq(data2['pool_id'])\n");
+                example.push_str("    expect(data1).to have_key('context_id')\n");
+                example.push_str("    expect(data2).to have_key('context_id')\n");
+                example.push_str("    expect(data1['context_id']).not_to eq(data2['context_id'])\n");
+            } else {
+                example.push_str("    # Singleton should have same ID but incremented count\n");
+                example.push_str("    expect(data1).to have_key('id')\n");
+                example.push_str("    expect(data2).to have_key('id')\n");
+                example.push_str("    expect(data1['id']).to eq(data2['id'])  # Same singleton instance\n");
+                example.push_str("    if data1.key?('count') && data2.key?('count')\n");
+                example.push_str("      expect(data2['count']).to be > data1['count']  # Count incremented\n");
+                example.push_str("    end\n");
+            }
             example.push_str("    client.close\n");
             example.push_str(
                 "  end
@@ -326,7 +348,6 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
             return example;
         }
 
-        // Handle cleanup tests - poll cleanup state endpoint
         if has_cleanup(&di_config) {
             example.push_str("    expect(response.status_code).to eq(200)\n");
             example.push_str("\n");

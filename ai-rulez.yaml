@@ -1,7 +1,6 @@
 $schema: https://github.com/Goldziher/ai-rulez/schema/ai-rules-v2.schema.json
 
 # ==============================================================================
-# METADATA
 # ==============================================================================
 
 metadata:
@@ -16,21 +15,14 @@ metadata:
     taskfile automation, backed by extensive fixture-driven tests to ensure consistent
     request handling across platforms.
 
-# ==============================================================================
-# PRESETS
-# ==============================================================================
 
 presets:
   - claude
   - codex
   - gemini
 
-# ==============================================================================
-# SECTIONS: Repository Structure & Language Conventions
-# ==============================================================================
 
 sections:
-  # RUST CONVENTIONS
   - name: Rust Latest Edition Standards
     priority: critical
     id: rust-latest-edition
@@ -43,7 +35,6 @@ sections:
       - FFI: isolated modules, pointer validation, SAFETY comments, error conversion at boundaries
       - Code quality: RAII, explicit lifetimes, builder pattern, no panics
 
-  # PYTHON CONVENTIONS
   - name: Python Modern & Performance Standards
     priority: critical
     id: python-modern-performance
@@ -57,7 +48,6 @@ sections:
       - Function-based tests ONLY (*_test.py); pytest fixtures, 95% coverage
       - Never: class tests, pydantic, sync I/O in async, Any type, Optional[T]
 
-  # TYPESCRIPT/JAVASCRIPT CONVENTIONS
   - name: TypeScript Strictest Standards
     priority: critical
     id: typescript-strictest
@@ -72,7 +62,6 @@ sections:
       - React: function components, custom hooks, proper prop typing
       - Never: any/object types, non-null assertions !, || for defaults
 
-  # RUBY CONVENTIONS
   - name: Ruby 3.2+ with RBS & Steep
     priority: high
     id: ruby-3-2-rbs
@@ -85,7 +74,6 @@ sections:
       - Rubocop with auto-fix: line length ≤120
       - Code quality: methods <10 lines, guard clauses, modules for mixins
 
-  # PHP CONVENTIONS
   - name: PHP 8.2+ with PHPStan & PSR Standards
     priority: high
     id: php-8-2-phpstan
@@ -100,7 +88,6 @@ sections:
       - Code quality: methods <15 lines, typed properties, return types required
       - Never: mixed types, eval(), suppress errors with @, global state
 
-  # WASM CONVENTIONS
   - name: WebAssembly & wasm-bindgen Standards
     priority: high
     id: wasm-bindgen-standards
@@ -113,7 +100,6 @@ sections:
       - Type safety: proper type boundaries at JS/WASM interface, no Any types
       - Never: spawn threads (limited WASM threading), blocking allocations
 
-  # SPIKARD-SPECIFIC WORKSPACE LAYOUT
   - name: Spikard Workspace Architecture
     priority: high
     id: spikard-workspace-layout
@@ -126,7 +112,6 @@ sections:
 
       Python & Testing: Package scaffold `packages/python/spikard`; integration tests in `packages/python/tests/` with conftest.py. Shared fixtures `testing_data/` with schema.json per scenario. Fixture-driven: `testing_data/{headers,cookies,json_bodies,validation_errors,edge_cases}/`. Coverage: 95% Rust core, 80%+ Python/JS/Ruby/PHP.
 
-  # SPIKARD-SPECIFIC HTTP ROUTING & MIDDLEWARE
   - name: HTTP Routing & Middleware Design
     priority: high
     id: spikard-http-routing
@@ -139,7 +124,6 @@ sections:
 
       Lifecycle Hooks (docs/adr/0005-lifecycle-hooks.md): onRequest, preValidation, preHandler, onResponse, onError. Zero-cost: Option<Arc<dyn Fn>>. Async via pyo3_async_runtimes (Python) and ThreadsafeFunction (TypeScript).
 
-  # SPIKARD-SPECIFIC ERROR HANDLING
   - name: Cross-Language Error Handling
     priority: critical
     id: spikard-error-handling
@@ -152,7 +136,6 @@ sections:
 
       Validation: HTTP handlers validate against testing_data/{headers,cookies,json_bodies}. Reject with errors matching testing_data/validation_errors/schema.json. Assert in packages/python/tests/test_all_fixtures.py. Keep schema.json in sync with handler code.
 
-  # TESTING PHILOSOPHY
   - name: Fixture-First Testing Strategy
     priority: critical
     id: spikard-testing-strategy
@@ -167,7 +150,6 @@ sections:
 
       Running: `cargo test -p spikard`, `uv run pytest packages/python/tests/test_all_fixtures.py`, `pnpm test`, `bundle exec rspec`, `composer test`. All: `task test`.
 
-  # TASKFILE AUTOMATION
   - name: Task Automation & Build Orchestration
     priority: high
     id: spikard-taskfile-automation
@@ -180,7 +162,6 @@ sections:
 
       Dependency Files (committed): Cargo.lock, uv.lock, pnpm-lock.yaml, Gemfile.lock, composer.lock. All mandatory in version control.
 
-  # DOCUMENTATION & ADRs
   - name: Documentation & Architecture Decision Records
     priority: high
     id: spikard-documentation
@@ -193,12 +174,8 @@ sections:
 
       Examples (examples/): Runnable illustrations for Python, Node, Ruby, PHP, WASM. Load fixtures from testing_data/; show error handling.
 
-# ==============================================================================
-# AGENTS: Model Assignments & Responsibilities
-# ==============================================================================
 
 agents:
-  # Architect/Design Agents (Sonnet)
   - name: rust-polyglot-architect
     description: |
       Designs Rust-first APIs and keeps Python, Node, Ruby, PHP, and WASM bindings aligned
@@ -220,7 +197,6 @@ agents:
       isolation. Maintains Taskfile.yaml task definitions for multi-language orchestration.
     model: sonnet
 
-  # Language-Specific Engineers (Haiku)
   - name: python-engineer
     description: |
       Implements and maintains Python bindings via PyO3, ensuring Pythonic patterns with
@@ -256,7 +232,6 @@ agents:
       isolation and error handling conventions as Python/Node/Ruby bindings.
     model: haiku
 
-  # QA & Infrastructure Engineers (Haiku)
   - name: integration-qa
     description: |
       Expands fixture-driven coverage and hunts for regressions across Rust, Python, Node,
@@ -285,7 +260,6 @@ agents:
       manifest coordination across all language bindings.
     model: haiku
 
-  # Documentation & Developer Experience (Haiku)
   - name: docs-strategist
     description: |
       Maintains developer guides, upgrade notes, and architecture references (docs/adr/)
@@ -299,9 +273,6 @@ agents:
       Keeps generated CLAUDE.md in sync via ai-rulez generate and documents agent responsibilities.
     model: haiku
 
-# ==============================================================================
-# OUTPUTS: Generated File Locations
-# ==============================================================================
 
 outputs:
   - path: CLAUDE.md
@@ -309,9 +280,6 @@ outputs:
     path: .claude/agents/
     type: agent
 
-# ==============================================================================
-# MCP SERVERS
-# ==============================================================================
 
 mcp_servers:
   - name: ai-rulez
@@ -322,12 +290,8 @@ mcp_servers:
       - ai-rulez@latest
       - mcp
 
-# ==============================================================================
-# RULES: Spikard-Specific Conventions & Patterns
-# ==============================================================================
 
 rules:
-  # Cross-Language Error Handling
   - name: Cross-Language Error Boundaries
     priority: critical
     content: |
@@ -339,7 +303,6 @@ rules:
       (`crates/spikard-php/src`), return ext-php-rs Result and throw exceptions. Never let
       an unwrap cross the FFI boundary.
 
-  # PyO3 Async Performance
   - name: PyO3 Async Performance
     priority: critical
     content: |
@@ -350,7 +313,6 @@ rules:
       GIL is released before awaiting Rust futures: `Python::attach(|py| {...}).await`
       not `Python::with_gil(|py| {...}).await`.
 
-  # PyO3 Extension Module Management
   - name: PyO3 Extension Module Management
     priority: critical
     content: |
@@ -360,7 +322,6 @@ rules:
       modules build correctly. Binaries (CLI, tests) build without extension-module to link
       libpython; extensions (maturin builds) enable it for manylinux compliance.
 
-  # ext-php-rs Binding Configuration
   - name: ext-php-rs Binding Configuration
     priority: critical
     content: |
@@ -371,7 +332,6 @@ rules:
       translate to thrown PHP exceptions. Maintain PSR-4 autoloading in `packages/php/src/`
       and ensure PHPStan level max static analysis passes without @phpstan-ignore directives.
 
-  # PHP PSR Compliance & Standards Enforcement
   - name: PHP PSR Compliance & Standards Enforcement
     priority: critical
     content: |
@@ -383,7 +343,6 @@ rules:
       are committed (composer.lock) and managed strictly. Never use eval(), suppress errors with
       @, or maintain global state. Methods must be <15 lines; use composition over inheritance.
 
-  # Handler Trait Abstraction
   - name: Handler Trait Abstraction
     priority: critical
     content: |
@@ -394,7 +353,6 @@ rules:
       clean separation: spikard-http has zero FFI dependencies, all Python/Node/Ruby/PHP/WASM code
       lives in binding crates.
 
-  # Fixture-Backed Testing
   - name: Fixture-Backed Testing
     priority: critical
     content: |
@@ -404,7 +362,6 @@ rules:
       `packages/python/tests/test_all_fixtures.py`. Run `task test` locally before merging
       so the Rust, Python, and JavaScript checks that CI executes stay green.
 
-  # Fixture-Aligned Error Handling
   - name: Fixture-Aligned Error Handling
     priority: critical
     content: |
@@ -415,7 +372,6 @@ rules:
       and PHP (`crates/spikard-php`) adapters raise translated host-language errors while
       preserving the same JSON body that `packages/python/tests/test_all_fixtures.py` asserts on.
 
-  # Fixture-First Testing
   - name: Fixture-First Testing
     priority: critical
     content: |
@@ -425,7 +381,6 @@ rules:
       running `task test` plus the language targets (`task test:rust`, `task test:python`) so
       local runs match CI.
 
-  # Fixture-Driven Testing
   - name: Fixture-Driven Testing
     priority: critical
     content: |
@@ -434,7 +389,6 @@ rules:
       new fixture collections belong in testing_data/ with a runnable illustration under
       examples/ so automated coverage, demos, and docs stay synchronized.
 
-  # Tower-HTTP Middleware Stack
   - name: Tower-HTTP Middleware Stack
     priority: high
     content: |
@@ -445,7 +399,6 @@ rules:
       See `docs/adr/0002-runtime-and-middleware.md` for the complete middleware stack order
       and configuration options.
 
-  # Lifecycle Hooks Implementation
   - name: Lifecycle Hooks Implementation
     priority: high
     content: |
@@ -456,7 +409,6 @@ rules:
       short-circuit with early responses. Implement HookResult enum with Continue/ShortCircuit
       variants.
 
-  # Binding-Level Configuration Only
   - name: Binding-Level Configuration Only
     priority: high
     content: |
@@ -465,7 +417,6 @@ rules:
       APIs that construct ServerConfig and pass it to the Rust server. Python uses PyO3, TypeScript
       uses napi-rs, Ruby uses magnus, PHP uses ext-php-rs.
 
-  # HTTP Input Validation
   - name: HTTP Input Validation
     priority: high
     content: |
@@ -475,7 +426,6 @@ rules:
       errors returned to the caller, and cover each guard with an integration test tied to
       the corresponding fixture set.
 
-  # HTTP Error Contracts
   - name: HTTP Error Contracts
     priority: high
     content: |
@@ -485,7 +435,6 @@ rules:
       or the focused integration suites, and keep every testing_data/**/schema.json aligned
       with the new variants.
 
-  # Header & Cookie Security
   - name: Header & Cookie Security
     priority: high
     content: |
@@ -495,7 +444,6 @@ rules:
       for new header names or cookie attributes, and keep Secure/HttpOnly/SameSite defaults
       intact.
 
-  # Request Surface Security
   - name: Request Surface Security
     priority: high
     content: |
@@ -505,7 +453,6 @@ rules:
       CORS expectations via `testing_data/cors/*.json`. Strip secrets from logs and ensure
       new handlers never bypass the existing validator layer before reaching business logic.
 
-  # Zero-Copy JSON to Python Conversion
   - name: Zero-Copy JSON to Python Conversion
     priority: high
     content: |
@@ -515,7 +462,6 @@ rules:
       eliminates 30-40% conversion overhead. Match on Value variants and recursively build
       native Python objects.
 
-  # Workspace Organization
   - name: Workspace Organization
     priority: high
     content: |
@@ -524,7 +470,6 @@ rules:
       changes across Cargo manifests and refresh the relevant docs/adr/* notes whenever the
       layering or routing changes.
 
-  # Layered Code Organization
   - name: Layered Code Organization
     priority: high
     content: |
@@ -535,7 +480,6 @@ rules:
       `crates/spikard-wasm/package.json`, `composer.json`) and register new workflows in
       `Taskfile.yaml` so `task build`/`task lint` continue to orchestrate the monorepo.
 
-  # Workspace Separation
   - name: Workspace Separation
     priority: medium
     content: |
@@ -544,7 +488,6 @@ rules:
       introducing new modules, register them in the relevant `Cargo.toml`, mirror usage in
       `examples/`, and avoid duplicating business rules across bindings.
 
-  # Optimized Serialization Path
   - name: Optimized Serialization Path
     priority: medium
     content: |
@@ -553,7 +496,6 @@ rules:
       Share zero-copy buffers where possible, and use `task build:rust` (release mode) when
       benchmarking or publishing bindings to avoid debug-performance regressions.
 
-  # Async-Friendly Performance
   - name: Async-Friendly Performance
     priority: medium
     content: |
@@ -563,7 +505,6 @@ rules:
       `pyo3::Python::allow_threads` when calling back into Python). Reuse fixture loaders such
       as `packages/python/tests/fixture_app.py` instead of re-parsing schema files per request.
 
-  # Cross-Target Performance
   - name: Cross-Target Performance
     priority: medium
     content: |
@@ -573,7 +514,6 @@ rules:
       testing_data/edge_cases and verify optimized builds via task build:rust, task build:py,
       task build:node, task build:ruby, and task build:php.
 
-  # Consistent Tooling
   - name: Consistent Tooling
     priority: medium
     content: |
@@ -582,7 +522,6 @@ rules:
       Python tooling through `uv` (`uv.lock`). Invoke them via `task lint` so local changes
       match the CI configuration.
 
-  # Lint & Formatting Discipline
   - name: Lint & Formatting Discipline
     priority: medium
     content: |
@@ -591,7 +530,6 @@ rules:
       sync Python dependencies with uv so pyproject.toml and uv.lock stay consistent—avoid
       introducing divergent toolchains or unchecked formatting drift.
 
-  # Thin Binding Pattern
   - name: Thin Binding Pattern Architecture
     priority: high
     content: |

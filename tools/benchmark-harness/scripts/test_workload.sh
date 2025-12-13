@@ -5,7 +5,6 @@ set -e
 
 WORKSPACE_ROOT="/Users/naamanhirschfeld/workspace/spikard"
 SPIKARD_RUST_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/spikard-rust/target/release/spikard-rust-bench"
-AXUM_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/axum-baseline/target/release/spikard-rust-bench"
 PYTHON_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/spikard-python-workloads/server.py"
 
 # JSON payload for testing

@@ -76,7 +76,6 @@ async def test_19_file_mime_spoofing_png_as_jpeg() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -91,7 +90,6 @@ async def test_20_file_mime_spoofing_jpeg_as_png() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -118,7 +116,6 @@ async def test_content_type_validation_invalid_type() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
         response_data = response.json()
         assert "errors" in response_data
@@ -322,7 +319,6 @@ async def test_22_file_empty_buffer() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -424,7 +420,6 @@ async def test_required_file_upload_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 

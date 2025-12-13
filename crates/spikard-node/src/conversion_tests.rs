@@ -21,10 +21,6 @@ mod conversion_tests {
     use std::collections::HashMap;
     use std::sync::Arc;
 
-    // ========================================================================
-    // CONVERSION TESTS: HandlerInput::from(&RequestData)
-    // ========================================================================
-
     /// Test basic HandlerInput conversion from RequestData
     #[test]
     fn test_handler_input_basic_conversion() {
@@ -144,7 +140,6 @@ mod conversion_tests {
 
         let input = HandlerInput::from(&request);
 
-        // Verify nested structure is preserved
         assert_eq!(input.body["user"]["name"], "Bob");
         assert_eq!(input.body["user"]["email"], "bob@example.com");
         assert_eq!(input.body["user"]["roles"].as_array().unwrap().len(), 2);
@@ -185,10 +180,6 @@ mod conversion_tests {
         assert_eq!(input.query_params["sort"], "created_at");
         assert_eq!(input.query_params["filter"]["status"], "active");
     }
-
-    // ========================================================================
-    // CONVERSION TESTS: HandlerOutput::into_response()
-    // ========================================================================
 
     /// Test basic HandlerOutput response building
     #[test]
@@ -283,10 +274,6 @@ mod conversion_tests {
         }
     }
 
-    // ========================================================================
-    // CONVERSION TESTS: Header Marshalling
-    // ========================================================================
-
     /// Test header case preservation
     #[test]
     fn test_header_case_preservation() {
@@ -345,10 +332,6 @@ mod conversion_tests {
         assert_eq!(header_val, "value with spaces and-dashes_underscores");
     }
 
-    // ========================================================================
-    // CONVERSION TESTS: Cookie Marshalling
-    // ========================================================================
-
     /// Test cookie with special characters
     #[test]
     fn test_cookie_special_characters() {
@@ -375,10 +358,6 @@ mod conversion_tests {
         assert_eq!(input.cookies.get("session_id").unwrap(), "abc123!@#$%^&*()");
         assert_eq!(input.cookies.get("prefs").unwrap(), "dark=true;lang=en");
     }
-
-    // ========================================================================
-    // CONVERSION TESTS: Error Response Structures
-    // ========================================================================
 
     /// Test error response structure compliance
     #[test]
@@ -420,10 +399,6 @@ mod conversion_tests {
         }
     }
 
-    // ========================================================================
-    // EDGE CASES: Empty and Null Values
-    // ========================================================================
-
     /// Test HandlerInput with empty collections
     #[test]
     fn test_handler_input_empty_collections() {
@@ -462,10 +437,6 @@ mod conversion_tests {
         let response = output.into_response().expect("response should build");
         assert_eq!(response.status().as_u16(), 200);
     }
-
-    // ========================================================================
-    // EDGE CASES: Large Data Structures
-    // ========================================================================
 
     /// Test HandlerInput with large arrays
     #[test]

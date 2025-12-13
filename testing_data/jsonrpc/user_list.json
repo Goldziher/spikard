@@ -1,0 +1,167 @@
+{
+	"name": "user_list",
+	"description": "List users with pagination and filtering",
+	"method": "user.list",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"properties": {
+			"options": {
+				"type": "object",
+				"properties": {
+					"page": {
+						"type": "integer",
+						"minimum": 1,
+						"default": 1
+					},
+					"perPage": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 100,
+						"default": 20
+					},
+					"role": {
+						"type": "string",
+						"enum": ["admin", "user", "guest"]
+					}
+				}
+			}
+		}
+	},
+	"result_schema": {
+		"type": "object",
+		"properties": {
+			"users": {
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"name": {
+							"type": "string"
+						},
+						"email": {
+							"type": "string"
+						},
+						"role": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"pagination": {
+				"type": "object",
+				"properties": {
+					"page": {
+						"type": "integer"
+					},
+					"perPage": {
+						"type": "integer"
+					},
+					"total": {
+						"type": "integer"
+					},
+					"totalPages": {
+						"type": "integer"
+					}
+				}
+			}
+		}
+	},
+	"examples": [
+		{
+			"params": {
+				"options": {
+					"page": 1,
+					"perPage": 10
+				}
+			},
+			"result": {
+				"users": [
+					{
+						"id": "550e8400-e29b-41d4-a716-446655440000",
+						"name": "Alice Johnson",
+						"email": "alice@example.com",
+						"role": "admin"
+					},
+					{
+						"id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+						"name": "Bob Smith",
+						"email": "bob@example.com",
+						"role": "user"
+					}
+				],
+				"pagination": {
+					"page": 1,
+					"perPage": 10,
+					"total": 2,
+					"totalPages": 1
+				}
+			}
+		},
+		{
+			"params": {
+				"options": {
+					"page": 1,
+					"perPage": 5,
+					"role": "admin"
+				}
+			},
+			"result": {
+				"users": [
+					{
+						"id": "550e8400-e29b-41d4-a716-446655440000",
+						"name": "Alice Johnson",
+						"email": "alice@example.com",
+						"role": "admin"
+					}
+				],
+				"pagination": {
+					"page": 1,
+					"perPage": 5,
+					"total": 1,
+					"totalPages": 1
+				}
+			}
+		}
+	],
+	"error_cases": [
+		{
+			"name": "invalid_page",
+			"params": {
+				"options": {
+					"page": 0
+				}
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "page",
+					"reason": "Page must be at least 1"
+				}
+			}
+		},
+		{
+			"name": "perPage_too_large",
+			"params": {
+				"options": {
+					"perPage": 200
+				}
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "perPage",
+					"reason": "perPage must be at most 100"
+				}
+			}
+		}
+	]
+}

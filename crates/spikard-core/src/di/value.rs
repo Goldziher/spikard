@@ -116,17 +116,14 @@ impl<T: Clone + Send + Sync + 'static> Dependency for ValueDependency<T> {
     }
 
     fn depends_on(&self) -> Vec<String> {
-        // Value dependencies have no dependencies
         vec![]
     }
 
     fn cacheable(&self) -> bool {
-        // Values are inherently cacheable (they never change)
         true
     }
 
     fn singleton(&self) -> bool {
-        // Values can be singletons (they never change)
         true
     }
 }
@@ -225,7 +222,6 @@ mod tests {
         let request = Request::builder().body(()).unwrap();
         let request_data = make_request_data();
 
-        // Resolve concurrently from multiple tasks
         let handles: Vec<_> = (0..10)
             .map(|_| {
                 let dep = Arc::clone(&dep);

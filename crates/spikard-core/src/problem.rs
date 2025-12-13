@@ -112,6 +112,16 @@ impl ProblemDetails {
         self
     }
 
+    /// Add all extensions from a JSON object
+    pub fn with_extensions(mut self, extensions: Value) -> Self {
+        if let Some(obj) = extensions.as_object() {
+            for (key, value) in obj {
+                self.extensions.insert(key.clone(), value.clone());
+            }
+        }
+        self
+    }
+
     /// Create a validation error Problem Details from ValidationError
     ///
     /// This converts the FastAPI-style validation errors to RFC 9457 format:

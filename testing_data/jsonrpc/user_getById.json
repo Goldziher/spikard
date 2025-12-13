@@ -1,0 +1,96 @@
+{
+	"name": "user_getById",
+	"description": "Get user details by unique identifier",
+	"method": "user.getById",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"properties": {
+			"userId": {
+				"type": "string",
+				"format": "uuid",
+				"description": "Unique identifier for the user"
+			}
+		},
+		"required": ["userId"]
+	},
+	"result_schema": {
+		"type": "object",
+		"properties": {
+			"id": {
+				"type": "string",
+				"format": "uuid"
+			},
+			"name": {
+				"type": "string"
+			},
+			"email": {
+				"type": "string",
+				"format": "email"
+			},
+			"createdAt": {
+				"type": "string",
+				"format": "date-time"
+			},
+			"role": {
+				"type": "string",
+				"enum": ["admin", "user", "guest"]
+			}
+		},
+		"required": ["id", "name", "email", "createdAt", "role"]
+	},
+	"examples": [
+		{
+			"params": {
+				"userId": "550e8400-e29b-41d4-a716-446655440000"
+			},
+			"result": {
+				"id": "550e8400-e29b-41d4-a716-446655440000",
+				"name": "Alice Johnson",
+				"email": "alice@example.com",
+				"createdAt": "2024-01-15T10:30:00Z",
+				"role": "admin"
+			}
+		},
+		{
+			"params": {
+				"userId": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+			},
+			"result": {
+				"id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+				"name": "Bob Smith",
+				"email": "bob@example.com",
+				"createdAt": "2024-01-15T11:00:00Z",
+				"role": "user"
+			}
+		}
+	],
+	"error_cases": [
+		{
+			"name": "user_not_found",
+			"params": {
+				"userId": "00000000-0000-0000-0000-000000000000"
+			},
+			"error": {
+				"code": 404,
+				"message": "User not found"
+			}
+		},
+		{
+			"name": "invalid_uuid",
+			"params": {
+				"userId": "not-a-uuid"
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "userId",
+					"reason": "Invalid UUID format"
+				}
+			}
+		}
+	]
+}

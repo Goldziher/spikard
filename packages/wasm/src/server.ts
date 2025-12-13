@@ -63,8 +63,15 @@ export function runServer(app: SpikardApp, config: ServerConfig | ServerOptions 
 		});
 		return;
 	}
-	if (typeof globalThis.Deno !== "undefined" && typeof globalThis.Deno.serve === "function") {
-		globalThis.Deno.serve(
+	const globalAny = globalThis as unknown as {
+		Deno?: { serve?: (options: { hostname?: string; port?: number }, handler: FetchHandler) => void };
+		addEventListener?: (
+			type: "fetch",
+			listener: (event: Event & { request: Request; respondWith(response: Promise<Response>): void }) => void,
+		) => void;
+	};
+	if (globalAny.Deno && typeof globalAny.Deno.serve === "function") {
+		globalAny.Deno.serve(
 			{
 				hostname: options.host ?? "0.0.0.0",
 				port: options.port ?? 0,
@@ -73,8 +80,8 @@ export function runServer(app: SpikardApp, config: ServerConfig | ServerOptions 
 		);
 		return;
 	}
-	if ("addEventListener" in globalThis && typeof globalThis.addEventListener === "function") {
-		globalThis.addEventListener(
+	if (typeof globalAny.addEventListener === "function") {
+		globalAny.addEventListener(
 			"fetch",
 			(event: Event & { request: Request; respondWith(response: Promise<Response>): void }) => {
 				event.respondWith(handler(event.request));
@@ -86,7 +93,8 @@ export function runServer(app: SpikardApp, config: ServerConfig | ServerOptions 
 }
 
 function isBun(): boolean {
-	return typeof globalThis.Bun === "object" && typeof globalThis.Bun?.serve === "function";
+	const globalAny = globalThis as unknown as { Bun?: { serve?: unknown } };
+	return typeof globalAny.Bun === "object" && typeof globalAny.Bun?.serve === "function";
 }
 
 function headersToRecord(headers: Headers): Record<string, string> {
@@ -127,12 +135,13 @@ async function buildRequestOptions(request: Request) {
 				fields[key] = value;
 			} else {
 				const buffer = new Uint8Array(await value.arrayBuffer());
-				files.push({
+				const file: MultipartFile = {
 					name: key,
-					filename: value.name || undefined,
 					content: bufferToBase64(buffer),
-					contentType: value.type || undefined,
-				});
+					...(value.name ? { filename: value.name } : {}),
+					...(value.type ? { contentType: value.type } : {}),
+				};
+				files.push(file);
 			}
 		}
 		return { multipart: { fields, files } };
@@ -166,8 +175,11 @@ function responseToFetch(response: TestResponse): Response {
 }
 
 function bufferToBase64(bytes: Uint8Array): string {
-	if (typeof globalThis.Buffer !== "undefined") {
-		return globalThis.Buffer.from(bytes).toString("base64");
+	const globalAny = globalThis as unknown as {
+		Buffer?: { from: (bytes: Uint8Array) => { toString: (encoding: "base64") => string } };
+	};
+	if (globalAny.Buffer) {
+		return globalAny.Buffer.from(bytes).toString("base64");
 	}
 	let binary = "";
 	for (const byte of bytes) {
@@ -182,10 +194,14 @@ function bufferToBase64(bytes: Uint8Array): string {
 function resolveServerOptions(config: ServerConfig | ServerOptions): ServerOptions {
 	if ("host" in config || "port" in config) {
 		const options = config as ServerOptions;
-		return {
-			host: options.host,
-			port: options.port,
-		};
+		const resolved: ServerOptions = {};
+		if (options.host !== undefined) {
+			resolved.host = options.host;
+		}
+		if (options.port !== undefined) {
+			resolved.port = options.port;
+		}
+		return resolved;
 	}
 	return {};
 }

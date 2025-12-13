@@ -7,6 +7,7 @@
 //! middleware behaviour across languages.
 
 pub mod upload;
+pub mod validation;
 
 use std::collections::HashMap;
 use std::future::Future;
@@ -375,6 +376,7 @@ impl RouteBuilder {
                 cors: self.cors,
                 body_param_name: None,
                 handler_dependencies: None,
+                jsonrpc_method: None,
             }
         }
         #[cfg(not(feature = "di"))]
@@ -390,6 +392,7 @@ impl RouteBuilder {
                 is_async: self.is_async,
                 cors: self.cors,
                 body_param_name: None,
+                jsonrpc_method: None,
             }
         }
     }
@@ -522,11 +525,9 @@ impl RequestContext {
 
     /// Deserialize the JSON request body into the provided type.
     pub fn json<T: DeserializeOwned>(&self) -> std::result::Result<T, AppError> {
-        // Try to deserialize from raw_body first (direct from request bytes)
         if let Some(raw_bytes) = &self.data.raw_body {
             serde_json::from_slice(raw_bytes).map_err(|err| AppError::Decode(err.to_string()))
         } else {
-            // Fallback to deserializing from body (pre-parsed JSON Value)
             serde_json::from_value(self.data.body.clone()).map_err(|err| AppError::Decode(err.to_string()))
         }
     }
@@ -647,10 +648,8 @@ mod tests {
         message: String,
     }
 
-    // ===== Edge case tests for sanitize_identifier =====
     #[test]
     fn sanitize_identifier_handles_complex_path() {
-        // Comprehensive test covering path parsing, special chars, and consecutive underscores
         assert_eq!(
             sanitize_identifier("/api/v2/{resource}-{id}/action"),
             "api_v2_resource_id_action"
@@ -659,7 +658,6 @@ mod tests {
 
     #[tokio::test]
     async fn registers_route_with_schema() {
-        // Comprehensive test covering route registration, metadata, and schema handling
         let mut app = App::new();
         app.route(
             post("/hello").request_body::<Greeting>().response_body::<Greeting>(),
@@ -684,7 +682,6 @@ mod tests {
 
     #[test]
     fn request_context_extracts_and_accesses_all_fields() {
-        // Comprehensive test covering headers, cookies, path params, method, and path access
         let mut headers = std::collections::HashMap::new();
         headers.insert("content-type".to_string(), "application/json".to_string());
         headers.insert("authorization".to_string(), "Bearer token123".to_string());
@@ -716,20 +713,16 @@ mod tests {
 
         let ctx = RequestContext::new(request, data);
 
-        // Headers (case-insensitive)
         assert_eq!(ctx.header("content-type"), Some("application/json"));
         assert_eq!(ctx.header("Content-Type"), Some("application/json"));
         assert_eq!(ctx.header("authorization"), Some("Bearer token123"));
 
-        // Cookies
         assert_eq!(ctx.cookie("session_id"), Some("abc123"));
         assert_eq!(ctx.cookie("nonexistent"), None);
 
-        // Path params
         assert_eq!(ctx.path_param("id"), Some("123"));
         assert_eq!(ctx.path_param("missing"), None);
 
-        // Method and path
         assert_eq!(ctx.method(), "POST");
         assert_eq!(ctx.path_str(), "/users/{id}");
     }

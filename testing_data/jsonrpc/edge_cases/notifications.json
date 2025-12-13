@@ -1,0 +1,162 @@
+{
+	"name": "notifications",
+	"description": "JSON-RPC 2.0 notification handling (requests without id field)",
+	"method": "notification",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"description": "Notification parameters (no id field in request)"
+	},
+	"result_schema": {
+		"type": "object",
+		"description": "No response expected for notifications"
+	},
+	"examples": [
+		{
+			"name": "single_notification",
+			"description": "Single notification without id field (no response expected)",
+			"request": {
+				"jsonrpc": "2.0",
+				"method": "audit.log",
+				"params": {
+					"event": "user_login",
+					"userId": "550e8400-e29b-41d4-a716-446655440000",
+					"timestamp": "2024-01-15T14:30:00Z"
+				}
+			},
+			"expected_response": null
+		},
+		{
+			"name": "multiple_notifications_sequence",
+			"description": "Multiple notifications sent in sequence",
+			"request": [
+				{
+					"jsonrpc": "2.0",
+					"method": "audit.log",
+					"params": {
+						"event": "user_login",
+						"userId": "550e8400-e29b-41d4-a716-446655440000"
+					}
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "audit.log",
+					"params": {
+						"event": "user_accessed_dashboard",
+						"userId": "550e8400-e29b-41d4-a716-446655440000"
+					}
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "audit.log",
+					"params": {
+						"event": "user_logout",
+						"userId": "550e8400-e29b-41d4-a716-446655440000"
+					}
+				}
+			],
+			"expected_response": null
+		},
+		{
+			"name": "notification_batch",
+			"description": "Batch containing only notifications",
+			"request": [
+				{
+					"jsonrpc": "2.0",
+					"method": "system.heartbeat",
+					"params": {
+						"status": "ok"
+					}
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "metrics.update",
+					"params": {
+						"cpu": 45.2,
+						"memory": 62.8
+					}
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "audit.log",
+					"params": {
+						"event": "metrics_recorded"
+					}
+				}
+			],
+			"expected_response": null
+		},
+		{
+			"name": "mixed_notifications_and_requests",
+			"description": "Batch with both notifications (no id) and regular requests (with id)",
+			"request": [
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "audit.log",
+					"params": {
+						"event": "user_list_called"
+					}
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "user.list",
+					"params": {},
+					"id": 2
+				},
+				{
+					"jsonrpc": "2.0",
+					"method": "metrics.record",
+					"params": {
+						"operation": "list_users",
+						"duration_ms": 42
+					}
+				}
+			],
+			"expected_response": [
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 1
+				},
+				{
+					"jsonrpc": "2.0",
+					"result": {
+						"users": []
+					},
+					"id": 2
+				}
+			]
+		},
+		{
+			"name": "notification_with_null_params",
+			"description": "Notification with null params field",
+			"request": {
+				"jsonrpc": "2.0",
+				"method": "system.ping",
+				"params": null
+			},
+			"expected_response": null
+		},
+		{
+			"name": "notification_without_params",
+			"description": "Notification without params field entirely",
+			"request": {
+				"jsonrpc": "2.0",
+				"method": "system.ping"
+			},
+			"expected_response": null
+		}
+	],
+	"error_cases": [],
+	"tags": ["notifications", "protocol", "edge-cases"]
+}

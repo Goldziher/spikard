@@ -31,9 +31,6 @@ pub fn install_handle(handle: BackgroundHandle) {
     if let Ok(mut guard) = BACKGROUND_HANDLE.lock() {
         *guard = Some(handle.clone());
     }
-
-    // Note: The task runner loop is integrated into the server's main runtime
-    // via process_pending_tasks() which is called periodically
 }
 
 /// Clear the background handle at server shutdown
@@ -53,7 +50,6 @@ pub fn clear_handle() {
 /// * `true` if a task was processed
 /// * `false` if the queue was empty
 pub fn process_pending_tasks() -> bool {
-    // Check if background tasks are enabled
     let is_enabled = BACKGROUND_HANDLE
         .lock()
         .ok()
@@ -64,11 +60,9 @@ pub fn process_pending_tasks() -> bool {
         return false;
     }
 
-    // Process one task from the queue
     let task = TASK_QUEUE.with(|queue| queue.borrow_mut().pop_front());
 
     if let Some(task) = task {
-        // Execute the task on this thread (no Send required!)
         if let Err(e) = execute_queued_task(task) {
             eprintln!("Background task failed: {}", e);
         }
@@ -105,14 +99,12 @@ pub fn process_pending_tasks() -> bool {
 #[php_function]
 #[php(name = "spikard_background_run")]
 pub fn spikard_background_run(callable: &Zval, args: &Zval) -> PhpResult<()> {
-    // Validate callable
     if !callable.is_callable() {
         return Err(PhpException::default(
             "First argument to spikard_background_run must be callable".to_string(),
         ));
     }
 
-    // Clone the Zvals for queueing (shallow clone is cheap)
     let callable_owned = callable.shallow_clone();
     let args_owned = if args.is_null() {
         None
@@ -120,7 +112,6 @@ pub fn spikard_background_run(callable: &Zval, args: &Zval) -> PhpResult<()> {
         Some(args.shallow_clone())
     };
 
-    // Queue the task
     let task = QueuedTask {
         callable: callable_owned,
         args: args_owned,
@@ -133,22 +124,18 @@ pub fn spikard_background_run(callable: &Zval, args: &Zval) -> PhpResult<()> {
 
 /// Execute a queued task on the main thread
 fn execute_queued_task(task: QueuedTask) -> Result<(), String> {
-    // Build arguments for try_call
     let args: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> = if let Some(args_zval) = &task.args {
-        // Extract args array if provided
         if let Some(arr) = args_zval.array() {
             arr.values()
                 .map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn)
                 .collect()
         } else {
-            // Single argument, not an array
             vec![args_zval as &dyn ext_php_rs::convert::IntoZvalDyn]
         }
     } else {
         vec![]
     };
 
-    // Create callable and invoke
     let callable = ext_php_rs::types::ZendCallable::new(&task.callable)
         .map_err(|e| format!("Failed to create callable: {:?}", e))?;
 
@@ -165,7 +152,6 @@ mod tests {
 
     #[test]
     fn test_background_task_queue() {
-        // Test that tasks can be queued and cleared
         TASK_QUEUE.with(|queue| {
             let mut q = queue.borrow_mut();
             q.clear();

@@ -3,8 +3,8 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
+import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppCookies24CookieSamesiteStrict,
 	createAppCookies25CookieSamesiteLax,
@@ -334,7 +334,7 @@ describe("cookies", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Cookie: "fatebook_tracker=tracker456; session_id=session123; googall_tracker=ga789",
+			Cookie: "fatebook_tracker=tracker456; googall_tracker=ga789; session_id=session123",
 		};
 		const response = await client.get("/items/", headers);
 

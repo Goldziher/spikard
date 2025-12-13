@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
 require 'spikard'
 require 'rspec'
@@ -31,9 +31,9 @@ RSpec.describe Spikard::TestClient do
 
   let(:handlers) do
     {
-      'root' => ->(request) { { message: 'Hello, world!' } },
+      'root' => ->(_request) { { message: 'Hello, world!' } },
       'echo' => ->(request) { request['body'] },
-      'json' => ->(request) { { data: [1, 2, 3], nested: { key: 'value' } } }
+      'json' => ->(_request) { { data: [1, 2, 3], nested: { key: 'value' } } }
     }
   end
 

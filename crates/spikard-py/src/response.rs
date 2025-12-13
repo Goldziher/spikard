@@ -307,14 +307,12 @@ impl StreamingResponse {
             loop {
                 let stream_clone = Python::attach(|py| stream_object.clone_ref(py));
 
-                // Call __next__ to get the next item
                 let next_result_py = Python::attach(|py| -> PyResult<Py<PyAny>> {
                     let bound = stream_clone.bind(py);
                     match bound.call_method0("__next__") {
                         Ok(value) => Ok(value.unbind()),
                         Err(err) => {
                             if err.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
-                                // Use a sentinel value to indicate end of stream
                                 Ok(Python::None(py))
                             } else {
                                 Err(err)
@@ -325,13 +323,11 @@ impl StreamingResponse {
 
                 match next_result_py {
                     Ok(value_py) => {
-                        // Check if this is the sentinel None value indicating end of stream
                         let is_none = Python::attach(|py| value_py.bind(py).is_none());
                         if is_none {
                             break;
                         }
 
-                        // Check if the value is a coroutine
                         let is_coro = Python::attach(|py| -> PyResult<bool> {
                             let asyncio = py.import("asyncio")?;
                             asyncio
@@ -340,7 +336,6 @@ impl StreamingResponse {
                         }).unwrap_or(false);
 
                         let final_value = if is_coro {
-                            // Await the coroutine
                             let future_result = Python::attach(|py| {
                                 pyo3_async_runtimes::tokio::into_future(value_py.bind(py).clone())
                             });

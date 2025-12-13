@@ -4,17 +4,17 @@
 //! and comparing against external frameworks.
 
 pub mod analysis;
-pub mod compare; // Compare mode orchestrator (multi-framework)
-pub mod comparison; // Comparison utilities (post-processing)
+pub mod compare;
+pub mod comparison;
 pub mod error;
 pub mod fixture;
 pub mod framework;
 pub mod generators;
 pub mod load_generator;
 pub mod monitor;
-pub mod profile; // Profile mode runner
+pub mod profile;
 pub mod runner;
-pub mod schema; // New structured schema system
+pub mod schema;
 pub mod server;
 pub mod streaming;
 pub mod types;

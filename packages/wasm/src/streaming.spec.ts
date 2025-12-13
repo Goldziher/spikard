@@ -122,8 +122,8 @@ describe("StreamingResponse", () => {
 
 		it("should collect Uint8Array chunks", async () => {
 			async function* generator() {
-				yield new Uint8Array([72, 101, 108, 108, 111]); // "Hello"
-				yield new Uint8Array([87, 111, 114, 108, 100]); // "World"
+				yield new Uint8Array([72, 101, 108, 108, 111]);
+				yield new Uint8Array([87, 111, 114, 108, 100]);
 			}
 
 			const response = new StreamingResponse(generator());
@@ -163,9 +163,7 @@ describe("StreamingResponse", () => {
 		});
 
 		it("should handle empty stream", async () => {
-			async function* generator() {
-				// no yields
-			}
+			async function* generator() {}
 
 			const response = new StreamingResponse(generator());
 			const collected = await response.collect();
@@ -383,7 +381,7 @@ describe("StreamingResponse", () => {
 				yield " ";
 				yield { status: "ok" };
 				yield " ";
-				yield new Uint8Array([101, 110, 100]); // "end"
+				yield new Uint8Array([101, 110, 100]);
 			}
 
 			const response = new StreamingResponse(generator());
@@ -406,7 +404,6 @@ describe("StreamingResponse", () => {
 
 			try {
 				await response.collect();
-				// May or may not throw depending on implementation
 			} catch (e) {
 				expect(e).toBeInstanceOf(Error);
 			}

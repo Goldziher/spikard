@@ -20,7 +20,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="${SCRIPT_DIR}"
 PORT="${PORT:-8000}"
 BASE_URL="http://localhost:${PORT}"
-TIMEOUT=30
 STARTUP_WAIT=3
 
 # Counters
@@ -142,7 +141,7 @@ log_section "Server Startup"
 # Kill any existing process on the port
 if lsof -Pi ":${PORT}" -sTCP:LISTEN -t >/dev/null 2>&1; then
 	log_warn "Port ${PORT} already in use, attempting to free it..."
-	kill -9 $(lsof -Pi ":${PORT}" -sTCP:LISTEN -t) || true
+	kill -9 "$(lsof -Pi ":${PORT}" -sTCP:LISTEN -t)" || true
 	sleep 1
 fi
 
@@ -165,7 +164,7 @@ log_info "Server started successfully (PID: ${SERVER_PID})"
 ((TESTS_PASSED++))
 
 # Set trap to kill server on exit
-trap "kill ${SERVER_PID} 2>/dev/null || true" EXIT
+trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
 
 ###############################################################################
 # Functional Tests

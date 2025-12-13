@@ -282,7 +282,6 @@ async fn main() -> Result<()> {
             fixture,
             fixtures_dir,
         } => {
-            // Resolve framework - either use provided or auto-detect
             let framework_name = match framework {
                 Some(fw) => fw,
                 None => {
@@ -293,12 +292,9 @@ async fn main() -> Result<()> {
                 }
             };
 
-            // Load fixture(s) based on inputs
             let fixture_obj = if let Some(path) = fixture {
-                // Single fixture specified
                 Some(Fixture::from_file(path)?)
             } else if let Some(cat) = &category {
-                // Load a representative fixture from the category
                 let mut manager = FixtureManager::new();
                 manager.load_from_testing_data(&fixtures_dir)?;
                 let fixtures = manager.by_category(cat);
@@ -306,7 +302,6 @@ async fn main() -> Result<()> {
                     eprintln!("No fixtures found for category: {}", cat);
                     std::process::exit(1);
                 }
-                // Use first fixture as representative (oha will use it for the test)
                 Some(fixtures[0].clone())
             } else {
                 None
@@ -386,7 +381,6 @@ async fn main() -> Result<()> {
             variant,
             output,
         } => {
-            // Resolve framework - either use provided or auto-detect
             let framework_name = match framework {
                 Some(fw) => fw,
                 None => {
@@ -460,7 +454,6 @@ async fn main() -> Result<()> {
             variant,
             output,
         } => {
-            // Resolve framework - either use provided or auto-detect
             let framework_name = match framework {
                 Some(fw) => fw,
                 None => {
@@ -486,7 +479,6 @@ async fn main() -> Result<()> {
             let runner = ProfileRunner::new(config)?;
             let result = runner.run().await?;
 
-            // Print summary
             println!("\n{}", "=".repeat(70));
             println!(
                 "Profile Results: {} - {}",
@@ -520,7 +512,6 @@ async fn main() -> Result<()> {
 
             println!("\n{}", "=".repeat(70));
 
-            // Write JSON output
             if let Some(output_path) = output {
                 let json = serde_json::to_string_pretty(&result)?;
                 std::fs::write(&output_path, json)?;
@@ -540,7 +531,6 @@ async fn main() -> Result<()> {
             concurrency,
             warmup,
         } => {
-            // Validation
             if frameworks.len() < 2 {
                 eprintln!("❌ Error: Compare mode requires at least 2 frameworks");
                 eprintln!("   Provided: {} framework(s)", frameworks.len());
@@ -556,10 +546,8 @@ async fn main() -> Result<()> {
                 std::process::exit(1);
             }
 
-            // Create output directory if needed
             std::fs::create_dir_all(&output)?;
 
-            // Build configuration
             let config = CompareConfig {
                 frameworks,
                 workload_suite: suite.clone(),
@@ -571,7 +559,6 @@ async fn main() -> Result<()> {
                 concurrency,
             };
 
-            // Execute comparison
             println!("🚀 Starting framework comparison");
             println!("   Frameworks: {}", config.frameworks.join(", "));
             println!("   Suite: {}", config.workload_suite);
@@ -582,12 +569,10 @@ async fn main() -> Result<()> {
             let runner = CompareRunner::new(config.clone())?;
             let (result, profile_results) = runner.run().await?;
 
-            // Save JSON report
             let json_path = output.join("compare_results.json");
             let json_content = serde_json::to_string_pretty(&result)?;
             std::fs::write(&json_path, json_content)?;
 
-            // Generate and save markdown report
             let md_path =
                 CompareRunner::save_markdown_report(&result, &profile_results, &output, significance, &suite)?;
 

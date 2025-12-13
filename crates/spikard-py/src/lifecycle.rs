@@ -55,13 +55,11 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
             })
             .map_err(|e| error::python_error(&name, e))?;
 
-            let future = Python::attach(|py| pyo3_async_runtimes::tokio::into_future(result.bind(py).clone()))
-                .map_err(|e| error::python_error(&name, e))?;
-
-            let hook_result = future.await.map_err(|e| error::python_error(&name, e))?;
-
-            let processed = Python::attach(|py| execute_python_hook_request(py, hook_result, &name))
-                .map_err(|e| error::python_error(&name, e))?;
+            let processed = Python::attach(|py| -> PyResult<_> {
+                let resolved = resolve_hook_result(py, result.clone_ref(py), &name)?;
+                execute_python_hook_request(py, resolved, &name)
+            })
+            .map_err(|e| error::python_error(&name, e))?;
 
             Ok(processed)
         })
@@ -85,16 +83,33 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
             })
             .map_err(|e| error::python_error(&name, e))?;
 
-            let future = Python::attach(|py| pyo3_async_runtimes::tokio::into_future(result.bind(py).clone()))
-                .map_err(|e| error::python_error(&name, e))?;
-
-            let hook_result = future.await.map_err(|e| error::python_error(&name, e))?;
-
-            let processed = Python::attach(|py| execute_python_hook_response(py, hook_result, &name))
-                .map_err(|e| error::python_error(&name, e))?;
+            let processed = Python::attach(|py| -> PyResult<_> {
+                let resolved = resolve_hook_result(py, result.clone_ref(py), &name)?;
+                execute_python_hook_response(py, resolved, &name)
+            })
+            .map_err(|e| error::python_error(&name, e))?;
 
             Ok(processed)
         })
+    }
+}
+
+/// Resolve a hook return value, awaiting it if necessary.
+fn resolve_hook_result(py: Python<'_>, result: Py<PyAny>, name: &str) -> PyResult<Py<PyAny>> {
+    let bound_result = result.bind(py);
+    let inspect = py.import("inspect")?;
+    let is_awaitable: bool = inspect
+        .call_method1("isawaitable", (bound_result.clone(),))?
+        .extract()?;
+
+    if is_awaitable {
+        let asyncio = py.import("asyncio")?;
+        let awaited = asyncio.call_method1("run", (bound_result.clone(),)).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Hook {} await failed: {}", name, e))
+        })?;
+        Ok(awaited.unbind())
+    } else {
+        Ok(bound_result.clone().unbind())
     }
 }
 
@@ -105,12 +120,7 @@ fn execute_python_hook_request(
     name: &str,
 ) -> PyResult<HookResult<Request<Body>, Response<Body>>> {
     let bound_result = result.clone_ref(py).into_bound(py);
-    if bound_result.hasattr("__await__")? {
-        let asyncio = py.import("asyncio")?;
-        let completed_result = asyncio.call_method1("run", (result.clone_ref(py),))?;
-        return handle_python_hook_result(py, completed_result, name, true);
-    }
-    handle_python_hook_result(py, bound_result, name, false)
+    handle_python_hook_result(py, bound_result, name)
 }
 
 /// Execute a Python hook with a response, handling both sync and async results
@@ -120,11 +130,6 @@ fn execute_python_hook_response(
     name: &str,
 ) -> PyResult<HookResult<Response<Body>, Response<Body>>> {
     let bound_result = result.clone_ref(py).into_bound(py);
-    if bound_result.hasattr("__await__")? {
-        let asyncio = py.import("asyncio")?;
-        let completed_result = asyncio.call_method1("run", (result.clone_ref(py),))?;
-        return validate_and_convert_response(py, completed_result, name);
-    }
     validate_and_convert_response(py, bound_result, name)
 }
 
@@ -133,7 +138,6 @@ fn handle_python_hook_result(
     py: Python<'_>,
     result: Bound<'_, PyAny>,
     name: &str,
-    _is_async: bool,
 ) -> PyResult<HookResult<Request<Body>, Response<Body>>> {
     if result.is_instance_of::<PyResponse>() {
         let py_response: PyResponse = result.extract()?;

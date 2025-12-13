@@ -15,7 +15,6 @@ const app = new Spikard();
 get("/stream/numbers")(async function streamNumbers(req: Request) {
 	const count = (req.query?.count as string | undefined) ? parseInt(req.query.count as string, 10) : 100;
 
-	// Create a generator that yields numbers
 	async function* generateNumbers() {
 		for (let i = 1; i <= count; i++) {
 			yield {
@@ -23,7 +22,6 @@ get("/stream/numbers")(async function streamNumbers(req: Request) {
 				squared: i * i,
 				timestamp: new Date().toISOString(),
 			};
-			// Simulate processing delay
 			await new Promise((resolve) => setTimeout(resolve, 10));
 		}
 	}
@@ -31,7 +29,7 @@ get("/stream/numbers")(async function streamNumbers(req: Request) {
 	return new StreamingResponse(generateNumbers(), {
 		statusCode: 200,
 		headers: {
-			"Content-Type": "application/x-ndjson", // Newline-delimited JSON
+			"Content-Type": "application/x-ndjson",
 		},
 	});
 });
@@ -61,11 +59,9 @@ get("/stream/events")(async function streamEvents(req: Request) {
 				}),
 			};
 
-			// Send event every second
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 		}
 
-		// Send completion event
 		yield {
 			event: "complete",
 			data: JSON.stringify({
@@ -91,15 +87,12 @@ get("/stream/events")(async function streamEvents(req: Request) {
  */
 get("/stream/csv")(async function streamCsv(_req: Request) {
 	async function* generateCsv() {
-		// Yield CSV header
 		yield "id,name,email,created_at\n";
 
-		// Generate 1000 rows
 		for (let i = 1; i <= 1000; i++) {
 			const row = `${i},user_${i},user_${i}@example.com,${new Date().toISOString()}\n`;
 			yield row;
 
-			// Simulate processing
 			if (i % 100 === 0) {
 				await new Promise((resolve) => setTimeout(resolve, 10));
 			}

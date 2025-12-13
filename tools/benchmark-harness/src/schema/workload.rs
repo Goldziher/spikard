@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 /// HTTP endpoint definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Endpoint {
-    pub method: String, // "GET", "POST", etc.
-    pub path: String,   // "/json/small", "/items/{id}"
+    pub method: String,
+    pub path: String,
 }
 
 /// Workload definition
@@ -14,11 +14,11 @@ pub struct Endpoint {
 pub struct WorkloadDef {
     pub name: String,
     pub description: String,
-    pub category: String, // "json-bodies", "path-params", etc.
+    pub category: String,
     pub endpoint: Endpoint,
     pub payload_size_bytes: Option<u64>,
-    pub body_file: Option<String>,    // Path to request body
-    pub content_type: Option<String>, // "application/json", etc.
+    pub body_file: Option<String>,
+    pub content_type: Option<String>,
 }
 
 /// Workload suite definition
@@ -36,26 +36,21 @@ impl WorkloadSuite {
             name: "all".to_string(),
             description: "All workloads".to_string(),
             workloads: vec![
-                // JSON Bodies
                 Self::json_small(),
                 Self::json_medium(),
                 Self::json_large(),
                 Self::json_very_large(),
-                // Path Parameters
                 Self::path_simple(),
                 Self::path_multiple(),
                 Self::path_deep(),
                 Self::path_int(),
                 Self::path_uuid(),
                 Self::path_date(),
-                // Query Parameters
                 Self::query_few(),
                 Self::query_medium(),
                 Self::query_many(),
-                // URL-Encoded Forms
                 Self::urlencoded_simple(),
                 Self::urlencoded_complex(),
-                // Multipart File Uploads
                 Self::multipart_small(),
                 Self::multipart_medium(),
                 Self::multipart_large(),
@@ -123,8 +118,6 @@ impl WorkloadSuite {
             ],
         }
     }
-
-    // Individual workload definitions
 
     fn json_small() -> WorkloadDef {
         WorkloadDef {

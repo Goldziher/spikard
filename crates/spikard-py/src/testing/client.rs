@@ -140,7 +140,6 @@ impl TestClient {
         let files_data = extract_files(files)?;
 
         let fut = async move {
-            // Determine body type priority: multipart > form-encoded > JSON > raw > nothing
             let multipart =
                 if !files_data.is_empty() || (!form_data.is_empty() && raw_body.is_none() && json_value.is_none()) {
                     Some((form_data.clone(), files_data))

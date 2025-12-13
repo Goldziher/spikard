@@ -9,10 +9,6 @@ import Fastify from "fastify";
 
 const fastify = Fastify({ logger: false });
 
-// ============================================================================
-// JSON Schema Definitions
-// ============================================================================
-
 const smallPayloadSchema = {
 	type: "object",
 	required: ["name", "description", "price"],
@@ -107,15 +103,11 @@ const urlencodedComplexSchema = {
 	additionalProperties: true,
 } as const;
 
-// ============================================================================
-// JSON Body Workloads
-// ============================================================================
-
 fastify.post("/json/small", {
 	schema: {
 		body: smallPayloadSchema,
 	},
-	handler: async (request, reply) => {
+	handler: async (request, _reply) => {
 		return request.body;
 	},
 });
@@ -124,7 +116,7 @@ fastify.post("/json/medium", {
 	schema: {
 		body: mediumPayloadSchema,
 	},
-	handler: async (request, reply) => {
+	handler: async (request, _reply) => {
 		return request.body;
 	},
 });
@@ -133,7 +125,7 @@ fastify.post("/json/large", {
 	schema: {
 		body: largePayloadSchema,
 	},
-	handler: async (request, reply) => {
+	handler: async (request, _reply) => {
 		return request.body;
 	},
 });
@@ -142,39 +134,28 @@ fastify.post("/json/very-large", {
 	schema: {
 		body: veryLargePayloadSchema,
 	},
-	handler: async (request, reply) => {
+	handler: async (request, _reply) => {
 		return request.body;
 	},
 });
 
-// ============================================================================
-// Multipart Form Workloads
-// ============================================================================
-
-fastify.post("/multipart/small", async (request, reply) => {
-	// Mock response for multipart form (~1KB)
+fastify.post("/multipart/small", async (_request, _reply) => {
 	return { files_received: 1, total_bytes: 1024 };
 });
 
-fastify.post("/multipart/medium", async (request, reply) => {
-	// Mock response for multipart form (~10KB)
+fastify.post("/multipart/medium", async (_request, _reply) => {
 	return { files_received: 2, total_bytes: 10240 };
 });
 
-fastify.post("/multipart/large", async (request, reply) => {
-	// Mock response for multipart form (~100KB)
+fastify.post("/multipart/large", async (_request, _reply) => {
 	return { files_received: 5, total_bytes: 102400 };
 });
-
-// ============================================================================
-// URL Encoded Form Workloads
-// ============================================================================
 
 fastify.post("/urlencoded/simple", {
 	schema: {
 		body: urlencodedSimpleSchema,
 	},
-	handler: async (request, reply) => {
+	handler: async (request, _reply) => {
 		return request.body;
 	},
 });
@@ -183,21 +164,17 @@ fastify.post("/urlencoded/complex", {
 	schema: {
 		body: urlencodedComplexSchema,
 	},
-	handler: async (request, reply) => {
+	handler: async (request, _reply) => {
 		return request.body;
 	},
 });
 
-// ============================================================================
-// Path Parameter Workloads
-// ============================================================================
-
-fastify.get("/path/simple/:id", async (request, reply) => {
+fastify.get("/path/simple/:id", async (request, _reply) => {
 	const { id } = request.params as { id: string };
 	return { id };
 });
 
-fastify.get("/path/multiple/:user_id/:post_id", async (request, reply) => {
+fastify.get("/path/multiple/:user_id/:post_id", async (request, _reply) => {
 	const { user_id, post_id } = request.params as {
 		user_id: string;
 		post_id: string;
@@ -205,7 +182,7 @@ fastify.get("/path/multiple/:user_id/:post_id", async (request, reply) => {
 	return { user_id, post_id };
 });
 
-fastify.get("/path/deep/:org/:team/:project/:resource/:id", async (request, reply) => {
+fastify.get("/path/deep/:org/:team/:project/:resource/:id", async (request, _reply) => {
 	const { org, team, project, resource, id } = request.params as {
 		org: string;
 		team: string;
@@ -216,55 +193,40 @@ fastify.get("/path/deep/:org/:team/:project/:resource/:id", async (request, repl
 	return { org, team, project, resource, id };
 });
 
-fastify.get("/path/int/:id", async (request, reply) => {
+fastify.get("/path/int/:id", async (request, _reply) => {
 	const { id } = request.params as { id: string };
 	return { id: parseInt(id, 10) };
 });
 
-fastify.get("/path/uuid/:uuid", async (request, reply) => {
+fastify.get("/path/uuid/:uuid", async (request, _reply) => {
 	const { uuid } = request.params as { uuid: string };
 	return { uuid };
 });
 
-fastify.get("/path/date/:date", async (request, reply) => {
+fastify.get("/path/date/:date", async (request, _reply) => {
 	const { date } = request.params as { date: string };
 	return { date };
 });
 
-// ============================================================================
-// Query Parameter Workloads
-// ============================================================================
-
-fastify.get("/query/few", async (request, reply) => {
-	// Few query parameters (1-2)
+fastify.get("/query/few", async (request, _reply) => {
 	return request.query;
 });
 
-fastify.get("/query/medium", async (request, reply) => {
-	// Medium query parameters (3-5)
+fastify.get("/query/medium", async (request, _reply) => {
 	return request.query;
 });
 
-fastify.get("/query/many", async (request, reply) => {
-	// Many query parameters (6-10)
+fastify.get("/query/many", async (request, _reply) => {
 	return request.query;
 });
 
-// ============================================================================
-// Health Check
-// ============================================================================
-
-fastify.get("/health", async (request, reply) => {
+fastify.get("/health", async (_request, _reply) => {
 	return { status: "ok" };
 });
 
-fastify.get("/", async (request, reply) => {
+fastify.get("/", async (_request, _reply) => {
 	return { status: "ok" };
 });
-
-// ============================================================================
-// Server Startup
-// ============================================================================
 
 const port = process.argv[2] ? parseInt(process.argv[2], 10) : process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 

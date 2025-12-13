@@ -48,7 +48,23 @@ fn parse_query(query: &str) -> QueryParams {
     for (key, value) in form_urlencoded::parse(query.as_bytes()) {
         let key = key.into_owned();
         let value = value.into_owned();
-        normalized.insert(key.clone(), Value::String(value.clone()));
+        match normalized.get_mut(&key) {
+            None => {
+                normalized.insert(key.clone(), Value::String(value.clone()));
+            }
+            Some(existing) => match existing {
+                Value::String(existing_value) => {
+                    let previous = std::mem::take(existing_value);
+                    *existing = Value::Array(vec![Value::String(previous), Value::String(value.clone())]);
+                }
+                Value::Array(values) => {
+                    values.push(Value::String(value.clone()));
+                }
+                _ => {
+                    *existing = Value::String(value.clone());
+                }
+            },
+        }
         raw.entry(key).or_insert_with(Vec::new).push(value);
     }
     QueryParams { normalized, raw }

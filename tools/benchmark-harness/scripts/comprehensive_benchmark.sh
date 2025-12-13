@@ -120,20 +120,20 @@ start_server() {
 
 	if [ "$server_type" = "rust" ]; then
 		echo "Starting Spikard-Rust server on port $port..."
-		$SPIKARD_RUST_SERVER $port >/tmp/rust-server.log 2>&1 &
+		$SPIKARD_RUST_SERVER "$port" >/tmp/rust-server.log 2>&1 &
 		eval "$pid_var=$!"
 	else
 		echo "Starting Spikard-Python server on port $port..."
 		cd "$WORKSPACE_ROOT"
-		PYTHONPATH=packages/python uv run python $PYTHON_SERVER $port >/tmp/python-server.log 2>&1 &
+		PYTHONPATH=packages/python uv run python "$PYTHON_SERVER" "$port" >/tmp/python-server.log 2>&1 &
 		eval "$pid_var=$!"
 	fi
 
 	sleep 3
 
 	# Health check with retries
-	for i in {1..10}; do
-		if curl -sf http://localhost:$port/health >/dev/null 2>&1; then
+	for _ in {1..10}; do
+		if curl -sf "http://localhost:$port/health" >/dev/null 2>&1; then
 			echo "✓ Server healthy on port $port"
 			return 0
 		fi
@@ -272,7 +272,7 @@ benchmark_server() {
 # Start Rust server and benchmark
 if start_server "rust" 8100 RUST_PID; then
 	benchmark_server "rust" 8100
-	kill $RUST_PID 2>/dev/null || true
+	kill "$RUST_PID" 2>/dev/null || true
 	sleep 2
 else
 	echo "Failed to start Rust server, skipping benchmarks"
@@ -282,7 +282,7 @@ fi
 # Start Python server and benchmark
 if start_server "python" 8200 PYTHON_PID; then
 	benchmark_server "python" 8200
-	kill $PYTHON_PID 2>/dev/null || true
+	kill "$PYTHON_PID" 2>/dev/null || true
 	sleep 2
 else
 	echo "Failed to start Python server, skipping benchmarks"

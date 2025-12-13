@@ -8,6 +8,37 @@ import { runServer, type ServerOptions } from "./server";
 import type { MaybePromise, StructuredHandlerResponse } from "./types";
 
 /**
+ * Dependency value or factory configuration
+ */
+export type DependencyValue = unknown;
+
+/**
+ * Factory function for creating dependencies
+ */
+export type DependencyFactory = (...args: unknown[]) => MaybePromise<unknown>;
+
+/**
+ * Dependency registration options
+ */
+export interface DependencyOptions {
+	/** List of dependency keys this factory depends on */
+	dependsOn?: string[];
+	/** Whether this is a singleton (resolved once globally) */
+	singleton?: boolean;
+	/** Whether to cache per-request (default: false for factories, true for values) */
+	cacheable?: boolean;
+}
+
+interface DependencyDescriptor {
+	isFactory: boolean;
+	value?: DependencyValue | undefined;
+	factory?: ((dependenciesJson: string) => Promise<string>) | undefined;
+	dependsOn: string[];
+	singleton: boolean;
+	cacheable: boolean;
+}
+
+/**
  * Payload type provided to lifecycle hooks
  */
 export type LifecycleHookPayload = Request | StructuredHandlerResponse;
@@ -19,7 +50,7 @@ export type LifecycleHookPayload = Request | StructuredHandlerResponse;
  * - The (possibly modified) request to continue processing
  * - A Response object to short-circuit the request pipeline
  */
-export type LifecycleHookFunction = (payload: LifecycleHookPayload) => MaybePromise<LifecycleHookPayload>;
+export type LifecycleHookFunction = (payload: unknown) => MaybePromise<unknown>;
 
 /**
  * Container for lifecycle hooks
@@ -60,6 +91,7 @@ export class Spikard implements SpikardApp {
 		onResponse: [],
 		onError: [],
 	};
+	dependencies: Record<string, DependencyDescriptor> = {};
 
 	/**
 	 * Add a route to the application
@@ -79,6 +111,32 @@ export class Spikard implements SpikardApp {
 	 */
 	run(options: ServerOptions = {}): void {
 		runServer(this, options);
+	}
+
+	/**
+	 * Register a dependency value or factory
+	 *
+	 * Dependencies are normalized to `snake_case` so fixtures and cross-language
+	 * bindings stay aligned.
+	 */
+	provide(key: string, valueOrFactory: DependencyValue | DependencyFactory, options?: DependencyOptions): this {
+		const normalizedKey = normalizeDependencyKey(key);
+		const isFactory = typeof valueOrFactory === "function";
+
+		const dependsOn =
+			options?.dependsOn?.map((depKey) => normalizeDependencyKey(depKey)) ??
+			(isFactory ? inferFactoryDependencies(valueOrFactory as DependencyFactory) : []);
+
+		this.dependencies[normalizedKey] = {
+			isFactory,
+			value: isFactory ? undefined : valueOrFactory,
+			factory: isFactory ? wrapFactory(valueOrFactory as DependencyFactory) : undefined,
+			dependsOn,
+			singleton: options?.singleton ?? false,
+			cacheable: options?.cacheable ?? !isFactory,
+		};
+
+		return this;
 	}
 
 	/**
@@ -210,4 +268,131 @@ export class Spikard implements SpikardApp {
 			onError: [...this.lifecycleHooks.onError],
 		};
 	}
+}
+
+function normalizeDependencyKey(key: string): string {
+	if (key.includes("_")) {
+		return key.toLowerCase();
+	}
+	return key
+		.replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+		.replace(/([A-Z])([A-Z][a-z])/g, "$1_$2")
+		.toLowerCase();
+}
+
+function inferFactoryDependencies(factory: DependencyFactory): string[] {
+	const params = getFactoryParameterNames(factory);
+	return params.map((name) => normalizeDependencyKey(name));
+}
+
+function getFactoryParameterNames(factory: DependencyFactory): string[] {
+	const source = factory.toString().trim();
+	const openParen = source.indexOf("(");
+	if (openParen === -1) {
+		return [];
+	}
+	const closeParen = source.indexOf(")", openParen + 1);
+	if (closeParen === -1) {
+		return [];
+	}
+	const raw = source.slice(openParen + 1, closeParen).trim();
+	if (!raw) {
+		return [];
+	}
+
+	return raw
+		.split(",")
+		.map((entry) => entry.trim())
+		.filter((entry) => entry.length > 0)
+		.map(
+			(entry) =>
+				entry
+					.replace(/^\.\.\./, "")
+					.split("=")[0]
+					?.trim() ?? "",
+		)
+		.filter((entry) => entry.length > 0 && !entry.startsWith("{") && !entry.startsWith("["));
+}
+
+type GeneratorWithReturn = AsyncGenerator<unknown, unknown, unknown> & { return?: (value?: unknown) => unknown };
+
+const DI_REQUEST_ID_KEY = "__spikard_request_id__";
+
+const globalDi = globalThis as unknown as {
+	__spikard_di_generators__?: Record<string, GeneratorWithReturn[]>;
+	__spikard_di_cleanup__?: (requestId: string) => Promise<void>;
+};
+
+function registerDependencyGenerator(requestId: string, generator: GeneratorWithReturn): void {
+	let registry = globalDi.__spikard_di_generators__;
+	if (!registry) {
+		registry = {};
+		globalDi.__spikard_di_generators__ = registry;
+	}
+
+	let generators = registry[requestId];
+	if (!generators) {
+		generators = [];
+		registry[requestId] = generators;
+	}
+
+	generators.push(generator);
+}
+
+async function cleanupDependencyGenerators(requestId: string): Promise<void> {
+	const registry = globalDi.__spikard_di_generators__;
+	if (!registry) {
+		return;
+	}
+	const generators = registry[requestId];
+	if (!generators || generators.length === 0) {
+		return;
+	}
+	for (let idx = generators.length - 1; idx >= 0; idx -= 1) {
+		const generator = generators[idx];
+		if (!generator) {
+			continue;
+		}
+		try {
+			if (typeof generator.return === "function") {
+				await generator.return(undefined);
+			}
+		} catch {}
+	}
+	delete registry[requestId];
+}
+
+if (!globalDi.__spikard_di_cleanup__) {
+	globalDi.__spikard_di_cleanup__ = cleanupDependencyGenerators;
+}
+
+function wrapFactory(factory: DependencyFactory): (dependenciesJson: string) => Promise<string> {
+	return async (dependenciesJson) => {
+		const depsUnknown = JSON.parse(dependenciesJson) as unknown;
+		const deps = typeof depsUnknown === "object" && depsUnknown ? (depsUnknown as Record<string, unknown>) : {};
+		const requestId = typeof deps[DI_REQUEST_ID_KEY] === "string" ? (deps[DI_REQUEST_ID_KEY] as string) : null;
+
+		const paramNames = getFactoryParameterNames(factory);
+		const args = paramNames.map((name) => deps[normalizeDependencyKey(name)]);
+
+		const result = await factory(...args);
+
+		if (result && typeof result === "object" && Symbol.asyncIterator in (result as object)) {
+			const generator = result as GeneratorWithReturn;
+			const first = await generator.next();
+			const value = first.value;
+			if (requestId) {
+				registerDependencyGenerator(requestId, generator);
+			} else {
+				try {
+					if (typeof generator.return === "function") {
+						await generator.return(undefined);
+					}
+				} catch {}
+			}
+			return JSON.stringify(value ?? null);
+		}
+
+		return JSON.stringify(result ?? null);
+	};
 }

@@ -13,7 +13,7 @@
 
 **An experimental polyglot web development framework.**
 
-Spikard is a high-performance API toolkit built in Rust with bindings for Python, TypeScript, Ruby, PHP, and WebAssembly. Write REST APIs, JSON-RPC services, or Protobuf-based applications in the language you prefer—all sharing the same runtime, middleware, and validation engine.
+Spikard is a high-performance API toolkit built in Rust with bindings for Python, TypeScript, Ruby, PHP, and WebAssembly. Write REST APIs, JSON-RPC 2.0 services, or Protobuf-based applications in the language you prefer—all sharing the same runtime, middleware, and validation engine.
 
 ## Why?
 
@@ -28,7 +28,7 @@ Same middleware. Same validation. Same correctness guarantees. Different languag
 **Spikard IS:**
 - A batteries-included HTTP/API toolkit
 - High-performance routing, middleware, and validation
-- Protocol-agnostic (REST, JSON-RPC, Protobuf, GraphQL)
+- Multi-protocol (REST, JSON-RPC 2.0, Protobuf, GraphQL)
 - Polyglot with consistent APIs across languages
 - Built for microservices, APIs, and real-time services
 
@@ -70,6 +70,7 @@ All language bindings share the same core features through the Rust runtime:
 | Feature | Python | TypeScript | Ruby | PHP | Rust |
 |---------|--------|------------|------|-----|------|
 | **HTTP/REST** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **JSON-RPC 2.0** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Path Parameters** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **JSON Validation** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Background Tasks** | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -79,6 +80,7 @@ All language bindings share the same core features through the Rust runtime:
 | **Server-Sent Events** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **AsyncAPI Support** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **OpenAPI Codegen** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **JSON-RPC Codegen** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Lifecycle Hooks** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Middleware Stack** | ✅ | ✅ | ✅ | ✅ | ✅ |
 
@@ -275,12 +277,192 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+### JSON-RPC 2.0
+
+JSON-RPC methods are defined using method metadata and can be exposed over HTTP or WebSocket:
+
+**TypeScript (Node/Bun)**
+```typescript
+import { Spikard, websocket } from '@spikard/node';
+import {
+  JsonRpcMethod,
+  createJsonRpcError,
+  createJsonRpcSuccess,
+  JsonRpcErrorCodes,
+} from '@spikard/node/jsonrpc';
+
+const app = new Spikard();
+
+// Define JSON-RPC method metadata
+const addMethod = new JsonRpcMethod('math.add')
+  .withDescription('Add two numbers together')
+  .withParamsSchema({
+    type: 'object',
+    properties: {
+      a: { type: 'number' },
+      b: { type: 'number' },
+    },
+    required: ['a', 'b'],
+  })
+  .withResultSchema({
+    type: 'number',
+  });
+
+// Handle WebSocket JSON-RPC requests
+@websocket('/rpc')
+async function handleJsonRpc(message: unknown) {
+  if (typeof message !== 'string') return null;
+
+  let request;
+  try {
+    request = JSON.parse(message);
+  } catch {
+    return JSON.stringify(
+      createJsonRpcError(
+        JsonRpcErrorCodes.PARSE_ERROR,
+        'Invalid JSON',
+        null
+      )
+    );
+  }
+
+  if (request.method === 'math.add') {
+    const { a, b } = request.params || {};
+    if (typeof a !== 'number' || typeof b !== 'number') {
+      return JSON.stringify(
+        createJsonRpcError(
+          JsonRpcErrorCodes.INVALID_PARAMS,
+          'Invalid parameters',
+          request.id
+        )
+      );
+    }
+    return JSON.stringify(
+      createJsonRpcSuccess(a + b, request.id)
+    );
+  }
+
+  return JSON.stringify(
+    createJsonRpcError(
+      JsonRpcErrorCodes.METHOD_NOT_FOUND,
+      'Method not found',
+      request.id
+    )
+  );
+}
+
+app.run({ port: 8000 });
+```
+
+**Python**
+```python
+from spikard import App
+from spikard.jsonrpc import JsonRpcMethod, create_jsonrpc_success, create_jsonrpc_error
+
+app = App()
+
+# Define JSON-RPC method metadata
+add_method = JsonRpcMethod('math.add') \
+    .with_description('Add two numbers together') \
+    .with_params_schema({
+        'type': 'object',
+        'properties': {
+            'a': {'type': 'number'},
+            'b': {'type': 'number'},
+        },
+        'required': ['a', 'b'],
+    }) \
+    .with_result_schema({'type': 'number'})
+
+@app.websocket('/rpc')
+async def handle_jsonrpc(message: dict):
+    if not isinstance(message, dict):
+        return None
+
+    method = message.get('method')
+    params = message.get('params', {})
+    request_id = message.get('id')
+
+    if method == 'math.add':
+        a = params.get('a')
+        b = params.get('b')
+        if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+            return create_jsonrpc_error(-32602, 'Invalid parameters', request_id)
+        return create_jsonrpc_success(a + b, request_id)
+
+    return create_jsonrpc_error(-32601, 'Method not found', request_id)
+
+if __name__ == '__main__':
+    app.run(port=8000)
+```
+
+**Ruby**
+```ruby
+require 'spikard'
+require 'spikard/jsonrpc'
+
+app = Spikard::App.new
+
+# Define JSON-RPC method metadata
+add_method = Spikard::JsonRpc::Method.new('math.add')
+  .with_description('Add two numbers together')
+  .with_params_schema({
+    type: 'object',
+    properties: {
+      a: { type: 'number' },
+      b: { type: 'number' },
+    },
+    required: ['a', 'b'],
+  })
+  .with_result_schema({ type: 'number' })
+
+app.websocket('/rpc') do |message|
+  return nil unless message.is_a?(Hash)
+
+  method = message['method']
+  params = message.fetch('params', {})
+  request_id = message['id']
+
+  if method == 'math.add'
+    a, b = params['a'], params['b']
+    unless a.is_a?(Numeric) && b.is_a?(Numeric)
+      return Spikard::JsonRpc.error(-32602, 'Invalid parameters', request_id)
+    end
+    return Spikard::JsonRpc.success(a + b, request_id)
+  end
+
+  Spikard::JsonRpc.error(-32601, 'Method not found', request_id)
+end
+
+app.run(port: 8000)
+```
+
+**Example Client Request (WebSocket)**
+```javascript
+const ws = new WebSocket('ws://localhost:8000/rpc');
+
+ws.onopen = () => {
+  ws.send(JSON.stringify({
+    jsonrpc: '2.0',
+    method: 'math.add',
+    params: { a: 5, b: 3 },
+    id: 1
+  }));
+};
+
+ws.onmessage = (event) => {
+  const response = JSON.parse(event.data);
+  console.log(response.result); // 8
+};
+```
+
 ## Key Features
 
 ### HTTP & Protocols
 
 **Current:**
 - REST with typed routing (`/users/{id:uuid}`)
+- JSON-RPC 2.0 (HTTP and WebSocket transport)
 - HTTP/1.1 and HTTP/2
 - Request/response streaming
 - Server-Sent Events (SSE)
@@ -289,7 +471,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - URL-encoded and JSON bodies
 
 **Coming Soon:**
-- JSON-RPC
 - Protobuf with protoc support
 - GraphQL (queries, mutations, subscriptions)
 - CloudEvents *(post v1.0)*
@@ -367,8 +548,13 @@ spikard generate asyncapi --spec events.yaml --lang typescript --output ./app
 ```
 Generates: SSE producers, WebSocket handlers, event schemas, documentation
 
+**JSON-RPC (OpenRPC 1.3.2):**
+```bash
+spikard generate jsonrpc --spec api.json --lang python --output ./app
+```
+Generates: JSON-RPC method handlers, typed clients, validation, documentation
+
 **Future Protocols:**
-- JSON-RPC spec → RPC handlers
 - Protobuf (.proto files) → gRPC services
 - GraphQL SDL → resolvers and types
 - CloudEvents → event handlers *(post v1.0)*
@@ -414,8 +600,9 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 **What works:**
 - ✅ Core HTTP server with full middleware stack
 - ✅ Python, TypeScript, Ruby, PHP, WASM, Rust bindings
+- ✅ REST and JSON-RPC 2.0 protocols
 - ✅ JSON validation with JSON Schema
-- ✅ Code generation from OpenAPI and AsyncAPI
+- ✅ Code generation from OpenAPI, AsyncAPI, and OpenRPC
 - ✅ Streaming, SSE, WebSockets
 - ✅ Background tasks and dependency injection (all bindings)
 - ✅ 400+ fixtures with comprehensive test coverage
@@ -432,15 +619,16 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 ### Core Features
 - [x] HTTP/1.1 and HTTP/2 support
 - [x] REST routing with typed parameters
+- [x] JSON-RPC 2.0 protocol support (HTTP/WebSocket)
 - [x] JSON Schema validation
 - [x] Middleware stack (compression, rate limiting, CORS, auth, etc.)
 - [x] Streaming, SSE, WebSockets
 - [x] Lifecycle hooks
 - [x] OpenAPI 3.1 code generation
 - [x] AsyncAPI code generation
+- [x] JSON-RPC code generation
 - [x] Documentation generation
 - [x] **Dependency Injection**
-- [ ] JSON-RPC protocol support
 - [ ] Protobuf with protoc integration
 - [ ] GraphQL support (queries, mutations, subscriptions)
 - [ ] HTTP/3 (QUIC) support *(post v1.0)*

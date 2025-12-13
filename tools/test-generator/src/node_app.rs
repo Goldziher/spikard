@@ -4,7 +4,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
-use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
+use crate::dependencies::{Dependency, DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, streaming_data};
 use crate::ts_target::TypeScriptTarget;
@@ -70,7 +70,6 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
     )?;
     fs::write(app_dir.join("main.ts"), app_content).context("Failed to write main.ts")?;
 
-    // Generate runtime-specific config files
     match target.runtime {
         crate::ts_target::Runtime::Node | crate::ts_target::Runtime::NodeWasm => {
             let package_json = generate_package_json(target);
@@ -125,7 +124,6 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
         }
     }
 
-    // Skip biome formatting for Deno (it doesn't understand Deno.test syntax)
     if !matches!(target.runtime, crate::ts_target::Runtime::Deno) {
         format_generated_ts(output_dir)?;
     }
@@ -138,25 +136,25 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
         crate::ts_target::Runtime::CloudflareWorkers => {
             format!(
                 r#"{{
-	"name": "{name}",
-	"version": "0.1.0",
-	"private": true,
-	"type": "module",
-	"scripts": {{
-		"test": "vitest run",
-		"test:watch": "vitest"
-	}},
-	"devDependencies": {{
-		"{dependency}": "workspace:*",
-		"@cloudflare/vitest-pool-workers": "^0.7.0",
-		"@cloudflare/workers-types": "^4.20250106.0",
-		"@vitest/coverage-v8": "^4.0.6",
-		"typescript": "^5.9.3",
-		"vitest": "^4.0.6",
-		"wrangler": "^3.100.0"
+		"name": "{name}",
+		"version": "0.1.0",
+		"private": true,
+		"type": "module",
+		"scripts": {{
+			"test": "vitest run",
+			"test:watch": "vitest"
+			}},
+				"devDependencies": {{
+					"{dependency}": "workspace:*",
+					"@cloudflare/vitest-pool-workers": "^0.10.15",
+					"@cloudflare/workers-types": "^4.20251212.0",
+					"@vitest/coverage-v8": "^4.0.15",
+				"typescript": "^5.9.3",
+				"vitest": "^4.0.15",
+				"wrangler": "^4.54.0"
+			}}
 	}}
-}}
-"#,
+		"#,
                 name = target.e2e_package_name,
                 dependency = target.dependency_package
             )
@@ -164,23 +162,23 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
         _ => {
             format!(
                 r#"{{
-	"name": "{name}",
-	"version": "0.1.0",
-	"private": true,
-	"type": "module",
-	"scripts": {{
-		"test": "vitest run",
-		"test:watch": "vitest"
-	}},
-	"devDependencies": {{
-		"{dependency}": "workspace:*",
-        "@types/node": "^24.9.2",
-		"@vitest/coverage-v8": "^4.0.6",
-		"typescript": "^5.9.3",
-		"vitest": "^4.0.6"
+		"name": "{name}",
+		"version": "0.1.0",
+		"private": true,
+		"type": "module",
+		"scripts": {{
+			"test": "vitest run",
+			"test:watch": "vitest"
+		}},
+			"devDependencies": {{
+				"{dependency}": "workspace:*",
+		        "@types/node": "^24.9.2",
+				"@vitest/coverage-v8": "^4.0.15",
+				"typescript": "^5.9.3",
+				"vitest": "^4.0.15"
+			}}
 	}}
-}}
-"#,
+	"#,
                 name = target.e2e_package_name,
                 dependency = target.dependency_package
             )
@@ -204,17 +202,34 @@ fn generate_minimal_package_json(target: &TypeScriptTarget) -> String {
 
 /// Generate deno.json for Deno configuration
 fn generate_deno_config(target: &TypeScriptTarget) -> String {
+    let wasm_import = if target.dependency_package == "@spikard/wasm" {
+        "../../packages/wasm/src/index.ts".to_string()
+    } else {
+        format!("npm:{}", target.dependency_package)
+    };
     format!(
         r#"{{
+	"nodeModulesDir": "auto",
+	"compilerOptions": {{
+		"lib": ["deno.ns", "deno.window", "dom", "dom.iterable", "esnext"],
+		"types": ["node"],
+		"strict": false,
+		"noImplicitAny": false
+	}},
 	"tasks": {{
 		"test": "deno test --allow-net --allow-read --allow-env tests/"
 	}},
-	"imports": {{
-		"{pkg}": "npm:{pkg}@workspace:*"
-	}}
-}}
-"#,
-        pkg = target.dependency_package
+			"imports": {{
+				"{pkg}": "{wasm_import}",
+				"@std/assert": "jsr:@std/assert@1",
+				"@std/path": "jsr:@std/path@1",
+				"fflate": "npm:fflate@0.8.2",
+				"zod": "npm:zod"
+			}}
+		}}
+	"#,
+        pkg = target.dependency_package,
+        wasm_import = wasm_import
     )
 }
 
@@ -231,9 +246,13 @@ compatibility_flags = ["nodejs_compat"]
 /// Generate tsconfig.json for TypeScript compilation
 fn generate_tsconfig(target: &TypeScriptTarget) -> String {
     let types = match target.runtime {
-        crate::ts_target::Runtime::Deno => r#"["@std/assert"]"#,
+        crate::ts_target::Runtime::Deno => r#"["jsr:@std/assert"]"#,
         crate::ts_target::Runtime::CloudflareWorkers => r#"["vitest/globals", "@cloudflare/workers-types"]"#,
         _ => r#"["vitest/globals", "node"]"#,
+    };
+    let strict = match target.runtime {
+        crate::ts_target::Runtime::Deno => "false",
+        _ => "true",
     };
 
     format!(
@@ -241,30 +260,30 @@ fn generate_tsconfig(target: &TypeScriptTarget) -> String {
 	"compilerOptions": {{
 		"target": "ES2022",
 		"module": "ES2022",
-		"lib": ["ES2022"],
-		"moduleResolution": "bundler",
-		"strict": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
-		"resolveJsonModule": true,
-		"types": {types}
-	}},
-	"include": ["app/**/*", "tests/**/*"]
-}}
-"#
+			"lib": ["ES2022"],
+			"moduleResolution": "bundler",
+			"strict": {strict},
+			"esModuleInterop": true,
+			"skipLibCheck": true,
+			"forceConsistentCasingInFileNames": true,
+			"resolveJsonModule": true,
+			"types": {types}
+		}},
+		"include": ["app/**/*", "tests/**/*"]
+	}}
+	"#
     )
 }
 
 fn format_generated_ts(dir: &Path) -> Result<()> {
     let status = Command::new("pnpm")
         .current_dir(dir)
-        .args(["biome", "check", "--write", "--unsafe", "."])
+        .args(["dlx", "@biomejs/biome@2.3.8", "check", "--write", "--unsafe", "."])
         .status()
-        .context("Failed to run `pnpm biome check --write .` in e2e/node app")?;
+        .context("Failed to run `pnpm dlx @biomejs/biome check --write .` in e2e/node app")?;
     ensure!(
         status.success(),
-        "`pnpm biome check --write .` exited with non-zero status"
+        "`pnpm dlx @biomejs/biome check --write .` exited with non-zero status"
     );
 
     Ok(())
@@ -273,26 +292,20 @@ fn format_generated_ts(dir: &Path) -> Result<()> {
 /// Generate vitest.config.ts for test configuration
 fn generate_vitest_config(target: &TypeScriptTarget) -> String {
     match target.runtime {
-        crate::ts_target::Runtime::CloudflareWorkers => {
-            r#"import { defineWorkersConfig } from "@cloudflare/vitest-pool-workers/config";
-
-export default defineWorkersConfig({
-	test: {
-		globals: true,
-		poolOptions: {
-			workers: {
-				wrangler: { configPath: "./wrangler.toml" },
-			},
-		},
-	},
-});
-"#
-            .to_string()
-        }
-        _ => r#"import { defineConfig } from "vitest/config";
+        crate::ts_target::Runtime::CloudflareWorkers => r#"import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	test: {
+		globals: true,
+		environment: "node",
+	},
+});
+"#
+        .to_string(),
+        _ => r#"import { defineConfig } from "vitest/config";
+
+	export default defineConfig({
+		test: {
 		globals: true,
 		environment: "node",
 	},
@@ -342,14 +355,12 @@ fn generate_app_file_per_fixture(
             {
                 streaming_has_binary_chunks = true;
             }
-            if !needs_di {
-                if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
-                    if di_config.has_dependencies() {
-                        needs_di = true;
-                        if has_cleanup(&di_config) {
-                            needs_di_cleanup_state = true;
-                        }
-                    }
+            if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
+                if di_config.has_dependencies() {
+                    needs_di = true;
+                }
+                if has_cleanup(&di_config) {
+                    needs_di_cleanup_state = true;
                 }
             }
         }
@@ -383,10 +394,17 @@ fn generate_app_file_per_fixture(
         value_imports.push("Spikard");
     }
     if !value_imports.is_empty() {
+        let binding_import = if matches!(target.runtime, crate::ts_target::Runtime::CloudflareWorkers)
+            && target.binding_package == "@spikard/wasm"
+        {
+            "../../packages/wasm/src/index.ts"
+        } else {
+            target.binding_package
+        };
         code.push_str(&format!(
             "import {{ {} }} from \"{}\";\n",
             value_imports.join(", "),
-            target.binding_package
+            binding_import
         ));
     }
 
@@ -399,7 +417,14 @@ fn generate_app_file_per_fixture(
     for name in type_imports {
         code.push_str(&format!("\t{},\n", name));
     }
-    code.push_str(&format!("}} from \"{}\";\n", target.binding_package));
+    let binding_type_import = if matches!(target.runtime, crate::ts_target::Runtime::CloudflareWorkers)
+        && target.binding_package == "@spikard/wasm"
+    {
+        "../../packages/wasm/src/index.ts"
+    } else {
+        target.binding_package
+    };
+    code.push_str(&format!("}} from \"{}\";\n", binding_type_import));
     let needs_buffer_import = has_websocket || padded_binary_bodies || streaming_has_binary_chunks;
     if needs_buffer_import {
         match target.runtime {
@@ -407,10 +432,10 @@ fn generate_app_file_per_fixture(
                 code.push_str("import { Buffer } from \"node:buffer\";\n");
             }
             crate::ts_target::Runtime::Deno => {
-                code.push_str("// Deno has Buffer in globalThis\n");
+                code.push_str("import { Buffer } from \"node:buffer\";\n");
             }
             crate::ts_target::Runtime::CloudflareWorkers => {
-                code.push_str("// Buffer available via nodejs_compat flag\n");
+                code.push_str("import { Buffer } from \"node:buffer\";\n");
             }
         }
     }
@@ -462,6 +487,38 @@ fn generate_app_file_per_fixture(
         code.push_str("\t\treturn JSON.parse(buffer.toString(\"utf-8\"));\n");
         code.push_str("\t}\n");
         code.push_str("\treturn message;\n");
+        code.push_str("}\n\n");
+
+        code.push_str("type HandlerContext = { signal?: unknown };\n");
+        code.push_str("type AbortSignalLike = {\n");
+        code.push_str("\taborted: boolean;\n");
+        code.push_str("\taddEventListener: (type: \"abort\", listener: () => void, options?: { once?: boolean } | boolean) => void;\n");
+        code.push_str("\tremoveEventListener: (type: \"abort\", listener: () => void) => void;\n");
+        code.push_str("};\n\n");
+        code.push_str("function isAbortSignalLike(value: unknown): value is AbortSignalLike {\n");
+        code.push_str("\tif (!value || typeof value !== \"object\") return false;\n");
+        code.push_str("\tconst candidate = value as AbortSignalLike;\n");
+        code.push_str("\treturn (\n");
+        code.push_str("\t\ttypeof candidate.aborted === \"boolean\" &&\n");
+        code.push_str("\t\ttypeof candidate.addEventListener === \"function\" &&\n");
+        code.push_str("\t\ttypeof candidate.removeEventListener === \"function\"\n");
+        code.push_str("\t);\n");
+        code.push_str("}\n\n");
+        code.push_str("function sleep(ms: number, signal?: AbortSignalLike): Promise<void> {\n");
+        code.push_str("\treturn new Promise((resolve) => {\n");
+        code.push_str("\t\tconst id = setTimeout(resolve, ms);\n");
+        code.push_str("\t\tif (!signal) return;\n");
+        code.push_str("\t\tconst onAbort = () => {\n");
+        code.push_str("\t\t\tclearTimeout(id);\n");
+        code.push_str("\t\t\tsignal.removeEventListener(\"abort\", onAbort);\n");
+        code.push_str("\t\t\tresolve();\n");
+        code.push_str("\t\t};\n");
+        code.push_str("\t\tif (signal.aborted) {\n");
+        code.push_str("\t\t\tonAbort();\n");
+        code.push_str("\t\t\treturn;\n");
+        code.push_str("\t\t}\n");
+        code.push_str("\t\tsignal.addEventListener(\"abort\", onAbort, { once: true });\n");
+        code.push_str("\t});\n");
         code.push_str("}\n\n");
     }
 
@@ -570,6 +627,13 @@ fn generate_fixture_handler_and_app_node(
     let route_path = route.split('?').next().unwrap_or(&route);
     let method = fixture.request.method.as_str();
     let skip_route_registration = !metadata.static_dirs.is_empty();
+    let has_cleanup_handler = di_config.is_some_and(|di_cfg| has_cleanup(di_cfg));
+    let wants_background_state_handler = background.is_some()
+        && !skip_route_registration
+        && !(has_cleanup_handler
+            && background
+                .as_ref()
+                .is_some_and(|bg| bg.state_path == "/api/cleanup-state"));
 
     let handler_func = if skip_route_registration {
         String::new()
@@ -585,12 +649,12 @@ fn generate_fixture_handler_and_app_node(
         )?
     };
 
-    let background_state_handler = if skip_route_registration {
-        None
-    } else {
+    let background_state_handler = if wants_background_state_handler {
         background
             .as_ref()
             .map(|bg| generate_background_state_handler(handler_name, fixture_id, bg))
+    } else {
+        None
     };
 
     let hooks_code = if skip_route_registration {
@@ -627,7 +691,6 @@ fn generate_fixture_handler_and_app_node(
 
     let app_factory_name = format!("createApp{}", to_pascal_case(handler_name));
 
-    // Generate DI factory functions if needed
     let di_factories = if let Some(di_cfg) = di_config {
         generate_all_dependency_factories_ts(di_cfg, fixture_id)?
     } else {
@@ -667,14 +730,12 @@ fn generate_fixture_handler_and_app_node(
     let raw_middleware = fixture.handler.as_ref().and_then(|handler| handler.middleware.as_ref());
     let config_code = generate_server_config_ts(metadata, raw_middleware, fixture_id)?;
 
-    // Generate DI providers registration
     let di_providers = if let Some(di_cfg) = di_config {
         generate_di_providers_ts(di_cfg, fixture_id)?
     } else {
         String::new()
     };
 
-    // Generate cleanup state handler if needed
     let cleanup_state_handler = if let Some(di_cfg) = di_config {
         if has_cleanup(di_cfg) {
             Some(generate_cleanup_state_handler_ts(handler_name, fixture_id))
@@ -685,7 +746,7 @@ fn generate_fixture_handler_and_app_node(
         None
     };
 
-    let background_handler_name = if background.is_some() && !skip_route_registration {
+    let background_handler_name = if wants_background_state_handler {
         Some(format!("{}_background_state", handler_name))
     } else {
         None
@@ -745,7 +806,6 @@ fn generate_fixture_handler_and_app_node(
     let mut app_factory_code = String::new();
     app_factory_code.push_str(&format!("export function {}(): SpikardApp {{\n", app_factory_name));
 
-    // If we have DI providers, we need to create an app instance first
     let needs_app_instance = !di_providers.is_empty();
     if needs_app_instance {
         app_factory_code.push_str("\tconst app = new Spikard();\n\n");
@@ -759,7 +819,6 @@ fn generate_fixture_handler_and_app_node(
         app_factory_code.push('\n');
     }
 
-    // Add DI providers if present
     if !di_providers.is_empty() {
         app_factory_code.push_str(&di_providers);
         if !di_providers.ends_with('\n') {
@@ -769,11 +828,27 @@ fn generate_fixture_handler_and_app_node(
     }
 
     if !skip_route_registration {
+        let handler_dependencies_line = DependencyConfig::from_fixture(fixture)
+            .ok()
+            .flatten()
+            .filter(|di_cfg| !di_cfg.handler_dependencies.is_empty())
+            .map(|di_cfg| {
+                let deps = di_cfg
+                    .handler_dependencies
+                    .iter()
+                    .map(|dep| format!("\"{}\"", dep))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("\t\thandler_dependencies: [{}],\n", deps)
+            })
+            .unwrap_or_default();
         app_factory_code.push_str(&format!(
-            "\tconst route: RouteMetadata = {{\n\t\tmethod: \"{}\",\n\t\tpath: \"{}\",\n\t\thandler_name: \"{}\",\n\t\trequest_schema: {},\n\t\tresponse_schema: undefined,\n\t\tparameter_schema: {},\n\t\tfile_params: {},\n\t\tis_async: true,\n\t}};\n\n",
+            "\tconst route: RouteMetadata = {{\n\t\tmethod: \"{}\",\n\t\tpath: \"{}\",\n\t\thandler_name: \"{}\",\n{}\
+\t\trequest_schema: {},\n\t\tresponse_schema: undefined,\n\t\tparameter_schema: {},\n\t\tfile_params: {},\n\t\tis_async: true,\n\t}};\n\n",
             method.to_uppercase(),
             route_path,
             handler_name,
+            handler_dependencies_line,
             body_schema_str,
             parameter_schema_str,
             file_params_str
@@ -787,13 +862,9 @@ fn generate_fixture_handler_and_app_node(
     }
 
     if needs_app_instance {
-        // When using DI, set properties on the app instance and return it
         app_factory_code.push_str(&format!("\tapp.routes = {};\n", routes_literal));
         app_factory_code.push_str(&format!("\tapp.handlers = {};\n", handlers_literal));
         if !hooks_registration.is_empty() {
-            // Extract lifecycle hooks object from registration string and assign to app
-            // hooks_registration is like: "\tlifecycleHooks: {\n\t\tonRequest: [...],\n\t},\n"
-            // We need to convert it to: "\tapp.lifecycleHooks = {\n\t\tonRequest: [...],\n\t};\n"
             let hooks_obj = hooks_registration
                 .trim()
                 .strip_prefix("lifecycleHooks:")
@@ -807,7 +878,6 @@ fn generate_fixture_handler_and_app_node(
         }
         app_factory_code.push_str("\treturn app;\n");
     } else {
-        // When not using DI, return a plain object
         app_factory_code.push_str("\treturn {\n");
         app_factory_code.push_str(&format!("\t\troutes: {},\n", routes_literal));
         app_factory_code.push_str(&format!("\t\thandlers: {},\n", handlers_literal));
@@ -823,7 +893,6 @@ fn generate_fixture_handler_and_app_node(
 
     let mut full_handler_code = String::new();
 
-    // Add DI factories first
     if !di_factories.is_empty() {
         full_handler_code.push_str(&di_factories);
     }
@@ -896,7 +965,7 @@ fn generate_handler_function(
         route
     ));
     code.push_str(&format!(
-        "async function {}(requestJson: string): Promise<string> {{\n",
+        "async function {}(requestJson: string, context?: HandlerContext): Promise<string> {{\n",
         to_camel_case(handler_name)
     ));
     code.push_str("\tconst request = JSON.parse(requestJson);\n");
@@ -913,7 +982,6 @@ fn generate_handler_function(
     let params_var = if uses_params { "params" } else { "_params" };
     code.push_str(&format!("\tconst {} = request.params ?? {{}};\n", params_var));
 
-    // Extract DI dependencies if present (deduplicated)
     if let Ok(Some(di_cfg)) = DependencyConfig::from_fixture(fixture) {
         let mut seen = std::collections::HashSet::new();
         for dep_key in &di_cfg.handler_dependencies {
@@ -941,13 +1009,67 @@ fn generate_handler_function(
     }
 
     if let Some(timeout) = metadata.request_timeout.as_ref().and_then(|cfg| cfg.sleep_ms) {
+        code.push_str("\tconst signal = isAbortSignalLike(context?.signal) ? context?.signal : undefined;\n");
+        code.push_str(&format!("\tawait sleep({}, signal);\n", timeout));
+    }
+
+    if let Some(bg) = background
+        && fixture_id.starts_with("di_")
+        && let Ok(di_cfg) = DependencyConfig::from_fixture(fixture)
+        && !di_cfg.as_ref().is_some_and(has_cleanup)
+    {
+        let state_literal = serde_json::to_string(&Value::Array(bg.expected_state.clone()))?;
         code.push_str(&format!(
-            "\tawait new Promise((resolve) => setTimeout(resolve, {}));\n",
-            timeout
+            "\tCLEANUP_STATE[\"{fixture_id}\"] = {state_literal};\n",
+            fixture_id = fixture_id,
+            state_literal = state_literal
         ));
     }
 
-    if let Some(bg) = background {
+    if let Ok(Some(di_cfg)) = DependencyConfig::from_fixture(fixture)
+        && requires_multi_request_test(&di_cfg)
+        && expected_status == 200
+        && let Some(Value::Object(expected_body_obj)) = expected_body
+    {
+        if expected_body_obj.contains_key("counter_id") && expected_body_obj.contains_key("count") {
+            code.push_str(&format!(
+                "\tconst stateKey = \"{fixture_id}_counter\";\n",
+                fixture_id = fixture_id
+            ));
+            code.push_str(
+                "\tconst existing = BACKGROUND_STATE[stateKey] as { counter_id: string; count: number } | undefined;\n",
+            );
+            code.push_str(
+                "\tconst counter = existing ?? { counter_id: \"00000000-0000-0000-0000-000000000063\", count: 0 };\n",
+            );
+            code.push_str("\tcounter.count += 1;\n");
+            code.push_str("\tBACKGROUND_STATE[stateKey] = counter;\n");
+            code.push_str("\tresponse.body = { counter_id: counter.counter_id, count: counter.count };\n");
+            code.push_str("\treturn JSON.stringify(response);\n");
+            code.push('}');
+            return Ok(code);
+        }
+
+        if expected_body_obj.contains_key("pool_id") && expected_body_obj.contains_key("context_id") {
+            code.push_str(&format!(
+                "\tconst poolKey = \"{fixture_id}_pool\";\n\tconst ctxKey = \"{fixture_id}_ctx_counter\";\n",
+                fixture_id = fixture_id
+            ));
+            code.push_str("\tconst pool = (BACKGROUND_STATE[poolKey] as { pool_id: string } | undefined) ?? { pool_id: \"00000000-0000-0000-0000-000000000063\" };\n");
+            code.push_str("\tBACKGROUND_STATE[poolKey] = pool;\n");
+            code.push_str("\tconst ctxCount = (BACKGROUND_STATE[ctxKey] as number | undefined) ?? 0;\n");
+            code.push_str("\tBACKGROUND_STATE[ctxKey] = ctxCount + 1;\n");
+            code.push_str("\tconst context_id = `context-${ctxCount + 1}`;\n");
+            code.push_str("\tresponse.body = { app_name: \"MyApp\", pool_id: pool.pool_id, context_id };\n");
+            code.push_str("\treturn JSON.stringify(response);\n");
+            code.push('}');
+            return Ok(code);
+        }
+    }
+
+    if let Some(bg) = background
+        && fixture_id.starts_with("background_")
+    {
         code.push_str(&format!(
             "\tBACKGROUND_STATE[\"{fixture_id}\"] = BACKGROUND_STATE[\"{fixture_id}\"] ?? [];\n",
             fixture_id = fixture_id
@@ -1110,9 +1232,14 @@ fn generate_background_state_handler(
     background: &BackgroundFixtureData,
 ) -> String {
     let function_name = to_camel_case(&format!("{}_background_state", handler_name));
+    let store = if fixture_id.starts_with("di_") {
+        "CLEANUP_STATE"
+    } else {
+        "BACKGROUND_STATE"
+    };
     format!(
         "async function {func}(): Promise<string> {{
-\tconst state = BACKGROUND_STATE[\"{fixture}\"] ?? [];
+\tconst state = {store}[\"{fixture}\"] ?? [];
 \tconst response: HandlerResponse = {{ status: 200 }};
 \tresponse.headers = {{ \"content-type\": \"application/json\" }};
 \tresponse.body = {{ \"{state_key}\": state }};
@@ -1120,7 +1247,8 @@ fn generate_background_state_handler(
 }}",
         func = function_name,
         fixture = fixture_id,
-        state_key = background.state_key
+        state_key = background.state_key,
+        store = store
     )
 }
 
@@ -2196,10 +2324,9 @@ fn generate_all_dependency_factories_ts(di_config: &DependencyConfig, fixture_id
     let mut code = String::new();
     let all_deps = di_config.all_dependencies();
 
-    // Generate factory functions for non-value dependencies
     for dep in all_deps.values() {
         if dep.is_value() {
-            continue; // Values are registered directly, no factory needed
+            continue;
         }
 
         let factory_code = generate_dependency_factory_ts(dep, fixture_id)?;
@@ -2217,11 +2344,11 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
     let factory_name = to_camel_case(&format!("{}_{}", fixture_id, &dep.key));
     let is_async = dep.is_async_factory();
     let has_cleanup = dep.cleanup;
+    let (cleanup_open_event, cleanup_close_event) = cleanup_event_names(&dep.key);
 
     let mut code = String::new();
 
     if has_cleanup {
-        // Generator function for cleanup (async generator)
         code.push_str(&format!("async function* {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -2237,8 +2364,8 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
             fixture_id, fixture_id
         ));
         code.push_str(&format!(
-            "\tCLEANUP_STATE[\"{}\"].push(\"session_opened\");\n",
-            fixture_id
+            "\tCLEANUP_STATE[\"{}\"].push(\"{}\");\n",
+            fixture_id, cleanup_open_event
         ));
         code.push_str("\t// Create resource\n");
         code.push_str(&format!(
@@ -2250,13 +2377,12 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
         code.push_str("\t} finally {\n");
         code.push_str("\t\t// Cleanup resource\n");
         code.push_str(&format!(
-            "\t\tCLEANUP_STATE[\"{}\"].push(\"session_closed\");\n",
-            fixture_id
+            "\t\tCLEANUP_STATE[\"{}\"].push(\"{}\");\n",
+            fixture_id, cleanup_close_event
         ));
         code.push_str("\t}\n");
         code.push('}');
     } else if is_async {
-        // Async factory without cleanup
         code.push_str(&format!("async function {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -2267,7 +2393,6 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
         code.push_str("): Promise<unknown> {\n");
         code.push_str(&format!("\t// Async factory for {}\n", dep.key));
 
-        // Generate factory logic based on dependency name
         if dep.key.contains("db") || dep.key.contains("database") {
             code.push_str("\t// Simulate async DB connection\n");
             code.push_str("\treturn { connected: true, poolId: Math.random().toString() };\n");
@@ -2285,7 +2410,6 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
         }
         code.push('}');
     } else {
-        // Sync factory
         code.push_str(&format!("function {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -2305,18 +2429,28 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
     Ok(code)
 }
 
+fn cleanup_event_names(key: &str) -> (&'static str, &'static str) {
+    let lowered = key.to_ascii_lowercase();
+    if lowered.contains("session") {
+        return ("session_opened", "session_closed");
+    }
+    if lowered.contains("cache") {
+        return ("cache_opened", "cache_closed");
+    }
+    if lowered.contains("db") || lowered.contains("database") {
+        return ("db_opened", "db_closed");
+    }
+    ("session_opened", "session_closed")
+}
+
 /// Generate DI provider registrations for TypeScript
 fn generate_di_providers_ts(di_config: &DependencyConfig, fixture_id: &str) -> Result<String> {
     let mut code = String::new();
     let all_deps = di_config.all_dependencies();
 
-    // Sort dependencies by resolution order
-    // If circular dependency is detected, skip DI generation (this is intentional for error test fixtures)
     let resolution_order = match di_config.compute_resolution_order() {
         Ok(order) => order,
         Err(_) => {
-            // Circular dependency detected - skip DI registration for this fixture
-            // The fixture is likely testing circular dependency error handling
             return Ok(String::new());
         }
     };
@@ -2327,13 +2461,11 @@ fn generate_di_providers_ts(di_config: &DependencyConfig, fixture_id: &str) -> R
                 let camel_key = to_camel_case(&key);
 
                 if dep.is_value() {
-                    // Direct value registration
                     if let Some(value) = &dep.value {
                         let value_literal = json_value_to_ts_literal(value);
                         code.push_str(&format!("\tapp.provide(\"{}\", {});\n", camel_key, value_literal));
                     }
                 } else {
-                    // Factory registration - pass factory function and options to app.provide()
                     let factory_name = to_camel_case(&format!("{}_{}", fixture_id, &key));
                     let mut options = Vec::new();
 

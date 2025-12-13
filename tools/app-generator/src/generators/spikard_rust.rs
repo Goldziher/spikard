@@ -14,7 +14,6 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
     let mut handler_names = HashMap::new();
     let mut handlers_code = String::new();
 
-    // Add health check handler
     handlers_code.push_str("#[allow(dead_code)]\nstruct HealthHandler {}\n\n");
     handlers_code.push_str("impl Handler for HealthHandler {\n");
     handlers_code.push_str("    fn call(\n");
@@ -94,7 +93,6 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
 
     let mut code = String::new();
 
-    // Generate request struct if there's a body
     if has_body {
         let request_struct_name = format!("{}Request", struct_name);
         code.push_str("#[derive(Deserialize, Serialize)]\n");

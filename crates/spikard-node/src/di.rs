@@ -33,7 +33,7 @@ impl Dependency for NodeValueDependency {
     }
 
     fn depends_on(&self) -> Vec<String> {
-        vec![] // Value dependencies have no dependencies
+        vec![]
     }
 
     fn resolve(
@@ -50,14 +50,11 @@ impl Dependency for NodeValueDependency {
         >,
     > {
         let value = self.value_json.clone();
-        Box::pin(async move {
-            // Store as JSON string to pass across threads
-            Ok(Arc::new(value) as Arc<dyn Any + Send + Sync>)
-        })
+        Box::pin(async move { Ok(Arc::new(value) as Arc<dyn Any + Send + Sync>) })
     }
 
     fn singleton(&self) -> bool {
-        true // Value dependencies are always singletons
+        true
     }
 
     fn cacheable(&self) -> bool {
@@ -121,12 +118,10 @@ impl Dependency for NodeFactoryDependency {
                 + '_,
         >,
     > {
-        // Clone what we need before async
         let factory_fn = Arc::clone(&self.factory_fn);
         let depends_on = self.depends_on.clone();
         let key = self.key.clone();
 
-        // Extract resolved dependencies before async
         let resolved_deps: Vec<(String, String)> = depends_on
             .iter()
             .filter_map(|dep_key| {
@@ -136,14 +131,11 @@ impl Dependency for NodeFactoryDependency {
             })
             .collect();
 
-        // Clone resolved for cleanup task registration
         let resolved_clone = resolved.clone();
 
         Box::pin(async move {
-            // Build dependencies object as JSON
             let mut deps_map = std::collections::HashMap::new();
             for (dep_key, dep_value) in resolved_deps {
-                // Dependencies are stored as JSON strings
                 let parsed: serde_json::Value = serde_json::from_str(&dep_value).map_err(|e| {
                     spikard_core::di::DependencyError::ResolutionFailed {
                         message: format!("Failed to parse dependency {}: {}", dep_key, e),
@@ -157,7 +149,6 @@ impl Dependency for NodeFactoryDependency {
                     message: format!("Failed to serialize dependencies: {}", e),
                 })?;
 
-            // Call the factory function
             let result = factory_fn
                 .call_async(deps_json.clone())
                 .await
@@ -169,8 +160,6 @@ impl Dependency for NodeFactoryDependency {
                     message: format!("Factory promise failed: {}", e),
                 })?;
 
-            // Check if result is a JSON object with __async_generator__: true marker
-            // (This marker is set by JavaScript code when it returns an AsyncGenerator)
             let result_value: serde_json::Value = serde_json::from_str(&result).unwrap_or(serde_json::Value::Null);
 
             if let Some(obj) = result_value.as_object()
@@ -179,7 +168,6 @@ impl Dependency for NodeFactoryDependency {
                     .and_then(|v| v.as_bool())
                     .unwrap_or(false)
             {
-                // This is an async generator - extract the yielded value and generator handle
                 let value_str = obj
                     .get("value")
                     .and_then(|v| serde_json::to_string(v).ok())
@@ -187,22 +175,12 @@ impl Dependency for NodeFactoryDependency {
                         message: format!("AsyncGenerator missing 'value' field for {}", key),
                     })?;
 
-                // For cleanup, we would need to call the generator's return() method
-                // Since we can't easily store the generator object across the FFI boundary,
-                // we rely on JavaScript's GC to clean up when the generator is no longer referenced
-                // For now, store a note that cleanup is needed
                 let resolved_mut = resolved_clone;
-                resolved_mut.add_cleanup_task(Box::new(move || {
-                    Box::pin(async move {
-                        // Cleanup will be handled by JavaScript runtime
-                        // The generator's finally block will run when it's GC'd or explicitly closed
-                    })
-                }));
+                resolved_mut.add_cleanup_task(Box::new(move || Box::pin(async move {})));
 
                 return Ok(Arc::new(value_str) as Arc<dyn Any + Send + Sync>);
             }
 
-            // Store result as JSON string
             Ok(Arc::new(result) as Arc<dyn Any + Send + Sync>)
         })
     }
@@ -224,16 +202,12 @@ impl Dependency for NodeFactoryDependency {
 pub fn extract_dependency_container(
     app_or_dependencies: &Object,
 ) -> Result<Option<Arc<spikard_core::di::DependencyContainer>>> {
-    // Prefer an explicit `dependencies` property on the app; otherwise treat the
-    // provided object itself as the dependency map (used by the test client).
     let dependencies_opt: Option<Object> = app_or_dependencies.get("dependencies")?;
     let dependencies = if let Some(obj) = dependencies_opt {
         obj
     } else {
         let dep_keys = Object::keys(app_or_dependencies)?;
 
-        // Heuristic: if the object has entries that look like dependency descriptors,
-        // accept it as the dependency map.
         let has_dependency_shape = dep_keys.iter().any(|key| {
             app_or_dependencies
                 .get::<Object>(key)
@@ -267,11 +241,9 @@ pub fn extract_dependency_container(
             .get(key)?
             .ok_or_else(|| Error::from_reason(format!("Dependency {} not found", key)))?;
 
-        // Check if it's a factory or a value
         let is_factory: bool = dep_obj.get("isFactory")?.unwrap_or(false);
 
         if is_factory {
-            // Extract factory configuration
             let factory_fn: Function<String, Promise<String>> = dep_obj
                 .get("factory")?
                 .ok_or_else(|| Error::from_reason(format!("Factory function not found for {}", key)))?;
@@ -281,7 +253,6 @@ pub fn extract_dependency_container(
             let singleton: bool = dep_obj.get("singleton")?.unwrap_or(false);
             let cacheable: bool = dep_obj.get("cacheable")?.unwrap_or(false);
 
-            // Build ThreadsafeFunction
             let tsfn = factory_fn
                 .build_threadsafe_function()
                 .build_callback(|ctx| Ok(vec![ctx.value]))
@@ -298,12 +269,10 @@ pub fn extract_dependency_container(
                 .register(key.clone(), Arc::new(factory_dep))
                 .map_err(|e| Error::from_reason(format!("Failed to register factory {}: {}", key, e)))?;
         } else {
-            // Value dependency - serialize to JSON
             let value: Unknown = dep_obj
                 .get("value")?
                 .ok_or_else(|| Error::from_reason(format!("Value not found for dependency {}", key)))?;
 
-            // Convert to JSON string - get Env from app object
             let env = Env::from(app_or_dependencies.value().env);
             let global = env.get_global()?;
             let json_obj: Object = global.get_named_property("JSON")?;
@@ -339,7 +308,6 @@ pub fn resolved_to_js_object<'a>(
 
     for key in keys {
         if let Some(value_json) = resolved.get::<String>(key) {
-            // Parse JSON string back to JS value
             let js_value = parse.call(value_json.to_string())?;
             obj.set(key.as_str(), js_value)?;
         }

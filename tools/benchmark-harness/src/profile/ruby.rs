@@ -27,10 +27,6 @@ struct RubyMetricsFile {
 
 /// Start Ruby profiler for the given PID
 pub fn start_profiler(pid: u32) -> Result<RubyProfiler> {
-    // Note: stackprof requires the gem to be required in the application,
-    // so we can't attach to a running process.
-    // Instead, we'll rely on application instrumentation for metrics.
-
     eprintln!("  ℹ Ruby profiling via application instrumentation");
     eprintln!("  → GC and heap metrics will be collected");
     eprintln!("  → For CPU profiling, add: require 'stackprof'");
@@ -59,7 +55,6 @@ impl RubyProfiler {
             let _ = process.wait();
         }
 
-        // Load application metrics from instrumentation file
         let metrics_path = format!("/tmp/ruby-metrics-{}.json", self.pid);
         let app_metrics = self.load_metrics_file(&metrics_path);
 
@@ -85,10 +80,7 @@ impl RubyProfiler {
                     None
                 }
             },
-            Err(_) => {
-                // Metrics file not present - application may not have instrumentation
-                None
-            }
+            Err(_) => None,
         }
     }
 }

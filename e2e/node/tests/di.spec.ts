@@ -196,18 +196,16 @@ describe("di", () => {
 
 		expect(response.statusCode).toBe(200);
 
-		// Second request to verify singleton caching
 		const response2 = await client.get("/api/mixed-caching");
 		expect(response2.statusCode).toBe(200);
 		const data1 = response.json();
 		const data2 = response2.json();
 
-		// Singleton should have same ID but incremented count
 		expect(data1.id).toBeDefined();
 		expect(data2.id).toBeDefined();
-		expect(data1.id).toBe(data2.id); // Same singleton instance
+		expect(data1.id).toBe(data2.id);
 		if (data1.count !== undefined && data2.count !== undefined) {
-			expect(data2.count).toBeGreaterThan(data1.count); // Count incremented
+			expect(data2.count).toBeGreaterThan(data1.count);
 		}
 	});
 
@@ -259,18 +257,16 @@ describe("di", () => {
 
 		expect(response.statusCode).toBe(200);
 
-		// Second request to verify singleton caching
 		const response2 = await client.get("/api/app-counter");
 		expect(response2.statusCode).toBe(200);
 		const data1 = response.json();
 		const data2 = response2.json();
 
-		// Singleton should have same ID but incremented count
 		expect(data1.id).toBeDefined();
 		expect(data2.id).toBeDefined();
-		expect(data1.id).toBe(data2.id); // Same singleton instance
+		expect(data1.id).toBe(data2.id);
 		if (data1.count !== undefined && data2.count !== undefined) {
-			expect(data2.count).toBeGreaterThan(data1.count); // Count incremented
+			expect(data2.count).toBeGreaterThan(data1.count);
 		}
 	});
 

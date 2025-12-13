@@ -50,13 +50,9 @@ pub enum RubyHandlerResult {
 impl StreamingResponsePayload {
     /// Convert streaming response into a `HandlerResponse`.
     pub fn into_response(self) -> Result<HandlerResponse, Error> {
-        // Get Ruby VM reference. In FFI, Ruby must be available during this callback.
-        // If Ruby becomes unavailable, this is a fatal error condition.
         let ruby = match Ruby::get() {
             Ok(r) => r,
             Err(_) => {
-                // Ruby VM is unavailable. This should never happen during active FFI.
-                // We panic because continuing without a Ruby VM is unsafe.
                 panic!("Ruby VM became unavailable during streaming response construction");
             }
         };
@@ -542,11 +538,6 @@ fn interpret_handler_response(
         let body = if content_value.is_nil() {
             None
         } else if let Ok(str_value) = RString::try_convert(content_value) {
-            // SAFETY: Magnus RString::as_slice() yields a valid byte slice for the
-            // lifetime of the RString value. We immediately call .to_vec() which copies
-            // the bytes into owned memory, so the result does not retain any references
-            // to the underlying RString. This is safe because the copy happens before
-            // the RString reference is released.
             let slice = unsafe { str_value.as_slice() };
             raw_body = Some(slice.to_vec());
             None
@@ -567,10 +558,6 @@ fn interpret_handler_response(
     }
 
     if let Ok(str_value) = RString::try_convert(value) {
-        // SAFETY: Magnus RString::as_slice() returns a valid byte slice that remains
-        // valid for the lifetime of the RString. We call .to_vec() to copy the bytes
-        // into owned storage, ensuring the returned HandlerResponsePayload does not
-        // hold any references back to the RString. This copy-then-own pattern is safe.
         let slice = unsafe { str_value.as_slice() };
         return Ok(RubyHandlerResult::Payload(HandlerResponsePayload {
             status: 200,

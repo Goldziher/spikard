@@ -14,33 +14,26 @@ import { get, Spikard } from "@spikard/node";
 
 const app = new Spikard();
 
-// Register value dependencies
-// Values are automatically cached and shared across all requests
 app.provide("app_name", "SpikardApp");
 app.provide("version", "1.0.0");
 app.provide("max_connections", 100);
 
-// Register a factory dependency that depends on other dependencies
-// Factories can be async and access other resolved dependencies
 app.provide(
 	"database_url",
 	async ({ app_name }: { app_name: string }) => {
-		// Simulate async configuration loading
 		await new Promise((resolve) => setTimeout(resolve, 10));
 		return `postgresql://localhost/${app_name.toLowerCase()}`;
 	},
 	{
 		dependsOn: ["app_name"],
-		singleton: true, // Resolved once globally
-		cacheable: true, // Cache the result
+		singleton: true,
+		cacheable: true,
 	},
 );
 
-// Factory that creates a mock database connection
 app.provide(
 	"db_pool",
 	async ({ database_url }: { database_url: string }) => {
-		// Simulate database connection
 		console.log(`Connecting to database: ${database_url}`);
 		return {
 			connected: true,
@@ -114,7 +107,6 @@ get("/all")(async function getAll(
 	};
 });
 
-// Start the server (only if run directly)
 if (require.main === module) {
 	console.log("Starting Spikard server with dependency injection...");
 	app.run({ port: 8000 });

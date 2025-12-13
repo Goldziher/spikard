@@ -75,16 +75,11 @@ pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
         let normalized = normalize_route(&fixture.handler.route);
         let canonical = canonicalize_route(&normalized);
 
-        // Use just the canonical form (without method) to ensure all methods
-        // for the same path pattern use consistent parameter names
-        // e.g., PATCH /items/{id} and GET /items/{item_id} both use /items/{id}
         let consistent_normalized = canonical_paths
             .entry(canonical.clone())
             .or_insert_with(|| normalized.clone())
             .clone();
 
-        // Skip if we've already seen this method + canonical combination
-        // e.g., skip second POST /{} (whether it's /{id} or /{lang})
         let method_canonical_key = format!("{} {}", fixture.handler.method, canonical);
         if method_canonical_seen.contains(&method_canonical_key) {
             continue;

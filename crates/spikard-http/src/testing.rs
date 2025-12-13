@@ -125,7 +125,7 @@ fn decode_body(headers: &HashMap<String, String>, body: Vec<u8>) -> Result<Vec<u
         .map(|value| value.trim().to_ascii_lowercase());
 
     match encoding.as_deref() {
-        Some("gzip") | Some("x-gzip") => decode_gzip(body),
+        Some("gzip" | "x-gzip") => decode_gzip(body),
         Some("br") => decode_brotli(body),
         _ => Ok(body),
     }
@@ -133,20 +133,20 @@ fn decode_body(headers: &HashMap<String, String>, body: Vec<u8>) -> Result<Vec<u
 
 fn decode_gzip(body: Vec<u8>) -> Result<Vec<u8>, SnapshotError> {
     let mut decoder = GzDecoder::new(Cursor::new(body));
-    let mut decoded = Vec::new();
+    let mut decoded_bytes = Vec::new();
     decoder
-        .read_to_end(&mut decoded)
+        .read_to_end(&mut decoded_bytes)
         .map_err(|e| SnapshotError::Decompression(e.to_string()))?;
-    Ok(decoded)
+    Ok(decoded_bytes)
 }
 
 fn decode_brotli(body: Vec<u8>) -> Result<Vec<u8>, SnapshotError> {
     let mut decoder = Decompressor::new(Cursor::new(body), 4096);
-    let mut decoded = Vec::new();
+    let mut decoded_bytes = Vec::new();
     decoder
-        .read_to_end(&mut decoded)
+        .read_to_end(&mut decoded_bytes)
         .map_err(|e| SnapshotError::Decompression(e.to_string()))?;
-    Ok(decoded)
+    Ok(decoded_bytes)
 }
 
 /// WebSocket connection wrapper for testing.

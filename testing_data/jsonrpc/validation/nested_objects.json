@@ -1,0 +1,315 @@
+[
+	{
+		"name": "valid_nested_structure",
+		"method": "user.address.save",
+		"params": {
+			"user": {
+				"profile": {
+					"address": {
+						"street": "123 Main Street",
+						"zip": "12345"
+					}
+				}
+			}
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "valid_nested_with_optional_fields",
+		"method": "user.address.save",
+		"params": {
+			"user": {
+				"profile": {
+					"address": {
+						"street": "456 Oak Avenue",
+						"zip": "67890",
+						"city": "Springfield",
+						"country": "USA"
+					}
+				}
+			}
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "missing_nested_street",
+		"method": "user.address.save",
+		"params": {
+			"user": {
+				"profile": {
+					"address": {
+						"zip": "12345"
+					}
+				}
+			}
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "user.profile.address.street",
+				"constraint": "required",
+				"details": "Missing required field: street"
+			}
+		}
+	},
+	{
+		"name": "invalid_zip_pattern",
+		"method": "user.address.save",
+		"params": {
+			"user": {
+				"profile": {
+					"address": {
+						"street": "789 Pine Road",
+						"zip": "123"
+					}
+				}
+			}
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "user.profile.address.zip",
+				"constraint": "pattern",
+				"value": "123",
+				"details": "Value does not match pattern: ^[0-9]{5}$"
+			}
+		}
+	},
+	{
+		"name": "invalid_zip_with_letters",
+		"method": "user.address.save",
+		"params": {
+			"user": {
+				"profile": {
+					"address": {
+						"street": "321 Elm Street",
+						"zip": "123AB"
+					}
+				}
+			}
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "user.profile.address.zip",
+				"constraint": "pattern",
+				"value": "123AB",
+				"details": "Value does not match pattern: ^[0-9]{5}$"
+			}
+		}
+	},
+	{
+		"name": "missing_intermediate_profile",
+		"method": "user.address.save",
+		"params": {
+			"user": {}
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "user.profile",
+				"constraint": "required",
+				"details": "Missing required field: profile"
+			}
+		}
+	},
+	{
+		"name": "null_for_nested_object",
+		"method": "user.address.save",
+		"params": {
+			"user": {
+				"profile": null
+			}
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "user.profile",
+				"constraint": "type",
+				"value": null,
+				"details": "Expected type object, got null"
+			}
+		}
+	},
+	{
+		"name": "array_of_nested_objects_valid",
+		"method": "user.addresses.save",
+		"params": {
+			"addresses": [
+				{
+					"street": "123 Main Street",
+					"zip": "12345"
+				},
+				{
+					"street": "456 Oak Avenue",
+					"zip": "67890"
+				}
+			]
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "array_of_nested_objects_invalid_item",
+		"method": "user.addresses.save",
+		"params": {
+			"addresses": [
+				{
+					"street": "123 Main Street",
+					"zip": "12345"
+				},
+				{
+					"street": "456 Oak Avenue",
+					"zip": "invalid"
+				}
+			]
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "addresses[1].zip",
+				"constraint": "pattern",
+				"value": "invalid",
+				"details": "Value does not match pattern: ^[0-9]{5}$"
+			}
+		}
+	},
+	{
+		"name": "nested_array_with_item_validation",
+		"method": "user.profile.save",
+		"params": {
+			"user": {
+				"profile": {
+					"aliases": ["John", "Johnny", "JD"]
+				}
+			}
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "nested_array_invalid_items",
+		"method": "user.profile.save",
+		"params": {
+			"user": {
+				"profile": {
+					"aliases": ["John", 123, "JD"]
+				}
+			}
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "user.profile.aliases[1]",
+				"constraint": "type",
+				"value": 123,
+				"details": "Expected type string, got integer"
+			}
+		}
+	},
+	{
+		"name": "multiple_nested_validation_errors",
+		"method": "user.address.save",
+		"params": {
+			"user": {
+				"profile": {
+					"address": {
+						"zip": "abc"
+					}
+				}
+			}
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"errors": [
+					{
+						"fieldPath": "user.profile.address.street",
+						"constraint": "required",
+						"details": "Missing required field: street"
+					},
+					{
+						"fieldPath": "user.profile.address.zip",
+						"constraint": "pattern",
+						"details": "Value does not match pattern: ^[0-9]{5}$"
+					}
+				]
+			}
+		}
+	},
+	{
+		"name": "deep_nesting_six_levels",
+		"method": "user.deep.config.save",
+		"params": {
+			"user": {
+				"level1": {
+					"level2": {
+						"level3": {
+							"level4": {
+								"level5": {
+									"value": "deep"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "deep_nesting_invalid_at_level_four",
+		"method": "user.deep.config.save",
+		"params": {
+			"user": {
+				"level1": {
+					"level2": {
+						"level3": {
+							"level4": "not_an_object"
+						}
+					}
+				}
+			}
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "user.level1.level2.level3.level4",
+				"constraint": "type",
+				"value": "not_an_object",
+				"details": "Expected type object, got string"
+			}
+		}
+	},
+	{
+		"name": "missing_required_at_root_level",
+		"method": "user.address.save",
+		"params": {},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "user",
+				"constraint": "required",
+				"details": "Missing required field: user"
+			}
+		}
+	}
+]

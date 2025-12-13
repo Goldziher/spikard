@@ -1,30 +1,14 @@
-// WASM-specific tests using wasm-bindgen-test framework
-// These tests are compiled and run only for wasm32 target
-// Run with: wasm-pack test --headless --firefox crates/spikard-wasm
-
 #![cfg(target_arch = "wasm32")]
 
 use wasm_bindgen_test::*;
 
-// Configure to run in browser environment for full WASM testing
 wasm_bindgen_test_configure!(run_in_browser);
-
-// ============================================================================
-// Test 1: Module Initialization
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_init_sets_panic_hook() {
-    // The init() function should set the panic hook without panicking
-    // This test verifies that panic hook initialization works
     spikard_wasm::init();
-    // If we reach here, init() succeeded
     assert!(true);
 }
-
-// ============================================================================
-// Test 2: TestClient Construction - Valid JSON Routes
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_client_construction_with_valid_routes() {
@@ -47,10 +31,6 @@ fn test_client_construction_with_valid_routes() {
     assert!(result.is_ok(), "TestClient should construct with valid routes");
 }
 
-// ============================================================================
-// Test 3: TestClient Construction - Invalid Routes JSON
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_client_construction_invalid_json() {
     use js_sys::Object;
@@ -65,10 +45,6 @@ fn test_client_construction_invalid_json() {
     assert!(result.is_err(), "TestClient should reject invalid JSON routes");
 }
 
-// ============================================================================
-// Test 4: TestClient Construction - Handlers Must Be Object
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_client_construction_handlers_type_check() {
     use wasm_bindgen::JsValue;
@@ -81,10 +57,6 @@ fn test_client_construction_handlers_type_check() {
 
     assert!(result.is_err(), "TestClient should require handlers to be an object");
 }
-
-// ============================================================================
-// Test 5: TestClient GET Method Returns Promise
-// ============================================================================
 
 #[wasm_bindgen_test]
 async fn test_get_method_returns_promise() {
@@ -109,16 +81,11 @@ async fn test_get_method_returns_promise() {
     let client = client.unwrap();
     let promise = client.get("/test".to_string(), JsValue::NULL);
 
-    // Verify the return value is a Promise
     assert!(
         Promise::from(promise.clone()).is_instance_of::<Promise>(),
         "GET should return a Promise"
     );
 }
-
-// ============================================================================
-// Test 6: TestClient DELETE Method Returns Promise
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_delete_method_returns_promise() {
@@ -140,10 +107,6 @@ fn test_delete_method_returns_promise() {
     );
 }
 
-// ============================================================================
-// Test 7: TestClient POST Method Returns Promise
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_post_method_returns_promise() {
     use js_sys::{Object, Promise};
@@ -163,10 +126,6 @@ fn test_post_method_returns_promise() {
         "POST should return a Promise"
     );
 }
-
-// ============================================================================
-// Test 8: TestClient PUT Method Returns Promise
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_put_method_returns_promise() {
@@ -188,10 +147,6 @@ fn test_put_method_returns_promise() {
     );
 }
 
-// ============================================================================
-// Test 9: TestClient PATCH Method Returns Promise
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_patch_method_returns_promise() {
     use js_sys::{Object, Promise};
@@ -211,10 +166,6 @@ fn test_patch_method_returns_promise() {
         "PATCH should return a Promise"
     );
 }
-
-// ============================================================================
-// Test 10: TestClient HEAD Method Returns Promise
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_head_method_returns_promise() {
@@ -236,10 +187,6 @@ fn test_head_method_returns_promise() {
     );
 }
 
-// ============================================================================
-// Test 11: TestClient OPTIONS Method Returns Promise
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_options_method_returns_promise() {
     use js_sys::{Object, Promise};
@@ -260,10 +207,6 @@ fn test_options_method_returns_promise() {
     );
 }
 
-// ============================================================================
-// Test 12: TestClient TRACE Method Returns Promise
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_trace_method_returns_promise() {
     use js_sys::{Object, Promise};
@@ -283,10 +226,6 @@ fn test_trace_method_returns_promise() {
         "TRACE should return a Promise"
     );
 }
-
-// ============================================================================
-// Test 13: Multiple Routes Configuration
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_client_with_multiple_routes() {
@@ -329,10 +268,6 @@ fn test_client_with_multiple_routes() {
     assert!(result.is_ok(), "TestClient should accept multiple routes");
 }
 
-// ============================================================================
-// Test 14: Server Config Deserialization - Valid JSON
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_client_with_valid_config() {
     use js_sys::Object;
@@ -347,10 +282,6 @@ fn test_client_with_valid_config() {
     assert!(result.is_ok(), "TestClient should accept valid server config");
 }
 
-// ============================================================================
-// Test 15: Server Config Deserialization - Invalid Config Type
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_client_with_invalid_config_type() {
     use js_sys::Object;
@@ -358,16 +289,12 @@ fn test_client_with_invalid_config_type() {
 
     let routes_json = "[]";
     let handlers = Object::new();
-    let config = JsValue::from(42); // Not a string
+    let config = JsValue::from(42);
 
     let result = spikard_wasm::TestClient::new(routes_json, handlers.into(), config, None);
 
     assert!(result.is_err(), "TestClient should reject non-string config");
 }
-
-// ============================================================================
-// Test 16: Server Config Deserialization - Malformed JSON
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_client_with_malformed_config_json() {
@@ -382,10 +309,6 @@ fn test_client_with_malformed_config_json() {
 
     assert!(result.is_err(), "TestClient should reject malformed config JSON");
 }
-
-// ============================================================================
-// Test 17: Route Definition with Schemas
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_client_with_routes_containing_schemas() {
@@ -425,10 +348,6 @@ fn test_client_with_routes_containing_schemas() {
     );
 }
 
-// ============================================================================
-// Test 18: JsValue Error Propagation - Invalid Handler Type
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_error_propagation_invalid_handler_map() {
     use wasm_bindgen::JsValue;
@@ -441,16 +360,11 @@ fn test_error_propagation_invalid_handler_map() {
 
     match result {
         Err(err) => {
-            // Verify the error is a JsValue (FFI boundary preservation)
             assert!(err.is_object(), "Error should be a JsValue");
         }
         Ok(_) => panic!("Should have failed with invalid handlers"),
     }
 }
-
-// ============================================================================
-// Test 19: Client Supports Null/Undefined Config
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_client_with_null_config() {
@@ -460,20 +374,14 @@ fn test_client_with_null_config() {
     let routes_json = "[]";
     let handlers = Object::new();
 
-    // Test with NULL
     let result = spikard_wasm::TestClient::new(routes_json, handlers.into(), JsValue::NULL, None);
 
     assert!(result.is_ok(), "TestClient should accept NULL config");
 
-    // Test with UNDEFINED
     let result = spikard_wasm::TestClient::new(routes_json, Object::new().into(), JsValue::UNDEFINED, None);
 
     assert!(result.is_ok(), "TestClient should accept UNDEFINED config");
 }
-
-// ============================================================================
-// Test 20: Client Supports Null Lifecycle Hooks
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_client_with_null_lifecycle_hooks() {
@@ -488,10 +396,6 @@ fn test_client_with_null_lifecycle_hooks() {
 
     assert!(result.is_ok(), "TestClient should accept None for lifecycle hooks");
 }
-
-// ============================================================================
-// Test 21: Client Creation Does Not Panic on Valid Input
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_client_creation_no_panic() {
@@ -514,16 +418,10 @@ fn test_client_creation_no_panic() {
     let handlers = Object::new();
     let config = JsValue::NULL;
 
-    // This should not panic
     let _ = spikard_wasm::TestClient::new(routes_json, handlers.into(), config, None);
 
-    // If we reach here without panicking, test passes
     assert!(true);
 }
-
-// ============================================================================
-// Test 22: Multiple Client Instances Can Be Created
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_multiple_client_instances() {
@@ -546,10 +444,6 @@ fn test_multiple_client_instances() {
     );
 }
 
-// ============================================================================
-// Test 23: Test Memory Safety - No Dangling References
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_memory_safety_handler_references() {
     use js_sys::Object;
@@ -566,16 +460,10 @@ fn test_memory_safety_handler_references() {
     let handlers = Object::new();
     let config = JsValue::NULL;
 
-    // Create client with handlers - should not create dangling refs
     let _client = spikard_wasm::TestClient::new(routes_json, handlers.into(), config, None);
 
-    // If no panic/segfault, memory safety is preserved
     assert!(true);
 }
-
-// ============================================================================
-// Test 24: Route Path Parameter Handling
-// ============================================================================
 
 #[wasm_bindgen_test]
 fn test_route_with_path_parameters() {
@@ -598,10 +486,6 @@ fn test_route_with_path_parameters() {
     assert!(result.is_ok(), "TestClient should accept routes with path parameters");
 }
 
-// ============================================================================
-// Test 25: Empty Routes Array
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_client_with_empty_routes() {
     use js_sys::Object;
@@ -616,16 +500,11 @@ fn test_client_with_empty_routes() {
     assert!(result.is_ok(), "TestClient should accept empty routes array");
 }
 
-// ============================================================================
-// Test 26: Case Insensitive HTTP Methods
-// ============================================================================
-
 #[wasm_bindgen_test]
 fn test_route_methods_various_cases() {
     use js_sys::Object;
     use wasm_bindgen::JsValue;
 
-    // The routes should work with different method cases
     let routes_json = r#"[
         {
             "method": "GET",
@@ -649,6 +528,5 @@ fn test_route_methods_various_cases() {
 
     let result = spikard_wasm::TestClient::new(routes_json, handlers.into(), config, None);
 
-    // The client should accept method definitions with various cases
     assert!(result.is_ok());
 }

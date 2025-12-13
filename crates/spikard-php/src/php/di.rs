@@ -67,8 +67,6 @@ impl ZvalHandle {
     }
 }
 
-// SAFETY: ZvalHandle only contains a numeric ID, not raw pointers
-// The actual Zval is stored in thread-local storage
 unsafe impl Send for ZvalHandle {}
 unsafe impl Sync for ZvalHandle {}
 
@@ -110,7 +108,7 @@ impl Dependency for PhpValueDependency {
     }
 
     fn depends_on(&self) -> Vec<String> {
-        vec![] // Value dependencies don't depend on other dependencies
+        vec![]
     }
 
     fn resolve(
@@ -119,10 +117,8 @@ impl Dependency for PhpValueDependency {
         _request_data: &RequestData,
         _resolved: &ResolvedDependencies,
     ) -> BoxFuture<'_, Result<Arc<dyn Any + Send + Sync>, DependencyError>> {
-        // Create a Send+Sync handle that references the value
         let handle = ZvalHandle::new(self.value_id);
 
-        // Wrap the handle (which IS Send+Sync) in Arc<Any>
         let boxed: Arc<dyn Any + Send + Sync> = Arc::new(handle);
 
         Box::pin(async move { Ok(boxed) })
@@ -173,7 +169,6 @@ impl PhpFactoryDependency {
     /// # Returns
     /// Result containing the created instance value ID
     fn invoke_factory(&self, resolved: &ResolvedDependencies) -> Result<usize, DependencyError> {
-        // Collect resolved Zvals from handles
         let mut zvals = Vec::new();
         for dep_name in &self.dependencies {
             let resolved_value = match resolved.get_arc(dep_name) {
@@ -185,7 +180,6 @@ impl PhpFactoryDependency {
                 }
             };
 
-            // Downcast to ZvalHandle
             let handle =
                 resolved_value
                     .downcast_ref::<ZvalHandle>()
@@ -193,12 +187,10 @@ impl PhpFactoryDependency {
                         message: format!("Dependency '{}' is not a ZvalHandle", dep_name),
                     })?;
 
-            // Get the actual Zval from thread-local storage
             let zval = handle.get()?;
             zvals.push(zval);
         }
 
-        // Invoke factory callable with the resolved Zvals
         let result_zval = PHP_FACTORY_REGISTRY.with(|registry| {
             let reg = registry.borrow();
             let callable_zval = reg
@@ -207,13 +199,11 @@ impl PhpFactoryDependency {
                     message: format!("Factory {} not found in registry", self.factory_id),
                 })?;
 
-            // Build argument references for try_call
             let args: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> = zvals
                 .iter()
                 .map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn)
                 .collect();
 
-            // Invoke PHP callable
             let callable = ZendCallable::new(callable_zval).map_err(|e| DependencyError::ResolutionFailed {
                 message: format!("Failed to create callable: {:?}", e),
             })?;
@@ -224,7 +214,6 @@ impl PhpFactoryDependency {
             Ok(result)
         })?;
 
-        // Store the result in the value registry and return its ID
         let value_id = PHP_VALUE_REGISTRY.with(|registry| {
             let mut reg = registry.borrow_mut();
             let id = reg.len();
@@ -251,15 +240,11 @@ impl Dependency for PhpFactoryDependency {
         _request_data: &RequestData,
         resolved: &ResolvedDependencies,
     ) -> BoxFuture<'_, Result<Arc<dyn Any + Send + Sync>, DependencyError>> {
-        // Invoke factory synchronously (PHP has no async)
-        // The DI container has already resolved all dependencies we declared in depends_on()
-        // Returns a value_id, which we wrap in a ZvalHandle
         let value_id = match self.invoke_factory(resolved) {
             Ok(id) => id,
             Err(e) => return Box::pin(async move { Err(e) }),
         };
 
-        // Create a Send+Sync handle that references the factory result
         let handle = ZvalHandle::new(value_id);
         let boxed: Arc<dyn Any + Send + Sync> = Arc::new(handle);
 
@@ -280,10 +265,7 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
         _ => return Ok(None),
     };
 
-    // Get dependencies array from PHP container
-    // Assumes: $container->dependencies is a public property or has getDependencies()
     let deps_array = if let Some(obj) = container_zval.object() {
-        // Try to get 'dependencies' property
         obj.get_property::<&Zval>("dependencies")
             .map_err(|_| "DependencyContainer must have 'dependencies' property".to_string())?
     } else {
@@ -303,12 +285,9 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
             ext_php_rs::types::ArrayKey::Long(l) => l.to_string(),
         };
 
-        // Check if it's a factory or value dependency
         if let Some(dep_obj) = dep_val.object() {
-            // Check if it's a Provide instance (factory)
             if let Ok(class_name) = dep_obj.get_class_name() {
                 if class_name.contains("Provide") {
-                    // Extract factory callable and dependencies
                     let factory_callable = dep_obj
                         .get_property::<&Zval>("factory")
                         .map_err(|_| format!("Provide instance '{}' missing 'factory' property", dep_name))?;
@@ -329,21 +308,18 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
                         .register(dep_name, Arc::new(factory))
                         .map_err(|e| format!("Failed to register factory: {:?}", e))?;
                 } else {
-                    // Plain object value dependency
                     let value = PhpValueDependency::new(dep_name.clone(), dep_val.shallow_clone());
                     container
                         .register(dep_name, Arc::new(value))
                         .map_err(|e| format!("Failed to register value: {:?}", e))?;
                 }
             } else {
-                // Object without class name - treat as value
                 let value = PhpValueDependency::new(dep_name.clone(), dep_val.shallow_clone());
                 container
                     .register(dep_name, Arc::new(value))
                     .map_err(|e| format!("Failed to register value: {:?}", e))?;
             }
         } else {
-            // Scalar value dependency
             let value = PhpValueDependency::new(dep_name.clone(), dep_val.shallow_clone());
             container
                 .register(dep_name, Arc::new(value))
@@ -360,15 +336,13 @@ mod tests {
 
     #[test]
     fn test_value_dependency() {
-        // Test that PhpValueDependency can be created
-        let zval = Zval::new(); // Create a null Zval for testing
+        let zval = Zval::new();
         let dep = PhpValueDependency::new("test_key".to_string(), zval);
         assert_eq!(dep.key(), "test_key");
     }
 
     #[test]
     fn test_factory_registry() {
-        // Test that factory registry works
         PHP_FACTORY_REGISTRY.with(|registry| {
             registry.borrow_mut().clear();
             let initial_len = registry.borrow().len();

@@ -101,7 +101,6 @@ async function handleEcho(request: Request): Promise<Response> {
 	try {
 		const body = (await request.json()) as unknown;
 
-		// Validate body is an object with string message
 		if (
 			typeof body !== "object" ||
 			body === null ||
@@ -223,7 +222,6 @@ async function startServer(): Promise<void> {
 			const { pathname } = parseUrl(request.url);
 			const method = request.method.toUpperCase();
 
-			// Route matching
 			if (pathname === "/" && method === "GET") {
 				return handleHome();
 			}
@@ -240,13 +238,11 @@ async function startServer(): Promise<void> {
 				return handleHealth();
 			}
 
-			// Default 404 handler
 			return handleNotFound();
 		},
 	);
 }
 
-// Auto-start when script is run directly
 await startServer().catch((error: unknown) => {
 	console.error("Failed to start server:", error);
 	Deno.exit(1);

@@ -22,6 +22,7 @@ pub fn build_route_metadata(
     is_async: bool,
     cors_value: Value,
     body_param_name: Option<String>,
+    jsonrpc_method_value: Value,
     handler_value: Value,
 ) -> Result<Value, Error> {
     let normalized_path = normalize_path_for_route(&path);
@@ -63,6 +64,12 @@ pub fn build_route_metadata(
         Some(handler_dependencies.clone())
     };
 
+    let jsonrpc_method = if jsonrpc_method_value.is_nil() {
+        None
+    } else {
+        Some(ruby_value_to_json(ruby, json_module, jsonrpc_method_value)?)
+    };
+
     let mut metadata = RouteMetadata {
         method,
         path: normalized_path,
@@ -76,9 +83,9 @@ pub fn build_route_metadata(
         body_param_name,
         #[cfg(feature = "di")]
         handler_dependencies: handler_deps_option,
+        jsonrpc_method,
     };
 
-    // Validate schemas and parameter validator during build to fail fast
     let registry = SchemaRegistry::new();
     let route = Route::from_metadata(metadata.clone(), &registry).map_err(|err| {
         Error::new(
@@ -147,6 +154,11 @@ pub fn route_metadata_to_ruby(ruby: &Ruby, metadata: &RouteMetadata) -> Result<V
             hash.aset(ruby.to_symbol("handler_dependencies"), ruby.qnil())?;
         }
     }
+
+    hash.aset(
+        ruby.to_symbol("jsonrpc_method"),
+        option_json_to_ruby(ruby, &metadata.jsonrpc_method)?,
+    )?;
 
     Ok(hash.as_value())
 }

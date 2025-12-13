@@ -11,7 +11,6 @@ import { del, get, patch, post, put, route } from "./routing";
  * Uses object property access with the readonly modifier to safely access __route_metadata__.
  */
 function getRouteMetadata(handler: unknown): RouteMetadata {
-	// Type the handler object with the metadata property
 	const handlerWithMetadata = handler as unknown as {
 		readonly __route_metadata__?: RouteMetadata;
 	};
@@ -182,7 +181,6 @@ describe("Routing Decorators", () => {
 			});
 
 			it("should not allow methods option", () => {
-				// This is enforced by TypeScript, but we test the runtime behavior
 				const handler = get("/test")(() => ({}));
 				const metadata = getRouteMetadata(handler);
 				expect(metadata.method).toBe("GET");

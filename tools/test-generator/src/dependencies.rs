@@ -124,7 +124,6 @@ impl DependencyConfig {
     /// Since the spikard_codegen Fixture struct doesn't have DI fields yet,
     /// we need to deserialize the fixture as a raw JSON Value to access DI fields
     pub fn from_fixture(fixture: &Fixture) -> Result<Option<Self>> {
-        // Serialize fixture back to JSON and parse as Value to access DI fields
         let fixture_json = serde_json::to_value(fixture)?;
 
         let handler = match fixture_json.get("handler") {
@@ -132,7 +131,6 @@ impl DependencyConfig {
             _ => return Ok(None),
         };
 
-        // Check if fixture has DI fields
         let has_dependencies = handler.get("dependencies").is_some()
             || handler.get("handler_dependencies").is_some()
             || handler.get("route_overrides").is_some();
@@ -141,7 +139,6 @@ impl DependencyConfig {
             return Ok(None);
         }
 
-        // Parse dependencies
         let mut dependencies = HashMap::new();
         if let Some(deps) = handler.get("dependencies").and_then(|v| v.as_object()) {
             for (key, value) in deps.iter() {
@@ -150,7 +147,6 @@ impl DependencyConfig {
             }
         }
 
-        // Parse route overrides
         let mut route_overrides = HashMap::new();
         if let Some(overrides) = handler.get("route_overrides").and_then(|v| v.as_object()) {
             for (key, value) in overrides.iter() {
@@ -159,21 +155,18 @@ impl DependencyConfig {
             }
         }
 
-        // Parse handler dependencies
         let handler_dependencies = handler
             .get("handler_dependencies")
             .and_then(|v| v.as_array())
             .map(|arr| arr.iter().filter_map(|v| v.as_str()).map(String::from).collect())
             .unwrap_or_default();
 
-        // Parse injection strategy
         let injection_strategy = handler
             .get("injection_strategy")
             .and_then(|v| v.as_str())
             .map(String::from);
 
-        // Parse resolution order from expected response (if present as raw JSON)
-        let resolution_order = None; // We'll compute this on-demand instead
+        let resolution_order = None;
 
         Ok(Some(DependencyConfig {
             dependencies,
@@ -193,12 +186,10 @@ impl DependencyConfig {
     pub fn all_dependencies(&self) -> HashMap<String, &Dependency> {
         let mut all = HashMap::new();
 
-        // Start with app-level dependencies
         for (key, dep) in &self.dependencies {
             all.insert(key.clone(), dep);
         }
 
-        // Override with route-level dependencies
         for (key, dep) in &self.route_overrides {
             all.insert(key.clone(), dep);
         }
@@ -214,7 +205,6 @@ impl DependencyConfig {
         let mut graph: HashMap<String, Vec<String>> = HashMap::new();
         let mut all_keys: HashSet<String> = HashSet::new();
 
-        // Build graph and compute in-degrees
         for (key, dep) in &all_deps {
             all_keys.insert(key.clone());
             in_degree.entry(key.clone()).or_insert(0);
@@ -230,12 +220,10 @@ impl DependencyConfig {
             }
         }
 
-        // Topological sort with batching (Kahn's algorithm)
         let mut batches = Vec::new();
         let mut processed = HashSet::new();
 
         while processed.len() < all_keys.len() {
-            // Find all nodes with in-degree 0 (can be resolved in parallel)
             let mut batch: Vec<String> = in_degree
                 .iter()
                 .filter(|&(key, degree)| *degree == 0 && !processed.contains(key))
@@ -243,15 +231,13 @@ impl DependencyConfig {
                 .collect();
 
             if batch.is_empty() {
-                // Cycle detected
                 let remaining: Vec<String> = all_keys.iter().filter(|k| !processed.contains(*k)).cloned().collect();
                 anyhow::bail!("Circular dependency detected in: {:?}", remaining);
             }
 
-            batch.sort(); // For deterministic output
+            batch.sort();
             batches.push(batch.clone());
 
-            // Update in-degrees
             for key in &batch {
                 processed.insert(key.clone());
                 if let Some(neighbors) = graph.get(key) {
@@ -395,7 +381,6 @@ mod tests {
         let order = config.compute_resolution_order().unwrap();
         assert_eq!(order.len(), 2);
         assert_eq!(order[0], vec!["config"]);
-        // db_pool and cache can be resolved in parallel
         assert_eq!(order[1].len(), 2);
         assert!(order[1].contains(&"cache".to_string()));
         assert!(order[1].contains(&"db_pool".to_string()));

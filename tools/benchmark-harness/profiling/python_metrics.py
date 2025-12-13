@@ -66,7 +66,6 @@ class MetricsCollector:
         self.initial_gc_counts = gc.get_count()
         self.request_count = 0
 
-        # Get output path from environment or use default
         env_path = os.environ.get("SPIKARD_METRICS_FILE")
         default_path = Path(tempfile.gettempdir()) / f"python-metrics-{os.getpid()}.json"
         self.output_path = Path(env_path) if env_path else default_path
@@ -106,7 +105,6 @@ class MetricsCollector:
             elapsed_ms = (time.perf_counter() - start) * 1000
             with self._lock:
                 self.request_count += 1
-                # Running average
                 n = self.request_count
                 self.metrics.timing.handler_time_ms = (self.metrics.timing.handler_time_ms * (n - 1) + elapsed_ms) / n
 
@@ -127,7 +125,6 @@ class MetricsCollector:
 
     def finalize(self) -> None:
         """Finalize metrics collection and write to file."""
-        # Always collect GC metrics at finalization
         if self.gc_enabled:
             stats = gc.get_stats()
             if stats and len(stats) >= 3:
@@ -142,7 +139,6 @@ class MetricsCollector:
 
         self.metrics.sample_count = self.request_count
 
-        # Write metrics to JSON file
         output = {
             "gc_collections": self.metrics.gc.total_collections,
             "gc_collections_gen0": self.metrics.gc.collections_gen0,
@@ -184,7 +180,6 @@ def enable_profiling() -> MetricsCollector:
     """
     collector = get_collector()
 
-    # Register cleanup on exit
     atexit.register(collector.finalize)
 
     return collector
@@ -227,10 +222,8 @@ def measure_serialization(func: Callable[P, R]) -> Callable[P, R]:
 
 
 if __name__ == "__main__":
-    # Test the metrics collector
     collector = enable_profiling()
 
-    # Simulate some work
     for i in range(100):
         with collector.measure_handler():
             time.sleep(0.001)
@@ -239,5 +232,4 @@ if __name__ == "__main__":
 
     collector.finalize()
 
-    # Read back the metrics
     metrics = json.loads(collector.output_path.read_text())

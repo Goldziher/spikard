@@ -30,7 +30,6 @@ class TestBodySchemaOverrides:
         app = Spikard()
         explicit_schema: Schema = {"type": "object", "properties": {"custom": {"type": "string"}}}
 
-        # Mock extract_schemas to return a different schema that will be overridden
         monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"type": "ignored"}, {"response": True}))
         monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
 
@@ -73,7 +72,6 @@ class TestBodySchemaOverrides:
 
         routes = app.get_routes()
         assert len(routes) == 1
-        # First non-request-bound param after body is body, then dep1 and dep2 are dependencies
         assert routes[0].body_param_name == "body"
         assert routes[0].handler_dependencies is not None
         assert "dep1" in routes[0].handler_dependencies
@@ -125,8 +123,7 @@ class TestAsyncHandlerDefaults:
         routes = app.get_routes()
         assert len(routes) == 1
         assert routes[0].is_async is True
-        # The wrapper should preserve the ability to inject defaults
-        assert routes[0].handler is not handler  # Should be wrapped
+        assert routes[0].handler is not handler
 
     def test_sync_handler_with_param_defaults(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Sync handler with ParamBase defaults gets wrapped."""
@@ -144,7 +141,7 @@ class TestAsyncHandlerDefaults:
         routes = app.get_routes()
         assert len(routes) == 1
         assert routes[0].is_async is False
-        assert routes[0].handler is not handler  # Should be wrapped
+        assert routes[0].handler is not handler
 
     def test_async_handler_mixed_defaults(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Async handler with mixed ParamBase and regular defaults."""
@@ -180,7 +177,6 @@ class TestAsyncHandlerDefaults:
 
         routes = app.get_routes()
         assert len(routes) == 1
-        # No wrapping should occur since there are no ParamBase defaults
         assert routes[0].handler is handler
 
 
@@ -194,7 +190,6 @@ class TestRunConfigMerging:
 
         def custom_import(name: str, *args: object, **kwargs: object) -> object:
             if name == "_spikard":
-                # Return a mock module with run_server
                 mock_module = MagicMock()
                 mock_module.run_server = mock_run
                 return mock_module
@@ -213,7 +208,6 @@ class TestRunConfigMerging:
         config = ServerConfig(port=9000, host="192.168.1.1")
         app.run(config=config, host="0.0.0.0", port=8000)
 
-        # Individual params should override config values
         called_config = mock_run.call_args[1]["config"]
         assert isinstance(called_config, ServerConfig)
         assert called_config.host == "0.0.0.0"
@@ -254,7 +248,6 @@ class TestRunConfigMerging:
         app.run()
 
         called_config = mock_run.call_args[1]["config"]
-        # App config should be used
         assert called_config.port == 7000
         assert called_config.host == "app.example.com"
 
@@ -265,12 +258,10 @@ class TestRunConfigMerging:
         mock_run = MagicMock()
         self._mock_run_server_import(monkeypatch, mock_run)
 
-        # Pass a new config and override some fields with individual params
         new_config = ServerConfig(port=8000)
         app.run(config=new_config, host="127.0.0.1")
 
         called_config = mock_run.call_args[1]["config"]
-        # Individual params should override the provided config
         assert called_config.host == "127.0.0.1"
         assert called_config.port == 8000
 

@@ -15,6 +15,7 @@ use Spikard\Handlers\ControllerMethodHandler;
 use Spikard\Handlers\HandlerInterface;
 use Spikard\Handlers\SseEventProducerInterface;
 use Spikard\Handlers\WebSocketHandlerInterface;
+use Spikard\Http\JsonRpcMethodInfo;
 use Spikard\Http\Request;
 use Spikard\Native\TestClient as NativeClient;
 
@@ -31,7 +32,7 @@ final class App
     private ?DependencyContainer $dependencies = null;
     private ?int $serverHandle = null;
 
-    /** @var array<int, array{method: string, path: string, handler: HandlerInterface, request_schema?: array<mixed>|null, response_schema?: array<mixed>|null, parameter_schema?: array<mixed>|null}> */
+    /** @var array<int, array{method: string, path: string, handler: HandlerInterface, request_schema?: array<mixed>|null, response_schema?: array<mixed>|null, parameter_schema?: array<mixed>|null, jsonrpc_method?: JsonRpcMethodInfo|null}> */
     private array $routes = [];
 
     /** @var array<string, WebSocketHandlerInterface> */
@@ -104,6 +105,38 @@ final class App
             'request_schema' => $requestSchema,
             'response_schema' => $responseSchema,
             'parameter_schema' => $parameterSchema,
+        ];
+        return $clone;
+    }
+
+    /**
+     * Register a JSON-RPC 2.0 method route with metadata.
+     *
+     * @param JsonRpcMethodInfo|null $jsonrpcMethod JSON-RPC method metadata
+     */
+    /**
+     * @param array<string, mixed>|null $requestSchema
+     * @param array<string, mixed>|null $responseSchema
+     * @param array<string, mixed>|null $parameterSchema
+     */
+    public function addJsonRpcRoute(
+        string $method,
+        string $path,
+        HandlerInterface $handler,
+        ?JsonRpcMethodInfo $jsonrpcMethod = null,
+        ?array $requestSchema = null,
+        ?array $responseSchema = null,
+        ?array $parameterSchema = null
+    ): self {
+        $clone = clone $this;
+        $clone->routes[] = [
+            'method' => $method,
+            'path' => $path,
+            'handler' => $handler,
+            'request_schema' => $requestSchema,
+            'response_schema' => $responseSchema,
+            'parameter_schema' => $parameterSchema,
+            'jsonrpc_method' => $jsonrpcMethod,
         ];
         return $clone;
     }
@@ -253,18 +286,36 @@ final class App
     /**
      * Routes formatted for the native (Rust) test client.
      *
-     * @return array<int, array{method: string, path: string, handler_name: string, handler?: object, websocket?: bool, sse?: bool}>
+     * @return array<int, array{method: string, path: string, handler_name: string, handler?: object, jsonrpc_method?: array<string, mixed>, websocket?: bool, sse?: bool}>
      */
     public function nativeRoutes(): array
     {
         $routes = [];
         foreach ($this->routes as $route) {
-            $routes[] = [
+            $routeData = [
                 'method' => \strtoupper($route['method']),
                 'path' => $route['path'],
                 'handler_name' => \spl_object_hash($route['handler']),
                 'handler' => $route['handler'],
             ];
+
+            // Add JSON-RPC method info if present
+            if (isset($route['jsonrpc_method'])) {
+                $routeData['jsonrpc_method'] = $route['jsonrpc_method']->toArray();
+            }
+
+            // Add request/response/parameter schemas if present
+            if (isset($route['request_schema'])) {
+                $routeData['request_schema'] = $route['request_schema'];
+            }
+            if (isset($route['response_schema'])) {
+                $routeData['response_schema'] = $route['response_schema'];
+            }
+            if (isset($route['parameter_schema'])) {
+                $routeData['parameter_schema'] = $route['parameter_schema'];
+            }
+
+            $routes[] = $routeData;
         }
         foreach ($this->websocketHandlers as $path => $handler) {
             $routes[] = [
@@ -326,7 +377,9 @@ final class App
 
         $configPayload = $this->configToNative($configToUse);
         $lifecyclePayload = $this->hooks ? $this->hooksToNative($this->hooks) : [];
-        $dependenciesPayload = $this->dependencies ?? null;
+        $dependenciesPayload = (object) [
+            'dependencies' => $this->dependencies ? $this->dependencies->getDependencies() : [],
+        ];
 
         // Extension entrypoint is guaranteed by the guard above; call directly.
         $routes = $this->nativeRoutes();

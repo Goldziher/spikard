@@ -120,7 +120,6 @@ def create_fixture_test(category: str) -> type:
     return FixtureCategoryTest
 
 
-# Create test classes for all fixture categories
 FIXTURE_CATEGORIES = [
     "headers",
     "cookies",

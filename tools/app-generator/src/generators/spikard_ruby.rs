@@ -12,7 +12,6 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
 
     output.push_str("app = Spikard::App.new\n\n");
 
-    // Add health check endpoint first
     output.push_str(&generate_health_check());
     output.push_str("\n\n");
 
@@ -41,7 +40,6 @@ require 'spikard/handler_wrapper'
 "#
     .to_string();
 
-    // Check if any routes need Dry::Struct for request bodies
     let needs_dry_struct = analysis.routes.iter().any(|r| r.params.body.is_some());
 
     if needs_dry_struct {
@@ -91,21 +89,13 @@ fn generate_handler_block(route: &RouteInfo) -> (String, String) {
     let has_body = route.params.body.is_some();
 
     let params_str = match (has_path, has_query, has_body) {
-        // Only body
         (false, false, true) => "body".to_string(),
-        // Only path params
         (true, false, false) => "params, _query, _body".to_string(),
-        // Path params and body
         (true, false, true) => "params, _query, body".to_string(),
-        // Only query params
         (false, true, false) => "_params, query, _body".to_string(),
-        // Query params and body
         (false, true, true) => "_params, query, body".to_string(),
-        // Path and query params
         (true, true, false) => "params, query, _body".to_string(),
-        // Path, query params, and body
         (true, true, true) => "params, query, body".to_string(),
-        // Nothing
         (false, false, false) => "_params, _query, _body".to_string(),
     };
 

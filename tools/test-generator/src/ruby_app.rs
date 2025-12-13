@@ -115,7 +115,6 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
             let background_info = background_data(fixture)?;
             let di_config = DependencyConfig::from_fixture(fixture)?;
 
-            // Generate DI factory functions first
             if let Some(ref di_cfg) = di_config {
                 let factories = generate_all_dependency_factories_ruby(di_cfg, &fixture_dir)?;
                 if !factories.is_empty() {
@@ -250,7 +249,6 @@ fn build_fixture_function(
     let args_joined = args.join(", ");
     let skip_route_registration = !metadata.static_dirs.is_empty();
 
-    // Add DI parameter to handler block (deduplicated to avoid duplicate parameters)
     let mut handler_params = Vec::new();
     handler_params.push("_request".to_string());
     if let Some(di_cfg) = di_config {
@@ -331,14 +329,12 @@ fn build_fixture_function(
         );
     }
 
-    // Add DI registration
     if let Some(di_cfg) = di_config {
         let di_registration = generate_dependency_registration_ruby(di_cfg, fixture_dir)?;
         if !di_registration.is_empty() {
             function.push_str(&di_registration);
         }
 
-        // Add cleanup state handler
         if has_cleanup(di_cfg) {
             function.push_str(&format!(
                 "    app.get('/api/cleanup-state', handler_name: {}) do |_req|\n",
@@ -1116,7 +1112,6 @@ fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Resul
     let mut code = String::new();
 
     if is_cleanup {
-        // Factory with cleanup (returns [value, cleanup_proc])
         code.push_str(&format!("  def {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -1140,7 +1135,6 @@ fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Resul
         code.push_str("    [resource, cleanup_proc]\n");
         code.push_str("  end\n\n");
     } else if dep.singleton {
-        // Singleton factory with persistent state
         code.push_str(&format!("  def {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -1159,7 +1153,6 @@ fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Resul
         code.push_str("    BACKGROUND_STATE[singleton_key]\n");
         code.push_str("  end\n\n");
     } else {
-        // Regular factory
         code.push_str(&format!("  def {}(", factory_name));
         for (i, depend_key) in dep.depends_on.iter().enumerate() {
             if i > 0 {
@@ -1170,7 +1163,6 @@ fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Resul
         code.push_str(")\n");
 
         if dep.key.contains("auth") {
-            // Auth service
             code.push_str("    # Create auth service\n");
             if !dep.depends_on.is_empty() {
                 code.push_str(&format!(
@@ -1183,7 +1175,6 @@ fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Resul
                 code.push_str(&format!("    {{ {}_enabled: true, enabled: true }}\n", dep.key));
             }
         } else {
-            // Generic factory
             code.push_str(&format!(
                 "    {{ id: '{:012x}', type: '{}', timestamp: Time.now.to_s }}\n",
                 dep.key.len(),
@@ -1206,17 +1197,13 @@ fn generate_dependency_registration_ruby(di_config: &DependencyConfig, _fixture_
     let mut code = String::new();
     code.push_str("\n    # Register dependencies\n");
 
-    // Get all dependencies
     let all_deps = di_config.all_dependencies();
 
-    // Register each dependency
     for (key, dep) in all_deps.iter() {
         if dep.is_value() {
-            // Value dependency
             let value = ruby_dependency_value(dep)?;
             code.push_str(&format!("    app.provide({}, {})\n", string_literal(key), value));
         } else {
-            // Factory dependency
             let factory_name = dep.factory.as_ref().unwrap_or(key);
             let mut provide_args = Vec::new();
             provide_args.push(format!("method({})", string_literal(factory_name)));
@@ -1254,7 +1241,6 @@ fn generate_all_dependency_factories_ruby(di_config: &DependencyConfig, fixture_
 
     let all_deps = di_config.all_dependencies();
 
-    // Generate factory functions for non-value dependencies
     for dep in all_deps.values() {
         if !dep.is_value() {
             code.push_str(&generate_dependency_factory_ruby(dep, fixture_id)?);

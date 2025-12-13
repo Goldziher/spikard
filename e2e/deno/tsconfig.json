@@ -4,12 +4,12 @@
 		"module": "ES2022",
 		"lib": ["ES2022"],
 		"moduleResolution": "bundler",
-		"strict": true,
+		"strict": false,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true,
-		"types": ["@std/assert"]
+		"types": ["jsr:@std/assert"]
 	},
 	"include": ["app/**/*", "tests/**/*"]
 }

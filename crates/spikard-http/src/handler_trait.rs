@@ -62,8 +62,6 @@ impl Serialize for RequestData {
 
         #[cfg(feature = "di")]
         {
-            // Dependencies field is not serialized (contains Arc<dyn Any>)
-            // We just serialize a marker indicating whether dependencies exist
             state.serialize_field("has_dependencies", &self.dependencies.is_some())?;
         }
 
@@ -147,7 +145,6 @@ impl<'de> Deserialize<'de> for RequestData {
                         }
                         #[cfg(feature = "di")]
                         Field::HasDependencies => {
-                            // We skip this field as dependencies can't be deserialized
                             let _: bool = map.next_value()?;
                         }
                     }
@@ -232,7 +229,6 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    // Helper function to create a minimal RequestData for testing
     fn minimal_request_data() -> RequestData {
         RequestData {
             path_params: std::sync::Arc::new(HashMap::new()),
@@ -251,13 +247,10 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_minimal() {
-        // Arrange: Create minimal RequestData
         let data = minimal_request_data();
 
-        // Act: Serialize to JSON
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert: All required fields are present
         assert!(json["path_params"].is_object());
         assert!(json["query_params"].is_object());
         assert!(json["raw_query_params"].is_object());
@@ -270,7 +263,6 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_with_path_params() {
-        // Arrange
         let mut path_params = HashMap::new();
         path_params.insert("id".to_string(), "123".to_string());
         path_params.insert("username".to_string(), "alice".to_string());
@@ -280,17 +272,14 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert_eq!(json["path_params"]["id"], "123");
         assert_eq!(json["path_params"]["username"], "alice");
     }
 
     #[test]
     fn test_request_data_serialization_with_query_params() {
-        // Arrange
         let query_params = serde_json::json!({
             "filter": "active",
             "limit": 10,
@@ -302,10 +291,8 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert_eq!(json["query_params"]["filter"], "active");
         assert_eq!(json["query_params"]["limit"], 10);
         assert_eq!(json["query_params"]["sort"], "name");
@@ -313,7 +300,6 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_with_raw_query_params() {
-        // Arrange
         let mut raw_query_params = HashMap::new();
         raw_query_params.insert("tags".to_string(), vec!["rust".to_string(), "web".to_string()]);
         raw_query_params.insert("category".to_string(), vec!["backend".to_string()]);
@@ -323,10 +309,8 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert!(json["raw_query_params"]["tags"].is_array());
         assert_eq!(json["raw_query_params"]["tags"][0], "rust");
         assert_eq!(json["raw_query_params"]["tags"][1], "web");
@@ -334,7 +318,6 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_with_headers() {
-        // Arrange
         let mut headers = HashMap::new();
         headers.insert("content-type".to_string(), "application/json".to_string());
         headers.insert("authorization".to_string(), "Bearer token123".to_string());
@@ -345,10 +328,8 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert_eq!(json["headers"]["content-type"], "application/json");
         assert_eq!(json["headers"]["authorization"], "Bearer token123");
         assert_eq!(json["headers"]["user-agent"], "test-client/1.0");
@@ -356,7 +337,6 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_with_cookies() {
-        // Arrange
         let mut cookies = HashMap::new();
         cookies.insert("session_id".to_string(), "abc123def456".to_string());
         cookies.insert("preferences".to_string(), "dark_mode=true".to_string());
@@ -366,17 +346,14 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert_eq!(json["cookies"]["session_id"], "abc123def456");
         assert_eq!(json["cookies"]["preferences"], "dark_mode=true");
     }
 
     #[test]
     fn test_request_data_serialization_with_json_body() {
-        // Arrange
         let body = serde_json::json!({
             "name": "test",
             "age": 30,
@@ -389,10 +366,8 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert_eq!(json["body"]["name"], "test");
         assert_eq!(json["body"]["age"], 30);
         assert_eq!(json["body"]["active"], true);
@@ -401,19 +376,15 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_with_raw_body() {
-        // Arrange
         let raw_body = bytes::Bytes::from("raw body content");
         let data = RequestData {
             raw_body: Some(raw_body),
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert!(json["raw_body"].is_array());
-        // Bytes are serialized as arrays of u8
         let serialized_bytes: Vec<u8> =
             serde_json::from_value(json["raw_body"].clone()).expect("failed to deserialize bytes");
         assert_eq!(serialized_bytes, b"raw body content".to_vec());
@@ -421,7 +392,6 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_with_empty_strings() {
-        // Arrange
         let mut headers = HashMap::new();
         headers.insert("x-empty".to_string(), "".to_string());
 
@@ -432,10 +402,8 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert_eq!(json["method"], "");
         assert_eq!(json["path"], "");
         assert_eq!(json["headers"]["x-empty"], "");
@@ -443,7 +411,6 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_with_nested_json_body() {
-        // Arrange
         let body = serde_json::json!({
             "user": {
                 "profile": {
@@ -464,10 +431,8 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert_eq!(json["body"]["user"]["profile"]["name"], "Alice");
         assert_eq!(json["body"]["user"]["profile"]["contact"]["email"], "alice@example.com");
         assert!(json["body"]["user"]["profile"]["contact"]["phone"].is_null());
@@ -476,7 +441,6 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_all_fields_complete() {
-        // Arrange: Create RequestData with all fields populated
         let mut path_params = HashMap::new();
         path_params.insert("id".to_string(), "42".to_string());
 
@@ -506,10 +470,8 @@ mod tests {
             dependencies: None,
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert: Verify all fields are serialized correctly
         assert_eq!(json["path_params"]["id"], "42");
         assert_eq!(json["query_params"]["page"], 1);
         assert_eq!(json["raw_query_params"]["filter"][0], "active");
@@ -523,7 +485,6 @@ mod tests {
 
     #[test]
     fn test_request_data_clone_shares_arc_data() {
-        // Arrange
         let mut path_params = HashMap::new();
         path_params.insert("id".to_string(), "original".to_string());
 
@@ -532,16 +493,13 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act: Clone the data
         let data2 = data1.clone();
 
-        // Assert: Both share the same Arc data (pointer equality)
         assert!(std::sync::Arc::ptr_eq(&data1.path_params, &data2.path_params));
     }
 
     #[test]
     fn test_request_data_deserialization_complete() {
-        // Arrange
         let json = serde_json::json!({
             "path_params": {"id": "123"},
             "query_params": {"filter": "active"},
@@ -554,10 +512,8 @@ mod tests {
             "path": "/api/test"
         });
 
-        // Act
         let data: RequestData = serde_json::from_value(json).expect("deserialization failed");
 
-        // Assert
         assert_eq!(data.path_params.get("id").unwrap(), "123");
         assert_eq!(data.query_params["filter"], "active");
         assert_eq!(data.raw_query_params.get("tags").unwrap()[0], "rust");
@@ -571,30 +527,26 @@ mod tests {
 
     #[test]
     fn test_request_data_deserialization_with_raw_body_bytes() {
-        // Arrange: raw_body is serialized as array of u8
         let json = serde_json::json!({
             "path_params": {},
             "query_params": {},
             "raw_query_params": {},
             "body": null,
-            "raw_body": [72, 101, 108, 108, 111], // "Hello"
+            "raw_body": [72, 101, 108, 108, 111],
             "headers": {},
             "cookies": {},
             "method": "GET",
             "path": "/"
         });
 
-        // Act
         let data: RequestData = serde_json::from_value(json).expect("deserialization failed");
 
-        // Assert
         assert!(data.raw_body.is_some());
         assert_eq!(data.raw_body.unwrap().as_ref(), b"Hello");
     }
 
     #[test]
     fn test_request_data_deserialization_missing_required_field_path_params() {
-        // Arrange: Missing path_params
         let json = serde_json::json!({
             "query_params": {},
             "raw_query_params": {},
@@ -605,7 +557,6 @@ mod tests {
             "path": "/"
         });
 
-        // Act & Assert
         let result: Result<RequestData, _> = serde_json::from_value(json);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("path_params"));
@@ -613,7 +564,6 @@ mod tests {
 
     #[test]
     fn test_request_data_deserialization_missing_required_field_method() {
-        // Arrange: Missing method
         let json = serde_json::json!({
             "path_params": {},
             "query_params": {},
@@ -624,7 +574,6 @@ mod tests {
             "path": "/"
         });
 
-        // Act & Assert
         let result: Result<RequestData, _> = serde_json::from_value(json);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("method"));
@@ -632,7 +581,6 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_roundtrip() {
-        // Arrange: Create complex RequestData
         let original = RequestData {
             path_params: std::sync::Arc::new({
                 let mut map = HashMap::new();
@@ -663,11 +611,9 @@ mod tests {
             dependencies: None,
         };
 
-        // Act: Serialize then deserialize
         let json = serde_json::to_value(&original).expect("serialization failed");
         let restored: RequestData = serde_json::from_value(json).expect("deserialization failed");
 
-        // Assert: All fields match
         assert_eq!(*original.path_params, *restored.path_params);
         assert_eq!(original.query_params, restored.query_params);
         assert_eq!(*original.raw_query_params, *restored.raw_query_params);
@@ -681,7 +627,6 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_large_body() {
-        // Arrange: Create RequestData with large nested body
         let mut large_object = serde_json::Map::new();
         for i in 0..100 {
             large_object.insert(format!("key_{}", i), serde_json::Value::String(format!("value_{}", i)));
@@ -692,10 +637,8 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert!(json["body"].is_object());
         assert_eq!(json["body"].get("key_0").unwrap(), "value_0");
         assert_eq!(json["body"].get("key_99").unwrap(), "value_99");
@@ -703,7 +646,6 @@ mod tests {
 
     #[test]
     fn test_request_data_empty_collections() {
-        // Arrange: All collections are empty
         let data = RequestData {
             path_params: std::sync::Arc::new(HashMap::new()),
             query_params: Value::Object(serde_json::Map::new()),
@@ -718,10 +660,8 @@ mod tests {
             dependencies: None,
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert_eq!(json["path_params"].as_object().unwrap().len(), 0);
         assert_eq!(json["query_params"].as_object().unwrap().len(), 0);
         assert_eq!(json["raw_query_params"].as_object().unwrap().len(), 0);
@@ -733,7 +673,6 @@ mod tests {
 
     #[test]
     fn test_request_data_special_characters_in_strings() {
-        // Arrange: Test special characters and unicode
         let mut headers = HashMap::new();
         headers.insert("x-custom".to_string(), "value with \"quotes\"".to_string());
         headers.insert("x-unicode".to_string(), "Café ☕ 🚀".to_string());
@@ -746,10 +685,8 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert_eq!(json["headers"]["x-custom"], "value with \"quotes\"");
         assert_eq!(json["headers"]["x-unicode"], "Café ☕ 🚀");
         assert_eq!(json["path"], "/api/v1/users\\test");
@@ -759,19 +696,15 @@ mod tests {
     #[test]
     #[cfg(feature = "di")]
     fn test_request_data_serialization_with_di_feature_no_dependencies() {
-        // Arrange: With DI feature but no dependencies set
         let data = minimal_request_data();
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert: has_dependencies field should be present and false
         assert_eq!(json["has_dependencies"], false);
     }
 
     #[test]
     fn test_request_data_method_variants() {
-        // Arrange & Act: Test various HTTP methods
         let methods = vec!["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"];
 
         for method in methods {
@@ -782,38 +715,31 @@ mod tests {
 
             let json = serde_json::to_value(&data).expect("serialization failed");
 
-            // Assert
             assert_eq!(json["method"], method);
         }
     }
 
     #[test]
     fn test_request_data_serialization_null_body() {
-        // Arrange
         let data = RequestData {
             body: Value::Null,
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert!(json["body"].is_null());
     }
 
     #[test]
     fn test_request_data_serialization_array_body() {
-        // Arrange
         let data = RequestData {
             body: serde_json::json!([1, 2, 3, "four", {"five": 5}]),
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert!(json["body"].is_array());
         assert_eq!(json["body"][0], 1);
         assert_eq!(json["body"][1], 2);
@@ -823,7 +749,6 @@ mod tests {
 
     #[test]
     fn test_request_data_serialization_numeric_edge_cases() {
-        // Arrange
         let data = RequestData {
             body: serde_json::json!({
                 "zero": 0,
@@ -834,10 +759,8 @@ mod tests {
             ..minimal_request_data()
         };
 
-        // Act
         let json = serde_json::to_value(&data).expect("serialization failed");
 
-        // Assert
         assert_eq!(json["body"]["zero"], 0);
         assert_eq!(json["body"]["negative"], -42);
         assert_eq!(json["body"]["large"], 9223372036854775807i64);
@@ -846,15 +769,12 @@ mod tests {
 
     #[test]
     fn test_validated_params_basic_creation() {
-        // Arrange
         let mut params = HashMap::new();
         params.insert("id".to_string(), Value::String("123".to_string()));
         params.insert("active".to_string(), Value::Bool(true));
 
-        // Act
         let validated = ValidatedParams { params };
 
-        // Assert
         assert_eq!(validated.params.get("id").unwrap(), &Value::String("123".to_string()));
         assert_eq!(validated.params.get("active").unwrap(), &Value::Bool(true));
     }

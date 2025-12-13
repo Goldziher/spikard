@@ -1,0 +1,200 @@
+[
+	{
+		"name": "valid_exact_fields",
+		"method": "user.delete",
+		"params": {
+			"name": "Alice Johnson",
+			"email": "alice@example.com"
+		},
+		"expectedSuccess": true,
+		"schemaConfig": "additionalPropertiesFalse"
+	},
+	{
+		"name": "valid_with_optional_field",
+		"method": "user.delete",
+		"params": {
+			"name": "Bob Smith",
+			"email": "bob@example.com",
+			"confirmed": true
+		},
+		"expectedSuccess": true,
+		"schemaConfig": "additionalPropertiesTrue"
+	},
+	{
+		"name": "one_extra_field_rejected",
+		"method": "user.delete",
+		"params": {
+			"name": "Charlie Brown",
+			"email": "charlie@example.com",
+			"age": 35
+		},
+		"expectedSuccess": false,
+		"schemaConfig": "additionalPropertiesFalse",
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "age",
+				"constraint": "additionalProperties",
+				"value": 35,
+				"details": "Additional property not allowed: age"
+			}
+		}
+	},
+	{
+		"name": "multiple_extra_fields_rejected",
+		"method": "user.delete",
+		"params": {
+			"name": "Diana Prince",
+			"email": "diana@example.com",
+			"age": 28,
+			"phone": "+1-555-0100",
+			"tags": ["admin"]
+		},
+		"expectedSuccess": false,
+		"schemaConfig": "additionalPropertiesFalse",
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"errors": [
+					{
+						"fieldPath": "age",
+						"constraint": "additionalProperties",
+						"details": "Additional property not allowed: age"
+					},
+					{
+						"fieldPath": "phone",
+						"constraint": "additionalProperties",
+						"details": "Additional property not allowed: phone"
+					},
+					{
+						"fieldPath": "tags",
+						"constraint": "additionalProperties",
+						"details": "Additional property not allowed: tags"
+					}
+				]
+			}
+		}
+	},
+	{
+		"name": "typo_missing_required_and_extra",
+		"method": "user.delete",
+		"params": {
+			"nam": "Eve Wilson",
+			"email": "eve@example.com"
+		},
+		"expectedSuccess": false,
+		"schemaConfig": "additionalPropertiesFalse",
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"errors": [
+					{
+						"fieldPath": "name",
+						"constraint": "required",
+						"details": "Missing required field: name"
+					},
+					{
+						"fieldPath": "nam",
+						"constraint": "additionalProperties",
+						"details": "Additional property not allowed: nam"
+					}
+				]
+			}
+		}
+	},
+	{
+		"name": "extra_nested_object_rejected",
+		"method": "user.delete",
+		"params": {
+			"name": "Frank Martin",
+			"email": "frank@example.com",
+			"metadata": { "created": "2024-01-01", "updated": "2024-12-10" }
+		},
+		"expectedSuccess": false,
+		"schemaConfig": "additionalPropertiesFalse",
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "metadata",
+				"constraint": "additionalProperties",
+				"value": { "created": "2024-01-01", "updated": "2024-12-10" },
+				"details": "Additional property not allowed: metadata"
+			}
+		}
+	},
+	{
+		"name": "schema_with_additional_properties_true",
+		"method": "user.delete",
+		"params": {
+			"name": "Grace Lee",
+			"email": "grace@example.com",
+			"extra1": "value1",
+			"extra2": 123,
+			"extra3": true
+		},
+		"expectedSuccess": true,
+		"schemaConfig": "additionalPropertiesTrue"
+	},
+	{
+		"name": "schema_without_additional_properties_specified",
+		"method": "user.delete",
+		"params": {
+			"name": "Henry Davis",
+			"email": "henry@example.com",
+			"extra": "field"
+		},
+		"expectedSuccess": true,
+		"schemaConfig": "additionalPropertiesDefault",
+		"note": "Default behavior allows additional properties when not explicitly set to false"
+	},
+	{
+		"name": "empty_params_missing_required",
+		"method": "user.delete",
+		"params": {},
+		"expectedSuccess": false,
+		"schemaConfig": "additionalPropertiesFalse",
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"errors": [
+					{
+						"fieldPath": "name",
+						"constraint": "required",
+						"details": "Missing required field: name"
+					},
+					{
+						"fieldPath": "email",
+						"constraint": "required",
+						"details": "Missing required field: email"
+					}
+				]
+			}
+		}
+	},
+	{
+		"name": "special_characters_in_extra_field_name",
+		"method": "user.delete",
+		"params": {
+			"name": "Iris King",
+			"email": "iris@example.com",
+			"x-custom-header": "value"
+		},
+		"expectedSuccess": false,
+		"schemaConfig": "additionalPropertiesFalse",
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "x-custom-header",
+				"constraint": "additionalProperties",
+				"value": "value",
+				"details": "Additional property not allowed: x-custom-header"
+			}
+		}
+	}
+]

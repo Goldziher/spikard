@@ -3,6 +3,12 @@ use super::asyncapi::{
     generate_nodejs_handler_app, generate_nodejs_test_app, generate_php_handler_app, generate_python_handler_app,
     generate_python_test_app, generate_ruby_handler_app, generate_ruby_test_app, generate_rust_handler_app,
 };
+use super::openrpc::{
+    generate_php_handler_app as generate_openrpc_php_handler,
+    generate_python_handler_app as generate_openrpc_python_handler,
+    generate_ruby_handler_app as generate_openrpc_ruby_handler,
+    generate_typescript_handler_app as generate_openrpc_typescript_handler, parse_openrpc_schema,
+};
 use super::{DtoConfig, TargetLanguage, detect_primary_protocol, generate_fixtures};
 use crate::codegen::generate_from_openapi;
 use anyhow::{Context, Result, bail};
@@ -16,6 +22,7 @@ use std::path::{Path, PathBuf};
 pub enum SchemaKind {
     OpenApi,
     AsyncApi,
+    OpenRpc,
 }
 
 /// Type of artifact to generate for a schema
@@ -34,6 +41,8 @@ pub enum CodegenTargetKind {
     AsyncHandlers { language: TargetLanguage, output: PathBuf },
     /// Generate fixtures + test applications for all AsyncAPI languages
     AsyncAll { output: PathBuf },
+    /// Generate JSON-RPC handler scaffolding for a language
+    JsonRpcHandlers { language: TargetLanguage, output: PathBuf },
 }
 
 /// Request executed by the code generation engine
@@ -107,6 +116,12 @@ impl CodegenEngine {
                 let protocol = detect_primary_protocol(&spec)?;
                 let assets = Self::generate_asyncapi_bundle(&spec, protocol, output)?;
                 Ok(CodegenOutcome::Files(assets))
+            }
+            (SchemaKind::OpenRpc, CodegenTargetKind::JsonRpcHandlers { language, output }) => {
+                let spec = parse_openrpc_schema(&request.schema_path)
+                    .context("Failed to parse OpenRPC schema for handler generation")?;
+                let asset = Self::generate_openrpc_handler(&spec, *language, output)?;
+                Ok(CodegenOutcome::Files(vec![asset]))
             }
             _ => bail!(
                 "Unsupported schema/target combination: {:?} -> {:?}",
@@ -208,6 +223,24 @@ impl CodegenEngine {
         Ok(assets)
     }
 
+    fn generate_openrpc_handler(
+        spec: &super::openrpc::spec_parser::OpenRpcSpec,
+        language: TargetLanguage,
+        output: &Path,
+    ) -> Result<GeneratedAsset> {
+        let code = match language {
+            TargetLanguage::Python => generate_openrpc_python_handler(spec)?,
+            TargetLanguage::TypeScript => generate_openrpc_typescript_handler(spec)?,
+            TargetLanguage::Ruby => generate_openrpc_ruby_handler(spec)?,
+            TargetLanguage::Php => generate_openrpc_php_handler(spec)?,
+            other => {
+                bail!("{:?} is not supported for OpenRPC handler generation", other);
+            }
+        };
+
+        Self::write_asset(output, format!("{} JSON-RPC handlers", language_name(language)), code)
+    }
+
     fn write_asset(path: &Path, description: impl Into<String>, content: impl AsRef<[u8]>) -> Result<GeneratedAsset> {
         if let Some(parent) = path.parent()
             && !parent.as_os_str().is_empty()
@@ -255,6 +288,11 @@ impl std::fmt::Debug for CodegenTargetKind {
                 .field("output", output)
                 .finish(),
             CodegenTargetKind::AsyncAll { output } => f.debug_struct("AsyncAll").field("output", output).finish(),
+            CodegenTargetKind::JsonRpcHandlers { language, output } => f
+                .debug_struct("JsonRpcHandlers")
+                .field("language", language)
+                .field("output", output)
+                .finish(),
         }
     }
 }

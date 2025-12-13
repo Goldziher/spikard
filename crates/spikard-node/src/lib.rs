@@ -241,9 +241,48 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         shutdown_timeout,
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
+        jsonrpc: None,
         lifecycle_hooks: None,
         di_container: None,
     })
+}
+
+/// Extract JSON-RPC method metadata from a Node.js object
+///
+/// Converts a JavaScript object to a serde_json::Value, handling both `toJSON()` method
+/// and falling back to JSON.stringify for serialization. Returns None if the value is null
+/// or extraction fails (with a warning logged).
+fn extract_jsonrpc_method(route_obj: &Object) -> Option<serde_json::Value> {
+    match route_obj.get_named_property::<Object>("jsonrpcMethod") {
+        Ok(obj) => match node_object_to_json(&obj) {
+            Ok(value) => Some(value),
+            Err(e) => {
+                warn!("Failed to extract jsonrpcMethod: {}", e);
+                None
+            }
+        },
+        Err(_) => None,
+    }
+}
+
+/// Convert a Node.js object to a serde_json::Value
+///
+/// First attempts to use the object's toJSON() method if available,
+/// then falls back to JSON.stringify via the global JSON object.
+fn node_object_to_json(obj: &Object) -> Result<serde_json::Value> {
+    let json_str: String = obj
+        .get_named_property("toJSON")
+        .and_then(|func: Function<(), String>| func.call(()))
+        .or_else(|_| {
+            let env_ptr = obj.env();
+            let env = napi::Env::from_raw(env_ptr);
+            let global = env.get_global()?;
+            let json: Object = global.get_named_property("JSON")?;
+            let stringify: Function<Object, String> = json.get_named_property("stringify")?;
+            stringify.call(*obj)
+        })?;
+
+    serde_json::from_str(&json_str).map_err(|e| Error::from_reason(format!("Failed to parse JSON: {}", e)))
 }
 
 /// Start the Spikard HTTP server from Node.js
@@ -329,6 +368,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             cors: None,
             body_param_name: None,
             handler_dependencies: None, // TODO: Extract from route
+            jsonrpc_method: extract_jsonrpc_method(&route_obj),
         };
 
         routes.push(route_meta);
@@ -365,6 +405,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                         cors: None,
                         body_param_name: None,
                         handler_dependencies: None,
+                        jsonrpc_method: extract_jsonrpc_method(&route_obj),
                     });
                 }
             }
@@ -383,7 +424,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
         let tsfn = js_handler
             .build_threadsafe_function()
-            .build_callback(|_ctx| Ok(vec![()]))
+            .build_callback(|ctx| Ok(vec![ctx.value]))
             .map_err(|e| {
                 Error::from_reason(format!(
                     "Failed to build ThreadsafeFunction for '{}': {}",
@@ -396,7 +437,6 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         handler_map.insert(route.handler_name.clone(), handler);
     }
 
-    // Extract dependency container if DI is enabled
     #[cfg(feature = "di")]
     let dependency_container = di::extract_dependency_container(&app)?;
     #[cfg(not(feature = "di"))]

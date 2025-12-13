@@ -28,10 +28,6 @@ struct NodeMetricsFile {
 
 /// Start Node profiler for the given PID
 pub fn start_profiler(pid: u32) -> Result<NodeProfiler> {
-    // Note: Node --prof requires the process to be started with the flag,
-    // so we can't attach to a running process like py-spy.
-    // Instead, we'll rely on application instrumentation for metrics.
-
     eprintln!("  ℹ Node profiling via application instrumentation");
     eprintln!("  → V8 heap and event loop metrics will be collected");
     eprintln!("  → For CPU profiling, restart with: node --prof app.js");
@@ -60,7 +56,6 @@ impl NodeProfiler {
             let _ = process.wait();
         }
 
-        // Load application metrics from instrumentation file
         let metrics_path = format!("/tmp/node-metrics-{}.json", self.pid);
         let app_metrics = self.load_metrics_file(&metrics_path);
 
@@ -86,10 +81,7 @@ impl NodeProfiler {
                     None
                 }
             },
-            Err(_) => {
-                // Metrics file not present - application may not have instrumentation
-                None
-            }
+            Err(_) => None,
         }
     }
 }

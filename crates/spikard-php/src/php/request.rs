@@ -1,53 +1,102 @@
 //! PHP-visible HTTP request struct.
 
+#![allow(non_snake_case)]
+
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendHashTable;
+use ext_php_rs::types::Zval;
 use serde_json::Value;
 use std::collections::HashMap;
 
 /// PHP-visible HTTP request mirroring `RequestData`.
 #[php_class]
-#[php(name = "Spikard\\Internal\\Request")]
+#[php(name = "Spikard\\Http\\Request")]
 pub struct PhpRequest {
+    #[php(prop)]
     pub(crate) method: String,
+    #[php(prop)]
     pub(crate) path: String,
+    #[php(prop, name = "pathParams")]
     pub(crate) path_params: HashMap<String, String>,
     pub(crate) body: Value,
+    pub(crate) files: Value,
     pub(crate) raw_body: Option<Vec<u8>>,
+    #[php(prop, name = "queryParams")]
     pub(crate) raw_query: HashMap<String, Vec<String>>,
+    #[php(prop)]
     pub(crate) headers: HashMap<String, String>,
+    #[php(prop)]
     pub(crate) cookies: HashMap<String, String>,
 }
 
 #[php_impl]
 impl PhpRequest {
-    /// Create a new request from JSON body string.
+    #[php(constructor)]
     #[allow(clippy::too_many_arguments)]
+    pub fn __construct(
+        method: String,
+        path: String,
+        body: Option<&Zval>,
+        headers: Option<HashMap<String, String>>,
+        cookies: Option<HashMap<String, String>>,
+        queryParams: Option<HashMap<String, Vec<String>>>,
+        pathParams: Option<HashMap<String, String>>,
+        files: Option<&Zval>,
+        dependencies: Option<&Zval>,
+    ) -> PhpResult<Self> {
+        Self::new(
+            method,
+            path,
+            body,
+            headers,
+            cookies,
+            queryParams,
+            pathParams,
+            files,
+            dependencies,
+        )
+    }
+
+    /// Create a new request.
+    ///
+    /// This intentionally matches `packages/php/src/Http/Request.php` so PHP code can use named
+    /// arguments like `queryParams:` and `pathParams:` even when the native extension is loaded.
+    #[allow(clippy::too_many_arguments)]
+    #[allow(non_snake_case)]
     pub fn new(
         method: String,
         path: String,
-        body: Option<String>,
-        raw_body: Option<Vec<u8>>,
+        body: Option<&Zval>,
         headers: Option<HashMap<String, String>>,
         cookies: Option<HashMap<String, String>>,
-        raw_query: Option<HashMap<String, Vec<String>>>,
-        path_params: Option<HashMap<String, String>>,
-    ) -> Self {
-        let body_value = body
-            .as_ref()
-            .map(|b| serde_json::from_str(b).unwrap_or(Value::String(b.clone())))
-            .unwrap_or(Value::Null);
-        Self {
+        queryParams: Option<HashMap<String, Vec<String>>>,
+        pathParams: Option<HashMap<String, String>>,
+        files: Option<&Zval>,
+        dependencies: Option<&Zval>,
+    ) -> PhpResult<Self> {
+        let _ = dependencies;
+        let body_value = match body {
+            None => Value::Null,
+            Some(v) => crate::php::zval_to_json(v).map_err(PhpException::default)?,
+        };
+
+        let files_value = match files {
+            None => Value::Object(serde_json::Map::new()),
+            Some(v) => crate::php::zval_to_json(v).map_err(PhpException::default)?,
+        };
+
+        Ok(Self {
             method,
             path,
-            path_params: path_params.unwrap_or_default(),
+            path_params: pathParams.unwrap_or_default(),
             body: body_value,
-            raw_body,
-            raw_query: raw_query.unwrap_or_default(),
+            files: files_value,
+            raw_body: None,
+            raw_query: queryParams.unwrap_or_default(),
             headers: headers.unwrap_or_default(),
             cookies: cookies.unwrap_or_default(),
-        }
+        })
     }
 
     /// Get the HTTP method.
@@ -68,6 +117,15 @@ impl PhpRequest {
         match &self.body {
             Value::String(s) => s.clone(),
             _ => serde_json::to_string(&self.body).unwrap_or_else(|_| "{}".to_string()),
+        }
+    }
+
+    #[php(name = "__get")]
+    pub fn __get(&self, name: String) -> PhpResult<Zval> {
+        match name.as_str() {
+            "body" => crate::php::json_to_zval(&self.body),
+            "files" => crate::php::json_to_zval(&self.files),
+            _ => Ok(Zval::new()),
         }
     }
 
@@ -130,6 +188,7 @@ impl PhpRequest {
             path: data.path.clone(),
             path_params: (*data.path_params).clone(),
             body: data.body.clone(),
+            files: Value::Object(serde_json::Map::new()),
             raw_body: data.raw_body.as_ref().map(|b| b.to_vec()),
             raw_query: (*data.raw_query_params).clone(),
             headers: (*data.headers).clone(),
@@ -143,6 +202,7 @@ impl PhpRequest {
         method: String,
         path: String,
         body: Value,
+        files: Value,
         raw_body: Option<Vec<u8>>,
         headers: HashMap<String, String>,
         cookies: HashMap<String, String>,
@@ -154,6 +214,7 @@ impl PhpRequest {
             path,
             path_params,
             body,
+            files,
             raw_body,
             raw_query,
             headers,

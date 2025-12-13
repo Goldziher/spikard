@@ -19,10 +19,6 @@ use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
-// ============================================================================
-// Test Setup & Initialization
-// ============================================================================
-
 /// Initialize Python interpreter and event loop for tests
 fn init_python() {
     static PYTHON_INIT: OnceLock<()> = OnceLock::new();
@@ -57,7 +53,6 @@ fn ensure_stub_dir() -> PathBuf {
             let dir = std::env::temp_dir().join("spikard_py_stub");
             let _ = fs::create_dir_all(&dir);
 
-            // Create _spikard stub module
             let stub = r#"
 class Response:
     def __init__(self, status_code: int = 200, body=None, headers=None):
@@ -73,7 +68,6 @@ def background_run(_awaitable):
 "#;
             let _ = fs::write(dir.join("_spikard.py"), stub);
 
-            // Create spikard package stub
             let pkg_dir = dir.join("spikard");
             let _ = fs::create_dir_all(&pkg_dir);
             let pkg_init = r#"
@@ -102,7 +96,6 @@ class Spikard:
 "#;
             let _ = fs::write(pkg_dir.join("__init__.py"), pkg_init);
 
-            // Create _internal subpackage
             let internal_dir = pkg_dir.join("_internal");
             let _ = fs::create_dir_all(&internal_dir);
             let _ = fs::write(internal_dir.join("__init__.py"), "");
@@ -173,10 +166,6 @@ async fn get_response_body(response: axum::http::Response<Body>) -> String {
     String::from_utf8_lossy(&bytes).to_string()
 }
 
-// ============================================================================
-// PRIORITY 1: test_gil_concurrent_handlers_no_deadlock
-// ============================================================================
-
 /// Test that concurrent handler execution doesn't cause GIL deadlock.
 ///
 /// This critical test verifies:
@@ -207,7 +196,6 @@ async def handler(path_params, query_params, body, headers, cookies):
 
     let handler = build_python_handler(code, "handler", true);
 
-    // Spawn 10 concurrent tasks
     let mut handles = vec![];
     for i in 0..10 {
         let h = handler.clone();
@@ -240,12 +228,10 @@ async def handler(path_params, query_params, body, headers, cookies):
         handles.push(handle);
     }
 
-    // Wait for all with 10-second timeout to detect deadlock
     let results = tokio::time::timeout(Duration::from_secs(10), futures::future::join_all(handles))
         .await
         .expect("test timed out - GIL deadlock detected in concurrent handler execution");
 
-    // Verify all completed successfully
     let mut success_count = 0;
     for (i, result) in results.iter().enumerate() {
         assert!(result.is_ok(), "handler task {} panicked", i);
@@ -260,7 +246,6 @@ async def handler(path_params, query_params, body, headers, cookies):
     }
     assert_eq!(success_count, 10, "not all handlers completed successfully");
 
-    // Verify subsequent call still works (no GIL corruption)
     let sequential_handler = build_python_handler(code, "handler", true);
     let req_data = default_request_data();
     let req = Request::builder()
@@ -276,10 +261,6 @@ async def handler(path_params, query_params, body, headers, cookies):
         result.err()
     );
 }
-
-// ============================================================================
-// PRIORITY 1: test_exception_translation_preserves_traceback
-// ============================================================================
 
 /// Test that complex Python exceptions preserve information during FFI translation.
 ///
@@ -324,55 +305,38 @@ def handler(path_params, query_params, body, headers, cookies):
 
     let result = handler.call(req, req_data).await;
 
-    // Should fail with error
     assert!(result.is_err(), "handler should have raised ValueError exception");
 
     let (status, body) = result.unwrap_err();
 
-    // Verify HTTP 500 status
     assert_eq!(
         status,
         StatusCode::INTERNAL_SERVER_ERROR,
         "error should return 500 status code"
     );
 
-    // Verify response is valid JSON
     let json: Value = match serde_json::from_str(&body) {
         Ok(j) => j,
         Err(e) => panic!("response is not valid JSON: {} (body: {})", e, body),
     };
 
-    // Verify StructuredError format has required fields
     assert!(json.get("error").is_some(), "response missing 'error' field: {}", json);
 
     let error_value = json.get("error");
-    // The error field may contain the full error message or a structured code
     assert!(error_value.is_some(), "error field should exist");
 
-    // Verify exception type is preserved in response
     assert!(
         body.contains("ValueError") || body.contains("root cause"),
         "exception type/message not in error response: {}",
         body
     );
 
-    // Verify that the error response structure is correct
-    // Note: Full traceback context (level_1, level_2, level_3) is captured in the
-    // Python exception but may not be included in the JSON response by default.
-    // What matters is that:
-    // 1. The exception type (ValueError) is preserved
-    // 2. The error message is included
-    // 3. The response has proper JSON structure with error code
     assert!(
         body.contains("ValueError") || body.contains("python_error"),
         "error response should indicate the exception type or error code: {}",
         body
     );
 }
-
-// ============================================================================
-// Additional Edge Cases & Context Tests
-// ============================================================================
 
 /// Test that handler properly handles null/None values in concurrent context.
 ///
@@ -441,7 +405,6 @@ def handler(path_params, query_params, body, headers, cookies):
 /// - No event loop conflicts or reinitialization errors
 #[tokio::test]
 async fn test_event_loop_initialization_idempotence() {
-    // Don't call init_python() to test initialization within this test
     static INIT_LOCK: OnceLock<()> = OnceLock::new();
     INIT_LOCK.get_or_init(|| {
         let package_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -464,8 +427,6 @@ async fn test_event_loop_initialization_idempotence() {
         Python::initialize();
     });
 
-    // Verify idempotency - multiple inits should succeed or return "already initialized"
-    // This ensures the function is safe to call multiple times
     let result1 = _spikard::init_python_event_loop();
     assert!(
         result1.is_ok() || result1.as_ref().unwrap_err().to_string().contains("already"),
@@ -480,7 +441,6 @@ async fn test_event_loop_initialization_idempotence() {
         result2
     );
 
-    // Verify async handlers work after initialization
     let code = r#"
 import asyncio
 
@@ -539,10 +499,6 @@ def handler(path_params, query_params, body, headers, cookies):
     assert!(json.get("error").is_some(), "error response should have 'error' field");
 }
 
-// ============================================================================
-// PRIORITY 2: test_async_event_loop_initialization_and_usage
-// ============================================================================
-
 /// Test async event loop initialization and usage across multiple handlers.
 ///
 /// This HIGH priority test verifies:
@@ -560,7 +516,6 @@ def handler(path_params, query_params, body, headers, cookies):
 async fn test_async_event_loop_initialization_and_usage() {
     init_python();
 
-    // Test 1: Event loop is initialized exactly once (idempotent)
     let init1 = _spikard::init_python_event_loop();
     assert!(
         init1.is_ok() || init1.as_ref().unwrap_err().to_string().contains("already"),
@@ -575,7 +530,6 @@ async fn test_async_event_loop_initialization_and_usage() {
         init2
     );
 
-    // Test 2: Multiple handlers share the same event loop
     let handler_code = r#"
 import asyncio
 
@@ -592,7 +546,6 @@ async def async_handler(path_params, query_params, body, headers, cookies):
     let handler1 = build_python_handler(handler_code, "async_handler", true);
     let handler2 = build_python_handler(handler_code, "async_handler", true);
 
-    // Execute both handlers and collect loop IDs
     let mut path_params = HashMap::new();
     path_params.insert("id".to_string(), "1".to_string());
 
@@ -627,7 +580,6 @@ async def async_handler(path_params, query_params, body, headers, cookies):
     let result2 = handler2.call(req2, req_data2).await;
     assert!(result2.is_ok(), "handler2 should succeed");
 
-    // Test 3: Event loop survives handler failures
     let failing_handler_code = r#"
 import asyncio
 
@@ -648,7 +600,6 @@ async def failing_handler(path_params, query_params, body, headers, cookies):
     let fail_result = failing_handler.call(req_fail, req_data_fail).await;
     assert!(fail_result.is_err(), "failing handler should return error");
 
-    // Test 4: After failure, event loop is still functional
     let recovery_handler_code = r#"
 import asyncio
 
@@ -679,8 +630,6 @@ async def recovery_handler(path_params, query_params, body, headers, cookies):
     let resp = recovery_result.unwrap();
     assert_eq!(resp.status(), StatusCode::OK, "recovery handler should return 200");
 
-    // Test 5: TaskLocals are stored and accessible
-    // Verify that multiple concurrent handlers can use the event loop without conflicts
     let concurrent_code = r#"
 import asyncio
 
@@ -726,10 +675,6 @@ async def concurrent_handler(path_params, query_params, body, headers, cookies):
     }
 }
 
-// ============================================================================
-// PRIORITY 2: test_validated_params_with_di_dependency_injection
-// ============================================================================
-
 /// Test parameter validation with dependency injection integration.
 ///
 /// This HIGH priority test verifies:
@@ -750,7 +695,6 @@ async def concurrent_handler(path_params, query_params, body, headers, cookies):
 async fn test_validated_params_with_di_dependency_injection() {
     init_python();
 
-    // Test 1: Valid parameters pass validation and handler executes
     let valid_handler_code = r#"
 def valid_handler(path_params, query_params, body, headers, cookies):
     return {
@@ -789,7 +733,6 @@ def valid_handler(path_params, query_params, body, headers, cookies):
     let body_str = get_response_body(resp).await;
     let json: Value = serde_json::from_str(&body_str).expect("response should be valid JSON");
 
-    // Verify handler receives the path_id (as number from JSON)
     assert_eq!(
         json.get("body").and_then(|b| b.get("path_id")),
         Some(&Value::Number(123.into())),
@@ -797,7 +740,6 @@ def valid_handler(path_params, query_params, body, headers, cookies):
         json
     );
 
-    // Test 2: Handler receives correct validated body
     assert_eq!(
         json.get("body")
             .and_then(|b| b.get("received_body"))
@@ -807,10 +749,6 @@ def valid_handler(path_params, query_params, body, headers, cookies):
         "handler should receive complete validated body"
     );
 
-    // Test 3: Handler executes even with empty params (validation is external)
-    // In spikard, parameter validation happens in the request extraction layer,
-    // not in the handler itself. This test verifies the handler can handle
-    // empty path_params gracefully.
     let missing_params_code = r#"
 def handler_with_empty_params(path_params, query_params, body, headers, cookies):
     # Handler should gracefully handle empty/missing params
@@ -858,7 +796,6 @@ def handler_with_empty_params(path_params, query_params, body, headers, cookies)
         "handler should return default value for missing param"
     );
 
-    // Test 4: DI injection happens after validation
     let di_aware_code = r#"
 def di_aware_handler(path_params, query_params, body, headers, cookies):
     # In a real scenario, DI dependencies would be injected here
@@ -907,7 +844,6 @@ def di_aware_handler(path_params, query_params, body, headers, cookies):
         "DI should be ready after validation passes"
     );
 
-    // Test 5: Validation doesn't block concurrent requests
     let concurrent_validation_code = r#"
 def concurrent_handler(path_params, query_params, body, headers, cookies):
     return {
@@ -949,8 +885,6 @@ def concurrent_handler(path_params, query_params, body, headers, cookies):
         assert!(result.as_ref().unwrap().is_ok(), "concurrent handler {} failed", i);
     }
 
-    // Test 6: Verify handler error responses are properly structured
-    // Different error types should have proper code/message structure
     let error_handler_code = r#"
 def error_handler(path_params, query_params, body, headers, cookies):
     error_type = path_params.get("type", "unknown")
@@ -974,7 +908,6 @@ def error_handler(path_params, query_params, body, headers, cookies):
 
     let error_handler = build_python_handler(error_handler_code, "error_handler", false);
 
-    // Test validation error response structure
     let mut validation_error_params = HashMap::new();
     validation_error_params.insert("type".to_string(), "validation".to_string());
 
@@ -1001,7 +934,6 @@ def error_handler(path_params, query_params, body, headers, cookies):
         "handler executes and returns 200"
     );
 
-    // Verify response body contains validation error details with proper structure
     let validation_body_str = get_response_body(validation_error_resp).await;
     let validation_body_json: Value =
         serde_json::from_str(&validation_body_str).expect("validation error response should be valid JSON");
@@ -1014,7 +946,6 @@ def error_handler(path_params, query_params, body, headers, cookies):
         "validation error response should contain error code"
     );
 
-    // Test server error response structure
     let mut server_error_params = HashMap::new();
     server_error_params.insert("type".to_string(), "server".to_string());
 
@@ -1039,7 +970,6 @@ def error_handler(path_params, query_params, body, headers, cookies):
         "handler executes and returns 200"
     );
 
-    // Verify response body contains server error details with proper structure
     let server_body_str = get_response_body(server_error_resp).await;
     let server_body_json: Value =
         serde_json::from_str(&server_body_str).expect("server error response should be valid JSON");
@@ -1052,7 +982,6 @@ def error_handler(path_params, query_params, body, headers, cookies):
         "server error response should contain error code"
     );
 
-    // Verify error messages are present
     assert!(
         server_body_json
             .get("body")
@@ -1062,9 +991,6 @@ def error_handler(path_params, query_params, body, headers, cookies):
         "error responses should contain descriptive messages"
     );
 }
-// ============================================================================
-// PRIORITY 3: test_response_marshalling_content_type_negotiation
-// ============================================================================
 
 /// Test response marshalling with various content types and status codes.
 ///
@@ -1085,7 +1011,6 @@ def error_handler(path_params, query_params, body, headers, cookies):
 async fn test_response_marshalling_content_type_negotiation() {
     init_python();
 
-    // Test 1: Dictionary response with nested structure
     let dict_code = r#"
 def handler(path_params, query_params, body, headers, cookies):
     return {
@@ -1111,7 +1036,6 @@ def handler(path_params, query_params, body, headers, cookies):
     let json: Value = serde_json::from_str(&body_str).expect("response should be valid JSON");
     assert!(json.is_object(), "response body should be a JSON object");
 
-    // Test 2: String response marshalling
     let string_code = r#"
 def handler(path_params, query_params, body, headers, cookies):
     return "plain text response"
@@ -1131,7 +1055,6 @@ def handler(path_params, query_params, body, headers, cookies):
     let body_str = get_response_body(resp).await;
     assert!(!body_str.is_empty(), "string response should not be empty");
 
-    // Test 3: Array/List response marshalling
     let array_code = r#"
 def handler(path_params, query_params, body, headers, cookies):
     return [1, 2, 3, 4, 5]
@@ -1152,7 +1075,6 @@ def handler(path_params, query_params, body, headers, cookies):
     let json: Value = serde_json::from_str(&body_str).expect("array response should be valid JSON");
     assert!(json.is_array(), "response should be a JSON array");
 
-    // Test 4: Concurrent response marshalling (10 handlers simultaneously)
     let concurrent_code = r#"
 def handler(path_params, query_params, body, headers, cookies):
     return {"concurrent": True, "id": path_params.get("id", "unknown")}
@@ -1198,7 +1120,6 @@ def handler(path_params, query_params, body, headers, cookies):
         assert!(json.is_object(), "concurrent response should be object");
     }
 
-    // Test 5: Empty body handling
     let empty_code = r#"
 def handler(path_params, query_params, body, headers, cookies):
     return {}
@@ -1220,10 +1141,6 @@ def handler(path_params, query_params, body, headers, cookies):
     assert!(json.is_object(), "empty response should be object");
 }
 
-// ============================================================================
-// PRIORITY 3: test_json_conversion_deeply_nested_and_edge_cases
-// ============================================================================
-
 /// Test JSON conversion with deeply nested structures and edge cases.
 ///
 /// This critical test verifies:
@@ -1243,7 +1160,6 @@ def handler(path_params, query_params, body, headers, cookies):
 async fn test_json_conversion_deeply_nested_and_edge_cases() {
     init_python();
 
-    // Test 1: 100+ level deeply nested structures
     let mut nested = json!({"value": "leaf"});
     for i in 0..100 {
         nested = json!({"level": i, "nested": nested});
@@ -1278,7 +1194,6 @@ def handler(path_params, query_params, body, headers, cookies):
         .body(Body::empty())
         .unwrap();
 
-    // Should complete within 5 seconds (not stack overflow)
     let result = tokio::time::timeout(Duration::from_secs(5), deep_handler.call(req, req_data))
         .await
         .expect("deep nesting handler timed out - possible stack overflow");
@@ -1297,7 +1212,6 @@ def handler(path_params, query_params, body, headers, cookies):
         depth
     );
 
-    // Test 2: Large arrays (1000+ elements)
     let large_array = serde_json::Value::Array(
         (0..1000)
             .map(|i| serde_json::Value::Number(serde_json::Number::from(i)))
@@ -1344,7 +1258,6 @@ def handler(path_params, query_params, body, headers, cookies):
     let count = json.get("body").unwrap().get("count").unwrap().as_i64();
     assert_eq!(count, Some(1000), "array count should be 1000");
 
-    // Test 3: Mixed type arrays
     let mixed_array = json!([
         1,
         "string",
@@ -1402,7 +1315,6 @@ def handler(path_params, query_params, body, headers, cookies):
     assert_eq!(body.get("has_dict").unwrap().as_bool(), Some(true));
     assert_eq!(body.get("has_list").unwrap().as_bool(), Some(true));
 
-    // Test 4: Empty structures
     let empty_code = r#"
 def handler(path_params, query_params, body, headers, cookies):
     empty_list = []
@@ -1439,10 +1351,6 @@ def handler(path_params, query_params, body, headers, cookies):
     assert_eq!(body.get("empty_dict").unwrap().as_object().unwrap().len(), 0);
     assert_eq!(body.get("empty_str").unwrap().as_str(), Some(""));
 }
-
-// ============================================================================
-// PRIORITY 3: test_sync_async_handler_execution_isolation
-// ============================================================================
 
 /// Test that sync and async handlers execute in isolation without interference.
 ///
@@ -1492,7 +1400,6 @@ async def async_handler(path_params, query_params, body, headers, cookies):
     let sync_handler = build_python_handler(sync_code, "sync_handler", false);
     let async_handler = build_python_handler(async_code, "async_handler", true);
 
-    // Test 1: Individual execution paths work correctly
     let mut path_params = HashMap::new();
     path_params.insert("id".to_string(), "sync-1".to_string());
 
@@ -1518,7 +1425,6 @@ async def async_handler(path_params, query_params, body, headers, cookies):
     assert_eq!(body.get("mode").unwrap().as_str(), Some("sync"));
     assert!(body.get("result").unwrap().as_i64().is_some());
 
-    // Test async individually
     let mut path_params = HashMap::new();
     path_params.insert("id".to_string(), "async-1".to_string());
 
@@ -1543,7 +1449,6 @@ async def async_handler(path_params, query_params, body, headers, cookies):
     let body = json.get("body").unwrap();
     assert_eq!(body.get("mode").unwrap().as_str(), Some("async"));
 
-    // Test 2: Concurrent execution (mixed sync and async)
     let mut tasks = vec![];
 
     for i in 0..10 {
@@ -1574,12 +1479,10 @@ async def async_handler(path_params, query_params, body, headers, cookies):
         tasks.push(handle);
     }
 
-    // All concurrent tasks should complete within timeout
     let results = tokio::time::timeout(Duration::from_secs(10), futures::future::join_all(tasks))
         .await
         .expect("concurrent handlers timed out");
 
-    // Verify all completed and isolation is preserved
     for (i, result) in results.iter().enumerate() {
         assert!(result.is_ok(), "handler {} task panicked", i);
         let handler_result = result.as_ref().unwrap();
@@ -1594,7 +1497,6 @@ async def async_handler(path_params, query_params, body, headers, cookies):
         assert_eq!(resp.status(), StatusCode::OK, "handler {} should return OK", i);
     }
 
-    // Test 3: Failure isolation - one handler error doesn't affect others
     let error_code = r#"
 def error_handler(path_params, query_params, body, headers, cookies):
     raise ValueError("intentional error")
@@ -1605,7 +1507,6 @@ def error_handler(path_params, query_params, body, headers, cookies):
 
     let mut error_tasks = vec![];
 
-    // Mix error and working handlers
     for i in 0..5 {
         let h = if i % 2 == 0 {
             error_handler.clone()
@@ -1633,10 +1534,8 @@ def error_handler(path_params, query_params, body, headers, cookies):
 
         let handler_result = result.unwrap();
         if idx % 2 == 0 {
-            // Error handler should fail
             assert!(handler_result.is_err(), "error handler should return error");
         } else {
-            // Working handler should succeed
             assert!(
                 handler_result.is_ok(),
                 "working handler should succeed even after errors"

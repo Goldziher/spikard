@@ -2,10 +2,14 @@
  * Testing utilities for Spikard applications
  */
 
+import fs from "node:fs/promises";
 import { createRequire } from "node:module";
+import path from "node:path";
+import { gunzipSync, gzipSync } from "node:zlib";
 import type { ServerConfig } from "./config";
 import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
+import { getStreamingHandle, isStreamingResponse } from "./streaming";
 import type { JsonValue } from "./types";
 
 interface NativeTestResponse {
@@ -86,13 +90,43 @@ class MockWebSocketConnection {
 		this.queue.push(response);
 	}
 
+	async sendJson(message: unknown): Promise<void> {
+		return this.send_json(message);
+	}
+
+	async sendText(text: string): Promise<void> {
+		return this.send_json(text);
+	}
+
 	async receive_json(): Promise<unknown> {
 		return this.queue.shift();
 	}
 
-	async close(): Promise<void> {
-		// no-op for mock
+	async receiveJson(): Promise<unknown> {
+		return this.receive_json();
 	}
+
+	async receiveText(): Promise<string> {
+		const value = await this.receive_json();
+		return typeof value === "string" ? value : JSON.stringify(value);
+	}
+
+	async receiveBytes(): Promise<Buffer> {
+		const value = await this.receive_json();
+		if (Buffer.isBuffer(value)) {
+			return value;
+		}
+		if (typeof value === "string") {
+			return Buffer.from(value);
+		}
+		return Buffer.from(JSON.stringify(value));
+	}
+
+	async receiveMessage(): Promise<unknown> {
+		return this.receive_json();
+	}
+
+	async close(): Promise<void> {}
 }
 
 type NativeClientConstructor = new (
@@ -123,8 +157,6 @@ let nativeTestClient: NativeClientConstructor | null = null;
 
 const loadNativeTestClient = (): NativeClientConstructor | null => {
 	try {
-		// createRequire allows us to require CommonJS modules from ESM context
-		// This is necessary to load the NAPI binding which is a .node file loaded via CommonJS
 		const require = createRequire(import.meta.url);
 		const binding = require("../index.js") as NativeBinding;
 		return binding.TestClient;
@@ -154,15 +186,34 @@ class JsTestResponse implements NativeTestResponse {
 	}
 
 	text(): string {
-		return this.body.toString("utf-8");
+		return this.decodeBody().toString("utf-8");
 	}
 
 	json<T>(): T {
 		const raw = this.text();
-		return raw.length === 0 ? (undefined as unknown as T) : (JSON.parse(raw) as T);
+		if (raw.length === 0) {
+			return undefined as unknown as T;
+		}
+		try {
+			return JSON.parse(raw) as T;
+		} catch {
+			return raw as unknown as T;
+		}
 	}
 
 	bytes(): Buffer {
+		return this.decodeBody();
+	}
+
+	private decodeBody(): Buffer {
+		const encoding = (this.headerBag["content-encoding"] ?? "").toLowerCase();
+		if (encoding === "gzip") {
+			try {
+				return gunzipSync(this.body);
+			} catch {
+				return this.body;
+			}
+		}
 		return this.body;
 	}
 }
@@ -171,22 +222,33 @@ class JsNativeClient implements NativeClient {
 	private readonly routes: SpikardApp["routes"];
 	private readonly handlers: Record<string, NativeHandlerFunction>;
 	private readonly dependencies: Record<string, unknown> | null;
+	private readonly config: ServerConfig | null;
+	private readonly rateLimitBuckets: Map<string, { tokens: number; resetAt: number }>;
+	private readonly websocketRoutes: SpikardApp["websocketRoutes"];
+	private readonly websocketHandlers: Record<string, Record<string, unknown>>;
 
 	constructor(
 		routesJson: string,
 		_websocketRoutesJson: string | null,
 		handlers: Record<string, NativeHandlerFunction>,
-		_websocketHandlers: Record<string, Record<string, unknown>>,
+		websocketHandlers: Record<string, Record<string, unknown>>,
 		dependencies: Record<string, unknown> | null,
 		_lifecycleHooks: Record<string, unknown> | null,
-		_dependencies: ServerConfig | null,
+		config: ServerConfig | null,
 	) {
 		this.routes = JSON.parse(routesJson) as SpikardApp["routes"];
+		this.websocketRoutes = JSON.parse(_websocketRoutesJson ?? "[]") as SpikardApp["websocketRoutes"];
 		this.handlers = handlers;
+		this.websocketHandlers = websocketHandlers;
 		this.dependencies = dependencies;
+		this.config = config;
+		this.rateLimitBuckets = new Map();
 	}
 
-	private matchRoute(method: string, path: string): { handlerName: string; params: Record<string, string> } {
+	private matchRoute(
+		method: string,
+		path: string,
+	): { handlerName: string; params: Record<string, string>; route: SpikardApp["routes"][number] } {
 		const cleanedPath = path.split("?")[0] ?? path;
 		for (const route of this.routes) {
 			if (route.method.toUpperCase() !== method.toUpperCase()) {
@@ -195,7 +257,7 @@ class JsNativeClient implements NativeClient {
 
 			const params = this.extractParams(route.path, cleanedPath);
 			if (params) {
-				return { handlerName: route.handler_name, params };
+				return { handlerName: route.handler_name, params, route };
 			}
 		}
 
@@ -205,7 +267,11 @@ class JsNativeClient implements NativeClient {
 	private extractParams(pattern: string, actual: string): Record<string, string> | null {
 		const patternParts = pattern.split("/").filter(Boolean);
 		const actualParts = actual.split("/").filter(Boolean);
-		if (patternParts.length !== actualParts.length) {
+		const hasTailParam = patternParts.some((part) => part.includes(":path"));
+		if (!hasTailParam && patternParts.length !== actualParts.length) {
+			return null;
+		}
+		if (hasTailParam && actualParts.length < patternParts.length - 1) {
 			return null;
 		}
 
@@ -218,8 +284,15 @@ class JsNativeClient implements NativeClient {
 				return null;
 			}
 
-			if (patternPart.startsWith(":")) {
-				params[patternPart.slice(1)] = decodeURIComponent(actualPart);
+			if (patternPart.startsWith(":") || (patternPart.startsWith("{") && patternPart.endsWith("}"))) {
+				const isPathTailParam = patternPart.includes(":path");
+				const rawKey = patternPart.startsWith("{") ? patternPart.slice(1, -1).split(":")[0] : patternPart.slice(1);
+				const key = rawKey ?? "";
+				if (isPathTailParam) {
+					params[key] = decodeURIComponent(actualParts.slice(i).join("/"));
+					return params;
+				}
+				params[key] = decodeURIComponent(actualPart);
 				continue;
 			}
 
@@ -242,16 +315,73 @@ class JsNativeClient implements NativeClient {
 		return query;
 	}
 
+	private validateParams(
+		route: SpikardApp["routes"][number],
+		params: Record<string, string>,
+	): NativeTestResponse | null {
+		const schema = route.parameter_schema as
+			| { properties?: Record<string, { format?: string; source?: string; type?: string }> }
+			| undefined;
+		if (!schema?.properties) {
+			return null;
+		}
+
+		for (const [key, meta] of Object.entries(schema.properties)) {
+			if (meta.source !== "path") {
+				continue;
+			}
+			const raw = params[key];
+			if (raw === undefined) {
+				continue;
+			}
+
+			if (meta.format === "date" || meta.format === "date-time") {
+				const parsed = new Date(raw);
+				if (Number.isNaN(parsed.valueOf())) {
+					return new JsTestResponse(422, {}, Buffer.from(""));
+				}
+				(params as Record<string, unknown>)[key] = parsed;
+			}
+		}
+
+		return null;
+	}
+
 	private async invoke(
 		method: string,
 		path: string,
 		headers: Record<string, string> | null,
 		body: NativeBody,
 	): Promise<NativeTestResponse> {
-		const { handlerName, params } = this.matchRoute(method, path);
+		const routeMatch = (() => {
+			try {
+				return this.matchRoute(method, path);
+			} catch {
+				return null;
+			}
+		})();
+
+		if (!routeMatch) {
+			const staticResponse = await this.serveStatic(path);
+			if (staticResponse) {
+				return staticResponse;
+			}
+			throw new Error(`No route matched ${method} ${path}`);
+		}
+
+		const { handlerName, params, route } = routeMatch;
 		const handler = this.handlers[handlerName];
 		if (!handler) {
 			throw new Error(`Handler not found for ${handlerName}`);
+		}
+
+		if (this.config?.rateLimit && this.isRateLimited(route.path)) {
+			return new JsTestResponse(429, {}, Buffer.from(""));
+		}
+
+		const validationResponse = this.validateParams(route, params);
+		if (validationResponse) {
+			return validationResponse;
 		}
 
 		const requestPayload = {
@@ -261,15 +391,46 @@ class JsNativeClient implements NativeClient {
 			query: this.buildQuery(path),
 			headers: headers ?? {},
 			cookies: {},
-			body: body === null ? null : Array.from(Buffer.from(JSON.stringify(body))),
+			body: this.encodeBody(body),
 			dependencies: this.dependencies ?? undefined,
 		};
 
-		const result = await handler(JSON.stringify(requestPayload));
-		return this.toResponse(result);
+		const result = await handler(this.safeStringify(requestPayload));
+		const response = await this.toResponse(result);
+		return this.applyCompression(response, headers);
 	}
 
-	private toResponse(result: unknown): NativeTestResponse {
+	private async toResponse(result: unknown): Promise<NativeTestResponse> {
+		if (isStreamingResponse(result as never)) {
+			const handle = getStreamingHandle(result as never);
+			if (handle.kind === "js") {
+				const buffers: Buffer[] = [];
+				for await (const chunk of handle.iterator) {
+					if (chunk === null || chunk === undefined) {
+						continue;
+					}
+					if (Buffer.isBuffer(chunk)) {
+						buffers.push(chunk);
+						continue;
+					}
+					if (typeof chunk === "string") {
+						buffers.push(Buffer.from(chunk));
+						continue;
+					}
+					if (chunk instanceof ArrayBuffer || ArrayBuffer.isView(chunk)) {
+						const view = ArrayBuffer.isView(chunk)
+							? Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+							: Buffer.from(chunk as ArrayBuffer);
+						buffers.push(view);
+						continue;
+					}
+					buffers.push(Buffer.from(this.safeStringify(chunk)));
+				}
+				const bodyBuffer = buffers.length === 0 ? Buffer.alloc(0) : Buffer.concat(buffers);
+				return new JsTestResponse(handle.init.statusCode ?? 200, handle.init.headers ?? {}, bodyBuffer);
+			}
+		}
+
 		if (typeof result === "string") {
 			try {
 				const parsed = JSON.parse(result) as {
@@ -290,9 +451,7 @@ class JsNativeClient implements NativeClient {
 							: JSON.stringify(parsed.body);
 					return new JsTestResponse(statusCode, parsed.headers ?? {}, Buffer.from(textBody));
 				}
-			} catch {
-				// fall through to treat as plain text
-			}
+			} catch {}
 			return new JsTestResponse(200, {}, Buffer.from(result));
 		}
 
@@ -315,8 +474,135 @@ class JsNativeClient implements NativeClient {
 			return new JsTestResponse(statusCode, payload.headers ?? {}, Buffer.from(textBody));
 		}
 
-		const text = JSON.stringify(result);
+		const text = this.safeStringify(result);
 		return new JsTestResponse(200, {}, Buffer.from(text));
+	}
+
+	private isRateLimited(routePath: string): boolean {
+		if (!this.config?.rateLimit) {
+			return false;
+		}
+		const now = Math.floor(Date.now() / 1000);
+		const key = routePath;
+		const existing = this.rateLimitBuckets.get(key);
+		const bucket =
+			existing && existing.resetAt === now ? existing : { tokens: this.config.rateLimit.burst, resetAt: now };
+		if (bucket.tokens <= 0) {
+			this.rateLimitBuckets.set(key, bucket);
+			return true;
+		}
+		bucket.tokens -= 1;
+		this.rateLimitBuckets.set(key, bucket);
+		return false;
+	}
+
+	private async serveStatic(targetPath: string): Promise<NativeTestResponse | null> {
+		const normalized = targetPath.split("?")[0] ?? targetPath;
+		const staticConfig = this.config?.staticFiles ?? [];
+		for (const entry of staticConfig) {
+			if (!normalized.startsWith(entry.routePrefix)) {
+				continue;
+			}
+			const relative = normalized.slice(entry.routePrefix.length);
+			const resolved = relative === "/" || relative === "" ? "index.html" : relative.replace(/^\//, "");
+			const filePath = path.join(entry.directory, resolved);
+			try {
+				const contents = await fs.readFile(filePath);
+				const contentType = this.detectContentType(filePath);
+				const headers: Record<string, string> = {
+					"content-type": contentType,
+				};
+				if (entry.cacheControl) {
+					headers["cache-control"] = entry.cacheControl;
+				}
+				const bodyBuffer = contentType.startsWith("text/")
+					? Buffer.from(contents.toString("utf-8").replace(/\n$/, ""))
+					: contents;
+				return new JsTestResponse(200, headers, bodyBuffer);
+			} catch {}
+		}
+		return null;
+	}
+
+	private detectContentType(filePath: string): string {
+		const ext = path.extname(filePath).toLowerCase();
+		switch (ext) {
+			case ".txt":
+				return "text/plain";
+			case ".html":
+			case ".htm":
+				return "text/html";
+			case ".json":
+				return "application/json";
+			case ".xml":
+				return "application/xml";
+			case ".csv":
+				return "text/csv";
+			case ".png":
+				return "image/png";
+			case ".jpg":
+			case ".jpeg":
+				return "image/jpeg";
+			case ".pdf":
+				return "application/pdf";
+			default:
+				return "application/octet-stream";
+		}
+	}
+
+	private applyCompression(response: NativeTestResponse, requestHeaders: Record<string, string> | null) {
+		const config = this.config?.compression;
+		const acceptsGzip = (this.lookupHeader(requestHeaders, "accept-encoding") ?? "").includes("gzip");
+		if (!config || !config.gzip || !acceptsGzip) {
+			return response;
+		}
+
+		const rawBody = response.bytes();
+		if (rawBody.length < (config.minSize ?? 0)) {
+			return response;
+		}
+
+		const gzipped = gzipSync(rawBody, { level: config.quality ?? 6 });
+		const headers = { ...response.headers(), "content-encoding": "gzip" };
+		return new JsTestResponse(response.statusCode, headers, gzipped);
+	}
+
+	private lookupHeader(headers: Record<string, string> | null, name: string): string | undefined {
+		if (!headers) {
+			return undefined;
+		}
+		const target = name.toLowerCase();
+		for (const [key, value] of Object.entries(headers)) {
+			if (key.toLowerCase() === target) {
+				return value;
+			}
+		}
+		return undefined;
+	}
+
+	private safeStringify(value: unknown): string {
+		return JSON.stringify(value, (_key, val) => {
+			if (typeof val === "bigint") {
+				return val.toString();
+			}
+			return val;
+		});
+	}
+
+	private encodeBody(body: NativeBody): NativeBody {
+		if (body === null) {
+			return null;
+		}
+
+		if (typeof body === "object" && ("__spikard_multipart__" in body || "__spikard_form__" in body)) {
+			return Array.from(Buffer.from(this.safeStringify(body)));
+		}
+
+		if (Buffer.isBuffer(body)) {
+			return Array.from(body);
+		}
+
+		return body;
 	}
 
 	async get(path: string, headers: Record<string, string> | null): Promise<NativeTestResponse> {
@@ -352,7 +638,24 @@ class JsNativeClient implements NativeClient {
 	}
 
 	async websocket(_path: string): Promise<WebSocketTestConnection> {
-		throw new Error("WebSocket testing is not available in the JS fallback client");
+		const match = this.websocketRoutes?.find((route) => route.path === _path);
+		if (!match) {
+			throw new Error("WebSocket testing is not available in the JS fallback client");
+		}
+		const handlerEntry = this.websocketHandlers?.[match.handler_name];
+		if (!handlerEntry) {
+			throw new Error("WebSocket testing is not available in the JS fallback client");
+		}
+		const handler =
+			handlerEntry &&
+			typeof (handlerEntry as { handleMessage?: (msg: unknown) => Promise<unknown> }).handleMessage === "function"
+				? (handlerEntry as { handleMessage: (msg: unknown) => Promise<unknown> }).handleMessage
+				: null;
+		if (!handler) {
+			throw new Error("WebSocket testing is not available in the JS fallback client");
+		}
+		const mock = new MockWebSocketConnection(async (msg) => handler(msg));
+		return mock as unknown as WebSocketTestConnection;
 	}
 }
 
@@ -427,6 +730,16 @@ export class TestClient {
 	readonly app: SpikardApp;
 	private nativeClient: NativeClient;
 
+	private looksLikeStringHandler(fn: HandlerFunction | NativeHandlerFunction): boolean {
+		const source = fn.toString();
+		return (
+			source.includes("requestJson") ||
+			source.includes("request_json") ||
+			source.includes("JSON.parse") ||
+			source.includes("JSON.parse(")
+		);
+	}
+
 	/**
 	 * Create a new test client
 	 *
@@ -439,10 +752,14 @@ export class TestClient {
 		this.app = app;
 		const routesJson = JSON.stringify(app.routes);
 		const websocketRoutesJson = JSON.stringify(app.websocketRoutes ?? []);
+		const handlerEntries = Object.entries(app.handlers || {});
+
 		const handlersMap = Object.fromEntries(
-			Object.entries(app.handlers || {}).map(([name, handler]) => {
-				const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
-				return [name, nativeHandler];
+			handlerEntries.map(([name, handler]) => {
+				if (isNativeHandler(handler) || this.looksLikeStringHandler(handler)) {
+					return [name, handler as NativeHandlerFunction];
+				}
+				return [name, wrapHandler(handler as HandlerFunction)];
 			}),
 		);
 		const websocketHandlersMap = app.websocketHandlers || {};
@@ -600,6 +917,26 @@ export class TestClient {
 		if (handler) {
 			const mock = new MockWebSocketConnection(async (msg) => handler(msg));
 			return mock as unknown as WebSocketTestConnection;
+		}
+
+		const routeMatch = this.app.routes.find((r) => r.path === path);
+		if (routeMatch) {
+			const handlerFn = this.app.handlers?.[routeMatch.handler_name];
+			if (handlerFn) {
+				const mock = new MockWebSocketConnection(async (msg) => {
+					const payload = typeof msg === "string" ? msg : JSON.stringify(msg);
+					const result = await (handlerFn as HandlerFunction | NativeHandlerFunction)(payload as never);
+					if (typeof result === "string") {
+						try {
+							return JSON.parse(result);
+						} catch {
+							return result;
+						}
+					}
+					return result;
+				});
+				return mock as unknown as WebSocketTestConnection;
+			}
 		}
 
 		return this.nativeClient.websocket(path);

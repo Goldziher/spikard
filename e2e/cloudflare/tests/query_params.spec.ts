@@ -3,8 +3,8 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
+import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppQueryParams42NegativeIntegerQueryParam,
 	createAppQueryParams43ScientificNotationFloat,
@@ -482,7 +482,7 @@ describe("query_params", () => {
 		const app = createAppQueryParamsQueryParameterWithSpecialCharactersUrlEncoding();
 		const client = new TestClient(app);
 
-		const response = await client.get("/test?email=x%40test.com&special=%26%40A.ac");
+		const response = await client.get("/test?special=%26%40A.ac&email=x%40test.com");
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
@@ -537,7 +537,7 @@ describe("query_params", () => {
 		const app = createAppQueryParamsMultipleQueryParametersWithDifferentTypes();
 		const client = new TestClient(app);
 
-		const response = await client.get("/query/multi-type?name=john&age=30&score=95.5&active=true");
+		const response = await client.get("/query/multi-type?score=95.5&name=john&active=true&age=30");
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();

@@ -258,12 +258,10 @@ describe("WebSocket support", () => {
 		const client = new TestClient(app);
 		const ws = await client.websocketConnect("/echo");
 
-		// Send first message
 		await ws.send_json({ id: 1, text: "first" });
 		const response1 = await ws.receive_json();
 		expect((response1 as Record<string, unknown>).echoed).toBe(true);
 
-		// Send second message
 		await ws.send_json({ id: 2, text: "second" });
 		const response2 = await ws.receive_json();
 		expect((response2 as Record<string, unknown>).echoed).toBe(true);
@@ -275,9 +273,7 @@ describe("WebSocket support", () => {
 		const client = new TestClient(app);
 		try {
 			await client.websocketConnect("/nonexistent");
-		} catch {
-			// Expected behavior when no handler registered
-		}
+		} catch {}
 	});
 });
 
@@ -718,7 +714,7 @@ describe("TestClient edge cases and internal behavior", () => {
 
 		try {
 			await client.get("/does-not-exist");
-			expect(true).toBe(false); // Should have thrown
+			expect(true).toBe(false);
 		} catch (e) {
 			expect((e as Error).message).toContain("No route matched");
 		}
@@ -758,7 +754,6 @@ describe("TestClient edge cases and internal behavior", () => {
 		const client = new TestClient(app);
 		await client.cleanup();
 
-		// Should not throw
 		expect(true).toBe(true);
 	});
 });

@@ -182,7 +182,6 @@ mod graph;
 mod resolved;
 mod value;
 
-// Public exports
 pub use container::DependencyContainer;
 pub use dependency::Dependency;
 pub use error::DependencyError;

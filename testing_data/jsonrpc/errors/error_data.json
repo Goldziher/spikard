@@ -1,0 +1,273 @@
+{
+	"data_field_level_errors_simple": {
+		"description": "Single field validation error",
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUser",
+			"params": {
+				"email": "alice@example.com"
+			},
+			"id": 200
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"errors": [
+						{
+							"field": "name",
+							"message": "Required field missing"
+						}
+					]
+				}
+			},
+			"id": 200
+		}
+	},
+	"data_field_level_errors_multiple": {
+		"description": "Multiple field validation errors",
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUser",
+			"params": {
+				"name": "John",
+				"email": "invalid",
+				"age": 200,
+				"phone": ""
+			},
+			"id": 201
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"errors": [
+						{
+							"field": "email",
+							"message": "Invalid email format"
+						},
+						{
+							"field": "age",
+							"message": "Must be less than 150"
+						},
+						{
+							"field": "phone",
+							"message": "Must not be empty"
+						}
+					],
+					"total_errors": 3
+				}
+			},
+			"id": 201
+		}
+	},
+	"data_conflict_duplicate": {
+		"description": "Conflict with duplicate resource details",
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUser",
+			"params": {
+				"email": "bob@example.com"
+			},
+			"id": 202
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 409,
+				"message": "Duplicate resource",
+				"data": {
+					"conflicting_field": "email",
+					"conflicting_value": "bob@example.com",
+					"existing_id": "550e8400-e29b-41d4-a716-446655440010",
+					"resource_type": "user",
+					"suggested_action": "Use a different email or update the existing user"
+				}
+			},
+			"id": 202
+		}
+	},
+	"data_nested_validation_errors": {
+		"description": "Deeply nested object validation errors",
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUser",
+			"params": {
+				"name": "John Doe",
+				"address": {
+					"street": "123 Main St",
+					"city": "Springfield",
+					"zip_code": "123",
+					"country": "USA"
+				}
+			},
+			"id": 203
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"errors": {
+						"address": {
+							"zip_code": "Must be 5 digits",
+							"state": "Required field missing"
+						}
+					}
+				}
+			},
+			"id": 203
+		}
+	},
+	"data_complex_nested_errors": {
+		"description": "Multiple levels of nested validation errors",
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createOrder",
+			"params": {
+				"user_id": "user-123",
+				"items": [
+					{
+						"product_id": "prod-001",
+						"quantity": -5
+					}
+				],
+				"shipping": {
+					"address": {
+						"street": "123 Main",
+						"zip_code": "abc",
+						"country": ""
+					}
+				}
+			},
+			"id": 204
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"errors": {
+						"items": [
+							{
+								"index": 0,
+								"quantity": "Must be positive"
+							}
+						],
+						"shipping": {
+							"address": {
+								"zip_code": "Invalid format",
+								"country": "Required field missing"
+							}
+						}
+					}
+				}
+			},
+			"id": 204
+		}
+	},
+	"data_stack_trace_development": {
+		"description": "Stack trace in error data (development environment)",
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "processData",
+			"params": {
+				"file_id": "file-123"
+			},
+			"id": 205
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32603,
+				"message": "Internal error",
+				"data": {
+					"exception": "DatabaseConnectionError",
+					"message": "Failed to connect to database",
+					"trace": [
+						"at processData (handler.rs:42)",
+						"at execute_query (db.rs:156)",
+						"at connect (connection.rs:89)",
+						"at create_pool (pool.rs:34)"
+					],
+					"timestamp": "2025-12-10T10:35:20Z",
+					"request_id": "req-abc123def456"
+				}
+			},
+			"id": 205
+		}
+	},
+	"data_context_information": {
+		"description": "Contextual error data with hints and suggestions",
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "listItems",
+			"params": {
+				"limit": 10000,
+				"offset": -50
+			},
+			"id": 206
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"errors": [
+						{
+							"field": "limit",
+							"message": "Value exceeds maximum",
+							"rule": "max_value",
+							"max_value": 1000,
+							"provided_value": 10000
+						},
+						{
+							"field": "offset",
+							"message": "Must be non-negative",
+							"rule": "min_value",
+							"min_value": 0,
+							"provided_value": -50
+						}
+					],
+					"hint": "Use limit between 1 and 1000, offset >= 0",
+					"documentation": "https://api.example.com/docs/pagination"
+				}
+			},
+			"id": 206
+		}
+	},
+	"data_resource_state_error": {
+		"description": "Error with resource state information",
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "publishDocument",
+			"params": {
+				"document_id": "doc-456"
+			},
+			"id": 207
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": 422,
+				"message": "Invalid operation for document state",
+				"data": {
+					"resource": "document",
+					"resource_id": "doc-456",
+					"current_state": "archived",
+					"requested_action": "publish",
+					"valid_actions_for_state": ["restore", "delete", "view"],
+					"transition_help": "Restore the document first before publishing"
+				}
+			},
+			"id": 207
+		}
+	}
+}

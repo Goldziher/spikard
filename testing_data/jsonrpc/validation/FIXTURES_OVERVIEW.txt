@@ -1,0 +1,401 @@
+================================================================================
+JSON-RPC VALIDATION EDGE CASE FIXTURES - COMPREHENSIVE OVERVIEW
+================================================================================
+
+PROJECT: Spikard - Rust-centric multi-language JSON-RPC 2.0 toolkit
+LOCATION: /Users/naamanhirschfeld/workspace/spikard/testing_data/jsonrpc/validation/
+CREATED:  2025-12-10
+VERSION:  1.0
+
+================================================================================
+FIXTURE FILES (5 total + supporting files)
+================================================================================
+
+1. SCHEMA_VALIDATION.JSON (13 test cases)
+   ─────────────────────────────────────────────────────────────────────────
+   Focus: JSON Schema constraint validation
+
+   Coverage:
+   • String constraints: minLength (2-50), maxLength
+   • Number constraints: minimum (0), maximum (150)
+   • Format validation: email format
+   • Array constraints: minItems (1+), item type checking
+   • Multiple error aggregation
+
+   Test Cases:
+   ✓ valid_input_all_fields          - All fields with valid values
+   ✓ valid_input_required_only       - Only required fields
+   ✗ name_too_short                  - "A" fails minLength: 2
+   ✗ name_too_long                   - 51+ chars fails maxLength: 50
+   ✗ age_negative                    - -5 fails minimum: 0
+   ✗ age_over_maximum                - 200 fails maximum: 150
+   ✗ invalid_email_no_at             - "eveexample.com" fails email format
+   ✗ invalid_email_no_domain         - "frank@" fails email format
+   ✗ empty_tags_array                - [] fails minItems: 1
+   ✗ tags_with_non_string_items      - [42] fails array item type
+   ✗ missing_required_name           - Omitted name field
+   ✗ missing_required_email          - Omitted email field
+   ✗ multiple_validation_errors      - 4 errors in one request
+
+   Real-world Usage: User registration, profile creation, contact forms
+
+2. TYPE_COERCION.JSON (11 test cases)
+   ─────────────────────────────────────────────────────────────────────────
+   Focus: Strict type checking (no implicit coercion)
+
+   Coverage:
+   • String ↔ number type mismatch
+   • String ↔ boolean type mismatch
+   • Array ↔ object type confusion
+   • Null handling
+   • Float for integer rejection
+   • Edge cases (zero, false, empty string)
+
+   Test Cases:
+   ✓ valid_types                     - Correct types
+   ✗ string_number_rejected          - "25" instead of 25
+   ✗ number_string_rejected          - 123 instead of "John"
+   ✗ string_boolean_rejected         - "true" instead of true
+   ✗ array_as_object_rejected        - {"0": "tag"} instead of array
+   ✗ object_as_array_rejected        - [object] instead of object
+   ✗ null_vs_missing_field           - null when integer expected
+   ✗ float_for_integer_rejected      - 25.5 when integer expected
+   ✗ empty_string_validation         - "" fails minLength: 2
+   ✓ number_zero_valid               - 0 is valid
+   ✓ boolean_false_valid             - false is valid
+
+   Real-world Usage: API contracts, strict typing enforcement, security
+
+3. REQUIRED_FIELDS.JSON (10 test cases)
+   ─────────────────────────────────────────────────────────────────────────
+   Focus: Required field enforcement
+
+   Coverage:
+   • Single and multiple missing required fields
+   • Null values for required fields
+   • Empty strings for required fields
+   • Optional field handling
+
+   Test Cases:
+   ✓ all_required_present            - id, name, email present
+   ✓ required_only_present           - No optional fields
+   ✗ missing_id                      - Required field omitted
+   ✗ missing_name                    - Required field omitted
+   ✗ missing_email                   - Required field omitted
+   ✗ missing_two_required_fields     - 2 fields missing (2 errors)
+   ✗ all_required_fields_missing     - All 3 required missing (3 errors)
+   ✗ only_optional_field_present     - Optional present, required missing
+   ✗ required_field_is_null          - null for required string
+   ✗ required_field_is_empty_string  - "" for required string
+
+   Real-world Usage: Form validation, API endpoints, data integrity
+
+4. EXTRA_FIELDS.JSON (10 test cases)
+   ─────────────────────────────────────────────────────────────────────────
+   Focus: additionalProperties constraint
+
+   Coverage:
+   • Single and multiple extra fields
+   • Typos (missing required + extra field)
+   • Different schema configurations:
+     - additionalPropertiesFalse (strict)
+     - additionalPropertiesTrue (permissive)
+     - Default behavior (allows by default)
+   • Special character field names
+
+   Test Cases:
+   ✓ valid_exact_fields              - Exact match (no extras)
+   ✓ valid_with_optional_field       - With extras allowed
+   ✗ one_extra_field_rejected        - age field not in schema
+   ✗ multiple_extra_fields_rejected  - age, phone, tags (3 errors)
+   ✗ typo_missing_required_and_extra - nam instead of name
+   ✗ extra_nested_object_rejected    - metadata object not allowed
+   ✓ schema_with_additional_properties_true   - Extras allowed
+   ✓ schema_without_additional_properties     - Default allows extras
+   ✗ empty_params_missing_required   - Empty {} fails required check
+   ✗ special_characters_in_extra_field_name   - x-custom-header rejected
+
+   Real-world Usage: API security, schema enforcement, legacy compatibility
+
+5. NESTED_OBJECTS.JSON (15 test cases)
+   ─────────────────────────────────────────────────────────────────────────
+   Focus: Deeply nested object validation
+
+   Coverage:
+   • Validation at multiple nesting levels (3-6+ levels deep)
+   • Required field enforcement in nested structures
+   • Pattern validation in nested fields
+   • Arrays of nested objects
+   • Nested arrays with item validation
+   • Multiple errors with full path tracking
+
+   Test Cases:
+   ✓ valid_nested_structure          - 3 levels deep, valid
+   ✓ valid_nested_with_optional      - Extra optional fields
+   ✗ missing_nested_street           - user.profile.address.street missing
+   ✗ invalid_zip_pattern             - "123" fails ^[0-9]{5}$
+   ✗ invalid_zip_with_letters        - "123AB" fails pattern
+   ✗ missing_intermediate_profile    - user.profile missing
+   ✗ null_for_nested_object          - user.profile = null
+   ✓ array_of_nested_objects_valid   - Array of addresses
+   ✗ array_of_nested_objects_invalid - Invalid item in array
+   ✓ nested_array_with_item_validation - aliases array validation
+   ✗ nested_array_invalid_items      - [42] in string array
+   ✗ multiple_nested_validation      - 2 errors in nested structure
+   ✓ deep_nesting_six_levels         - 6-level deep structure
+   ✗ deep_nesting_invalid_at_level4  - Invalid at depth 4
+   ✗ missing_required_at_root_level  - user field missing
+
+   Real-world Usage: Complex domain objects, hierarchical data, API responses
+
+================================================================================
+ERROR RESPONSE FORMAT
+================================================================================
+
+All validation errors follow JSON-RPC 2.0 specification:
+
+Single Error Response:
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "code": -32602,
+    "message": "Invalid params",
+    "data": {
+      "fieldPath": "user.profile.address.zip",
+      "constraint": "pattern",
+      "value": "123",
+      "details": "Value does not match pattern: ^[0-9]{5}$"
+    }
+  },
+  "id": "request-id"
+}
+
+Multiple Errors Response:
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "code": -32602,
+    "message": "Invalid params",
+    "data": {
+      "errors": [
+        {
+          "fieldPath": "name",
+          "constraint": "minLength",
+          "details": "String length must be at least 2"
+        },
+        {
+          "fieldPath": "email",
+          "constraint": "format",
+          "details": "Invalid email format"
+        }
+      ]
+    }
+  },
+  "id": "request-id"
+}
+
+Error Data Fields:
+• fieldPath:  Dot-notation path (e.g., user.profile.address.zip, tags[1])
+• constraint: JSON Schema constraint name
+• value:      Actual value that failed (optional)
+• details:    Human-readable explanation
+• errors:     Array of error objects (when multiple failures)
+
+================================================================================
+CONSTRAINTS COVERED (10 total)
+================================================================================
+
+Constraint          | Description                    | Example
+───────────────────────────────────────────────────────────────────────────────
+type                | Type mismatch                  | "25" for integer
+required            | Missing required field         | omitted name
+minLength           | String too short               | "A" (min: 2)
+maxLength           | String too long                | 51+ chars (max: 50)
+minimum             | Number too small               | -5 (min: 0)
+maximum             | Number too large               | 200 (max: 150)
+pattern             | Regex pattern mismatch         | "123" for ^[0-9]{5}$
+format              | Format validation              | "noatsign" for email
+minItems            | Array too small                | [] (min: 1)
+additionalProperties| Extra fields not allowed       | extra_field: true
+
+================================================================================
+FIELD PATH CONVENTIONS
+================================================================================
+
+Nested Objects:
+  Format: field1.field2.field3
+  Example: user.profile.address.zip
+
+Array Items:
+  Format: arrayField[index]
+  Example: tags[0], addresses[2].zip
+
+Mixed:
+  Example: user.addresses[1].zip
+           → Array at index 1 within user.addresses
+
+Deep Nesting:
+  Example: user.level1.level2.level3.level4.value
+           → 5 levels deep
+
+================================================================================
+TEST STATISTICS
+================================================================================
+
+Distribution by Category:
+  Schema validation     13 test cases  (22%)
+  Type coercion         11 test cases  (19%)
+  Required fields       10 test cases  (17%)
+  Extra fields          10 test cases  (17%)
+  Nested objects        15 test cases  (25%)
+  ─────────────────────────────────────────
+  Total                 59 test cases
+
+Success vs Failure:
+  Success (✓)           23 test cases  (39%)
+  Failure (✗)           36 test cases  (61%)
+
+File Sizes:
+  schema_validation.json      5.7 KB
+  type_coercion.json          4.1 KB
+  required_fields.json        4.6 KB
+  extra_fields.json           5.3 KB
+  nested_objects.json         7.0 KB
+  schema.json                 3.7 KB
+  README.md                  18.2 KB
+  ─────────────────────────────────────
+  Total                      48.6 KB
+
+================================================================================
+INTEGRATION POINTS
+================================================================================
+
+Python Tests (packages/python/tests/):
+  • test_all_fixtures.py
+  • test_integration_query_params.py
+  • Load via conftest.py fixtures
+  • Parametrize with fixture files
+
+Rust Tests (crates/spikard-http/tests/):
+  • Unit tests
+  • Integration tests
+  • Load from testing_data/jsonrpc/validation/
+  • Validate schema registration
+
+Node/TypeScript Tests (packages/node/tests/):
+  • Fixture-driven test suites
+  • Type validation checks
+  • JSON-RPC handler tests
+
+CI/CD Pipeline:
+  • Fixture validation in setup phase
+  • Run against all language bindings
+  • Consistency checks across platforms
+
+================================================================================
+USAGE EXAMPLES
+================================================================================
+
+Python:
+  import json
+  with open("testing_data/jsonrpc/validation/schema_validation.json") as f:
+      fixtures = json.load(f)
+
+  for test_case in fixtures:
+      response = client.jsonrpc_call(test_case["method"], test_case["params"])
+      assert response["result"] is not None if test_case["expectedSuccess"]
+      assert response["error"]["code"] == "-32602" if not test_case["expectedSuccess"]
+
+Rust:
+  let fixtures: Vec<TestCase> = serde_json::from_str(
+      include_str!("../../../testing_data/jsonrpc/validation/schema_validation.json")
+  )?;
+
+  for test_case in fixtures {
+      let result = validate_schema(&test_case.params, &schema);
+      assert_eq!(result.is_ok(), test_case.expected_success);
+  }
+
+JavaScript:
+  const fixtures = require('./testing_data/jsonrpc/validation/schema_validation.json');
+
+  fixtures.forEach(testCase => {
+      const result = client.call(testCase.method, testCase.params);
+      expect(result.success).toBe(testCase.expectedSuccess);
+  });
+
+================================================================================
+EXTENDING FIXTURES
+================================================================================
+
+To Add New Test Cases:
+
+1. Choose appropriate fixture file based on validation type
+2. Add test case object with required fields:
+   - name (string): Unique identifier
+   - method (string): JSON-RPC method name
+   - params (object): Test parameters
+   - expectedSuccess (boolean): Expected outcome
+
+3. For failure cases, include expectedError:
+   - code (string): "-32602"
+   - message (string): "Invalid params"
+   - data (object): Error details with fieldPath, constraint, details
+
+4. Use descriptive snake_case names
+5. Keep realistic field values and names
+6. Validate JSON: python3 -m json.tool fixture_file.json
+7. Update README.md if adding new constraint types
+
+Template:
+{
+  "name": "descriptive_test_name",
+  "method": "module.method",
+  "params": { /* JSON object */ },
+  "expectedSuccess": true/false,
+  "expectedError": {
+    "code": "-32602",
+    "message": "Invalid params",
+    "data": {
+      "fieldPath": "field.path",
+      "constraint": "constraintName",
+      "value": actual_value,
+      "details": "Human-readable explanation"
+    }
+  }
+}
+
+================================================================================
+VALIDATION CHECKLIST
+================================================================================
+
+Before Committing:
+  □ All JSON files validated with json.tool
+  □ Test case names are unique within each file
+  □ Error codes match JSON-RPC 2.0 spec (-32602)
+  □ Field paths use dot notation (object.property)
+  □ Array indices use bracket notation (array[0])
+  □ All constraints are valid JSON Schema
+  □ Error details are descriptive and human-readable
+  □ README.md updated with new constraint types
+  □ No trailing commas or formatting issues
+  □ All fixture files sorted by name/relevance
+
+================================================================================
+REFERENCES
+================================================================================
+
+JSON-RPC 2.0 Specification:
+  https://www.jsonrpc.org/specification
+
+JSON Schema Draft 7:
+  https://json-schema.org/draft-07/
+
+Spikard Repository:
+  /Users/naamanhirschfeld/workspace/spikard
+
+Testing Framework:
+  packages/python/tests/
+  crates/spikard-http/tests/
+
+================================================================================

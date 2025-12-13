@@ -1,0 +1,118 @@
+{
+	"name": "method_not_found",
+	"description": "JSON-RPC method not found error handling",
+	"method": "method_not_found",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"description": "Parameters for method calls"
+	},
+	"result_schema": {
+		"type": "object",
+		"description": "JSON-RPC error response"
+	},
+	"examples": [],
+	"error_cases": [
+		{
+			"name": "unknown_method_name",
+			"description": "Call to completely unknown method",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "nonexistent.method",
+				"params": {},
+				"id": 1
+			},
+			"error": {
+				"code": -32601,
+				"message": "Method not found"
+			}
+		},
+		{
+			"name": "typo_in_method_name",
+			"description": "Method name with typo (user.lsit instead of user.list)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.lsit",
+				"params": {},
+				"id": 2
+			},
+			"error": {
+				"code": -32601,
+				"message": "Method not found"
+			}
+		},
+		{
+			"name": "case_sensitivity_uppercase",
+			"description": "Method name with wrong case (User.List instead of user.list)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "User.List",
+				"params": {},
+				"id": 3
+			},
+			"error": {
+				"code": -32601,
+				"message": "Method not found"
+			}
+		},
+		{
+			"name": "empty_method_name",
+			"description": "Empty string as method name",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "",
+				"params": {},
+				"id": 4
+			},
+			"error": {
+				"code": -32601,
+				"message": "Method not found"
+			}
+		},
+		{
+			"name": "method_with_special_characters",
+			"description": "Method name with special characters not in spec",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user@list!",
+				"params": {},
+				"id": 5
+			},
+			"error": {
+				"code": -32601,
+				"message": "Method not found"
+			}
+		},
+		{
+			"name": "method_too_many_dots",
+			"description": "Method with extra dots in namespace",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.admin.list.all",
+				"params": {},
+				"id": 6
+			},
+			"error": {
+				"code": -32601,
+				"message": "Method not found"
+			}
+		},
+		{
+			"name": "method_whitespace",
+			"description": "Method name with leading/trailing whitespace",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": " user.list ",
+				"params": {},
+				"id": 7
+			},
+			"error": {
+				"code": -32601,
+				"message": "Method not found"
+			}
+		}
+	],
+	"tags": ["method-not-found", "protocol", "edge-cases", "error-handling"]
+}

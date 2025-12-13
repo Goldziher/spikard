@@ -12,7 +12,6 @@ from spikard import Spikard
 def main() -> None:
     app = Spikard()
 
-    # Register value dependencies
     app.provide("app_name", "MyApp")
     app.provide("version", "1.0.0")
     app.provide("max_connections", 100)

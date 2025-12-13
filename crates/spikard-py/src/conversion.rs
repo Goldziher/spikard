@@ -83,7 +83,6 @@ pub fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py
 /// let value = python_to_json(py, &py_dict.as_any().into())?;
 /// ```
 pub fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-    // Fast path: already a builtin type, convert directly
     if obj.is_none() {
         return Ok(Value::Null);
     }
@@ -107,7 +106,6 @@ pub fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value>
         return Ok(Value::String(s));
     }
 
-    // Handle dict
     #[allow(deprecated)]
     if let Ok(dict) = obj.downcast::<PyDict>() {
         let mut map = serde_json::Map::new();
@@ -119,7 +117,6 @@ pub fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value>
         return Ok(Value::Object(map));
     }
 
-    // Handle list
     #[allow(deprecated)]
     if let Ok(list) = obj.downcast::<PyList>() {
         let mut arr = Vec::new();
@@ -130,8 +127,6 @@ pub fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value>
         return Ok(Value::Array(arr));
     }
 
-    // Not a builtin type - could be DTO (msgspec.Struct, dataclass, Pydantic model)
-    // Use json.dumps() as last resort for custom types
     let json_module = py.import("json")?;
     let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
 

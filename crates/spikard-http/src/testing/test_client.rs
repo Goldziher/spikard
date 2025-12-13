@@ -73,12 +73,10 @@ impl TestClient {
         let full_path = build_full_path(path, query_params.as_deref());
         let mut request = self.server.post(&full_path);
 
-        // Apply headers first
         if let Some(headers_vec) = headers {
             request = self.add_headers(request, headers_vec.clone())?;
         }
 
-        // Determine body and content-type
         if let Some((form_fields, files)) = multipart {
             let (body, boundary) = super::build_multipart_body(&form_fields, &files);
             let content_type = format!("multipart/form-data; boundary={}", boundary);

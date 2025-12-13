@@ -1,0 +1,69 @@
+{
+	"name": "user_delete",
+	"description": "Delete a user account",
+	"method": "user.delete",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"properties": {
+			"userId": {
+				"type": "string",
+				"format": "uuid",
+				"description": "ID of user to delete"
+			}
+		},
+		"required": ["userId"]
+	},
+	"result_schema": {
+		"type": "object",
+		"properties": {
+			"success": {
+				"type": "boolean"
+			},
+			"deletedId": {
+				"type": "string",
+				"format": "uuid"
+			}
+		},
+		"required": ["success", "deletedId"]
+	},
+	"examples": [
+		{
+			"params": {
+				"userId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+			},
+			"result": {
+				"success": true,
+				"deletedId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+			}
+		}
+	],
+	"error_cases": [
+		{
+			"name": "user_not_found",
+			"params": {
+				"userId": "00000000-0000-0000-0000-000000000000"
+			},
+			"error": {
+				"code": 404,
+				"message": "User not found"
+			}
+		},
+		{
+			"name": "invalid_uuid",
+			"params": {
+				"userId": "invalid-id"
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "userId",
+					"reason": "Invalid UUID format"
+				}
+			}
+		}
+	]
+}

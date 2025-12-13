@@ -57,8 +57,6 @@ impl FrameworkConfig {
 /// Registry of all supported frameworks
 fn framework_registry() -> Vec<FrameworkConfig> {
     vec![
-        // Spikard bindings - detect via server files only
-        // (config files like pyproject.toml, package.json, Gemfile are in workspace root, not app dirs)
         FrameworkConfig::new(
             "spikard-rust",
             vec!["Cargo.toml".to_string(), "src/main.rs".to_string()],
@@ -101,7 +99,6 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "deno run --allow-net --allow-read server.ts {port}",
             None,
         ),
-        // Baseline and alternative frameworks
         FrameworkConfig::new(
             "fastapi-uvicorn-dto",
             vec!["server.py".to_string()],
@@ -130,7 +127,6 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "uv run server.py {port}",
             None,
         ),
-        // Raw/no-validation variants for validation overhead measurement
         FrameworkConfig::new(
             "spikard-raw",
             vec!["server.py".to_string()],
@@ -173,7 +169,6 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "uv run server.py {port}",
             None,
         ),
-        // TypeScript frameworks
         FrameworkConfig::new(
             "fastify-dto",
             vec!["server.ts".to_string()],
@@ -244,7 +239,6 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "uv run server.py {port}",
             None,
         ),
-        // Ruby frameworks
         FrameworkConfig::new(
             "hanami-api-dto",
             vec!["server.rb".to_string()],
@@ -273,7 +267,6 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "ruby server.rb {port}",
             None,
         ),
-        // PHP frameworks
         FrameworkConfig::new(
             "trongate-raw",
             vec!["server.php".to_string()],
@@ -319,7 +312,6 @@ fn framework_registry() -> Vec<FrameworkConfig> {
 pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
     let registry = framework_registry();
 
-    // Check if directory exists
     if !app_dir.exists() {
         return Err(crate::Error::InvalidInput(format!(
             "App directory does not exist: {}",
@@ -327,10 +319,6 @@ pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
         )));
     }
 
-    // Try to detect frameworks in priority order:
-    // 1. First, check for more specific frameworks (those with more detect_files)
-    // 2. Then fall back to less specific ones
-    // This avoids false positives when a directory could match multiple frameworks
     let mut matches: Vec<FrameworkConfig> = registry.into_iter().filter(|fw| fw.matches(app_dir)).collect();
 
     if matches.is_empty() {
@@ -340,10 +328,8 @@ pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
         )));
     }
 
-    // Sort by number of detect_files in descending order (most specific first)
     matches.sort_by(|a, b| b.detect_files.len().cmp(&a.detect_files.len()));
 
-    // Return the most specific match
     Ok(matches.into_iter().next().unwrap())
 }
 
@@ -418,7 +404,6 @@ mod tests {
         let registry = framework_registry();
         let names: Vec<&str> = registry.iter().map(|f| f.name.as_str()).collect();
 
-        // Spikard bindings (6)
         assert!(names.contains(&"spikard-rust"));
         assert!(names.contains(&"spikard-python"));
         assert!(names.contains(&"spikard-node"));
@@ -426,7 +411,6 @@ mod tests {
         assert!(names.contains(&"spikard-php"));
         assert!(names.contains(&"spikard-wasm"));
 
-        // Python validated (6)
         assert!(names.contains(&"fastapi-uvicorn-dto"));
         assert!(names.contains(&"fastapi-python"));
         assert!(names.contains(&"fastapi-granian-dto"));
@@ -434,7 +418,6 @@ mod tests {
         assert!(names.contains(&"litestar-granian"));
         assert!(names.contains(&"robyn-dto"));
 
-        // Python raw (6)
         assert!(names.contains(&"spikard-raw"));
         assert!(names.contains(&"fastapi-raw"));
         assert!(names.contains(&"fastapi-granian-raw"));
@@ -442,7 +425,6 @@ mod tests {
         assert!(names.contains(&"litestar-granian-raw"));
         assert!(names.contains(&"robyn-raw"));
 
-        // TypeScript (8)
         assert!(names.contains(&"fastify-dto"));
         assert!(names.contains(&"fastify-raw"));
         assert!(names.contains(&"hono-dto"));
@@ -452,13 +434,11 @@ mod tests {
         assert!(names.contains(&"express-dto"));
         assert!(names.contains(&"express-raw"));
 
-        // Ruby (4)
         assert!(names.contains(&"hanami-api-dto"));
         assert!(names.contains(&"hanami-api-raw"));
         assert!(names.contains(&"roda-dto"));
         assert!(names.contains(&"roda-raw"));
 
-        // PHP (2)
         assert!(names.contains(&"trongate-raw"));
         assert!(names.contains(&"phalcon-raw"));
 
@@ -489,13 +469,11 @@ mod tests {
     #[test]
     fn test_detect_framework_ambiguous() {
         let temp_dir = TempDir::new().unwrap();
-        // Create files that would match multiple frameworks
         fs::write(temp_dir.path().join("Cargo.toml"), "[package]").unwrap();
         fs::create_dir_all(temp_dir.path().join("src")).unwrap();
         fs::write(temp_dir.path().join("src").join("main.rs"), "fn main()").unwrap();
 
         let result = detect_framework(temp_dir.path());
-        // spikard-rust requires both Cargo.toml and src/main.rs, making it more specific
         assert!(result.is_ok());
         assert_eq!(result.unwrap().name, "spikard-rust");
     }
@@ -534,10 +512,8 @@ mod tests {
             None,
         );
 
-        // Should not match when files don't exist
         assert!(!config.matches(temp_dir.path()));
 
-        // Should match when all files exist
         fs::write(temp_dir.path().join("file1.txt"), "content").unwrap();
         fs::write(temp_dir.path().join("file2.txt"), "content").unwrap();
         assert!(config.matches(temp_dir.path()));
@@ -587,8 +563,6 @@ mod tests {
         let result = detect_framework(temp_dir.path());
         assert!(result.is_ok());
         let name = result.unwrap().name;
-        // When only server.ts exists, both spikard-node and spikard-wasm match (same detect_files).
-        // spikard-node appears first in registry, so it wins the tie.
         assert_eq!(name, "spikard-node");
     }
 
@@ -599,8 +573,6 @@ mod tests {
 
         let result = detect_framework(temp_dir.path());
         assert!(result.is_ok());
-        // When only server.ts exists, it should detect as spikard-node first (more specific precedence)
-        // but both match, so we verify it's one of the valid options
         let name = result.unwrap().name;
         assert!(name == "spikard-node" || name == "fastify");
     }

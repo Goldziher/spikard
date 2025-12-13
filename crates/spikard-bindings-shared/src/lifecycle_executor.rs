@@ -154,12 +154,10 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
         let result = self.hook.invoke_hook(hook_data).await?;
 
         if !result.continue_execution {
-            // Short-circuit: build response and return it
             let response = self.build_response_from_hook_result(&result)?;
             return Ok(Err(response));
         }
 
-        // Continue: optionally modify request
         if let Some(modifications) = result.request_modifications {
             let modified_req = self.apply_request_modifications(req, modifications)?;
             Ok(Ok(modified_req))
@@ -173,14 +171,9 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
     /// Response hooks can only continue or modify the response,
     /// never short-circuit.
     pub async fn execute_response_hook(&self, resp: Response<Body>) -> Result<Response<Body>, String> {
-        // For response hooks, we typically don't have hook_data to prepare
-        // since response hooks operate on already-generated responses.
-        // This is a simplified version; language bindings may override.
         let (parts, body) = resp.into_parts();
         let body_bytes = extract_body(body).await?;
 
-        // Rebuild request as a dummy for prepare_hook_data
-        // (Language bindings override this behavior as needed)
         let dummy_req = Request::builder()
             .method("GET")
             .uri("/")
@@ -190,29 +183,23 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
         let hook_data = self.hook.prepare_hook_data(&dummy_req)?;
         let result = self.hook.invoke_hook(hook_data).await?;
 
-        // Apply modifications to response if provided
         if let Some(modifications) = result.request_modifications {
-            // For response hooks, interpret modifications as response body/headers changes
             let mut builder = Response::builder().status(parts.status);
 
-            // Collect header mod keys for later comparison
             let header_mod_keys: Vec<String> = modifications
                 .headers
                 .as_ref()
                 .map(|mods| mods.keys().map(|k| k.to_lowercase()).collect())
                 .unwrap_or_default();
 
-            // Apply header modifications
             if let Some(header_mods) = modifications.headers {
                 for (key, value) in header_mods {
                     builder = builder.header(&key, &value);
                 }
             }
 
-            // Copy original headers not overridden
             for (name, value) in parts.headers.iter() {
                 let key_str = name.as_str().to_lowercase();
-                // Skip if this header was in modifications
                 if !header_mod_keys.contains(&key_str) {
                     builder = builder.header(name, value);
                 }
@@ -224,7 +211,6 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
                 .map_err(|e| format!("Failed to build modified response: {}", e));
         }
 
-        // Rebuild original response
         let mut builder = Response::builder().status(parts.status);
         for (name, value) in parts.headers {
             if let Some(name) = name {
@@ -244,14 +230,12 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
 
         let mut builder = Response::builder().status(status);
 
-        // Add headers from hook result
         if let Some(ref headers) = result.headers {
             for (key, value) in headers {
                 builder = builder.header(key, value);
             }
         }
 
-        // Ensure content-type if not specified
         if !builder
             .headers_ref()
             .map(|h| h.contains_key("content-type"))
@@ -275,19 +259,16 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
     ) -> Result<Request<Body>, String> {
         let (mut parts, body) = req.into_parts();
 
-        // Update method if provided
         if let Some(method) = &mods.method {
             parts.method = method
                 .parse()
                 .map_err(|e| format!("Invalid method '{}': {}", method, e))?;
         }
 
-        // Update URI if provided
         if let Some(path) = &mods.path {
             parts.uri = path.parse().map_err(|e| format!("Invalid path '{}': {}", path, e))?;
         }
 
-        // Update/add headers
         if let Some(new_headers) = &mods.headers {
             for (key, value) in new_headers {
                 let header_name: http::header::HeaderName =
@@ -299,7 +280,6 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
             }
         }
 
-        // Update body if provided
         let body = if let Some(new_body) = mods.body {
             Body::from(new_body)
         } else {
@@ -385,7 +365,6 @@ mod tests {
         assert_eq!(mods.body, Some(b"data".to_vec()));
     }
 
-    // Mock hook implementation for testing
     struct MockHook {
         result: HookResultData,
     }

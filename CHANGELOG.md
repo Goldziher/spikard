@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-12-10
+
+### Added
+
+#### JSON-RPC 2.0 Protocol Support
+- **Core protocol**: Full JSON-RPC 2.0 specification implementation with method registry, batch requests, notifications, and standard error codes (-32700 to -32603)
+- **OpenRPC 1.3.2 code generation**: Complete parser and multi-language code generator for Python, TypeScript, Ruby, and PHP with handler scaffolding and type-safe DTOs
+- **Method validation**: Defense-in-depth validation at both parse and route time, preventing invalid method names from reaching handlers
+- **Language bindings**: Full API parity across all languages with `@app.jsonrpc()` decorator (Python), `JsonRpcMethod` class (TypeScript), `JsonRpcMethodInfo` struct (Ruby), and strict type-safe implementation (PHP)
+- **CLI commands**: `spikard generate openrpc` for code generation from OpenRPC specifications
+
+#### Test Fixtures & Coverage
+- **23 comprehensive fixtures**: Protocol edge cases (batch, notifications, invalid JSON, large payloads, unicode), error scenarios (standard + custom codes), validation cases (schema, type coercion, nested objects)
+- **35 fixture validation tests**: Achieved 100% fixture coverage (up from 21.7%)
+- **Test client helpers**: Python test client with HTTP/WebSocket/SSE support
+
+#### Documentation
+- **4 user guides**: JSON-RPC intro, quickstart (5-minute), code generation workflow, integration patterns
+- **4 playbooks**: Error handling, batch requests, validation strategies, integration patterns
+- **Complete API reference**: Updated for all languages (Python, TypeScript, Ruby, PHP) with multi-language tabbed code examples
+- **CLI documentation**: Complete reference for `spikard generate openrpc` command
+- **Root README update**: Added JSON-RPC 2.0 quickstart and feature parity table
+
+#### Examples
+- **Python JSON-RPC example**: Complete user CRUD API with test fixtures
+- **Ruby JSON-RPC example**: Math operations + user API with complete documentation
+- **PHP JSON-RPC example**: Full example with README and PSR compliance
+
+#### PHP Binding Enhancements
+- **JsonRpcMethodInfo class**: Strict type-safe implementation with PHPStan level max compliance
+- **ClosureHandler**: Functional route definitions with closures
+- **App::addJsonRpcRoute()**: New method for JSON-RPC route registration with full metadata support
+
+### Fixed
+
+#### Type Safety
+- **Python**: Fixed all mypy --strict violations in test files, added proper type annotations (`dict[str, object]`), used `Path.open()` instead of `open()`
+- **PHP**: Fixed PHPStan level max violations with proper type assertions (`@var` annotations) in fromArray() method
+- **Ruby**: Fixed handler signature in DI examples to use single `request` hash parameter
+
+#### Documentation
+- **README examples**: Corrected Python/Ruby README examples to use actual exported APIs (`TestClient`, `OpenApiConfig`)
+- **Multi-language examples**: Converted all code examples to use tabbed snippets format (MkDocs Material with `pymdownx.tabbed`)
+- **Fixed syntax errors**: Removed invalid PHP async/await keywords, fixed Ruby RBS mixing, replaced Python dataclass with msgspec
+
+#### Code Quality
+- **Linting**: All pre-commit hooks passing (ShellCheck, Biome, clippy, mypy, PHPStan, rubocop)
+- **Clippy warnings**: Fixed type complexity issues with type aliases, boxed large error variants, replaced `push_str("\n")` with `push('\n')`
+- **Shell scripts**: Fixed SC2086 (quoting), SC2034 (unused vars), SC2064 (trap syntax) in CI scripts
+
 ## [0.3.5] - 2025-12-08
 
 ### Fixed

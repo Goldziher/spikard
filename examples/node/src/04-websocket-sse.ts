@@ -9,7 +9,6 @@ import { get, post, type Request, Spikard, StreamingResponse } from "@spikard/no
 
 const app = new Spikard();
 
-// Simple in-memory message store for chat simulation
 interface Message {
 	id: number;
 	user: string;
@@ -26,7 +25,6 @@ let messageId = 0;
 app.websocket(
 	"/ws/chat",
 	async (message: unknown) => {
-		// Handle incoming WebSocket message
 		if (typeof message === "string") {
 			try {
 				const data = JSON.parse(message);
@@ -79,7 +77,6 @@ app.websocket(
 app.websocket(
 	"/ws/notifications",
 	async (message: unknown) => {
-		// Echo received messages
 		return {
 			type: "echo",
 			received: message,
@@ -103,7 +100,6 @@ post("/sse/chat-history")(async function chatHistorySse(req: Request) {
 	const startId = (req.query?.since as string | undefined) ? parseInt(req.query.since as string, 10) : 0;
 
 	async function* generateHistory() {
-		// Send header
 		yield {
 			event: "history_start",
 			data: JSON.stringify({
@@ -113,18 +109,15 @@ post("/sse/chat-history")(async function chatHistorySse(req: Request) {
 			}),
 		};
 
-		// Stream existing messages
 		for (const msg of messages.filter((m) => m.id > startId)) {
 			yield {
 				event: "message",
 				data: JSON.stringify(msg),
 			};
 
-			// Small delay between messages
 			await new Promise((resolve) => setTimeout(resolve, 10));
 		}
 
-		// Send completion
 		yield {
 			event: "history_complete",
 			data: JSON.stringify({
@@ -155,7 +148,6 @@ get("/sse/metrics")(async function metricsStream(req: Request) {
 		let iteration = 0;
 
 		while (iteration < 60) {
-			// Simulate metrics
 			const cpuUsage = Math.random() * 100;
 			const memoryUsage = Math.random() * 100;
 			const requestCount = Math.floor(Math.random() * 1000);

@@ -57,28 +57,58 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
         dto_map.insert(fixture.name.clone(), dto);
     }
 
+    let test_suffix = if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
+        "_test.ts"
+    } else {
+        ".spec.ts"
+    };
+
+    let rewrite_wasm_imports = |code: String| -> String {
+        if matches!(target.runtime, crate::ts_target::Runtime::CloudflareWorkers)
+            && target.dependency_package == "@spikard/wasm"
+        {
+            code.replace("from \"@spikard/wasm\"", "from \"../../packages/wasm/src/index.ts\"")
+        } else {
+            code
+        }
+    };
+
     for (category, fixtures) in fixtures_by_category.iter() {
-        let test_content = generate_test_file(category, fixtures, target)?;
-        let test_file = tests_dir.join(format!("{}.spec.ts", category));
+        let test_content = rewrite_wasm_imports(generate_test_file(category, fixtures, target)?);
+        let test_file = tests_dir.join(format!("{category}{test_suffix}"));
         fs::write(&test_file, test_content).with_context(|| format!("Failed to write test file for {}", category))?;
-        println!("  ✓ Generated tests/{}.spec.ts ({} tests)", category, fixtures.len());
+        println!(
+            "  ✓ Generated tests/{}{} ({} tests)",
+            category,
+            test_suffix,
+            fixtures.len()
+        );
     }
 
     if !sse_fixtures.is_empty() {
-        let sse_content = generate_sse_test_file(&sse_fixtures, &dto_map, target)?;
-        fs::write(tests_dir.join("asyncapi_sse.spec.ts"), sse_content)
-            .context("Failed to write asyncapi_sse.spec.ts")?;
-        println!("  ✓ Generated tests/asyncapi_sse.spec.ts");
+        let sse_content = rewrite_wasm_imports(generate_sse_test_file(&sse_fixtures, &dto_map, target)?);
+        let sse_file = if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
+            "asyncapi_sse_test.ts"
+        } else {
+            "asyncapi_sse.spec.ts"
+        };
+        fs::write(tests_dir.join(sse_file), sse_content).with_context(|| format!("Failed to write {}", sse_file))?;
+        println!("  ✓ Generated tests/{}", sse_file);
     }
 
     if !websocket_fixtures.is_empty() {
-        let websocket_content = generate_websocket_test_file(&websocket_fixtures, &dto_map, target)?;
-        fs::write(tests_dir.join("asyncapi_websocket.spec.ts"), websocket_content)
-            .context("Failed to write asyncapi_websocket.spec.ts")?;
-        println!("  ✓ Generated tests/asyncapi_websocket.spec.ts");
+        let websocket_content =
+            rewrite_wasm_imports(generate_websocket_test_file(&websocket_fixtures, &dto_map, target)?);
+        let websocket_file = if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
+            "asyncapi_websocket_test.ts"
+        } else {
+            "asyncapi_websocket.spec.ts"
+        };
+        fs::write(tests_dir.join(websocket_file), websocket_content)
+            .with_context(|| format!("Failed to write {}", websocket_file))?;
+        println!("  ✓ Generated tests/{}", websocket_file);
     }
 
-    // Skip biome formatting for Deno (it doesn't understand Deno.test syntax)
     if !matches!(target.runtime, crate::ts_target::Runtime::Deno) {
         format_generated_ts(output_dir)?;
     }
@@ -98,7 +128,7 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
 
     match target.runtime {
         crate::ts_target::Runtime::Deno => {
-            code.push_str("import { assertEquals } from \"@std/assert\";\n");
+            code.push_str("import { assertEquals } from \"jsr:@std/assert@1\";\n");
         }
         _ => {
             code.push_str("import { describe, expect, test } from \"vitest\";\n");
@@ -139,7 +169,6 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
 
     code.push_str("});\n");
 
-    // For Deno, convert vitest syntax to Deno.test()
     if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
         code = convert_to_deno_syntax(&code, category);
     }
@@ -252,23 +281,25 @@ fn generate_sse_test_file(
     file_content.push_str(&test_blocks);
     file_content.push_str("});\n");
 
-    // For Deno, convert vitest syntax to Deno.test()
     if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
-        // Don't use convert_to_deno_syntax for async API tests - just do simple replacements
         file_content = file_content
             .replace(
                 "import { describe, expect, test } from \"vitest\";\n",
-                "import { assertEquals } from \"@std/assert\";\n",
+                "import { assertEquals } from \"jsr:@std/assert@1\";\n",
             )
             .replace("import { readFileSync } from \"node:fs\";\n", "")
             .replace(
                 "import path from \"node:path\";\n",
-                "import { join, resolve } from \"@std/path\";\n",
+                "import { join, resolve } from \"jsr:@std/path@1\";\n",
             )
             .replace("__dirname", "new URL(\".\", import.meta.url).pathname")
             .replace("path.resolve(", "resolve(")
             .replace("path.join(", "join(")
             .replace("readFileSync(", "Deno.readTextFileSync(")
+            .replace(
+                "Deno.readTextFileSync(fixturePath, \"utf-8\")",
+                "Deno.readTextFileSync(fixturePath)",
+            )
             .replace("describe(\"asyncapi_sse\", () => {\n", "")
             .replace("\n\ttest(\"SSE", "\nDeno.test(\"asyncapi_sse: SSE")
             .replace(
@@ -283,7 +314,6 @@ fn generate_sse_test_file(
                 "expect(response.statusCode).toBe(200);",
                 "assertEquals(response.statusCode, 200);",
             );
-        // Remove trailing });\n
         if file_content.ends_with("\n});\n") {
             file_content = file_content[..file_content.len() - 5].to_string();
         }
@@ -398,23 +428,25 @@ fn generate_websocket_test_file(
     file_content.push_str(&test_blocks);
     file_content.push_str("});\n");
 
-    // For Deno, convert vitest syntax to Deno.test()
     if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
-        // Don't use convert_to_deno_syntax for async API tests - just do simple replacements
         file_content = file_content
             .replace(
                 "import { describe, expect, test } from \"vitest\";\n",
-                "import { assertEquals } from \"@std/assert\";\n",
+                "import { assertEquals } from \"jsr:@std/assert@1\";\n",
             )
             .replace("import { readFileSync } from \"node:fs\";\n", "")
             .replace(
                 "import path from \"node:path\";\n",
-                "import { join, resolve } from \"@std/path\";\n",
+                "import { join, resolve } from \"jsr:@std/path@1\";\n",
             )
             .replace("__dirname", "new URL(\".\", import.meta.url).pathname")
             .replace("path.resolve(", "resolve(")
             .replace("path.join(", "join(")
             .replace("readFileSync(", "Deno.readTextFileSync(")
+            .replace(
+                "Deno.readTextFileSync(fixturePath, \"utf-8\")",
+                "Deno.readTextFileSync(fixturePath)",
+            )
             .replace("describe(\"asyncapi_websocket\", () => {\n", "")
             .replace("\n\ttest(\"WebSocket", "\nDeno.test(\"asyncapi_websocket: WebSocket")
             .replace(
@@ -437,7 +469,6 @@ fn generate_websocket_test_file(
                 "expect(response.validated).toBe(true);",
                 "assertEquals(response.validated, true);",
             );
-        // Remove trailing });\n
         if file_content.ends_with("\n});\n") {
             file_content = file_content[..file_content.len() - 5].to_string();
         }
@@ -631,29 +662,50 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         return Ok(code);
     }
 
-    // Check for DI-specific test patterns
     if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
-        // Handle singleton caching tests - requires multiple requests
         if requires_multi_request_test(&di_config) {
+            let expected_keys = fixture
+                .expected_response
+                .body
+                .as_ref()
+                .and_then(|v| v.as_object())
+                .map(|obj| obj.keys().cloned().collect::<std::collections::HashSet<_>>())
+                .unwrap_or_default();
+
             code.push_str("\n");
-            code.push_str("\t\t// Second request to verify singleton caching\n");
+            code.push_str("\t\t// Second request to verify caching behavior\n");
             code.push_str(&format!("\t\tconst response2 = {};\n", request_call));
             code.push_str("\t\texpect(response2.statusCode).toBe(200);\n");
             code.push_str("\t\tconst data1 = response.json();\n");
             code.push_str("\t\tconst data2 = response2.json();\n");
             code.push_str("\n");
-            code.push_str("\t\t// Singleton should have same ID but incremented count\n");
-            code.push_str("\t\texpect(data1.id).toBeDefined();\n");
-            code.push_str("\t\texpect(data2.id).toBeDefined();\n");
-            code.push_str("\t\texpect(data1.id).toBe(data2.id); // Same singleton instance\n");
-            code.push_str("\t\tif (data1.count !== undefined && data2.count !== undefined) {\n");
-            code.push_str("\t\t\texpect(data2.count).toBeGreaterThan(data1.count); // Count incremented\n");
-            code.push_str("\t\t}\n");
+            if expected_keys.contains("counter_id") && expected_keys.contains("count") {
+                code.push_str("\t\t// Singleton counter should have stable counter_id and incremented count\n");
+                code.push_str("\t\texpect(data1.counter_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data2.counter_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data1.counter_id).toBe(data2.counter_id);\n");
+                code.push_str("\t\texpect(data2.count).toBeGreaterThan(data1.count);\n");
+            } else if expected_keys.contains("pool_id") && expected_keys.contains("context_id") {
+                code.push_str("\t\t// pool_id is singleton; context_id is per-request\n");
+                code.push_str("\t\texpect(data1.pool_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data2.pool_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data1.pool_id).toBe(data2.pool_id);\n");
+                code.push_str("\t\texpect(data1.context_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data2.context_id).toBeDefined();\n");
+                code.push_str("\t\texpect(data1.context_id).not.toBe(data2.context_id);\n");
+            } else {
+                code.push_str("\t\t// Singleton should have same ID but incremented count\n");
+                code.push_str("\t\texpect(data1.id).toBeDefined();\n");
+                code.push_str("\t\texpect(data2.id).toBeDefined();\n");
+                code.push_str("\t\texpect(data1.id).toBe(data2.id); // Same singleton instance\n");
+                code.push_str("\t\tif (data1.count !== undefined && data2.count !== undefined) {\n");
+                code.push_str("\t\t\texpect(data2.count).toBeGreaterThan(data1.count); // Count incremented\n");
+                code.push_str("\t\t}\n");
+            }
             code.push_str("\t});\n");
             return Ok(code);
         }
 
-        // Handle cleanup tests - poll cleanup state endpoint
         if has_cleanup(&di_config) {
             code.push_str("\n");
             code.push_str("\t\t// Allow async cleanup to complete\n");
@@ -739,7 +791,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 if !expected_body_is_empty {
                     if needs_response_text {
                         code.push_str(&format!(
-                            "\t\texpect(responseText).toBe({});\n",
+                            "\t\texpect(responseText.trimEnd()).toBe({});\n",
                             json_to_typescript(expected_body)
                         ));
                     } else {
@@ -843,7 +895,15 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 }
                 _ => {
                     let escaped_value = escape_string(value);
-                    code.push_str(&format!("\t\texpect({}).toBe(\"{}\");\n", header_access, escaped_value));
+                    if looks_like_regex_pattern(value) {
+                        code.push_str(&format!(
+                            "\t\texpect({}).toMatch({});\n",
+                            header_access,
+                            regex_literal(value)
+                        ));
+                    } else {
+                        code.push_str(&format!("\t\texpect({}).toBe(\"{}\");\n", header_access, escaped_value));
+                    }
                 }
             }
         }
@@ -1025,12 +1085,23 @@ fn generate_echo_assertions(code: &mut String, sent_value: &serde_json::Value, p
                         generate_echo_assertions(code, value, &new_path, indent_level);
                     }
                     _ => {
-                        code.push_str(&format!(
-                            "{}expect({}).toBe({});\n",
-                            indent,
-                            new_path,
-                            json_to_typescript(value)
-                        ));
+                        if let serde_json::Value::String(text) = value
+                            && looks_like_regex_pattern(text)
+                        {
+                            code.push_str(&format!(
+                                "{}expect({}).toMatch({});\n",
+                                indent,
+                                new_path,
+                                regex_literal(text)
+                            ));
+                        } else {
+                            code.push_str(&format!(
+                                "{}expect({}).toBe({});\n",
+                                indent,
+                                new_path,
+                                json_to_typescript(value)
+                            ));
+                        }
                     }
                 }
             }
@@ -1043,12 +1114,23 @@ fn generate_echo_assertions(code: &mut String, sent_value: &serde_json::Value, p
             }
         }
         _ => {
-            code.push_str(&format!(
-                "{}expect({}).toBe({});\n",
-                indent,
-                path,
-                json_to_typescript(sent_value)
-            ));
+            if let serde_json::Value::String(text) = sent_value
+                && looks_like_regex_pattern(text)
+            {
+                code.push_str(&format!(
+                    "{}expect({}).toMatch({});\n",
+                    indent,
+                    path,
+                    regex_literal(text)
+                ));
+            } else {
+                code.push_str(&format!(
+                    "{}expect({}).toBe({});\n",
+                    indent,
+                    path,
+                    json_to_typescript(sent_value)
+                ));
+            }
         }
     }
 }
@@ -1093,12 +1175,23 @@ fn generate_body_assertions(
                             || (skip_error_fields && path == "responseData" && key == "detail");
 
                         if !skip_assertion {
-                            code.push_str(&format!(
-                                "{}expect({}).toBe({});\n",
-                                indent,
-                                new_path,
-                                json_to_typescript(value)
-                            ));
+                            if let serde_json::Value::String(text) = value
+                                && looks_like_regex_pattern(text)
+                            {
+                                code.push_str(&format!(
+                                    "{}expect({}).toMatch({});\n",
+                                    indent,
+                                    new_path,
+                                    regex_literal(text)
+                                ));
+                            } else {
+                                code.push_str(&format!(
+                                    "{}expect({}).toBe({});\n",
+                                    indent,
+                                    new_path,
+                                    json_to_typescript(value)
+                                ));
+                            }
                         }
                     }
                 }
@@ -1115,12 +1208,23 @@ fn generate_body_assertions(
             }
         }
         _ => {
-            code.push_str(&format!(
-                "{}expect({}).toBe({});\n",
-                indent,
-                path,
-                json_to_typescript(body)
-            ));
+            if let serde_json::Value::String(text) = body
+                && looks_like_regex_pattern(text)
+            {
+                code.push_str(&format!(
+                    "{}expect({}).toMatch({});\n",
+                    indent,
+                    path,
+                    regex_literal(text)
+                ));
+            } else {
+                code.push_str(&format!(
+                    "{}expect({}).toBe({});\n",
+                    indent,
+                    path,
+                    json_to_typescript(body)
+                ));
+            }
         }
     }
 }
@@ -1159,6 +1263,15 @@ fn json_to_typescript(value: &serde_json::Value) -> String {
             format!("{{ {} }}", items.join(", "))
         }
     }
+}
+
+fn looks_like_regex_pattern(value: &str) -> bool {
+    value.contains(".*")
+}
+
+fn regex_literal(pattern: &str) -> String {
+    let escaped = pattern.replace('/', "\\/");
+    format!("/{escaped}/")
 }
 
 fn is_large_integer(number: &serde_json::Number) -> bool {
@@ -1229,12 +1342,12 @@ fn path_contains_segment(path: &str, segment: &str) -> bool {
 fn format_generated_ts(dir: &Path) -> Result<()> {
     let status = Command::new("pnpm")
         .current_dir(dir)
-        .args(["biome", "check", "--write", "."])
+        .args(["dlx", "@biomejs/biome@2.3.8", "check", "--write", "."])
         .status()
-        .context("Failed to run `pnpm biome check --write .` in e2e/node")?;
+        .context("Failed to run `pnpm dlx @biomejs/biome check --write .` in e2e/node")?;
     ensure!(
         status.success(),
-        "`pnpm biome check --write .` exited with non-zero status"
+        "`pnpm dlx @biomejs/biome check --write .` exited with non-zero status"
     );
 
     Ok(())
@@ -1245,50 +1358,61 @@ fn format_generated_ts(dir: &Path) -> Result<()> {
 fn convert_to_deno_syntax(code: &str, category: &str) -> String {
     let mut result = code.to_string();
 
-    // Remove describe wrapper - find the opening and matching closing brace
-    let describe_pattern = format!("describe(\"{}\", () => {{", category);
-    if let Some(start_pos) = result.find(&describe_pattern) {
-        // Find the matching closing brace
-        let after_open = &result[start_pos + describe_pattern.len()..];
-        let mut depth = 1;
-        let mut close_pos = 0;
-        for (i, ch) in after_open.chars().enumerate() {
-            if ch == '{' {
-                depth += 1;
-            } else if ch == '}' {
-                depth -= 1;
-                if depth == 0 {
-                    close_pos = i;
-                    break;
+    let mut filtered_lines: Vec<&str> = result
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim_start();
+            !trimmed.starts_with(&format!("describe(\"{}\"", category))
+        })
+        .collect();
+    while matches!(filtered_lines.last(), Some(l) if l.trim().is_empty()) {
+        filtered_lines.pop();
+    }
+    if matches!(filtered_lines.last(), Some(l) if l.trim() == "});") {
+        filtered_lines.pop();
+    }
+    result = filtered_lines.join("\n");
+
+    let mut rewritten: Vec<String> = Vec::new();
+    let mut in_skip_block = false;
+    let mut skip_indent = String::new();
+    for line in result.lines() {
+        if !in_skip_block {
+            if let Some(pos) = line.find("test.skip(\"") {
+                let indent = line[..pos].to_string();
+                let after = &line[pos + "test.skip(\"".len()..];
+                if let Some(end_quote) = after.find('"') {
+                    let test_name = &after[..end_quote];
+                    rewritten.push(format!("{indent}Deno.test({{"));
+                    rewritten.push(format!("{indent}\tname: \"{category}: {test_name}\","));
+                    rewritten.push(format!("{indent}\tignore: true,"));
+                    rewritten.push(format!("{indent}\tfn: async () => {{"));
+                    in_skip_block = true;
+                    skip_indent = indent;
+                    continue;
                 }
             }
+            rewritten.push(line.to_string());
+            continue;
         }
-        if close_pos > 0 {
-            // Extract the content between the braces
-            let content = after_open[..close_pos].trim();
-            // Replace the entire describe block with just the content
-            let before_describe = &result[..start_pos];
-            let after_closing = &result[start_pos + describe_pattern.len() + close_pos + 1..];
-            result = format!(
-                "{}{}{}",
-                before_describe.trim_end(),
-                content,
-                after_closing
-                    .trim_start()
-                    .trim_start_matches(");\n")
-                    .trim_start_matches(");")
-            );
-        }
-    }
 
-    // Convert test() to Deno.test() with category prefix
+        if line.trim() == "});" {
+            rewritten.push(format!("{skip_indent}\t}},"));
+            rewritten.push(format!("{skip_indent}}});"));
+            in_skip_block = false;
+            skip_indent.clear();
+            continue;
+        }
+
+        rewritten.push(format!("{skip_indent}\t{}", line.trim_start()));
+    }
+    result = rewritten.join("\n");
+
     let lines: Vec<String> = result
         .lines()
         .map(|line| {
             if line.contains("test(\"") || line.contains("Deno.test(\"") {
-                // Already converted or needs conversion
                 if !line.contains("Deno.test(\"") && line.contains("test(\"") {
-                    // Extract test name between quotes
                     if let Some(start) = line.find("test(\"") {
                         if let Some(end) = line[start + 6..].find("\"") {
                             let test_name = &line[start + 6..start + 6 + end];
@@ -1305,79 +1429,180 @@ fn convert_to_deno_syntax(code: &str, category: &str) -> String {
         .collect();
     result = lines.join("\n");
 
-    // Convert all expect() calls to assertEquals()
-    // Handle expect().toBe() and expect().toEqual()
-    loop {
-        let mut modified = false;
+    // Convert all expect() calls to Deno std/assert helpers.
+    let mut search_start = 0;
+    while let Some(rel_expect_pos) = result[search_start..].find("expect(") {
+        let expect_pos = search_start + rel_expect_pos;
+        let after_expect = &result[expect_pos + 7..];
+        let mut depth = 1;
+        let mut expr_end = 0;
 
-        // Find expect( patterns
-        if let Some(expect_pos) = result.find("expect(") {
-            // Find the matching closing parenthesis for expect()
-            let after_expect = &result[expect_pos + 7..];
-            let mut depth = 1;
-            let mut expr_end = 0;
+        for (byte_i, ch) in after_expect.char_indices() {
+            match ch {
+                '(' => depth += 1,
+                ')' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        expr_end = byte_i;
+                        break;
+                    }
+                }
+                _ => {}
+            }
+        }
 
-            for (i, ch) in after_expect.chars().enumerate() {
+        if expr_end == 0 {
+            search_start = expect_pos + 7;
+            continue;
+        }
+
+        let expr = &after_expect[..expr_end];
+        let after_expr = &after_expect[expr_end + 1..];
+
+        let mut replaced = false;
+
+        if after_expr.starts_with(".toBeUndefined()") {
+            let original_len = 7 + expr_end + 1 + ".toBeUndefined()".len();
+            let original = &result[expect_pos..expect_pos + original_len];
+            let replacement = format!("assertEquals({}, undefined)", expr);
+            result = result.replacen(original, &replacement, 1);
+            replaced = true;
+        } else if after_expr.starts_with(".toBeDefined()") {
+            let original_len = 7 + expr_end + 1 + ".toBeDefined()".len();
+            let original = &result[expect_pos..expect_pos + original_len];
+            let replacement = format!("assert({} !== undefined && {} !== null)", expr, expr);
+            result = result.replacen(original, &replacement, 1);
+            replaced = true;
+        } else if let Some(rest) = after_expr.strip_prefix(".not.toBe(") {
+            let mut depth2 = 1;
+            let mut arg_end = 0;
+            for (byte_i, ch) in rest.char_indices() {
                 match ch {
-                    '(' => depth += 1,
+                    '(' => depth2 += 1,
                     ')' => {
-                        depth -= 1;
-                        if depth == 0 {
-                            expr_end = i;
+                        depth2 -= 1;
+                        if depth2 == 0 {
+                            arg_end = byte_i;
                             break;
                         }
                     }
                     _ => {}
                 }
             }
+            if arg_end > 0 {
+                let arg = &rest[..arg_end];
+                let replacement = format!("assert({} !== {})", expr, arg);
+                let original_len = 7 + expr_end + 1 + ".not.toBe(".len() + arg_end + 1;
+                let original = &result[expect_pos..expect_pos + original_len];
+                result = result.replacen(original, &replacement, 1);
+                replaced = true;
+            }
+        } else {
+            let matcher_prefixes = [
+                (".toBe(", "eq"),
+                (".toEqual(", "eq"),
+                (".toStrictEqual(", "eq"),
+                (".toBeGreaterThan(", "gt"),
+                (".toHaveProperty(", "hasprop"),
+                (".toMatch(", "match"),
+            ];
 
-            if expr_end > 0 {
-                let expr = &after_expect[..expr_end];
-                let after_expr = &after_expect[expr_end + 1..];
+            let mut matched: Option<(&str, &str, &str)> = None;
+            for (prefix, kind) in matcher_prefixes {
+                if let Some(rest) = after_expr.strip_prefix(prefix) {
+                    matched = Some((prefix, kind, rest));
+                    break;
+                }
+            }
 
-                // Check for .toBe( or .toEqual(
-                if let Some(method_match) = after_expr
-                    .strip_prefix(".toBe(")
-                    .or_else(|| after_expr.strip_prefix(".toEqual("))
-                {
-                    // Find the closing parenthesis for the argument
-                    let mut depth2 = 1;
-                    let mut arg_end = 0;
+            if let Some((prefix, kind, method_match)) = matched {
+                let mut depth2 = 1;
+                let mut arg_end = 0;
 
-                    for (i, ch) in method_match.chars().enumerate() {
-                        match ch {
-                            '(' => depth2 += 1,
-                            ')' => {
-                                depth2 -= 1;
-                                if depth2 == 0 {
-                                    arg_end = i;
-                                    break;
-                                }
+                for (byte_i, ch) in method_match.char_indices() {
+                    match ch {
+                        '(' => depth2 += 1,
+                        ')' => {
+                            depth2 -= 1;
+                            if depth2 == 0 {
+                                arg_end = byte_i;
+                                break;
                             }
-                            _ => {}
                         }
+                        _ => {}
                     }
+                }
 
-                    if arg_end > 0 {
-                        let arg = &method_match[..arg_end];
-                        let replacement = format!("assertEquals({}, {})", expr, arg);
+                if arg_end > 0 {
+                    let arg = &method_match[..arg_end];
+                    let replacement = match kind {
+                        "eq" => format!("assertEquals({}, {})", expr, arg),
+                        "gt" => format!("assert({} > {})", expr, arg),
+                        "hasprop" => format!("assert(Object.hasOwn({}, {}))", expr, arg),
+                        "match" => {
+                            if arg.trim_start().starts_with('/') {
+                                format!("assert({}.test({}))", arg, expr)
+                            } else {
+                                format!("assert({}.includes({}))", expr, arg)
+                            }
+                        }
+                        _ => unreachable!("Unsupported matcher kind"),
+                    };
 
-                        // Calculate the full length of the original expression
-                        let method_name_len = if after_expr.starts_with(".toBe(") { 6 } else { 8 };
-                        let original_len = 7 + expr_end + 1 + method_name_len + arg_end + 1; // "expect(" + expr + ")" + ".toBe(" or ".toEqual(" + arg + ")"
-                        let original = &result[expect_pos..expect_pos + original_len];
-
-                        result = result.replacen(original, &replacement, 1);
-                        modified = true;
-                    }
+                    let original_len = 7 + expr_end + 1 + prefix.len() + arg_end + 1;
+                    let original = &result[expect_pos..expect_pos + original_len];
+                    result = result.replacen(original, &replacement, 1);
+                    replaced = true;
                 }
             }
         }
 
-        if !modified {
-            break;
+        if replaced {
+            search_start = 0;
+        } else {
+            search_start = expect_pos + 7;
         }
     }
+
+    let wants_assert = result.contains("assert(");
+    let assert_import = if wants_assert {
+        "import { assert, assertEquals } from \"jsr:@std/assert@1\";"
+    } else {
+        "import { assertEquals } from \"jsr:@std/assert@1\";"
+    };
+
+    let mut lines: Vec<String> = Vec::new();
+    let mut has_std_assert = false;
+    for line in result.lines() {
+        if line.contains("from \"vitest\"") {
+            continue;
+        }
+        if line.contains("from \"@std/assert\"") || line.contains("from \"jsr:@std/assert") {
+            has_std_assert = true;
+            lines.push(assert_import.to_string());
+            continue;
+        }
+        if line.contains("from \"@std/path\"") {
+            lines.push("import { join, resolve } from \"jsr:@std/path@1\";".to_string());
+            continue;
+        }
+        lines.push(line.to_string());
+    }
+    if !has_std_assert {
+        let mut inserted = false;
+        let mut new_lines = Vec::with_capacity(lines.len() + 1);
+        for line in lines {
+            new_lines.push(line.clone());
+            if !inserted && line.contains("TestClient") && line.contains("@spikard/wasm") {
+                new_lines.push(assert_import.to_string());
+                inserted = true;
+            }
+        }
+        lines = new_lines;
+    }
+    result = lines.join("\n");
+
+    result = result.replace("})});", "});");
 
     result
 }

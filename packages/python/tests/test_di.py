@@ -25,10 +25,8 @@ class TestProvideAutoDetection:
         def my_func(db: object, cache: object) -> str:
             return "value"
 
-        # Explicitly set depends_on to different value
         provider = Provide(dependency=my_func, depends_on=["custom_dep"])
 
-        # Should use explicit value, not auto-detected
         assert provider.depends_on == ["custom_dep"]
 
     def test_auto_detect_single_parameter(self) -> None:
@@ -43,7 +41,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_func)
 
-        # Should auto-detect "config"
         assert provider.depends_on == ["config"]
 
     def test_auto_detect_filters_self(self) -> None:
@@ -58,7 +55,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_method)
 
-        # Should only include "db", not "self"
         assert provider.depends_on == ["db"]
         assert "self" not in provider.depends_on
 
@@ -74,7 +70,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_classmethod)
 
-        # Should only include "service", not "cls"
         assert provider.depends_on == ["service"]
         assert "cls" not in provider.depends_on
 
@@ -90,7 +85,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_handler)
 
-        # Should only include "db", not "request"
         assert provider.depends_on == ["db"]
         assert "request" not in provider.depends_on
 
@@ -106,7 +100,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_handler)
 
-        # Should only include "cache", not "response"
         assert provider.depends_on == ["cache"]
         assert "response" not in provider.depends_on
 
@@ -122,7 +115,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=constant)
 
-        # Should have empty depends_on
         assert provider.depends_on == []
 
     def test_auto_detect_multiple_parameters(self) -> None:
@@ -137,7 +129,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_func)
 
-        # Should detect all three
         assert provider.depends_on == ["db", "cache", "config"]
         assert len(provider.depends_on) == 3
 
@@ -160,7 +151,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=complex_handler)
 
-        # Should only include db and cache
         assert provider.depends_on == ["db", "cache"]
         assert "self" not in provider.depends_on
         assert "cls" not in provider.depends_on
@@ -179,7 +169,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_func)
 
-        # Should detect both parameters regardless of defaults
         assert "db" in provider.depends_on
         assert "cache" in provider.depends_on
         assert len(provider.depends_on) == 2
@@ -196,7 +185,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=typed_func)
 
-        # Should detect both regardless of type annotations
         assert provider.depends_on == ["db", "config"]
 
     def test_auto_detect_lambda(self) -> None:
@@ -207,7 +195,6 @@ class TestProvideAutoDetection:
         """
         provider = Provide(dependency=lambda db: str(db))
 
-        # Should detect "db" from lambda
         assert provider.depends_on == ["db"]
 
     def test_auto_detect_lambda_multiple(self) -> None:
@@ -217,7 +204,6 @@ class TestProvideAutoDetection:
         """
         provider = Provide(dependency=lambda db, cache, config: str(db) + str(cache) + str(config))
 
-        # Should detect all three
         assert provider.depends_on == ["db", "cache", "config"]
 
     def test_auto_detect_preserves_order(self) -> None:
@@ -232,7 +218,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=ordered_func)
 
-        # Order should match function signature
         assert provider.depends_on == ["first", "second", "third"]
 
     def test_explicit_empty_depends_on(self) -> None:
@@ -246,10 +231,8 @@ class TestProvideAutoDetection:
         def my_func(db: object, cache: object) -> str:
             return "value"
 
-        # Explicitly set empty depends_on - still triggers auto-detection
         provider = Provide(dependency=my_func, depends_on=[])
 
-        # Empty list is treated as None/falsy, so auto-detection runs
         assert provider.depends_on == ["db", "cache"]
 
     def test_auto_detect_with_kwargs(self) -> None:
@@ -263,7 +246,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=func_with_kwargs)
 
-        # Should detect db; **kwargs itself is not a dependency
         assert "db" in provider.depends_on
 
     def test_auto_detect_args_and_kwargs(self) -> None:
@@ -278,7 +260,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=variadic_func)
 
-        # Should at least detect db
         assert "db" in provider.depends_on
 
     def test_auto_detect_keyword_only(self) -> None:
@@ -293,7 +274,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=keyword_only)
 
-        # Should detect both
         assert "db" in provider.depends_on
         assert "cache" in provider.depends_on
         assert len(provider.depends_on) == 2
@@ -310,7 +290,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=mixed_func)
 
-        # Should only include db and config
         assert provider.depends_on == ["db", "config"]
 
     def test_auto_detect_singleton_flag_preserved(self) -> None:
@@ -325,7 +304,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_func, singleton=True)
 
-        # Auto-detection should work with singleton flag
         assert provider.depends_on == ["db"]
         assert provider.singleton is True
 
@@ -340,7 +318,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_func, use_cache=True)
 
-        # Auto-detection should work with use_cache flag
         assert provider.depends_on == ["db"]
         assert provider.use_cache is True
 
@@ -355,7 +332,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_func)
 
-        # Repr should show auto-detected dependencies
         repr_str = repr(provider)
         assert "my_func" in repr_str
         assert "depends_on" in repr_str
@@ -374,7 +350,6 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=positional_only)
 
-        # Should detect both
         assert "db" in provider.depends_on
         assert "cache" in provider.depends_on
         assert len(provider.depends_on) == 2
@@ -399,11 +374,9 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=complex_sig)
 
-        # Should detect pos_only, regular, kw_only, args, and kwargs
         assert "pos_only" in provider.depends_on
         assert "regular" in provider.depends_on
         assert "kw_only" in provider.depends_on
-        # args and kwargs are also detected (not filtered)
         assert "args" in provider.depends_on
         assert "kwargs" in provider.depends_on
 
@@ -419,9 +392,7 @@ class TestProvideAutoDetection:
 
         provider = Provide(dependency=my_func, use_cache=False, cacheable=True)
 
-        # cacheable should override use_cache
         assert provider.use_cache is True
-        # And auto-detection should still work
         assert provider.depends_on == ["db"]
 
 

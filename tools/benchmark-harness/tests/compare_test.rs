@@ -28,7 +28,6 @@ async fn test_error_min_frameworks() {
 
     let result = CompareRunner::new(config);
 
-    // Should error with minimum frameworks message
     assert!(result.is_err());
 
     if let Err(e) = result {
@@ -40,7 +39,6 @@ async fn test_error_min_frameworks() {
         );
     }
 
-    // Cleanup
     std::fs::remove_dir_all("./test-output/error-min").ok();
 }
 
@@ -62,7 +60,6 @@ async fn test_error_invalid_workload_suite() {
 
     let result = CompareRunner::new(config);
 
-    // Should error during configuration validation
     assert!(result.is_err());
 
     if let Err(e) = result {
@@ -74,7 +71,6 @@ async fn test_error_invalid_workload_suite() {
         );
     }
 
-    // Cleanup
     std::fs::remove_dir_all("./test-output/error-suite").ok();
 }
 
@@ -108,14 +104,8 @@ async fn test_port_allocation_strategy() {
         significance_threshold: 0.05,
     };
 
-    // Port allocation logic:
-    // Framework 0: 8100 + (0 * 10) = 8100
-    // Framework 1: 8100 + (1 * 10) = 8110
-    // Framework 2: 8100 + (2 * 10) = 8120
-
     assert_eq!(config.port, 8100);
 
-    // These would be the allocated ports
     let expected_ports = [8100, 8110, 8120];
 
     for (idx, _fw) in config.frameworks.iter().enumerate() {
@@ -123,7 +113,6 @@ async fn test_port_allocation_strategy() {
         assert_eq!(allocated_port, expected_ports[idx]);
     }
 
-    // Cleanup
     std::fs::remove_dir_all("./test-output/port-test").ok();
 }
 
@@ -132,13 +121,8 @@ async fn test_port_allocation_strategy() {
 async fn test_compare_analyzer_basics() {
     use benchmark_harness::compare::CompareAnalyzer;
 
-    // Test different significance thresholds
     let _analyzer_05 = CompareAnalyzer::new(0.05);
     let _analyzer_01 = CompareAnalyzer::new(0.01);
-
-    // Analyzers should be created successfully
-    // (We can't directly access significance_threshold as it's private,
-    // but we can verify they instantiate correctly)
 }
 
 /// Test baseline selection logic with minimal schema
@@ -146,7 +130,6 @@ async fn test_compare_analyzer_basics() {
 async fn test_baseline_selection_logic() {
     use benchmark_harness::schema::compare::CompareResult;
 
-    // Create minimal CompareResult to test baseline selection
     let frameworks = vec![
         benchmark_harness::schema::FrameworkInfo {
             name: "framework-a".to_string(),
@@ -184,7 +167,6 @@ async fn test_baseline_selection_logic() {
         },
     };
 
-    // Verify baseline is first framework
     assert_eq!(result.frameworks[0].name, "framework-a");
 }
 
@@ -228,14 +210,12 @@ async fn test_compare_result_json_serialization() {
         },
     };
 
-    // Test JSON serialization
     let json_result = serde_json::to_string_pretty(&result);
     assert!(json_result.is_ok(), "CompareResult should serialize to JSON");
 
     let json_content = json_result.unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&json_content).unwrap();
 
-    // Verify JSON structure
     assert!(parsed.get("metadata").is_some(), "JSON should have metadata");
     assert!(parsed.get("frameworks").is_some(), "JSON should have frameworks");
     assert!(parsed.get("summary").is_some(), "JSON should have summary");
@@ -266,7 +246,6 @@ async fn test_error_invalid_framework() {
     let runner = CompareRunner::new(config).expect("Config validation should pass");
     let result = runner.run().await;
 
-    // Should error with framework not found
     assert!(result.is_err());
 
     if let Err(e) = result {
@@ -278,6 +257,5 @@ async fn test_error_invalid_framework() {
         );
     }
 
-    // Cleanup
     std::fs::remove_dir_all("./test-output/error-framework").ok();
 }

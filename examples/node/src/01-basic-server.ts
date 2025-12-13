@@ -29,5 +29,4 @@ get("/health")(async function handleHealth() {
 console.log("Starting Spikard Node.js server on http://127.0.0.1:8000");
 console.log("Press Ctrl+C to stop\n");
 
-// Run the server
 app.run({ port: 8000, host: "0.0.0.0" });

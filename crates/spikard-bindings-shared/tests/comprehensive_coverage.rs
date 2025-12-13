@@ -8,21 +8,15 @@ use pretty_assertions::assert_eq;
 use serde_json::json;
 use spikard_bindings_shared::response_builder::ResponseBuilder;
 use spikard_bindings_shared::*;
+use spikard_core::RequestData as CoreRequestData;
 use spikard_core::di::{Dependency, ResolvedDependencies};
 use spikard_core::problem::ProblemDetails;
 use spikard_core::validation::{ValidationError, ValidationErrorDetail};
-// Use the correct RequestData type for DI tests
-use spikard_core::RequestData as CoreRequestData;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-// =============================================================================
-// ErrorResponseBuilder Tests - Coverage of remaining edge cases
-// =============================================================================
-
 #[test]
 fn test_error_response_all_status_codes_coverage() {
-    // Test all convenience methods to ensure full coverage
     let test_cases = vec![
         (
             ErrorResponseBuilder::bad_request("msg"),
@@ -153,13 +147,8 @@ fn test_structured_error_with_complex_details() {
     assert_eq!(parsed["details"]["metadata"]["request_id"], "req-12345");
 }
 
-// =============================================================================
-// ResponseBuilder Tests - Full coverage
-// =============================================================================
-
 #[test]
 fn test_response_builder_comprehensive() {
-    // Test chaining with multiple operations
     let (status, headers, body) = ResponseBuilder::new()
         .status(StatusCode::CREATED)
         .body(json!({
@@ -185,21 +174,15 @@ fn test_response_builder_comprehensive() {
 
 #[test]
 fn test_response_builder_invalid_headers() {
-    // Invalid header names should be silently ignored
     let (_, headers, _) = ResponseBuilder::new()
         .header("Invalid\nHeader", "value1")
         .header("Valid-Header", "value2")
         .header("Another\r\nInvalid", "value3")
         .build();
 
-    // Only the valid header should be present
     assert_eq!(headers.len(), 1);
     assert!(headers.get("valid-header").is_some());
 }
-
-// =============================================================================
-// LifecycleBase Tests - Full coverage
-// =============================================================================
 
 #[test]
 fn test_lifecycle_hook_types() {
@@ -213,12 +196,10 @@ fn test_lifecycle_hook_types() {
         LifecycleHookType::OnError,
     ];
 
-    // Test equality and hashing
     for hook_type in &hook_types {
         assert_eq!(*hook_type, *hook_type);
     }
 
-    // Test HookResult cloning
     let continue_result = HookResult::Continue;
     let cloned_continue = continue_result.clone();
     assert!(matches!(cloned_continue, HookResult::Continue));
@@ -227,10 +208,6 @@ fn test_lifecycle_hook_types() {
     let cloned_short = short_circuit.clone();
     assert!(matches!(cloned_short, HookResult::ShortCircuit(_)));
 }
-
-// =============================================================================
-// ValidationHelpers Tests - Full coverage
-// =============================================================================
 
 #[test]
 fn test_validation_helpers_all_field_types() {
@@ -245,32 +222,24 @@ fn test_validation_helpers_all_field_types() {
         "null_field": null
     });
 
-    // Test all field types
     assert!(BodyValidator::validate_field_type(&body, "string_field", FieldType::String).is_ok());
     assert!(BodyValidator::validate_field_type(&body, "number_field", FieldType::Number).is_ok());
     assert!(BodyValidator::validate_field_type(&body, "boolean_field", FieldType::Boolean).is_ok());
     assert!(BodyValidator::validate_field_type(&body, "object_field", FieldType::Object).is_ok());
     assert!(BodyValidator::validate_field_type(&body, "array_field", FieldType::Array).is_ok());
 
-    // Test null field validation
     assert!(BodyValidator::validate_field_type(&body, "null_field", FieldType::String).is_err());
 
-    // Test header validation with different formats
     assert!(HeaderValidator::validate_format("Authorization", "Bearer token", HeaderFormat::Bearer).is_ok());
     assert!(
         HeaderValidator::validate_format("Content-Type", "application/json; charset=utf-8", HeaderFormat::Json).is_ok()
     );
 }
 
-// =============================================================================
-// TestClientBase Tests - Full coverage
-// =============================================================================
-
 #[test]
 fn test_test_client_comprehensive() {
     use test_client_base::{TestClientConfig, TestResponseMetadata};
 
-    // Test configuration builder
     let config = TestClientConfig::new("http://example.com")
         .with_timeout(5000)
         .with_follow_redirects(false);
@@ -279,7 +248,6 @@ fn test_test_client_comprehensive() {
     assert_eq!(config.timeout_ms, 5000);
     assert!(!config.follow_redirects);
 
-    // Test response metadata
     let mut headers = HashMap::new();
     headers.insert("Content-Type".to_string(), "application/json".to_string());
     headers.insert("X-Custom".to_string(), "value".to_string());
@@ -293,7 +261,6 @@ fn test_test_client_comprehensive() {
     assert!(!metadata.is_client_error());
     assert!(!metadata.is_server_error());
 
-    // Test case-insensitive header lookup
     assert_eq!(
         metadata.get_header("content-type"),
         Some(&"application/json".to_string())
@@ -303,10 +270,6 @@ fn test_test_client_comprehensive() {
         Some(&"application/json".to_string())
     );
 }
-
-// =============================================================================
-// DI Traits Tests - Full coverage
-// =============================================================================
 
 #[tokio::test]
 async fn test_di_traits_comprehensive() {
@@ -369,7 +332,6 @@ async fn test_di_traits_comprehensive() {
         }
     }
 
-    // Test value bridge
     let value_adapter = TestValueAdapter {
         key: "test_value".to_string(),
         value: "test_data".to_string(),
@@ -396,7 +358,6 @@ async fn test_di_traits_comprehensive() {
     let result = value_bridge.resolve(&request, &request_data, &resolved).await;
     assert!(result.is_ok());
 
-    // Test factory bridge
     let called_flag = Arc::new(AtomicBool::new(false));
     let factory_adapter = TestFactoryAdapter {
         key: "test_factory".to_string(),
@@ -412,19 +373,13 @@ async fn test_di_traits_comprehensive() {
     assert!(called_flag.load(Ordering::SeqCst));
 }
 
-// =============================================================================
-// ConversionTraits Tests - Full coverage
-// =============================================================================
-
 #[test]
 fn test_conversion_traits_comprehensive() {
     use conversion_traits::{FromLanguage, JsonConversionError, JsonConvertible, ToLanguage};
 
-    // Test JsonConversionError
     let error = JsonConversionError("Test error message".to_string());
     assert_eq!(error.to_string(), "JSON conversion error: Test error message");
 
-    // Test JSON value conversion with all types
     let test_cases = vec![
         json!(null),
         json!(true),
@@ -446,7 +401,6 @@ fn test_conversion_traits_comprehensive() {
         assert_eq!(to_result.unwrap(), test_value);
     }
 
-    // Test custom FromLanguage/ToLanguage implementations
     #[derive(Debug)]
     struct CustomType {
         value: i32,
@@ -479,7 +433,6 @@ fn test_conversion_traits_comprehensive() {
     let back_to_i32 = back_to_any.downcast_ref::<i32>().unwrap();
     assert_eq!(*back_to_i32, 42);
 
-    // Test error case
     let wrong_type: Box<dyn std::any::Any + Send + Sync> = Box::new("string");
     let result = CustomType::from_any(&*wrong_type);
     assert!(result.is_err());
@@ -488,8 +441,6 @@ fn test_conversion_traits_comprehensive() {
 
 #[test]
 fn test_all_modules_documented() {
-    // This test ensures all public modules are exercised
-    // The imports at the top of this file cover all public exports
     println!("All modules successfully imported and tested:");
     println!("- ErrorResponseBuilder");
     println!("- ResponseBuilder");

@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Comprehensive tests for lifecycle hooks execution
 //!
 //! Tests the execute_with_lifecycle_hooks function covering:
@@ -70,13 +71,8 @@ impl Handler for BadRequestHandler {
     }
 }
 
-// ============================================================================
-// Test Scenarios
-// ============================================================================
-
 #[tokio::test]
 async fn test_no_hooks_none_variant() {
-    // Test 1: No hooks (None variant) → direct handler call
     let handler = Arc::new(OkHandler);
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = test_request_data();
@@ -90,7 +86,6 @@ async fn test_no_hooks_none_variant() {
 
 #[tokio::test]
 async fn test_empty_hooks_list() {
-    // Test 2: Empty hooks (is_empty() returns true) → direct handler call
     let handler = Arc::new(OkHandler);
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = test_request_data();
@@ -105,7 +100,6 @@ async fn test_empty_hooks_list() {
 
 #[tokio::test]
 async fn test_pre_validation_hook_continues() {
-    // Test 3: preValidation hook continues → proceeds to handler
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_validation(spikard_http::lifecycle::request_hook(
@@ -126,7 +120,6 @@ async fn test_pre_validation_hook_continues() {
 
 #[tokio::test]
 async fn test_pre_validation_hook_short_circuits() {
-    // Test 4: preValidation hook short-circuits → handler not called, response returned
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_validation(spikard_http::lifecycle::request_hook(
@@ -153,7 +146,6 @@ async fn test_pre_validation_hook_short_circuits() {
 
 #[tokio::test]
 async fn test_pre_validation_hook_error_calls_on_error() {
-    // Test 5: preValidation hook fails → onError hook called
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_validation(spikard_http::lifecycle::request_hook(
@@ -187,7 +179,6 @@ async fn test_pre_validation_hook_error_calls_on_error() {
 
 #[tokio::test]
 async fn test_pre_handler_hook_continues() {
-    // Test 6: preHandler hook continues → proceeds to handler
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_handler(spikard_http::lifecycle::request_hook(
@@ -208,7 +199,6 @@ async fn test_pre_handler_hook_continues() {
 
 #[tokio::test]
 async fn test_pre_handler_hook_short_circuits() {
-    // Test 7: preHandler hook short-circuits → handler not called
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_handler(spikard_http::lifecycle::request_hook(
@@ -235,7 +225,6 @@ async fn test_pre_handler_hook_short_circuits() {
 
 #[tokio::test]
 async fn test_pre_handler_hook_error_calls_on_error() {
-    // Test 8: preHandler hook fails → onError hook called
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_handler(spikard_http::lifecycle::request_hook(
@@ -272,7 +261,6 @@ async fn test_pre_handler_hook_error_calls_on_error() {
 
 #[tokio::test]
 async fn test_handler_error_calls_on_error() {
-    // Test 9: Handler fails → onError hook called and transforms response
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_on_error(spikard_http::lifecycle::response_hook(
@@ -301,7 +289,6 @@ async fn test_handler_error_calls_on_error() {
 
 #[tokio::test]
 async fn test_success_handler_calls_on_response() {
-    // Test 10: Handler succeeds → onResponse hook called and modifies response
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_on_response(spikard_http::lifecycle::response_hook(
@@ -333,7 +320,6 @@ async fn test_success_handler_calls_on_response() {
 
 #[tokio::test]
 async fn test_on_response_hook_error_returns_500() {
-    // Test 11: onResponse hook fails → returns 500
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_on_response(spikard_http::lifecycle::response_hook(
@@ -354,7 +340,6 @@ async fn test_on_response_hook_error_returns_500() {
 
 #[tokio::test]
 async fn test_on_error_hook_fails_fallback_500() {
-    // Test 12: onError hook itself fails → fallback 500 response
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_validation(spikard_http::lifecycle::request_hook(
@@ -380,7 +365,6 @@ async fn test_on_error_hook_fails_fallback_500() {
 
 #[tokio::test]
 async fn test_hook_execution_order_preserved() {
-    // Test 13: Hook execution order preserved across phases
     use std::sync::Mutex;
 
     let execution_log = Arc::new(Mutex::new(Vec::new()));
@@ -390,7 +374,6 @@ async fn test_hook_execution_order_preserved() {
 
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
-    // Pre-validation hook
     hooks.add_pre_validation(spikard_http::lifecycle::request_hook("pre_validation", move |req| {
         let log = execution_log_clone1.clone();
         async move {
@@ -399,7 +382,6 @@ async fn test_hook_execution_order_preserved() {
         }
     }));
 
-    // Pre-handler hook
     hooks.add_pre_handler(spikard_http::lifecycle::request_hook("pre_handler", move |req| {
         let log = execution_log_clone2.clone();
         async move {
@@ -408,7 +390,6 @@ async fn test_hook_execution_order_preserved() {
         }
     }));
 
-    // On-response hook
     hooks.add_on_response(spikard_http::lifecycle::response_hook("on_response", move |resp| {
         let log = execution_log_clone3.clone();
         async move {
@@ -431,7 +412,6 @@ async fn test_hook_execution_order_preserved() {
 
 #[tokio::test]
 async fn test_pre_validation_short_circuit_skips_handler_and_on_response() {
-    // Test 14: preValidation short-circuit skips handler and on_response
     use std::sync::Mutex;
 
     let handler_called = Arc::new(Mutex::new(false));
@@ -503,7 +483,6 @@ async fn test_pre_validation_short_circuit_skips_handler_and_on_response() {
 
 #[tokio::test]
 async fn test_multiple_hooks_same_phase_executed_in_order() {
-    // Test 15: Multiple hooks in same phase executed in order
     use std::sync::Mutex;
 
     let execution_log = Arc::new(Mutex::new(Vec::new()));
@@ -513,7 +492,6 @@ async fn test_multiple_hooks_same_phase_executed_in_order() {
 
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
-    // Add multiple on_response hooks
     hooks.add_on_response(spikard_http::lifecycle::response_hook("first_hook", move |resp| {
         let log = log1.clone();
         async move {
@@ -552,7 +530,6 @@ async fn test_multiple_hooks_same_phase_executed_in_order() {
 
 #[tokio::test]
 async fn test_hook_can_modify_request() {
-    // Test 16: Hook can modify request and handler receives modified version
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_handler(spikard_http::lifecycle::request_hook(
@@ -598,7 +575,6 @@ async fn test_hook_can_modify_request() {
 
 #[tokio::test]
 async fn test_error_response_contains_hook_error_message() {
-    // Test 17: Error response contains hook error message
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_validation(spikard_http::lifecycle::request_hook(
@@ -616,7 +592,6 @@ async fn test_error_response_contains_hook_error_message() {
     let response = result.unwrap();
     assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
 
-    // Verify error message is in response body
     let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
     assert!(body_str.contains("Custom validation error"));
@@ -624,7 +599,6 @@ async fn test_error_response_contains_hook_error_message() {
 
 #[tokio::test]
 async fn test_chained_hook_modifications() {
-    // Test 18: Multiple hooks can chain modifications
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_on_response(spikard_http::lifecycle::response_hook(
@@ -665,7 +639,6 @@ async fn test_chained_hook_modifications() {
 
 #[tokio::test]
 async fn test_on_response_not_called_when_handler_fails() {
-    // Test 19: Verify on_response hook is NOT called when handler fails (bug-prone area)
     use std::sync::Mutex;
 
     let response_hook_called = Arc::new(Mutex::new(false));
@@ -699,7 +672,6 @@ async fn test_on_response_not_called_when_handler_fails() {
 
 #[tokio::test]
 async fn test_on_error_called_when_handler_fails() {
-    // Test 20: Verify on_error hook IS called when handler fails
     use std::sync::Mutex;
 
     let error_hook_called = Arc::new(Mutex::new(false));
@@ -730,13 +702,11 @@ async fn test_on_error_called_when_handler_fails() {
 
 #[tokio::test]
 async fn test_on_error_hook_preserves_original_handler_error_status() {
-    // Test 21: on_error hook receives original error status code
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_on_error(spikard_http::lifecycle::response_hook(
         "error_checker",
         |resp| async move {
-            // Verify we receive 400 from the handler, not 500
             if resp.status() == StatusCode::BAD_REQUEST {
                 Ok(HookResult::Continue(resp))
             } else {
@@ -751,7 +721,6 @@ async fn test_on_error_hook_preserves_original_handler_error_status() {
 
     let result = execute_with_lifecycle_hooks(request, request_data, handler, Some(Arc::new(hooks))).await;
 
-    // Should succeed because on_error processed the response correctly
     assert!(result.is_ok());
     let response = result.unwrap();
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -759,12 +728,10 @@ async fn test_on_error_hook_preserves_original_handler_error_status() {
 
 #[tokio::test]
 async fn test_all_three_error_paths_call_on_error() {
-    // Test 22: All error paths (preValidation, preHandler, handler) call on_error
     use std::sync::Mutex;
 
     let error_hook_count = Arc::new(Mutex::new(0));
 
-    // Test preValidation error path
     {
         let error_hook_count_clone = error_hook_count.clone();
         let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
@@ -794,7 +761,6 @@ async fn test_all_three_error_paths_call_on_error() {
         "on_error called for preValidation error"
     );
 
-    // Reset and test preHandler error path
     *error_hook_count.lock().unwrap() = 0;
     {
         let error_hook_count_clone = error_hook_count.clone();
@@ -828,7 +794,6 @@ async fn test_all_three_error_paths_call_on_error() {
 
 #[tokio::test]
 async fn test_on_error_fallback_response_when_error_hook_fails() {
-    // Test 23: If on_error hook itself fails, fallback response returned
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_validation(spikard_http::lifecycle::request_hook(
@@ -858,7 +823,6 @@ async fn test_on_error_fallback_response_when_error_hook_fails() {
 
 #[tokio::test]
 async fn test_full_hook_chain_with_success() {
-    // Test 24: Full chain: preValidation → preHandler → handler → onResponse
     use std::sync::Mutex;
 
     let execution_log = Arc::new(Mutex::new(Vec::new()));
@@ -905,7 +869,6 @@ async fn test_full_hook_chain_with_success() {
 
 #[tokio::test]
 async fn test_pre_handler_short_circuit_skips_on_response() {
-    // Test 25: preHandler short-circuit skips handler and on_response
     use std::sync::Mutex;
 
     let response_hook_called = Arc::new(Mutex::new(false));
@@ -952,7 +915,6 @@ async fn test_pre_handler_short_circuit_skips_on_response() {
 
 #[tokio::test]
 async fn test_on_response_hook_can_transform_success_response() {
-    // Test 26: on_response can completely transform the response
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_on_response(spikard_http::lifecycle::response_hook(
@@ -984,7 +946,6 @@ async fn test_on_response_hook_can_transform_success_response() {
 
 #[tokio::test]
 async fn test_error_response_body_contains_correct_hook_context() {
-    // Test 27: Error responses include context about which hook phase failed
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_pre_handler(spikard_http::lifecycle::request_hook("failing", |_req| async move {
@@ -1004,14 +965,12 @@ async fn test_error_response_body_contains_correct_hook_context() {
     let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
 
-    // Should mention preHandler and the error message
     assert!(body_str.contains("preHandler"));
     assert!(body_str.contains("Specific handler setup error"));
 }
 
 #[tokio::test]
 async fn test_multiple_error_hooks_execute_in_sequence() {
-    // Test 28: Multiple on_error hooks execute in sequence
     use std::sync::Mutex;
 
     let execution_log = Arc::new(Mutex::new(Vec::new()));
@@ -1053,7 +1012,6 @@ async fn test_multiple_error_hooks_execute_in_sequence() {
 
 #[tokio::test]
 async fn test_handler_result_error_becomes_500_with_on_error_handling() {
-    // Test 29: Handler errors are wrapped with on_error hook capability
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_on_error(spikard_http::lifecycle::response_hook(
@@ -1082,7 +1040,6 @@ async fn test_handler_result_error_becomes_500_with_on_error_handling() {
 
 #[tokio::test]
 async fn test_on_response_with_multiple_sequential_transforms() {
-    // Test 30: Multiple on_response hooks can sequentially transform response
     let mut hooks = spikard_http::lifecycle::LifecycleHooks::new();
 
     hooks.add_on_response(spikard_http::lifecycle::response_hook(

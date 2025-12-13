@@ -255,6 +255,7 @@ pub fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard
         shutdown_timeout,
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
+        jsonrpc: None,
         lifecycle_hooks: None,
         di_container: None,
     })

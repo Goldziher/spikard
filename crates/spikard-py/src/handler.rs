@@ -29,12 +29,11 @@ pub fn init_python_event_loop() -> PyResult<()> {
         }
 
         let asyncio = py.import("asyncio")?;
-        let event_loop = asyncio.call_method0("new_event_loop")?;
+        let event_loop: Py<PyAny> = asyncio.call_method0("new_event_loop")?.unbind();
         PYTHON_EVENT_LOOP
-            .set(event_loop.into())
+            .set(event_loop.clone_ref(py))
             .map_err(|_| pyo3::exceptions::PyRuntimeError::new_err("Event loop already initialized"))?;
 
-        // Start the event loop in a dedicated Python thread
         let threading = py.import("threading")?;
         let globals = pyo3::types::PyDict::new(py);
         globals.set_item("asyncio", asyncio)?;
@@ -185,9 +184,6 @@ impl PythonHandler {
                 structured_error("python_call_error", format!("Python error calling handler: {}", e))
             })?;
 
-            // Use run_coroutine_threadsafe for async handlers since into_future requires
-            // the event loop to be properly integrated with the tokio runtime, which may not
-            // be available in all contexts (e.g., during testing)
             let coroutine_result = Python::attach(|py| -> PyResult<Py<PyAny>> {
                 let asyncio = py.import("asyncio")?;
                 let event_loop = PYTHON_EVENT_LOOP
@@ -204,11 +200,6 @@ impl PythonHandler {
             Python::attach(|py| python_to_response_result(py, coroutine_result.bind(py)))
                 .map_err(|e: PyErr| structured_error("python_response_error", format!("Python error: {}", e)))?
         } else {
-            // Use spawn_blocking for sync handlers
-            // Note: block_in_place was tested but is 6% slower under load due to:
-            // 1. Limited worker threads (8-10) vs blocking pool (512)
-            // 2. Python GIL serialization means more threads waiting = better utilization
-            // 3. High concurrency (50+ connections) starves worker threads with block_in_place
             tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
@@ -371,18 +362,14 @@ fn inject_di_dependencies<'py>(
     request_data: &RequestData,
 ) -> PyResult<()> {
     if let Some(ref dependencies) = request_data.dependencies {
-        // Get all dependency keys
         let keys = dependencies.keys();
 
         for key in keys {
-            // Get the value for this key using public API
-            if let Some(value) = dependencies.get_arc(&key) {
-                // Try to downcast to Py<PyAny> (Python objects stored by PythonValueDependency/PythonFactoryDependency)
-                if let Ok(py_obj) = value.downcast::<pyo3::Py<PyAny>>() {
-                    // Convert to Python object and add to kwargs
-                    let obj_ref = py_obj.bind(py);
-                    kwargs.set_item(&key, obj_ref)?;
-                }
+            if let Some(value) = dependencies.get_arc(&key)
+                && let Ok(py_obj) = value.downcast::<pyo3::Py<PyAny>>()
+            {
+                let obj_ref = py_obj.bind(py);
+                kwargs.set_item(&key, obj_ref)?;
             }
         }
     }
@@ -402,11 +389,9 @@ fn validated_params_to_py_kwargs<'py>(
     request_data: &RequestData,
     handler: Bound<'py, PyAny>,
 ) -> PyResult<Bound<'py, PyDict>> {
-    // Convert validated params to Python dict using pythonize (optimized)
     let params_dict = pythonize::pythonize(py, validated_params)?;
     let params_dict: Bound<'_, PyDict> = params_dict.extract()?;
 
-    // Add raw body bytes if present (for msgspec to parse directly)
     if let Some(raw_bytes) = &request_data.raw_body {
         params_dict.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
         params_dict.set_item("_raw_json", true)?;
@@ -415,11 +400,9 @@ fn validated_params_to_py_kwargs<'py>(
         params_dict.set_item("body", py_body)?;
     }
 
-    // Inject DI dependencies if present
     #[cfg(feature = "di")]
     inject_di_dependencies(py, &params_dict, request_data)?;
 
-    // Call convert_params to filter parameters to match handler signature
     let converter_module = py.import("spikard._internal.converters")?;
     let convert_params_func = converter_module.getattr("convert_params")?;
     let converted = convert_params_func.call1((params_dict, handler))?;
@@ -475,23 +458,17 @@ fn request_data_to_py_kwargs<'py>(
     }
     kwargs.set_item("cookies", cookies_dict)?;
 
-    // Optimization: Pass raw JSON bytes to Python for msgspec to parse directly
-    // This avoids double-parsing (Rust serde + Python msgspec)
     if let Some(raw_bytes) = &request_data.raw_body {
-        // Pass raw bytes as PyBytes for msgspec.json.decode() to handle
         kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
-        kwargs.set_item("_raw_json", true)?; // Flag for converter
+        kwargs.set_item("_raw_json", true)?;
     } else {
         let py_body = json_to_python(py, &request_data.body)?;
         kwargs.set_item(body_param_name, py_body)?;
     }
 
-    // Inject DI dependencies if present
     #[cfg(feature = "di")]
     inject_di_dependencies(py, &kwargs, request_data)?;
 
-    // Always call convert_params to filter parameters to match handler signature
-    // When needs_conversion=False, it will skip type conversion but still filter params
     let converter_module = py.import("spikard._internal.converters")?;
     let convert_params_func = converter_module.getattr("convert_params")?;
     let converted = convert_params_func.call1((kwargs, handler))?;
