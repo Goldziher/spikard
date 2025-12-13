@@ -597,7 +597,6 @@ impl Handler for ClosureHandler {
 }
 
 /// Helper to interpret a PHP response Zval into HandlerResult.
-#[allow(dead_code)]
 pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerResult {
     if response.is_null() {
         return Response::builder()
@@ -612,75 +611,75 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
             .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
     }
 
-    if let Some(obj) = response.object() {
-        if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
-            let status_code = status_zval.long().unwrap_or(200);
-            let status = StatusCode::from_u16(status_code as u16).unwrap_or(StatusCode::OK);
+    if let Some(obj) = response.object()
+        && let Ok(status_zval) = obj.try_call_method("getStatus", vec![])
+    {
+        let status_code = status_zval.long().unwrap_or(200);
+        let status = StatusCode::from_u16(status_code as u16).unwrap_or(StatusCode::OK);
 
-            let mut builder = Response::builder().status(status);
+        let mut builder = Response::builder().status(status);
 
-            let mut has_content_type = false;
-            if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
-                && let Some(arr) = headers_zval.array()
-            {
-                for (key, val) in arr.iter() {
-                    let key_str = match key {
-                        ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                        ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                        ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                    };
-                    if let Some(val_str) = val.string() {
-                        if key_str.eq_ignore_ascii_case("content-type") {
-                            has_content_type = true;
-                        }
-                        if let (Ok(header_name), Ok(header_value)) = (
-                            HeaderName::from_bytes(key_str.as_bytes()),
-                            HeaderValue::from_str(&val_str),
-                        ) {
-                            builder = builder.header(header_name, header_value);
-                        }
+        let mut has_content_type = false;
+        if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
+            && let Some(arr) = headers_zval.array()
+        {
+            for (key, val) in arr.iter() {
+                let key_str = match key {
+                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                };
+                if let Some(val_str) = val.string() {
+                    if key_str.eq_ignore_ascii_case("content-type") {
+                        has_content_type = true;
+                    }
+                    if let (Ok(header_name), Ok(header_value)) = (
+                        HeaderName::from_bytes(key_str.as_bytes()),
+                        HeaderValue::from_str(&val_str),
+                    ) {
+                        builder = builder.header(header_name, header_value);
                     }
                 }
             }
+        }
 
-            let body_zval = obj.try_call_method("getBody", vec![]).unwrap_or_else(|_| Zval::new());
-            if body_zval.object().is_some() {
-                let status_code = status.as_u16();
-                let headers = builder
-                    .headers_ref()
-                    .map(|h| {
-                        h.iter()
-                            .filter_map(|(name, value)| value.to_str().ok().map(|v| (name.to_string(), v.to_string())))
-                            .collect::<HashMap<_, _>>()
-                    })
-                    .unwrap_or_default();
-                let cfg = crate::php::StreamingConfig { status_code, headers };
-                return crate::php::register_generator(&body_zval, Some(cfg))
-                    .map_err(|msg| (StatusCode::INTERNAL_SERVER_ERROR, msg))
-                    .and_then(|(idx, config)| {
-                        crate::php::create_streaming_response(idx, config)
-                            .map(|r| r.into_response())
-                            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
-                    })
-                    .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
-            }
-
-            let body_str = body_zval.string().map(|s| s.to_string()).unwrap_or_default();
-
-            if !has_content_type && !body_str.is_empty() {
-                builder = builder.header("content-type", "application/json");
-            }
-
-            return builder
-                .body(Body::from(body_str))
-                .map_err(|e| {
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        format!("Failed to build response: {}", e),
-                    )
+        let body_zval = obj.try_call_method("getBody", vec![]).unwrap_or_else(|_| Zval::new());
+        if body_zval.object().is_some() {
+            let status_code = status.as_u16();
+            let headers = builder
+                .headers_ref()
+                .map(|h| {
+                    h.iter()
+                        .filter_map(|(name, value)| value.to_str().ok().map(|v| (name.to_string(), v.to_string())))
+                        .collect::<HashMap<_, _>>()
+                })
+                .unwrap_or_default();
+            let cfg = crate::php::StreamingConfig { status_code, headers };
+            return crate::php::register_generator(&body_zval, Some(cfg))
+                .map_err(|msg| (StatusCode::INTERNAL_SERVER_ERROR, msg))
+                .and_then(|(idx, config)| {
+                    crate::php::create_streaming_response(idx, config)
+                        .map(|r| r.into_response())
+                        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
                 })
                 .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
         }
+
+        let body_str = body_zval.string().map(|s| s.to_string()).unwrap_or_default();
+
+        if !has_content_type && !body_str.is_empty() {
+            builder = builder.header("content-type", "application/json");
+        }
+
+        return builder
+            .body(Body::from(body_str))
+            .map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to build response: {}", e),
+                )
+            })
+            .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
     }
 
     if let Some(s) = response.string() {

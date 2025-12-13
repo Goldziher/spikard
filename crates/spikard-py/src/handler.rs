@@ -365,11 +365,11 @@ fn inject_di_dependencies<'py>(
         let keys = dependencies.keys();
 
         for key in keys {
-            if let Some(value) = dependencies.get_arc(&key) {
-                if let Ok(py_obj) = value.downcast::<pyo3::Py<PyAny>>() {
-                    let obj_ref = py_obj.bind(py);
-                    kwargs.set_item(&key, obj_ref)?;
-                }
+            if let Some(value) = dependencies.get_arc(&key)
+                && let Ok(py_obj) = value.downcast::<pyo3::Py<PyAny>>()
+            {
+                let obj_ref = py_obj.bind(py);
+                kwargs.set_item(&key, obj_ref)?;
             }
         }
     }

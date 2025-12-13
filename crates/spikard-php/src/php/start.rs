@@ -4,6 +4,7 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{LifecycleHooks, Route};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::php::handler::PhpHandler;

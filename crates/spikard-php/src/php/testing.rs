@@ -263,34 +263,33 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
     if let Some(obj) = response.object()
         && let Ok(class_name) = obj.get_class_name()
         && class_name.contains("Response")
+        && let Ok(status_zval) = obj.try_call_method("getStatus", vec![])
     {
-        if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
-            let status = status_zval.long().unwrap_or(200);
+        let status = status_zval.long().unwrap_or(200);
 
-            let body = if let Ok(body_zval) = obj.try_call_method("getBody", vec![]) {
-                body_zval.string().map(|s| s.to_string()).unwrap_or_default()
-            } else {
-                String::new()
-            };
+        let body = if let Ok(body_zval) = obj.try_call_method("getBody", vec![]) {
+            body_zval.string().map(|s| s.to_string()).unwrap_or_default()
+        } else {
+            String::new()
+        };
 
-            let mut headers = HashMap::new();
-            if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
-                && let Some(arr) = headers_zval.array()
-            {
-                for (key, val) in arr.iter() {
-                    let key_str = match key {
-                        ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                        ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                        ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                    };
-                    if let Some(val_str) = val.string() {
-                        headers.insert(key_str, val_str.to_string());
-                    }
+        let mut headers = HashMap::new();
+        if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
+            && let Some(arr) = headers_zval.array()
+        {
+            for (key, val) in arr.iter() {
+                let key_str = match key {
+                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                };
+                if let Some(val_str) = val.string() {
+                    headers.insert(key_str, val_str.to_string());
                 }
             }
-
-            return Ok(PhpTestResponse { status, body, headers });
         }
+
+        return Ok(PhpTestResponse { status, body, headers });
     }
 
     if let Some(s) = response.string() {
