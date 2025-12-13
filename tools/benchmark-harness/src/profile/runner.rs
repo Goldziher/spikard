@@ -613,10 +613,9 @@ impl ProfileRunner {
             "ruby" => {
                 if let Ok(output) = std::process::Command::new("ruby").arg("--version").output()
                     && let Ok(version) = String::from_utf8(output.stdout)
+                    && let Some(version_part) = version.split_whitespace().nth(1)
                 {
-                    if let Some(version_part) = version.split_whitespace().nth(1) {
-                        return format!("Ruby {}", version_part);
-                    }
+                    return format!("Ruby {}", version_part);
                 }
                 "Ruby".to_string()
             }

@@ -378,21 +378,19 @@ impl CompareRunner {
         for (idx, fw_info) in result.frameworks.iter().enumerate() {
             let verdict = if idx == 0 {
                 "baseline"
-            } else {
-                if let Some(profile_result) = profile_map.get(fw_info.name.as_str()) {
-                    let baseline_rps = profile_results[0].1.summary.avg_requests_per_sec;
-                    let this_rps = profile_result.summary.avg_requests_per_sec;
+            } else if let Some(profile_result) = profile_map.get(fw_info.name.as_str()) {
+                let baseline_rps = profile_results[0].1.summary.avg_requests_per_sec;
+                let this_rps = profile_result.summary.avg_requests_per_sec;
 
-                    if this_rps > baseline_rps * 1.1 {
-                        "significantly better"
-                    } else if this_rps < baseline_rps * 0.9 {
-                        "significantly worse"
-                    } else {
-                        "similar"
-                    }
+                if this_rps > baseline_rps * 1.1 {
+                    "significantly better"
+                } else if this_rps < baseline_rps * 0.9 {
+                    "significantly worse"
                 } else {
-                    "unknown"
+                    "similar"
                 }
+            } else {
+                "unknown"
             };
 
             let emoji = match verdict {

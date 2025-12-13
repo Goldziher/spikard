@@ -125,12 +125,11 @@ impl Dependency for RubyFactoryDependency {
                 if let Some(json_value) = resolved.get::<JsonValue>(dep_key) {
                     return Some((dep_key.clone(), (*json_value).clone()));
                 }
-                if let Some(wrapper) = resolved.get::<RubyValueWrapper>(dep_key) {
-                    if let Ok(ruby) = Ruby::get()
-                        && let Ok(json) = wrapper.to_json(&ruby)
-                    {
-                        return Some((dep_key.clone(), json));
-                    }
+                if let Some(wrapper) = resolved.get::<RubyValueWrapper>(dep_key)
+                    && let Ok(ruby) = Ruby::get()
+                    && let Ok(json) = wrapper.to_json(&ruby)
+                {
+                    return Some((dep_key.clone(), json));
                 }
                 None
             })
