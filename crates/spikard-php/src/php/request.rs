@@ -1,5 +1,7 @@
 //! PHP-visible HTTP request struct.
 
+#![allow(non_snake_case)]
+
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendHashTable;

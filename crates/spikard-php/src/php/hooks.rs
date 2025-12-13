@@ -216,9 +216,10 @@ async fn axum_response_to_php(resp: Response<Body>) -> Result<(PhpResponse, Resp
     }
 
     let php_resp = PhpResponse {
-        status: parts.status.as_u16() as i64,
+        status_code: parts.status.as_u16() as i64,
         body: body_value,
         headers: headers.clone(),
+        cookies: HashMap::new(),
     };
 
     let mut builder = Response::builder().status(parts.status);
@@ -317,7 +318,12 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
                                 }
                             }
                         }
-                        Some(Ok(Some(PhpResponse { status, body, headers })))
+                        Some(Ok(Some(PhpResponse {
+                            status_code: status,
+                            body,
+                            headers,
+                            cookies: HashMap::new(),
+                        })))
                     } else {
                         Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                     }
@@ -399,9 +405,10 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
                 tracing_error!("Failed to convert response to PHP: {}", e);
                 (
                     PhpResponse {
-                        status: 500,
+                        status_code: 500,
                         body: Value::Null,
                         headers: HashMap::new(),
+                        cookies: HashMap::new(),
                     },
                     Response::new(Body::empty()),
                 )
@@ -449,7 +456,12 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
                                 }
                             }
                         }
-                        Some(Ok(Some(PhpResponse { status, body, headers })))
+                        Some(Ok(Some(PhpResponse {
+                            status_code: status,
+                            body,
+                            headers,
+                            cookies: HashMap::new(),
+                        })))
                     } else {
                         Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                     }
@@ -524,9 +536,10 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
                 tracing_error!("Failed to convert response to PHP: {}", e);
                 (
                     PhpResponse {
-                        status: 500,
+                        status_code: 500,
                         body: Value::Null,
                         headers: HashMap::new(),
+                        cookies: HashMap::new(),
                     },
                     Response::new(Body::empty()),
                 )
@@ -574,7 +587,12 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
                                 }
                             }
                         }
-                        Some(Ok(Some(PhpResponse { status, body, headers })))
+                        Some(Ok(Some(PhpResponse {
+                            status_code: status,
+                            body,
+                            headers,
+                            cookies: HashMap::new(),
+                        })))
                     } else {
                         Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                     }
