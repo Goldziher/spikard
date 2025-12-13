@@ -71,11 +71,21 @@ jobs:
       - name: Build benchmark-harness
         run: cargo build --manifest-path tools/benchmark-harness/Cargo.toml --release
 
-      - name: Upload benchmark-harness artifact
+      - name: Install oha load generator
+        run: cargo install oha --locked
+
+      - name: Package benchmark tools
+        run: |
+          mkdir -p artifacts/bin
+          cp target/release/benchmark-harness artifacts/bin/benchmark-harness
+          cp ~/.cargo/bin/oha artifacts/bin/oha
+          chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha
+
+      - name: Upload benchmark tools artifact
         uses: actions/upload-artifact@v5
         with:
-          name: benchmark-harness
-          path: target/release/benchmark-harness
+          name: bench-tools
+          path: artifacts/bin/
           retention-days: 1
           if-no-files-found: error
 
@@ -87,17 +97,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Download benchmark-harness
+      - name: Download benchmark tools
         uses: actions/download-artifact@v6
         with:
-          name: benchmark-harness
+          name: bench-tools
           path: ~/.cargo/bin
 
-      - name: Make benchmark-harness executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness
-
-      - name: Install oha load generator
-        run: cargo install oha
+      - name: Make benchmark tools executable
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -138,14 +145,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Download benchmark-harness
+      - name: Download benchmark tools
         uses: actions/download-artifact@v6
         with:
-          name: benchmark-harness
+          name: bench-tools
           path: ~/.cargo/bin
 
-      - name: Make benchmark-harness executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness
+      - name: Make benchmark tools executable
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -157,9 +164,6 @@ jobs:
         with:
           python-version: "3.14"
           cache-prefix: bench-python
-
-      - name: Install oha load generator
-        run: cargo install oha
 
       - name: Build spikard-python binding
         uses: ./.github/actions/build-python-binding
@@ -198,17 +202,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Download benchmark-harness
+      - name: Download benchmark tools
         uses: actions/download-artifact@v6
         with:
-          name: benchmark-harness
+          name: bench-tools
           path: ~/.cargo/bin
 
-      - name: Make benchmark-harness executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness
-
-      - name: Install oha load generator
-        run: cargo install oha
+      - name: Make benchmark tools executable
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -257,17 +258,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Download benchmark-harness
+      - name: Download benchmark tools
         uses: actions/download-artifact@v6
         with:
-          name: benchmark-harness
+          name: bench-tools
           path: ~/.cargo/bin
 
-      - name: Make benchmark-harness executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness
-
-      - name: Install oha load generator
-        run: cargo install oha
+      - name: Make benchmark tools executable
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -318,17 +316,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Download benchmark-harness
+      - name: Download benchmark tools
         uses: actions/download-artifact@v6
         with:
-          name: benchmark-harness
+          name: bench-tools
           path: ~/.cargo/bin
 
-      - name: Make benchmark-harness executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness
-
-      - name: Install oha load generator
-        run: cargo install oha
+      - name: Make benchmark tools executable
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -405,17 +400,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Download benchmark-harness
+      - name: Download benchmark tools
         uses: actions/download-artifact@v6
         with:
-          name: benchmark-harness
+          name: bench-tools
           path: ~/.cargo/bin
 
-      - name: Make benchmark-harness executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness
-
-      - name: Install oha load generator
-        run: cargo install oha
+      - name: Make benchmark tools executable
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
