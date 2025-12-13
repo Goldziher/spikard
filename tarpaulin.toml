@@ -34,18 +34,18 @@ exclude-files = [
     "**/generated/**",
 
     # FFI and binding-specific code (already tested via bindings)
-    "crates/spikard-py/src/**",
-    "crates/spikard-node/src/**",
-    "crates/spikard-rb/src/**",
-    "crates/spikard-php/src/**",
-    "crates/spikard-wasm/src/**",
+    "**/crates/spikard-py/src/**",
+    "**/crates/spikard-node/src/**",
+    "**/crates/spikard-rb/src/**",
+    "**/crates/spikard-php/src/**",
+    "**/crates/spikard-wasm/src/**",
 
     # Exclude examples (not part of core library)
-    "examples/**",
-    "tools/**",
+    "**/examples/**",
+    "**/tools/**",
 
     # Exclude vendored copies (bindings packaging)
-    "packages/**",
+    "**/packages/**",
 ]
 
 # Crates to exclude from coverage

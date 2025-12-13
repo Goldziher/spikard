@@ -345,6 +345,7 @@ impl ConfigExtractor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::Value;
 
     struct MockConfigSource {
         data: HashMap<String, String>,
@@ -579,5 +580,100 @@ mod tests {
 
         let schemes = ConfigExtractor::extract_security_schemes_config(&source).unwrap();
         assert_eq!(schemes.len(), 0);
+    }
+
+    struct JsonConfigSource<'a> {
+        value: &'a Value,
+    }
+
+    impl<'a> JsonConfigSource<'a> {
+        fn new(value: &'a Value) -> Self {
+            Self { value }
+        }
+    }
+
+    impl ConfigSource for JsonConfigSource<'_> {
+        fn get_bool(&self, key: &str) -> Option<bool> {
+            self.value.get(key)?.as_bool()
+        }
+
+        fn get_u64(&self, key: &str) -> Option<u64> {
+            self.value.get(key)?.as_u64()
+        }
+
+        fn get_u16(&self, key: &str) -> Option<u16> {
+            u16::try_from(self.get_u64(key)?).ok()
+        }
+
+        fn get_string(&self, key: &str) -> Option<String> {
+            self.value.get(key)?.as_str().map(str::to_string)
+        }
+
+        fn get_vec_string(&self, key: &str) -> Option<Vec<String>> {
+            self.value.get(key)?.as_array().map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(str::to_string))
+                    .collect()
+            })
+        }
+
+        fn get_nested(&self, key: &str) -> Option<Box<dyn ConfigSource + '_>> {
+            let nested = self.value.get(key)?;
+            nested.is_object().then(|| Box::new(JsonConfigSource::new(nested)) as Box<dyn ConfigSource>)
+        }
+
+        fn has_key(&self, key: &str) -> bool {
+            self.value.get(key).is_some()
+        }
+
+        fn get_array_length(&self, key: &str) -> Option<usize> {
+            self.value.get(key)?.as_array().map(Vec::len)
+        }
+
+        fn get_array_element(&self, key: &str, index: usize) -> Option<Box<dyn ConfigSource + '_>> {
+            let arr = self.value.get(key)?.as_array()?;
+            let elem = arr.get(index)?;
+            elem.is_object().then(|| Box::new(JsonConfigSource::new(elem)) as Box<dyn ConfigSource>)
+        }
+    }
+
+    #[test]
+    fn test_static_files_extraction_supports_arrays() {
+        let value = serde_json::json!({
+            "static_files": [
+                {
+                    "directory": "public",
+                    "route_prefix": "/assets",
+                    "index_file": true,
+                    "cache_control": "public, max-age=3600"
+                }
+            ]
+        });
+        let source = JsonConfigSource::new(&value);
+        let configs = ConfigExtractor::extract_static_files_config(&source).expect("extract");
+        assert_eq!(configs.len(), 1);
+        assert_eq!(configs[0].directory, "public");
+        assert_eq!(configs[0].route_prefix, "/assets");
+        assert!(configs[0].index_file);
+        assert_eq!(configs[0].cache_control.as_deref(), Some("public, max-age=3600"));
+    }
+
+    #[test]
+    fn test_server_config_prefers_host_key_variants() {
+        let value = serde_json::json!({
+            "Host": "0.0.0.0",
+            "port": 9000,
+            "workers": 2,
+            "enable_request_id": false,
+            "graceful_shutdown": true,
+            "shutdown_timeout": 1,
+            "static_files": []
+        });
+        let source = JsonConfigSource::new(&value);
+        let cfg = ConfigExtractor::extract_server_config(&source).expect("extract");
+        assert_eq!(cfg.host, "0.0.0.0");
+        assert_eq!(cfg.port, 9000);
+        assert_eq!(cfg.workers, 2);
+        assert!(!cfg.enable_request_id);
     }
 }

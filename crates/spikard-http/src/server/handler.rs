@@ -40,6 +40,20 @@ impl Handler for ValidatingHandler {
         let parameter_validator = self.parameter_validator.clone();
 
         Box::pin(async move {
+            if request_data.body.is_null()
+                && request_data.raw_body.is_some()
+                && request_data
+                    .headers
+                    .get("content-type")
+                    .and_then(|s| s.parse::<mime::Mime>().ok())
+                    .as_ref()
+                    .is_some_and(crate::middleware::validation::is_json_content_type)
+            {
+                let raw_bytes = request_data.raw_body.as_ref().unwrap();
+                request_data.body = serde_json::from_slice::<Value>(raw_bytes)
+                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?;
+            }
+
             if let Some(validator) = request_validator {
                 if request_data.body.is_null() && request_data.raw_body.is_some() {
                     let raw_bytes = request_data.raw_body.as_ref().unwrap();
@@ -196,6 +210,62 @@ mod tests {
         assert!(result.is_ok(), "Handler should succeed without validators");
         let response = result.unwrap();
         assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    /// Test 1b: JSON body is parsed even without request schema validation.
+    #[tokio::test]
+    async fn test_json_body_parsed_without_request_validator() {
+        let route = spikard_core::Route {
+            method: spikard_core::http::Method::Post,
+            path: "/test".to_string(),
+            handler_name: "test_handler".to_string(),
+            request_validator: None,
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: vec![],
+            jsonrpc_method: None,
+        };
+
+        let inner = Arc::new(SuccessEchoHandler);
+        let validator_handler = ValidatingHandler::new(inner, &route);
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("/test")
+            .header("content-type", "application/json")
+            .body(Body::empty())
+            .unwrap();
+
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+        let request_data = RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: json!({}),
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Value::Null,
+            raw_body: Some(bytes::Bytes::from(br#"{"name":"Alice"}"#.to_vec())),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/test".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        let response = validator_handler
+            .call(request, request_data)
+            .await
+            .expect("handler should succeed");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("read body");
+        let echoed: Value = serde_json::from_slice(&body).expect("json");
+        assert_eq!(echoed["name"], "Alice");
     }
 
     /// Test 2: Request body validation - Valid input passes

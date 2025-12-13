@@ -8,6 +8,7 @@ use axum::http::{HeaderName, HeaderValue, Response, StatusCode};
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
+use serde_json::Value;
 use spikard_http::ParameterValidator;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, Route, Router, SchemaRegistry, ServerConfig};
@@ -643,6 +644,51 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
                 )
             })
             .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
+    }
+
+    if let Some(obj) = response.object() {
+        let status_code = obj.get_property::<i64>("statusCode").unwrap_or(200);
+        let status = StatusCode::from_u16(status_code as u16).unwrap_or(StatusCode::OK);
+
+        let mut builder = Response::builder().status(status);
+
+        let mut has_content_type = false;
+        let headers_map = obj
+            .get_property::<HashMap<String, String>>("headers")
+            .unwrap_or_default();
+        for (key, value) in headers_map {
+            if key.eq_ignore_ascii_case("content-type") {
+                has_content_type = true;
+            }
+            if let (Ok(header_name), Ok(header_value)) =
+                (HeaderName::from_bytes(key.as_bytes()), HeaderValue::from_str(&value))
+            {
+                builder = builder.header(header_name, header_value);
+            }
+        }
+
+        let body_value = obj
+            .get_property::<&Zval>("body")
+            .ok()
+            .and_then(|zv| zval_to_json(zv).ok())
+            .unwrap_or(Value::Null);
+
+        let body_bytes = match &body_value {
+            Value::Null => Vec::new(),
+            Value::String(s) => s.as_bytes().to_vec(),
+            _ => serde_json::to_vec(&body_value).unwrap_or_default(),
+        };
+
+        if !has_content_type && !body_bytes.is_empty() {
+            builder = builder.header("content-type", "application/json");
+        }
+
+        return builder.body(Body::from(body_bytes)).map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to build response: {}", e),
+            )
+        });
     }
 
     if let Some(s) = response.string() {

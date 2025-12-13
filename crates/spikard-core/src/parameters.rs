@@ -520,10 +520,60 @@ impl ParameterValidator {
 
     /// Validate ISO 8601 time format: HH:MM:SS or HH:MM:SS.ffffff
     fn validate_time_format(value: &str) -> Result<(), String> {
-        jiff::civil::Time::strptime("%H:%M:%S", value)
-            .or_else(|_| jiff::civil::Time::strptime("%H:%M", value))
-            .map(|_| ())
-            .map_err(|e| format!("Invalid time format: {}", e))
+        let (time_part, offset_part) = if let Some(stripped) = value.strip_suffix('Z') {
+            (stripped, "Z")
+        } else {
+            let plus = value.rfind('+');
+            let minus = value.rfind('-');
+            let split_at = match (plus, minus) {
+                (Some(p), Some(m)) => Some(std::cmp::max(p, m)),
+                (Some(p), None) => Some(p),
+                (None, Some(m)) => Some(m),
+                (None, None) => None,
+            }
+            .ok_or_else(|| "Invalid time format: missing timezone offset".to_string())?;
+
+            if split_at < 8 {
+                return Err("Invalid time format: timezone offset position is invalid".to_string());
+            }
+
+            (&value[..split_at], &value[split_at..])
+        };
+
+        let base_time = time_part.split('.').next().unwrap_or(time_part);
+        jiff::civil::Time::strptime("%H:%M:%S", base_time).map_err(|e| format!("Invalid time format: {}", e))?;
+
+        if let Some((_, frac)) = time_part.split_once('.') {
+            if frac.is_empty() || frac.len() > 9 || !frac.chars().all(|c| c.is_ascii_digit()) {
+                return Err("Invalid time format: fractional seconds must be 1-9 digits".to_string());
+            }
+        }
+
+        if offset_part != "Z" {
+            let sign = offset_part
+                .chars()
+                .next()
+                .ok_or_else(|| "Invalid time format: empty timezone offset".to_string())?;
+            if sign != '+' && sign != '-' {
+                return Err("Invalid time format: timezone offset must start with + or -".to_string());
+            }
+
+            let rest = &offset_part[1..];
+            let (hours_str, minutes_str) = rest
+                .split_once(':')
+                .ok_or_else(|| "Invalid time format: timezone offset must be ±HH:MM".to_string())?;
+            let hours: u8 = hours_str
+                .parse()
+                .map_err(|_| "Invalid time format: invalid timezone hours".to_string())?;
+            let minutes: u8 = minutes_str
+                .parse()
+                .map_err(|_| "Invalid time format: invalid timezone minutes".to_string())?;
+            if hours > 23 || minutes > 59 {
+                return Err("Invalid time format: timezone offset out of range".to_string());
+            }
+        }
+
+        Ok(())
     }
 
     /// Validate duration format (simplified - accept ISO 8601 duration or simple formats)
