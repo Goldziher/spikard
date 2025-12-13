@@ -33,6 +33,7 @@ pub struct PhpRequest {
 #[php_impl]
 impl PhpRequest {
     #[php(constructor)]
+    #[allow(clippy::too_many_arguments)]
     pub fn __construct(
         method: String,
         path: String,
