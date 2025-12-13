@@ -38,7 +38,6 @@ pub fn get_runtime() -> PhpResult<&'static Runtime> {
 }
 
 /// Inner state of a PHP handler.
-#[allow(dead_code)]
 pub struct PhpHandlerInner {
     pub handler_name: String,
     pub method: String,
@@ -51,7 +50,6 @@ pub struct PhpHandlerInner {
 /// implementation wraps the synchronous call in an async wrapper for compatibility
 /// with spikard-http's async infrastructure.
 #[derive(Clone)]
-#[allow(dead_code)]
 pub struct PhpHandler {
     pub inner: Arc<PhpHandlerInner>,
     /// Index into a handler registry - used to retrieve the actual PHP callable

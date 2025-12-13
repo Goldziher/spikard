@@ -7,6 +7,7 @@
 //! - Handler infrastructure
 
 use ext_php_rs::boxed::ZBox;
+use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
@@ -158,6 +159,25 @@ pub fn json_to_php_table(value: &Value) -> PhpResult<ZBox<ZendHashTable>> {
     }
 
     Ok(table)
+}
+
+/// Convert a serde_json Value into a PHP Zval.
+pub fn json_to_zval(value: &Value) -> PhpResult<Zval> {
+    match value {
+        Value::Null => Ok(Zval::new()),
+        Value::Bool(b) => b.into_zval(false),
+        Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                i.into_zval(false)
+            } else if let Some(f) = n.as_f64() {
+                f.into_zval(false)
+            } else {
+                Ok(Zval::new())
+            }
+        }
+        Value::String(s) => s.as_str().into_zval(false),
+        Value::Array(_) | Value::Object(_) => json_to_php_table(value).and_then(|t| t.into_zval(false)),
+    }
 }
 
 /// Convert a JSON array to a ZendHashTable.

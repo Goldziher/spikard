@@ -165,6 +165,7 @@ fn axum_request_to_php_sync(req: &Request<Body>) -> PhpRequest {
         method,
         path,
         Value::Null,
+        Value::Object(serde_json::Map::new()),
         None,
         headers,
         HashMap::new(),
@@ -175,8 +176,8 @@ fn axum_request_to_php_sync(req: &Request<Body>) -> PhpRequest {
 
 /// Convert PhpResponse to axum Response for PHP hooks.
 fn php_response_to_axum(php_resp: &PhpResponse) -> Result<Response<Body>, String> {
-    let status = StatusCode::from_u16(php_resp.status as u16)
-        .map_err(|e| format!("Invalid status code {}: {}", php_resp.status, e))?;
+    let status = StatusCode::from_u16(php_resp.status_code as u16)
+        .map_err(|e| format!("Invalid status code {}: {}", php_resp.status_code, e))?;
 
     let body_bytes = match &php_resp.body {
         Value::String(s) => s.as_bytes().to_vec(),
