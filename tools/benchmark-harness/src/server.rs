@@ -2,36 +2,11 @@
 
 use crate::error::{Error, Result};
 use crate::framework::{detect_framework, get_framework};
-use std::env;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::time::sleep;
-
-/// Find the workspace root by looking for Cargo.toml
-#[allow(dead_code)]
-fn find_workspace_root() -> Result<PathBuf> {
-    let exe_path =
-        env::current_exe().map_err(|e| Error::ServerStartFailed(format!("Failed to get executable path: {}", e)))?;
-
-    let mut current = exe_path
-        .parent()
-        .ok_or_else(|| Error::ServerStartFailed("Failed to get executable parent directory".to_string()))?;
-
-    loop {
-        let cargo_toml = current.join("Cargo.toml");
-        if cargo_toml.exists()
-            && let Ok(contents) = std::fs::read_to_string(&cargo_toml)
-            && contents.contains("[workspace]")
-        {
-            return Ok(current.to_path_buf());
-        }
-
-        current = current.parent().ok_or_else(|| {
-            Error::ServerStartFailed("Could not find workspace root (no Cargo.toml with [workspace])".to_string())
-        })?;
-    }
-}
 
 /// Server process handle
 pub struct ServerHandle {
@@ -180,12 +155,51 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         ))
     })?;
 
-    let stderr = process.stderr.take();
+    let stderr_output = Arc::new(Mutex::new(Vec::<u8>::new()));
+    let stderr_tail_limit = 64 * 1024;
+    if let Some(stderr) = process.stderr.take() {
+        let stderr_output = Arc::clone(&stderr_output);
+        std::thread::spawn(move || {
+            use std::io::Read;
+            let mut reader = stderr;
+            let mut buf = [0u8; 8192];
+            loop {
+                match reader.read(&mut buf) {
+                    Ok(0) => break,
+                    Ok(n) => {
+                        if let Ok(mut out) = stderr_output.lock() {
+                            out.extend_from_slice(&buf[..n]);
+                            if out.len() > stderr_tail_limit {
+                                let drain = out.len() - stderr_tail_limit;
+                                out.drain(..drain);
+                            }
+                        }
+                    }
+                    Err(_) => break,
+                }
+            }
+        });
+    }
 
     let mut handle = ServerHandle {
         process,
         port,
         base_url: base_url.clone(),
+    };
+
+    let stderr_snapshot = || -> String {
+        let Ok(out) = stderr_output.lock() else {
+            return String::new();
+        };
+        let Ok(text) = String::from_utf8(out.clone()) else {
+            return String::new();
+        };
+        let text = text.trim();
+        if text.is_empty() {
+            String::new()
+        } else {
+            format!("\n\nServer stderr (tail):\n{}", text)
+        }
     };
 
     let max_attempts = 30;
@@ -194,22 +208,10 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
         match handle.process.try_wait() {
             Ok(Some(status)) => {
-                let stderr_output = if let Some(mut stderr) = stderr {
-                    use std::io::Read;
-                    let mut buf = String::new();
-                    stderr.read_to_string(&mut buf).ok();
-                    if buf.is_empty() {
-                        String::new()
-                    } else {
-                        format!("\n\nServer stderr:\n{}", buf)
-                    }
-                } else {
-                    String::new()
-                };
-
                 return Err(Error::ServerStartFailed(format!(
                     "Process exited with status: {}{}",
-                    status, stderr_output
+                    status,
+                    stderr_snapshot()
                 )));
             }
             Ok(None) => {
@@ -227,7 +229,11 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
         if attempt == max_attempts {
             handle.kill()?;
-            return Err(Error::ServerNotHealthy(max_attempts));
+            return Err(Error::ServerStartFailed(format!(
+                "Server not healthy after {} attempts{}",
+                max_attempts,
+                stderr_snapshot()
+            )));
         }
     }
 
@@ -236,10 +242,9 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
 /// Check if server is healthy
 async fn health_check(base_url: &str) -> bool {
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(2))
-        .build()
-        .unwrap();
+    let Ok(client) = reqwest::Client::builder().timeout(Duration::from_secs(2)).build() else {
+        return false;
+    };
 
     for path in ["/health", "/"] {
         let url = format!("{}{}", base_url, path);

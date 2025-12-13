@@ -59,3 +59,4 @@ di = ["spikard-core/di"]
 [dev-dependencies]
 chrono = "0.4"
 doc-comment = "0.3"
+tempfile = "3.23"

@@ -356,12 +356,14 @@ jobs:
       - name: Enable PHP extension
         run: |
           EXT_FILE=$(find target/release -name "libspikard_php.*" -o -name "spikard_php.*" | head -1)
-          if [ -n "$EXT_FILE" ]; then
-            EXT_DIR=$(php-config --extension-dir)
-            sudo cp "$EXT_FILE" "$EXT_DIR/spikard_php.so"
-            echo "extension=spikard_php.so" | sudo tee /etc/php/8.4/cli/conf.d/99-spikard.ini
-            php -m | grep spikard
+          if [ -z "$EXT_FILE" ]; then
+            echo "Failed to locate built PHP extension artifact under target/release" >&2
+            exit 1
           fi
+          EXT_DIR=$(php-config --extension-dir)
+          sudo cp "$EXT_FILE" "$EXT_DIR/spikard_php.so"
+          echo "extension=spikard_php.so" | sudo tee /etc/php/8.4/cli/conf.d/99-spikard.ini
+          php -m | grep spikard
 
       - name: Install PHP package dependencies
         working-directory: packages/php

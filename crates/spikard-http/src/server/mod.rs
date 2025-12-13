@@ -45,29 +45,26 @@ fn extract_handler_dependencies(route: &crate::Route) -> Vec<String> {
 }
 
 /// Determines if a method typically has a request body
-fn method_expects_body(method: &str) -> bool {
-    matches!(method, "POST" | "PUT" | "PATCH")
+fn method_expects_body(method: &crate::Method) -> bool {
+    matches!(method, crate::Method::Post | crate::Method::Put | crate::Method::Patch)
 }
 
-/// Creates a method router for the given HTTP method
-/// Handles both path parameters and non-path variants
-///
-/// Coverage: Tested via integration tests (nested Axum closures not directly testable in unit tests)
-#[cfg(not(tarpaulin_include))]
+/// Creates a method router for the given HTTP method.
+/// Handles both path parameters and non-path variants.
 fn create_method_router(
-    method: &str,
+    method: crate::Method,
     has_path_params: bool,
     handler: Arc<dyn Handler>,
     hooks: Option<Arc<crate::LifecycleHooks>>,
 ) -> axum::routing::MethodRouter {
-    let expects_body = method_expects_body(method);
+    let expects_body = method_expects_body(&method);
 
     if expects_body {
         if has_path_params {
             let handler_clone = handler.clone();
             let hooks_clone = hooks.clone();
             match method {
-                "POST" => axum::routing::post(
+                crate::Method::Post => axum::routing::post(
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
                         let request_data =
@@ -77,7 +74,7 @@ fn create_method_router(
                             .await
                     },
                 ),
-                "PUT" => axum::routing::put(
+                crate::Method::Put => axum::routing::put(
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
                         let request_data =
@@ -87,7 +84,7 @@ fn create_method_router(
                             .await
                     },
                 ),
-                "PATCH" => axum::routing::patch(
+                crate::Method::Patch => axum::routing::patch(
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
                         let request_data =
@@ -97,19 +94,17 @@ fn create_method_router(
                             .await
                     },
                 ),
-                _ => {
-                    eprintln!(
-                        "[spikard-router] unsupported HTTP method with path params: {} (defaulting to 405)",
-                        method
-                    );
-                    MethodRouter::new()
-                }
+                crate::Method::Get
+                | crate::Method::Delete
+                | crate::Method::Head
+                | crate::Method::Options
+                | crate::Method::Trace => MethodRouter::new(),
             }
         } else {
             let handler_clone = handler.clone();
             let hooks_clone = hooks.clone();
             match method {
-                "POST" => axum::routing::post(move |req: axum::extract::Request| async move {
+                crate::Method::Post => axum::routing::post(move |req: axum::extract::Request| async move {
                     let (parts, body) = req.into_parts();
                     let request_data =
                         request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
@@ -117,7 +112,7 @@ fn create_method_router(
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
-                "PUT" => axum::routing::put(move |req: axum::extract::Request| async move {
+                crate::Method::Put => axum::routing::put(move |req: axum::extract::Request| async move {
                     let (parts, body) = req.into_parts();
                     let request_data =
                         request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
@@ -125,7 +120,7 @@ fn create_method_router(
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
-                "PATCH" => axum::routing::patch(move |req: axum::extract::Request| async move {
+                crate::Method::Patch => axum::routing::patch(move |req: axum::extract::Request| async move {
                     let (parts, body) = req.into_parts();
                     let request_data =
                         request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
@@ -133,20 +128,18 @@ fn create_method_router(
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
-                _ => {
-                    eprintln!(
-                        "[spikard-router] unsupported HTTP method without path params: {} (defaulting to 405)",
-                        method
-                    );
-                    MethodRouter::new()
-                }
+                crate::Method::Get
+                | crate::Method::Delete
+                | crate::Method::Head
+                | crate::Method::Options
+                | crate::Method::Trace => MethodRouter::new(),
             }
         }
     } else if has_path_params {
         let handler_clone = handler.clone();
         let hooks_clone = hooks.clone();
         match method {
-            "GET" => axum::routing::get(
+            crate::Method::Get => axum::routing::get(
                 move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                     let request_data = request_extraction::create_request_data_without_body(
                         req.uri(),
@@ -158,7 +151,7 @@ fn create_method_router(
                         .await
                 },
             ),
-            "DELETE" => axum::routing::delete(
+            crate::Method::Delete => axum::routing::delete(
                 move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                     let request_data = request_extraction::create_request_data_without_body(
                         req.uri(),
@@ -170,7 +163,7 @@ fn create_method_router(
                         .await
                 },
             ),
-            "HEAD" => axum::routing::head(
+            crate::Method::Head => axum::routing::head(
                 move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                     let request_data = request_extraction::create_request_data_without_body(
                         req.uri(),
@@ -182,7 +175,7 @@ fn create_method_router(
                         .await
                 },
             ),
-            "TRACE" => axum::routing::trace(
+            crate::Method::Trace => axum::routing::trace(
                 move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                     let request_data = request_extraction::create_request_data_without_body(
                         req.uri(),
@@ -194,7 +187,7 @@ fn create_method_router(
                         .await
                 },
             ),
-            "OPTIONS" => axum::routing::options(
+            crate::Method::Options => axum::routing::options(
                 move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                     let request_data = request_extraction::create_request_data_without_body(
                         req.uri(),
@@ -206,19 +199,13 @@ fn create_method_router(
                         .await
                 },
             ),
-            _ => {
-                eprintln!(
-                    "[spikard-router] unsupported HTTP method with path params: {} (defaulting to 405)",
-                    method
-                );
-                MethodRouter::new()
-            }
+            crate::Method::Post | crate::Method::Put | crate::Method::Patch => MethodRouter::new(),
         }
     } else {
         let handler_clone = handler.clone();
         let hooks_clone = hooks.clone();
         match method {
-            "GET" => axum::routing::get(move |req: axum::extract::Request| async move {
+            crate::Method::Get => axum::routing::get(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
                     req.uri(),
                     req.method(),
@@ -227,7 +214,7 @@ fn create_method_router(
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
-            "DELETE" => axum::routing::delete(move |req: axum::extract::Request| async move {
+            crate::Method::Delete => axum::routing::delete(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
                     req.uri(),
                     req.method(),
@@ -236,7 +223,7 @@ fn create_method_router(
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
-            "HEAD" => axum::routing::head(move |req: axum::extract::Request| async move {
+            crate::Method::Head => axum::routing::head(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
                     req.uri(),
                     req.method(),
@@ -245,7 +232,7 @@ fn create_method_router(
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
-            "TRACE" => axum::routing::trace(move |req: axum::extract::Request| async move {
+            crate::Method::Trace => axum::routing::trace(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
                     req.uri(),
                     req.method(),
@@ -254,7 +241,7 @@ fn create_method_router(
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
-            "OPTIONS" => axum::routing::options(move |req: axum::extract::Request| async move {
+            crate::Method::Options => axum::routing::options(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
                     req.uri(),
                     req.method(),
@@ -263,13 +250,7 @@ fn create_method_router(
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
-            _ => {
-                eprintln!(
-                    "[spikard-router] unsupported HTTP method without path params: {} (defaulting to 405)",
-                    method
-                );
-                MethodRouter::new()
-            }
+            crate::Method::Post | crate::Method::Put | crate::Method::Patch => MethodRouter::new(),
         }
     }
 }
@@ -412,15 +393,16 @@ fn build_router_with_handlers_inner(
         let has_path_params = path.contains('{');
 
         for (_method, (route, handler)) in handlers_by_method {
-            let method_router: MethodRouter = match route.method.as_str() {
-                "OPTIONS" => {
+            let method = route.method.clone();
+            let method_router: MethodRouter = match method {
+                crate::Method::Options => {
                     if let Some(ref cors_cfg) = route.cors {
                         let cors_config = cors_cfg.clone();
                         axum::routing::options(move |req: axum::extract::Request| async move {
                             crate::cors::handle_preflight(req.headers(), &cors_config).map_err(|e| *e)
                         })
                     } else {
-                        create_method_router(route.method.as_str(), has_path_params, handler, hooks.clone())
+                        create_method_router(method, has_path_params, handler, hooks.clone())
                     }
                 }
                 method => create_method_router(method, has_path_params, handler, hooks.clone()),
@@ -828,11 +810,11 @@ impl Server {
         tracing::info!("Listening on http://{}", socket_addr);
 
         if config.graceful_shutdown {
-            axum::serve(listener, app)
+            axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
                 .with_graceful_shutdown(shutdown_signal())
                 .await?;
         } else {
-            axum::serve(listener, app).await?;
+            axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
         }
 
         Ok(())
@@ -864,7 +846,7 @@ impl Server {
 
         tracing::info!("Listening on http://{}", socket_addr);
 
-        axum::serve(listener, app).await?;
+        axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
 
         Ok(())
     }
@@ -947,52 +929,42 @@ mod tests {
 
     #[test]
     fn test_method_expects_body_post() {
-        assert!(method_expects_body("POST"));
+        assert!(method_expects_body(&crate::Method::Post));
     }
 
     #[test]
     fn test_method_expects_body_put() {
-        assert!(method_expects_body("PUT"));
+        assert!(method_expects_body(&crate::Method::Put));
     }
 
     #[test]
     fn test_method_expects_body_patch() {
-        assert!(method_expects_body("PATCH"));
+        assert!(method_expects_body(&crate::Method::Patch));
     }
 
     #[test]
     fn test_method_expects_body_get() {
-        assert!(!method_expects_body("GET"));
+        assert!(!method_expects_body(&crate::Method::Get));
     }
 
     #[test]
     fn test_method_expects_body_delete() {
-        assert!(!method_expects_body("DELETE"));
+        assert!(!method_expects_body(&crate::Method::Delete));
     }
 
     #[test]
     fn test_method_expects_body_head() {
-        assert!(!method_expects_body("HEAD"));
+        assert!(!method_expects_body(&crate::Method::Head));
     }
 
     #[test]
     fn test_method_expects_body_options() {
-        assert!(!method_expects_body("OPTIONS"));
+        assert!(!method_expects_body(&crate::Method::Options));
     }
 
     #[test]
     fn test_method_expects_body_trace() {
-        assert!(!method_expects_body("TRACE"));
-    }
-
-    #[test]
-    fn test_method_expects_body_connect() {
-        assert!(!method_expects_body("CONNECT"));
-    }
-
-    #[test]
-    fn test_method_expects_body_custom_method() {
-        assert!(!method_expects_body("CUSTOM"));
+        assert!(!method_expects_body(&crate::Method::Trace));
     }
 
     #[test]
