@@ -610,16 +610,17 @@ mod tests {
         }
 
         fn get_vec_string(&self, key: &str) -> Option<Vec<String>> {
-            self.value.get(key)?.as_array().map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str().map(str::to_string))
-                    .collect()
-            })
+            self.value
+                .get(key)?
+                .as_array()
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(str::to_string)).collect())
         }
 
         fn get_nested(&self, key: &str) -> Option<Box<dyn ConfigSource + '_>> {
             let nested = self.value.get(key)?;
-            nested.is_object().then(|| Box::new(JsonConfigSource::new(nested)) as Box<dyn ConfigSource>)
+            nested
+                .is_object()
+                .then(|| Box::new(JsonConfigSource::new(nested)) as Box<dyn ConfigSource>)
         }
 
         fn has_key(&self, key: &str) -> bool {
@@ -633,7 +634,8 @@ mod tests {
         fn get_array_element(&self, key: &str, index: usize) -> Option<Box<dyn ConfigSource + '_>> {
             let arr = self.value.get(key)?.as_array()?;
             let elem = arr.get(index)?;
-            elem.is_object().then(|| Box::new(JsonConfigSource::new(elem)) as Box<dyn ConfigSource>)
+            elem.is_object()
+                .then(|| Box::new(JsonConfigSource::new(elem)) as Box<dyn ConfigSource>)
         }
     }
 
