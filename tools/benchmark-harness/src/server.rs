@@ -28,8 +28,15 @@ impl ServerHandle {
     pub fn kill(mut self) -> Result<()> {
         #[cfg(unix)]
         {
+            let pid = self.process.id() as i32;
+
             unsafe {
-                libc::kill(-(self.process.id() as i32), libc::SIGTERM);
+                if libc::kill(-pid, libc::SIGTERM) != 0 {
+                    let err = std::io::Error::last_os_error();
+                    if err.raw_os_error() == Some(libc::ESRCH) {
+                        libc::kill(pid, libc::SIGTERM);
+                    }
+                }
             }
 
             for _ in 0..50 {
@@ -55,8 +62,16 @@ impl ServerHandle {
 impl Drop for ServerHandle {
     fn drop(&mut self) {
         #[cfg(unix)]
-        unsafe {
-            libc::kill(-(self.process.id() as i32), libc::SIGKILL);
+        {
+            let pid = self.process.id() as i32;
+            unsafe {
+                if libc::kill(-pid, libc::SIGKILL) != 0 {
+                    let err = std::io::Error::last_os_error();
+                    if err.raw_os_error() == Some(libc::ESRCH) {
+                        libc::kill(pid, libc::SIGKILL);
+                    }
+                }
+            }
         }
         let _ = self.process.kill();
     }
