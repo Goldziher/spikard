@@ -195,14 +195,12 @@ pub fn parse_openrpc_schema(path: &Path) -> Result<OpenRpcSpec> {
 }
 
 /// Extract all methods from spec
-#[allow(dead_code)]
 pub fn extract_methods(spec: &OpenRpcSpec) -> Vec<&OpenRpcMethod> {
     spec.methods.iter().collect()
 }
 
-/// Get parameter class name from method name and parameter
-#[allow(dead_code)]
-pub fn get_param_class_name(method_name: &str, param: &OpenRpcParam) -> String {
+/// Get params class name from method name
+pub fn get_method_params_class_name(method_name: &str) -> String {
     let method_pascal = method_name
         .split('.')
         .map(|part| {
@@ -215,19 +213,10 @@ pub fn get_param_class_name(method_name: &str, param: &OpenRpcParam) -> String {
         .collect::<Vec<_>>()
         .join("");
 
-    let param_pascal = {
-        let mut chars = param.name.chars();
-        match chars.next() {
-            None => String::new(),
-            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-        }
-    };
-
-    format!("{}{}Params", method_pascal, param_pascal)
+    format!("{method_pascal}Params")
 }
 
 /// Get result class name from method name
-#[allow(dead_code)]
 pub fn get_result_class_name(method_name: &str) -> String {
     let method_pascal = method_name
         .split('.')
@@ -249,19 +238,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_param_class_name() {
-        assert_eq!(
-            get_param_class_name(
-                "user.getById",
-                &OpenRpcParam {
-                    name: "userId".to_string(),
-                    description: None,
-                    required: true,
-                    schema: serde_json::json!({"type": "string"}),
-                }
-            ),
-            "UserGetByIdUserIdParams"
-        );
+    fn test_get_method_params_class_name() {
+        assert_eq!(get_method_params_class_name("user.getById"), "UserGetByIdParams");
     }
 
     #[test]

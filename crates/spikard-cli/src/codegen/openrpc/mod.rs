@@ -52,4 +52,14 @@ mod tests {
         let _: fn(&OpenRpcSpec) -> Result<String> = generate_ruby_handler_app;
         let _: fn(&OpenRpcSpec) -> Result<String> = generate_php_handler_app;
     }
+
+    #[test]
+    fn test_openrpc_module_can_parse_and_generate() {
+        let schema_path =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+        let spec = parse_openrpc_schema(&schema_path).expect("OpenRPC schema should parse");
+
+        let ts = generate_typescript_handler_app(&spec).expect("TypeScript scaffold should generate");
+        assert!(ts.contains("handleJsonRpcCall"));
+    }
 }

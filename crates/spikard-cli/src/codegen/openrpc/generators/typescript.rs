@@ -3,7 +3,9 @@
 use anyhow::Result;
 use serde_json::Value;
 
-use crate::codegen::openrpc::spec_parser::OpenRpcSpec;
+use crate::codegen::openrpc::spec_parser::{
+    OpenRpcSpec, extract_methods, get_method_params_class_name, get_result_class_name,
+};
 
 use super::OpenRpcGenerator;
 
@@ -31,7 +33,7 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
         code.push_str("// Zod Validation Schemas\n");
         code.push_str("// ============================================================================\n\n");
 
-        for method in &spec.methods {
+        for method in extract_methods(spec) {
             generate_typescript_schemas(&mut code, method)?;
         }
 
@@ -39,7 +41,7 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
         code.push_str("// Handler Types\n");
         code.push_str("// ============================================================================\n\n");
 
-        for method in &spec.methods {
+        for method in extract_methods(spec) {
             generate_typescript_types(&mut code, method)?;
         }
 
@@ -47,7 +49,7 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
         code.push_str("// JSON-RPC Method Handlers\n");
         code.push_str("// ============================================================================\n\n");
 
-        for method in &spec.methods {
+        for method in extract_methods(spec) {
             generate_typescript_handler(&mut code, method)?;
         }
 
@@ -73,7 +75,7 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
         code.push_str("  const { method, params, id } = request;\n");
         code.push_str("  try {\n");
 
-        for method in &spec.methods {
+        for method in extract_methods(spec) {
             let handler_name = format!("handle{}", pascal_case(&method.name));
             code.push_str(&format!("    if (method === \"{}\") {{\n", method.name));
             code.push_str(&format!("      const result = await {}(params);\n", handler_name));
@@ -169,12 +171,12 @@ fn generate_typescript_types(
     method: &crate::codegen::openrpc::spec_parser::OpenRpcMethod,
 ) -> Result<()> {
     if !method.params.is_empty() {
-        let type_name = format!("{}Params", pascal_case(&method.name));
+        let type_name = get_method_params_class_name(&method.name);
         let schema_name = format!("{}ParamsSchema", pascal_case(&method.name));
         code.push_str(&format!("type {} = z.infer<typeof {}>;\n", type_name, schema_name));
     }
 
-    let result_type_name = format!("{}Result", pascal_case(&method.name));
+    let result_type_name = get_result_class_name(&method.name);
     let result_schema_name = format!("{}ResultSchema", pascal_case(&method.name));
     code.push_str(&format!(
         "type {} = z.infer<typeof {}>;\n",
@@ -191,7 +193,7 @@ fn generate_typescript_handler(
     method: &crate::codegen::openrpc::spec_parser::OpenRpcMethod,
 ) -> Result<()> {
     let handler_name = format!("handle{}", pascal_case(&method.name));
-    let result_type_name = format!("{}Result", pascal_case(&method.name));
+    let result_type_name = get_result_class_name(&method.name);
 
     code.push_str(&format!(
         "async function {}: (params: unknown): Promise<{}> {{\n",
