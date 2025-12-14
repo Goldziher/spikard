@@ -598,13 +598,28 @@ impl ParameterValidator {
     /// (JSON Schema doesn't recognize "source" as a standard field)
     fn create_validation_schema(&self) -> Value {
         let mut schema = self.schema.clone();
+        let mut optional_fields: Vec<String> = Vec::new();
 
         if let Some(properties) = schema.get_mut("properties").and_then(|p| p.as_object_mut()) {
-            for (_name, prop) in properties.iter_mut() {
+            for (name, prop) in properties.iter_mut() {
                 if let Some(obj) = prop.as_object_mut() {
                     obj.remove("source");
+                    if obj.get("optional").and_then(|v| v.as_bool()) == Some(true) {
+                        optional_fields.push(name.clone());
+                    }
+                    obj.remove("optional");
                 }
             }
+        }
+
+        if !optional_fields.is_empty()
+            && let Some(required) = schema.get_mut("required").and_then(|r| r.as_array_mut())
+        {
+            required.retain(|value| {
+                value
+                    .as_str()
+                    .is_some_and(|field| !optional_fields.iter().any(|opt| opt == field))
+            });
         }
 
         schema
