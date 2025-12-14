@@ -188,9 +188,14 @@ def enable_profiling() -> MetricsCollector:
             collector.finalize()
         raise SystemExit(0)
 
+    def _finalize_only(_signum: int, _frame: object) -> None:
+        with suppress(builtins.BaseException):
+            collector.finalize()
+
     with suppress(builtins.BaseException):
         signal.signal(signal.SIGTERM, _finalize_and_exit)
         signal.signal(signal.SIGINT, _finalize_and_exit)
+        signal.signal(signal.SIGUSR1, _finalize_only)
 
     return collector
 
