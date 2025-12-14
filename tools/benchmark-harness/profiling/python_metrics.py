@@ -20,9 +20,19 @@ from dataclasses import dataclass
 from functools import wraps
 from pathlib import Path
 from threading import Lock
-from typing import Optional, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Optional, ParamSpec, TypeVar
 
 LOGGER = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from pyinstrument import Profiler as PyInstrumentProfiler
+
+try:
+    from pyinstrument import Profiler as _PyInstrumentProfiler
+    from pyinstrument.renderers.speedscope import SpeedscopeRenderer as _SpeedscopeRenderer
+except Exception:
+    _PyInstrumentProfiler = None
+    _SpeedscopeRenderer = None
 
 
 @dataclass
@@ -69,10 +79,26 @@ class MetricsCollector:
         self.gc_enabled = gc.isenabled()
         self.initial_gc_counts = gc.get_count()
         self.request_count = 0
+        self._finalized = False
 
         env_path = os.environ.get("SPIKARD_METRICS_FILE")
         default_path = Path(tempfile.gettempdir()) / f"python-metrics-{os.getpid()}.json"
         self.output_path = Path(env_path) if env_path else default_path
+        self.pyinstrument_output_path = (
+            Path(os.environ["SPIKARD_PYSPY_OUTPUT"]) if "SPIKARD_PYSPY_OUTPUT" in os.environ else None
+        )
+        self.pyinstrument_profiler: PyInstrumentProfiler | None = None
+
+        if self.pyinstrument_output_path is not None and _PyInstrumentProfiler is not None:
+            try:
+                self.pyinstrument_profiler = _PyInstrumentProfiler()
+                self.pyinstrument_profiler.start()
+            except Exception:
+                if os.environ.get("SPIKARD_METRICS_DEBUG") == "1":
+                    with suppress(builtins.BaseException):
+                        if not LOGGER.handlers:
+                            logging.basicConfig(level=logging.INFO)
+                        LOGGER.exception("Failed to start pyinstrument profiler")
 
     @classmethod
     def instance(cls) -> "MetricsCollector":
@@ -129,6 +155,10 @@ class MetricsCollector:
 
     def finalize(self) -> None:
         """Finalize metrics collection and write to file."""
+        if self._finalized:
+            return
+        self._finalized = True
+
         if self.gc_enabled:
             stats = gc.get_stats()
             if stats and len(stats) >= 3:
@@ -165,6 +195,23 @@ class MetricsCollector:
                     if not LOGGER.handlers:
                         logging.basicConfig(level=logging.INFO)
                     LOGGER.exception("Failed to write python metrics to %s", self.output_path)
+
+        if (
+            self.pyinstrument_profiler is not None
+            and self.pyinstrument_output_path is not None
+            and _SpeedscopeRenderer is not None
+        ):
+            try:
+                self.pyinstrument_profiler.stop()
+                speedscope = self.pyinstrument_profiler.output(renderer=_SpeedscopeRenderer())
+                self.pyinstrument_output_path.parent.mkdir(parents=True, exist_ok=True)
+                self.pyinstrument_output_path.write_text(speedscope, encoding="utf-8")
+            except Exception:
+                if os.environ.get("SPIKARD_METRICS_DEBUG") == "1":
+                    with suppress(builtins.BaseException):
+                        if not LOGGER.handlers:
+                            logging.basicConfig(level=logging.INFO)
+                        LOGGER.exception("Failed to write speedscope profile to %s", self.pyinstrument_output_path)
 
     def __del__(self) -> None:
         """Ensure metrics are written on collector destruction."""

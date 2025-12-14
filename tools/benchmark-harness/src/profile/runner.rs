@@ -115,15 +115,14 @@ impl ProfileRunner {
 
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
-        let suite_py_spy_output = self.suite_py_spy_output_path();
-        let start_cmd_override = self.py_spy_suite_start_cmd_override(suite_py_spy_output.as_deref());
+        let suite_flamegraph_path = self.suite_flamegraph_path();
 
         let server_config = ServerConfig {
             framework: Some(self.config.framework.clone()),
             port,
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
-            start_cmd_override,
+            start_cmd_override: None,
         };
 
         let server = start_server(server_config).await?;
@@ -131,7 +130,7 @@ impl ProfileRunner {
         println!();
 
         let mut suite_results = Vec::new();
-        let suite_result = self.run_suite(&server, suite_py_spy_output.as_deref()).await?;
+        let suite_result = self.run_suite(&server, suite_flamegraph_path.as_deref()).await?;
         suite_results.push(suite_result);
 
         let summary = self.calculate_summary(&suite_results);
@@ -186,7 +185,7 @@ impl ProfileRunner {
         })
     }
 
-    fn suite_py_spy_output_path(&self) -> Option<String> {
+    fn suite_flamegraph_path(&self) -> Option<String> {
         if self.config.profiler.as_deref() != Some("python") {
             return None;
         }
@@ -194,33 +193,7 @@ impl ProfileRunner {
             return None;
         }
 
-        let Some(output_dir) = self.config.output_dir.as_ref() else {
-            return None;
-        };
-
-        let path = output_dir.join(format!("py-spy-suite-{}.speedscope.json", self.suite.name));
-        path.to_str().map(|s| s.to_string())
-    }
-
-    fn py_spy_suite_start_cmd_override(&self, suite_output_path: Option<&str>) -> Option<String> {
-        let Some(output_path) = suite_output_path else {
-            return None;
-        };
-        if which::which("py-spy").is_err() {
-            return None;
-        }
-
-        let duration = (self.config.warmup_secs + self.config.duration_secs)
-            .saturating_mul(self.suite.workloads.len() as u64)
-            .saturating_add(15);
-
-        let framework = crate::framework::get_framework(&self.config.framework)?;
-        let cmd = framework.start_cmd;
-
-        Some(format!(
-            "py-spy record --output {} --format speedscope --rate 100 --nonblocking --duration {} -- {}",
-            output_path, duration, cmd
-        ))
+        std::env::var("SPIKARD_PYSPY_OUTPUT").ok()
     }
 
     fn with_suite_profiling(&self, mut result: WorkloadResult, suite_flamegraph_path: Option<&str>) -> WorkloadResult {
