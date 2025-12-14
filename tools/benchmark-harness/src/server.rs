@@ -8,6 +8,9 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::time::sleep;
 
+#[cfg(unix)]
+use std::os::unix::process::CommandExt;
+
 /// Server process handle
 pub struct ServerHandle {
     pub process: Child,
@@ -26,7 +29,7 @@ impl ServerHandle {
         #[cfg(unix)]
         {
             unsafe {
-                libc::kill(self.process.id() as i32, libc::SIGTERM);
+                libc::kill(-(self.process.id() as i32), libc::SIGTERM);
             }
 
             for _ in 0..50 {
@@ -51,6 +54,10 @@ impl ServerHandle {
 
 impl Drop for ServerHandle {
     fn drop(&mut self) {
+        #[cfg(unix)]
+        unsafe {
+            libc::kill(-(self.process.id() as i32), libc::SIGKILL);
+        }
         let _ = self.process.kill();
     }
 }
@@ -147,6 +154,16 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     cmd.current_dir(&working_dir);
 
     cmd.stdout(Stdio::null()).stderr(Stdio::piped());
+
+    #[cfg(unix)]
+    unsafe {
+        cmd.pre_exec(|| {
+            if libc::setpgid(0, 0) != 0 {
+                return Err(std::io::Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
 
     let mut process = cmd.spawn().map_err(|e| {
         Error::ServerStartFailed(format!(

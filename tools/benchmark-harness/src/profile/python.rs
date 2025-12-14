@@ -8,7 +8,7 @@
 use crate::error::Result;
 use serde::Deserialize;
 use std::path::PathBuf;
-use std::process::{Child, Command};
+use std::process::{Child, Command, Stdio};
 
 /// Python profiler handle
 pub struct PythonProfiler {
@@ -35,6 +35,9 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PythonPr
         .or_else(|| std::env::var("SPIKARD_PYSPY_OUTPUT").ok());
     if which::which("py-spy").is_ok() {
         let output_path = desired_output_path.unwrap_or_else(|| format!("/tmp/py-spy-{}.json", pid));
+        if let Some(parent) = PathBuf::from(&output_path).parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
 
         match Command::new("py-spy")
             .arg("record")
@@ -47,6 +50,7 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PythonPr
             .arg("--rate")
             .arg("100")
             .arg("--nonblocking")
+            .stderr(Stdio::inherit())
             .spawn()
         {
             Ok(process) => {
@@ -85,11 +89,19 @@ impl PythonProfiler {
 
     /// Stop the profiler and collect final metrics
     pub fn stop(mut self) -> ProfilingData {
+        #[cfg(unix)]
+        {
+            unsafe {
+                libc::kill(self.pid as i32, libc::SIGUSR1);
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+
         if let Some(mut process) = self.process.take() {
             #[cfg(unix)]
             {
                 unsafe {
-                    libc::kill(process.id() as i32, libc::SIGTERM);
+                    libc::kill(process.id() as i32, libc::SIGINT);
                 }
             }
 
@@ -100,14 +112,18 @@ impl PythonProfiler {
 
             use std::time::{Duration, Instant};
             let start = Instant::now();
-            let timeout = Duration::from_secs(3);
+            let timeout = Duration::from_secs(10);
 
             loop {
                 match process.try_wait() {
                     Ok(Some(_)) => break,
                     Ok(None) => {
                         if start.elapsed() > timeout {
-                            eprintln!("  ⚠ Profiler did not exit within timeout, killing");
+                            eprintln!("  ⚠ Profiler did not exit within timeout, terminating");
+                            #[cfg(unix)]
+                            unsafe {
+                                libc::kill(process.id() as i32, libc::SIGTERM);
+                            }
                             let _ = process.kill();
                             break;
                         }
@@ -118,7 +134,9 @@ impl PythonProfiler {
             }
         }
 
-        let metrics_path = format!("/tmp/python-metrics-{}.json", self.pid);
+        let metrics_path = std::env::var("SPIKARD_METRICS_FILE")
+            .ok()
+            .unwrap_or_else(|| format!("/tmp/python-metrics-{}.json", self.pid));
         let app_metrics = self.load_metrics_file(&metrics_path);
 
         let flamegraph_path = self.output_path().and_then(|p| {
