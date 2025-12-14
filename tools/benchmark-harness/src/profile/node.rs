@@ -56,7 +56,9 @@ impl NodeProfiler {
             let _ = process.wait();
         }
 
-        let metrics_path = format!("/tmp/node-metrics-{}.json", self.pid);
+        let metrics_path = std::env::var("SPIKARD_NODE_METRICS_FILE")
+            .ok()
+            .unwrap_or_else(|| format!("/tmp/node-metrics-{}.json", self.pid));
         let app_metrics = self.load_metrics_file(&metrics_path);
 
         ProfilingData {

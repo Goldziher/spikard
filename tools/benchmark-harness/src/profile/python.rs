@@ -28,8 +28,9 @@ struct PythonMetricsFile {
 
 /// Start Python profiler for the given PID
 pub fn start_profiler(pid: u32) -> Result<PythonProfiler> {
+    let desired_output_path = std::env::var("SPIKARD_PYSPY_OUTPUT").ok();
     if which::which("py-spy").is_ok() {
-        let output_path = format!("/tmp/py-spy-{}.json", pid);
+        let output_path = desired_output_path.unwrap_or_else(|| format!("/tmp/py-spy-{}.json", pid));
 
         match Command::new("py-spy")
             .arg("record")

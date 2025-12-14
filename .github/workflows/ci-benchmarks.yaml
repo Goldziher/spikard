@@ -76,12 +76,16 @@ jobs:
       - name: Install oha load generator
         run: cargo install oha --locked
 
+      - name: Install py-spy profiler
+        run: cargo install py-spy --locked
+
       - name: Package benchmark tools
         run: |
           mkdir -p artifacts/bin
           cp target/release/benchmark-harness artifacts/bin/benchmark-harness
           cp ~/.cargo/bin/oha artifacts/bin/oha
-          chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha
+          cp ~/.cargo/bin/py-spy artifacts/bin/py-spy
+          chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha artifacts/bin/py-spy
 
       - name: Upload benchmark tools artifact
         uses: actions/upload-artifact@v5
@@ -106,7 +110,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -154,7 +158,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -179,6 +183,7 @@ jobs:
 
       - name: Run benchmarks
         run: |
+          sudo sysctl -w kernel.yama.ptrace_scope=0
           benchmark-harness profile \
             --framework spikard-python \
             --app-dir tools/benchmark-harness/apps/spikard-python \
@@ -186,7 +191,11 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler python \
             --output results/spikard-python/profile.json
+        env:
+          SPIKARD_METRICS_FILE: ${{ github.workspace }}/results/spikard-python/python-metrics.json
+          SPIKARD_PYSPY_OUTPUT: ${{ github.workspace }}/results/spikard-python/py-spy.speedscope.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v5
@@ -211,7 +220,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -242,7 +251,10 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler node \
             --output results/spikard-node/profile.json
+        env:
+          SPIKARD_NODE_METRICS_FILE: ${{ github.workspace }}/results/spikard-node/node-metrics.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v5
@@ -267,7 +279,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -300,7 +312,10 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler ruby \
             --output results/spikard-ruby/profile.json
+        env:
+          SPIKARD_RUBY_METRICS_FILE: ${{ github.workspace }}/results/spikard-ruby/ruby-metrics.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v5
@@ -325,7 +340,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -409,7 +424,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust

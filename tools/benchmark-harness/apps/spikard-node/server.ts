@@ -7,6 +7,10 @@
  */
 
 import { createRequire } from "node:module";
+import { PerformanceObserver, monitorEventLoopDelay } from "node:perf_hooks";
+import process from "node:process";
+import v8 from "node:v8";
+import { writeFile } from "node:fs/promises";
 import { z } from "zod";
 
 const require = createRequire(import.meta.url);
@@ -47,6 +51,66 @@ type HandlerFunction = (input: HandlerInput) => Promise<HandlerOutput>;
 
 const routes: RouteMetadata[] = [];
 const handlers: Record<string, HandlerFunction> = {};
+
+type NodeMetricsSnapshot = {
+	v8_heap_used_mb: number;
+	v8_heap_total_mb: number;
+	event_loop_lag_ms: number;
+	gc_time_ms: number | null;
+};
+
+function resolveNodeMetricsPath(): string {
+	const envPath = process.env.SPIKARD_NODE_METRICS_FILE;
+	return envPath && envPath.length > 0 ? envPath : `/tmp/node-metrics-${process.pid}.json`;
+}
+
+function startMetricsCollector(): void {
+	const delay = monitorEventLoopDelay({ resolution: 10 });
+	delay.enable();
+
+	let gcTimeMs: number | null = null;
+	try {
+		const gcObserver = new PerformanceObserver((list) => {
+			for (const entry of list.getEntries()) {
+				gcTimeMs = (gcTimeMs ?? 0) + entry.duration;
+			}
+		});
+		gcObserver.observe({ entryTypes: ["gc"] });
+		process.once("beforeExit", () => {
+			gcObserver.disconnect();
+		});
+	} catch {}
+
+	const flush = async (): Promise<void> => {
+		try {
+			const heap = process.memoryUsage();
+			const heapStats = v8.getHeapStatistics();
+			const snapshot: NodeMetricsSnapshot = {
+				v8_heap_used_mb: heap.heapUsed / (1024 * 1024),
+				v8_heap_total_mb: heapStats.total_heap_size / (1024 * 1024),
+				event_loop_lag_ms: delay.mean / 1e6,
+				gc_time_ms: gcTimeMs,
+			};
+			await writeFile(resolveNodeMetricsPath(), JSON.stringify(snapshot, null, 2), "utf8");
+		} catch {
+			// Best-effort only.
+		} finally {
+			delay.disable();
+		}
+	};
+
+	process.once("SIGTERM", () => {
+		void flush().finally(() => process.exit(0));
+	});
+	process.once("SIGINT", () => {
+		void flush().finally(() => process.exit(0));
+	});
+	process.once("beforeExit", () => {
+		void flush();
+	});
+}
+
+startMetricsCollector();
 
 function registerRoute(method: string, path: string, handler: HandlerFunction, requestSchema?: unknown): void {
 	const metadata: RouteMetadata = {

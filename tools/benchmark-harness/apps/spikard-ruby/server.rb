@@ -10,6 +10,21 @@ require 'spikard_rb'
 require 'spikard'
 require 'json'
 
+GC::Profiler.enable
+at_exit do
+  metrics = {
+    gc_count: GC.count,
+    gc_time_ms: (GC::Profiler.total_time.to_f * 1000.0),
+    heap_allocated_pages: GC.stat[:heap_allocated_pages],
+    heap_live_slots: GC.stat[:heap_live_slots]
+  }
+
+  path = ENV['SPIKARD_RUBY_METRICS_FILE'] || "/tmp/ruby-metrics-#{Process.pid}.json"
+  File.write(path, JSON.pretty_generate(metrics))
+rescue StandardError
+  nil
+end
+
 app = Spikard::App.new
 
 # ============================================================================
