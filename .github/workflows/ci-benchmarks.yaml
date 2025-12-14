@@ -45,8 +45,10 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
   CARGO_PROFILE_DEV_DEBUG: 0
+  BENCH_SUITE: ${{ github.event_name == 'pull_request' && 'json-bodies' || 'all' }}
   BENCH_DURATION: ${{ github.event_name == 'pull_request' && '10' || '30' }}
-  BENCH_WARMUP: ${{ github.event_name == 'pull_request' && '250' || '1000' }}
+  BENCH_CONCURRENCY: ${{ github.event_name == 'pull_request' && '50' || '100' }}
+  BENCH_WARMUP: ${{ github.event_name == 'pull_request' && '2' || '10' }}
 
 defaults:
   run:
@@ -123,9 +125,9 @@ jobs:
           benchmark-harness profile \
             --framework spikard-rust \
             --app-dir tools/benchmark-harness/apps/spikard-rust \
-            --suite all \
+            --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
-            --concurrency 100 \
+            --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --output results/spikard-rust
 
@@ -180,9 +182,9 @@ jobs:
           benchmark-harness profile \
             --framework spikard-python \
             --app-dir tools/benchmark-harness/apps/spikard-python \
-            --suite all \
+            --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
-            --concurrency 100 \
+            --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --output results/spikard-python
 
@@ -236,9 +238,9 @@ jobs:
           benchmark-harness profile \
             --framework spikard-node \
             --app-dir tools/benchmark-harness/apps/spikard-node \
-            --suite all \
+            --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
-            --concurrency 100 \
+            --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --output results/spikard-node
 
@@ -294,9 +296,9 @@ jobs:
           benchmark-harness profile \
             --framework spikard-ruby \
             --app-dir tools/benchmark-harness/apps/spikard-ruby \
-            --suite all \
+            --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
-            --concurrency 100 \
+            --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --output results/spikard-ruby
 
@@ -378,9 +380,9 @@ jobs:
           benchmark-harness profile \
             --framework spikard-php \
             --app-dir tools/benchmark-harness/apps/spikard-php \
-            --suite all \
+            --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
-            --concurrency 100 \
+            --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --output results/spikard-php
 
@@ -443,9 +445,9 @@ jobs:
           benchmark-harness profile \
             --framework spikard-wasm \
             --app-dir tools/benchmark-harness/apps/spikard-wasm \
-            --suite all \
+            --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
-            --concurrency 100 \
+            --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --output results/spikard-wasm
 
