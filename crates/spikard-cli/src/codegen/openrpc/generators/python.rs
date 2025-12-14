@@ -3,7 +3,9 @@
 use anyhow::Result;
 use serde_json::Value;
 
-use crate::codegen::openrpc::spec_parser::{OpenRpcMethod, OpenRpcSpec};
+use crate::codegen::openrpc::spec_parser::{
+    OpenRpcMethod, OpenRpcSpec, get_method_params_class_name, get_result_class_name,
+};
 
 use super::OpenRpcGenerator;
 
@@ -114,7 +116,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
 
 fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
     if !method.params.is_empty() {
-        let params_class = get_python_params_class_name(&method.name);
+        let params_class = get_method_params_class_name(&method.name);
         code.push_str(&format!("class {}(msgspec.Struct, frozen=True):\n", params_class));
         code.push_str("    \"\"\"\n");
         if let Some(desc) = &method.description {
@@ -131,7 +133,7 @@ fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()>
         code.push_str("\n\n");
     }
 
-    let result_class = get_python_result_class_name(&method.name);
+    let result_class = get_result_class_name(&method.name);
     code.push_str(&format!("class {}(msgspec.Struct, frozen=True):\n", result_class));
     code.push_str("    \"\"\"\n");
     if let Some(desc) = &method.result.description {
@@ -156,7 +158,7 @@ fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()>
 
 fn generate_python_handler(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
     let handler_name = format!("handle_{}", method.name.replace('.', "_"));
-    let params_class = get_python_params_class_name(&method.name);
+    let params_class = get_method_params_class_name(&method.name);
 
     code.push_str(&format!("async def {}(params: Any) -> Dict[str, Any]:\n", handler_name));
     code.push_str("    \"\"\"\n");
@@ -247,36 +249,4 @@ fn json_schema_to_python_type(schema: &Value) -> String {
     } else {
         "Any".to_string()
     }
-}
-
-fn get_python_params_class_name(method_name: &str) -> String {
-    let pascal = method_name
-        .split('.')
-        .map(|part| {
-            let mut chars = part.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("");
-
-    format!("{}Params", pascal)
-}
-
-fn get_python_result_class_name(method_name: &str) -> String {
-    let pascal = method_name
-        .split('.')
-        .map(|part| {
-            let mut chars = part.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("");
-
-    format!("{}Result", pascal)
 }
