@@ -70,6 +70,11 @@ jobs:
         with:
           cache-key-prefix: build-harness
 
+      - name: Setup Python (for py-spy)
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
       - name: Build benchmark-harness
         run: cargo build --manifest-path tools/benchmark-harness/Cargo.toml --release
 
@@ -77,14 +82,19 @@ jobs:
         run: cargo install oha --locked
 
       - name: Install py-spy profiler
-        run: cargo install py-spy --locked
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --user --upgrade py-spy
+          py_spy="$(command -v py-spy)"
+          echo "py-spy: $py_spy"
+          py-spy --version
 
       - name: Package benchmark tools
         run: |
           mkdir -p artifacts/bin
           cp target/release/benchmark-harness artifacts/bin/benchmark-harness
           cp ~/.cargo/bin/oha artifacts/bin/oha
-          cp ~/.cargo/bin/py-spy artifacts/bin/py-spy
+          cp "$(command -v py-spy)" artifacts/bin/py-spy
           chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha artifacts/bin/py-spy
 
       - name: Upload benchmark tools artifact
@@ -148,8 +158,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-harness
     timeout-minutes: 75
-    env:
-      UV_PYTHON: "3.13"
     steps:
       - uses: actions/checkout@v6
 
@@ -176,7 +184,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           cache-prefix: bench-python
 
       - name: Build spikard-python binding
