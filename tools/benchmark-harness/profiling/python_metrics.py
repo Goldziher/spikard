@@ -9,6 +9,7 @@ import atexit
 import builtins
 import gc
 import json
+import logging
 import os
 import signal
 import tempfile
@@ -20,6 +21,8 @@ from functools import wraps
 from pathlib import Path
 from threading import Lock
 from typing import Optional, ParamSpec, TypeVar
+
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -157,7 +160,11 @@ class MetricsCollector:
             with self.output_path.open("w") as file_handle:
                 json.dump(output, file_handle, indent=2)
         except Exception:
-            pass
+            if os.environ.get("SPIKARD_METRICS_DEBUG") == "1":
+                with suppress(builtins.BaseException):
+                    if not LOGGER.handlers:
+                        logging.basicConfig(level=logging.INFO)
+                    LOGGER.exception("Failed to write python metrics to %s", self.output_path)
 
     def __del__(self) -> None:
         """Ensure metrics are written on collector destruction."""

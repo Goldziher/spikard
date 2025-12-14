@@ -160,6 +160,12 @@ jobs:
       - name: Make benchmark tools executable
         run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
+      - name: Allow py-spy to attach (ptrace)
+        run: |
+          sudo sysctl -w kernel.yama.ptrace_scope=0
+          sudo setcap cap_sys_ptrace,cap_dac_read_search=eip ~/.cargo/bin/py-spy
+          getcap ~/.cargo/bin/py-spy || true
+
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
         with:
@@ -183,7 +189,6 @@ jobs:
 
       - name: Run benchmarks
         run: |
-          sudo sysctl -w kernel.yama.ptrace_scope=0
           benchmark-harness profile \
             --framework spikard-python \
             --app-dir tools/benchmark-harness/apps/spikard-python \
@@ -195,6 +200,7 @@ jobs:
             --output results/spikard-python/profile.json
         env:
           SPIKARD_METRICS_FILE: ${{ github.workspace }}/results/spikard-python/python-metrics.json
+          SPIKARD_METRICS_DEBUG: "1"
           SPIKARD_PYSPY_OUTPUT: ${{ github.workspace }}/results/spikard-python/py-spy.speedscope.json
 
       - name: Upload benchmark results
