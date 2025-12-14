@@ -297,7 +297,7 @@ jobs:
             rust_target: ""
             use_cross: false
             use_napi_cross: false
-          - os: macos-13
+          - os: macos-14
             target: x86_64-apple-darwin
             rust_target: ""
             use_cross: false
@@ -883,18 +883,10 @@ jobs:
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         uses: rubygems/configure-rubygems-credentials@v1.0.0
 
-      - name: Check RubyGems version
-        id: rubygems_check
-        run: python scripts/publish/ruby/check_rubygems_version.py "${{ needs.prepare.outputs.version }}"
-
       - name: Publish gems
-        if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.rubygems_check.outputs.exists != 'true' }}
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         working-directory: dist
         run: bash ../scripts/publish/ruby/publish-gems.sh
-
-      - name: Ruby gem already published
-        if: ${{ steps.rubygems_check.outputs.exists == 'true' }}
-        run: bash scripts/publish/ruby/already-published-summary.sh "${{ needs.prepare.outputs.version }}"
 
       - name: Dry run summary
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}
