@@ -29,7 +29,7 @@ pub struct ProfileRunnerConfig {
     pub duration_secs: u64,
     pub concurrency: usize,
     pub warmup_secs: u64,
-    pub profiler: Option<String>, // "python", "node", "ruby", "perf"
+    pub profiler: Option<String>,
     pub baseline_path: Option<PathBuf>,
     pub variant: Option<String>,
 }
@@ -42,7 +42,6 @@ pub struct ProfileRunner {
 
 impl ProfileRunner {
     pub fn new(config: ProfileRunnerConfig) -> Result<Self> {
-        // Load workload suite
         let suite = WorkloadSuite::by_name(&config.suite_name)
             .ok_or_else(|| Error::InvalidInput(format!("Unknown suite: {}", config.suite_name)))?;
 
@@ -56,10 +55,8 @@ impl ProfileRunner {
         println!("Suite: {} ({} workloads)", self.suite.name, self.suite.workloads.len());
         println!();
 
-        // Collect metadata
         let metadata = Metadata::collect();
 
-        // Framework info
         let framework_info = FrameworkInfo {
             name: self.config.framework.clone(),
             version: self.detect_framework_version(),
@@ -69,7 +66,6 @@ impl ProfileRunner {
             variant: self.config.variant.clone(),
         };
 
-        // Configuration
         let configuration = Configuration {
             duration_secs: self.config.duration_secs,
             concurrency: self.config.concurrency,
@@ -77,7 +73,6 @@ impl ProfileRunner {
             load_tool: "oha".to_string(),
         };
 
-        // Start server
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
         let server_config = ServerConfig {
@@ -91,22 +86,18 @@ impl ProfileRunner {
         println!("✓ Server healthy on port {}", server.port);
         println!();
 
-        // Run workloads
         let mut suite_results = Vec::new();
         let suite_result = self.run_suite(&server).await?;
         suite_results.push(suite_result);
 
-        // Calculate summary
         let summary = self.calculate_summary(&suite_results);
 
-        // Load baseline comparison if provided
         let comparison = if let Some(baseline_path) = &self.config.baseline_path {
             Some(self.load_baseline_comparison(baseline_path, &suite_results)?)
         } else {
             None
         };
 
-        // Kill server
         server.kill()?;
 
         Ok(ProfileResult {
@@ -152,10 +143,8 @@ impl ProfileRunner {
         workload_def: &crate::schema::workload::WorkloadDef,
         server: &ServerHandle,
     ) -> Result<WorkloadResult> {
-        // Create fixture from workload definition
         let fixture = self.create_fixture_from_workload(workload_def)?;
 
-        // Start profiler if configured
         let profiler_handle = if let Some(ref profiler_type) = self.config.profiler {
             match profiler_type.as_str() {
                 "python" => Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
@@ -179,27 +168,22 @@ impl ProfileRunner {
             None
         };
 
-        // Start resource monitor
         let monitor = ResourceMonitor::new(server.pid());
-        let monitor_handle = monitor.start_monitoring(100); // Sample every 100ms
+        let monitor_handle = monitor.start_monitoring(100);
 
-        // Warmup
         if self.config.warmup_secs > 0 {
             self.run_load_test(&server.base_url, &fixture, self.config.warmup_secs)
                 .await?;
         }
 
-        // Actual benchmark
         let (oha_output, throughput) = self
             .run_load_test(&server.base_url, &fixture, self.config.duration_secs)
             .await?;
 
-        // Stop monitor and collect samples
         let monitor_with_samples = monitor_handle.stop().await;
         let resource_metrics = monitor_with_samples.calculate_metrics();
         let cpu_p95 = monitor_with_samples.cpu_percentile(95.0);
 
-        // Stop profiler and collect data
         let profiling = profiler_handle.map(|profiler| match profiler {
             ProfilerHandle::Python(p) => {
                 let data = p.stop();
@@ -243,7 +227,6 @@ impl ProfileRunner {
             }
         });
 
-        // Convert to schema types
         let throughput_schema = Throughput {
             requests_per_sec: throughput.requests_per_sec,
             bytes_per_sec: throughput.bytes_per_sec,
@@ -253,7 +236,6 @@ impl ProfileRunner {
             success_rate: throughput.success_rate,
         };
 
-        // Extract latency from oha_output
         let latency_metrics: crate::types::LatencyMetrics = oha_output.into();
         let latency = Latency {
             mean_ms: latency_metrics.mean_ms,
@@ -321,7 +303,6 @@ impl ProfileRunner {
             headers.insert("Content-Type".to_string(), content_type.clone());
         }
 
-        // Load body from testing_data fixtures
         let body = if let Some(ref body_file) = workload_def.body_file {
             Some(self.load_body_from_fixtures(body_file)?)
         } else {
@@ -362,43 +343,33 @@ impl ProfileRunner {
 
     /// Resolve fixture path relative to workspace root
     fn resolve_fixture_path(&self, fixture_file: &str) -> PathBuf {
-        // Assume fixture_file is relative to testing_data
         let workspace_root = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
         workspace_root.join("testing_data").join(fixture_file)
     }
 
     /// Load body data from testing_data fixtures
     fn load_body_from_fixtures(&self, body_file: &str) -> Result<serde_json::Value> {
-        // Map body file names to actual fixture files in testing_data
         let fixture_path = match body_file {
             "json-small.json" => "json_bodies/01_simple_object_success.json",
             "json-medium.json" => "json_bodies/04_nested_object_success.json",
             "json-large.json" => "json_bodies/25_deeply_nested_objects.json",
             "json-very-large.json" => "json_bodies/05_array_of_objects.json",
-            _ => {
-                // Try direct path in testing_data
-                body_file
-            }
+            _ => body_file,
         };
 
         let full_path = self.resolve_fixture_path(fixture_path);
 
-        // Load fixture and extract body
         match Fixture::from_file(&full_path) {
             Ok(fixture) => fixture
                 .request
                 .body
                 .ok_or_else(|| Error::InvalidInput(format!("Fixture {} has no body", fixture_path))),
-            Err(_) => {
-                // Fallback to generating synthetic data
-                self.generate_synthetic_body(body_file)
-            }
+            Err(_) => self.generate_synthetic_body(body_file),
         }
     }
 
     /// Generate synthetic body data as fallback
     fn generate_synthetic_body(&self, body_file: &str) -> Result<serde_json::Value> {
-        // Handle URL-encoded bodies
         if body_file.ends_with(".txt") {
             let urlencoded_str = match body_file {
                 "urlencoded-simple.txt" => "name=John+Doe&email=john%40example.com&age=30&subscribe=true",
@@ -407,11 +378,9 @@ impl ProfileRunner {
                 }
                 _ => return Err(Error::InvalidInput(format!("Unknown body file: {}", body_file))),
             };
-            // Return URL-encoded string as JSON string value for load generator
             return Ok(serde_json::Value::String(urlencoded_str.to_string()));
         }
 
-        // Handle multipart bodies
         if body_file.ends_with(".bin") {
             let (file_count, total_bytes) = match body_file {
                 "multipart-small.bin" => (1, 1024),
@@ -419,14 +388,12 @@ impl ProfileRunner {
                 "multipart-large.bin" => (5, 102400),
                 _ => return Err(Error::InvalidInput(format!("Unknown body file: {}", body_file))),
             };
-            // Return multipart metadata as JSON for the server to validate
             return Ok(serde_json::json!({
                 "files_received": file_count,
                 "total_bytes": total_bytes
             }));
         }
 
-        // Handle JSON bodies
         let json_str = match body_file {
             "json-small.json" => r#"{"id":12345,"name":"test_item","active":true,"count":42}"#,
             "json-medium.json" => {
@@ -436,7 +403,6 @@ impl ProfileRunner {
                 r#"{"id":12345,"name":"large_item","description":"Large payload with nested data","metadata":{"version":1,"status":"active"},"attributes":{"color":"blue","size":"large"}}"#
             }
             "json-very-large.json" => {
-                // Generate array of 50 items
                 let items: Vec<String> = (0..50)
                     .map(|i| format!(r#"{{"id":{},"name":"item_{}","value":{}}}"#, i, i, i * 100))
                     .collect();
@@ -485,7 +451,6 @@ impl ProfileRunner {
 
         let total_duration_secs = self.config.duration_secs * total_workloads as u64;
 
-        // Category breakdown
         let mut category_map: std::collections::HashMap<String, Vec<&WorkloadResult>> =
             std::collections::HashMap::new();
         for suite in suite_results {
@@ -532,14 +497,12 @@ impl ProfileRunner {
         baseline_path: &PathBuf,
         suite_results: &[SuiteResult],
     ) -> Result<BaselineComparison> {
-        // Load baseline ProfileResult from JSON file
         let baseline_json = std::fs::read_to_string(baseline_path)
             .map_err(|e| Error::InvalidInput(format!("Failed to read baseline file: {}", e)))?;
 
         let baseline: crate::schema::profile::ProfileResult = serde_json::from_str(&baseline_json)
             .map_err(|e| Error::InvalidInput(format!("Failed to parse baseline JSON: {}", e)))?;
 
-        // Build a map of workload name -> baseline metrics
         let mut baseline_map: std::collections::HashMap<String, &WorkloadResult> = std::collections::HashMap::new();
         for suite in &baseline.suites {
             for workload in &suite.workloads {
@@ -547,7 +510,6 @@ impl ProfileRunner {
             }
         }
 
-        // Compare each current workload with baseline
         let mut workload_comparisons = Vec::new();
         let mut total_current_rps = 0.0;
         let mut total_baseline_rps = 0.0;
@@ -592,22 +554,18 @@ impl ProfileRunner {
 
     /// Find an available port for the server
     fn find_available_port(&self) -> u16 {
-        // Try to bind to a port starting from 8100
         for port in 8100..8200 {
             if std::net::TcpListener::bind(("127.0.0.1", port)).is_ok() {
                 return port;
             }
         }
-        // Fallback to 8100 if no port found
         8100
     }
 
     fn detect_framework_version(&self) -> String {
-        // Try to detect version from Cargo.toml for Rust apps
         if self.detect_language() == "rust" {
             let cargo_toml = self.config.app_dir.join("Cargo.toml");
             if let Ok(contents) = std::fs::read_to_string(cargo_toml) {
-                // Simple parsing for version line
                 for line in contents.lines() {
                     if line.trim().starts_with("version")
                         && let Some(version) = line.split('=').nth(1)
@@ -617,7 +575,6 @@ impl ProfileRunner {
                 }
             }
         }
-        // For now, return a default version for other languages
         "0.1.0".to_string()
     }
 
@@ -638,7 +595,6 @@ impl ProfileRunner {
     fn detect_runtime(&self) -> String {
         match self.detect_language().as_str() {
             "python" => {
-                // Try to detect actual Python version
                 if let Ok(output) = std::process::Command::new("python3").arg("--version").output()
                     && let Ok(version) = String::from_utf8(output.stdout)
                 {
@@ -647,7 +603,6 @@ impl ProfileRunner {
                 "Python 3.x".to_string()
             }
             "node" => {
-                // Try to detect actual Node version
                 if let Ok(output) = std::process::Command::new("node").arg("--version").output()
                     && let Ok(version) = String::from_utf8(output.stdout)
                 {
@@ -656,19 +611,15 @@ impl ProfileRunner {
                 "Node.js".to_string()
             }
             "ruby" => {
-                // Try to detect actual Ruby version
                 if let Ok(output) = std::process::Command::new("ruby").arg("--version").output()
                     && let Ok(version) = String::from_utf8(output.stdout)
+                    && let Some(version_part) = version.split_whitespace().nth(1)
                 {
-                    // Ruby version output is like "ruby 3.3.0 (2023-12-25 revision...)"
-                    if let Some(version_part) = version.split_whitespace().nth(1) {
-                        return format!("Ruby {}", version_part);
-                    }
+                    return format!("Ruby {}", version_part);
                 }
                 "Ruby".to_string()
             }
             "rust" => {
-                // Try to detect actual rustc version
                 if let Ok(output) = std::process::Command::new("rustc").arg("--version").output()
                     && let Ok(version) = String::from_utf8(output.stdout)
                 {

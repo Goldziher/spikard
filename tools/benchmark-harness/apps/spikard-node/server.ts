@@ -6,15 +6,34 @@
  * This server implements all workload types to measure Node.js binding performance.
  */
 
-import * as native from "@spikard/node";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const native = require("../../../../packages/node/index.js") as { runServer: (app: unknown, config: unknown) => void };
 import { z } from "zod";
 
-// Route registration arrays
-const routes = [];
-const handlers = {};
+type HandlerInput = {
+	method: string;
+	path: string;
+	headers: Record<string, string>;
+	cookies: Record<string, string>;
+	query_params: unknown;
+	body: unknown;
+	path_params: Record<string, string>;
+};
 
-// Helper functions to register routes
-function registerRoute(method, path, handler) {
+type HandlerOutput = {
+	status: number;
+	headers?: Record<string, string>;
+	body?: unknown;
+};
+
+type HandlerFunction = (input: HandlerInput) => Promise<HandlerOutput>;
+
+const routes: Array<{ method: string; path: string; handler_name: string; is_async: boolean }> = [];
+const handlers: Record<string, HandlerFunction> = {};
+
+function registerRoute(method: string, path: string, handler: HandlerFunction): HandlerFunction {
 	const metadata = {
 		method: method.toUpperCase(),
 		path,
@@ -26,17 +45,17 @@ function registerRoute(method, path, handler) {
 	return handler;
 }
 
-function get(path) {
+function get(path: string): (handler: HandlerFunction) => HandlerFunction {
 	return (handler) => registerRoute("GET", path, handler);
 }
 
-function post(path) {
+function post(path: string): (handler: HandlerFunction) => HandlerFunction {
 	return (handler) => registerRoute("POST", path, handler);
 }
 
-// ============================================================================
-// Zod Schemas for Validation
-// ============================================================================
+function ok(body: unknown): HandlerOutput {
+	return { status: 200, body };
+}
 
 const SmallPayloadSchema = z.object({
 	name: z.string(),
@@ -81,84 +100,59 @@ const VeryLargePayloadSchema = z.object({
 	metadata: z.record(z.any()),
 });
 
-// ============================================================================
-// JSON Body Workloads
-// ============================================================================
-
-async function post_json_small(requestJson) {
-	const request = JSON.parse(requestJson);
+async function post_json_small(request: HandlerInput): Promise<HandlerOutput> {
 	const validated = SmallPayloadSchema.parse(request.body);
-	return JSON.stringify(validated);
+	return ok(validated);
 }
 
-async function post_json_medium(requestJson) {
-	const request = JSON.parse(requestJson);
+async function post_json_medium(request: HandlerInput): Promise<HandlerOutput> {
 	const validated = MediumPayloadSchema.parse(request.body);
-	return JSON.stringify(validated);
+	return ok(validated);
 }
 
-async function post_json_large(requestJson) {
-	const request = JSON.parse(requestJson);
+async function post_json_large(request: HandlerInput): Promise<HandlerOutput> {
 	const validated = LargePayloadSchema.parse(request.body);
-	return JSON.stringify(validated);
+	return ok(validated);
 }
 
-async function post_json_very_large(requestJson) {
-	const request = JSON.parse(requestJson);
+async function post_json_very_large(request: HandlerInput): Promise<HandlerOutput> {
 	const validated = VeryLargePayloadSchema.parse(request.body);
-	return JSON.stringify(validated);
+	return ok(validated);
 }
 
-// ============================================================================
-// Multipart Form Workloads
-// ============================================================================
-
-async function post_multipart_small(_requestJson) {
-	return JSON.stringify({ files_received: 1, total_bytes: 1024 });
+async function post_multipart_small(_request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ files_received: 1, total_bytes: 1024 });
 }
 
-async function post_multipart_medium(_requestJson) {
-	return JSON.stringify({ files_received: 2, total_bytes: 10240 });
+async function post_multipart_medium(_request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ files_received: 2, total_bytes: 10240 });
 }
 
-async function post_multipart_large(_requestJson) {
-	return JSON.stringify({ files_received: 5, total_bytes: 102400 });
+async function post_multipart_large(_request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ files_received: 5, total_bytes: 102400 });
 }
 
-// ============================================================================
-// URL Encoded Form Workloads
-// ============================================================================
-
-async function post_urlencoded_simple(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify(request.body || {});
+async function post_urlencoded_simple(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(request.body ?? {});
 }
 
-async function post_urlencoded_complex(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify(request.body || {});
+async function post_urlencoded_complex(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(request.body ?? {});
 }
 
-// ============================================================================
-// Path Parameter Workloads
-// ============================================================================
-
-async function get_path_simple(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify({ id: request.path_params.id });
+async function get_path_simple(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ id: request.path_params.id });
 }
 
-async function get_path_multiple(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify({
+async function get_path_multiple(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({
 		user_id: request.path_params.user_id,
 		post_id: request.path_params.post_id,
 	});
 }
 
-async function get_path_deep(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify({
+async function get_path_deep(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({
 		org: request.path_params.org,
 		team: request.path_params.team,
 		project: request.path_params.project,
@@ -167,53 +161,38 @@ async function get_path_deep(requestJson) {
 	});
 }
 
-async function get_path_int(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify({ id: parseInt(request.path_params.id, 10) });
+async function get_path_int(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ id: parseInt(request.path_params.id, 10) });
 }
 
-async function get_path_uuid(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify({ uuid: request.path_params.uuid });
+async function get_path_uuid(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ uuid: request.path_params.uuid });
 }
 
-async function get_path_date(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify({ date: request.path_params.date });
+async function get_path_date(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ date: request.path_params.date });
 }
 
-// ============================================================================
-// Query Parameter Workloads
-// ============================================================================
-
-async function get_query_few(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify(request.query_params || {});
+async function get_query_few(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(request.query_params ?? {});
 }
 
-async function get_query_medium(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify(request.query_params || {});
+async function get_query_medium(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(request.query_params ?? {});
 }
 
-async function get_query_many(requestJson) {
-	const request = JSON.parse(requestJson);
-	return JSON.stringify(request.query_params || {});
+async function get_query_many(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(request.query_params ?? {});
 }
 
-// ============================================================================
-// Health Check
-// ============================================================================
-
-async function get_health(_requestJson) {
-	return JSON.stringify({ status: "ok" });
+async function get_health(_request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ status: "ok" });
 }
 
-async function get_root(_requestJson) {
-	return JSON.stringify({ status: "ok" });
+async function get_root(_request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ status: "ok" });
 }
 
-// Register all routes
 post("/json/small")(post_json_small);
 post("/json/medium")(post_json_medium);
 post("/json/large")(post_json_large);
@@ -240,19 +219,22 @@ get("/query/many")(get_query_many);
 get("/health")(get_health);
 get("/")(get_root);
 
-// Create app object
 const app = {
 	routes,
 	handlers,
 };
 
-// Parse port from command line or environment
 const port = process.argv[2] ? parseInt(process.argv[2], 10) : process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 
-// Start the server
 console.error(`[spikard-node] Starting server on port ${port}`);
 const config = {
 	host: "0.0.0.0",
 	port,
 };
-native.runServer(app, config);
+try {
+	native.runServer(app, config);
+	console.error(`[spikard-node] runServer dispatched successfully`);
+} catch (err) {
+	console.error(`[spikard-node] Failed to start server:`, err);
+	process.exit(1);
+}

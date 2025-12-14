@@ -7,6 +7,7 @@
 //! - Handler infrastructure
 
 use ext_php_rs::boxed::ZBox;
+use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
@@ -33,7 +34,6 @@ pub use request::PhpRequest;
 pub use response::PhpResponse;
 pub use server::PhpServer;
 pub use sse::{PhpSseEventProducer, create_sse_state};
-// Start module functions are wrapped above and don't need re-export
 pub use streaming::{StreamingConfig, create_handler_response as create_streaming_response, register_generator};
 pub use testing::{
     PhpHttpTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse, PhpWebSocketTestConnection,
@@ -76,7 +76,6 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
         .name("spikard")
         .version(env!("CARGO_PKG_VERSION"))
-        // Functions
         .function(wrap_function!(spikard_version))
         .function(wrap_function!(spikard_echo_response))
         .function(wrap_function!(spikard_json_response))
@@ -84,12 +83,9 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .function(wrap_function!(spikard_start_server))
         .function(wrap_function!(spikard_stop_server))
         .function(wrap_function!(spikard_background_run_wrapper))
-        // Core classes
         .class::<PhpRequest>()
         .class::<PhpResponse>()
-        // Server
         .class::<PhpServer>()
-        // Testing
         .class::<PhpTestClient>()
         .class::<PhpTestResponse>()
         .class::<PhpHttpTestClient>()
@@ -163,6 +159,29 @@ pub fn json_to_php_table(value: &Value) -> PhpResult<ZBox<ZendHashTable>> {
     }
 
     Ok(table)
+}
+
+/// Convert a serde_json Value into a PHP Zval.
+pub fn json_to_zval(value: &Value) -> PhpResult<Zval> {
+    let map_err = |e: ext_php_rs::error::Error| PhpException::default(e.to_string());
+    match value {
+        Value::Null => Ok(Zval::new()),
+        Value::Bool(b) => b.into_zval(false).map_err(map_err),
+        Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                i.into_zval(false).map_err(map_err)
+            } else if let Some(f) = n.as_f64() {
+                f.into_zval(false).map_err(map_err)
+            } else {
+                Ok(Zval::new())
+            }
+        }
+        Value::String(s) => s.as_str().into_zval(false).map_err(map_err),
+        Value::Array(_) | Value::Object(_) => {
+            let table = json_to_php_table(value)?;
+            table.into_zval(false).map_err(map_err)
+        }
+    }
 }
 
 /// Convert a JSON array to a ZendHashTable.
@@ -248,7 +267,6 @@ pub fn zval_to_json(value: &ext_php_rs::types::Zval) -> Result<Value, String> {
         }
 
         if is_sequential && !map.is_empty() {
-            // Return as array
             let arr: Vec<Value> = map.into_iter().map(|(_, v)| v).collect();
             return Ok(Value::Array(arr));
         }

@@ -6,13 +6,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { run } from "./background";
 
 describe("background.run()", () => {
-	// Add unhandledRejection handler to suppress errors from our error tests
 	const originalHandlers: ((reason: unknown, promise: Promise<unknown>) => void)[] = [];
 
 	afterEach(async () => {
-		// Give promises time to settle
 		await new Promise((resolve) => setTimeout(resolve, 50));
-		// Clear any pending rejection handlers
 		originalHandlers.length = 0;
 	});
 
@@ -21,10 +18,8 @@ describe("background.run()", () => {
 			const callback = vi.fn();
 			run(callback);
 
-			// Should not execute immediately
 			expect(callback).not.toHaveBeenCalled();
 
-			// Should execute after microtask
 			await new Promise((resolve) => setTimeout(resolve, 0));
 			expect(callback).toHaveBeenCalledTimes(1);
 		});
@@ -111,11 +106,9 @@ describe("background.run()", () => {
 	describe("Error handling", () => {
 		it("should schedule work that may throw without throwing run()", () => {
 			const callback = vi.fn(() => {
-				// This will throw but run() doesn't throw
 				return "work scheduled";
 			});
 
-			// run() itself never throws
 			expect(() => {
 				run(callback);
 			}).not.toThrow();
@@ -199,7 +192,7 @@ describe("background.run()", () => {
 			expect(state.counter).toBe(0);
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
-			expect(state.counter).toBe(12); // (0+1)*2+10
+			expect(state.counter).toBe(12);
 		});
 
 		it("should handle concurrent scheduled work", async () => {
@@ -221,7 +214,6 @@ describe("background.run()", () => {
 
 			await new Promise((resolve) => setTimeout(resolve, 20));
 
-			// All should complete, though order of first/second may vary due to timing
 			expect(results).toContain("first");
 			expect(results).toContain("second");
 			expect(results).toContain("third");
@@ -242,9 +234,7 @@ describe("background.run()", () => {
 
 	describe("Edge cases", () => {
 		it("should handle empty function", async () => {
-			const callback = vi.fn(() => {
-				// empty
-			});
+			const callback = vi.fn(() => {});
 
 			run(callback);
 
@@ -253,9 +243,7 @@ describe("background.run()", () => {
 		});
 
 		it("should handle no-op async function", async () => {
-			const callback = vi.fn(async () => {
-				// no-op
-			});
+			const callback = vi.fn(async () => {});
 
 			run(callback);
 
@@ -305,7 +293,6 @@ describe("background.run()", () => {
 
 			await new Promise((resolve) => setTimeout(resolve, 0));
 
-			// Both should execute in microtask queue order
 			expect(order).toEqual(expect.arrayContaining(["promise-then", "run"]));
 		});
 
@@ -319,7 +306,6 @@ describe("background.run()", () => {
 
 			await new Promise((resolve) => setTimeout(resolve, 0));
 
-			// All microtasks should execute
 			expect(results).toHaveLength(4);
 			expect(results).toContain("promise1");
 			expect(results).toContain("promise2");

@@ -22,7 +22,7 @@ pub enum BenchmarkResult {
 /// System metadata for reproducibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metadata {
-    pub timestamp: String, // ISO 8601
+    pub timestamp: String,
     pub git_commit: Option<String>,
     pub git_branch: Option<String>,
     pub git_dirty: bool,
@@ -31,12 +31,12 @@ pub struct Metadata {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HostInfo {
-    pub os: String,         // "darwin", "linux", "windows"
-    pub arch: String,       // "arm64", "x86_64"
-    pub cpu_model: String,  // "Apple M2 Pro"
-    pub cpu_cores: usize,   // Physical cores
-    pub cpu_threads: usize, // Logical threads
-    pub memory_gb: f64,     // Total RAM
+    pub os: String,
+    pub arch: String,
+    pub cpu_model: String,
+    pub cpu_cores: usize,
+    pub cpu_threads: usize,
+    pub memory_gb: f64,
     pub hostname: String,
 }
 
@@ -46,18 +46,18 @@ pub struct Configuration {
     pub duration_secs: u64,
     pub concurrency: usize,
     pub warmup_secs: u64,
-    pub load_tool: String, // "oha", "bombardier", etc.
+    pub load_tool: String,
 }
 
 /// Framework information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FrameworkInfo {
-    pub name: String,            // "spikard-python", "fastapi"
-    pub version: String,         // "0.1.0"
-    pub language: String,        // "python", "rust", "node", "ruby"
-    pub runtime: String,         // "CPython 3.12.1", "Node 20.10.0"
-    pub app_dir: String,         // Relative path
-    pub variant: Option<String>, // "sync", "async"
+    pub name: String,
+    pub version: String,
+    pub language: String,
+    pub runtime: String,
+    pub app_dir: String,
+    pub variant: Option<String>,
 }
 
 /// Throughput metrics
@@ -68,7 +68,7 @@ pub struct Throughput {
     pub total_requests: u64,
     pub successful_requests: u64,
     pub failed_requests: u64,
-    pub success_rate: f64, // 0.0 - 1.0
+    pub success_rate: f64,
 }
 
 /// Latency distribution
@@ -156,8 +156,8 @@ pub struct RustProfilingData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatisticalSignificance {
     pub p_value: f64,
-    pub significant: bool,     // p < 0.05
-    pub confidence_level: f64, // 0.95
+    pub significant: bool,
+    pub confidence_level: f64,
 }
 
 /// Helper to collect system metadata

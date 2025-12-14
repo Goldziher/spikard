@@ -1,6 +1,6 @@
 {
 	"name": "@spikard/node",
-	"version": "0.3.7",
+	"version": "0.4.0",
 	"description": "High-performance Node.js HTTP framework with Rust core. Type-safe routing, validation, middleware, and testing via napi-rs bindings.",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
@@ -67,7 +67,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.8",
 		"@napi-rs/cli": "^3.5.0",
-		"@types/node": "^24.10.1",
+		"@types/node": "^25.0.1",
 		"@types/ws": "^8.18.1",
 		"@vitest/coverage-v8": "^4.0.15",
 		"tsup": "^8.5.1",

@@ -1,8 +1,14 @@
 """Type definitions for Spikard."""
 
-from collections.abc import Callable
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from spikard.jsonrpc import JsonRpcMethodInfo
 
 
 @dataclass
@@ -18,5 +24,6 @@ class Route:
     parameter_schema: dict[str, Any] | None = None
     file_params: dict[str, Any] | None = None
     is_async: bool = False
-    body_param_name: str | None = None  # Name of the body parameter (default: "body")
-    handler_dependencies: list[str] | None = None  # List of dependency keys for DI
+    body_param_name: str | None = None
+    handler_dependencies: list[str] | None = None
+    jsonrpc_method: JsonRpcMethodInfo | None = None

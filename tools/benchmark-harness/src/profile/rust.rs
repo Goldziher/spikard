@@ -24,7 +24,6 @@ struct RustMetricsFile {
 
 /// Start Rust profiler for the given PID
 pub fn start_profiler(pid: u32) -> Result<RustProfiler> {
-    // Try platform-specific profilers
     #[cfg(target_os = "linux")]
     {
         if which::which("perf").is_ok() {
@@ -72,7 +71,6 @@ impl RustProfiler {
             let _ = process.wait();
         }
 
-        // Load application metrics from instrumentation file
         let metrics_path = format!("/tmp/rust-metrics-{}.json", self.pid);
         let app_metrics = self.load_metrics_file(&metrics_path);
 
@@ -95,10 +93,7 @@ impl RustProfiler {
                     None
                 }
             },
-            Err(_) => {
-                // Metrics file not present - application may not have instrumentation
-                None
-            }
+            Err(_) => None,
         }
     }
 }

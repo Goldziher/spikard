@@ -133,7 +133,6 @@ const handleEcho: HandlerFunction = async (request: Request) => {
  */
 const app = new Spikard();
 
-// Register routes using decorators
 get("/")(handleRoot);
 get("/api/data")(handleData);
 post("/api/echo")(handleEcho);
@@ -143,7 +142,6 @@ post("/api/echo")(handleEcho);
  */
 export default app;
 
-// Auto-start if running in Node.js environment
 if (typeof process !== "undefined" && process.env.NODE_ENV !== "test") {
 	app.run({ port: 8080, host: "127.0.0.1" });
 }

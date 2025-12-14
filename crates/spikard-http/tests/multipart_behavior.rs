@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Behavioral tests for multipart form data handling in spikard-http
 //!
 //! These tests verify observable behavior of the multipart parser through real HTTP requests
@@ -29,9 +30,7 @@ fn create_multipart_body(boundary: &str, parts: Vec<String>) -> Vec<u8> {
 async fn test_large_file_upload_streaming_behavior() {
     let boundary = "multipart-boundary";
 
-    // Create a file just over 1MB to trigger binary handling
-    // We use a modest size to avoid memory issues in tests
-    let large_file_size = 1024 * 1024 + 512; // 1MB + 512 bytes
+    let large_file_size = 1024 * 1024 + 512;
     let large_file_content: Vec<u8> = (0..large_file_size).map(|i| (i % 256) as u8).collect();
 
     let mut body = Vec::new();
@@ -57,13 +56,11 @@ async fn test_large_file_upload_streaming_behavior() {
 
     let file_obj = &obj["large_upload"];
 
-    // Verify file metadata is captured
     assert!(file_obj["filename"].is_string());
     assert_eq!(file_obj["filename"], "large_file.bin");
     assert!(file_obj["size"].is_number());
     assert_eq!(file_obj["size"], large_file_size);
 
-    // Verify large file is marked as binary (not fully buffered)
     let content = file_obj["content"].as_str().unwrap();
     assert!(content.contains("<binary data"));
     assert!(content.contains("bytes"));
@@ -75,7 +72,6 @@ async fn test_large_file_upload_streaming_behavior() {
 async fn test_boundary_string_in_file_data() {
     let boundary = "boundary123";
 
-    // File content contains the boundary string itself
     let file_content = "This file contains --boundary123 in the data\nBut it should not confuse the parser";
     let parts = vec![format!(
         "Content-Disposition: form-data; name=\"file\"; filename=\"tricky.txt\"\r\nContent-Type: text/plain\r\n\r\n{}",
@@ -98,7 +94,6 @@ async fn test_boundary_string_in_file_data() {
     let obj = result.as_object().unwrap();
     assert!(obj.contains_key("file"));
 
-    // Verify content is preserved exactly as uploaded
     let returned_content = obj["file"]["content"].as_str().unwrap();
     assert_eq!(returned_content, file_content);
     assert!(returned_content.contains("--boundary123"));
@@ -132,12 +127,10 @@ async fn test_mixed_file_and_form_field_ordering() {
 
     let obj = result.as_object().unwrap();
 
-    // Verify all fields present regardless of order
     assert_eq!(obj["field1"], "Value 1");
     assert_eq!(obj["field2"], "Value 2");
     assert_eq!(obj["field3"], "Value 3");
 
-    // Verify files are captured with metadata
     assert!(obj["upload1"].is_object());
     assert!(obj["upload2"].is_object());
     assert_eq!(obj["upload1"]["filename"], "file1.txt");
@@ -154,13 +147,10 @@ async fn test_invalid_utf8_in_text_fields() {
     body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
     body.extend_from_slice(b"Content-Disposition: form-data; name=\"text_field\"\r\n\r\n");
 
-    // Append valid UTF-8
     body.extend_from_slice(b"Valid UTF-8: ");
 
-    // Append invalid UTF-8 sequence
     body.extend_from_slice(&[0xFF, 0xFE, 0xFD]);
 
-    // Append more valid UTF-8
     body.extend_from_slice(b" and more valid");
 
     body.extend_from_slice(b"\r\n");
@@ -179,11 +169,9 @@ async fn test_invalid_utf8_in_text_fields() {
 
     let obj = result.as_object().unwrap();
 
-    // Verify field exists and contains lossy-decoded content
     assert!(obj.contains_key("text_field"));
     let text_value = obj["text_field"].as_str().unwrap();
 
-    // The invalid bytes should be replaced with replacement character (handled by from_utf8_lossy)
     assert!(text_value.contains("Valid UTF-8:"));
     assert!(text_value.contains("and more valid"));
 }
@@ -196,7 +184,6 @@ async fn test_malformed_multipart_missing_content_disposition() {
     let mut body = Vec::new();
 
     body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
-    // Missing Content-Disposition header - just try to add content directly
     body.extend_from_slice(b"\r\n");
     body.extend_from_slice(b"orphaned content");
     body.extend_from_slice(b"\r\n");
@@ -210,12 +197,9 @@ async fn test_malformed_multipart_missing_content_disposition() {
 
     let multipart = Multipart::from_request(request, &()).await.unwrap();
 
-    // Should handle gracefully - either returning empty or error depending on implementation
     let result = spikard_http::middleware::multipart::parse_multipart_to_json(multipart).await;
 
-    // Verify behavior is defined (not panic)
     if let Ok(parsed) = result {
-        // If it succeeds, verify result is reasonable (likely empty object)
         assert!(parsed.is_object());
     }
 }
@@ -269,8 +253,7 @@ async fn test_duplicate_field_names_aggregation() {
 async fn test_large_streaming_file_completes() {
     let boundary = "stream-boundary";
 
-    // Create a file just over 1MB to ensure binary handling
-    let streaming_file_size = 1024 * 1024 + 256 * 1024; // 1.25 MB
+    let streaming_file_size = 1024 * 1024 + 256 * 1024;
     let streaming_file: Vec<u8> = (0..streaming_file_size).map(|i| ((i >> 8) % 256) as u8).collect();
 
     let mut body = Vec::new();
@@ -288,7 +271,6 @@ async fn test_large_streaming_file_completes() {
 
     let multipart = Multipart::from_request(request, &()).await.unwrap();
 
-    // Parse should complete successfully for large streaming file
     let result = spikard_http::middleware::multipart::parse_multipart_to_json(multipart).await;
 
     assert!(result.is_ok(), "Large streaming file should parse without timeout");
@@ -297,7 +279,6 @@ async fn test_large_streaming_file_completes() {
     let obj = parsed.as_object().unwrap();
     assert!(obj.contains_key("stream_upload"));
 
-    // Verify size is correctly captured
     assert_eq!(obj["stream_upload"]["size"], streaming_file_size);
 }
 
@@ -337,7 +318,6 @@ async fn test_multiple_file_uploads_same_field_name() {
     let files = attachments.as_array().unwrap();
     assert_eq!(files.len(), 3, "All 3 file uploads should be present");
 
-    // Verify each file's metadata
     assert_eq!(files[0]["filename"], "file1.txt");
     assert_eq!(files[0]["content"], "First file content");
 
@@ -389,7 +369,6 @@ async fn test_binary_file_with_null_bytes() {
     body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
     body.extend_from_slice(b"Content-Disposition: form-data; name=\"binary\"; filename=\"binary.dat\"\r\nContent-Type: application/octet-stream\r\n\r\n");
 
-    // Binary data with null bytes
     body.extend_from_slice(&[0x00, 0x01, 0x02, 0x03, 0xFF, 0xFE, 0xFD, 0xFC]);
 
     body.extend_from_slice(b"\r\n");
@@ -440,7 +419,6 @@ async fn test_mixed_json_and_binary_files() {
 
     let obj = result.as_object().unwrap();
 
-    // Verify JSON fields are parsed as objects
     assert!(obj["metadata"].is_object());
     assert_eq!(obj["metadata"]["version"], 1);
 
@@ -448,7 +426,6 @@ async fn test_mixed_json_and_binary_files() {
     assert_eq!(obj["config"][0], 1);
     assert_eq!(obj["config"][4], 5);
 
-    // Verify binary file is captured with metadata
     assert!(obj["image"].is_object());
     assert_eq!(obj["image"]["filename"], "photo.bin");
     assert_eq!(obj["image"]["content"], "BINARY_IMAGE_DATA_HERE");
@@ -459,7 +436,7 @@ async fn test_mixed_json_and_binary_files() {
 #[tokio::test]
 async fn test_very_large_field_name() {
     let boundary = "boundary123";
-    let long_field_name = "field_".repeat(200); // ~1200 character field name
+    let long_field_name = "field_".repeat(200);
     let parts = vec![format!(
         "Content-Disposition: form-data; name=\"{}\"\r\n\r\nvalue",
         long_field_name
@@ -510,7 +487,6 @@ async fn test_content_type_with_charset_parameter() {
 
     let content_type = file_obj["content_type"].as_str().unwrap();
     assert!(content_type.contains("text/plain"));
-    // charset parameter may or may not be preserved, but Content-Type base should be
 }
 
 /// Test 14: CRLF line endings preservation in file content
@@ -540,7 +516,6 @@ async fn test_crlf_line_endings_in_file_content() {
     let obj = result.as_object().unwrap();
     let file_content = obj["multiline"]["content"].as_str().unwrap();
 
-    // Verify CRLF sequences are preserved
     assert!(file_content.contains("Line 1\r\nLine 2"));
 }
 
@@ -630,10 +605,9 @@ async fn test_single_value_fields_not_arrays() {
 
     let obj = result.as_object().unwrap();
 
-    // Single values should be strings, not arrays
     assert!(obj["username"].is_string());
     assert!(obj["email"].is_string());
-    assert!(obj["age"].is_string()); // Note: form fields are strings even for numeric input
+    assert!(obj["age"].is_string());
 }
 
 /// Test 18: File around the 1MB streaming threshold
@@ -642,23 +616,19 @@ async fn test_single_value_fields_not_arrays() {
 async fn test_file_around_1mb_threshold() {
     let boundary = "boundary123";
 
-    // Create a file just under 1MB
-    let small_file_size = 1024 * 1024 - 1024; // 1MB - 1KB
+    let small_file_size = 1024 * 1024 - 1024;
     let small_file: Vec<u8> = (0..small_file_size).map(|i| (i % 256) as u8).collect();
 
-    // Create a file just over 1MB
-    let large_file_size = 1024 * 1024 + 512; // 1MB + 512 bytes
+    let large_file_size = 1024 * 1024 + 512;
     let large_file: Vec<u8> = (0..large_file_size).map(|i| ((i >> 8) % 256) as u8).collect();
 
     let mut body = Vec::new();
 
-    // Small file (below threshold)
     body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
     body.extend_from_slice(b"Content-Disposition: form-data; name=\"small\"; filename=\"small.dat\"\r\nContent-Type: application/octet-stream\r\n\r\n");
     body.extend_from_slice(&small_file);
     body.extend_from_slice(b"\r\n");
 
-    // Large file (exceeds threshold)
     body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
     body.extend_from_slice(b"Content-Disposition: form-data; name=\"large\"; filename=\"large.dat\"\r\nContent-Type: application/octet-stream\r\n\r\n");
     body.extend_from_slice(&large_file);
@@ -679,10 +649,8 @@ async fn test_file_around_1mb_threshold() {
 
     let obj = result.as_object().unwrap();
 
-    // Small file should show actual content (or indicate it's included)
     assert_eq!(obj["small"]["size"], small_file_size);
 
-    // Large file should be marked as binary
     let large_content = obj["large"]["content"].as_str().unwrap();
     assert!(large_content.contains("<binary data") || large_content.len() > 100);
 }

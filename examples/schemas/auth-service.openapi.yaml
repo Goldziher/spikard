@@ -625,7 +625,6 @@ paths:
 
 components:
   schemas:
-    # Request Schemas
     PasswordGrantRequest:
       type: object
       required:
@@ -670,7 +669,6 @@ components:
         refresh_token:
           type: string
 
-    # Response Schemas
     ApiKeyResponse:
       type: object
       required:
@@ -801,7 +799,6 @@ components:
           format: date-time
           nullable: true
 
-    # Error Schemas
     ErrorResponse:
       type: object
       required:

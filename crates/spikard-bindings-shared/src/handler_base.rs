@@ -125,7 +125,6 @@ impl<L: LanguageHandler + 'static> Handler for HandlerExecutor<L> {
         mut request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            // Validate parameters if validator is present
             if let Some(validator) = &self.parameter_validator {
                 match validator.validate_and_extract(
                     &request_data.query_params,
@@ -135,7 +134,6 @@ impl<L: LanguageHandler + 'static> Handler for HandlerExecutor<L> {
                     &request_data.cookies,
                 ) {
                     Ok(validated_params) => {
-                        // Merge validated params back into request_data
                         request_data.query_params = validated_params;
                     }
                     Err(validation_err) => {
@@ -144,27 +142,23 @@ impl<L: LanguageHandler + 'static> Handler for HandlerExecutor<L> {
                 }
             }
 
-            // Validate request body if validator is present
             if let Some(validator) = &self.request_validator
                 && let Err(validation_err) = validator.validate(&request_data.body)
             {
                 return Err(ErrorResponseBuilder::validation_error(&validation_err));
             }
 
-            // Prepare language-specific input
             let input = self
                 .language_handler
                 .prepare_request(&request_data)
                 .map_err(|e| ErrorResponseBuilder::internal_error(format!("Failed to prepare request: {}", e)))?;
 
-            // Invoke the language handler
             let output = self
                 .language_handler
                 .invoke_handler(input)
                 .await
                 .map_err(|e| ErrorResponseBuilder::internal_error(format!("Handler execution failed: {}", e)))?;
 
-            // Interpret the response
             let response = self
                 .language_handler
                 .interpret_response(output)

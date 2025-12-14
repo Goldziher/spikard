@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Validate all test fixtures against their JSON schemas."""
 
 import json

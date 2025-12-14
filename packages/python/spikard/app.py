@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from spikard.config import ServerConfig
 from spikard.introspection import extract_parameter_schema
+from spikard.jsonrpc import JsonRpcMethodInfo
 from spikard.params import ParamBase
 from spikard.schema import extract_schemas
 from spikard.types import Route
@@ -47,19 +48,23 @@ class Spikard:
         self,
         method: HttpMethod,
         path: str,
+        handler: Callable[..., Any] | None = None,
         *,
         body_schema: dict[str, Any] | None = None,
         parameter_schema: dict[str, Any] | None = None,
         file_params: dict[str, Any] | None = None,
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        jsonrpc_method: JsonRpcMethodInfo | None = None,
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]] | Callable[..., Any]:
         """Internal method to register a route.
 
         Args:
             method: HTTP method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE)
             path: URL path pattern
+            handler: Optional handler to register immediately instead of using decorator style
             body_schema: Optional explicit body schema (takes precedence over type hint extraction)
             parameter_schema: Optional explicit parameter schema (takes precedence over type hint extraction)
             file_params: Optional file parameter schema for multipart file validation
+            jsonrpc_method: Optional JsonRpcMethodInfo for exposing as JSON-RPC method
 
         Returns:
             Decorator function
@@ -83,15 +88,9 @@ class Spikard:
             sig = inspect.signature(func)
             wrapped_func = func
 
-            # Extract handler dependencies FIRST (all parameter names that could be dependencies)
-            # We do this before extracting body_param_name so we can skip DI parameters
-            # We include ALL non-standard parameters, not just registered ones, so that
-            # the DI handler can properly return "dependency not found" errors for missing deps
             standard_params = {"self", "cls", "path_params", "query_params", "headers", "cookies"}
             potential_dependencies = [param_name for param_name in sig.parameters if param_name not in standard_params]
 
-            # Parameters already bound to the request (headers/query/path/cookies/files/body) are
-            # NOT DI dependencies. Derive them from the parameter schema, file params, and ParamBase defaults.
             request_bound_params = set()
             provided_parameter_schema = parameter_schema is not None
             if extracted_parameter_schema:
@@ -108,12 +107,8 @@ class Spikard:
                 if isinstance(param.default, ParamBase):
                     request_bound_params.add(param_name)
 
-            # Never treat registered dependencies as request-bound
             request_bound_params.difference_update(self._dependencies.keys())
 
-            # For methods with no body schema, assume first non-standard param that's NOT a
-            # path/query/header/cookie param is likely a DI dependency, not a body parameter
-            # The body parameter should be explicitly named "body" or have a body schema
             handler_dependencies = []
             body_param_name = None
             if method.upper() not in {"GET", "DELETE", "HEAD", "OPTIONS"}:
@@ -124,11 +119,9 @@ class Spikard:
                         handler_dependencies.append(param_name)
                         continue
                     if body_param_name is None:
-                        # First unbound param is treated as the body
                         body_param_name = param_name
                     else:
                         handler_dependencies.append(param_name)
-            # Any param that is not request-bound and not the body is treated as a DI dependency
             handler_dependencies.extend(
                 [p for p in potential_dependencies if p != body_param_name and p not in request_bound_params]
             )
@@ -169,11 +162,14 @@ class Spikard:
                 is_async=inspect.iscoroutinefunction(func),
                 body_param_name=body_param_name,
                 handler_dependencies=handler_dependencies if handler_dependencies else None,
+                jsonrpc_method=jsonrpc_method,
             )
 
             self._routes.append(route)
             return func
 
+        if handler is not None:
+            return decorator(handler)
         return decorator
 
     def run(
@@ -251,7 +247,6 @@ class Spikard:
         """
         return self._routes.copy()
 
-    # HTTP verb decorators (FastAPI/Litestar pattern)
     def get(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a GET route.
 

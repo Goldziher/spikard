@@ -2,11 +2,16 @@ AllCops:
   NewCops: enable
   TargetRubyVersion: 3.2
   Exclude:
-    - "ext/**"
+    - "ext/**/*"
     - "tmp/**/*"
-    - "vendor/crates/**/*"
+    - "vendor/**/*"
     - "**/Gemfile.ext"
     - "**/Gemfile.ext.lock"
+    - "packages/ruby/ext/**/*"
+    - "packages/ruby/tmp/**/*"
+    - "packages/ruby/vendor/**/*"
+    - "packages/ruby/**/Gemfile.ext"
+    - "packages/ruby/**/Gemfile.ext.lock"
 
 Metrics/BlockLength:
   Exclude:

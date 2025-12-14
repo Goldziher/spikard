@@ -7,7 +7,7 @@ GEM
     rack (3.2.4)
     rackup (2.3.1)
       rack (>= 3)
-    roda (3.98.0)
+    roda (3.99.0)
       rack
 
 PLATFORMS

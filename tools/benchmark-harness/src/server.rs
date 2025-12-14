@@ -2,36 +2,11 @@
 
 use crate::error::{Error, Result};
 use crate::framework::{detect_framework, get_framework};
-use std::env;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::time::sleep;
-
-/// Find the workspace root by looking for Cargo.toml
-#[allow(dead_code)]
-fn find_workspace_root() -> Result<PathBuf> {
-    let exe_path =
-        env::current_exe().map_err(|e| Error::ServerStartFailed(format!("Failed to get executable path: {}", e)))?;
-
-    let mut current = exe_path
-        .parent()
-        .ok_or_else(|| Error::ServerStartFailed("Failed to get executable parent directory".to_string()))?;
-
-    loop {
-        let cargo_toml = current.join("Cargo.toml");
-        if cargo_toml.exists()
-            && let Ok(contents) = std::fs::read_to_string(&cargo_toml)
-            && contents.contains("[workspace]")
-        {
-            return Ok(current.to_path_buf());
-        }
-
-        current = current.parent().ok_or_else(|| {
-            Error::ServerStartFailed("Could not find workspace root (no Cargo.toml with [workspace])".to_string())
-        })?;
-    }
-}
 
 /// Server process handle
 pub struct ServerHandle {
@@ -115,25 +90,16 @@ pub struct ServerConfig {
 /// - Server fails health check within timeout
 pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     let port = config.port;
-    let base_url = format!("http://localhost:{}", port);
+    let base_url = format!("http://127.0.0.1:{}", port);
 
-    // Step 1: Resolve framework configuration
     let framework_config = match &config.framework {
-        Some(name) => {
-            // Explicit framework name provided - look it up in registry
-            get_framework(name).ok_or_else(|| Error::FrameworkNotFound(name.clone()))?
-        }
-        None => {
-            // Auto-detect framework from app directory
-            detect_framework(&config.app_dir)?
-        }
+        Some(name) => get_framework(name).ok_or_else(|| Error::FrameworkNotFound(name.clone()))?,
+        None => detect_framework(&config.app_dir)?,
     };
 
-    // Step 2: Execute build command if present
     if let Some(build_cmd) = &framework_config.build_cmd {
         let build_cmd = build_cmd.replace("{port}", &port.to_string());
 
-        // Parse command into executable and arguments
         let parts: Vec<&str> = build_cmd.split_whitespace().collect();
         if !parts.is_empty() {
             let executable = parts[0];
@@ -143,7 +109,6 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             build.args(args);
             build.current_dir(&config.app_dir);
 
-            // Build output is normally visible since it's a one-time operation
             let status = build.status().map_err(|e| {
                 Error::ServerStartFailed(format!("Failed to execute build command '{}': {}", build_cmd, e))
             })?;
@@ -157,10 +122,8 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         }
     }
 
-    // Step 3: Build start command with port substitution
     let start_cmd = framework_config.start_cmd.replace("{port}", &port.to_string());
 
-    // Parse command into executable and arguments
     let parts: Vec<&str> = start_cmd.split_whitespace().collect();
     if parts.is_empty() {
         return Err(Error::ServerStartFailed(
@@ -173,10 +136,8 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
     let mut cmd = Command::new(executable);
     cmd.args(args);
-    // Set PORT environment variable for frameworks that expect it (Node.js, etc.)
     cmd.env("PORT", port.to_string());
 
-    // Step 4: Set working directory
     let working_dir = if let Some(hint) = &framework_config.working_dir_hint {
         config.app_dir.join(hint)
     } else {
@@ -185,10 +146,8 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
     cmd.current_dir(&working_dir);
 
-    // Suppress stdout but capture stderr for debugging startup failures
     cmd.stdout(Stdio::null()).stderr(Stdio::piped());
 
-    // Step 5: Spawn server process
     let mut process = cmd.spawn().map_err(|e| {
         Error::ServerStartFailed(format!(
             "Failed to spawn process for {} with command '{}': {}",
@@ -196,8 +155,31 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         ))
     })?;
 
-    // Capture stderr for debugging
-    let stderr = process.stderr.take();
+    let stderr_output = Arc::new(Mutex::new(Vec::<u8>::new()));
+    let stderr_tail_limit = 64 * 1024;
+    if let Some(stderr) = process.stderr.take() {
+        let stderr_output = Arc::clone(&stderr_output);
+        std::thread::spawn(move || {
+            use std::io::Read;
+            let mut reader = stderr;
+            let mut buf = [0u8; 8192];
+            loop {
+                match reader.read(&mut buf) {
+                    Ok(0) => break,
+                    Ok(n) => {
+                        if let Ok(mut out) = stderr_output.lock() {
+                            out.extend_from_slice(&buf[..n]);
+                            if out.len() > stderr_tail_limit {
+                                let drain = out.len() - stderr_tail_limit;
+                                out.drain(..drain);
+                            }
+                        }
+                    }
+                    Err(_) => break,
+                }
+            }
+        });
+    }
 
     let mut handle = ServerHandle {
         process,
@@ -205,30 +187,31 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         base_url: base_url.clone(),
     };
 
-    // Step 6: Wait for health check with timeout
+    let stderr_snapshot = || -> String {
+        let Ok(out) = stderr_output.lock() else {
+            return String::new();
+        };
+        let Ok(text) = String::from_utf8(out.clone()) else {
+            return String::new();
+        };
+        let text = text.trim();
+        if text.is_empty() {
+            String::new()
+        } else {
+            format!("\n\nServer stderr (tail):\n{}", text)
+        }
+    };
+
     let max_attempts = 30;
     for attempt in 1..=max_attempts {
         sleep(Duration::from_secs(1)).await;
 
         match handle.process.try_wait() {
             Ok(Some(status)) => {
-                // Process exited - capture stderr output
-                let stderr_output = if let Some(mut stderr) = stderr {
-                    use std::io::Read;
-                    let mut buf = String::new();
-                    stderr.read_to_string(&mut buf).ok();
-                    if buf.is_empty() {
-                        String::new()
-                    } else {
-                        format!("\n\nServer stderr:\n{}", buf)
-                    }
-                } else {
-                    String::new()
-                };
-
                 return Err(Error::ServerStartFailed(format!(
                     "Process exited with status: {}{}",
-                    status, stderr_output
+                    status,
+                    stderr_snapshot()
                 )));
             }
             Ok(None) => {
@@ -246,7 +229,11 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
         if attempt == max_attempts {
             handle.kill()?;
-            return Err(Error::ServerNotHealthy(max_attempts));
+            return Err(Error::ServerStartFailed(format!(
+                "Server not healthy after {} attempts{}",
+                max_attempts,
+                stderr_snapshot()
+            )));
         }
     }
 
@@ -255,10 +242,9 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
 /// Check if server is healthy
 async fn health_check(base_url: &str) -> bool {
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(2))
-        .build()
-        .unwrap();
+    let Ok(client) = reqwest::Client::builder().timeout(Duration::from_secs(2)).build() else {
+        return false;
+    };
 
     for path in ["/health", "/"] {
         let url = format!("{}{}", base_url, path);
@@ -314,7 +300,6 @@ mod tests {
 
     #[test]
     fn test_port_substitution_in_command() {
-        // Test that {port} placeholder is correctly substituted
         let framework = get_framework("spikard-rust").expect("spikard-rust should exist");
         let port = 9000u16;
         let start_cmd = framework.start_cmd.replace("{port}", &port.to_string());
@@ -332,7 +317,6 @@ mod tests {
         let port = 8000u16;
         let substituted = build_cmd.replace("{port}", &port.to_string());
 
-        // Build command may or may not have {port}, just ensure no errors
         assert!(!substituted.is_empty());
     }
 
@@ -340,7 +324,6 @@ mod tests {
     fn test_working_directory_resolution() {
         let app_dir = PathBuf::from("/app");
 
-        // Test without working_dir_hint
         let framework = get_framework("spikard-python").expect("spikard-python should exist");
         let working_dir = if let Some(hint) = &framework.working_dir_hint {
             app_dir.join(hint)
@@ -349,8 +332,6 @@ mod tests {
         };
         assert_eq!(working_dir, PathBuf::from("/app"));
 
-        // Test with working_dir_hint (if applicable)
-        // Most frameworks don't have hints, but if one did:
         let framework = get_framework("spikard-rust").expect("spikard-rust should exist");
         if let Some(hint) = &framework.working_dir_hint {
             let working_dir = app_dir.join(hint);
@@ -360,7 +341,6 @@ mod tests {
 
     #[test]
     fn test_is_port_available() {
-        // Find an unused port first
         let port = find_available_port(10000).expect("Should find available port");
         assert!(is_port_available(port));
     }
@@ -377,7 +357,6 @@ mod tests {
 
     #[test]
     fn test_framework_config_access() {
-        // Verify that all major frameworks are accessible
         let frameworks = vec![
             "spikard-rust",
             "spikard-python",
@@ -406,7 +385,6 @@ mod tests {
         fs::create_dir_all(temp_dir.path().join("src")).unwrap();
         fs::write(temp_dir.path().join("src").join("main.rs"), "fn main()").unwrap();
 
-        // Manually test detection logic (start_server would use this internally)
         let detected = detect_framework(temp_dir.path());
         assert!(detected.is_ok());
         assert_eq!(detected.unwrap().name, "spikard-rust");

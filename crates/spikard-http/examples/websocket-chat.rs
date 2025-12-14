@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! WebSocket Chat Server Example
 //!
 //! Demonstrates WebSocket support in Spikard matching the AsyncAPI chat specification.

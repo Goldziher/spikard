@@ -13,7 +13,6 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
 
     output.push_str("$app = new App();\n\n");
 
-    // Add health check endpoint first
     output.push_str(&generate_health_check());
     output.push_str("\n\n");
 
@@ -47,7 +46,6 @@ use Spikard\Http\Response;
 "#
     .to_string();
 
-    // Check if any routes need config for middleware
     let has_middleware = analysis.routes.iter().any(|r| r.has_middleware());
     if has_middleware {
         header.push_str("use Spikard\\Config\\ServerConfig;\n");
@@ -81,7 +79,6 @@ fn generate_handler_body(route: &RouteInfo) -> String {
     let mut lines = Vec::new();
     lines.push("$response = [];".to_string());
 
-    // Extract path parameters
     let path_params = crate::analyzer::extract_path_params(&route.route);
     for param_name in &path_params {
         lines.push(format!(
@@ -90,7 +87,6 @@ fn generate_handler_body(route: &RouteInfo) -> String {
         ));
     }
 
-    // Extract query parameters
     for name in route.params.query.keys() {
         lines.push(format!("if (isset($request->queryParams['{}'])) {{", name));
         lines.push(format!(
@@ -100,14 +96,12 @@ fn generate_handler_body(route: &RouteInfo) -> String {
         lines.push("}".to_string());
     }
 
-    // Extract headers if needed
     for name in route.params.headers.keys() {
         lines.push(format!("if (isset($request->headers['{}'])) {{", name));
         lines.push(format!("    $response['{}'] = $request->headers['{}'];", name, name));
         lines.push("}".to_string());
     }
 
-    // Extract body if present
     if route.params.body.is_some() {
         lines.push("if ($request->body !== null) {".to_string());
         lines.push("    $response = array_merge($response, $request->body);".to_string());

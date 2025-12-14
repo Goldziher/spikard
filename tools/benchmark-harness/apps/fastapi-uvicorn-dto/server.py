@@ -1,10 +1,4 @@
 """FastAPI comparison server for benchmarking."""
-# /// script
-# dependencies = [
-#     "fastapi",
-#     "uvicorn[standard]",
-# ]
-# ///
 
 import sys
 

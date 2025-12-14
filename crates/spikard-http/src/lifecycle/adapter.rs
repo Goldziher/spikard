@@ -115,6 +115,11 @@ impl HookRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::lifecycle::HookResult;
+    use axum::body::Body;
+    use axum::http::{Request, Response, StatusCode};
+    use std::future::Future;
+    use std::pin::Pin;
 
     #[test]
     fn test_error_messages() {
@@ -145,5 +150,81 @@ mod tests {
 
         let deser_err = error::deserialize_failed("response", "malformed");
         assert!(deser_err.contains("response"));
+    }
+
+    #[tokio::test]
+    async fn serial_extract_body_roundtrips_bytes() {
+        let body = Body::from("hello");
+        let bytes = serial::extract_body(body).await.expect("extract body");
+        assert_eq!(&bytes[..], b"hello");
+    }
+
+    #[test]
+    fn serial_parse_json_handles_empty_valid_and_invalid_json() {
+        let empty = serial::parse_json(&[]).expect("parse empty");
+        assert_eq!(empty, serde_json::Value::Null);
+
+        let valid = serial::parse_json(br#"{"ok":true}"#).expect("parse json");
+        assert_eq!(valid["ok"], true);
+
+        let invalid = serial::parse_json(b"not-json").expect("parse fallback");
+        assert_eq!(invalid, serde_json::Value::String("not-json".to_string()));
+    }
+
+    #[test]
+    fn hook_registry_registers_all_hooks_via_callback() {
+        struct NoopHook {
+            hook_name: String,
+        }
+
+        impl LifecycleHook<Request<Body>, Response<Body>> for NoopHook {
+            fn name(&self) -> &str {
+                &self.hook_name
+            }
+
+            fn execute_request<'a>(
+                &'a self,
+                req: Request<Body>,
+            ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>>
+            {
+                Box::pin(async move { Ok(HookResult::Continue(req)) })
+            }
+
+            fn execute_response<'a>(
+                &'a self,
+                resp: Response<Body>,
+            ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>>
+            {
+                Box::pin(async move { Ok(HookResult::Continue(resp)) })
+            }
+        }
+
+        let mut hooks = HttpLifecycleHooks::new();
+        assert!(hooks.is_empty());
+
+        let hook_list: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>> = vec![
+            Arc::new(NoopHook {
+                hook_name: "one".to_string(),
+            }),
+            Arc::new(NoopHook {
+                hook_name: "two".to_string(),
+            }),
+        ];
+
+        HookRegistry::register_from_list(&mut hooks, hook_list, "on_request", |hooks, hook| {
+            hooks.add_on_request(hook);
+        });
+
+        let dbg = format!("{:?}", hooks);
+        assert!(dbg.contains("on_request_count"));
+        assert!(dbg.contains("2"));
+
+        let req = Request::builder().body(Body::empty()).unwrap();
+        let result = futures::executor::block_on(hooks.execute_on_request(req)).expect("hook run");
+        assert!(matches!(result, HookResult::Continue(_)));
+
+        let resp = Response::builder().status(StatusCode::OK).body(Body::empty()).unwrap();
+        let resp = futures::executor::block_on(hooks.execute_on_response(resp)).expect("hook run");
+        assert_eq!(resp.status(), StatusCode::OK);
     }
 }

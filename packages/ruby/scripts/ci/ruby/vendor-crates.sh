@@ -11,10 +11,22 @@ cd "$REPO_ROOT"
 VENDOR_DIR="packages/ruby/vendor/crates"
 mkdir -p "$VENDOR_DIR"
 
+# Read workspace version for vendored crates.
+WORKSPACE_VERSION="$(
+	awk -F'"' '
+		/^\[workspace\.package\]$/ { in_ws=1; next }
+		in_ws && /^version =/ { print $2; exit }
+	' Cargo.toml
+)"
+if [ -z "${WORKSPACE_VERSION:-}" ]; then
+	echo "Failed to detect workspace version from Cargo.toml" >&2
+	exit 1
+fi
+
 # Copy internal crates
 for crate in spikard-core spikard-http spikard-bindings-shared spikard-rb; do
 	echo "  Copying $crate..."
-	rm -rf "$VENDOR_DIR/$crate"
+	rm -rf "${VENDOR_DIR:?}/${crate:?}"
 	cp -r "crates/$crate" "$VENDOR_DIR/"
 done
 
@@ -28,7 +40,7 @@ patch_cargo_toml() {
 	sed -i.bak '/^\[workspace\]/d' "$file"
 
 	# Replace workspace metadata with explicit values
-	sed -i.bak 's/version\.workspace = true/version = "0.3.7"/' "$file"
+	sed -i.bak "s/version\\.workspace = true/version = \"${WORKSPACE_VERSION}\"/" "$file"
 	sed -i.bak 's/edition\.workspace = true/edition = "2024"/' "$file"
 	sed -i.bak 's/authors\.workspace = true/authors = ["Na'\''aman Hirschfeld <nhirschfeld@gmail.com>"]/' "$file"
 	sed -i.bak 's/license\.workspace = true/license = "MIT"/' "$file"
@@ -59,7 +71,7 @@ patch_cargo_toml() {
 # Patch all vendored Cargo.toml files
 for toml in "$VENDOR_DIR"/*/Cargo.toml; do
 	if [ -f "$toml" ]; then
-		echo "  Patching $(basename $(dirname $toml))/Cargo.toml..."
+		echo "  Patching $(basename "$(dirname "$toml")")/Cargo.toml..."
 		patch_cargo_toml "$toml"
 	fi
 done

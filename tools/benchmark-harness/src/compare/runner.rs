@@ -62,7 +62,7 @@ impl Default for CompareConfig {
 #[derive(Debug)]
 pub struct CompareRunner {
     config: CompareConfig,
-    #[allow(dead_code)] // Will be used in Phase 2 for workload iteration
+    #[allow(dead_code)]
     suite: WorkloadSuite,
 }
 
@@ -76,18 +76,15 @@ impl CompareRunner {
     /// - Workload suite not found
     /// - Invalid configuration parameters
     pub fn new(config: CompareConfig) -> Result<Self> {
-        // Validate minimum 2 frameworks
         if config.frameworks.len() < 2 {
             return Err(Error::InvalidInput(
                 "Compare mode requires at least 2 frameworks".to_string(),
             ));
         }
 
-        // Load workload suite
         let suite = WorkloadSuite::by_name(&config.workload_suite)
             .ok_or_else(|| Error::WorkloadNotFound(config.workload_suite.clone()))?;
 
-        // Validate output directory is writable
         if let Some(parent) = config.output_dir.parent()
             && !parent.exists()
         {
@@ -119,7 +116,6 @@ impl CompareRunner {
         println!("Concurrency: {}", self.config.concurrency);
         println!();
 
-        // Validate all frameworks exist before starting
         println!("🔍 Validating {} frameworks...", total);
         for framework in &self.config.frameworks {
             self.detect_app_dir(framework)?;
@@ -128,7 +124,6 @@ impl CompareRunner {
 
         let mut profile_results = Vec::new();
 
-        // Sequential execution to avoid port conflicts and resource contention
         for (idx, framework) in self.config.frameworks.iter().enumerate() {
             let num = idx + 1;
             println!("{}", "━".repeat(60));
@@ -155,7 +150,6 @@ impl CompareRunner {
             }
         }
 
-        // Perform statistical analysis
         println!("🧮 Running statistical analysis...");
         let compare_result = self.create_basic_result(profile_results.clone())?;
         println!("✓ Analysis complete\n");
@@ -179,16 +173,13 @@ impl CompareRunner {
     ///
     /// Returns error if ProfileRunner execution fails
     async fn run_single_framework(&self, framework: &str, index: usize) -> Result<ProfileResult> {
-        // Detect app directory for framework
         let app_dir = self.detect_app_dir(framework)?;
 
-        // Allocate unique port to avoid conflicts
         let port = self.config.port + (index as u16 * 10);
 
         println!("App directory: {}", app_dir.display());
         println!("Port: {}", port);
 
-        // Create ProfileRunnerConfig
         let profile_config = ProfileRunnerConfig {
             framework: framework.to_string(),
             app_dir,
@@ -196,12 +187,11 @@ impl CompareRunner {
             duration_secs: self.config.duration_secs,
             concurrency: self.config.concurrency,
             warmup_secs: (self.config.warmup_requests / self.config.concurrency).max(5) as u64,
-            profiler: None, // Phase 1: No profiling
+            profiler: None,
             baseline_path: None,
             variant: None,
         };
 
-        // Create and run ProfileRunner
         let runner = ProfileRunner::new(profile_config)?;
         runner.run().await
     }
@@ -210,11 +200,9 @@ impl CompareRunner {
     ///
     /// Looks for framework-specific directories in standard locations
     fn detect_app_dir(&self, framework: &str) -> Result<PathBuf> {
-        // Try common locations
         let workspace_root = std::env::current_dir()
             .map_err(|e| Error::InvalidInput(format!("Cannot determine workspace root: {}", e)))?;
 
-        // Try tools/benchmark-harness/apps/{framework} first
         let apps_dir = workspace_root
             .join("tools")
             .join("benchmark-harness")
@@ -224,13 +212,11 @@ impl CompareRunner {
             return Ok(apps_dir);
         }
 
-        // Try benchmarks/{framework}
         let benchmark_dir = workspace_root.join("benchmarks").join(framework);
         if benchmark_dir.exists() {
             return Ok(benchmark_dir);
         }
 
-        // Try e2e/{language} for spikard frameworks
         if framework.starts_with("spikard-") {
             let language = framework.strip_prefix("spikard-").unwrap_or("python");
             let e2e_dir = workspace_root.join("e2e").join(language);
@@ -239,7 +225,6 @@ impl CompareRunner {
             }
         }
 
-        // Try examples/{framework}
         let examples_dir = workspace_root.join("examples").join(framework);
         if examples_dir.exists() {
             return Ok(examples_dir);
@@ -252,20 +237,17 @@ impl CompareRunner {
     ///
     /// Phase 2 implementation: Performs statistical tests and effect size calculations
     fn create_basic_result(&self, profile_results: Vec<(String, ProfileResult)>) -> Result<CompareResult> {
-        // Collect metadata (use first framework's metadata as base)
         let metadata = if let Some((_, first_result)) = profile_results.first() {
             first_result.metadata.clone()
         } else {
             Metadata::collect()
         };
 
-        // Extract framework info
         let frameworks: Vec<FrameworkInfo> = profile_results
             .iter()
             .map(|(_, result)| result.framework.clone())
             .collect();
 
-        // Use configuration from first result
         let configuration = if let Some((_, first_result)) = profile_results.first() {
             first_result.configuration.clone()
         } else {
@@ -277,18 +259,14 @@ impl CompareRunner {
             }
         };
 
-        // Phase 2: Statistical analysis
         let analyzer = CompareAnalyzer::new(self.config.significance_threshold);
 
-        // Baseline is always the first framework
         let baseline = &profile_results[0];
 
-        // Perform statistical comparisons for each non-baseline framework
         let mut statistical_comparisons = Vec::new();
 
         for (idx, (framework, result)) in profile_results.iter().enumerate() {
             if idx == 0 {
-                // Skip baseline (no self-comparison)
                 continue;
             }
 
@@ -296,17 +274,14 @@ impl CompareRunner {
             statistical_comparisons.push((framework.clone(), analysis));
         }
 
-        // Phase 2: Create empty suites (will be populated in Phase 3 with workload-level comparisons)
         let suites = Vec::new();
 
-        // Calculate summary with statistical insights
         let overall_winner = if let Some((fw, _analysis)) = statistical_comparisons
             .iter()
             .find(|(_, a)| a.overall_verdict == "significantly_better")
         {
             fw.clone()
         } else {
-            // Fall back to highest RPS if no statistically significant winner
             profile_results
                 .iter()
                 .max_by(|(_, a), (_, b)| {
@@ -319,7 +294,6 @@ impl CompareRunner {
                 .unwrap_or_else(|| baseline.0.clone())
         };
 
-        // Calculate average performance gain
         let avg_rps_values: Vec<f64> = profile_results
             .iter()
             .map(|(_, r)| r.summary.avg_requests_per_sec)
@@ -339,7 +313,6 @@ impl CompareRunner {
 
         let avg_performance_gain = if min_rps > 0.0 { (max_rps / min_rps) - 1.0 } else { 0.0 };
 
-        // Print statistical summary
         println!("\n📊 Statistical Analysis Summary");
         println!("Baseline: {}", baseline.0);
         for (framework, analysis) in &statistical_comparisons {
@@ -364,8 +337,8 @@ impl CompareRunner {
         let summary = CompareSummary {
             overall_winner,
             avg_performance_gain,
-            workloads_won: std::collections::HashMap::new(),    // Phase 3
-            category_winners: std::collections::HashMap::new(), // Phase 3
+            workloads_won: std::collections::HashMap::new(),
+            category_winners: std::collections::HashMap::new(),
         };
 
         Ok(CompareResult {
@@ -397,7 +370,6 @@ impl CompareRunner {
         report.push_str("| Framework | Runtime | Verdict | Overall |\n");
         report.push_str("|-----------|---------|---------|----------|\n");
 
-        // Create a map of framework name to profile result for easy lookup
         let profile_map: std::collections::HashMap<&str, &ProfileResult> = profile_results
             .iter()
             .map(|(name, result)| (name.as_str(), result))
@@ -406,22 +378,19 @@ impl CompareRunner {
         for (idx, fw_info) in result.frameworks.iter().enumerate() {
             let verdict = if idx == 0 {
                 "baseline"
-            } else {
-                // Determine verdict from analysis
-                if let Some(profile_result) = profile_map.get(fw_info.name.as_str()) {
-                    let baseline_rps = profile_results[0].1.summary.avg_requests_per_sec;
-                    let this_rps = profile_result.summary.avg_requests_per_sec;
+            } else if let Some(profile_result) = profile_map.get(fw_info.name.as_str()) {
+                let baseline_rps = profile_results[0].1.summary.avg_requests_per_sec;
+                let this_rps = profile_result.summary.avg_requests_per_sec;
 
-                    if this_rps > baseline_rps * 1.1 {
-                        "significantly better"
-                    } else if this_rps < baseline_rps * 0.9 {
-                        "significantly worse"
-                    } else {
-                        "similar"
-                    }
+                if this_rps > baseline_rps * 1.1 {
+                    "significantly better"
+                } else if this_rps < baseline_rps * 0.9 {
+                    "significantly worse"
                 } else {
-                    "unknown"
+                    "similar"
                 }
+            } else {
+                "unknown"
             };
 
             let emoji = match verdict {
@@ -441,13 +410,11 @@ impl CompareRunner {
         report.push('\n');
         report.push_str(&format!("**Overall Winner:** {}\n\n", result.summary.overall_winner));
 
-        // Add performance metrics table
         report.push_str("## Performance Metrics\n\n");
         report.push_str("| Framework | Avg RPS | Avg Latency (ms) | Success Rate | Workloads |\n");
         report.push_str("|-----------|---------|------------------|--------------|----------|\n");
 
         for (name, profile_result) in profile_results {
-            // Calculate average latency from category breakdown
             let avg_latency = if profile_result.summary.category_breakdown.is_empty() {
                 0.0
             } else {
@@ -472,7 +439,6 @@ impl CompareRunner {
 
         report.push('\n');
 
-        // Add statistical analysis section if available
         if profile_results.len() > 1 {
             report.push_str("## Statistical Analysis\n\n");
 
@@ -481,7 +447,7 @@ impl CompareRunner {
 
             for (idx, (fw_name, fw_result)) in profile_results.iter().enumerate() {
                 if idx == 0 {
-                    continue; // Skip baseline
+                    continue;
                 }
 
                 report.push_str(&format!("### {} vs {}\n\n", fw_name, baseline.0));
@@ -494,7 +460,6 @@ impl CompareRunner {
                 for test in &analysis.statistical_tests {
                     let sig_marker = if test.is_significant { "✓" } else { "✗" };
 
-                    // Find corresponding effect size
                     let effect_size = analysis
                         .effect_sizes
                         .iter()
@@ -549,7 +514,6 @@ mod tests {
 
     #[test]
     fn test_compare_config_validation_min_frameworks() {
-        // Should fail with less than 2 frameworks
         let config = CompareConfig {
             frameworks: vec!["framework1".to_string()],
             ..Default::default()
@@ -562,7 +526,6 @@ mod tests {
 
     #[test]
     fn test_compare_config_validation_unknown_suite() {
-        // Should fail with unknown workload suite
         let config = CompareConfig {
             frameworks: vec!["framework1".to_string(), "framework2".to_string()],
             workload_suite: "non-existent-suite".to_string(),
@@ -577,7 +540,6 @@ mod tests {
 
     #[test]
     fn test_compare_config_validation_valid() {
-        // Should succeed with valid configuration
         let config = CompareConfig {
             frameworks: vec!["framework1".to_string(), "framework2".to_string()],
             workload_suite: "all".to_string(),
@@ -590,7 +552,6 @@ mod tests {
 
     #[test]
     fn test_port_allocation() {
-        // Port allocation should increment by 10 for each framework
         let config = CompareConfig {
             frameworks: vec!["fw1".to_string(), "fw2".to_string(), "fw3".to_string()],
             port: 8100,
@@ -599,7 +560,6 @@ mod tests {
 
         let runner = CompareRunner::new(config).expect("valid config");
 
-        // Test that port calculation works
         assert_eq!(runner.config.port, 8100);
         assert_eq!(runner.config.port + 10, 8110);
         assert_eq!(runner.config.port + 20, 8120);

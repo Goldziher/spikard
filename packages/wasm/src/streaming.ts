@@ -59,26 +59,24 @@ function toAsyncIterator(
 function wrapIterator(iterator: AsyncIterator<StreamChunk>): AsyncIteratorLike<StreamChunk> {
 	return {
 		next: iterator.next.bind(iterator),
-		throw: iterator.throw ? iterator.throw.bind(iterator) : undefined,
-		return: iterator.return ? iterator.return.bind(iterator) : undefined,
+		...(iterator.throw ? { throw: iterator.throw.bind(iterator) } : {}),
+		...(iterator.return ? { return: iterator.return.bind(iterator) } : {}),
 		[Symbol.asyncIterator]() {
 			return this;
 		},
 	};
 }
 
-function normalizeChunk(chunk: StreamChunk): Uint8Array {
+function normalizeChunk(chunk: unknown): Uint8Array {
 	if (typeof chunk === "string") {
 		return new TextEncoder().encode(chunk);
 	}
 	if (chunk instanceof Uint8Array) {
 		return chunk;
 	}
-	if (typeof Buffer !== "undefined" && chunk instanceof Buffer) {
-		return new Uint8Array(chunk);
-	}
 	if (ArrayBuffer.isView(chunk)) {
-		return new Uint8Array(chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength));
+		const view = chunk as ArrayBufferView;
+		return new Uint8Array(view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength));
 	}
 	if (chunk instanceof ArrayBuffer) {
 		return new Uint8Array(chunk);
@@ -91,7 +89,7 @@ function normalizeChunk(chunk: StreamChunk): Uint8Array {
 
 function concatChunks(chunks: Uint8Array[]): Uint8Array {
 	if (chunks.length === 1) {
-		return chunks[0];
+		return chunks[0] ?? new Uint8Array();
 	}
 
 	const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);

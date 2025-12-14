@@ -15,7 +15,6 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-// Mock handler that returns controlled responses
 struct MockHandler {
     should_fail_prepare: bool,
     should_fail_invoke: bool,
@@ -62,7 +61,6 @@ impl LanguageHandler for MockHandler {
 
 #[tokio::test]
 async fn test_handler_executor_with_validation_error() {
-    // Create a validator that will reject the request
     let schema = json!({
         "type": "object",
         "properties": {
@@ -86,7 +84,6 @@ async fn test_handler_executor_with_validation_error() {
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
         raw_query_params: Arc::new(HashMap::new()),
-        // Missing required field 'age'
         body: json!({"username": "john"}),
         raw_body: None,
         headers: Arc::new(HashMap::new()),
@@ -102,7 +99,6 @@ async fn test_handler_executor_with_validation_error() {
 
 #[tokio::test]
 async fn test_handler_executor_with_parameter_validation() {
-    // Create a parameter validator with schema
     let param_schema = json!({
         "type": "object",
         "properties": {
@@ -134,14 +130,12 @@ async fn test_handler_executor_with_parameter_validation() {
         dependencies: None,
     };
 
-    // Missing required query param should fail validation
     let result = executor.call(request, request_data).await;
     assert!(result.is_err());
 }
 
 #[tokio::test]
 async fn test_handler_executor_with_valid_parameters() {
-    // Create a parameter validator with optional param
     let param_schema = json!({
         "type": "object",
         "properties": {
@@ -262,7 +256,6 @@ async fn test_handler_executor_interpret_failure() {
 
 #[tokio::test]
 async fn test_handler_executor_with_both_validators() {
-    // Create both request and parameter validators
     let schema = json!({
         "type": "object",
         "properties": {
@@ -291,7 +284,6 @@ async fn test_handler_executor_with_both_validators() {
 
     let request = Request::builder().body(Body::empty()).unwrap();
 
-    // Valid request with all requirements
     let mut headers = HashMap::new();
     headers.insert("x-api-key".to_string(), "test-key".to_string());
 
@@ -338,7 +330,7 @@ async fn test_handler_executor_parameter_validation_failure() {
         raw_query_params: Arc::new(HashMap::new()),
         body: json!({}),
         raw_body: None,
-        headers: Arc::new(HashMap::new()), // Missing required header
+        headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         method: "GET".to_string(),
         path: "/test".to_string(),
@@ -389,7 +381,6 @@ async fn test_handler_executor_builder_pattern() {
         should_fail_interpret: false,
     });
 
-    // Test builder pattern chaining
     let executor = HandlerExecutor::with_handler(handler)
         .with_request_validator(request_validator)
         .with_parameter_validator(Arc::new(param_validator));

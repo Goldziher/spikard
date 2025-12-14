@@ -300,7 +300,7 @@ export class Spikard implements SpikardApp {
 			factory: isFactory ? (valueOrFactory as DependencyFactory) : undefined,
 			dependsOn: options?.dependsOn ?? [],
 			singleton: options?.singleton ?? false,
-			cacheable: options?.cacheable ?? !isFactory, // Values are cacheable by default
+			cacheable: options?.cacheable ?? !isFactory,
 		};
 
 		return this;
@@ -313,11 +313,11 @@ export class Spikard implements SpikardApp {
 	 */
 	getLifecycleHooks(): LifecycleHooks {
 		return {
-			onRequest: [...this.lifecycleHooks.onRequest],
-			preValidation: [...this.lifecycleHooks.preValidation],
-			preHandler: [...this.lifecycleHooks.preHandler],
-			onResponse: [...this.lifecycleHooks.onResponse],
-			onError: [...this.lifecycleHooks.onError],
+			onRequest: [...(this.lifecycleHooks.onRequest ?? [])],
+			preValidation: [...(this.lifecycleHooks.preValidation ?? [])],
+			preHandler: [...(this.lifecycleHooks.preHandler ?? [])],
+			onResponse: [...(this.lifecycleHooks.onResponse ?? [])],
+			onError: [...(this.lifecycleHooks.onError ?? [])],
 		};
 	}
 }

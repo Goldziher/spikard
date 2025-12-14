@@ -56,7 +56,6 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
     Ok(grouped)
 }
 
-// Simplified AppFactory: routes call into native extension with schemas; no PHP-side matching.
 fn build_app_factory(
     fixtures_by_category: &BTreeMap<String, Vec<Fixture>>,
     sse_fixtures: &[AsyncFixture],
@@ -74,7 +73,6 @@ fn build_app_factory(
         return code;
     }
 
-    // Generate SSE factory methods
     for (index, fixture) in sse_fixtures.iter().enumerate() {
         let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
         let factory_method = format!("create_sse_{}_{}", sanitize_identifier(&fixture.name), index + 1);
@@ -87,7 +85,6 @@ fn build_app_factory(
             producer_class = producer_class
         ));
 
-        // Generate SSE producer class
         let events_literal = if fixture.examples.is_empty() {
             "[]".to_string()
         } else {
@@ -107,7 +104,6 @@ fn build_app_factory(
         ));
     }
 
-    // Generate WebSocket factory methods
     for (index, fixture) in websocket_fixtures.iter().enumerate() {
         let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
         let factory_method = format!("create_websocket_{}_{}", sanitize_identifier(&fixture.name), index + 1);
@@ -120,7 +116,6 @@ fn build_app_factory(
             handler_class = handler_class
         ));
 
-        // Generate WebSocket handler class with example messages
         let messages_literal = if fixture.examples.is_empty() {
             "[]".to_string()
         } else {
@@ -140,7 +135,6 @@ fn build_app_factory(
         ));
     }
 
-    // Generate regular HTTP route factory methods
     for (category, fixtures) in fixtures_by_category {
         for (index, fixture) in fixtures.iter().enumerate() {
             let factory_method = format!(
@@ -152,10 +146,8 @@ fn build_app_factory(
             let method = fixture.request.method.to_ascii_uppercase();
             let (path, _) = normalize_path_and_query(fixture, fixture.request.path.as_str());
 
-            // Parse middleware metadata
             let metadata = parse_middleware(fixture).unwrap_or_default();
 
-            // Extract schemas from fixture
             let request_schema = if let Some(handler) = &fixture.handler {
                 if let Some(schema) = &handler.body_schema {
                     php_encode_json_value(schema)
@@ -166,7 +158,7 @@ fn build_app_factory(
                 "null".to_string()
             };
 
-            let response_schema = "null".to_string(); // PHP doesn't validate response schemas yet
+            let response_schema = "null".to_string();
 
             let parameter_schema = if let Some(handler) = &fixture.handler {
                 if let Some(params) = &handler.parameters {
@@ -178,14 +170,11 @@ fn build_app_factory(
                 "null".to_string()
             };
 
-            // Build ServerConfig from middleware
             let raw_middleware = fixture.handler.as_ref().and_then(|h| h.middleware.as_ref());
             let config_str = generate_server_config_php(&metadata, raw_middleware);
 
-            // Generate handler with expected response
             let handler_class = generate_handler_class_php(fixture);
 
-            // Generate factory method
             if config_str == "null" {
                 code.push_str(&format!(
                     "    public static function {factory_method}(): App\n    {{\n        $app = new App();\n{handler}\n        $app = $app->addRouteWithSchemas('{method}', '{path}', $handler, {req}, {resp}, {params});\n        return $app;\n    }}\n\n",
@@ -301,7 +290,6 @@ fn build_routes_json(
         }
     }
 
-    // SSE and WebSocket placeholders (no schema)
     for fixture in sse_fixtures {
         let path = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
         routes.push(json!({
@@ -334,14 +322,12 @@ fn generate_handler_class_php(fixture: &Fixture) -> String {
     let expected_body = fixture.expected_response.body.as_ref();
     let expected_headers = &fixture.expected_response.headers;
 
-    // Build response body
     let body_literal = if let Some(body_value) = expected_body {
         value_to_php(body_value)
     } else {
         "null".to_string()
     };
 
-    // Build response headers
     let headers_literal = if let Some(headers_map) = expected_headers {
         let mut header_pairs = Vec::new();
         for (key, value) in headers_map {
@@ -366,7 +352,6 @@ fn generate_handler_class_php(fixture: &Fixture) -> String {
 fn generate_server_config_php(metadata: &MiddlewareMetadata, raw_middleware: Option<&Value>) -> String {
     let mut config_lines = Vec::new();
 
-    // Compression config
     if let Some(compression) = &metadata.compression {
         let mut args = Vec::new();
         if let Some(gzip) = compression.gzip {
@@ -391,7 +376,6 @@ fn generate_server_config_php(metadata: &MiddlewareMetadata, raw_middleware: Opt
         }
     }
 
-    // Rate limit config
     if let Some(rate_limit) = &metadata.rate_limit {
         let mut args = vec![
             format!("perSecond: {}", rate_limit.per_second),
@@ -406,12 +390,10 @@ fn generate_server_config_php(metadata: &MiddlewareMetadata, raw_middleware: Opt
         ));
     }
 
-    // Request timeout
     if let Some(timeout) = &metadata.request_timeout {
         config_lines.push(format!("            requestTimeout: {}", timeout.seconds));
     }
 
-    // Request ID
     if let Some(request_id) = &metadata.request_id {
         if let Some(enabled) = request_id.enabled {
             config_lines.push(format!(
@@ -421,7 +403,6 @@ fn generate_server_config_php(metadata: &MiddlewareMetadata, raw_middleware: Opt
         }
     }
 
-    // Body limit
     if let Some(body_limit) = &metadata.body_limit {
         if let Some(max_bytes) = body_limit.max_bytes {
             config_lines.push(format!("            maxBodySize: {}", max_bytes));
@@ -430,23 +411,19 @@ fn generate_server_config_php(metadata: &MiddlewareMetadata, raw_middleware: Opt
         }
     }
 
-    // JWT auth
     if let Some(middleware) = raw_middleware {
         if let Some(jwt) = middleware.get("jwt_auth") {
             config_lines.push(build_jwt_config_php(jwt));
         }
 
-        // API Key auth
         if let Some(api_key) = middleware.get("api_key_auth") {
             config_lines.push(build_api_key_config_php(api_key));
         }
 
-        // CORS
         if let Some(cors) = middleware.get("cors") {
             config_lines.push(build_cors_config_php(cors));
         }
 
-        // OpenAPI
         if let Some(openapi) = middleware.get("openapi") {
             config_lines.push(build_openapi_config_php(openapi));
         }

@@ -91,7 +91,6 @@ async function handleEcho(request: Request): Promise<Response> {
 	try {
 		const body = (await request.json()) as unknown;
 
-		// Type guard for EchoRequest
 		if (
 			typeof body !== "object" ||
 			body === null ||
@@ -211,7 +210,6 @@ function getPathname(url: string): string {
 function routeRequest(method: string, pathname: string, request: Request): Response | Promise<Response> {
 	const normalizedMethod = method.toUpperCase();
 
-	// Route matching
 	if (pathname === "/" && normalizedMethod === "GET") {
 		return handleHome();
 	}
@@ -228,7 +226,6 @@ function routeRequest(method: string, pathname: string, request: Request): Respo
 		return handleHealth();
 	}
 
-	// Default 404 handler
 	return handleNotFound();
 }
 

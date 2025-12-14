@@ -323,13 +323,10 @@ mod tests {
             }
         });
 
-        // Validate headers
         assert!(HeaderValidator::validate_required(&headers, &["Content-Type", "Authorization"]).is_ok());
 
-        // Validate required body fields
         assert!(BodyValidator::validate_required_fields(&body, &["username", "password"]).is_ok());
 
-        // Validate field types
         assert!(BodyValidator::validate_field_type(&body, "username", FieldType::String).is_ok());
         assert!(BodyValidator::validate_field_type(&body, "roles", FieldType::Array).is_ok());
         assert!(BodyValidator::validate_field_type(&body, "preferences", FieldType::Object).is_ok());
@@ -345,7 +342,6 @@ mod tests {
             "array_field": [1, 2, 3]
         });
 
-        // Test all field types
         assert!(BodyValidator::validate_field_type(&body, "string_field", FieldType::String).is_ok());
         assert!(BodyValidator::validate_field_type(&body, "number_field", FieldType::Number).is_ok());
         assert!(BodyValidator::validate_field_type(&body, "boolean_field", FieldType::Boolean).is_ok());

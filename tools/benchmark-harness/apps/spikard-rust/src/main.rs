@@ -20,9 +20,6 @@ struct Args {
     port: u16,
 }
 
-// ============================================================================
-// JSON Body Workloads
-// ============================================================================
 
 #[derive(Debug, Serialize, Deserialize)]
 struct SmallPayload {
@@ -87,7 +84,6 @@ struct VeryLargePayload {
     tags: Vec<Tag>,
 }
 
-// JSON handlers
 async fn post_json_small(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: SmallPayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -128,9 +124,6 @@ async fn post_json_very_large(ctx: RequestContext) -> Result<Response<Body>, (St
         .unwrap())
 }
 
-// ============================================================================
-// Multipart Form Workloads
-// ============================================================================
 
 async fn post_multipart_small(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let result = serde_json::json!({
@@ -168,9 +161,6 @@ async fn post_multipart_large(_ctx: RequestContext) -> Result<Response<Body>, (S
         .unwrap())
 }
 
-// ============================================================================
-// URL Encoded Form Workloads
-// ============================================================================
 
 async fn post_urlencoded_simple(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: Value = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
@@ -192,9 +182,6 @@ async fn post_urlencoded_complex(ctx: RequestContext) -> Result<Response<Body>, 
         .unwrap())
 }
 
-// ============================================================================
-// Path Parameter Workloads
-// ============================================================================
 
 async fn get_path_simple(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let id = ctx.path_param("id").unwrap_or("unknown");
@@ -270,9 +257,6 @@ async fn get_path_date(ctx: RequestContext) -> Result<Response<Body>, (StatusCod
         .unwrap())
 }
 
-// ============================================================================
-// Query Parameter Workloads
-// ============================================================================
 
 #[derive(Debug, Serialize, Deserialize)]
 struct QueryFew {
@@ -336,9 +320,6 @@ async fn get_query_many(ctx: RequestContext) -> Result<Response<Body>, (StatusCo
         .unwrap())
 }
 
-// ============================================================================
-// Health Check
-// ============================================================================
 
 async fn health(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let result = serde_json::json!({ "status": "ok" });
@@ -349,9 +330,6 @@ async fn health(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, Str
         .unwrap())
 }
 
-// ============================================================================
-// Main Server Setup
-// ============================================================================
 
 #[tokio::main]
 async fn main() {
@@ -366,25 +344,20 @@ async fn main() {
 
     let mut app = App::new().config(config);
 
-    // Health check
     app.route(get("/health"), health).unwrap();
 
-    // JSON body workloads
     app.route(post("/json/small"), post_json_small).unwrap();
     app.route(post("/json/medium"), post_json_medium).unwrap();
     app.route(post("/json/large"), post_json_large).unwrap();
     app.route(post("/json/very-large"), post_json_very_large).unwrap();
 
-    // Multipart workloads
     app.route(post("/multipart/small"), post_multipart_small).unwrap();
     app.route(post("/multipart/medium"), post_multipart_medium).unwrap();
     app.route(post("/multipart/large"), post_multipart_large).unwrap();
 
-    // URL encoded workloads
     app.route(post("/urlencoded/simple"), post_urlencoded_simple).unwrap();
     app.route(post("/urlencoded/complex"), post_urlencoded_complex).unwrap();
 
-    // Path parameter workloads
     app.route(get("/path/simple/{id}"), get_path_simple).unwrap();
     app.route(get("/path/multiple/{user_id}/{post_id}"), get_path_multiple)
         .unwrap();
@@ -394,7 +367,6 @@ async fn main() {
     app.route(get("/path/uuid/{uuid}"), get_path_uuid).unwrap();
     app.route(get("/path/date/{date}"), get_path_date).unwrap();
 
-    // Query parameter workloads
     app.route(get("/query/few"), get_query_few).unwrap();
     app.route(get("/query/medium"), get_query_medium).unwrap();
     app.route(get("/query/many"), get_query_many).unwrap();

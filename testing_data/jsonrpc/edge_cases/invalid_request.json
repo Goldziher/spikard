@@ -1,0 +1,133 @@
+{
+	"name": "invalid_request",
+	"description": "Invalid JSON-RPC request structure - missing required fields",
+	"method": "invalid_request",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"description": "JSON-RPC request object (may be invalid)"
+	},
+	"result_schema": {
+		"type": "object",
+		"description": "JSON-RPC error response"
+	},
+	"examples": [],
+	"error_cases": [
+		{
+			"name": "missing_jsonrpc_field",
+			"description": "Missing required 'jsonrpc' field",
+			"params": {
+				"method": "user.list",
+				"params": {},
+				"id": 1
+			},
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request"
+			}
+		},
+		{
+			"name": "wrong_jsonrpc_version",
+			"description": "Wrong jsonrpc version (1.0 instead of 2.0)",
+			"params": {
+				"jsonrpc": "1.0",
+				"method": "user.list",
+				"params": {},
+				"id": 1
+			},
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request",
+				"data": {
+					"reason": "jsonrpc must be '2.0'"
+				}
+			}
+		},
+		{
+			"name": "missing_method_field",
+			"description": "Missing required 'method' field",
+			"params": {
+				"jsonrpc": "2.0",
+				"params": {},
+				"id": 1
+			},
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request"
+			}
+		},
+		{
+			"name": "non_string_method",
+			"description": "Method field is not a string",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": 123,
+				"params": {},
+				"id": 1
+			},
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request",
+				"data": {
+					"reason": "method must be a string"
+				}
+			}
+		},
+		{
+			"name": "invalid_params_type_string",
+			"description": "Params is a string instead of object or array",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.list",
+				"params": "invalid_string",
+				"id": 1
+			},
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request",
+				"data": {
+					"reason": "params must be an object or array"
+				}
+			}
+		},
+		{
+			"name": "invalid_params_type_number",
+			"description": "Params is a number instead of object or array",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.list",
+				"params": 42,
+				"id": 1
+			},
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request",
+				"data": {
+					"reason": "params must be an object or array"
+				}
+			}
+		},
+		{
+			"name": "invalid_id_type",
+			"description": "ID is an object (should be string, number, or null)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.list",
+				"params": {},
+				"id": {
+					"nested": "object"
+				}
+			},
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request",
+				"data": {
+					"reason": "id must be a string, number, or null"
+				}
+			}
+		}
+	],
+	"tags": ["invalid-request", "protocol", "edge-cases", "error-handling"]
+}

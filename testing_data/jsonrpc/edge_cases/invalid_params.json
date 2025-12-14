@@ -1,0 +1,206 @@
+{
+	"name": "invalid_params",
+	"description": "Invalid method parameters - validation error handling",
+	"method": "invalid_params",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"description": "Method parameters that may be invalid"
+	},
+	"result_schema": {
+		"type": "object",
+		"description": "JSON-RPC error response"
+	},
+	"examples": [],
+	"error_cases": [
+		{
+			"name": "missing_required_param_name",
+			"description": "Missing required 'name' parameter in user.create",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"email": "test@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 1
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "userData.name",
+					"reason": "Required field is missing"
+				}
+			}
+		},
+		{
+			"name": "missing_required_param_email",
+			"description": "Missing required 'email' parameter in user.create",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "John Doe",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 2
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "userData.email",
+					"reason": "Required field is missing"
+				}
+			}
+		},
+		{
+			"name": "wrong_param_type_string_instead_of_object",
+			"description": "Wrong parameter type - string instead of object",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": "not an object"
+				},
+				"id": 3
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "userData",
+					"reason": "Expected object, got string"
+				}
+			}
+		},
+		{
+			"name": "wrong_param_type_integer",
+			"description": "Wrong parameter type - integer instead of string",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": 12345,
+						"email": "test@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 4
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "userData.name",
+					"reason": "Expected string, got integer"
+				}
+			}
+		},
+		{
+			"name": "null_required_field",
+			"description": "Null value for required field",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": null,
+						"email": "test@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 5
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "userData.name",
+					"reason": "Expected string, got null"
+				}
+			}
+		},
+		{
+			"name": "invalid_email_format",
+			"description": "Invalid email format",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "John Doe",
+						"email": "not-an-email",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 6
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "userData.email",
+					"reason": "Invalid email format"
+				}
+			}
+		},
+		{
+			"name": "password_too_short",
+			"description": "Password below minimum length (8 chars)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "John Doe",
+						"email": "john@example.com",
+						"password": "short"
+					}
+				},
+				"id": 7
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "userData.password",
+					"reason": "Password must be at least 8 characters"
+				}
+			}
+		},
+		{
+			"name": "name_exceeds_max_length",
+			"description": "Name exceeds maximum length (100 chars)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore mag",
+						"email": "test@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 8
+			},
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"field": "userData.name",
+					"reason": "Name must not exceed 100 characters"
+				}
+			}
+		}
+	],
+	"tags": ["invalid-params", "validation", "edge-cases", "error-handling"]
+}

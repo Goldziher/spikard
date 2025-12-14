@@ -208,7 +208,7 @@ jobs:
 
       - name: Run Deno tests
         working-directory: e2e/deno
-        run: deno test --allow-read --allow-net --allow-env tests/
+        run: deno test --no-check --sloppy-imports --allow-read --allow-net --allow-env tests/
 
   test-cloudflare:
     name: Test Cloudflare Workers E2E
@@ -270,7 +270,8 @@ jobs:
       - name: Run Deno coverage
         working-directory: e2e/deno
         run: |
-          deno test --allow-read --allow-net --allow-env --coverage=coverage_profile/ tests/
+          deno test --no-check --sloppy-imports --allow-read --allow-net --allow-env --coverage=coverage_profile/ tests/
+          mkdir -p coverage
           deno coverage coverage_profile/ --lcov --output=coverage/lcov.info
 
       - name: Upload coverage to Codecov

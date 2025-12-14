@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Spikard\Http;
 
-// When the native extension is loaded, alias the internal response to this class name.
-if (\class_exists(\Spikard\Internal\Response::class)) {
-    \class_alias(\Spikard\Internal\Response::class, __NAMESPACE__ . '\Response');
+// When the native extension is loaded, the Response class is provided by the extension.
+if (\class_exists(__NAMESPACE__ . '\Response', false)) {
     return;
 }
 
@@ -42,5 +41,37 @@ final class Response
     public function withCookies(array $cookies): self
     {
         return new self(body: $this->body, statusCode: $this->statusCode, headers: $this->headers, cookies: $cookies);
+    }
+
+    public function getStatus(): int
+    {
+        return $this->statusCode;
+    }
+
+    public function getStatusCode(): int
+    {
+        return $this->statusCode;
+    }
+
+    /** @return array<string, string> */
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    /** @return array<string, string> */
+    public function getCookies(): array
+    {
+        return $this->cookies;
+    }
+
+    public function getBody(): string
+    {
+        if (\is_string($this->body)) {
+            return $this->body;
+        }
+
+        $encoded = \json_encode($this->body);
+        return $encoded === false ? '' : $encoded;
     }
 }

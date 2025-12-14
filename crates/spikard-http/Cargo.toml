@@ -49,6 +49,9 @@ base64 = "0.22.1"
 flate2.workspace = true
 brotli = "8.0"
 
+[lints]
+workspace = true
+
 [features]
 default = []
 di = ["spikard-core/di"]
@@ -56,3 +59,4 @@ di = ["spikard-core/di"]
 [dev-dependencies]
 chrono = "0.4"
 doc-comment = "0.3"
+tempfile = "3.23"

@@ -26,19 +26,18 @@ class TestUploadFileRolledToDisk:
         upload = UploadFile(
             filename="small.txt",
             content=content,
-            max_spool_size=1024 * 1024,  # 1MB threshold
+            max_spool_size=1024 * 1024,
         )
 
         assert upload.rolled_to_disk is False
 
     def test_large_file_spills_to_disk(self) -> None:
         """Test that large files spill to disk (rolled_to_disk = True)."""
-        # Create file larger than 1KB threshold
-        large_content = b"x" * (2 * 1024)  # 2KB
+        large_content = b"x" * (2 * 1024)
         upload = UploadFile(
             filename="large.bin",
             content=large_content,
-            max_spool_size=1024,  # 1KB threshold
+            max_spool_size=1024,
         )
 
         assert upload.rolled_to_disk is True
@@ -46,14 +45,13 @@ class TestUploadFileRolledToDisk:
     def test_file_at_threshold_stays_in_memory(self) -> None:
         """Test file exactly at threshold remains in memory."""
         threshold = 1024
-        content = b"x" * threshold  # Exactly at threshold
+        content = b"x" * threshold
         upload = UploadFile(
             filename="threshold.bin",
             content=content,
             max_spool_size=threshold,
         )
 
-        # At threshold should stay in memory
         assert upload.rolled_to_disk is False
 
     def test_file_one_byte_over_threshold_rolls_to_disk(self) -> None:
@@ -87,14 +85,11 @@ class TestUploadFileRolledToDisk:
             max_spool_size=threshold,
         )
 
-        # Initially small
         assert upload.rolled_to_disk is False
 
-        # Write more to exceed threshold
-        upload.seek(0, 2)  # Seek to end
+        upload.seek(0, 2)
         upload.write(b"x" * 200)
 
-        # Should now be on disk
         assert upload.rolled_to_disk is True
 
     def test_rolled_to_disk_false_attribute_access(self) -> None:
@@ -105,7 +100,6 @@ class TestUploadFileRolledToDisk:
             max_spool_size=1024,
         )
 
-        # getattr with default should return False if _rolled not set
         rolled = getattr(upload._file, "_rolled", False)
         assert rolled is False
         assert upload.rolled_to_disk is False
@@ -120,17 +114,14 @@ class TestUploadFileAsync:
         content = b"0123456789"
         upload = UploadFile(filename="test.txt", content=content)
 
-        # Test seek to start
         result = await upload.aseek(0)
         assert result == 0
         assert upload._file.tell() == 0
 
-        # Test seek to end
         result = await upload.aseek(0, 2)
         assert result == len(content)
         assert upload._file.tell() == len(content)
 
-        # Test relative seek
         upload.seek(5)
         result = await upload.aseek(3, 1)
         assert result == 8
@@ -141,16 +132,13 @@ class TestUploadFileAsync:
         """Test async write with various data patterns."""
         upload = UploadFile(filename="test.txt", content=b"initial")
 
-        # Single write
         upload.seek(0, 2)
         bytes_written = await upload.awrite(b"chunk1")
         assert bytes_written == 6
 
-        # Empty write
         bytes_written = await upload.awrite(b"")
         assert bytes_written == 0
 
-        # Verify result
         upload.seek(0)
         assert upload.read() == b"initialchunk1"
 
@@ -193,16 +181,12 @@ class TestUploadFileProperties:
         content = b"0123456789"
         upload = UploadFile(filename="test.txt", content=content)
 
-        # Position at byte 5
         upload.seek(5)
 
-        # Get BytesIO
         bytes_io = upload.as_bytes_io()
         bytes_io.seek(0)
 
-        # Original position preserved
         assert upload._file.tell() == 5
-        # BytesIO has full content
         assert bytes_io.read() == content
 
     def test_as_bytes_io_returns_independent_instance(self) -> None:
@@ -228,17 +212,13 @@ class TestUploadFileIntegration:
         """Test complete seek/read/write cycle."""
         upload = UploadFile(filename="test.txt", content=b"0123456789")
 
-        # Seek to position 5
         upload.seek(5)
-        # Read 3 bytes
         data = upload.read(3)
         assert data == b"567"
 
-        # Write at end
         upload.seek(0, 2)
         upload.write(b"!")
 
-        # Verify full content
         upload.seek(0)
         assert upload.read() == b"0123456789!"
 
@@ -247,13 +227,9 @@ class TestUploadFileIntegration:
         """Test sequence of async operations."""
         upload = UploadFile(filename="test.txt", content=b"start")
 
-        # Async seek to end
         await upload.aseek(0, 2)
-        # Async write
         await upload.awrite(b" middle")
-        # Async seek back to start
         await upload.aseek(0)
-        # Async read
         data = await upload.aread()
 
         assert data == b"start middle"
@@ -264,5 +240,4 @@ class TestUploadFileIntegration:
             data = upload.read()
             assert data == b"content"
 
-        # Should be closed after context exit
         assert upload._file.closed is True

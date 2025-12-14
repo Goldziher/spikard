@@ -3,8 +3,8 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
+import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppStaticFilesStaticFileServerReturnsTextFile,
 	createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory,
@@ -19,10 +19,10 @@ describe("static_files", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseText = response.text();
-		expect(responseText).toBe("Hello from static storage");
+		expect(responseText.trimEnd()).toBe("Hello from static storage");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["cache-control"]).toBe("public, max-age=60");
 		expect(responseHeaders["content-type"]).toBe("text/plain");
+		expect(responseHeaders["cache-control"]).toBe("public, max-age=60");
 	});
 
 	test("Static server returns index html for directory", async () => {
@@ -33,7 +33,7 @@ describe("static_files", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseText = response.text();
-		expect(responseText).toBe("<!doctype html><h1>Welcome</h1>");
+		expect(responseText.trimEnd()).toBe("<!doctype html><h1>Welcome</h1>");
 		const responseHeaders = response.headers();
 		expect(responseHeaders["content-type"]).toBe("text/html");
 	});

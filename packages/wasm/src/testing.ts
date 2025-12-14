@@ -1,12 +1,22 @@
-import { init as initWasm, TestClient as NativeTestClient } from "../runtime/spikard_wasm.js";
-import type { LifecycleHookFunction, LifecycleHookPayload, LifecycleHooks } from "./app";
+import type { LifecycleHookFunction, LifecycleHooks } from "./app";
+import type { StaticFilesConfig, StaticManifestEntry } from "./config";
 import type { HandlerFunction, SpikardApp } from "./index";
 import type { Request } from "./request";
 import { isStreamingResponse } from "./streaming";
-import type { HandlerPayload, JsonValue, StructuredHandlerResponse } from "./types";
+import type {
+	AbortSignalLike,
+	HandlerBody,
+	HandlerContext,
+	HandlerPayload,
+	JsonValue,
+	StructuredHandlerResponse,
+} from "./types";
+import { gunzipSync } from "fflate";
 
 type HeaderMap = Record<string, string>;
 type HeaderInput = HeaderMap | Map<string, string> | null | undefined;
+
+const globalAny = globalThis as unknown as { Buffer?: unknown };
 
 export interface MultipartFile {
 	name: string;
@@ -39,7 +49,17 @@ type NativeRequestOptions = {
 	binary?: string;
 };
 
-type NativeClient = InstanceType<typeof NativeTestClient>;
+interface NativeClient {
+	get(path: string, headers: HeaderMap | null): Promise<NativeSnapshot>;
+	delete(path: string, headers: HeaderMap | null): Promise<NativeSnapshot>;
+	head(path: string, headers: HeaderMap | null): Promise<NativeSnapshot>;
+	options(path: string, headers: HeaderMap | null): Promise<NativeSnapshot>;
+	trace(path: string, headers: HeaderMap | null): Promise<NativeSnapshot>;
+	post(path: string, options: NativeRequestOptions | null): Promise<NativeSnapshot>;
+	put(path: string, options: NativeRequestOptions | null): Promise<NativeSnapshot>;
+	patch(path: string, options: NativeRequestOptions | null): Promise<NativeSnapshot>;
+	handle_request(requestJson: string): Promise<NativeSnapshot>;
+}
 
 type NativeLifecycleHookResult =
 	| { type: "request"; payload: InternalRequestPayload }
@@ -58,10 +78,62 @@ type NativeClientFactory = (
 	handlers: Record<string, HandlerFunction>,
 	config: string | null,
 	lifecycleHooks: NativeLifecycleHooksPayload | null,
+	dependencies: Record<string, unknown> | null,
 ) => Promise<NativeClient>;
 
-const defaultNativeClientFactory: NativeClientFactory = (routesJson, handlers, config, lifecycleHooks) =>
-	wasmInitPromise.then(() => new NativeTestClient(routesJson, handlers, config, lifecycleHooks));
+type NativeTestClientConstructor = new (
+	routesJson: string,
+	handlers: Record<string, HandlerFunction>,
+	config: string | null,
+	lifecycleHooks: NativeLifecycleHooksPayload | null,
+	dependencies: Record<string, unknown> | null,
+) => NativeClient;
+
+type WasmBindings = {
+	default?: (module?: unknown) => Promise<unknown>;
+	init: () => unknown;
+	TestClient: NativeTestClientConstructor;
+};
+
+let wasmBindingsPromise: Promise<WasmBindings> | null = null;
+
+async function loadWasmBindings(): Promise<WasmBindings> {
+	if (wasmBindingsPromise) {
+		return wasmBindingsPromise;
+	}
+	wasmBindingsPromise = (async () => {
+		const runtimePath = "../runtime/spikard_wasm.js";
+		const webFallback = "../../../crates/spikard-wasm/dist-web/" + "spikard_wasm.js";
+		const nodeFallback = "../../../crates/spikard-wasm/dist-node/" + "spikard_wasm.js";
+		const preferNode = isNodeLikeEnvironment();
+
+		const candidates = preferNode ? [nodeFallback, runtimePath, webFallback] : [runtimePath, webFallback, nodeFallback];
+
+		for (const candidate of candidates) {
+			try {
+				return (await import(candidate)) as unknown as WasmBindings;
+			} catch {}
+		}
+
+		throw new Error("Failed to load WASM bindings (runtime, dist-web, dist-node).");
+	})();
+	return wasmBindingsPromise;
+}
+
+const defaultNativeClientFactory: NativeClientFactory = async (
+	routesJson,
+	handlers,
+	config,
+	lifecycleHooks,
+	dependencies,
+) => {
+	const bindings = await loadWasmBindings();
+	if (typeof bindings.default === "function") {
+		await bindings.default();
+	}
+	await Promise.resolve(bindings.init());
+	return new bindings.TestClient(routesJson, handlers, config, lifecycleHooks, dependencies);
+};
 
 let nativeClientFactory: NativeClientFactory = defaultNativeClientFactory;
 
@@ -78,7 +150,7 @@ interface NativeSnapshot {
 const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
 const RAW_REQUEST_KEY = "__spikard_raw_request__";
-const wasmInitPromise = Promise.resolve(initWasm());
+const ABORT_SIGNAL_KEY = "__spikard_abort_signal__";
 const EMPTY_HOOKS: LifecycleHooks = {
 	onRequest: [],
 	preValidation: [],
@@ -134,8 +206,9 @@ export class TestResponse {
 
 	bytes(): Uint8Array {
 		const decoded = this.getDecodedBody();
-		if (typeof globalThis.Buffer !== "undefined") {
-			return globalThis.Buffer.from(decoded);
+		const bufferCtor = globalAny.Buffer as { from: (data: Uint8Array) => Uint8Array } | undefined;
+		if (bufferCtor) {
+			return bufferCtor.from(decoded);
 		}
 		return decoded.slice();
 	}
@@ -180,40 +253,44 @@ export class TestClient {
 		const routesJson = JSON.stringify(app.routes);
 		const lifecycleHooks = normalizeLifecycleHooks(app.lifecycleHooks);
 		const wrappedHandlers = wrapHandlers(this.websocketHandlers);
-		const configString = app.config && Object.keys(app.config).length > 0 ? JSON.stringify(app.config) : null;
-
+		const dependencies = (app as SpikardApp & { dependencies?: Record<string, unknown> }).dependencies ?? null;
 		const nativeLifecycleHooks = createNativeLifecycleHooks(lifecycleHooks);
 
-		this.nativeClientPromise = nativeClientFactory(routesJson, wrappedHandlers, configString, nativeLifecycleHooks);
+		this.nativeClientPromise = (async () => {
+			const resolvedApp = await withStaticManifest(app);
+			const configString =
+				resolvedApp.config && Object.keys(resolvedApp.config).length > 0 ? JSON.stringify(resolvedApp.config) : null;
+			return nativeClientFactory(routesJson, wrappedHandlers, configString, nativeLifecycleHooks, dependencies);
+		})();
 	}
 
 	async get(path: string, headers?: Record<string, string>): Promise<TestResponse> {
 		const native = await this.nativeClientPromise;
-		const snapshot = await native.get(path, headers ?? null);
+		const snapshot = await this.dispatchWithHeaders(native, "GET", path, headers);
 		return this.responseFromNative(snapshot);
 	}
 
 	async delete(path: string, headers?: Record<string, string>): Promise<TestResponse> {
 		const native = await this.nativeClientPromise;
-		const snapshot = await native.delete(path, headers ?? null);
+		const snapshot = await this.dispatchWithHeaders(native, "DELETE", path, headers);
 		return this.responseFromNative(snapshot);
 	}
 
 	async head(path: string, headers?: Record<string, string>): Promise<TestResponse> {
 		const native = await this.nativeClientPromise;
-		const snapshot = await native.head(path, headers ?? null);
+		const snapshot = await this.dispatchWithHeaders(native, "HEAD", path, headers);
 		return this.responseFromNative(snapshot);
 	}
 
 	async options(path: string, headers?: Record<string, string>): Promise<TestResponse> {
 		const native = await this.nativeClientPromise;
-		const snapshot = await native.options(path, headers ?? null);
+		const snapshot = await this.dispatchWithHeaders(native, "OPTIONS", path, headers);
 		return this.responseFromNative(snapshot);
 	}
 
 	async trace(path: string, headers?: Record<string, string>): Promise<TestResponse> {
 		const native = await this.nativeClientPromise;
-		const snapshot = await native.trace(path, headers ?? null);
+		const snapshot = await this.dispatchWithHeaders(native, "TRACE", path, headers);
 		return this.responseFromNative(snapshot);
 	}
 
@@ -236,6 +313,7 @@ export class TestClient {
 	}
 
 	async websocketConnect(path: string): Promise<WebSocketTestConnection> {
+		await this.nativeClientPromise;
 		const route = this.findRoute("GET", path);
 		if (!route) {
 			throw new Error(`WebSocket route not found for ${path}`);
@@ -248,8 +326,64 @@ export class TestClient {
 	}
 
 	private responseFromNative(snapshot: NativeSnapshot) {
-		const headers = normalizeRecord(snapshot.headers);
-		return new TestResponse(snapshot.status, headers, snapshot.body);
+		const rawHeaders = normalizeRecord(snapshot.headers);
+		const normalizedHeaders = lowerCaseHeaderKeys(rawHeaders);
+		const bodyBytes = toUint8Array(snapshot.body);
+		const unwrapped = tryUnwrapStructuredSnapshot(bodyBytes);
+		if (unwrapped) {
+			const flattened = flattenStructuredResponse(unwrapped);
+			const status = flattened.status ?? flattened.statusCode ?? snapshot.status;
+			const headers = lowerCaseHeaderKeys({
+				...normalizeRecord(flattened.headers ?? {}),
+				...normalizedHeaders,
+			});
+			const body = flattened.body ?? null;
+			return new TestResponse(status, headers, encodeBodyBytes(body));
+		}
+		return new TestResponse(snapshot.status, normalizedHeaders, bodyBytes);
+	}
+
+	private dispatchWithHeaders(
+		native: NativeClient,
+		method: string,
+		path: string,
+		headers?: Record<string, string>,
+	): Promise<NativeSnapshot> {
+		const normalizedHeaders = normalizeHeaderInput(headers);
+		if (!normalizedHeaders) {
+			switch (method) {
+				case "GET":
+					return native.get(path, null);
+				case "DELETE":
+					return native.delete(path, null);
+				case "HEAD":
+					return native.head(path, null);
+				case "OPTIONS":
+					return native.options(path, null);
+				case "TRACE":
+					return native.trace(path, null);
+				default:
+					return native.get(path, null);
+			}
+		}
+		const maybeHandleRequest = (native as unknown as { handle_request?: unknown }).handle_request;
+		if (typeof maybeHandleRequest === "function") {
+			return native.handle_request(JSON.stringify({ method, path, headers: normalizedHeaders }));
+		}
+		switch (method) {
+			case "GET":
+				return native.get(path, normalizedHeaders);
+			case "DELETE":
+				return native.delete(path, normalizedHeaders);
+			case "HEAD":
+				return native.head(path, normalizedHeaders);
+			case "OPTIONS":
+				return native.options(path, normalizedHeaders);
+			case "TRACE":
+				return native.trace(path, normalizedHeaders);
+			default:
+				return native.get(path, normalizedHeaders);
+		}
 	}
 
 	private buildNativeOptions(options?: RequestOptions): NativeRequestOptions | null {
@@ -281,7 +415,7 @@ export class TestClient {
 			return native;
 		}
 		if ("json" in options) {
-			native.json = options.json ?? null;
+			native.json = options.json == null ? null : normalizeJsonValue(options.json);
 		}
 		if (options.binary) {
 			native.binary = options.binary;
@@ -293,7 +427,7 @@ export class TestClient {
 		if (!options?.headers || Object.keys(options.headers).length === 0) {
 			return null;
 		}
-		return options.headers;
+		return normalizeHeaderInput(options.headers);
 	}
 
 	private findRoute(
@@ -311,6 +445,219 @@ export class TestClient {
 		}
 		return undefined;
 	}
+}
+
+function normalizeHeaderInput(headers?: Record<string, string> | null): HeaderMap | null {
+	if (!headers) {
+		return null;
+	}
+	const normalized: HeaderMap = {};
+	for (const [key, value] of Object.entries(headers)) {
+		normalized[key] = String(value);
+	}
+	return normalized;
+}
+
+async function withStaticManifest(app: SpikardApp): Promise<SpikardApp> {
+	const config = app.config;
+	if (!config || !config.staticFiles || config.staticFiles.length === 0) {
+		return app;
+	}
+	if (Array.isArray(config.__wasmStaticManifest) && config.__wasmStaticManifest.length > 0) {
+		return app;
+	}
+
+	const manifest = await buildStaticManifest(config.staticFiles);
+	if (manifest.length === 0) {
+		return app;
+	}
+	return {
+		...app,
+		config: {
+			...config,
+			__wasmStaticManifest: manifest,
+		},
+	};
+}
+
+function isNodeLikeEnvironment(): boolean {
+	const processValue = (globalThis as Record<string, unknown>)["process"];
+	if (!processValue || typeof processValue !== "object") {
+		return false;
+	}
+	const versionsValue = (processValue as Record<string, unknown>)["versions"];
+	if (!versionsValue || typeof versionsValue !== "object") {
+		return false;
+	}
+	return typeof (versionsValue as Record<string, unknown>)["node"] === "string";
+}
+
+function hasDeno(): boolean {
+	return typeof (globalThis as Record<string, unknown>)["Deno"] === "object";
+}
+
+function normalizeRoute(route: string): string {
+	let normalized = route.replaceAll("\\", "/");
+	while (normalized.includes("//")) {
+		normalized = normalized.replaceAll("//", "/");
+	}
+	if (!normalized.startsWith("/")) {
+		normalized = `/${normalized}`;
+	}
+	return normalized;
+}
+
+function contentTypeForPath(path: string): string {
+	const lower = path.toLowerCase();
+	if (lower.endsWith(".html")) {
+		return "text/html";
+	}
+	if (lower.endsWith(".txt")) {
+		return "text/plain";
+	}
+	if (lower.endsWith(".css")) {
+		return "text/css";
+	}
+	if (lower.endsWith(".js") || lower.endsWith(".mjs")) {
+		return "application/javascript";
+	}
+	if (lower.endsWith(".json")) {
+		return "application/json";
+	}
+	if (lower.endsWith(".svg")) {
+		return "image/svg+xml";
+	}
+	if (lower.endsWith(".png")) {
+		return "image/png";
+	}
+	if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+		return "image/jpeg";
+	}
+	return "application/octet-stream";
+}
+
+function buildStaticHeaders(filePath: string, cacheControl?: string | null): Record<string, string> {
+	const headers: Record<string, string> = {
+		"content-type": contentTypeForPath(filePath),
+	};
+	if (cacheControl) {
+		headers["cache-control"] = cacheControl;
+	}
+	return headers;
+}
+
+async function buildStaticManifest(configs: StaticFilesConfig[]): Promise<StaticManifestEntry[]> {
+	if (isNodeLikeEnvironment()) {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+		const manifest: StaticManifestEntry[] = [];
+		for (const config of configs) {
+			if (!config.directory || !config.routePrefix) {
+				continue;
+			}
+			if (!fs.existsSync(config.directory)) {
+				continue;
+			}
+
+			const stack: string[] = [config.directory];
+			while (stack.length > 0) {
+				const current = stack.pop();
+				if (!current) {
+					continue;
+				}
+				const stats = fs.statSync(current);
+				if (stats.isDirectory()) {
+					for (const child of fs.readdirSync(current)) {
+						stack.push(path.join(current, child));
+					}
+					continue;
+				}
+
+				const relative = path.relative(config.directory, current).split(path.sep).join("/");
+				let prefix = config.routePrefix;
+				while (prefix.endsWith("/")) {
+					prefix = prefix.slice(0, -1);
+				}
+				const route = normalizeRoute(`${prefix}/${relative}`);
+				const headers = buildStaticHeaders(current, config.cacheControl ?? null);
+				const body = bufferToBase64(new Uint8Array(fs.readFileSync(current)));
+				manifest.push({ route, headers, body });
+			}
+
+			if (config.indexFile ?? true) {
+				const indexPath = path.join(config.directory, "index.html");
+				if (fs.existsSync(indexPath)) {
+					const headers = buildStaticHeaders(indexPath, config.cacheControl ?? null);
+					const body = bufferToBase64(new Uint8Array(fs.readFileSync(indexPath)));
+					const prefix = normalizeRoute(config.routePrefix);
+					manifest.push({ route: prefix, headers: { ...headers }, body });
+					if (!prefix.endsWith("/")) {
+						manifest.push({ route: `${prefix}/`, headers: { ...headers }, body });
+					}
+				}
+			}
+		}
+		return manifest;
+	}
+
+	if (hasDeno()) {
+		const deno = (globalThis as Record<string, unknown>)["Deno"] as {
+			readDir: (path: string) => AsyncIterable<{ name: string; isFile: boolean; isDirectory: boolean }>;
+			readFile: (path: string) => Promise<Uint8Array>;
+		};
+
+		const manifest: StaticManifestEntry[] = [];
+		for (const config of configs) {
+			if (!config.directory || !config.routePrefix) {
+				continue;
+			}
+			const root = config.directory.replaceAll("\\", "/").replace(/\/+$/, "");
+
+			const stack: string[] = [root];
+			while (stack.length > 0) {
+				const current = stack.pop();
+				if (!current) {
+					continue;
+				}
+				for await (const entry of deno.readDir(current)) {
+					const entryPath = `${current}/${entry.name}`;
+					if (entry.isDirectory) {
+						stack.push(entryPath);
+						continue;
+					}
+					if (!entry.isFile) {
+						continue;
+					}
+					const relative = entryPath.startsWith(`${root}/`) ? entryPath.slice(root.length + 1) : entry.name;
+					let prefix = config.routePrefix;
+					while (prefix.endsWith("/")) {
+						prefix = prefix.slice(0, -1);
+					}
+					const route = normalizeRoute(`${prefix}/${relative}`);
+					const headers = buildStaticHeaders(entryPath, config.cacheControl ?? null);
+					const body = bufferToBase64(await deno.readFile(entryPath));
+					manifest.push({ route, headers, body });
+				}
+			}
+
+			if (config.indexFile ?? true) {
+				const indexPath = `${root}/index.html`;
+				try {
+					const bytes = await deno.readFile(indexPath);
+					const headers = buildStaticHeaders(indexPath, config.cacheControl ?? null);
+					const body = bufferToBase64(bytes);
+					const prefix = normalizeRoute(config.routePrefix);
+					manifest.push({ route: prefix, headers: { ...headers }, body });
+					if (!prefix.endsWith("/")) {
+						manifest.push({ route: `${prefix}/`, headers: { ...headers }, body });
+					}
+				} catch {}
+			}
+		}
+		return manifest;
+	}
+
+	return [];
 }
 
 export class WebSocketTestConnection {
@@ -462,7 +809,10 @@ function normalizeJsonValue(value: unknown): JsonValue {
 		return value.map((entry) => normalizeJsonValue(entry)) as JsonValue;
 	}
 	if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-		return value;
+		return value as JsonValue;
+	}
+	if (typeof value === "bigint") {
+		return value.toString();
 	}
 	if (typeof value === "object" && value) {
 		const result: Record<string, JsonValue> = {};
@@ -474,12 +824,62 @@ function normalizeJsonValue(value: unknown): JsonValue {
 	return value as JsonValue;
 }
 
+function lowerCaseHeaderKeys(headers: HeaderMap): HeaderMap {
+	const lowered: HeaderMap = {};
+	for (const [key, value] of Object.entries(headers)) {
+		lowered[key.toLowerCase()] = value;
+	}
+	return lowered;
+}
+
+function tryUnwrapStructuredSnapshot(body: Uint8Array): StructuredHandlerResponse | null {
+	if (body.length === 0) {
+		return null;
+	}
+	const text = textDecoder.decode(body);
+	try {
+		const parsed = JSON.parse(text) as unknown;
+		if (!isStructuredResponseLike(parsed)) {
+			return null;
+		}
+		return parsed as StructuredHandlerResponse;
+	} catch {
+		return null;
+	}
+}
+
+function flattenStructuredResponse(response: StructuredHandlerResponse): StructuredHandlerResponse {
+	let current: StructuredHandlerResponse = response;
+	let mergedHeaders: HeaderMap = normalizeRecord(current.headers ?? {});
+
+	while (current.body && typeof current.body === "object" && isStructuredResponseLike(current.body)) {
+		const next = current.body as unknown as StructuredHandlerResponse;
+		mergedHeaders = {
+			...mergedHeaders,
+			...normalizeRecord(next.headers ?? {}),
+		};
+		current = next;
+	}
+
+	return {
+		...current,
+		headers: mergedHeaders,
+	};
+}
+
+function encodeBodyBytes(body: HandlerBody): Uint8Array {
+	if (body == null) {
+		return new Uint8Array();
+	}
+	if (typeof body === "string") {
+		return textEncoder.encode(body);
+	}
+	return textEncoder.encode(JSON.stringify(body));
+}
+
 function toUint8Array(value: ArrayBuffer | ArrayLike<number> | Uint8Array): Uint8Array {
 	if (value instanceof Uint8Array) {
 		return value;
-	}
-	if (typeof globalThis.Buffer !== "undefined" && value instanceof globalThis.Buffer) {
-		return new Uint8Array(value);
 	}
 	if (ArrayBuffer.isView(value)) {
 		return new Uint8Array(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
@@ -498,12 +898,19 @@ function gunzipBytes(data: Uint8Array): Uint8Array {
 			return data;
 		}
 	}
-	return data;
+	try {
+		return gunzipSync(data);
+	} catch {
+		return data;
+	}
 }
 
 function bufferToBase64(bytes: Uint8Array): string {
-	if (typeof globalThis.Buffer !== "undefined") {
-		return globalThis.Buffer.from(bytes).toString("base64");
+	const bufferCtor = globalAny.Buffer as
+		| { from: (data: Uint8Array) => { toString: (encoding: string) => string } }
+		| undefined;
+	if (bufferCtor) {
+		return bufferCtor.from(bytes).toString("base64");
 	}
 	let binary = "";
 	for (const byte of bytes) {
@@ -515,12 +922,34 @@ function bufferToBase64(bytes: Uint8Array): string {
 	throw new Error("Base64 encoding is not supported in this environment");
 }
 
+function isAbortSignalLike(value: unknown): value is AbortSignalLike {
+	if (!value || typeof value !== "object") {
+		return false;
+	}
+	const candidate = value as AbortSignalLike;
+	return (
+		typeof candidate.aborted === "boolean" &&
+		typeof candidate.addEventListener === "function" &&
+		typeof candidate.removeEventListener === "function"
+	);
+}
+
 function wrapHandlers(handlers: Record<string, HandlerFunction>): Record<string, HandlerFunction> {
 	const wrapped: Record<string, HandlerFunction> = {};
 	for (const [name, handler] of Object.entries(handlers)) {
+		const looksLikeStringHandler = handler.toString().includes("JSON.parse");
 		wrapped[name] = async (request) => {
+			const rawJson =
+				request && typeof request === "object" && RAW_REQUEST_KEY in request
+					? String((request as { [RAW_REQUEST_KEY]?: unknown })[RAW_REQUEST_KEY] ?? "")
+					: JSON.stringify(request);
+			const maybeSignal =
+				request && typeof request === "object" && ABORT_SIGNAL_KEY in request
+					? (request as { [ABORT_SIGNAL_KEY]?: unknown })[ABORT_SIGNAL_KEY]
+					: undefined;
+			const context: HandlerContext | undefined = isAbortSignalLike(maybeSignal) ? { signal: maybeSignal } : undefined;
 			const normalizedRequest = maybeWrapRequestPayload(request);
-			return handler(normalizedRequest);
+			return looksLikeStringHandler ? handler(rawJson, context) : handler(normalizedRequest, context);
 		};
 	}
 	return wrapped;
@@ -561,12 +990,12 @@ class WasmRequest implements Request {
 	public readonly files?: MultipartFile[];
 	private readonly rawJson: string;
 	private readonly bodyKind: RequestBodyKind;
-	private readonly bodyJson?: JsonValue;
-	private readonly formData?: Record<string, string>;
-	private readonly textBody?: string;
+	private readonly bodyJson: JsonValue | undefined;
+	private readonly formData: Record<string, string> | undefined;
+	private readonly textBody: string | undefined;
 	private bodyMetadata: BodyMetadata | null = null;
 	private bodyDirty = false;
-	private _body: Buffer | Uint8Array | null;
+	private _body: Uint8Array | null;
 
 	constructor(payload: InternalRequestPayload, rawJson: string) {
 		this.rawJson = rawJson;
@@ -591,15 +1020,17 @@ class WasmRequest implements Request {
 		this.bodyJson = applied.jsonValue;
 		this.formData = applied.formValue;
 		this.textBody = applied.textValue;
-		this.files = applied.files ?? undefined;
+		if (applied.files !== undefined) {
+			this.files = applied.files;
+		}
 		this._body = applied.buffer;
 	}
 
-	get body(): Buffer | Uint8Array | null {
+	get body(): Uint8Array | null {
 		return this._body;
 	}
 
-	set body(value: Buffer | Uint8Array | null) {
+	set body(value: Uint8Array | null) {
 		this._body = value;
 		this.bodyDirty = true;
 	}
@@ -617,7 +1048,6 @@ class WasmRequest implements Request {
 		} else {
 			throw new Error("Request body is not JSON");
 		}
-		// Normalize Maps to plain objects (from serde_wasm_bindgen conversion)
 		return normalizeJsonValue(value) as T;
 	}
 
@@ -660,12 +1090,12 @@ class WasmRequest implements Request {
 					return this.formData ? { __spikard_form__: this.formData } : null;
 				case "multipart":
 					return this.formData || this.files
-						? {
+						? ({
 								__spikard_multipart__: {
 									fields: this.formData ?? {},
 									files: this.files ?? [],
 								},
-							}
+							} as unknown as JsonValue)
 						: null;
 				case "binary":
 					if (this.bodyMetadata?.rawBase64) {
@@ -675,16 +1105,6 @@ class WasmRequest implements Request {
 				default:
 					return null;
 			}
-		}
-		if (typeof currentBody === "string") {
-			return currentBody;
-		}
-		if (
-			typeof globalThis.Buffer !== "undefined" &&
-			typeof globalThis.Buffer === "function" &&
-			currentBody instanceof globalThis.Buffer
-		) {
-			return { __spikard_base64__: bufferToBase64(toUint8Array(currentBody)) };
 		}
 		if (currentBody instanceof Uint8Array) {
 			return { __spikard_base64__: bufferToBase64(currentBody) };
@@ -733,17 +1153,17 @@ function isWasmRequest(value: unknown): value is WasmRequest {
 	return value instanceof WasmRequest;
 }
 
-function maybeWrapRequestPayload(payload: HandlerPayload): HandlerPayload {
+function maybeWrapRequestPayload(payload: HandlerPayload | InternalRequestPayload): HandlerPayload {
 	if (!payload || typeof payload !== "object") {
-		return payload;
+		return payload as HandlerPayload;
 	}
 	if (!("method" in payload) || !("path" in payload)) {
-		return payload;
+		return payload as HandlerPayload;
 	}
 	const candidate = payload as InternalRequestPayload & { [RAW_REQUEST_KEY]?: string };
 	const rawJson =
 		typeof candidate[RAW_REQUEST_KEY] === "string" ? candidate[RAW_REQUEST_KEY] : JSON.stringify(candidate);
-	return new WasmRequest(candidate, rawJson);
+	return new WasmRequest(candidate, rawJson) as unknown as HandlerPayload;
 }
 
 function buildQueryString(raw?: Map<string, string[]> | Record<string, string[]>): string {
@@ -776,8 +1196,10 @@ function buildRawQueryMap(queryString: string): Record<string, string[]> {
 }
 
 function base64ToUint8Array(base64: string): Uint8Array {
-	if (typeof globalThis.Buffer !== "undefined") {
-		return new Uint8Array(globalThis.Buffer.from(base64, "base64"));
+	const bufferCtor = globalAny.Buffer as { from: (data: string, encoding: string) => Uint8Array } | undefined;
+	if (bufferCtor) {
+		const buf = bufferCtor.from(base64, "base64");
+		return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
 	}
 	if (typeof atob === "function") {
 		const binary = atob(base64);
@@ -804,12 +1226,14 @@ function decodeFormValues(values: Record<string, JsonValue>): Record<string, str
 	return form;
 }
 
-function buildBuffer(bytes: Uint8Array | null): Buffer | Uint8Array | null {
+function buildBuffer(bytes: Uint8Array | null): Uint8Array | null {
 	if (!bytes) {
 		return null;
 	}
-	if (typeof globalThis.Buffer !== "undefined") {
-		return globalThis.Buffer.from(bytes);
+	const bufferCtor = globalAny.Buffer as { from: (data: Uint8Array) => Uint8Array } | undefined;
+	if (bufferCtor) {
+		const buf = bufferCtor.from(bytes);
+		return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
 	}
 	return bytes;
 }
@@ -819,14 +1243,14 @@ function applyBodyMetadata(
 	payloadBody: JsonValue | null | undefined,
 ): {
 	kind: RequestBodyKind;
-	buffer: Buffer | Uint8Array | null;
-	jsonValue?: JsonValue;
-	formValue?: Record<string, string>;
-	textValue?: string;
-	files?: MultipartFile[];
+	buffer: Uint8Array | null;
+	jsonValue: JsonValue | undefined;
+	formValue: Record<string, string> | undefined;
+	textValue: string | undefined;
+	files: MultipartFile[] | undefined;
 } {
 	const kind = normalizeRequestBodyKind(metadata?.kind);
-	let buffer: Buffer | Uint8Array | null = null;
+	let buffer: Uint8Array | null = null;
 	if (metadata?.rawBase64) {
 		buffer = buildBuffer(base64ToUint8Array(metadata.rawBase64));
 	}
@@ -864,7 +1288,7 @@ function applyBodyMetadata(
 		jsonValue,
 		formValue,
 		textValue,
-		files: files ?? undefined,
+		files,
 	};
 }
 
@@ -966,7 +1390,7 @@ function ensureWasmRequest(value: unknown): WasmRequest | null {
 }
 
 async function normalizeStructuredResponse(
-	value: HandlerPayload | LifecycleHookPayload,
+	value: unknown,
 	defaultResponse?: StructuredHandlerResponse,
 ): Promise<StructuredHandlerResponse> {
 	if (typeof value === "string") {
@@ -993,11 +1417,11 @@ async function normalizeStructuredResponse(
 	if (isStructuredResponseLike(value)) {
 		const headers = normalizeRecord(value.headers ?? {});
 		const status = value.status ?? value.statusCode ?? 200;
-		const body =
+		const body: HandlerBody =
 			value.body === undefined
 				? null
 				: typeof value.body === "object" && value.body !== null
-					? (value.body as StructuredHandlerResponse["body"])
+					? (value.body as HandlerBody)
 					: (value.body as JsonValue);
 		return {
 			status,
@@ -1013,16 +1437,19 @@ async function normalizeStructuredResponse(
 }
 
 function isStructuredResponseLike(value: unknown): value is StructuredHandlerResponse {
-	return (
-		!!value &&
-		typeof value === "object" &&
-		("status" in value || "statusCode" in value || "headers" in value || "body" in value)
-	);
+	if (!value || typeof value !== "object") {
+		return false;
+	}
+	const hasStatus = "status" in value || "statusCode" in value;
+	if (!hasStatus) {
+		return false;
+	}
+	return "headers" in value || "body" in value;
 }
 
 function matchPath(template: string, actual: string): Record<string, string> | null {
 	const params: Record<string, string> = {};
-	const [actualPath] = actual.split("?");
+	const actualPath = actual.split("?")[0] ?? actual;
 
 	const templateSegments = template.split("/").filter(Boolean);
 	const actualSegments = actualPath.split("/").filter(Boolean);
@@ -1034,6 +1461,9 @@ function matchPath(template: string, actual: string): Record<string, string> | n
 	for (let i = 0; i < templateSegments.length; i += 1) {
 		const templateSegment = templateSegments[i];
 		const actualSegment = actualSegments[i];
+		if (templateSegment === undefined || actualSegment === undefined) {
+			return null;
+		}
 		if (templateSegment.startsWith("{") && templateSegment.endsWith("}")) {
 			const key = templateSegment.slice(1, -1);
 			params[key] = decodeURIComponent(actualSegment);
