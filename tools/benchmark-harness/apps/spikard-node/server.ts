@@ -32,9 +32,9 @@ type HandlerInput = {
 	path: string;
 	headers: Record<string, string>;
 	cookies: Record<string, string>;
-	query_params: unknown;
+	queryParams: unknown;
 	body: unknown;
-	path_params: Record<string, string>;
+	pathParams: Record<string, string>;
 };
 
 type HandlerOutput = {
@@ -152,48 +152,48 @@ async function post_urlencoded_complex(request: HandlerInput): Promise<HandlerOu
 }
 
 async function get_path_simple(request: HandlerInput): Promise<HandlerOutput> {
-	return ok({ id: request.path_params.id });
+	return ok({ id: request.pathParams.id });
 }
 
 async function get_path_multiple(request: HandlerInput): Promise<HandlerOutput> {
 	return ok({
-		user_id: request.path_params.user_id,
-		post_id: request.path_params.post_id,
+		user_id: request.pathParams.user_id,
+		post_id: request.pathParams.post_id,
 	});
 }
 
 async function get_path_deep(request: HandlerInput): Promise<HandlerOutput> {
 	return ok({
-		org: request.path_params.org,
-		team: request.path_params.team,
-		project: request.path_params.project,
-		resource: request.path_params.resource,
-		id: request.path_params.id,
+		org: request.pathParams.org,
+		team: request.pathParams.team,
+		project: request.pathParams.project,
+		resource: request.pathParams.resource,
+		id: request.pathParams.id,
 	});
 }
 
 async function get_path_int(request: HandlerInput): Promise<HandlerOutput> {
-	return ok({ id: parseInt(request.path_params.id, 10) });
+	return ok({ id: parseInt(request.pathParams.id, 10) });
 }
 
 async function get_path_uuid(request: HandlerInput): Promise<HandlerOutput> {
-	return ok({ uuid: request.path_params.uuid });
+	return ok({ uuid: request.pathParams.uuid });
 }
 
 async function get_path_date(request: HandlerInput): Promise<HandlerOutput> {
-	return ok({ date: request.path_params.date });
+	return ok({ date: request.pathParams.date });
 }
 
 async function get_query_few(request: HandlerInput): Promise<HandlerOutput> {
-	return ok(request.query_params ?? {});
+	return ok(request.queryParams ?? {});
 }
 
 async function get_query_medium(request: HandlerInput): Promise<HandlerOutput> {
-	return ok(request.query_params ?? {});
+	return ok(request.queryParams ?? {});
 }
 
 async function get_query_many(request: HandlerInput): Promise<HandlerOutput> {
-	return ok(request.query_params ?? {});
+	return ok(request.queryParams ?? {});
 }
 
 async function get_health(_request: HandlerInput): Promise<HandlerOutput> {

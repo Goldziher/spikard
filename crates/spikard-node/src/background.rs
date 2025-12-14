@@ -23,7 +23,7 @@ pub fn clear_handle() {
 }
 
 #[napi]
-#[allow(dead_code)]
+/// Run an async task on Spikard's background runtime.
 pub fn background_run(task: Function<(), Promise<()>>) -> Result<()> {
     let handle = BACKGROUND_HANDLE
         .read()
@@ -33,7 +33,10 @@ pub fn background_run(task: Function<(), Promise<()>>) -> Result<()> {
 
     let tsfn = task
         .build_threadsafe_function()
-        .build_callback(|ctx| Ok(vec![ctx.value]))
+        .build_callback(|ctx| {
+            let _: () = ctx.value;
+            Ok(())
+        })
         .map_err(|e| Error::from_reason(format!("Failed to build background callback: {}", e)))?;
 
     handle
@@ -51,7 +54,6 @@ pub fn background_run(task: Function<(), Promise<()>>) -> Result<()> {
         .map_err(map_spawn_error)
 }
 
-#[allow(dead_code)]
 fn map_spawn_error(err: BackgroundSpawnError) -> Error {
     Error::from_reason(err.to_string())
 }

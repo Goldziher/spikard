@@ -8,11 +8,9 @@ use std::sync::Arc;
 use tracing::{debug, error};
 
 /// Type alias for Node.js Promise-returning ThreadsafeFunction
-#[allow(dead_code)]
-type NodeTsfn = ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>;
+type NodeTsfn = ThreadsafeFunction<String, Promise<String>, String, napi::Status, false>;
 
 /// Node.js implementation of WebSocketHandler
-#[allow(dead_code)]
 pub struct NodeWebSocketHandler {
     /// Handler name for debugging
     name: String,
@@ -26,7 +24,6 @@ pub struct NodeWebSocketHandler {
 
 impl NodeWebSocketHandler {
     /// Create a new Node.js WebSocket handler
-    #[allow(dead_code)]
     pub fn new(
         name: String,
         handle_message_tsfn: NodeTsfn,
@@ -45,7 +42,6 @@ impl NodeWebSocketHandler {
 impl WebSocketHandler for NodeWebSocketHandler {
     async fn handle_message(&self, message: Value) -> Option<Value> {
         debug!("Node.js WebSocket handler '{}': handle_message", self.name);
-        println!("Node WS handler input: {}", message);
 
         let json_str = match serde_json::to_string(&message) {
             Ok(s) => s,
@@ -128,14 +124,14 @@ pub fn create_websocket_state(handler_instance: &Object) -> Result<spikard_http:
 
     let handle_message_tsfn = handle_message_fn
         .build_threadsafe_function()
-        .build_callback(|ctx| Ok(vec![ctx.value]))?;
+        .build_callback(|ctx| Ok(ctx.value))?;
 
     let on_connect_tsfn = handler_instance
         .get_named_property::<Function<String, Promise<String>>>("onConnect")
         .ok()
         .and_then(|func| {
             func.build_threadsafe_function()
-                .build_callback(|ctx| Ok(vec![ctx.value]))
+                .build_callback(|ctx| Ok(ctx.value))
                 .ok()
         });
 
@@ -144,7 +140,7 @@ pub fn create_websocket_state(handler_instance: &Object) -> Result<spikard_http:
         .ok()
         .and_then(|func| {
             func.build_threadsafe_function()
-                .build_callback(|ctx| Ok(vec![ctx.value]))
+                .build_callback(|ctx| Ok(ctx.value))
                 .ok()
         });
 
