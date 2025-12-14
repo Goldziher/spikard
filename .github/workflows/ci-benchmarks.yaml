@@ -165,7 +165,7 @@ jobs:
       - name: Allow py-spy to attach (ptrace)
         run: |
           sudo sysctl -w kernel.yama.ptrace_scope=0
-          sudo setcap cap_sys_ptrace,cap_dac_read_search=eip ~/.cargo/bin/py-spy
+          sudo setcap cap_sys_ptrace,cap_dac_read_search=eip ~/.cargo/bin/py-spy || true
           getcap ~/.cargo/bin/py-spy || true
 
       - name: Setup Rust
