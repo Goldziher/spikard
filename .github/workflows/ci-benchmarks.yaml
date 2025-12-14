@@ -129,7 +129,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --output results/spikard-rust
+            --output results/spikard-rust/profile.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v5
@@ -186,7 +186,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --output results/spikard-python
+            --output results/spikard-python/profile.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v5
@@ -242,7 +242,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --output results/spikard-node
+            --output results/spikard-node/profile.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v5
@@ -300,7 +300,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --output results/spikard-ruby
+            --output results/spikard-ruby/profile.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v5
@@ -384,7 +384,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --output results/spikard-php
+            --output results/spikard-php/profile.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v5
@@ -449,7 +449,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --output results/spikard-wasm
+            --output results/spikard-wasm/profile.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v5
