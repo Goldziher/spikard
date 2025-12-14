@@ -60,6 +60,7 @@ fn test_server_handle_pid() {
         process,
         port: 8000,
         base_url: "http://localhost:8000".to_string(),
+        stop_signal: libc::SIGTERM,
     };
 
     assert_eq!(handle.pid(), pid);
@@ -84,6 +85,7 @@ fn test_server_handle_kill() {
         process,
         port: 8000,
         base_url: "http://localhost:8000".to_string(),
+        stop_signal: libc::SIGTERM,
     };
 
     let result = handle.kill();
@@ -115,6 +117,7 @@ fn test_server_handle_drop() {
             process,
             port: 8000,
             base_url: "http://localhost:8000".to_string(),
+            stop_signal: libc::SIGTERM,
         };
     }
 
@@ -134,6 +137,7 @@ async fn test_start_server_framework_not_found() {
         port: 9999,
         app_dir: PathBuf::from("/tmp"),
         variant: None,
+        start_cmd_override: None,
     };
 
     let result = benchmark_harness::server::start_server(config).await;
@@ -151,6 +155,7 @@ async fn test_start_server_process_spawn_failure() {
         port: 9999,
         app_dir: PathBuf::from("/nonexistent/directory/that/does/not/exist"),
         variant: None,
+        start_cmd_override: None,
     };
 
     let result = benchmark_harness::server::start_server(config).await;
@@ -164,6 +169,7 @@ fn test_server_config_creation() {
         port: 8000,
         app_dir: PathBuf::from("/tmp/app"),
         variant: None,
+        start_cmd_override: None,
     };
 
     assert_eq!(config.framework, Some("spikard-python".to_string()));
@@ -212,6 +218,7 @@ if __name__ == '__main__':
         port,
         app_dir: temp_dir.path().to_path_buf(),
         variant: None,
+        start_cmd_override: None,
     };
 
     let result = benchmark_harness::server::start_server(config).await;
