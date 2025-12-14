@@ -1136,4 +1136,38 @@ mod tests {
         assert_eq!(data1.path_params.get("id"), data2.path_params.get("id"));
         assert_eq!(data1.body["name"], data2.body["name"]);
     }
+
+    #[test]
+    fn deserialize_errors_on_missing_required_field() {
+        let value = json!({
+            "path_params": {},
+            "query_params": {},
+            "raw_query_params": {},
+            "body": null,
+            "raw_body": null,
+            "headers": {},
+            "cookies": {},
+            "method": "GET"
+        });
+
+        let err = serde_json::from_value::<RequestData>(value).unwrap_err();
+        assert!(err.to_string().contains("missing field"));
+    }
+
+    #[test]
+    fn deserialize_errors_on_invalid_raw_body_type() {
+        let value = json!({
+            "path_params": {},
+            "query_params": {},
+            "raw_query_params": {},
+            "body": null,
+            "raw_body": "not-bytes",
+            "headers": {},
+            "cookies": {},
+            "method": "GET",
+            "path": "/"
+        });
+
+        assert!(serde_json::from_value::<RequestData>(value).is_err());
+    }
 }

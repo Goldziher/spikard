@@ -314,6 +314,30 @@ mod tests {
     }
 
     #[test]
+    fn test_validation_error_conversion_single_error_uses_singular_detail() {
+        let validation_error = ValidationError {
+            errors: vec![ValidationErrorDetail {
+                error_type: "missing".to_string(),
+                loc: vec!["query".to_string(), "id".to_string()],
+                msg: "Field required".to_string(),
+                input: Value::Null,
+                ctx: None,
+            }],
+        };
+
+        let problem = ProblemDetails::from_validation_error(&validation_error);
+        assert_eq!(problem.status, 422);
+        assert_eq!(problem.detail, Some("1 validation error in request".to_string()));
+    }
+
+    #[test]
+    fn test_with_extensions_ignores_non_object_values() {
+        let problem =
+            ProblemDetails::new("about:blank", "Test", StatusCode::BAD_REQUEST).with_extensions(Value::Bool(true));
+        assert!(problem.extensions.is_empty());
+    }
+
+    #[test]
     fn test_content_type_constant() {
         assert_eq!(CONTENT_TYPE_PROBLEM_JSON, "application/problem+json; charset=utf-8");
     }

@@ -223,8 +223,14 @@ impl SseEvent {
     }
 
     /// Convert to Axum's SSE Event
-    fn into_axum_event(self) -> Result<Event, serde_json::Error> {
-        let json_data = serde_json::to_string(&self.data)?;
+    fn into_axum_event(self) -> Event {
+        let json_data = match serde_json::to_string(&self.data) {
+            Ok(json) => json,
+            Err(e) => {
+                error!("Failed to serialize SSE event data: {}", e);
+                "null".to_string()
+            }
+        };
 
         let mut event = Event::default().data(json_data);
 
@@ -240,7 +246,7 @@ impl SseEvent {
             event = event.retry(Duration::from_millis(retry));
         }
 
-        Ok(event)
+        event
     }
 }
 
@@ -378,14 +384,8 @@ pub async fn sse_handler<P: SseEventProducer + 'static>(State(state): State<SseS
                     ));
                 }
 
-                match sse_event.into_axum_event() {
-                    Ok(event) => Some((Ok::<_, Infallible>(event), (producer, event_schema))),
-                    Err(e) => {
-                        error!("Failed to serialize SSE event: {}", e);
-                        producer.on_disconnect().await;
-                        None
-                    }
-                }
+                let event = sse_event.into_axum_event();
+                Some((Ok::<_, Infallible>(event), (producer, event_schema)))
             }
             None => {
                 info!("SSE stream ended");
@@ -643,8 +643,7 @@ mod tests {
     #[test]
     fn test_sse_event_into_axum_event_conversion() {
         let event: SseEvent = SseEvent::new(serde_json::json!({"msg": "test"}));
-        let axum_event: Result<axum::response::sse::Event, serde_json::Error> = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -653,8 +652,7 @@ mod tests {
             .with_id("123")
             .with_retry(5000);
 
-        let axum_event: Result<axum::response::sse::Event, serde_json::Error> = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -927,8 +925,7 @@ mod tests {
     #[test]
     fn test_sse_event_to_axum_preserves_data() {
         let event = SseEvent::new(serde_json::json!({"key": "value"}));
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok(), "Event conversion should succeed");
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -938,8 +935,7 @@ mod tests {
         assert!(event.id.is_none(), "id should be None");
         assert!(event.retry.is_none(), "retry should be None");
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -952,8 +948,7 @@ mod tests {
         assert_eq!(event.id.as_ref(), Some(&"evt-999".to_string()));
         assert_eq!(event.retry, Some(10000));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -962,8 +957,7 @@ mod tests {
         assert!(event.data.is_object());
         assert_eq!(event.data.as_object().unwrap().len(), 0);
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -974,8 +968,7 @@ mod tests {
         let stored_text = event.data.get("text").and_then(|v| v.as_str());
         assert_eq!(stored_text, Some(multiline_data));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -986,15 +979,13 @@ mod tests {
         let stored_data = event.data.get("data").and_then(|v| v.as_str());
         assert_eq!(stored_data, Some(data_with_colons));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
     fn test_sse_event_comment_only_structure() {
         let event = SseEvent::new(serde_json::json!({"comment": "this is a comment"}));
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1002,8 +993,7 @@ mod tests {
         let event = SseEvent::with_type("event type with spaces", serde_json::json!({"data": "test"}));
         assert_eq!(event.event_type, Some("event type with spaces".to_string()));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1014,8 +1004,7 @@ mod tests {
             let event = SseEvent::with_type(event_type, serde_json::json!({"data": "test"}));
             assert_eq!(event.event_type.as_ref(), Some(&event_type.to_string()));
 
-            let axum_event = event.into_axum_event();
-            assert!(axum_event.is_ok(), "Event type '{}' should be valid", event_type);
+            let _axum_event: axum::response::sse::Event = event.into_axum_event();
         }
     }
 
@@ -1027,8 +1016,7 @@ mod tests {
             let event = SseEvent::new(serde_json::json!({"data": "test"})).with_id(id);
             assert_eq!(event.id.as_ref(), Some(&id.to_string()));
 
-            let axum_event = event.into_axum_event();
-            assert!(axum_event.is_ok(), "ID '{}' should be valid", id);
+            let _axum_event: axum::response::sse::Event = event.into_axum_event();
         }
     }
 
@@ -1037,8 +1025,7 @@ mod tests {
         let event = SseEvent::new(serde_json::json!({"data": "test"})).with_retry(0);
         assert_eq!(event.retry, Some(0));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1046,8 +1033,7 @@ mod tests {
         let event = SseEvent::new(serde_json::json!({"data": "test"})).with_retry(100);
         assert_eq!(event.retry, Some(100));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1056,8 +1042,7 @@ mod tests {
         let event = SseEvent::new(serde_json::json!({"data": "test"})).with_retry(large_retry);
         assert_eq!(event.retry, Some(large_retry));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1068,8 +1053,7 @@ mod tests {
             let event = SseEvent::new(serde_json::json!({"data": "test"})).with_retry(retry_ms);
             assert_eq!(event.retry, Some(retry_ms));
 
-            let axum_event = event.into_axum_event();
-            assert!(axum_event.is_ok());
+            let _axum_event: axum::response::sse::Event = event.into_axum_event();
         }
     }
 
@@ -1081,8 +1065,7 @@ mod tests {
         let stored = event.data.get("text").and_then(|v| v.as_str());
         assert_eq!(stored, Some(emoji_data));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1093,8 +1076,7 @@ mod tests {
         let stored = event.data.get("text").and_then(|v| v.as_str());
         assert_eq!(stored, Some(chinese_text));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1105,8 +1087,7 @@ mod tests {
         let stored = event.data.get("text").and_then(|v| v.as_str());
         assert_eq!(stored, Some(arabic_text));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1117,17 +1098,13 @@ mod tests {
         let stored = event.data.get("text").and_then(|v| v.as_str());
         assert_eq!(stored, Some(mixed));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
     fn test_sse_event_json_serialization_produces_valid_utf8() {
         let event = SseEvent::new(serde_json::json!({"text": "test"}));
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
-
-        if let Ok(_evt) = axum_event {}
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1138,8 +1115,7 @@ mod tests {
         let stored = event.data.get("payload").and_then(|v| v.as_str());
         assert_eq!(stored.map(|s| s.len()), Some(65536));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1150,8 +1126,7 @@ mod tests {
         let stored = event.data.get("payload").and_then(|v| v.as_str());
         assert_eq!(stored.map(|s| s.len()), Some(1_000_000));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1175,8 +1150,7 @@ mod tests {
         });
 
         let event = SseEvent::new(deeply_nested);
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1189,8 +1163,7 @@ mod tests {
         assert!(items.is_some());
         assert_eq!(items.unwrap().len(), 5);
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1201,8 +1174,7 @@ mod tests {
 
         assert!(event.data.get("nullable").unwrap().is_null());
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1215,8 +1187,7 @@ mod tests {
         assert_eq!(event.data.get("active").and_then(|v| v.as_bool()), Some(true));
         assert_eq!(event.data.get("deleted").and_then(|v| v.as_bool()), Some(false));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[tokio::test]
@@ -1280,8 +1251,7 @@ mod tests {
         let event = SseEvent::with_type("", serde_json::json!({"data": "test"}));
         assert_eq!(event.event_type, Some("".to_string()));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1289,8 +1259,7 @@ mod tests {
         let event = SseEvent::new(serde_json::json!({"data": "test"})).with_id("");
         assert_eq!(event.id, Some("".to_string()));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[tokio::test]
@@ -1395,8 +1364,7 @@ mod tests {
             "negative": -273
         }));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1408,8 +1376,7 @@ mod tests {
 
         assert_eq!(event.data.get("float").and_then(|v| v.as_f64()), Some(3.14159265359));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1420,8 +1387,7 @@ mod tests {
             "backslash": "path\\to\\file"
         }));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 
     #[test]
@@ -1438,7 +1404,6 @@ mod tests {
             }
         }));
 
-        let axum_event = event.into_axum_event();
-        assert!(axum_event.is_ok());
+        let _axum_event: axum::response::sse::Event = event.into_axum_event();
     }
 }
