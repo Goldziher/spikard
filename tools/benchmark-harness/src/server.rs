@@ -16,6 +16,8 @@ pub struct ServerHandle {
     pub process: Child,
     pub port: u16,
     pub base_url: String,
+    #[cfg(unix)]
+    pub stop_signal: i32,
 }
 
 impl ServerHandle {
@@ -31,10 +33,11 @@ impl ServerHandle {
             let pid = self.process.id() as i32;
 
             unsafe {
-                if libc::kill(-pid, libc::SIGTERM) != 0 {
+                let signal = self.stop_signal;
+                if libc::kill(-pid, signal) != 0 {
                     let err = std::io::Error::last_os_error();
                     if err.raw_os_error() == Some(libc::ESRCH) {
-                        libc::kill(pid, libc::SIGTERM);
+                        libc::kill(pid, signal);
                     }
                 }
             }
@@ -85,6 +88,10 @@ pub struct ServerConfig {
     pub app_dir: PathBuf,
     /// Variant name (e.g., "sync", "async") - optional
     pub variant: Option<String>,
+    /// Optional override for the framework start command.
+    ///
+    /// The string is split by whitespace, so it must not require shell quoting.
+    pub start_cmd_override: Option<String>,
 }
 
 /// Start a server and wait for it to be ready
@@ -144,7 +151,11 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         }
     }
 
-    let start_cmd = framework_config.start_cmd.replace("{port}", &port.to_string());
+    let start_cmd = config
+        .start_cmd_override
+        .as_deref()
+        .unwrap_or(&framework_config.start_cmd)
+        .replace("{port}", &port.to_string());
 
     let parts: Vec<&str> = start_cmd.split_whitespace().collect();
     if parts.is_empty() {
@@ -169,6 +180,13 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     cmd.current_dir(&working_dir);
 
     cmd.stdout(Stdio::null()).stderr(Stdio::piped());
+
+    #[cfg(unix)]
+    let stop_signal = if executable == "py-spy" {
+        libc::SIGINT
+    } else {
+        libc::SIGTERM
+    };
 
     #[cfg(unix)]
     unsafe {
@@ -217,6 +235,8 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         process,
         port,
         base_url: base_url.clone(),
+        #[cfg(unix)]
+        stop_signal,
     };
 
     let stderr_snapshot = || -> String {
@@ -311,6 +331,7 @@ mod tests {
             port: 8080,
             app_dir: PathBuf::from("."),
             variant: None,
+            start_cmd_override: None,
         };
 
         assert_eq!(config.framework, Some("spikard-rust".to_string()));
@@ -324,6 +345,7 @@ mod tests {
             port: 8080,
             app_dir: PathBuf::from("."),
             variant: None,
+            start_cmd_override: None,
         };
 
         assert_eq!(config.framework, None);
@@ -439,6 +461,7 @@ mod tests {
             port: 8080,
             app_dir: PathBuf::from("."),
             variant: Some("async".to_string()),
+            start_cmd_override: None,
         };
 
         assert_eq!(config.variant, Some("async".to_string()));

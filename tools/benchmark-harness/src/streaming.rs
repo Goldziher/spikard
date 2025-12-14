@@ -48,6 +48,7 @@ impl StreamingBenchmarkRunner {
             port,
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
+            start_cmd_override: None,
         };
 
         let server = start_server(server_config).await?;
