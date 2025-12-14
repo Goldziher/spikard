@@ -148,6 +148,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-harness
     timeout-minutes: 75
+    env:
+      UV_PYTHON: "3.13"
     steps:
       - uses: actions/checkout@v6
 
