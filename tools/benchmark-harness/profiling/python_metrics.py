@@ -19,7 +19,7 @@ from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from functools import wraps
 from pathlib import Path
-from threading import Lock
+from threading import Lock, Thread
 from typing import TYPE_CHECKING, Optional, ParamSpec, TypeVar
 
 LOGGER = logging.getLogger(__name__)
@@ -80,6 +80,7 @@ class MetricsCollector:
         self.initial_gc_counts = gc.get_count()
         self.request_count = 0
         self._finalized = False
+        self._snapshot_lock = Lock()
 
         env_path = os.environ.get("SPIKARD_METRICS_FILE")
         default_path = Path(tempfile.gettempdir()) / f"python-metrics-{os.getpid()}.json"
@@ -99,6 +100,11 @@ class MetricsCollector:
                         if not LOGGER.handlers:
                             logging.basicConfig(level=logging.INFO)
                         LOGGER.exception("Failed to start pyinstrument profiler")
+
+    def snapshot(self) -> None:
+        """Write a best-effort snapshot of metrics and profiling outputs."""
+        with self._snapshot_lock:
+            self._write_outputs(finalize=False)
 
     @classmethod
     def instance(cls) -> "MetricsCollector":
@@ -158,6 +164,13 @@ class MetricsCollector:
         if self._finalized:
             return
         self._finalized = True
+        with self._snapshot_lock:
+            self._write_outputs(finalize=True)
+
+    def _write_outputs(self, *, finalize: bool) -> None:
+        if finalize and self.pyinstrument_profiler is not None:
+            with suppress(builtins.BaseException):
+                self.pyinstrument_profiler.stop()
 
         if self.gc_enabled:
             stats = gc.get_stats()
@@ -202,7 +215,6 @@ class MetricsCollector:
             and _SpeedscopeRenderer is not None
         ):
             try:
-                self.pyinstrument_profiler.stop()
                 speedscope = self.pyinstrument_profiler.output(renderer=_SpeedscopeRenderer())
                 self.pyinstrument_output_path.parent.mkdir(parents=True, exist_ok=True)
                 self.pyinstrument_output_path.write_text(speedscope, encoding="utf-8")
@@ -212,6 +224,10 @@ class MetricsCollector:
                         if not LOGGER.handlers:
                             logging.basicConfig(level=logging.INFO)
                         LOGGER.exception("Failed to write speedscope profile to %s", self.pyinstrument_output_path)
+            finally:
+                if not finalize:
+                    with suppress(builtins.BaseException):
+                        self.pyinstrument_profiler.start()
 
     def __del__(self) -> None:
         """Ensure metrics are written on collector destruction."""
@@ -250,6 +266,25 @@ def enable_profiling() -> MetricsCollector:
         signal.signal(signal.SIGTERM, _finalize_and_exit)
         signal.signal(signal.SIGINT, _finalize_and_exit)
         signal.signal(signal.SIGUSR1, _finalize_only)
+
+    snapshot_interval = os.environ.get("SPIKARD_PROFILE_SNAPSHOT_SECS")
+    if snapshot_interval is not None:
+        try:
+            interval_secs = max(1.0, float(snapshot_interval))
+
+            def _snapshot_loop() -> None:
+                while True:
+                    time.sleep(interval_secs)
+                    with suppress(builtins.BaseException):
+                        collector.snapshot()
+
+            Thread(target=_snapshot_loop, daemon=True).start()
+        except Exception:
+            if os.environ.get("SPIKARD_METRICS_DEBUG") == "1":
+                with suppress(builtins.BaseException):
+                    if not LOGGER.handlers:
+                        logging.basicConfig(level=logging.INFO)
+                    LOGGER.exception("Failed to start snapshot loop")
 
     return collector
 
