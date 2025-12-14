@@ -206,8 +206,8 @@ async def test_dependency_injection_in_lifecycle_hooks_success() -> None:
         assert "logged" in response_data
         assert response_data["logged"] == True
         response_headers = response.headers
-        assert response_headers.get("x-auth-mode") == "strict"
         assert response_headers.get("x-log-level") == "debug"
+        assert response_headers.get("x-auth-mode") == "strict"
 
 
 async def test_ruby_keyword_argument_injection_success() -> None:
@@ -253,17 +253,15 @@ async def test_mixed_singleton_and_per_request_caching_success() -> None:
 
         assert response.status_code == 200
 
-        # Second request to verify singleton caching
         response2 = await client.get("/api/mixed-caching")
         assert response2.status_code == 200
         data1 = response.json()
         data2 = response2.json()
 
-        # Singleton should have same ID but incremented count
         assert "id" in data1 and "id" in data2
-        assert data1["id"] == data2["id"]  # Same singleton instance
+        assert data1["id"] == data2["id"]
         if "count" in data1 and "count" in data2:
-            assert data2["count"] > data1["count"]  # Count incremented
+            assert data2["count"] > data1["count"]
 
 
 async def test_resource_cleanup_after_request_success() -> None:
@@ -314,17 +312,15 @@ async def test_singleton_dependency_caching_success() -> None:
 
         assert response.status_code == 200
 
-        # Second request to verify singleton caching
         response2 = await client.get("/api/app-counter")
         assert response2.status_code == 200
         data1 = response.json()
         data2 = response2.json()
 
-        # Singleton should have same ID but incremented count
         assert "id" in data1 and "id" in data2
-        assert data1["id"] == data2["id"]  # Same singleton instance
+        assert data1["id"] == data2["id"]
         if "count" in data1 and "count" in data2:
-            assert data2["count"] > data1["count"]  # Count incremented
+            assert data2["count"] > data1["count"]
 
 
 async def test_async_factory_dependency_success() -> None:

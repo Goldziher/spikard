@@ -168,10 +168,8 @@ app.run(host="127.0.0.1", port={self._port})
         env = os.environ.copy()
         cwd = str(Path.cwd())
 
-        # Build the Python path to include common test directories
         paths = [cwd]
 
-        # Add e2e test directories if they exist
         e2e_paths = [
             Path(cwd) / "e2e" / "python",
             Path(cwd) / "e2e" / "node",
@@ -179,7 +177,6 @@ app.run(host="127.0.0.1", port={self._port})
         ]
         paths.extend(str(path) for path in e2e_paths if path.exists())
 
-        # Preserve existing PYTHONPATH if set
         if "PYTHONPATH" in env:
             paths.append(env["PYTHONPATH"])
 

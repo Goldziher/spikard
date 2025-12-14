@@ -106,14 +106,12 @@ impl PhpLifecycleHooks {
     }
 }
 
-// Internal method not exposed to PHP
 impl PhpLifecycleHooks {
     /// Build LifecycleHooks from the accumulated hooks.
     /// Internal-only method, not exposed to PHP.
     pub fn build(&self) -> LifecycleHooks {
         let mut builder = LifecycleHooksBuilder::new();
 
-        // Add all registered hooks
         for hook in &self.on_request_hooks {
             builder = builder.on_request(Arc::clone(hook));
         }
@@ -134,19 +132,15 @@ impl PhpLifecycleHooks {
     }
 }
 
-// Registry for PHP lifecycle hook callables referenced by index.
-// Similar to SSE/WebSocket pattern - store Zval, reconstruct ZendCallable when invoking.
 thread_local! {
     static PHP_HOOK_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
 /// Convert axum Request to PhpRequest for PHP hooks (synchronous extraction).
 fn axum_request_to_php_sync(req: &Request<Body>) -> PhpRequest {
-    // Extract method and path
     let method = req.method().to_string();
     let path = req.uri().path().to_string();
 
-    // Extract headers
     let mut headers = HashMap::new();
     for (name, value) in req.headers() {
         if let Ok(v) = value.to_str() {
@@ -154,7 +148,6 @@ fn axum_request_to_php_sync(req: &Request<Body>) -> PhpRequest {
         }
     }
 
-    // Extract query params
     let raw_query = req
         .uri()
         .query()
@@ -168,26 +161,24 @@ fn axum_request_to_php_sync(req: &Request<Body>) -> PhpRequest {
         })
         .unwrap_or_default();
 
-    // For lifecycle hooks, we don't have the body yet (it's not consumed)
-    // So we'll pass empty body and headers
     PhpRequest::from_parts(
         method,
         path,
         Value::Null,
+        Value::Object(serde_json::Map::new()),
         None,
         headers,
-        HashMap::new(), // cookies will be parsed from headers if needed
+        HashMap::new(),
         raw_query,
-        HashMap::new(), // path_params not available in raw request
+        HashMap::new(),
     )
 }
 
 /// Convert PhpResponse to axum Response for PHP hooks.
 fn php_response_to_axum(php_resp: &PhpResponse) -> Result<Response<Body>, String> {
-    let status = StatusCode::from_u16(php_resp.status as u16)
-        .map_err(|e| format!("Invalid status code {}: {}", php_resp.status, e))?;
+    let status = StatusCode::from_u16(php_resp.status_code as u16)
+        .map_err(|e| format!("Invalid status code {}: {}", php_resp.status_code, e))?;
 
-    // Serialize based on Value type - avoid double serialization
     let body_bytes = match &php_resp.body {
         Value::String(s) => s.as_bytes().to_vec(),
         _ => serde_json::to_vec(&php_resp.body).map_err(|e| format!("Failed to serialize response body: {}", e))?,
@@ -208,18 +199,15 @@ fn php_response_to_axum(php_resp: &PhpResponse) -> Result<Response<Body>, String
 async fn axum_response_to_php(resp: Response<Body>) -> Result<(PhpResponse, Response<Body>), String> {
     let (parts, body) = resp.into_parts();
 
-    // Read the body
     let body_bytes = body
         .collect()
         .await
         .map_err(|e| format!("Failed to read response body: {}", e))?
         .to_bytes();
 
-    // Parse body as JSON if possible
     let body_value: Value = serde_json::from_slice(&body_bytes)
         .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&body_bytes).to_string()));
 
-    // Extract headers
     let mut headers = HashMap::new();
     for (name, value) in &parts.headers {
         if let Ok(v) = value.to_str() {
@@ -228,12 +216,12 @@ async fn axum_response_to_php(resp: Response<Body>) -> Result<(PhpResponse, Resp
     }
 
     let php_resp = PhpResponse {
-        status: parts.status.as_u16() as i64,
+        status_code: parts.status.as_u16() as i64,
         body: body_value,
         headers: headers.clone(),
+        cookies: HashMap::new(),
     };
 
-    // Rebuild the response for passing through
     let mut builder = Response::builder().status(parts.status);
     for (name, value) in parts.headers {
         if let Some(name) = name {
@@ -314,7 +302,6 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
                             .and_then(|v| v.string())
                             .map(|s| s.to_string())
                             .unwrap_or_else(|| "{}".to_string());
-                        // Avoid re-parsing - keep as string in Value::String if it came from getBody
                         let body: Value = serde_json::from_str(&body_str).unwrap_or_else(|_| Value::String(body_str));
                         let mut headers = HashMap::new();
                         if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
@@ -331,7 +318,12 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
                                 }
                             }
                         }
-                        Some(Ok(Some(PhpResponse { status, body, headers })))
+                        Some(Ok(Some(PhpResponse {
+                            status_code: status,
+                            body,
+                            headers,
+                            cookies: HashMap::new(),
+                        })))
                     } else {
                         Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                     }
@@ -413,9 +405,10 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
                 tracing_error!("Failed to convert response to PHP: {}", e);
                 (
                     PhpResponse {
-                        status: 500,
+                        status_code: 500,
                         body: Value::Null,
                         headers: HashMap::new(),
+                        cookies: HashMap::new(),
                     },
                     Response::new(Body::empty()),
                 )
@@ -447,7 +440,6 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
                             .and_then(|v| v.string())
                             .map(|s| s.to_string())
                             .unwrap_or_else(|| "{}".to_string());
-                        // Avoid re-parsing - keep as string in Value::String if it came from getBody
                         let body: Value = serde_json::from_str(&body_str).unwrap_or_else(|_| Value::String(body_str));
                         let mut headers = HashMap::new();
                         if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
@@ -464,7 +456,12 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
                                 }
                             }
                         }
-                        Some(Ok(Some(PhpResponse { status, body, headers })))
+                        Some(Ok(Some(PhpResponse {
+                            status_code: status,
+                            body,
+                            headers,
+                            cookies: HashMap::new(),
+                        })))
                     } else {
                         Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                     }
@@ -539,9 +536,10 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
                 tracing_error!("Failed to convert response to PHP: {}", e);
                 (
                     PhpResponse {
-                        status: 500,
+                        status_code: 500,
                         body: Value::Null,
                         headers: HashMap::new(),
+                        cookies: HashMap::new(),
                     },
                     Response::new(Body::empty()),
                 )
@@ -573,7 +571,6 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
                             .and_then(|v| v.string())
                             .map(|s| s.to_string())
                             .unwrap_or_else(|| "{}".to_string());
-                        // Avoid re-parsing - keep as string in Value::String if it came from getBody
                         let body: Value = serde_json::from_str(&body_str).unwrap_or_else(|_| Value::String(body_str));
                         let mut headers = HashMap::new();
                         if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
@@ -590,7 +587,12 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
                                 }
                             }
                         }
-                        Some(Ok(Some(PhpResponse { status, body, headers })))
+                        Some(Ok(Some(PhpResponse {
+                            status_code: status,
+                            body,
+                            headers,
+                            cookies: HashMap::new(),
+                        })))
                     } else {
                         Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                     }

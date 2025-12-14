@@ -21,7 +21,7 @@ exclude = [
 ]
 
 [workspace.package]
-version = "0.3.7"
+version = "0.4.0"
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
@@ -30,9 +30,9 @@ homepage = "https://github.com/Goldziher/spikard"
 
 [workspace.dependencies]
 # Core library
-spikard = { version = "0.3.7", path = "crates/spikard" }
-spikard-core = { version = "0.3.7", path = "crates/spikard-core" }
-spikard-http = { version = "0.3.7", path = "crates/spikard-http" }
+spikard = { version = "0.4.0", path = "crates/spikard" }
+spikard-core = { version = "0.4.0", path = "crates/spikard-core" }
+spikard-http = { version = "0.4.0", path = "crates/spikard-http" }
 
 # Python bindings
 pyo3 = { version = "0.27", features = ["abi3-py310"] }
@@ -60,12 +60,12 @@ tower-http = { version = "0.6.8", features = [
 ] }
 
 # Middleware and auth
-tower_governor = "0.8"
+"tower_governor" = "0.8"
 jsonwebtoken = { version = "10.2", features = ["use_pem", "rust_crypto"] }
 
 # OpenAPI
 utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
-utoipa-swagger-ui = { version = "9", features = ["axum"] }
+utoipa-swagger-ui = { version = "9", features = ["axum", "vendored"] }
 utoipa-redoc = { version = "6", features = ["axum"] }
 
 # Utilities
@@ -77,6 +77,14 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 http = "1.4"
 jsonschema = { version = "0.37", default-features = false }
 flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }
+
+[workspace.lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(tarpaulin_include)'] }
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = 0 }
+pedantic = { level = "deny", priority = 0 }
+nursery = { level = "deny", priority = 0 }
 
 [workspace.metadata.cargo-llvm-cov]
 exclude = ["spikard-node"]

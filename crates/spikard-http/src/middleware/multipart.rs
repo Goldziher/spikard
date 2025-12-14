@@ -105,7 +105,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_single_file_upload() {
-        // Create a mock multipart request with a single file
         let boundary = "boundary123";
         let file_content = "Hello, World!";
         let parts = vec![
@@ -113,7 +112,6 @@ mod tests {
         ];
         let body = create_multipart_body(boundary, parts);
 
-        // Create a test request
         let request = axum::http::Request::builder()
             .method("POST")
             .header("content-type", format!("multipart/form-data; boundary={}", boundary))
@@ -230,7 +228,6 @@ mod tests {
     #[tokio::test]
     async fn test_binary_file_handling() {
         let boundary = "boundary123";
-        // Create binary data (1MB + 1 byte to exceed threshold)
         let binary_data: Vec<u8> = vec![0xFF; 1024 * 1024 + 1];
         let mut body = Vec::new();
         body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
@@ -422,8 +419,6 @@ mod tests {
         assert_eq!(obj["file"]["size"], expected_size);
     }
 
-    // --- NEW COMPREHENSIVE TESTS FOR BOUNDARY PARSING & FILE UPLOADS ---
-
     #[tokio::test]
     async fn test_boundary_with_special_characters() {
         let boundary: &str = "boundary-with-dashes_and_underscores.123";
@@ -445,8 +440,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_boundary_parsing_with_crlf() {
-        // RFC 7578 requires CRLF line endings for multipart bodies.
-        // This test verifies proper boundary parsing with spec-compliant CRLF.
         let boundary: &str = "boundary123";
         let mut body: Vec<u8> = Vec::new();
 
@@ -739,29 +732,22 @@ mod tests {
 
     #[tokio::test]
     async fn test_multiple_files_different_sizes_around_threshold() {
-        // Test files around the 1MB streaming threshold
-        // - Small file: below threshold (buffered)
-        // - Large file: exceeds threshold (marked as binary)
         let boundary: &str = "boundary123";
         let small_content: Vec<u8> = "small".repeat(100).into_bytes();
-        // Large file just over 1MB threshold to trigger binary handling
-        let large_content: Vec<u8> = vec![0x42; 1024 * 1024 + 1]; // 'B' repeated
+        let large_content: Vec<u8> = vec![0x42; 1024 * 1024 + 1];
 
         let mut body: Vec<u8> = Vec::new();
 
-        // Small file
         body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
         body.extend_from_slice(b"Content-Disposition: form-data; name=\"small\"; filename=\"small.txt\"\r\nContent-Type: text/plain\r\n\r\n");
         body.extend_from_slice(&small_content);
         body.extend_from_slice(b"\r\n");
 
-        // Large file (exceeds 1MB threshold)
         body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
         body.extend_from_slice(b"Content-Disposition: form-data; name=\"large\"; filename=\"large.bin\"\r\nContent-Type: application/octet-stream\r\n\r\n");
         body.extend_from_slice(&large_content);
         body.extend_from_slice(b"\r\n");
 
-        // Final boundary
         body.extend_from_slice(format!("--{}--\r\n", boundary).as_bytes());
 
         let request: axum::http::Request<axum::body::Body> = axum::http::Request::builder()
@@ -775,17 +761,15 @@ mod tests {
 
         let obj: &serde_json::Map<String, serde_json::Value> = result.as_object().unwrap();
 
-        // Verify small file is included in full
         assert!(obj.contains_key("small"));
         assert!(obj["small"]["content"].is_string());
         let small_str = obj["small"]["content"].as_str().unwrap();
-        assert_eq!(small_str.len(), 500); // "small" (5) * 100
+        assert_eq!(small_str.len(), 500);
 
-        // Verify large file exceeds threshold and is marked as binary
         assert!(obj.contains_key("large"));
         let large_content_str = obj["large"]["content"].as_str().unwrap();
         assert!(large_content_str.contains("<binary data"));
-        assert!(large_content_str.contains("1048577 bytes")); // 1MB + 1 byte
+        assert!(large_content_str.contains("1048577 bytes"));
     }
 
     #[tokio::test]

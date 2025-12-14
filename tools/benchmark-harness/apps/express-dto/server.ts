@@ -11,13 +11,8 @@ import { type ZodSchema, z } from "zod";
 
 const app: Express = express();
 
-// Middleware for parsing JSON and URL-encoded bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ============================================================================
-// Zod Schema Definitions
-// ============================================================================
 
 const SmallPayloadSchema = z.object({
 	name: z.string(),
@@ -62,10 +57,6 @@ const VeryLargePayloadSchema = z.object({
 	metadata: z.record(z.string(), z.unknown()),
 });
 
-// ============================================================================
-// Type Definitions
-// ============================================================================
-
 type SmallPayload = z.infer<typeof SmallPayloadSchema>;
 type MediumPayload = z.infer<typeof MediumPayloadSchema>;
 type LargePayload = z.infer<typeof LargePayloadSchema>;
@@ -105,10 +96,6 @@ interface HealthResponse {
 	status: string;
 }
 
-// ============================================================================
-// Helper: Zod validation middleware
-// ============================================================================
-
 function validateBody<T>(schema: ZodSchema<T>): RequestHandler {
 	return (req: Request, res: Response, next: NextFunction): void => {
 		try {
@@ -129,10 +116,6 @@ function validateBody<T>(schema: ZodSchema<T>): RequestHandler {
 		}
 	};
 }
-
-// ============================================================================
-// JSON Body Workloads
-// ============================================================================
 
 app.post(
 	"/json/small",
@@ -166,10 +149,6 @@ app.post(
 	},
 );
 
-// ============================================================================
-// Multipart Form Workloads
-// ============================================================================
-
 app.post("/multipart/small", (_req: Request, res: Response<FileResponse>): void => {
 	res.json({ files_received: 1, total_bytes: 1024 });
 });
@@ -182,10 +161,6 @@ app.post("/multipart/large", (_req: Request, res: Response<FileResponse>): void 
 	res.json({ files_received: 5, total_bytes: 102400 });
 });
 
-// ============================================================================
-// URL Encoded Form Workloads
-// ============================================================================
-
 app.post("/urlencoded/simple", (req: Request, res: Response<Record<string, unknown>>): void => {
 	res.json(req.body ?? {});
 });
@@ -193,10 +168,6 @@ app.post("/urlencoded/simple", (req: Request, res: Response<Record<string, unkno
 app.post("/urlencoded/complex", (req: Request, res: Response<Record<string, unknown>>): void => {
 	res.json(req.body ?? {});
 });
-
-// ============================================================================
-// Path Parameter Workloads
-// ============================================================================
 
 app.get("/path/simple/:id", (req: Request<{ id: string }>, res: Response<IdResponse>): void => {
 	res.json({ id: req.params.id });
@@ -240,10 +211,6 @@ app.get("/path/date/:date", (req: Request<{ date: string }>, res: Response<DateR
 	res.json({ date: req.params.date });
 });
 
-// ============================================================================
-// Query Parameter Workloads
-// ============================================================================
-
 app.get("/query/few", (req: Request, res: Response<Record<string, unknown>>): void => {
 	res.json(req.query ?? {});
 });
@@ -256,10 +223,6 @@ app.get("/query/many", (req: Request, res: Response<Record<string, unknown>>): v
 	res.json(req.query ?? {});
 });
 
-// ============================================================================
-// Health Check
-// ============================================================================
-
 app.get("/health", (_req: Request, res: Response<HealthResponse>): void => {
 	res.json({ status: "ok" });
 });
@@ -267,10 +230,6 @@ app.get("/health", (_req: Request, res: Response<HealthResponse>): void => {
 app.get("/", (_req: Request, res: Response<HealthResponse>): void => {
 	res.json({ status: "ok" });
 });
-
-// ============================================================================
-// Server Startup
-// ============================================================================
 
 const port: number = process.argv[2]
 	? Number.parseInt(process.argv[2], 10)

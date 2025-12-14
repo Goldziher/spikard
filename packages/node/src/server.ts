@@ -15,8 +15,6 @@ let nativeBinding: NativeServerBinding;
 
 function loadBinding(): NativeServerBinding {
 	try {
-		// createRequire allows us to require CommonJS modules from ESM context
-		// This is necessary to load the NAPI binding which is a .node file loaded via CommonJS
 		const require = createRequire(import.meta.url);
 		return require("../index.js") as NativeServerBinding;
 	} catch {

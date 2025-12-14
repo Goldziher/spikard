@@ -21,7 +21,7 @@ pub struct DtoField {
 #[derive(Debug, Clone)]
 pub struct DtoDefinition {
     pub name: String,
-    pub kind: String, // "request" or "response"
+    pub kind: String,
     pub fields: Vec<DtoField>,
 }
 

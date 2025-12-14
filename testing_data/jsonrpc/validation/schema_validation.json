@@ -1,0 +1,251 @@
+[
+	{
+		"name": "valid_input_all_fields",
+		"method": "user.create",
+		"params": {
+			"name": "Alice Johnson",
+			"age": 28,
+			"email": "alice@example.com",
+			"tags": ["developer", "python"]
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "valid_input_required_only",
+		"method": "user.create",
+		"params": {
+			"name": "Bob Smith",
+			"email": "bob@example.com"
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "name_too_short",
+		"method": "user.create",
+		"params": {
+			"name": "A",
+			"email": "alice@example.com"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "name",
+				"constraint": "minLength",
+				"value": "A",
+				"details": "String length must be at least 2"
+			}
+		}
+	},
+	{
+		"name": "name_too_long",
+		"method": "user.create",
+		"params": {
+			"name": "ThisIsAVeryLongNameThatExceedsTheFiftyCharacterLimit1234567890",
+			"email": "alice@example.com"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "name",
+				"constraint": "maxLength",
+				"value": "ThisIsAVeryLongNameThatExceedsTheFiftyCharacterLimit1234567890",
+				"details": "String length must be at most 50"
+			}
+		}
+	},
+	{
+		"name": "age_negative",
+		"method": "user.create",
+		"params": {
+			"name": "Charlie Brown",
+			"age": -5,
+			"email": "charlie@example.com"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "age",
+				"constraint": "minimum",
+				"value": -5,
+				"details": "Value must be at least 0"
+			}
+		}
+	},
+	{
+		"name": "age_over_maximum",
+		"method": "user.create",
+		"params": {
+			"name": "Diana Prince",
+			"age": 200,
+			"email": "diana@example.com"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "age",
+				"constraint": "maximum",
+				"value": 200,
+				"details": "Value must be at most 150"
+			}
+		}
+	},
+	{
+		"name": "invalid_email_no_at",
+		"method": "user.create",
+		"params": {
+			"name": "Eve Wilson",
+			"email": "eveexample.com"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "email",
+				"constraint": "format",
+				"value": "eveexample.com",
+				"details": "Invalid email format"
+			}
+		}
+	},
+	{
+		"name": "invalid_email_no_domain",
+		"method": "user.create",
+		"params": {
+			"name": "Frank Martin",
+			"email": "frank@"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "email",
+				"constraint": "format",
+				"value": "frank@",
+				"details": "Invalid email format"
+			}
+		}
+	},
+	{
+		"name": "empty_tags_array",
+		"method": "user.create",
+		"params": {
+			"name": "Grace Lee",
+			"email": "grace@example.com",
+			"tags": []
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "tags",
+				"constraint": "minItems",
+				"value": [],
+				"details": "Array must contain at least 1 item"
+			}
+		}
+	},
+	{
+		"name": "tags_with_non_string_items",
+		"method": "user.create",
+		"params": {
+			"name": "Henry Davis",
+			"email": "henry@example.com",
+			"tags": ["rust", 42, "golang"]
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "tags[1]",
+				"constraint": "type",
+				"value": 42,
+				"details": "Expected type string, got integer"
+			}
+		}
+	},
+	{
+		"name": "missing_required_name",
+		"method": "user.create",
+		"params": {
+			"email": "iris@example.com"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "name",
+				"constraint": "required",
+				"details": "Missing required field: name"
+			}
+		}
+	},
+	{
+		"name": "missing_required_email",
+		"method": "user.create",
+		"params": {
+			"name": "Jack Thompson"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "email",
+				"constraint": "required",
+				"details": "Missing required field: email"
+			}
+		}
+	},
+	{
+		"name": "multiple_validation_errors",
+		"method": "user.create",
+		"params": {
+			"name": "K",
+			"age": 200,
+			"email": "invalid-email",
+			"tags": []
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"errors": [
+					{
+						"fieldPath": "name",
+						"constraint": "minLength",
+						"details": "String length must be at least 2"
+					},
+					{
+						"fieldPath": "age",
+						"constraint": "maximum",
+						"details": "Value must be at most 150"
+					},
+					{
+						"fieldPath": "email",
+						"constraint": "format",
+						"details": "Invalid email format"
+					},
+					{
+						"fieldPath": "tags",
+						"constraint": "minItems",
+						"details": "Array must contain at least 1 item"
+					}
+				]
+			}
+		}
+	}
+]

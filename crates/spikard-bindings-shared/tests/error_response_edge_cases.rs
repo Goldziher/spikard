@@ -201,11 +201,9 @@ fn test_all_convenience_methods_return_valid_json() {
     ];
 
     for (status, body) in test_cases {
-        // All should return valid JSON
         let parsed: Value = serde_json::from_str(&body)
             .unwrap_or_else(|_| panic!("Failed to parse JSON for status {}: {}", status, body));
 
-        // All should have required fields
         assert!(
             parsed.get("error").is_some(),
             "Missing 'error' field for status {}",
@@ -262,7 +260,6 @@ line2"#;
     let (status, body) = ErrorResponseBuilder::structured_error(StatusCode::BAD_REQUEST, "special_chars", message);
     assert_eq!(status, StatusCode::BAD_REQUEST);
 
-    // Should be valid JSON despite special characters
     let parsed: Value = serde_json::from_str(&body).unwrap();
     assert!(parsed["error"].as_str().unwrap().contains("quotes"));
     assert!(parsed["error"].as_str().unwrap().contains("backslashes"));
@@ -333,15 +330,12 @@ fn test_problem_details_all_standard_types() {
 
 #[test]
 fn test_error_message_types() {
-    // Test String
     let (_, body) = ErrorResponseBuilder::bad_request("test".to_string());
     assert!(body.contains("test"));
 
-    // Test &str
     let (_, body) = ErrorResponseBuilder::bad_request("test");
     assert!(body.contains("test"));
 
-    // Test owned String from format!
     let (_, body) = ErrorResponseBuilder::bad_request(format!("Error: {}", 123));
     assert!(body.contains("Error: 123"));
 }

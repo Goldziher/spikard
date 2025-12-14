@@ -1,0 +1,181 @@
+{
+	"name": "unicode_edge_cases",
+	"description": "Unicode handling in method names, parameters, and responses",
+	"method": "unicode_test",
+	"protocol": "jsonrpc",
+	"transport": "http",
+	"endpoint": "/rpc",
+	"params_schema": {
+		"type": "object",
+		"description": "Parameters with various Unicode content"
+	},
+	"result_schema": {
+		"type": "object",
+		"description": "Response with Unicode data"
+	},
+	"examples": [
+		{
+			"name": "emoji_in_params",
+			"description": "Emoji characters in user name parameter",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "Alice 👋 Smith",
+						"email": "alice@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 1
+			},
+			"result": {
+				"id": "550e8400-e29b-41d4-a716-446655440000",
+				"name": "Alice 👋 Smith",
+				"email": "alice@example.com",
+				"role": "user",
+				"createdAt": "2024-01-15T14:00:00Z"
+			}
+		},
+		{
+			"name": "multi_language_text",
+			"description": "Multiple languages: Chinese, Arabic, Hebrew characters",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "用户名 مستخدم משתמש",
+						"email": "multilang@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 2
+			},
+			"result": {
+				"id": "550e8400-e29b-41d4-a716-446655440001",
+				"name": "用户名 مستخدم משתמש",
+				"email": "multilang@example.com",
+				"role": "user",
+				"createdAt": "2024-01-15T14:00:00Z"
+			}
+		},
+		{
+			"name": "accented_characters",
+			"description": "Accented characters: é, ñ, ü, ç",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "José María Müller François",
+						"email": "accents@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 3
+			},
+			"result": {
+				"id": "550e8400-e29b-41d4-a716-446655440002",
+				"name": "José María Müller François",
+				"email": "accents@example.com",
+				"role": "user",
+				"createdAt": "2024-01-15T14:00:00Z"
+			}
+		},
+		{
+			"name": "rtl_text_handling",
+			"description": "Right-to-left text (Arabic, Hebrew)",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "أحمد محمود",
+						"email": "rtl@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 4
+			},
+			"result": {
+				"id": "550e8400-e29b-41d4-a716-446655440003",
+				"name": "أحمد محمود",
+				"email": "rtl@example.com",
+				"role": "user",
+				"createdAt": "2024-01-15T14:00:00Z"
+			}
+		},
+		{
+			"name": "japanese_characters",
+			"description": "Japanese hiragana, katakana, and kanji",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "田中 太郎 たなか タナカ",
+						"email": "japanese@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 5
+			},
+			"result": {
+				"id": "550e8400-e29b-41d4-a716-446655440004",
+				"name": "田中 太郎 たなか タナカ",
+				"email": "japanese@example.com",
+				"role": "user",
+				"createdAt": "2024-01-15T14:00:00Z"
+			}
+		},
+		{
+			"name": "greek_and_cyrillic",
+			"description": "Greek and Cyrillic alphabet characters",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "Παναγιώτης Петров",
+						"email": "greek_cyrillic@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 6
+			},
+			"result": {
+				"id": "550e8400-e29b-41d4-a716-446655440005",
+				"name": "Παναγιώτης Петров",
+				"email": "greek_cyrillic@example.com",
+				"role": "user",
+				"createdAt": "2024-01-15T14:00:00Z"
+			}
+		},
+		{
+			"name": "emoji_diversity",
+			"description": "Various emoji types: 😀 🌍 ❤️ 🚀 ✨",
+			"params": {
+				"jsonrpc": "2.0",
+				"method": "user.create",
+				"params": {
+					"userData": {
+						"name": "Emoji User 😀🌍❤️🚀✨",
+						"email": "emoji@example.com",
+						"password": "SecurePass123!"
+					}
+				},
+				"id": 7
+			},
+			"result": {
+				"id": "550e8400-e29b-41d4-a716-446655440006",
+				"name": "Emoji User 😀🌍❤️🚀✨",
+				"email": "emoji@example.com",
+				"role": "user",
+				"createdAt": "2024-01-15T14:00:00Z"
+			}
+		}
+	],
+	"error_cases": [],
+	"tags": ["unicode", "internationalization", "edge-cases"]
+}

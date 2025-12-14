@@ -48,7 +48,6 @@ servers:
     description: Local development server
 
 channels:
-  # Main SSE stream channel
   events:
     address: /events
     title: Event Stream
@@ -125,7 +124,6 @@ channels:
         $ref: '#/components/messages/streamError'
 
 operations:
-  # Server -> Client operations
   subscribeToEvents:
     action: receive
     channel:
@@ -243,7 +241,6 @@ operations:
 
 components:
   messages:
-    # Individual event types
     systemAlert:
       name: systemAlert
       title: System Alert

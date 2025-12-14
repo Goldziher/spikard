@@ -1,3 +1,5 @@
+#![allow(clippy::pedantic, clippy::nursery)]
+#![cfg_attr(test, allow(clippy::all))]
 //! Spikard HTTP Server
 //!
 //! Pure Rust HTTP server with language-agnostic handler trait.
@@ -13,6 +15,7 @@ pub mod debug;
 pub mod di_handler;
 pub mod handler_response;
 pub mod handler_trait;
+pub mod jsonrpc;
 pub mod lifecycle;
 pub mod middleware;
 pub mod openapi;
@@ -38,6 +41,7 @@ pub use body_metadata::ResponseBodySize;
 pub use di_handler::DependencyInjectingHandler;
 pub use handler_response::HandlerResponse;
 pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
+pub use jsonrpc::JsonRpcConfig;
 pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
 pub use openapi::{ContactInfo, LicenseInfo, OpenApiConfig, SecuritySchemeInfo, ServerInfo};
 pub use response::Response;
@@ -134,6 +138,8 @@ pub struct ServerConfig {
     pub shutdown_timeout: u64,
     /// OpenAPI documentation configuration
     pub openapi: Option<crate::openapi::OpenApiConfig>,
+    /// JSON-RPC configuration
+    pub jsonrpc: Option<crate::jsonrpc::JsonRpcConfig>,
     /// Lifecycle hooks for request/response processing
     pub lifecycle_hooks: Option<std::sync::Arc<LifecycleHooks>>,
     /// Background task executor configuration
@@ -160,6 +166,7 @@ impl Default for ServerConfig {
             graceful_shutdown: true,
             shutdown_timeout: 30,
             openapi: None,
+            jsonrpc: None,
             lifecycle_hooks: None,
             background_tasks: BackgroundTaskConfig::default(),
             #[cfg(feature = "di")]
@@ -317,6 +324,12 @@ impl ServerConfigBuilder {
         self
     }
 
+    /// Set JSON-RPC configuration
+    pub fn jsonrpc(mut self, jsonrpc: Option<crate::jsonrpc::JsonRpcConfig>) -> Self {
+        self.config.jsonrpc = jsonrpc;
+        self
+    }
+
     /// Set lifecycle hooks for request/response processing
     pub fn lifecycle_hooks(mut self, hooks: Option<std::sync::Arc<LifecycleHooks>>) -> Self {
         self.config.lifecycle_hooks = hooks;
@@ -355,24 +368,16 @@ impl ServerConfigBuilder {
 
         let key_str = key.into();
 
-        // Get or create DI container (mutable)
         let container = if let Some(container) = self.config.di_container.take() {
-            // Try to get mutable access - this will only work if we're the only owner
-            Arc::try_unwrap(container).unwrap_or_else(|_arc| {
-                // If we can't unwrap, we lose existing dependencies
-                // This is a fallback that shouldn't happen in normal builder usage (linear chaining)
-                DependencyContainer::new()
-            })
+            Arc::try_unwrap(container).unwrap_or_else(|_arc| DependencyContainer::new())
         } else {
             DependencyContainer::new()
         };
 
         let mut container = container;
 
-        // Create ValueDependency
         let dep = ValueDependency::new(key_str.clone(), value);
 
-        // Register (panic on error for builder pattern)
         container
             .register(key_str, Arc::new(dep))
             .expect("Failed to register dependency");
@@ -428,7 +433,6 @@ impl ServerConfigBuilder {
 
         let key_str = key.into();
 
-        // Get or create DI container (mutable)
         let container = if let Some(container) = self.config.di_container.take() {
             Arc::try_unwrap(container).unwrap_or_else(|_| DependencyContainer::new())
         } else {
@@ -437,10 +441,8 @@ impl ServerConfigBuilder {
 
         let mut container = container;
 
-        // Clone factory for the closure
         let factory_clone = factory.clone();
 
-        // Create FactoryDependency using builder
         let dep = FactoryDependency::builder(key_str.clone())
             .factory(
                 move |_req: &axum::http::Request<()>,
@@ -496,7 +498,6 @@ impl ServerConfigBuilder {
 
         let key = dependency.key().to_string();
 
-        // Get or create DI container (mutable)
         let container = if let Some(container) = self.config.di_container.take() {
             Arc::try_unwrap(container).unwrap_or_else(|_| DependencyContainer::new())
         } else {

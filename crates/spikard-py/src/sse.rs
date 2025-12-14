@@ -27,7 +27,6 @@ impl SseEventProducer for PythonSseEventProducer {
 
         let producer = Arc::clone(&self.producer);
 
-        // Call the Python method to get event or coroutine
         let result_py = Python::attach(|py| -> PyResult<Py<PyAny>> {
             debug!("Python SSE producer: acquired GIL");
             let result = producer.bind(py).call_method0("next_event")?;
@@ -36,7 +35,6 @@ impl SseEventProducer for PythonSseEventProducer {
 
         match result_py {
             Ok(result_py) => {
-                // Check if it's a coroutine
                 let is_coroutine = Python::attach(|py| -> PyResult<bool> {
                     let asyncio = py.import("asyncio")?;
                     asyncio.call_method1("iscoroutine", (result_py.bind(py),))?.extract()
@@ -69,7 +67,6 @@ impl SseEventProducer for PythonSseEventProducer {
                         }
                     }
                 } else {
-                    // Synchronous result
                     let is_none = Python::attach(|py| result_py.bind(py).is_none());
                     if is_none {
                         debug!("Python SSE producer: received None, ending stream");

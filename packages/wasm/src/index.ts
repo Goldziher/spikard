@@ -82,6 +82,8 @@ export interface RouteMetadata {
 	path: string;
 	/** Name of the handler function */
 	handler_name: string;
+	/** Dependency keys required by this handler (snake_case) */
+	handler_dependencies?: string[];
 	/** JSON schema for request body validation */
 	request_schema?: JsonSchema;
 	/** JSON schema for response validation */
@@ -108,4 +110,6 @@ export interface SpikardApp {
 	config?: import("./config").ServerConfig;
 	/** Optional lifecycle hooks */
 	lifecycleHooks?: Partial<import("./app").LifecycleHooks>;
+	/** Optional dependency injection container */
+	dependencies?: Record<string, unknown>;
 }

@@ -1,0 +1,341 @@
+{
+	"parse_error_invalid_json": {
+		"request": "{ invalid json }",
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32700,
+				"message": "Parse error",
+				"data": {
+					"details": "Unexpected character '{' at position 2",
+					"position": 2,
+					"context": "{ invalid json }"
+				}
+			},
+			"id": null
+		}
+	},
+	"parse_error_unterminated_string": {
+		"request": "{\"jsonrpc\": \"2.0\", \"method\": \"test\", \"params\": \"unterminated",
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32700,
+				"message": "Parse error",
+				"data": {
+					"details": "Unterminated string at EOF",
+					"position": 63
+				}
+			},
+			"id": null
+		}
+	},
+	"parse_error_trailing_comma": {
+		"request": "{\"jsonrpc\": \"2.0\", \"method\": \"test\",}",
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32700,
+				"message": "Parse error",
+				"data": {
+					"details": "Trailing comma in object"
+				}
+			},
+			"id": null
+		}
+	},
+	"invalid_request_missing_jsonrpc": {
+		"request": {
+			"method": "createUser",
+			"params": {
+				"email": "user@example.com"
+			},
+			"id": 1
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request",
+				"data": {
+					"details": "Missing required field: jsonrpc",
+					"missing_field": "jsonrpc"
+				}
+			},
+			"id": null
+		}
+	},
+	"invalid_request_missing_method": {
+		"request": {
+			"jsonrpc": "2.0",
+			"params": {
+				"email": "user@example.com"
+			},
+			"id": 2
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request",
+				"data": {
+					"details": "Missing required field: method",
+					"missing_field": "method"
+				}
+			},
+			"id": 2
+		}
+	},
+	"invalid_request_wrong_version": {
+		"request": {
+			"jsonrpc": "1.0",
+			"method": "createUser",
+			"params": {
+				"email": "user@example.com"
+			},
+			"id": 3
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request",
+				"data": {
+					"details": "Invalid jsonrpc version: expected 2.0, got 1.0",
+					"invalid_field": "jsonrpc",
+					"received": "1.0",
+					"expected": "2.0"
+				}
+			},
+			"id": 3
+		}
+	},
+	"invalid_request_invalid_jsonrpc_type": {
+		"request": {
+			"jsonrpc": 2.0,
+			"method": "createUser",
+			"params": {},
+			"id": 4
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32600,
+				"message": "Invalid Request",
+				"data": {
+					"details": "Invalid jsonrpc type: must be string",
+					"invalid_field": "jsonrpc",
+					"received_type": "number",
+					"expected_type": "string"
+				}
+			},
+			"id": 4
+		}
+	},
+	"method_not_found_simple": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "nonExistentMethod",
+			"params": {},
+			"id": 5
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32601,
+				"message": "Method not found",
+				"data": {
+					"method": "nonExistentMethod",
+					"available_methods": ["createUser", "getUser", "updateUser", "deleteUser"]
+				}
+			},
+			"id": 5
+		}
+	},
+	"method_not_found_typo": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUserr",
+			"params": {
+				"email": "user@example.com"
+			},
+			"id": 6
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32601,
+				"message": "Method not found",
+				"data": {
+					"method": "createUserr",
+					"suggestion": "Did you mean 'createUser'?",
+					"similar_methods": ["createUser"]
+				}
+			},
+			"id": 6
+		}
+	},
+	"invalid_params_missing_required": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUser",
+			"params": {
+				"name": "John Doe"
+			},
+			"id": 7
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"errors": [
+						{
+							"field": "email",
+							"message": "Required field missing"
+						}
+					]
+				}
+			},
+			"id": 7
+		}
+	},
+	"invalid_params_type_mismatch": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUser",
+			"params": {
+				"email": "user@example.com",
+				"age": "thirty"
+			},
+			"id": 8
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"errors": [
+						{
+							"field": "age",
+							"message": "Expected integer, got string",
+							"expected_type": "integer",
+							"received_type": "string",
+							"received_value": "thirty"
+						}
+					]
+				}
+			},
+			"id": 8
+		}
+	},
+	"invalid_params_multiple_errors": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "createUser",
+			"params": {
+				"email": "invalid-email",
+				"age": -5,
+				"name": ""
+			},
+			"id": 9
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32602,
+				"message": "Invalid params",
+				"data": {
+					"errors": [
+						{
+							"field": "email",
+							"message": "Invalid email format"
+						},
+						{
+							"field": "age",
+							"message": "Must be non-negative"
+						},
+						{
+							"field": "name",
+							"message": "Must not be empty"
+						}
+					]
+				}
+			},
+			"id": 9
+		}
+	},
+	"internal_error_database": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "getUser",
+			"params": {
+				"id": "550e8400-e29b-41d4-a716-446655440000"
+			},
+			"id": 10
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32603,
+				"message": "Internal error",
+				"data": {
+					"error": "Database connection failed",
+					"error_type": "DatabaseConnectionError",
+					"timestamp": "2025-12-10T10:30:45Z"
+				}
+			},
+			"id": 10
+		}
+	},
+	"internal_error_timeout": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "processLargeDataset",
+			"params": {
+				"dataset_id": "ds-12345"
+			},
+			"id": 11
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32603,
+				"message": "Internal error",
+				"data": {
+					"error": "Request timeout",
+					"error_type": "TimeoutError",
+					"timeout_seconds": 30,
+					"suggestion": "Try with smaller dataset or increase timeout"
+				}
+			},
+			"id": 11
+		}
+	},
+	"internal_error_unhandled": {
+		"request": {
+			"jsonrpc": "2.0",
+			"method": "complexCalculation",
+			"params": {
+				"value": 999
+			},
+			"id": 12
+		},
+		"expected_response": {
+			"jsonrpc": "2.0",
+			"error": {
+				"code": -32603,
+				"message": "Internal error",
+				"data": {
+					"error": "Unhandled exception in handler",
+					"error_type": "RuntimeError",
+					"handler": "complexCalculation",
+					"request_id": "req-abc-123-def"
+				}
+			},
+			"id": 12
+		}
+	}
+}

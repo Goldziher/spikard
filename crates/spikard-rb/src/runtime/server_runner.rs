@@ -166,7 +166,6 @@ pub fn run_server(
 
     config.lifecycle_hooks = lifecycle_hooks.map(Arc::new);
 
-    // Extract and register dependencies
     #[cfg(feature = "di")]
     {
         if let Ok(registry) = <&crate::NativeDependencyRegistry>::try_convert(dependencies) {

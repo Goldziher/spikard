@@ -4,17 +4,15 @@
 //! to create and run an HTTP server with Spikard's middleware stack.
 
 use axum::body::Body;
-use axum::http::{HeaderName, HeaderValue, Request, Response, StatusCode};
+use axum::http::{HeaderName, HeaderValue, Response, StatusCode};
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
+use serde_json::Value;
 use spikard_http::ParameterValidator;
-use spikard_http::RequestData;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, Route, Router, SchemaRegistry, ServerConfig};
 use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::php::handler::PhpHandler;
@@ -197,7 +195,6 @@ impl PhpServer {
             route_table.insert("method", route.method.as_str())?;
             route_table.insert("path", route.path.as_str())?;
             route_table.insert("handler_name", route.handler_name.as_str())?;
-            // Use i64 key for array index
             table.insert(i as i64, route_table)?;
         }
         Ok(table)
@@ -218,7 +215,6 @@ impl PhpServer {
     /// Set request timeout (milliseconds)
     #[php(name = "setTimeoutMs")]
     pub fn set_timeout_ms(&mut self, timeout_ms: i64) {
-        // Convert milliseconds to seconds for ServerConfig.request_timeout
         self.config.request_timeout = Some((timeout_ms as u64).div_ceil(1000));
     }
 
@@ -443,7 +439,8 @@ impl PhpServer {
                 is_async: false,
                 cors: None,
                 expects_json_body: route.request_schema.is_some(),
-                handler_dependencies: vec![], // PHP routes don't currently declare dependencies
+                handler_dependencies: vec![],
+                jsonrpc_method: None,
             };
 
             router.add_route(route_meta);
@@ -516,6 +513,7 @@ impl PhpServer {
                 cors: None,
                 expects_json_body: route.request_schema.is_some(),
                 handler_dependencies: vec![],
+                jsonrpc_method: None,
             };
 
             routes_with_handlers.push((metadata, Arc::new(handler) as Arc<dyn Handler>));
@@ -528,24 +526,22 @@ impl PhpServer {
     pub fn build_axum_router(&self) -> Result<axum::Router, String> {
         let routes = self.build_routes_with_handlers()?;
 
-        // Convert RegisteredRoute to RouteMetadata
         let metadata: Vec<spikard_core::RouteMetadata> = self
             .routes
             .iter()
-            .map(|r| {
-                spikard_core::RouteMetadata {
-                    method: r.method.clone(),
-                    path: r.path.clone(),
-                    handler_name: r.handler_name.clone(),
-                    request_schema: r.request_schema.clone(),
-                    response_schema: r.response_schema.clone(),
-                    parameter_schema: r.parameter_schema.clone(),
-                    file_params: None,
-                    is_async: true,       // PHP handlers are always async in our implementation
-                    cors: r.cors.clone(), // Use route-specific CORS config
-                    body_param_name: None,
-                    handler_dependencies: Some(Vec::new()),
-                }
+            .map(|r| spikard_core::RouteMetadata {
+                method: r.method.clone(),
+                path: r.path.clone(),
+                handler_name: r.handler_name.clone(),
+                request_schema: r.request_schema.clone(),
+                response_schema: r.response_schema.clone(),
+                parameter_schema: r.parameter_schema.clone(),
+                file_params: None,
+                is_async: true,
+                cors: r.cors.clone(),
+                body_param_name: None,
+                handler_dependencies: Some(Vec::new()),
+                jsonrpc_method: None,
             })
             .collect();
 
@@ -564,44 +560,8 @@ fn parse_schema(schema: Option<String>) -> PhpResult<Option<serde_json::Value>> 
     }
 }
 
-/// Closure-based handler that captures the handler logic.
-///
-/// Since PHP callables can't be stored across threads, we use a different approach:
-/// The test client and server use a callback-based system where the actual PHP
-/// callable is invoked synchronously on the PHP thread.
-#[allow(dead_code)]
-pub struct ClosureHandler {
-    handler_fn: Arc<dyn Fn(RequestData) -> HandlerResult + Send + Sync>,
-}
-
-#[allow(dead_code)]
-impl ClosureHandler {
-    /// Create a new closure handler.
-    pub fn new<F>(f: F) -> Self
-    where
-        F: Fn(RequestData) -> HandlerResult + Send + Sync + 'static,
-    {
-        Self {
-            handler_fn: Arc::new(f),
-        }
-    }
-}
-
-impl Handler for ClosureHandler {
-    fn call(
-        &self,
-        _req: Request<Body>,
-        request_data: RequestData,
-    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        let result = (self.handler_fn)(request_data);
-        Box::pin(async move { result })
-    }
-}
-
 /// Helper to interpret a PHP response Zval into HandlerResult.
-#[allow(dead_code)]
 pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerResult {
-    // If it's null, return 204 No Content
     if response.is_null() {
         return Response::builder()
             .status(StatusCode::NO_CONTENT)
@@ -615,85 +575,122 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
             .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
     }
 
-    // Try to extract Response - check if object has our expected methods
-    if let Some(obj) = response.object() {
-        // Try to call getStatus method
-        if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
-            let status_code = status_zval.long().unwrap_or(200);
-            let status = StatusCode::from_u16(status_code as u16).unwrap_or(StatusCode::OK);
+    if let Some(obj) = response.object()
+        && let Ok(status_zval) = obj.try_call_method("getStatus", vec![])
+    {
+        let status_code = status_zval.long().unwrap_or(200);
+        let status = StatusCode::from_u16(status_code as u16).unwrap_or(StatusCode::OK);
 
-            let mut builder = Response::builder().status(status);
+        let mut builder = Response::builder().status(status);
 
-            // Try to get headers
-            let mut has_content_type = false;
-            if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
-                && let Some(arr) = headers_zval.array()
-            {
-                for (key, val) in arr.iter() {
-                    let key_str = match key {
-                        ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                        ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                        ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                    };
-                    if let Some(val_str) = val.string() {
-                        if key_str.eq_ignore_ascii_case("content-type") {
-                            has_content_type = true;
-                        }
-                        if let (Ok(header_name), Ok(header_value)) = (
-                            HeaderName::from_bytes(key_str.as_bytes()),
-                            HeaderValue::from_str(&val_str),
-                        ) {
-                            builder = builder.header(header_name, header_value);
-                        }
+        let mut has_content_type = false;
+        if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
+            && let Some(arr) = headers_zval.array()
+        {
+            for (key, val) in arr.iter() {
+                let key_str = match key {
+                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                };
+                if let Some(val_str) = val.string() {
+                    if key_str.eq_ignore_ascii_case("content-type") {
+                        has_content_type = true;
+                    }
+                    if let (Ok(header_name), Ok(header_value)) = (
+                        HeaderName::from_bytes(key_str.as_bytes()),
+                        HeaderValue::from_str(&val_str),
+                    ) {
+                        builder = builder.header(header_name, header_value);
                     }
                 }
             }
+        }
 
-            // Try to get body (already a string from getBody, no re-parsing needed)
-            let body_zval = obj.try_call_method("getBody", vec![]).unwrap_or_else(|_| Zval::new());
-            if body_zval.object().is_some() {
-                // Streaming via generator
-                let status_code = status.as_u16();
-                let headers = builder
-                    .headers_ref()
-                    .map(|h| {
-                        h.iter()
-                            .filter_map(|(name, value)| value.to_str().ok().map(|v| (name.to_string(), v.to_string())))
-                            .collect::<HashMap<_, _>>()
-                    })
-                    .unwrap_or_default();
-                let cfg = crate::php::StreamingConfig { status_code, headers };
-                return crate::php::register_generator(&body_zval, Some(cfg))
-                    .map_err(|msg| (StatusCode::INTERNAL_SERVER_ERROR, msg))
-                    .and_then(|(idx, config)| {
-                        crate::php::create_streaming_response(idx, config)
-                            .map(|r| r.into_response())
-                            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
-                    })
-                    .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
-            }
-
-            // Body is already a string from getBody() - no need to parse/re-serialize
-            let body_str = body_zval.string().map(|s| s.to_string()).unwrap_or_default();
-
-            // Set content-type if not already set and we have a body
-            if !has_content_type && !body_str.is_empty() {
-                builder = builder.header("content-type", "application/json");
-            }
-
-            return builder
-                .body(Body::from(body_str))
-                .map_err(|e| {
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        format!("Failed to build response: {}", e),
-                    )
+        let body_zval = obj.try_call_method("getBody", vec![]).unwrap_or_else(|_| Zval::new());
+        if body_zval.object().is_some() {
+            let status_code = status.as_u16();
+            let headers = builder
+                .headers_ref()
+                .map(|h| {
+                    h.iter()
+                        .filter_map(|(name, value)| value.to_str().ok().map(|v| (name.to_string(), v.to_string())))
+                        .collect::<HashMap<_, _>>()
+                })
+                .unwrap_or_default();
+            let cfg = crate::php::StreamingConfig { status_code, headers };
+            return crate::php::register_generator(&body_zval, Some(cfg))
+                .map_err(|msg| (StatusCode::INTERNAL_SERVER_ERROR, msg))
+                .and_then(|(idx, config)| {
+                    crate::php::create_streaming_response(idx, config)
+                        .map(|r| r.into_response())
+                        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
                 })
                 .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
         }
+
+        let body_str = body_zval.string().map(|s| s.to_string()).unwrap_or_default();
+
+        if !has_content_type && !body_str.is_empty() {
+            builder = builder.header("content-type", "application/json");
+        }
+
+        return builder
+            .body(Body::from(body_str))
+            .map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to build response: {}", e),
+                )
+            })
+            .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
     }
 
-    // If it's a string, return as text/plain
+    if let Some(obj) = response.object() {
+        let status_code = obj.get_property::<i64>("statusCode").unwrap_or(200);
+        let status = StatusCode::from_u16(status_code as u16).unwrap_or(StatusCode::OK);
+
+        let mut builder = Response::builder().status(status);
+
+        let mut has_content_type = false;
+        let headers_map = obj
+            .get_property::<HashMap<String, String>>("headers")
+            .unwrap_or_default();
+        for (key, value) in headers_map {
+            if key.eq_ignore_ascii_case("content-type") {
+                has_content_type = true;
+            }
+            if let (Ok(header_name), Ok(header_value)) =
+                (HeaderName::from_bytes(key.as_bytes()), HeaderValue::from_str(&value))
+            {
+                builder = builder.header(header_name, header_value);
+            }
+        }
+
+        let body_value = obj
+            .get_property::<&Zval>("body")
+            .ok()
+            .and_then(|zv| zval_to_json(zv).ok())
+            .unwrap_or(Value::Null);
+
+        let body_bytes = match &body_value {
+            Value::Null => Vec::new(),
+            Value::String(s) => s.as_bytes().to_vec(),
+            _ => serde_json::to_vec(&body_value).unwrap_or_default(),
+        };
+
+        if !has_content_type && !body_bytes.is_empty() {
+            builder = builder.header("content-type", "application/json");
+        }
+
+        return builder.body(Body::from(body_bytes)).map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to build response: {}", e),
+            )
+        });
+    }
+
     if let Some(s) = response.string() {
         return Response::builder()
             .status(StatusCode::OK)
@@ -708,7 +705,6 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
             .or_else(|(_, msg)| to_problem(StatusCode::INTERNAL_SERVER_ERROR, msg));
     }
 
-    // Try to convert to JSON
     let body_json = match zval_to_json(response) {
         Ok(val) => val,
         Err(e) => {

@@ -1,0 +1,205 @@
+[
+	{
+		"name": "all_required_present",
+		"method": "user.register",
+		"params": {
+			"id": "usr_12345",
+			"name": "Alice Johnson",
+			"email": "alice@example.com",
+			"phone": "+1-555-0100"
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "required_only_present",
+		"method": "user.register",
+		"params": {
+			"id": "usr_67890",
+			"name": "Bob Smith",
+			"email": "bob@example.com"
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "missing_id",
+		"method": "user.register",
+		"params": {
+			"name": "Charlie Brown",
+			"email": "charlie@example.com"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "id",
+				"constraint": "required",
+				"details": "Missing required field: id"
+			}
+		}
+	},
+	{
+		"name": "missing_name",
+		"method": "user.register",
+		"params": {
+			"id": "usr_11111",
+			"email": "diana@example.com"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "name",
+				"constraint": "required",
+				"details": "Missing required field: name"
+			}
+		}
+	},
+	{
+		"name": "missing_email",
+		"method": "user.register",
+		"params": {
+			"id": "usr_22222",
+			"name": "Eve Wilson"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "email",
+				"constraint": "required",
+				"details": "Missing required field: email"
+			}
+		}
+	},
+	{
+		"name": "missing_two_required_fields",
+		"method": "user.register",
+		"params": {
+			"name": "Frank Martin"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"errors": [
+					{
+						"fieldPath": "id",
+						"constraint": "required",
+						"details": "Missing required field: id"
+					},
+					{
+						"fieldPath": "email",
+						"constraint": "required",
+						"details": "Missing required field: email"
+					}
+				]
+			}
+		}
+	},
+	{
+		"name": "all_required_fields_missing",
+		"method": "user.register",
+		"params": {
+			"phone": "+1-555-0200"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"errors": [
+					{
+						"fieldPath": "id",
+						"constraint": "required",
+						"details": "Missing required field: id"
+					},
+					{
+						"fieldPath": "name",
+						"constraint": "required",
+						"details": "Missing required field: name"
+					},
+					{
+						"fieldPath": "email",
+						"constraint": "required",
+						"details": "Missing required field: email"
+					}
+				]
+			}
+		}
+	},
+	{
+		"name": "only_optional_field_present",
+		"method": "user.register",
+		"params": {
+			"phone": "+1-555-0300"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"errors": [
+					{
+						"fieldPath": "id",
+						"constraint": "required",
+						"details": "Missing required field: id"
+					},
+					{
+						"fieldPath": "name",
+						"constraint": "required",
+						"details": "Missing required field: name"
+					},
+					{
+						"fieldPath": "email",
+						"constraint": "required",
+						"details": "Missing required field: email"
+					}
+				]
+			}
+		}
+	},
+	{
+		"name": "required_field_is_null",
+		"method": "user.register",
+		"params": {
+			"id": null,
+			"name": "Grace Lee",
+			"email": "grace@example.com"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "id",
+				"constraint": "type",
+				"value": null,
+				"details": "Expected type string, got null"
+			}
+		}
+	},
+	{
+		"name": "required_field_is_empty_string",
+		"method": "user.register",
+		"params": {
+			"id": "",
+			"name": "Henry Davis",
+			"email": "henry@example.com"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "id",
+				"constraint": "minLength",
+				"value": "",
+				"details": "String length must be at least 1"
+			}
+		}
+	}
+]

@@ -93,8 +93,8 @@ pub struct FrameworkResult {
 /// Statistical analysis of workload comparison
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkloadComparisonAnalysis {
-    pub winner: String,                           // Framework name
-    pub performance_ratios: HashMap<String, f64>, // "framework_a_vs_framework_b" -> ratio
+    pub winner: String,
+    pub performance_ratios: HashMap<String, f64>,
     pub statistical_significance: Option<super::StatisticalSignificance>,
 }
 
@@ -103,6 +103,6 @@ pub struct WorkloadComparisonAnalysis {
 pub struct CompareSummary {
     pub overall_winner: String,
     pub avg_performance_gain: f64,
-    pub workloads_won: HashMap<String, usize>,     // Framework -> count
-    pub category_winners: HashMap<String, String>, // Category -> winner
+    pub workloads_won: HashMap<String, usize>,
+    pub category_winners: HashMap<String, String>,
 }

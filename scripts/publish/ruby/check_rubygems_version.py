@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Check if a RubyGem version exists and emit output for GitHub Actions."""
 
 from __future__ import annotations

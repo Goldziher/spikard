@@ -5,6 +5,7 @@
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
+use crate::jsonrpc::JsonRpcFixture;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
@@ -42,6 +43,8 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
     }
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
+    let jsonrpc_fixtures =
+        crate::jsonrpc::load_jsonrpc_fixtures(fixtures_dir).context("Failed to load JSON-RPC fixtures")?;
 
     for (category, fixtures) in fixtures_by_category.iter() {
         let test_content = generate_test_file(category, fixtures)?;
@@ -62,6 +65,11 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
         fs::write(tests_dir.join("test_asyncapi_websocket.py"), websocket_content)
             .context("Failed to write test_asyncapi_websocket.py")?;
         println!("  ✓ Generated tests/test_asyncapi_websocket.py");
+    }
+
+    if !jsonrpc_fixtures.is_empty() {
+        generate_jsonrpc_tests(&jsonrpc_fixtures, output_dir)?;
+        println!("  ✓ Generated tests/test_jsonrpc.py");
     }
 
     Ok(())
@@ -114,7 +122,6 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
         if should_skip_due_to_http_client(fixture) {
             needs_pytest_import = true;
         }
-        // Check for DI cleanup fixtures
         if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
             if has_cleanup(&di_config) {
                 needs_time_import = true;
@@ -485,10 +492,16 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         return Ok(code);
     }
 
-    // Check for DI-specific test patterns
     if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
-        // Handle singleton caching tests - requires multiple requests
         if requires_multi_request_test(&di_config) {
+            let expected_keys = fixture
+                .expected_response
+                .body
+                .as_ref()
+                .and_then(|v| v.as_object())
+                .map(|obj| obj.keys().cloned().collect::<std::collections::HashSet<_>>())
+                .unwrap_or_default();
+
             code.push_str("\n");
             code.push_str("        # Second request to verify singleton caching\n");
             let request_str = if request_kwargs.is_empty() {
@@ -506,15 +519,27 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             code.push_str("        data1 = response.json()\n");
             code.push_str("        data2 = response2.json()\n");
             code.push_str("\n");
-            code.push_str("        # Singleton should have same ID but incremented count\n");
-            code.push_str("        assert \"id\" in data1 and \"id\" in data2\n");
-            code.push_str("        assert data1[\"id\"] == data2[\"id\"]  # Same singleton instance\n");
-            code.push_str("        if \"count\" in data1 and \"count\" in data2:\n");
-            code.push_str("            assert data2[\"count\"] > data1[\"count\"]  # Count incremented\n");
+            if expected_keys.contains("counter_id") && expected_keys.contains("count") {
+                code.push_str("        # Singleton counter should have stable counter_id and incremented count\n");
+                code.push_str("        assert \"counter_id\" in data1 and \"counter_id\" in data2\n");
+                code.push_str("        assert data1[\"counter_id\"] == data2[\"counter_id\"]\n");
+                code.push_str("        assert data2[\"count\"] > data1[\"count\"]\n");
+            } else if expected_keys.contains("pool_id") && expected_keys.contains("context_id") {
+                code.push_str("        # pool_id is singleton; context_id is per-request\n");
+                code.push_str("        assert \"pool_id\" in data1 and \"pool_id\" in data2\n");
+                code.push_str("        assert data1[\"pool_id\"] == data2[\"pool_id\"]\n");
+                code.push_str("        assert \"context_id\" in data1 and \"context_id\" in data2\n");
+                code.push_str("        assert data1[\"context_id\"] != data2[\"context_id\"]\n");
+            } else {
+                code.push_str("        # Singleton should have same ID but incremented count\n");
+                code.push_str("        assert \"id\" in data1 and \"id\" in data2\n");
+                code.push_str("        assert data1[\"id\"] == data2[\"id\"]  # Same singleton instance\n");
+                code.push_str("        if \"count\" in data1 and \"count\" in data2:\n");
+                code.push_str("            assert data2[\"count\"] > data1[\"count\"]  # Count incremented\n");
+            }
             return Ok(code);
         }
 
-        // Handle cleanup tests - poll cleanup state endpoint
         if has_cleanup(&di_config) {
             code.push_str("\n");
             code.push_str("        # Allow async cleanup to complete\n");
@@ -1032,4 +1057,133 @@ fn websocket_reply_literal(
         let literal = replies.iter().map(json_to_python).collect::<Vec<_>>().join(", ");
         Ok(Some(format!("[{}]", literal)))
     }
+}
+
+/// Generate JSON-RPC tests from fixtures
+fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Result<()> {
+    if fixtures.is_empty() {
+        return Ok(());
+    }
+
+    let test_file = output_dir.join("tests").join("test_jsonrpc.py");
+    let mut code = String::new();
+
+    code.push_str("\"\"\"JSON-RPC 2.0 e2e tests generated from fixtures.\"\"\"\n\n");
+    code.push_str("import pytest\n");
+    code.push_str("from httpx import AsyncClient\n");
+    code.push_str("from app.main import *\n\n");
+
+    for fixture in fixtures {
+        let factory_name = sanitize_identifier(&fixture.name);
+        let method_name = &fixture.method;
+
+        for (idx, example) in fixture.examples.iter().enumerate() {
+            code.push_str("@pytest.mark.asyncio\n");
+            code.push_str(&format!("async def test_{}_success_{}():\n", factory_name, idx + 1));
+            code.push_str(&format!("    \"\"\"Test {}.\"\"\" \n", method_name));
+            code.push_str(&format!("    app = create_app_{}()\n", factory_name));
+            code.push_str("    async with AsyncClient(app=app, base_url=\"http://test\") as client:\n");
+            let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
+            code.push_str(&format!(
+                "        response = await client.post(\"{}\", json={{\n",
+                endpoint
+            ));
+            code.push_str("            \"jsonrpc\": \"2.0\",\n");
+            code.push_str(&format!("            \"method\": \"{}\",\n", method_name));
+            let params_json = serde_json::to_string(&example.params)?;
+            let params_py = json_to_python_literal(&params_json);
+            code.push_str(&format!("            \"params\": {},\n", params_py));
+            code.push_str("            \"id\": 1,\n");
+            code.push_str("        })\n");
+            code.push_str("        assert response.status_code == 200\n");
+            code.push_str("        data = response.json()\n");
+            code.push_str("        assert data[\"jsonrpc\"] == \"2.0\"\n");
+            code.push_str("        assert \"result\" in data\n");
+            code.push_str("        assert data[\"id\"] == 1\n");
+            code.push_str("        # Result should match expected structure\n");
+            code.push_str("        result = data[\"result\"]\n");
+            code.push_str("        assert isinstance(result, dict)\n\n");
+        }
+
+        for error_case in &fixture.error_cases {
+            let error_test_name = sanitize_identifier(&error_case.name);
+            code.push_str("@pytest.mark.asyncio\n");
+            code.push_str(&format!(
+                "async def test_{}_{}_error():\n",
+                factory_name, error_test_name
+            ));
+            code.push_str(&format!(
+                "    \"\"\"Test {} - {} error case.\"\"\" \n",
+                method_name, error_test_name
+            ));
+            code.push_str(&format!("    app = create_app_{}()\n", factory_name));
+            code.push_str("    async with AsyncClient(app=app, base_url=\"http://test\") as client:\n");
+            let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
+            code.push_str(&format!(
+                "        response = await client.post(\"{}\", json={{\n",
+                endpoint
+            ));
+            code.push_str("            \"jsonrpc\": \"2.0\",\n");
+            code.push_str(&format!("            \"method\": \"{}\",\n", method_name));
+            if let Some(params) = &error_case.params {
+                let params_json = serde_json::to_string(params)?;
+                let params_py = json_to_python_literal(&params_json);
+                code.push_str(&format!("            \"params\": {},\n", params_py));
+            }
+            code.push_str("            \"id\": 1,\n");
+            code.push_str("        })\n");
+            code.push_str("        assert response.status_code == 200\n");
+            code.push_str("        data = response.json()\n");
+            code.push_str("        assert data[\"jsonrpc\"] == \"2.0\"\n");
+            code.push_str("        assert \"error\" in data\n");
+            code.push_str(&format!(
+                "        assert data[\"error\"][\"code\"] == {}\n",
+                error_case.error.code
+            ));
+            code.push_str("        assert \"message\" in data[\"error\"]\n");
+            code.push_str("        assert data[\"id\"] == 1\n\n");
+        }
+
+        if fixture.examples.len() > 1 {
+            code.push_str("@pytest.mark.asyncio\n");
+            code.push_str(&format!("async def test_{}_batch_request():\n", factory_name));
+            code.push_str(&format!("    \"\"\"Test {} - batch request.\"\"\" \n", method_name));
+            code.push_str(&format!("    app = create_app_{}()\n", factory_name));
+            code.push_str("    async with AsyncClient(app=app, base_url=\"http://test\") as client:\n");
+            code.push_str("        batch_request = [\n");
+            for (idx, example) in fixture.examples.iter().take(2).enumerate() {
+                code.push_str("            {\n");
+                code.push_str("                \"jsonrpc\": \"2.0\",\n");
+                code.push_str(&format!("                \"method\": \"{}\",\n", method_name));
+                let params_json = serde_json::to_string(&example.params)?;
+                let params_py = json_to_python_literal(&params_json);
+                code.push_str(&format!("                \"params\": {},\n", params_py));
+                code.push_str(&format!("                \"id\": {},\n", idx + 1));
+                code.push_str("            },\n");
+            }
+            code.push_str("        ]\n");
+            let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
+            code.push_str(&format!(
+                "        response = await client.post(\"{}\", json=batch_request)\n",
+                endpoint
+            ));
+            code.push_str("        assert response.status_code == 200\n");
+            code.push_str("        # Batch requests return array of responses\n");
+            code.push_str("        responses = response.json()\n");
+            code.push_str("        assert isinstance(responses, list)\n");
+            code.push_str("        assert len(responses) >= 1\n\n");
+        }
+    }
+
+    fs::create_dir_all(test_file.parent().unwrap())?;
+    fs::write(&test_file, code)?;
+    Ok(())
+}
+
+/// Convert JSON string to Python literal
+fn json_to_python_literal(json_str: &str) -> String {
+    json_str
+        .replace("true", "True")
+        .replace("false", "False")
+        .replace("null", "None")
 }

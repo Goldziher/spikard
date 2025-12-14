@@ -90,7 +90,6 @@ describe("Request implementation details", () => {
 		let parseCount = 0;
 		const handler = wrapHandler(async (req) => {
 			parseCount++;
-			// Call json multiple times
 			const first = req.json();
 			const second = req.json();
 			return { first, second, parseCount };
@@ -271,7 +270,6 @@ describe("Request implementation details", () => {
 		});
 
 		const payload = basePayload();
-		// URL-encoded form with multiple keys
 		payload.body = Array.from(Buffer.from("key1=value1&key2=value2&key3=value3"));
 
 		const result = await handler(JSON.stringify(payload));

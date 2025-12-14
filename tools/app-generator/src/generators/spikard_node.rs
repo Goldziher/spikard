@@ -16,7 +16,6 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
     output.push_str(&generate_imports(has_body_handlers));
     output.push('\n');
 
-    // Generate TypeScript interfaces for body handlers
     for route in &analysis.routes {
         if route.params.body.is_some() {
             output.push_str(&generate_interface(route));
@@ -24,7 +23,6 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
         }
     }
 
-    // Generate handler functions using wrapBodyHandler pattern
     for route in &analysis.routes {
         output.push_str(&generate_handler(route));
         output.push_str("\n\n");
@@ -48,7 +46,6 @@ fn generate_header() -> String {
 }
 
 fn generate_imports(_has_body_handlers: bool) -> String {
-    // Import both wrapHandler and wrapBodyHandler for flexibility
     let imports = "import { Spikard, wrapHandler, wrapBodyHandler, type UploadFile } from \"spikard\";\n";
 
     format!("{}\nconst app = new Spikard();", imports)
@@ -79,7 +76,6 @@ fn sanitize_handler_name(route: &RouteInfo) -> String {
 
 fn generate_interface_name(route: &RouteInfo) -> String {
     let handler_name = sanitize_handler_name(route);
-    // Convert snake_case to PascalCase and append "Request"
     let parts: Vec<&str> = handler_name.split('_').collect();
     let pascal = parts
         .iter()
@@ -102,7 +98,6 @@ fn generate_interface(route: &RouteInfo) -> String {
     let interface_name = generate_interface_name(route);
     let mut fields = Vec::new();
 
-    // Add body fields (if any)
     if let Some(_body) = &route.params.body {
         fields.push("  // TODO: Define body fields based on your API".to_string());
     }
@@ -123,7 +118,6 @@ fn generate_handler(route: &RouteInfo) -> String {
     let has_body = route.params.body.is_some();
     let has_query = !route.params.query.is_empty();
 
-    // If the route only needs the body, use wrapBodyHandler for a simpler signature.
     if has_body && !has_path_params && !has_query {
         let interface_name = generate_interface_name(route);
         let body = generate_handler_body(route, has_query, has_body);
@@ -136,7 +130,6 @@ fn generate_handler(route: &RouteInfo) -> String {
         );
     }
 
-    // For all other cases, use wrapHandler and destructure only the parameters we need.
     let mut destructured: Vec<&str> = Vec::new();
     if has_path_params {
         destructured.push("pathParams");

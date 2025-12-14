@@ -12,12 +12,7 @@ import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 
 const fastify = Fastify({ logger: false });
 
-// Register form body parser for URL-encoded forms
 await fastify.register(formbody);
-
-// ============================================================================
-// Type Definitions
-// ============================================================================
 
 interface SimpleParams {
 	id: string;
@@ -65,10 +60,6 @@ interface DateResponse {
 	date: string;
 }
 
-// ============================================================================
-// JSON Body Workloads - NO VALIDATION
-// ============================================================================
-
 fastify.post("/json/small", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
 	return request.body;
 });
@@ -85,10 +76,6 @@ fastify.post("/json/very-large", async (request: FastifyRequest, _reply: Fastify
 	return request.body;
 });
 
-// ============================================================================
-// Multipart Form Workloads - NO VALIDATION
-// ============================================================================
-
 fastify.post("/multipart/small", async (_request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
 	return { files_received: 1, total_bytes: 1024 };
 });
@@ -101,10 +88,6 @@ fastify.post("/multipart/large", async (_request: FastifyRequest, _reply: Fastif
 	return { files_received: 5, total_bytes: 102400 };
 });
 
-// ============================================================================
-// URL Encoded Form Workloads - NO VALIDATION
-// ============================================================================
-
 fastify.post("/urlencoded/simple", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
 	return request.body ?? {};
 });
@@ -112,10 +95,6 @@ fastify.post("/urlencoded/simple", async (request: FastifyRequest, _reply: Fasti
 fastify.post("/urlencoded/complex", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
 	return request.body ?? {};
 });
-
-// ============================================================================
-// Path Parameter Workloads - NO VALIDATION
-// ============================================================================
 
 fastify.get(
 	"/path/simple/:id",
@@ -165,10 +144,6 @@ fastify.get(
 	},
 );
 
-// ============================================================================
-// Query Parameter Workloads - NO VALIDATION
-// ============================================================================
-
 fastify.get("/query/few", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
 	return request.query ?? {};
 });
@@ -181,10 +156,6 @@ fastify.get("/query/many", async (request: FastifyRequest, _reply: FastifyReply)
 	return request.query ?? {};
 });
 
-// ============================================================================
-// Health Check
-// ============================================================================
-
 fastify.get("/health", async (_request: FastifyRequest, _reply: FastifyReply): Promise<StatusResponse> => {
 	return { status: "ok" };
 });
@@ -192,10 +163,6 @@ fastify.get("/health", async (_request: FastifyRequest, _reply: FastifyReply): P
 fastify.get("/", async (_request: FastifyRequest, _reply: FastifyReply): Promise<StatusResponse> => {
 	return { status: "ok" };
 });
-
-// ============================================================================
-// Server Startup
-// ============================================================================
 
 const port = process.argv[2]
 	? Number.parseInt(process.argv[2], 10)

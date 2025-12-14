@@ -10,13 +10,8 @@ import express, { type Request, type Response } from "express";
 
 const app = express();
 
-// Middleware for parsing JSON and URL-encoded bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ============================================================================
-// JSON Body Workloads - NO VALIDATION
-// ============================================================================
 
 app.post("/json/small", (req: Request, res: Response) => {
 	res.json(req.body);
@@ -34,10 +29,6 @@ app.post("/json/very-large", (req: Request, res: Response) => {
 	res.json(req.body);
 });
 
-// ============================================================================
-// Multipart Form Workloads - NO VALIDATION
-// ============================================================================
-
 app.post("/multipart/small", (req: Request, res: Response) => {
 	res.json({ files_received: 1, total_bytes: 1024 });
 });
@@ -50,10 +41,6 @@ app.post("/multipart/large", (req: Request, res: Response) => {
 	res.json({ files_received: 5, total_bytes: 102400 });
 });
 
-// ============================================================================
-// URL Encoded Form Workloads - NO VALIDATION
-// ============================================================================
-
 app.post("/urlencoded/simple", (req: Request, res: Response) => {
 	res.json(req.body || {});
 });
@@ -61,10 +48,6 @@ app.post("/urlencoded/simple", (req: Request, res: Response) => {
 app.post("/urlencoded/complex", (req: Request, res: Response) => {
 	res.json(req.body || {});
 });
-
-// ============================================================================
-// Path Parameter Workloads - NO VALIDATION
-// ============================================================================
 
 app.get("/path/simple/:id", (req: Request, res: Response) => {
 	res.json({ id: req.params.id });
@@ -99,10 +82,6 @@ app.get("/path/date/:date", (req: Request, res: Response) => {
 	res.json({ date: req.params.date });
 });
 
-// ============================================================================
-// Query Parameter Workloads - NO VALIDATION
-// ============================================================================
-
 app.get("/query/few", (req: Request, res: Response) => {
 	res.json(req.query || {});
 });
@@ -115,20 +94,16 @@ app.get("/query/many", (req: Request, res: Response) => {
 	res.json(req.query || {});
 });
 
-// ============================================================================
-// Health Check
-// ============================================================================
-
-app.get("/health", (req: Request, res: Response) => {
+app.get("/health", (_req: Request, res: Response) => {
 	res.json({ status: "ok" });
 });
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (_req: Request, res: Response) => {
 	res.json({ status: "ok" });
 });
-
-// ============================================================================
-// Server Startup
-// ============================================================================
 
 const port = process.argv[2] ? parseInt(process.argv[2], 10) : process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
+
+app.listen(port, () => {
+	console.error(`[express] Starting server on port ${port}`);
+});

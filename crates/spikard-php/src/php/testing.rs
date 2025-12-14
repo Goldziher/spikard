@@ -101,9 +101,7 @@ impl PhpTestResponse {
 #[php_class]
 #[php(name = "Spikard\\Testing\\NativeTestClient")]
 #[derive(Default)]
-pub struct PhpTestClient {
-    // No state needed - each request invokes the handler directly
-}
+pub struct PhpTestClient {}
 
 #[php_impl]
 impl PhpTestClient {
@@ -200,20 +198,18 @@ fn execute_test_request(
     query: Option<String>,
     headers: Option<HashMap<String, String>>,
 ) -> PhpResult<PhpTestResponse> {
-    // Parse body as JSON if provided
     let body_value = body
         .as_ref()
         .map(|b| serde_json::from_str(b).unwrap_or(JsonValue::String(b.clone())))
         .unwrap_or(JsonValue::Null);
 
-    // Parse query string into params
     let raw_query = parse_query_string(query.as_deref());
 
-    // Build PHP request object
     let php_request = PhpRequest::from_parts(
         method.to_string(),
         path.to_string(),
         body_value,
+        JsonValue::Object(serde_json::Map::new()),
         body.map(|b| b.into_bytes()),
         headers.clone().unwrap_or_default(),
         HashMap::new(),
@@ -221,17 +217,14 @@ fn execute_test_request(
         extract_path_params(path),
     );
 
-    // Convert PhpRequest to Zval using IntoZval trait
     let request_zval = php_request
         .into_zval(false)
         .map_err(|e| PhpException::default(format!("Failed to create request object: {:?}", e)))?;
 
-    // Call the handler
     let response_zval = handler
         .try_call(vec![&request_zval])
         .map_err(|e| PhpException::default(format!("Handler failed: {:?}", e)))?;
 
-    // Convert response to PhpTestResponse
     zval_to_test_response(&response_zval)
 }
 
@@ -255,13 +248,11 @@ fn parse_query_string(query: Option<&str>) -> HashMap<String, Vec<String>> {
 /// Extract path parameters from a path.
 /// This is a simple implementation - real path params come from the router.
 fn extract_path_params(_path: &str) -> HashMap<String, String> {
-    // Path params are extracted by the router, not here
     HashMap::new()
 }
 
 /// Convert a Zval response to a PhpTestResponse.
 fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
-    // Handle null response
     if response.is_null() {
         return Ok(PhpTestResponse {
             status: 204,
@@ -270,44 +261,38 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
         });
     }
 
-    // Try to extract PhpResponse - check if object has our expected methods
     if let Some(obj) = response.object()
         && let Ok(class_name) = obj.get_class_name()
         && class_name.contains("Response")
+        && let Ok(status_zval) = obj.try_call_method("getStatus", vec![])
     {
-        // Try to call getStatus method
-        if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
-            let status = status_zval.long().unwrap_or(200);
+        let status = status_zval.long().unwrap_or(200);
 
-            // Try to get body (already a string from getBody, no re-parsing needed)
-            let body = if let Ok(body_zval) = obj.try_call_method("getBody", vec![]) {
-                body_zval.string().map(|s| s.to_string()).unwrap_or_default()
-            } else {
-                String::new()
-            };
+        let body = if let Ok(body_zval) = obj.try_call_method("getBody", vec![]) {
+            body_zval.string().map(|s| s.to_string()).unwrap_or_default()
+        } else {
+            String::new()
+        };
 
-            // Try to get headers
-            let mut headers = HashMap::new();
-            if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
-                && let Some(arr) = headers_zval.array()
-            {
-                for (key, val) in arr.iter() {
-                    let key_str = match key {
-                        ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                        ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                        ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                    };
-                    if let Some(val_str) = val.string() {
-                        headers.insert(key_str, val_str.to_string());
-                    }
+        let mut headers = HashMap::new();
+        if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
+            && let Some(arr) = headers_zval.array()
+        {
+            for (key, val) in arr.iter() {
+                let key_str = match key {
+                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                };
+                if let Some(val_str) = val.string() {
+                    headers.insert(key_str, val_str.to_string());
                 }
             }
-
-            return Ok(PhpTestResponse { status, body, headers });
         }
+
+        return Ok(PhpTestResponse { status, body, headers });
     }
 
-    // If it's a string, return as-is
     if let Some(s) = response.string() {
         let mut headers = HashMap::new();
         headers.insert("content-type".to_string(), "text/plain".to_string());
@@ -318,7 +303,6 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
         });
     }
 
-    // Try to convert to JSON
     let body_json =
         zval_to_json(response).map_err(|e| PhpException::default(format!("Failed to convert response: {}", e)))?;
 
@@ -340,9 +324,7 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
 #[php_class]
 #[php(name = "Spikard\\Testing\\HttpTestClient")]
 #[derive(Default)]
-pub struct PhpHttpTestClient {
-    // Server is created on-demand for each test
-}
+pub struct PhpHttpTestClient {}
 
 #[php_impl]
 impl PhpHttpTestClient {
@@ -363,20 +345,16 @@ impl PhpHttpTestClient {
         body: Option<String>,
         headers: Option<HashMap<String, String>>,
     ) -> PhpResult<PhpTestResponse> {
-        // For full HTTP stack testing, we create a test server with a single route
-        // and execute the request through it.
-
-        // Create request data
         let body_value = body
             .as_ref()
             .map(|b| serde_json::from_str(b).unwrap_or(JsonValue::String(b.clone())))
             .unwrap_or(JsonValue::Null);
 
-        // Build the PHP request
         let php_request = PhpRequest::from_parts(
             method,
             path,
             body_value,
+            JsonValue::Object(serde_json::Map::new()),
             body.map(|b| b.into_bytes()),
             headers.unwrap_or_default(),
             HashMap::new(),
@@ -384,12 +362,10 @@ impl PhpHttpTestClient {
             HashMap::new(),
         );
 
-        // Convert PhpRequest to Zval using IntoZval trait
         let request_zval = php_request
             .into_zval(false)
             .map_err(|e| PhpException::default(format!("Failed to create request: {:?}", e)))?;
 
-        // Call handler
         let response_zval = handler
             .try_call(vec![&request_zval])
             .map_err(|e| PhpException::default(format!("Handler failed: {:?}", e)))?;
@@ -426,8 +402,6 @@ pub struct PhpWebSocketTestConnection {
 
 impl PhpWebSocketTestConnection {
     fn connect(_path: String, _handler: ZendCallable) -> PhpResult<Self> {
-        // For now, this is a minimal implementation that will work with the handler bridge
-        // The actual WebSocket testing will be implemented when we add the handler bridge
         Ok(Self {
             messages: Vec::new(),
             closed: false,
@@ -450,7 +424,6 @@ impl PhpWebSocketTestConnection {
     /// Send a JSON message to the WebSocket.
     #[php(name = "sendJson")]
     pub fn send_json(&mut self, data: String) -> PhpResult<()> {
-        // Validate JSON
         let _: JsonValue =
             serde_json::from_str(&data).map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
         self.send_text(data)
@@ -462,7 +435,6 @@ impl PhpWebSocketTestConnection {
         if self.closed {
             return Err(PhpException::default("WebSocket connection is closed".to_string()));
         }
-        // This will be implemented when we add the actual WebSocket handler bridge
         Ok(String::from("test message"))
     }
 
@@ -507,8 +479,6 @@ pub struct PhpSseStream {
 
 impl PhpSseStream {
     fn connect(_path: String, _handler: ZendCallable) -> PhpResult<Self> {
-        // For now, this is a minimal implementation that will work with the handler bridge
-        // The actual SSE testing will be implemented when we add the handler bridge
         Ok(Self { events: Vec::new() })
     }
 }

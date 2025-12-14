@@ -1,0 +1,191 @@
+[
+	{
+		"name": "valid_types",
+		"method": "user.update",
+		"params": {
+			"name": "Alice Johnson",
+			"age": 28,
+			"active": true
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "string_number_rejected",
+		"method": "user.update",
+		"params": {
+			"name": "Bob Smith",
+			"age": "25",
+			"active": true
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "age",
+				"constraint": "type",
+				"value": "25",
+				"details": "Expected type integer, got string"
+			}
+		}
+	},
+	{
+		"name": "number_string_rejected",
+		"method": "user.update",
+		"params": {
+			"name": 123,
+			"age": 30,
+			"active": true
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "name",
+				"constraint": "type",
+				"value": 123,
+				"details": "Expected type string, got integer"
+			}
+		}
+	},
+	{
+		"name": "string_boolean_rejected",
+		"method": "user.update",
+		"params": {
+			"name": "Charlie Brown",
+			"age": 35,
+			"active": "true"
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "active",
+				"constraint": "type",
+				"value": "true",
+				"details": "Expected type boolean, got string"
+			}
+		}
+	},
+	{
+		"name": "array_as_object_rejected",
+		"method": "user.update",
+		"params": {
+			"name": "Diana Prince",
+			"age": 29,
+			"active": true,
+			"tags": { "0": "tag1", "1": "tag2" }
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "tags",
+				"constraint": "type",
+				"value": { "0": "tag1", "1": "tag2" },
+				"details": "Expected type array, got object"
+			}
+		}
+	},
+	{
+		"name": "object_as_array_rejected",
+		"method": "user.metadata.save",
+		"params": {
+			"metadata": [{ "key": "env", "value": "prod" }]
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "metadata",
+				"constraint": "type",
+				"value": [{ "key": "env", "value": "prod" }],
+				"details": "Expected type object, got array"
+			}
+		}
+	},
+	{
+		"name": "null_vs_missing_field",
+		"method": "user.update",
+		"params": {
+			"name": "Eve Wilson",
+			"age": null,
+			"active": true
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "age",
+				"constraint": "type",
+				"value": null,
+				"details": "Expected type integer, got null"
+			}
+		}
+	},
+	{
+		"name": "float_for_integer_rejected",
+		"method": "user.update",
+		"params": {
+			"name": "Frank Martin",
+			"age": 25.5,
+			"active": true
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "age",
+				"constraint": "type",
+				"value": 25.5,
+				"details": "Expected type integer, got number"
+			}
+		}
+	},
+	{
+		"name": "empty_string_validation",
+		"method": "user.update",
+		"params": {
+			"name": "",
+			"age": 28,
+			"active": true
+		},
+		"expectedSuccess": false,
+		"expectedError": {
+			"code": "-32602",
+			"message": "Invalid params",
+			"data": {
+				"fieldPath": "name",
+				"constraint": "minLength",
+				"value": "",
+				"details": "String length must be at least 2"
+			}
+		}
+	},
+	{
+		"name": "number_zero_valid",
+		"method": "user.update",
+		"params": {
+			"name": "Grace Lee",
+			"age": 0,
+			"active": false
+		},
+		"expectedSuccess": true
+	},
+	{
+		"name": "boolean_false_valid",
+		"method": "user.update",
+		"params": {
+			"name": "Henry Davis",
+			"age": 40,
+			"active": false
+		},
+		"expectedSuccess": true
+	}
+]

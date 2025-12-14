@@ -250,10 +250,8 @@ describe("Spikard", () => {
 			const hooks1 = app.getLifecycleHooks();
 			const hooks2 = app.getLifecycleHooks();
 
-			// Should be different array instances
 			expect(hooks1.onRequest).not.toBe(hooks2.onRequest);
 
-			// But with same content
 			expect(hooks1.onRequest).toEqual(hooks2.onRequest);
 		});
 
@@ -281,11 +279,9 @@ describe("Spikard", () => {
 			const hooks = app.getLifecycleHooks();
 			const originalCount = hooks.onRequest.length;
 
-			// Try to modify the returned array
 			const newHook: LifecycleHookFunction = async (payload) => payload;
 			hooks.onRequest.push(newHook);
 
-			// Original should not be affected
 			const originalHooks = app.getLifecycleHooks();
 			expect(originalHooks.onRequest).toHaveLength(originalCount);
 		});

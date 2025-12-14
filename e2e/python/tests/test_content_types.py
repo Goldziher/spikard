@@ -319,5 +319,5 @@ async def test_binary_response_application_octet_stream() -> None:
         response_data = response.json()
         assert response_data == "binary_data_placeholder"
         response_headers = response.headers
-        assert response_headers.get("content-type") == "application/octet-stream"
         assert response_headers.get("content-disposition") == "attachment; filename=file.bin"
+        assert response_headers.get("content-type") == "application/octet-stream"

@@ -13,32 +13,24 @@ describe("Node.js Static File Utilities", () => {
 	let tmpDir: string;
 
 	beforeEach(() => {
-		// Create a temporary directory for test files
 		tmpDir = path.join(process.cwd(), `.test-static-${Math.random().toString(36).slice(2)}`);
 		try {
 			mkdirSync(tmpDir, { recursive: true });
-		} catch (e) {
-			// Directory might already exist
-		}
+		} catch (e) {}
 	});
 
 	afterEach(() => {
-		// Clean up test directory
 		try {
 			if (fs.existsSync(tmpDir)) {
 				rmSync(tmpDir, { recursive: true, force: true });
 			}
-		} catch (e) {
-			// Ignore cleanup errors
-		}
+		} catch (e) {}
 	});
 
 	describe("TestClient creation", () => {
 		it("should create TestClient with Spikard app", () => {
 			const app = new Spikard();
 			expect(() => {
-				// TestClient is imported from node.ts
-				// We test that it can be created with a valid app
 				const testAppData: SpikardApp = {
 					routes: app.routes,
 					handlers: app.handlers,
@@ -78,7 +70,6 @@ describe("Node.js Static File Utilities", () => {
 		});
 
 		it("should handle app with existing static directory", () => {
-			// Create a test file
 			writeFileSync(path.join(tmpDir, "test.txt"), "test content");
 
 			const app = new Spikard();
@@ -247,14 +238,12 @@ describe("Node.js Static File Utilities", () => {
 
 	describe("Content type detection", () => {
 		it("should handle HTML files", () => {
-			// Test that the system can be configured for HTML content types
 			const htmlConfig: StaticFilesConfig = {
 				directory: "/public",
 				routePrefix: "/static",
 			};
 
 			expect(htmlConfig).toBeDefined();
-			// Content type detection happens internally
 		});
 
 		it("should handle multiple file types", () => {
@@ -377,7 +366,7 @@ describe("Node.js Static File Utilities", () => {
 				{
 					route: "/index.html",
 					headers: { "content-type": "text/html" },
-					body: "aGVsbG8=", // base64
+					body: "aGVsbG8=",
 				},
 			];
 
@@ -485,7 +474,6 @@ describe("Node.js Static File Utilities", () => {
 				{
 					directory: "/downloads",
 					routePrefix: "/downloads",
-					// indexFile not specified
 				},
 			];
 

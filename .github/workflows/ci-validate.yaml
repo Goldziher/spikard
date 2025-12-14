@@ -4,67 +4,55 @@ on:
   push:
     branches: [main]
     paths:
-      # Rust
       - 'crates/**/*.rs'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
       - '.cargo/config.toml'
-      # Python
       - '**/*.py'
       - 'pyproject.toml'
       - 'uv.lock'
       - 'packages/python/**'
       - 'tools/**'
-      # TypeScript
       - '**/*.ts'
       - '**/*.tsx'
       - '**/*.js'
       - 'packages/node/**'
       - 'crates/spikard-node/src/**'
-      # Ruby
       - '**/*.rb'
       - 'Gemfile*'
       - 'packages/ruby/**'
-      # PHP
       - '**/*.php'
       - 'composer.json'
       - 'composer.lock'
       - 'packages/php/**'
-      # Workflows/actions
       - '.github/workflows/**'
       - '.github/actions/**'
   pull_request:
     branches: [main]
     paths:
-      # Rust
       - 'crates/**/*.rs'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
       - '.cargo/config.toml'
-      # Python
       - '**/*.py'
       - 'pyproject.toml'
       - 'uv.lock'
       - 'packages/python/**'
       - 'tools/**'
-      # TypeScript
       - '**/*.ts'
       - '**/*.tsx'
       - '**/*.js'
       - 'packages/node/**'
       - 'crates/spikard-node/src/**'
-      # Ruby
       - '**/*.rb'
       - 'Gemfile*'
       - 'packages/ruby/**'
-      # PHP
       - '**/*.php'
       - 'composer.json'
       - 'composer.lock'
       - 'packages/php/**'
-      # Workflows/actions
       - '.github/workflows/**'
       - '.github/actions/**'
 
