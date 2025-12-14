@@ -108,7 +108,8 @@ fastify.post("/json/small", {
 		body: smallPayloadSchema,
 	},
 	handler: async (request, _reply) => {
-		return request.body;
+		void request;
+		return { ok: true };
 	},
 });
 
@@ -117,7 +118,8 @@ fastify.post("/json/medium", {
 		body: mediumPayloadSchema,
 	},
 	handler: async (request, _reply) => {
-		return request.body;
+		void request;
+		return { ok: true };
 	},
 });
 
@@ -126,7 +128,8 @@ fastify.post("/json/large", {
 		body: largePayloadSchema,
 	},
 	handler: async (request, _reply) => {
-		return request.body;
+		void request;
+		return { ok: true };
 	},
 });
 
@@ -135,7 +138,8 @@ fastify.post("/json/very-large", {
 		body: veryLargePayloadSchema,
 	},
 	handler: async (request, _reply) => {
-		return request.body;
+		void request;
+		return { ok: true };
 	},
 });
 
@@ -156,7 +160,8 @@ fastify.post("/urlencoded/simple", {
 		body: urlencodedSimpleSchema,
 	},
 	handler: async (request, _reply) => {
-		return request.body;
+		void request;
+		return { ok: true };
 	},
 });
 
@@ -165,7 +170,8 @@ fastify.post("/urlencoded/complex", {
 		body: urlencodedComplexSchema,
 	},
 	handler: async (request, _reply) => {
-		return request.body;
+		void request;
+		return { ok: true };
 	},
 });
 
@@ -209,15 +215,18 @@ fastify.get("/path/date/:date", async (request, _reply) => {
 });
 
 fastify.get("/query/few", async (request, _reply) => {
-	return request.query;
+	void request;
+	return { ok: true };
 });
 
 fastify.get("/query/medium", async (request, _reply) => {
-	return request.query;
+	void request;
+	return { ok: true };
 });
 
 fastify.get("/query/many", async (request, _reply) => {
-	return request.query;
+	void request;
+	return { ok: true };
 });
 
 fastify.get("/health", async (_request, _reply) => {

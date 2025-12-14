@@ -46,10 +46,10 @@ test_endpoint "Root" "GET" "http://localhost:9995/" "" "status"
 
 # JSON endpoints
 test_endpoint "JSON Small" "POST" "http://localhost:9995/json/small" \
-	'{"name":"test","description":"desc","price":99.99}' "test"
+	'{"name":"test","description":"desc","price":99.99}' "\"ok\":true"
 
 test_endpoint "JSON Medium" "POST" "http://localhost:9995/json/medium" \
-	'{"name":"John","email":"j@ex.com","age":30,"address":{"street":"123 St","city":"City","state":"ST","zip_code":"12345"},"tags":["a"]}' "John"
+	'{"name":"John","email":"j@ex.com","age":30,"address":{"street":"123 St","city":"City","state":"ST","zip_code":"12345"},"tags":["a"]}' "\"ok\":true"
 
 # Path parameters
 test_endpoint "Path Simple" "GET" "http://localhost:9995/path/simple/123" "" "123"
@@ -60,13 +60,13 @@ test_endpoint "Path UUID" "GET" "http://localhost:9995/path/uuid/550e8400-e29b-4
 test_endpoint "Path Date" "GET" "http://localhost:9995/path/date/2024-01-01" "" "2024-01-01"
 
 # Query parameters
-test_endpoint "Query Few" "GET" "http://localhost:9995/query/few?a=1&b=2" "" "\"a\""
-test_endpoint "Query Medium" "GET" "http://localhost:9995/query/medium?a=1&b=2&c=3" "" "\"b\""
-test_endpoint "Query Many" "GET" "http://localhost:9995/query/many?a=1&b=2&c=3&d=4&e=5&f=6" "" "\"d\""
+test_endpoint "Query Few" "GET" "http://localhost:9995/query/few?a=1&b=2" "" "\"ok\":true"
+test_endpoint "Query Medium" "GET" "http://localhost:9995/query/medium?a=1&b=2&c=3" "" "\"ok\":true"
+test_endpoint "Query Many" "GET" "http://localhost:9995/query/many?a=1&b=2&c=3&d=4&e=5&f=6" "" "\"ok\":true"
 
 # URL encoded
 test_endpoint "URL Encoded Simple" "POST" "http://localhost:9995/urlencoded/simple" \
-	'{"username":"test","password":"pass"}' "username"
+	'{"username":"test","password":"pass"}' "\"ok\":true"
 
 # Multipart
 test_endpoint "Multipart Small" "POST" "http://localhost:9995/multipart/small" "" "files_received"

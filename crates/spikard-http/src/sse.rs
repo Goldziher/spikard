@@ -382,12 +382,14 @@ pub async fn sse_handler<P: SseEventProducer + 'static>(State(state): State<SseS
                     Ok(event) => Some((Ok::<_, Infallible>(event), (producer, event_schema))),
                     Err(e) => {
                         error!("Failed to serialize SSE event: {}", e);
+                        producer.on_disconnect().await;
                         None
                     }
                 }
             }
             None => {
                 info!("SSE stream ended");
+                producer.on_disconnect().await;
                 None
             }
         }
