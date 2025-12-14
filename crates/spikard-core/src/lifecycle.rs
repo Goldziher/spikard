@@ -424,6 +424,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tokio_test::block_on;
 
     #[test]
     fn test_hook_result_continue_variant() {
@@ -513,6 +514,27 @@ mod tests {
 
         hooks.add_on_request(hook);
         assert!(!hooks.is_empty());
+    }
+
+    #[test]
+    fn request_hook_errors_if_called_with_response() {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let hook = request_hook::<String, String, _, _>("req", |req| async move { Ok(HookResult::Continue(req)) });
+            let err = block_on(async { hook.execute_response("resp".to_string()).await }).unwrap_err();
+            assert!(err.contains("Request hook called with response"));
+        }
+    }
+
+    #[test]
+    fn response_hook_errors_if_called_with_request() {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let hook =
+                response_hook::<String, String, _, _>("resp", |resp| async move { Ok(HookResult::Continue(resp)) });
+            let err = block_on(async { hook.execute_request("req".to_string()).await }).unwrap_err();
+            assert!(err.contains("Response hook called with request"));
+        }
     }
 
     #[cfg(not(target_arch = "wasm32"))]

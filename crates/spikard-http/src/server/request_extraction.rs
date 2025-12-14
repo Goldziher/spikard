@@ -122,6 +122,7 @@ pub async fn create_request_data_with_body(
 mod tests {
     use super::*;
     use axum::http::{HeaderMap, HeaderValue, Method, Uri};
+    use futures_util::stream;
     use serde_json::json;
 
     #[test]
@@ -600,5 +601,26 @@ mod tests {
         assert!(Arc::ptr_eq(&request_data.headers, &cloned.headers));
         assert!(Arc::ptr_eq(&request_data.cookies, &cloned.cookies));
         assert!(Arc::ptr_eq(&request_data.raw_query_params, &cloned.raw_query_params));
+    }
+
+    #[tokio::test]
+    async fn create_request_data_with_body_returns_bad_request_when_body_stream_errors() {
+        let request = axum::http::Request::builder()
+            .method(Method::POST)
+            .uri("/path")
+            .body(Body::empty())
+            .unwrap();
+        let (parts, _) = request.into_parts();
+
+        let stream = stream::once(async move {
+            Err::<bytes::Bytes, std::io::Error>(std::io::Error::new(std::io::ErrorKind::Other, "boom"))
+        });
+        let body = Body::from_stream(stream);
+
+        let err = create_request_data_with_body(&parts, HashMap::new(), body)
+            .await
+            .unwrap_err();
+        assert_eq!(err.0, axum::http::StatusCode::BAD_REQUEST);
+        assert!(err.1.contains("Failed to read body:"));
     }
 }
