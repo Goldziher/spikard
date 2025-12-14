@@ -41,10 +41,8 @@ fn find_linux_descendant_pid_by_comm(root_pid: u32, needle: &str, max_depth: usi
             continue;
         }
 
-        if let Some(comm) = read_linux_comm(pid) {
-            if comm.contains(needle) {
-                return Some(pid);
-            }
+        if read_linux_comm(pid).is_some_and(|comm| comm.contains(needle)) {
+            return Some(pid);
         }
 
         for child in read_linux_children_pids(pid) {
