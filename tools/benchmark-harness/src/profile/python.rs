@@ -120,12 +120,22 @@ impl PythonProfiler {
 
     /// Stop the profiler and collect final metrics
     pub fn stop(mut self) -> ProfilingData {
+        let metrics_path = std::env::var("SPIKARD_METRICS_FILE")
+            .ok()
+            .unwrap_or_else(|| format!("/tmp/python-metrics-{}.json", self.pid));
+
         #[cfg(unix)]
         {
             unsafe {
                 libc::kill(self.pid as i32, libc::SIGUSR1);
             }
-            std::thread::sleep(std::time::Duration::from_millis(200));
+            let start = std::time::Instant::now();
+            while start.elapsed() < std::time::Duration::from_secs(2) {
+                if std::fs::metadata(&metrics_path).is_ok() {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
         }
 
         let mut py_spy_exit_status = None;
@@ -169,9 +179,6 @@ impl PythonProfiler {
             }
         }
 
-        let metrics_path = std::env::var("SPIKARD_METRICS_FILE")
-            .ok()
-            .unwrap_or_else(|| format!("/tmp/python-metrics-{}.json", self.pid));
         let app_metrics = self.load_metrics_file(&metrics_path);
 
         if app_metrics.is_none() {
