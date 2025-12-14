@@ -61,19 +61,23 @@ interface DateResponse {
 }
 
 fastify.post("/json/small", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body;
+	void request;
+	return { ok: true };
 });
 
 fastify.post("/json/medium", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body;
+	void request;
+	return { ok: true };
 });
 
 fastify.post("/json/large", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body;
+	void request;
+	return { ok: true };
 });
 
 fastify.post("/json/very-large", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body;
+	void request;
+	return { ok: true };
 });
 
 fastify.post("/multipart/small", async (_request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
@@ -89,11 +93,13 @@ fastify.post("/multipart/large", async (_request: FastifyRequest, _reply: Fastif
 });
 
 fastify.post("/urlencoded/simple", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body ?? {};
+	void request;
+	return { ok: true };
 });
 
 fastify.post("/urlencoded/complex", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body ?? {};
+	void request;
+	return { ok: true };
 });
 
 fastify.get(
@@ -145,15 +151,18 @@ fastify.get(
 );
 
 fastify.get("/query/few", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.query ?? {};
+	void request;
+	return { ok: true };
 });
 
 fastify.get("/query/medium", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.query ?? {};
+	void request;
+	return { ok: true };
 });
 
 fastify.get("/query/many", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.query ?? {};
+	void request;
+	return { ok: true };
 });
 
 fastify.get("/health", async (_request: FastifyRequest, _reply: FastifyReply): Promise<StatusResponse> => {
