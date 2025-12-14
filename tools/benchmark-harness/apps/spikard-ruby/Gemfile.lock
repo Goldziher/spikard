@@ -18,8 +18,7 @@ GEM
       websocket
 
 PLATFORMS
-  arm64-darwin-24
-  ruby
+  x86_64-linux
 
 DEPENDENCIES
   spikard!
