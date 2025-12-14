@@ -141,6 +141,30 @@ impl ProfileRunner {
             None
         };
 
+        #[cfg(unix)]
+        {
+            if suite_flamegraph_path.is_some() && self.config.profiler.as_deref() == Some("python") {
+                let pgid = -(server.pid() as i32);
+                unsafe {
+                    libc::kill(pgid, libc::SIGUSR1);
+                }
+                let start = std::time::Instant::now();
+                while start.elapsed() < std::time::Duration::from_secs(10) {
+                    let mut ready = true;
+                    if let Some(path) = suite_flamegraph_path.as_deref() {
+                        ready &= std::fs::metadata(path).is_ok();
+                    }
+                    if let Ok(metrics_path) = std::env::var("SPIKARD_METRICS_FILE") {
+                        ready &= std::fs::metadata(metrics_path).is_ok();
+                    }
+                    if ready {
+                        break;
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(200));
+                }
+            }
+        }
+
         server.kill()?;
 
         Ok(ProfileResult {
