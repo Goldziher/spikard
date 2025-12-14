@@ -57,7 +57,22 @@ function registerRoute(method: string, path: string, handler: HandlerFunction, r
 		request_schema: requestSchema,
 	};
 	routes.push(metadata);
-	handlers[handler.name] = handler;
+	handlers[handler.name] = async (input: HandlerInput) => {
+		try {
+			return await handler(input);
+		} catch (error) {
+			return {
+				status: 500,
+				body: {
+					error: "handler_exception",
+					code: "handler_exception",
+					details: {
+						message: error instanceof Error ? error.message : String(error),
+					},
+				},
+			};
+		}
+	};
 }
 
 function get(path: string, handler: HandlerFunction): void {
@@ -79,40 +94,40 @@ const SmallPayloadSchema = z.object({
 	tax: z.number().optional(),
 });
 
-const AddressSchema = z.object({
-	street: z.string(),
-	city: z.string(),
-	state: z.string(),
-	zip_code: z.string(),
-});
-
 const MediumPayloadSchema = z.object({
-	user_id: z.number(),
-	username: z.string(),
-	email: z.string(),
-	is_active: z.boolean(),
-	address: AddressSchema,
-	tags: z.array(z.string()),
-});
-
-const ItemSchema = z.object({
-	id: z.number(),
 	name: z.string(),
 	price: z.number(),
-	in_stock: z.boolean(),
+	image: z.object({
+		url: z.string(),
+		name: z.string(),
+	}),
 });
 
 const LargePayloadSchema = z.object({
-	order_id: z.string(),
-	customer_name: z.string(),
-	items: z.array(ItemSchema),
-	total: z.number(),
-	notes: z.string(),
+	name: z.string(),
+	price: z.number(),
+	seller: z.object({
+		name: z.string(),
+		address: z.object({
+			street: z.string(),
+			city: z.string(),
+			country: z.object({
+				name: z.string(),
+				code: z.string(),
+			}),
+		}),
+	}),
 });
 
 const VeryLargePayloadSchema = z.object({
-	data: z.array(z.record(z.any())),
-	metadata: z.record(z.any()),
+	name: z.string(),
+	tags: z.array(z.string()),
+	images: z.array(
+		z.object({
+			url: z.string(),
+			name: z.string(),
+		}),
+	),
 });
 
 async function post_json_small(request: HandlerInput): Promise<HandlerOutput> {
