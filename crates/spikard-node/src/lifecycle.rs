@@ -25,15 +25,12 @@ pub struct NodeLifecycleHook {
     /// JavaScript async function via ThreadsafeFunction
     /// Input: String (JSON-serialized request/response)
     /// Return: Promise<String> (JSON-serialized request/response)
-    func: Arc<ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>>,
+    func: Arc<ThreadsafeFunction<String, Promise<String>, String, napi::Status, false>>,
 }
 
 impl NodeLifecycleHook {
     /// Create a new Node lifecycle hook
-    pub fn new(
-        name: String,
-        func: ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>,
-    ) -> Self {
+    pub fn new(name: String, func: ThreadsafeFunction<String, Promise<String>, String, napi::Status, false>) -> Self {
         Self {
             name,
             func: Arc::new(func),

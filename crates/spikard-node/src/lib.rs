@@ -44,7 +44,6 @@ pub mod handler_input;
 pub mod handler_output;
 mod lifecycle;
 mod response;
-mod sse;
 pub mod testing;
 mod websocket;
 
@@ -55,6 +54,7 @@ use std::io::Write;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 
+pub use background::background_run;
 pub use handler_input::HandlerInput;
 pub use handler_output::HandlerOutput;
 
@@ -448,7 +448,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
         let tsfn = js_handler
             .build_threadsafe_function()
-            .build_callback(|ctx| Ok(vec![ctx.value]))
+            .build_callback(|ctx| Ok(ctx.value))
             .map_err(|e| {
                 Error::from_reason(format!(
                     "Failed to build ThreadsafeFunction for '{}': {}",
@@ -481,7 +481,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
                     let tsfn = js_fn
                         .build_threadsafe_function()
-                        .build_callback(|ctx| Ok(vec![ctx.value]))
+                        .build_callback(|ctx| Ok(ctx.value))
                         .map_err(|e| {
                             Error::from_reason(format!("Failed to build ThreadsafeFunction for hook '{}': {}", name, e))
                         })?;

@@ -68,7 +68,7 @@ impl Dependency for NodeValueDependency {
 /// Uses ThreadsafeFunction to call JS from Rust async context.
 pub struct NodeFactoryDependency {
     key: String,
-    factory_fn: Arc<ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>>,
+    factory_fn: Arc<ThreadsafeFunction<String, Promise<String>, String, napi::Status, false>>,
     depends_on: Vec<String>,
     singleton: bool,
     cacheable: bool,
@@ -81,7 +81,7 @@ impl NodeFactoryDependency {
     /// Create a new Node factory dependency
     pub fn new(
         key: String,
-        factory_fn: ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>,
+        factory_fn: ThreadsafeFunction<String, Promise<String>, String, napi::Status, false>,
         depends_on: Vec<String>,
         singleton: bool,
         cacheable: bool,
@@ -255,7 +255,7 @@ pub fn extract_dependency_container(
 
             let tsfn = factory_fn
                 .build_threadsafe_function()
-                .build_callback(|ctx| Ok(vec![ctx.value]))
+                .build_callback(|ctx| Ok(ctx.value))
                 .map_err(|e| {
                     Error::from_reason(format!(
                         "Failed to build ThreadsafeFunction for factory '{}': {}",
