@@ -10,6 +10,7 @@ import builtins
 import gc
 import json
 import os
+import signal
 import tempfile
 import time
 from collections.abc import Callable, Generator
@@ -181,6 +182,15 @@ def enable_profiling() -> MetricsCollector:
     collector = get_collector()
 
     atexit.register(collector.finalize)
+
+    def _finalize_and_exit(_signum: int, _frame: object) -> None:
+        with suppress(builtins.BaseException):
+            collector.finalize()
+        raise SystemExit(0)
+
+    with suppress(builtins.BaseException):
+        signal.signal(signal.SIGTERM, _finalize_and_exit)
+        signal.signal(signal.SIGINT, _finalize_and_exit)
 
     return collector
 

@@ -7,6 +7,7 @@
 
 use crate::error::Result;
 use serde::Deserialize;
+use std::path::PathBuf;
 use std::process::{Child, Command};
 
 /// Python profiler handle
@@ -27,8 +28,11 @@ struct PythonMetricsFile {
 }
 
 /// Start Python profiler for the given PID
-pub fn start_profiler(pid: u32) -> Result<PythonProfiler> {
-    let desired_output_path = std::env::var("SPIKARD_PYSPY_OUTPUT").ok();
+pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PythonProfiler> {
+    let desired_output_path = output_path
+        .as_ref()
+        .and_then(|p| p.to_str().map(|s| s.to_string()))
+        .or_else(|| std::env::var("SPIKARD_PYSPY_OUTPUT").ok());
     if which::which("py-spy").is_ok() {
         let output_path = desired_output_path.unwrap_or_else(|| format!("/tmp/py-spy-{}.json", pid));
 
@@ -117,8 +121,17 @@ impl PythonProfiler {
         let metrics_path = format!("/tmp/python-metrics-{}.json", self.pid);
         let app_metrics = self.load_metrics_file(&metrics_path);
 
+        let flamegraph_path = self.output_path().and_then(|p| {
+            if std::fs::metadata(p).is_ok() {
+                Some(p.to_string())
+            } else {
+                eprintln!("  ⚠ py-spy output not found at {}", p);
+                None
+            }
+        });
+
         ProfilingData {
-            flamegraph_path: self.output_path().map(|s| s.to_string()),
+            flamegraph_path,
             gc_collections: app_metrics.as_ref().and_then(|m| m.gc_collections),
             gc_time_ms: app_metrics.as_ref().and_then(|m| m.gc_time_ms),
             handler_time_ms: app_metrics.as_ref().and_then(|m| m.handler_time_ms),

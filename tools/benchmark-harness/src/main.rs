@@ -474,6 +474,7 @@ async fn main() -> Result<()> {
                 profiler,
                 baseline_path: baseline,
                 variant,
+                output_dir: output.as_ref().and_then(|p| p.parent().map(|d| d.to_path_buf())),
             };
 
             let runner = ProfileRunner::new(config)?;
