@@ -32,6 +32,7 @@ pub struct ProfileRunnerConfig {
     pub profiler: Option<String>,
     pub baseline_path: Option<PathBuf>,
     pub variant: Option<String>,
+    pub output_dir: Option<PathBuf>,
 }
 
 /// Profile mode runner
@@ -147,9 +148,16 @@ impl ProfileRunner {
 
         let profiler_handle = if let Some(ref profiler_type) = self.config.profiler {
             match profiler_type.as_str() {
-                "python" => Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
-                    server.pid(),
-                )?)),
+                "python" => {
+                    let output_path =
+                        self.config.output_dir.as_ref().map(|dir| {
+                            dir.join(format!("py-spy-{}-{}.speedscope.json", workload_def.name, server.pid()))
+                        });
+                    Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
+                        server.pid(),
+                        output_path,
+                    )?))
+                }
                 "node" => Some(ProfilerHandle::Node(crate::profile::node::start_profiler(
                     server.pid(),
                 )?)),

@@ -190,6 +190,7 @@ impl CompareRunner {
             profiler: None,
             baseline_path: None,
             variant: None,
+            output_dir: None,
         };
 
         let runner = ProfileRunner::new(profile_config)?;

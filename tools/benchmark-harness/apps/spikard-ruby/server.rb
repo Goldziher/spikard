@@ -11,7 +11,8 @@ require 'spikard'
 require 'json'
 
 GC::Profiler.enable
-at_exit do
+
+def write_benchmark_metrics
   metrics = {
     gc_count: GC.count,
     gc_time_ms: (GC::Profiler.total_time.to_f * 1000.0),
@@ -19,11 +20,15 @@ at_exit do
     heap_live_slots: GC.stat[:heap_live_slots]
   }
 
-  path = ENV['SPIKARD_RUBY_METRICS_FILE'] || "/tmp/ruby-metrics-#{Process.pid}.json"
+  path = ENV.fetch('SPIKARD_RUBY_METRICS_FILE', "/tmp/ruby-metrics-#{Process.pid}.json")
   File.write(path, JSON.pretty_generate(metrics))
 rescue StandardError
   nil
 end
+
+Signal.trap('TERM') { write_benchmark_metrics; exit(0) }
+Signal.trap('INT') { write_benchmark_metrics; exit(0) }
+at_exit { write_benchmark_metrics }
 
 app = Spikard::App.new
 
