@@ -6,21 +6,70 @@
  * This server implements all workload types to measure Node.js binding performance.
  */
 
-import { Spikard, runServer, type Request } from "@spikard/node";
+import { createRequire } from "node:module";
 import { z } from "zod";
 
-const app = new Spikard();
+const require = createRequire(import.meta.url);
+const native = require("../../../../packages/node/index.js") as {
+	runServer: (app: unknown, config: unknown) => void;
+};
 
-function addRoute(method: "GET" | "POST", path: string, handler: (req: Request) => unknown | Promise<unknown>): void {
-	app.addRoute(
-		{
-			method,
-			path,
-			handler_name: handler.name,
-			is_async: true,
-		},
-		handler,
-	);
+type RouteMetadata = {
+	method: string;
+	path: string;
+	handler_name: string;
+	is_async: boolean;
+	request_schema?: unknown;
+	response_schema?: unknown;
+	parameter_schema?: unknown;
+	file_params?: unknown;
+	cors?: unknown;
+	body_param_name?: string;
+};
+
+type HandlerInput = {
+	method: string;
+	path: string;
+	headers: Record<string, string>;
+	cookies: Record<string, string>;
+	query_params: unknown;
+	body: unknown;
+	path_params: Record<string, string>;
+};
+
+type HandlerOutput = {
+	status: number;
+	headers?: Record<string, string>;
+	body?: unknown;
+};
+
+type HandlerFunction = (input: HandlerInput) => Promise<HandlerOutput>;
+
+const routes: RouteMetadata[] = [];
+const handlers: Record<string, HandlerFunction> = {};
+
+function registerRoute(method: string, path: string, handler: HandlerFunction, requestSchema?: unknown): void {
+	const metadata: RouteMetadata = {
+		method: method.toUpperCase(),
+		path,
+		handler_name: handler.name,
+		is_async: true,
+		request_schema: requestSchema,
+	};
+	routes.push(metadata);
+	handlers[handler.name] = handler;
+}
+
+function get(path: string, handler: HandlerFunction): void {
+	registerRoute("GET", path, handler);
+}
+
+function post(path: string, handler: HandlerFunction, requestSchema: unknown = {}): void {
+	registerRoute("POST", path, handler, requestSchema);
+}
+
+function ok(body: unknown): HandlerOutput {
+	return { status: 200, body };
 }
 
 const SmallPayloadSchema = z.object({
@@ -66,120 +115,120 @@ const VeryLargePayloadSchema = z.object({
 	metadata: z.record(z.any()),
 });
 
-async function post_json_small(request: Request): Promise<unknown> {
-	return SmallPayloadSchema.parse(request.json());
+async function post_json_small(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(SmallPayloadSchema.parse(request.body));
 }
 
-async function post_json_medium(request: Request): Promise<unknown> {
-	return MediumPayloadSchema.parse(request.json());
+async function post_json_medium(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(MediumPayloadSchema.parse(request.body));
 }
 
-async function post_json_large(request: Request): Promise<unknown> {
-	return LargePayloadSchema.parse(request.json());
+async function post_json_large(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(LargePayloadSchema.parse(request.body));
 }
 
-async function post_json_very_large(request: Request): Promise<unknown> {
-	return VeryLargePayloadSchema.parse(request.json());
+async function post_json_very_large(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(VeryLargePayloadSchema.parse(request.body));
 }
 
-async function post_multipart_small(_request: Request): Promise<unknown> {
-	return { files_received: 1, total_bytes: 1024 };
+async function post_multipart_small(_request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ files_received: 1, total_bytes: 1024 });
 }
 
-async function post_multipart_medium(_request: Request): Promise<unknown> {
-	return { files_received: 2, total_bytes: 10240 };
+async function post_multipart_medium(_request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ files_received: 2, total_bytes: 10240 });
 }
 
-async function post_multipart_large(_request: Request): Promise<unknown> {
-	return { files_received: 5, total_bytes: 102400 };
+async function post_multipart_large(_request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ files_received: 5, total_bytes: 102400 });
 }
 
-async function post_urlencoded_simple(request: Request): Promise<unknown> {
-	return request.form();
+async function post_urlencoded_simple(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(request.body ?? {});
 }
 
-async function post_urlencoded_complex(request: Request): Promise<unknown> {
-	return request.form();
+async function post_urlencoded_complex(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(request.body ?? {});
 }
 
-async function get_path_simple(request: Request): Promise<unknown> {
-	return { id: request.params.id };
+async function get_path_simple(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ id: request.path_params.id });
 }
 
-async function get_path_multiple(request: Request): Promise<unknown> {
-	return {
-		user_id: request.params.user_id,
-		post_id: request.params.post_id,
-	};
+async function get_path_multiple(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({
+		user_id: request.path_params.user_id,
+		post_id: request.path_params.post_id,
+	});
 }
 
-async function get_path_deep(request: Request): Promise<unknown> {
-	return {
-		org: request.params.org,
-		team: request.params.team,
-		project: request.params.project,
-		resource: request.params.resource,
-		id: request.params.id,
-	};
+async function get_path_deep(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({
+		org: request.path_params.org,
+		team: request.path_params.team,
+		project: request.path_params.project,
+		resource: request.path_params.resource,
+		id: request.path_params.id,
+	});
 }
 
-async function get_path_int(request: Request): Promise<unknown> {
-	return { id: parseInt(request.params.id, 10) };
+async function get_path_int(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ id: parseInt(request.path_params.id, 10) });
 }
 
-async function get_path_uuid(request: Request): Promise<unknown> {
-	return { uuid: request.params.uuid };
+async function get_path_uuid(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ uuid: request.path_params.uuid });
 }
 
-async function get_path_date(request: Request): Promise<unknown> {
-	return { date: request.params.date };
+async function get_path_date(request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ date: request.path_params.date });
 }
 
-async function get_query_few(request: Request): Promise<unknown> {
-	return request.query;
+async function get_query_few(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(request.query_params ?? {});
 }
 
-async function get_query_medium(request: Request): Promise<unknown> {
-	return request.query;
+async function get_query_medium(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(request.query_params ?? {});
 }
 
-async function get_query_many(request: Request): Promise<unknown> {
-	return request.query;
+async function get_query_many(request: HandlerInput): Promise<HandlerOutput> {
+	return ok(request.query_params ?? {});
 }
 
-async function get_health(_request: Request): Promise<unknown> {
-	return { status: "ok" };
+async function get_health(_request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ status: "ok" });
 }
 
-async function get_root(_request: Request): Promise<unknown> {
-	return { status: "ok" };
+async function get_root(_request: HandlerInput): Promise<HandlerOutput> {
+	return ok({ status: "ok" });
 }
 
-addRoute("POST", "/json/small", post_json_small);
-addRoute("POST", "/json/medium", post_json_medium);
-addRoute("POST", "/json/large", post_json_large);
-addRoute("POST", "/json/very-large", post_json_very_large);
+post("/json/small", post_json_small);
+post("/json/medium", post_json_medium);
+post("/json/large", post_json_large);
+post("/json/very-large", post_json_very_large);
 
-addRoute("POST", "/multipart/small", post_multipart_small);
-addRoute("POST", "/multipart/medium", post_multipart_medium);
-addRoute("POST", "/multipart/large", post_multipart_large);
+post("/multipart/small", post_multipart_small);
+post("/multipart/medium", post_multipart_medium);
+post("/multipart/large", post_multipart_large);
 
-addRoute("POST", "/urlencoded/simple", post_urlencoded_simple);
-addRoute("POST", "/urlencoded/complex", post_urlencoded_complex);
+post("/urlencoded/simple", post_urlencoded_simple);
+post("/urlencoded/complex", post_urlencoded_complex);
 
-addRoute("GET", "/path/simple/{id}", get_path_simple);
-addRoute("GET", "/path/multiple/{user_id}/{post_id}", get_path_multiple);
-addRoute("GET", "/path/deep/{org}/{team}/{project}/{resource}/{id}", get_path_deep);
-addRoute("GET", "/path/int/{id}", get_path_int);
-addRoute("GET", "/path/uuid/{uuid}", get_path_uuid);
-addRoute("GET", "/path/date/{date}", get_path_date);
+get("/path/simple/{id}", get_path_simple);
+get("/path/multiple/{user_id}/{post_id}", get_path_multiple);
+get("/path/deep/{org}/{team}/{project}/{resource}/{id}", get_path_deep);
+get("/path/int/{id}", get_path_int);
+get("/path/uuid/{uuid}", get_path_uuid);
+get("/path/date/{date}", get_path_date);
 
-addRoute("GET", "/query/few", get_query_few);
-addRoute("GET", "/query/medium", get_query_medium);
-addRoute("GET", "/query/many", get_query_many);
+get("/query/few", get_query_few);
+get("/query/medium", get_query_medium);
+get("/query/many", get_query_many);
 
-addRoute("GET", "/health", get_health);
-addRoute("GET", "/", get_root);
+get("/health", get_health);
+get("/", get_root);
 
 const port = process.argv[2] ? parseInt(process.argv[2], 10) : process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 
@@ -188,24 +237,17 @@ const config = {
 	host: "0.0.0.0",
 	port,
 };
+const app = {
+	routes,
+	handlers,
+};
 try {
-	runServer(app, config);
+	native.runServer(app, config);
 	console.error(`[spikard-node] runServer dispatched successfully`);
 } catch (err) {
 	console.error(`[spikard-node] Failed to start server:`, err);
 	process.exit(1);
 }
 
-// Keep the Node.js process alive (Rust server runs on a background thread).
-const keepAlive = setInterval(() => {}, 1 << 30);
-keepAlive.unref?.();
-
-process.on("SIGINT", () => {
-	clearInterval(keepAlive);
-	process.exit(0);
-});
-
-process.on("SIGTERM", () => {
-	clearInterval(keepAlive);
-	process.exit(0);
-});
+// Ensure the process stays alive while benchmarks run.
+setInterval(() => {}, 1 << 30);

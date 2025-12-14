@@ -265,6 +265,30 @@ fn extract_jsonrpc_method(route_obj: &Object) -> Option<serde_json::Value> {
     }
 }
 
+fn extract_optional_json_property(route_obj: &Object, property: &str) -> Option<serde_json::Value> {
+    match route_obj.get_named_property::<Object>(property) {
+        Ok(obj) => match node_object_to_json(&obj) {
+            Ok(value) => Some(value),
+            Err(e) => {
+                warn!("Failed to extract {}: {}", property, e);
+                None
+            }
+        },
+        Err(_) => None,
+    }
+}
+
+fn extract_optional_cors(route_obj: &Object) -> Option<spikard_core::CorsConfig> {
+    let value = extract_optional_json_property(route_obj, "cors")?;
+    match serde_json::from_value::<spikard_core::CorsConfig>(value) {
+        Ok(cors) => Some(cors),
+        Err(e) => {
+            warn!("Failed to parse cors config: {}", e);
+            None
+        }
+    }
+}
+
 /// Convert a Node.js object to a serde_json::Value
 ///
 /// First attempts to use the object's toJSON() method if available,
@@ -360,13 +384,13 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             method,
             path,
             handler_name,
-            request_schema: None, // TODO: Extract from route
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
+            request_schema: extract_optional_json_property(&route_obj, "request_schema"),
+            response_schema: extract_optional_json_property(&route_obj, "response_schema"),
+            parameter_schema: extract_optional_json_property(&route_obj, "parameter_schema"),
+            file_params: extract_optional_json_property(&route_obj, "file_params"),
             is_async,
-            cors: None,
-            body_param_name: None,
+            cors: extract_optional_cors(&route_obj),
+            body_param_name: route_obj.get_named_property::<String>("body_param_name").ok(),
             handler_dependencies: None, // TODO: Extract from route
             jsonrpc_method: extract_jsonrpc_method(&route_obj),
         };
@@ -397,13 +421,13 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                         method,
                         path,
                         handler_name,
-                        request_schema: None,
-                        response_schema: None,
-                        parameter_schema: None,
-                        file_params: None,
+                        request_schema: extract_optional_json_property(&route_obj, "request_schema"),
+                        response_schema: extract_optional_json_property(&route_obj, "response_schema"),
+                        parameter_schema: extract_optional_json_property(&route_obj, "parameter_schema"),
+                        file_params: extract_optional_json_property(&route_obj, "file_params"),
                         is_async,
-                        cors: None,
-                        body_param_name: None,
+                        cors: extract_optional_cors(&route_obj),
+                        body_param_name: route_obj.get_named_property::<String>("body_param_name").ok(),
                         handler_dependencies: None,
                         jsonrpc_method: extract_jsonrpc_method(&route_obj),
                     });
