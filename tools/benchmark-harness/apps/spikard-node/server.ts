@@ -195,3 +195,17 @@ try {
 	console.error(`[spikard-node] Failed to start server:`, err);
 	process.exit(1);
 }
+
+// Keep the Node.js process alive (Rust server runs on a background thread).
+const keepAlive = setInterval(() => {}, 1 << 30);
+keepAlive.unref?.();
+
+process.on("SIGINT", () => {
+	clearInterval(keepAlive);
+	process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+	clearInterval(keepAlive);
+	process.exit(0);
+});
