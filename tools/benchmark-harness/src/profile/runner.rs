@@ -13,6 +13,48 @@ use crate::{
 };
 use std::path::PathBuf;
 
+#[cfg(target_os = "linux")]
+fn read_linux_children_pids(pid: u32) -> Vec<u32> {
+    let path = format!("/proc/{}/task/{}/children", pid, pid);
+    let Ok(contents) = std::fs::read_to_string(path) else {
+        return Vec::new();
+    };
+    contents
+        .split_whitespace()
+        .filter_map(|s| s.parse::<u32>().ok())
+        .collect()
+}
+
+#[cfg(target_os = "linux")]
+fn read_linux_comm(pid: u32) -> Option<String> {
+    let path = format!("/proc/{}/comm", pid);
+    std::fs::read_to_string(path).ok().map(|s| s.trim().to_string())
+}
+
+#[cfg(target_os = "linux")]
+fn find_linux_descendant_pid_by_comm(root_pid: u32, needle: &str, max_depth: usize) -> Option<u32> {
+    let mut queue: std::collections::VecDeque<(u32, usize)> = std::collections::VecDeque::new();
+    queue.push_back((root_pid, 0));
+
+    while let Some((pid, depth)) = queue.pop_front() {
+        if depth > max_depth {
+            continue;
+        }
+
+        if let Some(comm) = read_linux_comm(pid) {
+            if comm.contains(needle) {
+                return Some(pid);
+            }
+        }
+
+        for child in read_linux_children_pids(pid) {
+            queue.push_back((child, depth + 1));
+        }
+    }
+
+    None
+}
+
 /// Unified profiler handle for different languages
 enum ProfilerHandle {
     Python(crate::profile::python::PythonProfiler),
@@ -149,12 +191,18 @@ impl ProfileRunner {
         let profiler_handle = if let Some(ref profiler_type) = self.config.profiler {
             match profiler_type.as_str() {
                 "python" => {
+                    #[cfg(target_os = "linux")]
+                    let python_pid =
+                        find_linux_descendant_pid_by_comm(server.pid(), "python", 6).unwrap_or(server.pid());
+                    #[cfg(not(target_os = "linux"))]
+                    let python_pid = server.pid();
+
                     let output_path =
                         self.config.output_dir.as_ref().map(|dir| {
-                            dir.join(format!("py-spy-{}-{}.speedscope.json", workload_def.name, server.pid()))
+                            dir.join(format!("py-spy-{}-{}.speedscope.json", workload_def.name, python_pid))
                         });
                     Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
-                        server.pid(),
+                        python_pid,
                         output_path,
                     )?))
                 }
