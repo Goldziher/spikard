@@ -150,6 +150,17 @@ impl ProfileRunner {
 
         let suite_app_metrics = python_pid.and_then(crate::profile::python::collect_app_metrics);
         self.try_flush_python_profiling(&server).await;
+        if suite_python_profiler
+            && let Some(path) = suite_flamegraph_path.as_deref()
+        {
+            let start = std::time::Instant::now();
+            while start.elapsed() < std::time::Duration::from_secs(30) {
+                if std::fs::metadata(path).is_ok() {
+                    break;
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            }
+        }
         server.kill()?;
 
         if suite_python_profiler && python_pid.is_some() {

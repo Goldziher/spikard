@@ -8,6 +8,7 @@ Uses msgspec.Struct for proper validation following ADR 0003.
 
 import os
 import sys
+import threading
 from pathlib import Path as PathLib
 from typing import Any
 
@@ -31,6 +32,7 @@ if profiling_module.exists():
 
 _pyinstrument_profiler: Profiler | None = None
 _pyinstrument_output: str | None = os.environ.get("SPIKARD_PYTHON_PROFILE_OUTPUT")
+_pyinstrument_dump_started = False
 if _pyinstrument_output:
     _pyinstrument_profiler = Profiler()
     _pyinstrument_profiler.start()
@@ -53,13 +55,21 @@ def flush_profile() -> dict[str, Any]:
 
     profiler_ok = False
     if _pyinstrument_profiler is not None and _pyinstrument_output is not None:
-        try:
-            _pyinstrument_profiler.stop()
-        except RuntimeError:
-            pass
-        out_path = PathLib(_pyinstrument_output)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(_pyinstrument_profiler.output(renderer=SpeedscopeRenderer()), encoding="utf-8")
+        global _pyinstrument_dump_started
+        if not _pyinstrument_dump_started:
+            _pyinstrument_dump_started = True
+
+            def _dump_profile() -> None:
+                try:
+                    _pyinstrument_profiler.stop()
+                except RuntimeError:
+                    pass
+                out_path = PathLib(_pyinstrument_output)
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_text(_pyinstrument_profiler.output(renderer=SpeedscopeRenderer()), encoding="utf-8")
+
+            threading.Thread(target=_dump_profile, daemon=True).start()
+
         profiler_ok = True
 
     return {"ok": metrics_ok or profiler_ok, "metrics": metrics_ok, "pyinstrument": profiler_ok}
