@@ -8,6 +8,7 @@ use spikard_http::{
     ServerConfig, StaticFilesConfig,
 };
 use std::future::Future;
+use std::path::Path;
 use std::pin::Pin;
 use std::sync::Arc;
 
@@ -40,17 +41,16 @@ impl Handler for EchoHandler {
     }
 }
 
-#[tokio::test]
-async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
-    let dir = tempfile::tempdir().expect("tempdir");
-    std::fs::write(dir.path().join("index.html"), "<h1>static index</h1>").expect("write index.html");
-    std::fs::write(dir.path().join("hello.txt"), "hello world").expect("write hello.txt");
+fn api_items_path() -> String {
+    ["api/items/", "{", "id:uuid", "}"].concat()
+}
 
-    let routes = vec![
+fn build_routes(path: &str) -> Vec<(Route, Arc<dyn Handler>)> {
+    vec![
         (
             Route {
                 method: Method::Get,
-                path: "api/items/{id:uuid}".to_string(),
+                path: path.to_string(),
                 handler_name: "echo_get".to_string(),
                 expects_json_body: false,
                 cors: None,
@@ -75,7 +75,7 @@ async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
         (
             Route {
                 method: Method::Post,
-                path: "api/items/{id:uuid}".to_string(),
+                path: path.to_string(),
                 handler_name: "echo_post".to_string(),
                 expects_json_body: true,
                 cors: None,
@@ -90,8 +90,10 @@ async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
             },
             Arc::new(EchoHandler) as Arc<dyn Handler>,
         ),
-    ];
+    ]
+}
 
+fn build_route_metadata(path: &str) -> Vec<RouteMetadata> {
     let request_schema = serde_json::json!({
         "type": "object",
         "properties": {
@@ -108,10 +110,10 @@ async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
         "required": ["ok"]
     });
 
-    let route_metadata = vec![
+    vec![
         RouteMetadata {
             method: "GET".to_string(),
-            path: "api/items/{id:uuid}".to_string(),
+            path: path.to_string(),
             handler_name: "echo_get".to_string(),
             request_schema: None,
             response_schema: None,
@@ -136,7 +138,7 @@ async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
         },
         RouteMetadata {
             method: "POST".to_string(),
-            path: "api/items/{id:uuid}".to_string(),
+            path: path.to_string(),
             handler_name: "echo_post".to_string(),
             request_schema: Some(request_schema),
             response_schema: Some(response_schema),
@@ -149,31 +151,34 @@ async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
             handler_dependencies: None,
             jsonrpc_method: None,
         },
-    ];
+    ]
+}
 
-    let mut config = ServerConfig::default();
-    config.openapi = Some(OpenApiConfig {
-        enabled: true,
-        title: "Spikard Test API".to_string(),
-        version: "0.1.0".to_string(),
-        ..OpenApiConfig::default()
-    });
-    config.jsonrpc = Some(JsonRpcConfig::default());
-    config.static_files = vec![StaticFilesConfig {
-        directory: dir.path().to_string_lossy().into_owned(),
-        route_prefix: "/static".to_string(),
-        index_file: true,
-        cache_control: Some("public, max-age=60".to_string()),
-    }];
-    config.rate_limit = Some(RateLimitConfig {
-        per_second: 100,
-        burst: 10,
-        ip_based: false,
-    });
+fn build_config(static_dir: &Path) -> ServerConfig {
+    ServerConfig {
+        openapi: Some(OpenApiConfig {
+            enabled: true,
+            title: "Spikard Test API".to_string(),
+            version: "0.1.0".to_string(),
+            ..OpenApiConfig::default()
+        }),
+        jsonrpc: Some(JsonRpcConfig::default()),
+        static_files: vec![StaticFilesConfig {
+            directory: static_dir.to_string_lossy().into_owned(),
+            route_prefix: "/static".to_string(),
+            index_file: true,
+            cache_control: Some("public, max-age=60".to_string()),
+        }],
+        rate_limit: Some(RateLimitConfig {
+            per_second: 100,
+            burst: 10,
+            ip_based: false,
+        }),
+        ..Default::default()
+    }
+}
 
-    let router = build_router_with_handlers_and_config(routes, config, route_metadata).expect("router");
-    let server = axum_test::TestServer::new(router).expect("test server");
-
+async fn assert_openapi_docs_and_redoc(server: &axum_test::TestServer) {
     let openapi_response = server.get("/openapi.json").await;
     assert_eq!(openapi_response.status_code(), StatusCode::OK);
     let openapi: Value = serde_json::from_str(&openapi_response.text()).expect("openapi json");
@@ -189,7 +194,9 @@ async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
     assert_eq!(redoc_html.status_code(), StatusCode::OK);
     assert!(redoc_html.text().contains("<redoc"));
     assert!(redoc_html.text().contains("/openapi.json"));
+}
 
+async fn assert_static_files(server: &axum_test::TestServer) {
     let static_index = server.get("/static/").await;
     assert_eq!(static_index.status_code(), StatusCode::OK);
     assert!(static_index.text().contains("static index"));
@@ -205,7 +212,9 @@ async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
         static_file.header("cache-control").to_str().expect("cache-control"),
         "public, max-age=60"
     );
+}
 
+async fn assert_jsonrpc_and_http_routes(server: &axum_test::TestServer) {
     let rpc_request = serde_json::json!({
         "jsonrpc": "2.0",
         "method": "spikard.test.echo",
@@ -234,17 +243,38 @@ async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
     assert_eq!(ok_post_json["raw_body_json"]["name"], "spikard");
 }
 
+#[tokio::test]
+async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(dir.path().join("index.html"), "<h1>static index</h1>").expect("write index.html");
+    std::fs::write(dir.path().join("hello.txt"), "hello world").expect("write hello.txt");
+
+    let api_items_path = api_items_path();
+    let route_entries = build_routes(&api_items_path);
+    let route_metadata = build_route_metadata(&api_items_path);
+    let config = build_config(dir.path());
+
+    let app_router = build_router_with_handlers_and_config(route_entries, config, route_metadata).expect("router");
+    let server = axum_test::TestServer::new(app_router).expect("test server");
+
+    assert_openapi_docs_and_redoc(&server).await;
+    assert_static_files(&server).await;
+    assert_jsonrpc_and_http_routes(&server).await;
+}
+
 #[test]
 fn router_returns_error_for_invalid_cache_control_header_value() {
     let routes: Vec<(Route, Arc<dyn Handler>)> = Vec::new();
 
-    let mut config = ServerConfig::default();
-    config.static_files = vec![StaticFilesConfig {
-        directory: "/tmp".to_string(),
-        route_prefix: "/static".to_string(),
-        index_file: true,
-        cache_control: Some("\n".to_string()),
-    }];
+    let config = ServerConfig {
+        static_files: vec![StaticFilesConfig {
+            directory: "/tmp".to_string(),
+            route_prefix: "/static".to_string(),
+            index_file: true,
+            cache_control: Some("\n".to_string()),
+        }],
+        ..Default::default()
+    };
 
     let err = build_router_with_handlers_and_config(routes, config, Vec::new()).expect_err("invalid header");
     assert!(err.contains("Invalid cache-control header"));

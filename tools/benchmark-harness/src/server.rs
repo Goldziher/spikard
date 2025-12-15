@@ -42,7 +42,8 @@ impl ServerHandle {
                 }
             }
 
-            for _ in 0..50 {
+            let max_wait_iters = if self.stop_signal == libc::SIGINT { 150 } else { 50 };
+            for _ in 0..max_wait_iters {
                 match self.process.try_wait() {
                     Ok(Some(_)) => return Ok(()),
                     Ok(None) => std::thread::sleep(Duration::from_millis(100)),
@@ -182,7 +183,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     cmd.stdout(Stdio::null()).stderr(Stdio::piped());
 
     #[cfg(unix)]
-    let stop_signal = if executable == "py-spy" {
+    let stop_signal = if executable.contains("python") || executable == "uv" || executable.ends_with("/python") {
         libc::SIGINT
     } else {
         libc::SIGTERM

@@ -46,19 +46,21 @@ fn route(method: Method, path: &str, handler_name: &str) -> Route {
 
 fn now_plus(seconds: u64) -> usize {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("time");
-    (now + Duration::from_secs(seconds)).as_secs() as usize
+    usize::try_from((now + Duration::from_secs(seconds)).as_secs()).expect("timestamp fits usize")
 }
 
 #[tokio::test]
 async fn jwt_auth_layer_rejects_missing_authorization() {
-    let mut config = ServerConfig::default();
-    config.jwt_auth = Some(JwtConfig {
-        secret: "secret".to_string(),
-        algorithm: "HS256".to_string(),
-        audience: None,
-        issuer: None,
-        leeway: 0,
-    });
+    let config = ServerConfig {
+        jwt_auth: Some(JwtConfig {
+            secret: "secret".to_string(),
+            algorithm: "HS256".to_string(),
+            audience: None,
+            issuer: None,
+            leeway: 0,
+        }),
+        ..Default::default()
+    };
 
     let router = build_router_with_handlers_and_config(
         vec![(
@@ -87,14 +89,16 @@ async fn jwt_auth_layer_rejects_missing_authorization() {
 #[tokio::test]
 async fn jwt_auth_layer_accepts_valid_bearer_token() {
     let secret = "secret";
-    let mut config = ServerConfig::default();
-    config.jwt_auth = Some(JwtConfig {
-        secret: secret.to_string(),
-        algorithm: "HS256".to_string(),
-        audience: None,
-        issuer: None,
-        leeway: 0,
-    });
+    let config = ServerConfig {
+        jwt_auth: Some(JwtConfig {
+            secret: secret.to_string(),
+            algorithm: "HS256".to_string(),
+            audience: None,
+            issuer: None,
+            leeway: 0,
+        }),
+        ..Default::default()
+    };
 
     let claims = Claims {
         sub: "user123".to_string(),
@@ -138,11 +142,13 @@ async fn jwt_auth_layer_accepts_valid_bearer_token() {
 
 #[tokio::test]
 async fn api_key_auth_layer_rejects_missing_key() {
-    let mut config = ServerConfig::default();
-    config.api_key_auth = Some(ApiKeyConfig {
-        keys: vec!["k1".to_string()],
-        header_name: "X-API-Key".to_string(),
-    });
+    let config = ServerConfig {
+        api_key_auth: Some(ApiKeyConfig {
+            keys: vec!["k1".to_string()],
+            header_name: "X-API-Key".to_string(),
+        }),
+        ..Default::default()
+    };
 
     let router = build_router_with_handlers_and_config(
         vec![(
@@ -170,11 +176,13 @@ async fn api_key_auth_layer_rejects_missing_key() {
 
 #[tokio::test]
 async fn api_key_auth_layer_accepts_valid_key_from_header() {
-    let mut config = ServerConfig::default();
-    config.api_key_auth = Some(ApiKeyConfig {
-        keys: vec!["k1".to_string()],
-        header_name: "X-API-Key".to_string(),
-    });
+    let config = ServerConfig {
+        api_key_auth: Some(ApiKeyConfig {
+            keys: vec!["k1".to_string()],
+            header_name: "X-API-Key".to_string(),
+        }),
+        ..Default::default()
+    };
 
     let router = build_router_with_handlers_and_config(
         vec![(
@@ -203,11 +211,13 @@ async fn api_key_auth_layer_accepts_valid_key_from_header() {
 
 #[tokio::test]
 async fn api_key_auth_layer_accepts_valid_key_from_query_param() {
-    let mut config = ServerConfig::default();
-    config.api_key_auth = Some(ApiKeyConfig {
-        keys: vec!["k1".to_string()],
-        header_name: "X-API-Key".to_string(),
-    });
+    let config = ServerConfig {
+        api_key_auth: Some(ApiKeyConfig {
+            keys: vec!["k1".to_string()],
+            header_name: "X-API-Key".to_string(),
+        }),
+        ..Default::default()
+    };
 
     let router = build_router_with_handlers_and_config(
         vec![(

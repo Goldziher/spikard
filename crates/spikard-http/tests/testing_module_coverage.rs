@@ -18,8 +18,7 @@ async fn call_test_server_preserves_method_headers_query_and_body() {
                 .headers()
                 .get("x-test")
                 .and_then(|v| v.to_str().ok())
-                .map(str::to_string)
-                .unwrap_or_else(|| "<missing>".to_string());
+                .map_or_else(|| "<missing>".to_string(), str::to_string);
             let bytes = axum::body::to_bytes(req.into_body(), usize::MAX).await.unwrap();
             (StatusCode::OK, format!("{method} {uri} {header} {}", bytes.len())).into_response()
         }),
@@ -96,9 +95,8 @@ async fn websocket_testing_wrappers_roundtrip_and_message_helpers() {
                         Ok(axum::extract::ws::Message::Ping(data)) => {
                             let _ = socket.send(axum::extract::ws::Message::Pong(data)).await;
                         }
-                        Ok(axum::extract::ws::Message::Close(_)) => break,
+                        Ok(axum::extract::ws::Message::Close(_)) | Err(_) => break,
                         Ok(axum::extract::ws::Message::Pong(_)) => {}
-                        Err(_) => break,
                     }
                 }
             })
@@ -121,13 +119,13 @@ async fn websocket_testing_wrappers_roundtrip_and_message_helpers() {
     assert_eq!(msg.as_text(), Some("hi"));
     assert!(msg.as_json().is_err());
 
-    ws.send_message(axum_test::WsMessage::Binary(bytes::Bytes::from_static(b"bin").into()))
+    ws.send_message(axum_test::WsMessage::Binary(bytes::Bytes::from_static(b"bin")))
         .await;
     let msg = ws.receive_message().await;
     assert_eq!(msg.as_binary().expect("binary"), b"bin");
     assert!(msg.as_json().is_err());
 
-    ws.send_message(axum_test::WsMessage::Ping(bytes::Bytes::from_static(b"ping").into()))
+    ws.send_message(axum_test::WsMessage::Ping(bytes::Bytes::from_static(b"ping")))
         .await;
     let msg = ws.receive_message().await;
     assert!(matches!(msg, WebSocketMessage::Pong(_)));

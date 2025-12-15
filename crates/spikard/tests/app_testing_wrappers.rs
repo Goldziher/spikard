@@ -11,8 +11,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 struct EchoWs;
 
 impl spikard::WebSocketHandler for EchoWs {
-    fn handle_message(&self, message: Value) -> impl std::future::Future<Output = Option<Value>> + Send {
-        async move { Some(message) }
+    async fn handle_message(&self, message: Value) -> Option<Value> {
+        Some(message)
     }
 }
 

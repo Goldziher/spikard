@@ -141,11 +141,6 @@ impl ProfileRunner {
             None
         };
 
-        if suite_flamegraph_path.is_some() && self.config.profiler.as_deref() == Some("python") {
-            self.flush_python_profile(&server, suite_flamegraph_path.as_deref())
-                .await;
-        }
-
         server.kill()?;
 
         Ok(ProfileResult {
@@ -199,31 +194,6 @@ impl ProfileRunner {
         }
 
         std::env::var("SPIKARD_PYSPY_OUTPUT").ok()
-    }
-
-    async fn flush_python_profile(&self, server: &ServerHandle, flamegraph_path: Option<&str>) {
-        if self.detect_language() != "python" {
-            return;
-        }
-
-        let client = reqwest::Client::new();
-        let url = format!("{}/__internal/flush-profile", server.base_url);
-        let _ = client.get(url).timeout(std::time::Duration::from_secs(5)).send().await;
-
-        let start = std::time::Instant::now();
-        while start.elapsed() < std::time::Duration::from_secs(10) {
-            let mut ready = true;
-            if let Some(path) = flamegraph_path {
-                ready &= std::fs::metadata(path).is_ok();
-            }
-            if let Ok(metrics_path) = std::env::var("SPIKARD_METRICS_FILE") {
-                ready &= std::fs::metadata(metrics_path).is_ok();
-            }
-            if ready {
-                break;
-            }
-            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
-        }
     }
 
     fn with_suite_profiling(&self, mut result: WorkloadResult, suite_flamegraph_path: Option<&str>) -> WorkloadResult {

@@ -257,9 +257,8 @@ class MetricsCollector:
                         LOGGER.exception("Failed to write speedscope profile to %s", self.pyinstrument_output_path)
 
     def __del__(self) -> None:
-        """Ensure metrics are written on collector destruction."""
-        with suppress(builtins.BaseException):
-            self.finalize()
+        """No-op (finalization is handled via atexit/signal handlers)."""
+        return
 
 
 P = ParamSpec("P")

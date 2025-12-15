@@ -1710,7 +1710,7 @@ mod tests {
         let serialized = serde_json::to_vec(&json_obj);
         assert!(serialized.is_ok(), "JSON should serialize");
 
-        let bytes = serialized.unwrap();
+        let bytes = serialized.expect("JSON should serialize");
         assert!(!bytes.is_empty(), "Serialized JSON should not be empty");
     }
 

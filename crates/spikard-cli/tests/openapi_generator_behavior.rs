@@ -52,8 +52,10 @@ fn iter_paths_visits_all_http_methods_and_operation_ids() {
     let mut spec = OpenAPI::default();
     let mut path_item = PathItem::default();
 
-    let mut get = Operation::default();
-    get.operation_id = Some("getThing".to_string());
+    let get = Operation {
+        operation_id: Some("getThing".to_string()),
+        ..Default::default()
+    };
     path_item.get = Some(get);
 
     let post = Operation::default();
@@ -121,9 +123,6 @@ fn extract_request_and_response_types_handle_refs_and_ranges() {
         ..Default::default()
     };
 
-    let mut op = Operation::default();
-    op.request_body = Some(ReferenceOr::Item(request_body));
-
     // 2XX range response uses inline schema (should return default response type)
     let response = Response {
         content: {
@@ -144,7 +143,11 @@ fn extract_request_and_response_types_handle_refs_and_ranges() {
     responses
         .responses
         .insert(openapiv3::StatusCode::Range(2), ReferenceOr::Item(response));
-    op.responses = responses;
+    let op = Operation {
+        request_body: Some(ReferenceOr::Item(request_body)),
+        responses,
+        ..Default::default()
+    };
 
     let generator = DummyGenerator::new(spec);
 

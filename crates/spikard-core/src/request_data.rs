@@ -193,24 +193,29 @@ mod tests {
     use super::*;
     use serde_json::{Value, json};
 
+    #[derive(Default)]
+    struct RequestDataCollections {
+        raw_query_params: HashMap<String, Vec<String>>,
+        headers: HashMap<String, String>,
+        cookies: HashMap<String, String>,
+        path_params: HashMap<String, String>,
+    }
+
     fn create_request_data(
         path: &str,
         method: &str,
         body: Value,
         query_params: Value,
-        raw_query_params: HashMap<String, Vec<String>>,
-        headers: HashMap<String, String>,
-        cookies: HashMap<String, String>,
-        path_params: HashMap<String, String>,
+        collections: RequestDataCollections,
     ) -> RequestData {
         RequestData {
-            path_params: Arc::new(path_params),
+            path_params: Arc::new(collections.path_params),
             query_params,
-            raw_query_params: Arc::new(raw_query_params),
+            raw_query_params: Arc::new(collections.raw_query_params),
             body,
             raw_body: None,
-            headers: Arc::new(headers),
-            cookies: Arc::new(cookies),
+            headers: Arc::new(collections.headers),
+            cookies: Arc::new(collections.cookies),
             method: method.to_string(),
             path: path.to_string(),
             #[cfg(feature = "di")]
@@ -225,10 +230,7 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         assert_eq!(data.path, "/api/users");
@@ -249,10 +251,7 @@ mod tests {
             "POST",
             body.clone(),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         assert_eq!(data.body, body);
@@ -279,10 +278,10 @@ mod tests {
             "GET",
             json!(null),
             query_params,
-            raw_query_params,
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections {
+                raw_query_params,
+                ..Default::default()
+            },
         );
 
         assert_eq!(data.raw_query_params.get("page"), Some(&vec!["1".to_string()]));
@@ -305,10 +304,10 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            headers,
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections {
+                headers,
+                ..Default::default()
+            },
         );
 
         assert_eq!(data.headers.get("content-type"), Some(&"application/json".to_string()));
@@ -328,10 +327,10 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            cookies,
-            HashMap::new(),
+            RequestDataCollections {
+                cookies,
+                ..Default::default()
+            },
         );
 
         assert_eq!(data.cookies.get("session_id"), Some(&"abc123xyz".to_string()));
@@ -350,10 +349,10 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            path_params,
+            RequestDataCollections {
+                path_params,
+                ..Default::default()
+            },
         );
 
         assert_eq!(data.path_params.get("user_id"), Some(&"123".to_string()));
@@ -388,10 +387,12 @@ mod tests {
             "PUT",
             body,
             query_params,
-            raw_query_params,
-            headers,
-            cookies,
-            path_params,
+            RequestDataCollections {
+                raw_query_params,
+                headers,
+                cookies,
+                path_params,
+            },
         );
 
         assert_eq!(data.path, "/api/users/user_99");
@@ -409,10 +410,7 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         assert!(data.path_params.is_empty());
@@ -431,10 +429,10 @@ mod tests {
             "GET",
             json!({"name": "test"}),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            path_params,
+            RequestDataCollections {
+                path_params,
+                ..Default::default()
+            },
         );
 
         let data2 = data1.clone();
@@ -455,10 +453,7 @@ mod tests {
                 method,
                 json!(null),
                 json!({}),
-                HashMap::new(),
-                HashMap::new(),
-                HashMap::new(),
-                HashMap::new(),
+                RequestDataCollections::default(),
             );
 
             assert_eq!(data.method, method);
@@ -472,10 +467,7 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         assert!(data.raw_body.is_none());
@@ -490,10 +482,7 @@ mod tests {
             "POST",
             json!(null),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         data.raw_body = Some(raw_body_bytes.clone());
@@ -513,10 +502,10 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            raw_query_params,
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections {
+                raw_query_params,
+                ..Default::default()
+            },
         );
 
         let colors = data.raw_query_params.get("colors").unwrap();
@@ -543,16 +532,7 @@ mod tests {
             }
         });
 
-        let data = create_request_data(
-            "/api/users",
-            "POST",
-            body,
-            json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-        );
+        let data = create_request_data("/api/users", "POST", body, json!({}), RequestDataCollections::default());
 
         assert_eq!(data.body["user"]["name"], "Alice");
         assert_eq!(data.body["user"]["profile"]["age"], 28);
@@ -567,10 +547,7 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         assert_eq!(data.path, "/api/users/john@example.com/posts");
@@ -587,10 +564,10 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            path_params,
+            RequestDataCollections {
+                path_params,
+                ..Default::default()
+            },
         );
 
         assert_eq!(data.path_params.get("email"), Some(&"test@example.com".to_string()));
@@ -606,16 +583,7 @@ mod tests {
             "active": false
         });
 
-        let data = create_request_data(
-            "/api/users",
-            "POST",
-            body,
-            json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-        );
+        let data = create_request_data("/api/users", "POST", body, json!({}), RequestDataCollections::default());
 
         assert!(data.body["name"].is_null());
         assert_eq!(data.body["email"], "");
@@ -636,10 +604,11 @@ mod tests {
             "GET",
             json!({"name": "test"}),
             json!({"page": "1"}),
-            HashMap::new(),
-            headers,
-            HashMap::new(),
-            path_params,
+            RequestDataCollections {
+                headers,
+                path_params,
+                ..Default::default()
+            },
         );
 
         let serialized = serde_json::to_string(&data);
@@ -656,10 +625,10 @@ mod tests {
             "DELETE",
             json!(null),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            path_params,
+            RequestDataCollections {
+                path_params,
+                ..Default::default()
+            },
         );
 
         assert_eq!(data.method, "DELETE");
@@ -674,16 +643,7 @@ mod tests {
             {"id": 3, "name": "item3"}
         ]);
 
-        let data = create_request_data(
-            "/api/items",
-            "POST",
-            body,
-            json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-        );
+        let data = create_request_data("/api/items", "POST", body, json!({}), RequestDataCollections::default());
 
         assert!(data.body.is_array());
         assert_eq!(data.body.as_array().unwrap().len(), 3);
@@ -702,10 +662,10 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            headers,
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections {
+                headers,
+                ..Default::default()
+            },
         );
 
         assert_eq!(data.headers.get("Content-Type"), Some(&"application/json".to_string()));
@@ -731,10 +691,12 @@ mod tests {
             "PUT",
             json!({"status": "updated"}),
             json!({"page": "2"}),
-            raw_query_params,
-            headers,
-            cookies,
-            path_params,
+            RequestDataCollections {
+                raw_query_params,
+                headers,
+                cookies,
+                path_params,
+            },
         );
 
         let serialized = serde_json::to_string(&data).expect("serialization failed");
@@ -789,10 +751,12 @@ mod tests {
             "DELETE",
             json!({"reason": "archived"}),
             json!({"sort": "desc"}),
-            raw_query_params,
-            headers,
-            cookies,
-            path_params,
+            RequestDataCollections {
+                raw_query_params,
+                headers,
+                cookies,
+                path_params,
+            },
         );
 
         let serialized = serde_json::to_string(&original).expect("serialization failed");
@@ -820,10 +784,7 @@ mod tests {
             "POST",
             body.clone(),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         assert!(data.body.is_object());
@@ -846,16 +807,7 @@ mod tests {
             }
         });
 
-        let data = create_request_data(
-            "/api/nested",
-            "GET",
-            body,
-            json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-        );
+        let data = create_request_data("/api/nested", "GET", body, json!({}), RequestDataCollections::default());
 
         assert_eq!(
             data.body["level1"]["level2"]["level3"]["level4"]["level5"]["value"],
@@ -881,10 +833,11 @@ mod tests {
             "POST",
             body,
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            cookies,
-            path_params,
+            RequestDataCollections {
+                cookies,
+                path_params,
+                ..Default::default()
+            },
         );
 
         assert_eq!(data.path_params.get("name"), Some(&"用户".to_string()));
@@ -904,10 +857,10 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            headers,
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections {
+                headers,
+                ..Default::default()
+            },
         );
 
         assert_eq!(data.headers.get("x-custom-1"), Some(&"value1".to_string()));
@@ -920,7 +873,7 @@ mod tests {
     fn test_request_data_numeric_values_in_json() {
         let body = json!({
             "int": 42,
-            "float": 3.14,
+            "float": 3.2,
             "negative": -100,
             "zero": 0,
             "large": 9223372036854775807i64
@@ -931,14 +884,11 @@ mod tests {
             "POST",
             body,
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         assert_eq!(data.body["int"], 42);
-        assert_eq!(data.body["float"], 3.14);
+        assert_eq!(data.body["float"], 3.2);
         assert_eq!(data.body["negative"], -100);
         assert_eq!(data.body["zero"], 0);
     }
@@ -950,16 +900,7 @@ mod tests {
             "is_admin": false
         });
 
-        let data = create_request_data(
-            "/api/config",
-            "GET",
-            body,
-            json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-        );
+        let data = create_request_data("/api/config", "GET", body, json!({}), RequestDataCollections::default());
 
         assert_eq!(data.body["is_active"], true);
         assert_eq!(data.body["is_admin"], false);
@@ -972,10 +913,7 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         assert!(data.raw_body.is_none());
@@ -988,10 +926,7 @@ mod tests {
             "GET",
             json!(null),
             json!({"q": "test", "limit": "10"}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         assert_eq!(data.path, "/api/search?q=test&limit=10");
@@ -999,16 +934,7 @@ mod tests {
 
     #[test]
     fn test_request_data_root_path() {
-        let data = create_request_data(
-            "/",
-            "GET",
-            json!(null),
-            json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-        );
+        let data = create_request_data("/", "GET", json!(null), json!({}), RequestDataCollections::default());
 
         assert_eq!(data.path, "/");
     }
@@ -1026,10 +952,11 @@ mod tests {
             "GET",
             json!(null),
             json!({}),
-            HashMap::new(),
-            headers,
-            HashMap::new(),
-            path_params,
+            RequestDataCollections {
+                headers,
+                path_params,
+                ..Default::default()
+            },
         );
 
         assert_eq!(data.headers.get("empty-header"), Some(&"".to_string()));
@@ -1084,10 +1011,10 @@ mod tests {
             "POST",
             json!(null),
             json!({}),
-            raw_query_params,
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections {
+                raw_query_params,
+                ..Default::default()
+            },
         );
 
         let values = data.raw_query_params.get("data").unwrap();
@@ -1104,10 +1031,7 @@ mod tests {
             "GET",
             json!({"key": "value"}),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
+            RequestDataCollections::default(),
         );
 
         let debug_str = format!("{:?}", data);
@@ -1125,10 +1049,10 @@ mod tests {
             "GET",
             json!({"name": "original"}),
             json!({}),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            path_params1,
+            RequestDataCollections {
+                path_params: path_params1,
+                ..Default::default()
+            },
         );
 
         let data2 = data1.clone();

@@ -656,7 +656,7 @@ async def concurrent_handler(path_params, query_params, body, headers, cookies):
 
             let req = Request::builder()
                 .method(Method::GET)
-                .uri(&format!("/concurrent/{}", i))
+                .uri(format!("/concurrent/{}", i))
                 .body(Body::empty())
                 .unwrap();
 
@@ -866,7 +866,7 @@ def concurrent_handler(path_params, query_params, body, headers, cookies):
 
             let req = Request::builder()
                 .method(Method::GET)
-                .uri(&format!("/requests/{}", i))
+                .uri(format!("/requests/{}", i))
                 .body(Body::empty())
                 .unwrap();
 
@@ -1265,7 +1265,7 @@ def handler(path_params, query_params, body, headers, cookies):
         [1, 2, 3],
         true,
         null,
-        3.14
+        3.2
     ]);
 
     let mixed_code = r#"
