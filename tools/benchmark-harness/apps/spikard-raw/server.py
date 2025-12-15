@@ -16,17 +16,26 @@ from spikard import Body, Path, Query, Spikard, get, post
 from spikard.config import ServerConfig
 
 profiling_module = PathLib(__file__).parent.parent.parent / "profiling" / "python_metrics.py"
+_profiling_collector = None
 if profiling_module.exists():
     sys.path.insert(0, str(profiling_module.parent))
     try:
         import python_metrics
 
-        python_metrics.enable_profiling()
+        _profiling_collector = python_metrics.enable_profiling()
     except ImportError:
         print("⚠ Failed to import profiling module", file=sys.stderr)
 
 
 app = Spikard()
+
+
+@get("/__benchmark__/flush-profile")
+def flush_profile() -> dict[str, Any]:
+    if _profiling_collector is not None:
+        _profiling_collector.finalize()
+        return {"ok": True}
+    return {"ok": False}
 
 
 @post("/json/small")
