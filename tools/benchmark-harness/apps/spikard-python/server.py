@@ -35,6 +35,8 @@ _profiled_endpoints: set[str] = set()
 
 app = Spikard()
 
+JsonScalar = str | int | float | bool | None
+
 
 @get("/health")
 def health() -> dict[str, str]:
@@ -230,14 +232,14 @@ async def post_urlencoded_complex(body: str) -> str:
 
 @get("/path/simple/{id}")
 @profile_once("path-simple")
-async def get_path_simple(id: str = Path()) -> dict[str, object]:
+async def get_path_simple(id: str = Path()) -> dict[str, JsonScalar]:
     """Single path parameter."""
     return {"id": id}
 
 
 @get("/path/multiple/{user_id}/{post_id}")
 @profile_once("path-multiple")
-async def get_path_multiple(user_id: str = Path(), post_id: str = Path()) -> dict[str, object]:
+async def get_path_multiple(user_id: str = Path(), post_id: str = Path()) -> dict[str, JsonScalar]:
     """Multiple path parameters."""
     return {"user_id": user_id, "post_id": post_id}
 
@@ -250,7 +252,7 @@ async def get_path_deep(
     project: str = Path(),
     resource: str = Path(),
     id: str = Path(),
-) -> dict[str, object]:
+) -> dict[str, JsonScalar]:
     """Deep path parameters (5 levels)."""
     return {
         "org": org,
@@ -263,21 +265,21 @@ async def get_path_deep(
 
 @get("/path/int/{id}")
 @profile_once("path-int")
-async def get_path_int(id: int = Path()) -> dict[str, object]:
+async def get_path_int(id: int = Path()) -> dict[str, JsonScalar]:
     """Integer path parameter."""
     return {"id": id}
 
 
 @get("/path/uuid/{uuid}")
 @profile_once("path-uuid")
-async def get_path_uuid(uuid: str = Path()) -> dict[str, object]:
+async def get_path_uuid(uuid: str = Path()) -> dict[str, JsonScalar]:
     """UUID path parameter."""
     return {"uuid": uuid}
 
 
 @get("/path/date/{date}")
 @profile_once("path-date")
-async def get_path_date(date: str = Path()) -> dict[str, object]:
+async def get_path_date(date: str = Path()) -> dict[str, JsonScalar]:
     """Date path parameter."""
     return {"date": date}
 
@@ -288,7 +290,7 @@ async def get_query_few(
     q: str | None = Query(default=None),
     page: int | None = Query(default=None),
     limit: int | None = Query(default=None),
-) -> dict[str, object]:
+) -> dict[str, JsonScalar]:
     """Few query parameters (1-3)."""
     return {"q": q, "page": page, "limit": limit}
 
@@ -304,7 +306,7 @@ async def get_query_medium(
     order: str | None = Query(default=None),
     page: int | None = Query(default=None),
     limit: int | None = Query(default=None),
-) -> dict[str, object]:
+) -> dict[str, JsonScalar]:
     """Medium number of query parameters (5-10)."""
     return {
         "category": category,
@@ -336,7 +338,7 @@ async def get_query_many(
     param13: str | None = Query(default=None),
     param14: str | None = Query(default=None),
     param15: str | None = Query(default=None),
-) -> dict[str, object]:
+) -> dict[str, JsonScalar]:
     """Many query parameters (15+)."""
     return {
         "param1": param1,
