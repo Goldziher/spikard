@@ -12,6 +12,8 @@ from pathlib import Path as PathLib
 from typing import Any
 
 import msgspec
+from pyinstrument import Profiler
+from pyinstrument.renderers.speedscope import SpeedscopeRenderer
 
 from spikard import Body, Path, Query, Spikard, get, post
 from spikard.config import ServerConfig
@@ -27,6 +29,11 @@ if profiling_module.exists():
     except ImportError:
         print("⚠ Failed to import profiling module", file=sys.stderr)
 
+_pyinstrument_profiler: Profiler | None = None
+_pyinstrument_output: str | None = os.environ.get("SPIKARD_PYTHON_PROFILE_OUTPUT")
+if _pyinstrument_output:
+    _pyinstrument_profiler = Profiler()
+    _pyinstrument_profiler.start()
 
 app = Spikard()
 
@@ -40,8 +47,22 @@ def health() -> dict[str, Any]:
 def flush_profile() -> dict[str, Any]:
     if _profiling_collector is not None:
         _profiling_collector.finalize()
-        return {"ok": True}
-    return {"ok": False}
+        metrics_ok = True
+    else:
+        metrics_ok = False
+
+    profiler_ok = False
+    if _pyinstrument_profiler is not None and _pyinstrument_output is not None:
+        try:
+            _pyinstrument_profiler.stop()
+        except RuntimeError:
+            pass
+        out_path = PathLib(_pyinstrument_output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(_pyinstrument_profiler.output(renderer=SpeedscopeRenderer()), encoding="utf-8")
+        profiler_ok = True
+
+    return {"ok": metrics_ok or profiler_ok, "metrics": metrics_ok, "pyinstrument": profiler_ok}
 
 
 class SmallPayload(msgspec.Struct):
