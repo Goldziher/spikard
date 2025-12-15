@@ -192,14 +192,23 @@ impl ProfileRunner {
         }
 
         let Ok(client) = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(2))
+            .timeout(std::time::Duration::from_secs(10))
             .build()
         else {
             return;
         };
 
         let url = format!("{}/__benchmark__/flush-profile", server.base_url);
-        let _ = client.get(url).send().await;
+        for attempt in 1..=5 {
+            if let Ok(resp) = client.get(&url).send().await
+                && resp.status().is_success()
+            {
+                return;
+            }
+            if attempt < 5 {
+                tokio::time::sleep(std::time::Duration::from_millis(250 * attempt)).await;
+            }
+        }
     }
 
     async fn run_suite(&self, server: &ServerHandle, suite_python_profiler: bool) -> Result<SuiteResult> {
