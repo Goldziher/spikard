@@ -116,33 +116,49 @@ impl ProfileRunner {
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
 
-        let mut server_env = Vec::new();
-        if self.config.profiler.as_deref() == Some("python")
+        let suite_python_profiler = self.config.profiler.as_deref() == Some("python")
             && framework_info.language == "python"
-            && std::env::var_os("SPIKARD_PYTHON_PROFILE_DIR").is_none()
-            && let Some(ref output_dir) = self.config.output_dir
-        {
-            server_env.push((
-                "SPIKARD_PYTHON_PROFILE_DIR".to_string(),
-                output_dir.join("profiles").display().to_string(),
-            ));
-        }
+            && which::which("py-spy").is_ok()
+            && self.config.output_dir.is_some();
+
+        let suite_py_spy_output = suite_python_profiler.then(|| {
+            self.config
+                .output_dir
+                .as_ref()
+                .expect("suite_python_profiler implies output_dir is Some")
+                .join("py-spy.speedscope.json")
+        });
+
+        let start_cmd_override = suite_python_profiler
+            .then(|| crate::framework::get_framework(&self.config.framework))
+            .flatten()
+            .and_then(|framework| {
+                suite_py_spy_output.as_ref().map(|output_path| {
+                    format!(
+                        "py-spy record --format speedscope --rate 100 --output {} -- {}",
+                        output_path.display(),
+                        framework.start_cmd
+                    )
+                })
+            });
 
         let server_config = ServerConfig {
             framework: Some(self.config.framework.clone()),
             port,
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
-            env: server_env,
-            start_cmd_override: None,
+            env: Vec::new(),
+            start_cmd_override,
         };
 
         let server = start_server(server_config).await?;
         println!("✓ Server healthy on port {}", server.port);
         println!();
 
+        let python_pid = suite_python_profiler.then(|| self.python_target_pid(&server));
+
         let mut suite_results = Vec::new();
-        let suite_result = self.run_suite(&server).await?;
+        let suite_result = self.run_suite(&server, suite_python_profiler).await?;
 
         suite_results.push(suite_result);
 
@@ -154,8 +170,31 @@ impl ProfileRunner {
             None
         };
 
+        let suite_app_metrics = python_pid.and_then(crate::profile::python::collect_app_metrics);
         self.try_flush_python_profiling(&server).await;
         server.kill()?;
+
+        if suite_python_profiler {
+            let flamegraph_path = suite_py_spy_output
+                .as_ref()
+                .and_then(|p| p.to_str())
+                .and_then(crate::profile::python::wait_for_profile_output);
+
+            for suite in &mut suite_results {
+                for workload in &mut suite.workloads {
+                    workload.results.profiling = Some(ProfilingData::Python(PythonProfilingData {
+                        gil_wait_time_ms: None,
+                        gil_contention_percent: None,
+                        ffi_overhead_ms: suite_app_metrics.as_ref().and_then(|m| m.ffi_overhead_ms),
+                        handler_time_ms: suite_app_metrics.as_ref().and_then(|m| m.handler_time_ms),
+                        serialization_time_ms: suite_app_metrics.as_ref().and_then(|m| m.serialization_time_ms),
+                        gc_collections: suite_app_metrics.as_ref().and_then(|m| m.gc_collections),
+                        gc_time_ms: suite_app_metrics.as_ref().and_then(|m| m.gc_time_ms),
+                        flamegraph_path: flamegraph_path.clone(),
+                    }));
+                }
+            }
+        }
 
         Ok(ProfileResult {
             metadata,
@@ -192,7 +231,7 @@ impl ProfileRunner {
         }
     }
 
-    async fn run_suite(&self, server: &ServerHandle) -> Result<SuiteResult> {
+    async fn run_suite(&self, server: &ServerHandle, suite_python_profiler: bool) -> Result<SuiteResult> {
         println!("📊 Running suite: {}", self.suite.name);
         println!();
 
@@ -206,7 +245,7 @@ impl ProfileRunner {
                 workload_def.name
             );
 
-            let result = self.run_workload(workload_def, server).await?;
+            let result = self.run_workload(workload_def, server, suite_python_profiler).await?;
             workload_results.push(result);
 
             println!("  ✓ Complete");
@@ -235,22 +274,27 @@ impl ProfileRunner {
         &self,
         workload_def: &crate::schema::workload::WorkloadDef,
         server: &ServerHandle,
+        suite_python_profiler: bool,
     ) -> Result<WorkloadResult> {
         let fixture = self.create_fixture_from_workload(workload_def)?;
 
         let profiler_handle = if let Some(ref profiler_type) = self.config.profiler {
             match profiler_type.as_str() {
                 "python" => {
-                    let python_pid = self.python_target_pid(server);
-                    let output_path = self
-                        .config
-                        .output_dir
-                        .as_ref()
-                        .map(|dir| dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name)));
-                    Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
-                        python_pid,
-                        output_path,
-                    )?))
+                    if suite_python_profiler {
+                        None
+                    } else {
+                        let python_pid = self.python_target_pid(server);
+                        let output_path = self
+                            .config
+                            .output_dir
+                            .as_ref()
+                            .map(|dir| dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name)));
+                        Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
+                            python_pid,
+                            output_path,
+                        )?))
+                    }
                 }
                 "node" => Some(ProfilerHandle::Node(crate::profile::node::start_profiler(
                     server.pid(),

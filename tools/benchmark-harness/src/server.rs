@@ -188,7 +188,11 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     cmd.stdout(Stdio::null()).stderr(Stdio::piped());
 
     #[cfg(unix)]
-    let stop_signal = if executable.contains("python") || executable == "uv" || executable.ends_with("/python") {
+    let stop_signal = if executable.contains("python")
+        || executable == "uv"
+        || executable.ends_with("/python")
+        || executable.contains("py-spy")
+    {
         libc::SIGINT
     } else {
         libc::SIGTERM
