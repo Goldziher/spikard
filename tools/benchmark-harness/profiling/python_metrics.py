@@ -168,10 +168,6 @@ class MetricsCollector:
             self._write_outputs(finalize=True)
 
     def _write_outputs(self, *, finalize: bool) -> None:
-        if finalize and self.pyinstrument_profiler is not None:
-            with suppress(builtins.BaseException):
-                self.pyinstrument_profiler.stop()
-
         if self.gc_enabled:
             stats = gc.get_stats()
             if stats and len(stats) >= 3:
@@ -215,6 +211,7 @@ class MetricsCollector:
             and _SpeedscopeRenderer is not None
         ):
             try:
+                self.pyinstrument_profiler.stop()
                 speedscope = self.pyinstrument_profiler.output(renderer=_SpeedscopeRenderer())
                 self.pyinstrument_output_path.parent.mkdir(parents=True, exist_ok=True)
                 self.pyinstrument_output_path.write_text(speedscope, encoding="utf-8")
