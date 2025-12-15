@@ -119,7 +119,7 @@ jobs:
           cache: pnpm
 
       - name: Download Node bindings
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: napi-bindings-${{ matrix.os }}
           path: packages/node/

@@ -107,7 +107,7 @@ jobs:
           node-version: "20"
 
       - name: Download WASM bindings
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: wasm-bindings
           path: crates/spikard-wasm/
@@ -148,7 +148,7 @@ jobs:
           node-version: "20"
 
       - name: Download WASM bindings
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: wasm-bindings
           path: crates/spikard-wasm/
@@ -197,7 +197,7 @@ jobs:
           deno-version: v2.x
 
       - name: Download WASM bindings
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: wasm-bindings
           path: crates/spikard-wasm/
@@ -227,7 +227,7 @@ jobs:
           node-version: "20"
 
       - name: Download WASM bindings
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: wasm-bindings
           path: crates/spikard-wasm/
@@ -258,7 +258,7 @@ jobs:
           deno-version: v2.x
 
       - name: Download WASM bindings
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: wasm-bindings
           path: crates/spikard-wasm/
@@ -310,7 +310,7 @@ jobs:
           node-version: "20"
 
       - name: Download WASM bindings
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: wasm-bindings
           path: crates/spikard-wasm/
