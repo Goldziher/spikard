@@ -14,6 +14,7 @@ import os
 import signal
 import tempfile
 import time
+import traceback
 from collections.abc import Callable, Generator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
@@ -99,6 +100,11 @@ class MetricsCollector:
             except Exception:
                 if os.environ.get("SPIKARD_METRICS_DEBUG") == "1":
                     with suppress(builtins.BaseException):
+                        if self.pyinstrument_output_path is not None:
+                            self.pyinstrument_output_path.with_suffix(".pyinstrument.error").write_text(
+                                traceback.format_exc(),
+                                encoding="utf-8",
+                            )
                         if not LOGGER.handlers:
                             logging.basicConfig(level=logging.INFO)
                         LOGGER.exception("Failed to start pyinstrument profiler")
@@ -222,6 +228,11 @@ class MetricsCollector:
             except Exception:
                 if os.environ.get("SPIKARD_METRICS_DEBUG") == "1":
                     with suppress(builtins.BaseException):
+                        if self.pyinstrument_output_path is not None:
+                            self.pyinstrument_output_path.with_suffix(".pyinstrument.error").write_text(
+                                traceback.format_exc(),
+                                encoding="utf-8",
+                            )
                         if not LOGGER.handlers:
                             logging.basicConfig(level=logging.INFO)
                         LOGGER.exception("Failed to write speedscope profile to %s", self.pyinstrument_output_path)
