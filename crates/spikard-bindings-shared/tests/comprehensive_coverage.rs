@@ -385,7 +385,7 @@ fn test_conversion_traits_comprehensive() {
         json!(true),
         json!(false),
         json!(42),
-        json!(3.14),
+        json!(3.2),
         json!("string"),
         json!([1, 2, 3]),
         json!({"key": "value"}),

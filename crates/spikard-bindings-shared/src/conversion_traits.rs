@@ -111,7 +111,7 @@ mod tests {
         let original = json!({
             "string": "test",
             "number": 42,
-            "float": 3.14,
+            "float": 3.2,
             "bool": true,
             "null": null,
             "array": [1, 2, 3],

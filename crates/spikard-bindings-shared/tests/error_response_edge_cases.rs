@@ -362,7 +362,7 @@ fn test_with_details_boolean_values() {
 fn test_with_details_numeric_values() {
     let details = json!({
         "integer": 42,
-        "float": 3.14159,
+        "float": 3.2,
         "negative": -100,
         "zero": 0
     });
@@ -377,7 +377,7 @@ fn test_with_details_numeric_values() {
     assert_eq!(status, StatusCode::BAD_REQUEST);
     let parsed: Value = serde_json::from_str(&body).unwrap();
     assert_eq!(parsed["details"]["integer"], 42);
-    assert_eq!(parsed["details"]["float"], 3.14159);
+    assert_eq!(parsed["details"]["float"], 3.2);
     assert_eq!(parsed["details"]["negative"], -100);
     assert_eq!(parsed["details"]["zero"], 0);
 }

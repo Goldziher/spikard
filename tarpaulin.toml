@@ -29,6 +29,8 @@ exclude-files = [
     "**/*_test.rs",
     "**/benches/**",
     "**/*_bench.rs",
+    "**/src/main.rs",
+    "**/src/bin/**",
 
     # Generated code
     "**/generated/**",

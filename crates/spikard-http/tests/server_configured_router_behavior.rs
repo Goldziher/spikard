@@ -52,27 +52,33 @@ async fn server_with_openapi_and_static_files_serves_expected_endpoints() {
     let index_path = dir.path().join("index.html");
     std::fs::write(&index_path, "<h1>hello</h1>").unwrap();
 
-    let mut openapi = OpenApiConfig::default();
-    openapi.enabled = true;
-    openapi.title = "Test".to_string();
-    openapi.version = "0.4.0".to_string();
-    openapi.openapi_json_path = "/openapi.json".to_string();
-    openapi.swagger_ui_path = "/docs".to_string();
-    openapi.redoc_path = "/redoc".to_string();
+    let openapi = OpenApiConfig {
+        enabled: true,
+        title: "Test".to_string(),
+        version: "0.4.0".to_string(),
+        openapi_json_path: "/openapi.json".to_string(),
+        swagger_ui_path: "/docs".to_string(),
+        redoc_path: "/redoc".to_string(),
+        ..Default::default()
+    };
 
-    let mut jsonrpc = JsonRpcConfig::default();
-    jsonrpc.enabled = true;
-    jsonrpc.endpoint_path = "/rpc".to_string();
+    let jsonrpc = JsonRpcConfig {
+        enabled: true,
+        endpoint_path: "/rpc".to_string(),
+        ..Default::default()
+    };
 
-    let mut config = ServerConfig::default();
-    config.openapi = Some(openapi);
-    config.jsonrpc = Some(jsonrpc);
-    config.static_files = vec![StaticFilesConfig {
-        directory: dir.path().display().to_string(),
-        route_prefix: "/static".to_string(),
-        index_file: true,
-        cache_control: Some("public, max-age=60".to_string()),
-    }];
+    let config = ServerConfig {
+        openapi: Some(openapi),
+        jsonrpc: Some(jsonrpc),
+        static_files: vec![StaticFilesConfig {
+            directory: dir.path().display().to_string(),
+            route_prefix: "/static".to_string(),
+            index_file: true,
+            cache_control: Some("public, max-age=60".to_string()),
+        }],
+        ..Default::default()
+    };
 
     let handler: Arc<dyn Handler> = Arc::new(JsonOkHandler);
     let app = Server::with_handlers(config, vec![(route("/ping", Method::Get), handler)]).unwrap();
@@ -144,12 +150,16 @@ async fn server_with_openapi_and_static_files_serves_expected_endpoints() {
 
 #[tokio::test]
 async fn server_registers_jsonrpc_endpoint_when_method_metadata_present() {
-    let mut jsonrpc = JsonRpcConfig::default();
-    jsonrpc.enabled = true;
-    jsonrpc.endpoint_path = "/rpc".to_string();
+    let jsonrpc = JsonRpcConfig {
+        enabled: true,
+        endpoint_path: "/rpc".to_string(),
+        ..Default::default()
+    };
 
-    let mut config = ServerConfig::default();
-    config.jsonrpc = Some(jsonrpc);
+    let config = ServerConfig {
+        jsonrpc: Some(jsonrpc),
+        ..Default::default()
+    };
 
     let mut rpc_route = route("/rpc_method", Method::Post);
     rpc_route.jsonrpc_method = Some(JsonRpcMethodInfo {
@@ -185,6 +195,6 @@ async fn server_registers_jsonrpc_endpoint_when_method_metadata_present() {
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
     assert_eq!(json.get("jsonrpc").and_then(|v| v.as_str()), Some("2.0"));
-    assert_eq!(json.get("id").and_then(|v| v.as_i64()), Some(1));
+    assert_eq!(json.get("id").and_then(serde_json::Value::as_i64), Some(1));
     assert_eq!(json.get("result"), Some(&serde_json::json!({"ok": true})));
 }

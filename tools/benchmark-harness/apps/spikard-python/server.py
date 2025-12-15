@@ -281,15 +281,6 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@get("/__internal/flush-profile")
-async def flush_profile() -> dict[str, str]:
-    """Flush profiling/metrics outputs to disk (best-effort)."""
-    if _profiling_collector is not None:
-        _profiling_collector.finalize()
-        return {"status": "flushed"}
-    return {"status": "no-profiler"}
-
-
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     print(

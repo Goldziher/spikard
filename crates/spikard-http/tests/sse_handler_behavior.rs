@@ -14,7 +14,7 @@ struct CountingProducer {
 }
 
 impl CountingProducer {
-    fn new(connect: Arc<AtomicUsize>, disconnect: Arc<AtomicUsize>, events: usize) -> Self {
+    const fn new(connect: Arc<AtomicUsize>, disconnect: Arc<AtomicUsize>, events: usize) -> Self {
         Self {
             connect,
             disconnect,

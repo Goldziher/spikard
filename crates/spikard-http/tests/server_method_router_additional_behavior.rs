@@ -213,8 +213,10 @@ async fn options_with_path_params_hits_handler_when_no_cors_configured() {
 
 #[tokio::test]
 async fn request_timeout_returns_408() {
-    let mut config = ServerConfig::default();
-    config.request_timeout = Some(1);
+    let config = ServerConfig {
+        request_timeout: Some(1),
+        ..Default::default()
+    };
 
     let router = build_router_with_handlers_and_config(
         vec![(
@@ -248,13 +250,15 @@ async fn static_files_cache_control_header_is_set_when_configured() {
     let file_path = dir.path().join("hello.txt");
     std::fs::write(&file_path, "hi").expect("write file");
 
-    let mut config = ServerConfig::default();
-    config.static_files = vec![StaticFilesConfig {
-        directory: dir.path().to_string_lossy().to_string(),
-        route_prefix: "/static".to_string(),
-        index_file: true,
-        cache_control: Some("max-age=60".to_string()),
-    }];
+    let config = ServerConfig {
+        static_files: vec![StaticFilesConfig {
+            directory: dir.path().to_string_lossy().to_string(),
+            route_prefix: "/static".to_string(),
+            index_file: true,
+            cache_control: Some("max-age=60".to_string()),
+        }],
+        ..Default::default()
+    };
 
     let router = build_router_with_handlers_and_config(Vec::new(), config, Vec::new()).expect("router");
 

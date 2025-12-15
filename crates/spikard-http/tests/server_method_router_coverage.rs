@@ -16,7 +16,7 @@ impl Handler for EchoMethodHandler {
         request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let body_len = request_data.raw_body.as_ref().map(|b| b.len()).unwrap_or(0);
+            let body_len = request_data.raw_body.as_ref().map_or(0, bytes::Bytes::len);
             let response_json = serde_json::json!({
                 "method": request_data.method,
                 "path": request_data.path,
@@ -63,7 +63,7 @@ async fn assert_method(server: &axum_test::TestServer, method: AxumMethod, path:
 #[tokio::test]
 async fn router_covers_all_http_methods_with_and_without_path_params() {
     let handler: Arc<dyn Handler> = Arc::new(EchoMethodHandler);
-    let routes = vec![
+    let route_entries = vec![
         route(Method::Get, "/m", false),
         route(Method::Delete, "/m", false),
         route(Method::Head, "/m", false),
@@ -85,8 +85,9 @@ async fn router_covers_all_http_methods_with_and_without_path_params() {
     .map(|r| (r, Arc::clone(&handler)))
     .collect();
 
-    let router = build_router_with_handlers_and_config(routes, ServerConfig::default(), Vec::new()).expect("router");
-    let server = axum_test::TestServer::new(router).expect("server");
+    let app_router =
+        build_router_with_handlers_and_config(route_entries, ServerConfig::default(), Vec::new()).expect("router");
+    let server = axum_test::TestServer::new(app_router).expect("server");
 
     assert_method(&server, AxumMethod::GET, "/m").await;
     assert_method(&server, AxumMethod::DELETE, "/m").await;

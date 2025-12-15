@@ -12,14 +12,14 @@ struct CountingEchoHandler {
 }
 
 impl CountingEchoHandler {
-    fn new(connects: Arc<AtomicUsize>, disconnects: Arc<AtomicUsize>) -> Self {
+    const fn new(connects: Arc<AtomicUsize>, disconnects: Arc<AtomicUsize>) -> Self {
         Self { connects, disconnects }
     }
 }
 
 impl WebSocketHandler for CountingEchoHandler {
-    fn handle_message(&self, message: Value) -> impl std::future::Future<Output = Option<Value>> + Send {
-        async move { Some(message) }
+    async fn handle_message(&self, message: Value) -> Option<Value> {
+        Some(message)
     }
 
     fn on_connect(&self) -> impl std::future::Future<Output = ()> + Send {
@@ -87,13 +87,13 @@ async fn websocket_handles_json_validation_invalid_json_binary_and_close() {
     assert_eq!(validation_error["error"], "Message validation failed");
 
     socket
-        .send_message(axum_test::WsMessage::Binary(bytes::Bytes::from_static(b"bin").into()))
+        .send_message(axum_test::WsMessage::Binary(bytes::Bytes::from_static(b"bin")))
         .await;
     let received = socket.receive_bytes().await;
     assert_eq!(&received[..], b"bin");
 
     socket
-        .send_message(axum_test::WsMessage::Ping(bytes::Bytes::from_static(b"ping").into()))
+        .send_message(axum_test::WsMessage::Ping(bytes::Bytes::from_static(b"ping")))
         .await;
     let pong = socket.receive_message().await;
     assert!(matches!(pong, axum_test::WsMessage::Pong(_)));
@@ -116,8 +116,8 @@ async fn websocket_handles_json_validation_invalid_json_binary_and_close() {
 struct AlwaysObjectHandler;
 
 impl WebSocketHandler for AlwaysObjectHandler {
-    fn handle_message(&self, _message: Value) -> impl std::future::Future<Output = Option<Value>> + Send {
-        async move { Some(serde_json::json!({"response": "object"})) }
+    async fn handle_message(&self, _message: Value) -> Option<Value> {
+        Some(serde_json::json!({"response": "object"}))
     }
 }
 

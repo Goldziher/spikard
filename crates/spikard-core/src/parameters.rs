@@ -2021,4 +2021,242 @@ mod tests {
         let extracted = result.unwrap();
         assert_eq!(extracted["flag"], json!(false));
     }
+
+    #[test]
+    fn test_missing_required_header_uses_kebab_case_in_error_loc() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "x_api_key": {
+                    "type": "string",
+                    "source": "header"
+                }
+            },
+            "required": ["x_api_key"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err(), "expected missing header to fail");
+        let err = result.unwrap_err();
+        assert_eq!(err.errors.len(), 1);
+        assert_eq!(err.errors[0].error_type, "missing");
+        assert_eq!(err.errors[0].loc, vec!["headers".to_string(), "x-api-key".to_string()]);
+    }
+
+    #[test]
+    fn test_missing_required_cookie_reports_cookie_loc() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "session": {
+                    "type": "string",
+                    "source": "cookie"
+                }
+            },
+            "required": ["session"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err(), "expected missing cookie to fail");
+        let err = result.unwrap_err();
+        assert_eq!(err.errors.len(), 1);
+        assert_eq!(err.errors[0].error_type, "missing");
+        assert_eq!(err.errors[0].loc, vec!["cookie".to_string(), "session".to_string()]);
+    }
+
+    #[test]
+    fn test_query_boolean_empty_string_coerces_to_false() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "flag": {
+                    "type": "boolean",
+                    "source": "query"
+                }
+            },
+            "required": ["flag"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("flag".to_string(), vec!["".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({"flag": ""}),
+            &raw_query_params,
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok(), "expected empty string to coerce");
+        let extracted = result.unwrap();
+        assert_eq!(extracted["flag"], json!(false));
+    }
+
+    #[test]
+    fn test_query_array_wraps_scalar_value_and_coerces_items() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "source": "query"
+                }
+            },
+            "required": ["ids"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({"ids": "1"}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok(), "expected scalar query value to coerce into array");
+        let extracted = result.unwrap();
+        assert_eq!(extracted["ids"], json!([1]));
+    }
+
+    #[test]
+    fn test_query_array_invalid_item_returns_parsing_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "source": "query"
+                }
+            },
+            "required": ["ids"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({"ids": ["x"]}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_err(), "expected invalid array item to fail");
+        let err = result.unwrap_err();
+        assert_eq!(err.errors.len(), 1);
+        assert_eq!(err.errors[0].error_type, "int_parsing");
+        assert_eq!(err.errors[0].loc, vec!["query".to_string(), "ids".to_string()]);
+    }
+
+    #[test]
+    fn test_uuid_date_datetime_time_and_duration_formats() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "source": "path"
+                },
+                "date": {
+                    "type": "string",
+                    "format": "date",
+                    "source": "query"
+                },
+                "dt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "source": "query"
+                },
+                "time": {
+                    "type": "string",
+                    "format": "time",
+                    "source": "query"
+                },
+                "duration": {
+                    "type": "string",
+                    "format": "duration",
+                    "source": "query"
+                }
+            },
+            "required": ["id", "date", "dt", "time", "duration"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let mut path_params = HashMap::new();
+        path_params.insert("id".to_string(), "550e8400-e29b-41d4-a716-446655440000".to_string());
+
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("date".to_string(), vec!["2025-01-02".to_string()]);
+        raw_query_params.insert("dt".to_string(), vec!["2025-01-02T03:04:05Z".to_string()]);
+        raw_query_params.insert("time".to_string(), vec!["03:04:05Z".to_string()]);
+        raw_query_params.insert("duration".to_string(), vec!["PT1S".to_string()]);
+
+        let result = validator.validate_and_extract(
+            &json!({
+                "date": "2025-01-02",
+                "dt": "2025-01-02T03:04:05Z",
+                "time": "03:04:05Z",
+                "duration": "PT1S"
+            }),
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+        assert!(result.is_ok(), "expected all format values to validate: {result:?}");
+    }
+
+    #[test]
+    fn test_optional_fields_are_not_required_in_validation_schema() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "maybe": {
+                    "type": "string",
+                    "source": "query",
+                    "optional": true
+                }
+            },
+            "required": ["maybe"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok(), "optional field in required list should not fail");
+        let extracted = result.unwrap();
+        assert_eq!(extracted, json!({}));
+    }
 }

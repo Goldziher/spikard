@@ -82,8 +82,10 @@ async fn request_id_is_generated_and_propagated() {
 #[tokio::test]
 async fn default_body_limit_can_be_disabled() {
     let route = basic_route(Method::Post, "/upload", false);
-    let mut config = ServerConfig::default();
-    config.max_body_size = None;
+    let config = ServerConfig {
+        max_body_size: None,
+        ..Default::default()
+    };
 
     let router = build_router_with_handlers_and_config(
         vec![(
@@ -104,8 +106,10 @@ async fn default_body_limit_can_be_disabled() {
 #[tokio::test]
 async fn default_body_limit_allows_payloads_within_limit() {
     let route = basic_route(Method::Post, "/upload", false);
-    let mut config = ServerConfig::default();
-    config.max_body_size = Some(16);
+    let config = ServerConfig {
+        max_body_size: Some(16),
+        ..Default::default()
+    };
 
     let router = build_router_with_handlers_and_config(
         vec![(
@@ -128,13 +132,15 @@ async fn compression_br_is_applied_when_accepted() {
     let original_body = "x".repeat(2048);
     let route = basic_route(Method::Get, "/compressed", false);
 
-    let mut config = ServerConfig::default();
-    config.compression = Some(CompressionConfig {
-        gzip: false,
-        brotli: true,
-        min_size: 0,
-        quality: 3,
-    });
+    let config = ServerConfig {
+        compression: Some(CompressionConfig {
+            gzip: false,
+            brotli: true,
+            min_size: 0,
+            quality: 3,
+        }),
+        ..Default::default()
+    };
 
     let router = build_router_with_handlers_and_config(
         vec![(
@@ -154,9 +160,9 @@ async fn compression_br_is_applied_when_accepted() {
     assert_eq!(response.header("content-encoding").to_str().expect("encoding"), "br");
 
     let mut decoder = Decompressor::new(response.as_bytes().as_ref(), 4096);
-    let mut decoded = String::new();
-    decoder.read_to_string(&mut decoded).expect("decompress");
-    assert_eq!(decoded, original_body);
+    let mut decoded_body = String::new();
+    decoder.read_to_string(&mut decoded_body).expect("decompress");
+    assert_eq!(decoded_body, original_body);
 }
 
 #[tokio::test]
@@ -164,12 +170,14 @@ async fn rate_limit_builder_covers_ip_and_global_key_extractors() {
     let route = basic_route(Method::Get, "/rl", false);
     let handler: Arc<dyn Handler> = Arc::new(PlainTextHandler { body: "ok".to_string() });
 
-    let mut ip_config = ServerConfig::default();
-    ip_config.rate_limit = Some(RateLimitConfig {
-        per_second: 100,
-        burst: 10,
-        ip_based: true,
-    });
+    let ip_config = ServerConfig {
+        rate_limit: Some(RateLimitConfig {
+            per_second: 100,
+            burst: 10,
+            ip_based: true,
+        }),
+        ..Default::default()
+    };
     let router_ip =
         build_router_with_handlers_and_config(vec![(route.clone(), Arc::clone(&handler))], ip_config, Vec::new())
             .expect("router");
@@ -177,12 +185,14 @@ async fn rate_limit_builder_covers_ip_and_global_key_extractors() {
         .expect("server");
     assert_eq!(server_ip.get("/rl").await.status_code(), StatusCode::OK);
 
-    let mut global_config = ServerConfig::default();
-    global_config.rate_limit = Some(RateLimitConfig {
-        per_second: 100,
-        burst: 10,
-        ip_based: false,
-    });
+    let global_config = ServerConfig {
+        rate_limit: Some(RateLimitConfig {
+            per_second: 100,
+            burst: 10,
+            ip_based: false,
+        }),
+        ..Default::default()
+    };
     let router_global =
         build_router_with_handlers_and_config(vec![(route, handler)], global_config, Vec::new()).expect("router");
     let server_global =

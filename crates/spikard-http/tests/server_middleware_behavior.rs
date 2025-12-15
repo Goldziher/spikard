@@ -17,7 +17,7 @@ impl Handler for LargeJsonHandler {
     ) -> Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
             let big_value = "x".repeat(2048);
-            let body = format!(r#"{{"payload":"{}"}}"#, big_value);
+            let body = format!(r#"{{"payload":"{big_value}"}}"#);
             Ok(axum::http::Response::builder()
                 .status(200)
                 .header("content-type", "application/json")
@@ -47,14 +47,16 @@ fn route(path: &str) -> Route {
 
 #[tokio::test]
 async fn server_applies_request_id_and_gzip_compression_when_configured() {
-    let mut config = ServerConfig::default();
-    config.compression = Some(CompressionConfig {
-        gzip: true,
-        brotli: false,
-        min_size: 0,
-        quality: 6,
-    });
-    config.enable_request_id = true;
+    let config = ServerConfig {
+        compression: Some(CompressionConfig {
+            gzip: true,
+            brotli: false,
+            min_size: 0,
+            quality: 6,
+        }),
+        enable_request_id: true,
+        ..Default::default()
+    };
 
     let handler: Arc<dyn Handler> = Arc::new(LargeJsonHandler);
     let app = Server::with_handlers(config, vec![(route("/data"), handler)]).unwrap();

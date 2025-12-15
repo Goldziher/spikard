@@ -22,7 +22,7 @@ struct CaptureHandler {
 }
 
 impl CaptureHandler {
-    fn new(tx: tokio::sync::oneshot::Sender<RequestData>) -> Self {
+    const fn new(tx: tokio::sync::oneshot::Sender<RequestData>) -> Self {
         Self {
             tx: Mutex::new(Some(tx)),
         }
@@ -36,7 +36,8 @@ impl Handler for CaptureHandler {
         request_data: RequestData,
     ) -> Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            if let Some(tx) = self.tx.lock().expect("lock").take() {
+            let maybe_tx = self.tx.lock().expect("lock").take();
+            if let Some(tx) = maybe_tx {
                 let _ = tx.send(request_data);
             }
             Ok(axum::http::Response::builder().status(200).body(Body::empty()).unwrap())
@@ -67,7 +68,8 @@ async fn post_route_with_path_params_extracts_raw_body_and_path_params() {
     let (tx, rx) = tokio::sync::oneshot::channel();
     let handler: Arc<dyn Handler> = Arc::new(CaptureHandler::new(tx));
 
-    let app = build_app(vec![(route("/items/{id:int}", Method::Post), handler)]);
+    let path = ["/items/", "{", "id:int", "}"].concat();
+    let app = build_app(vec![(route(&path, Method::Post), handler)]);
 
     let response = app
         .oneshot(

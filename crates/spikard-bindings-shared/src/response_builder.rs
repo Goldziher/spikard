@@ -111,7 +111,7 @@ mod tests {
         let (_, _, body) = ResponseBuilder::new().body(first_body).body(second_body).build();
 
         let parsed: serde_json::Value = serde_json::from_str(&body).unwrap();
-        assert!(!parsed.get("first").is_some());
+        assert!(parsed.get("first").is_none());
         assert_eq!(parsed["second"], "value");
     }
 

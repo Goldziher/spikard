@@ -33,7 +33,7 @@ fn multipart_body_contains_fields_and_files() {
     );
 
     let body_str = String::from_utf8_lossy(&body);
-    assert!(body_str.contains(&format!("--{}", boundary)));
+    assert!(body_str.contains(&format!("--{boundary}")));
     assert!(body_str.contains("name=\"field\""));
     assert!(body_str.contains("value"));
     assert!(body_str.contains("name=\"file\"; filename=\"hello.txt\""));

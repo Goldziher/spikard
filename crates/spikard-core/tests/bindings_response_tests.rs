@@ -29,12 +29,12 @@ fn raw_response_does_not_compress_empty_or_partial_content() {
         ..Default::default()
     };
     empty.apply_compression(&HashMap::new(), &cfg);
-    assert!(empty.headers.get("content-encoding").is_none());
+    assert!(!empty.headers.contains_key("content-encoding"));
     assert!(empty.body.is_empty());
 
     let mut partial = RawResponse::new(206, headers, b"{\"ok\":true}".to_vec());
     partial.apply_compression(&HashMap::new(), &cfg);
-    assert!(partial.headers.get("content-encoding").is_none());
+    assert!(!partial.headers.contains_key("content-encoding"));
 }
 
 #[test]
@@ -56,7 +56,7 @@ fn raw_response_respects_existing_content_encoding_and_min_size() {
         ..Default::default()
     };
     small.apply_compression(&HashMap::new(), &cfg);
-    assert!(small.headers.get("content-encoding").is_none());
+    assert!(!small.headers.contains_key("content-encoding"));
 }
 
 #[test]

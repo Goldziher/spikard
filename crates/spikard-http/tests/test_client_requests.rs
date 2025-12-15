@@ -77,8 +77,8 @@ async fn test_client_sends_query_headers_and_bodies() {
         .expect("post");
     let json = snapshot.json().expect("json");
     let body = json["body"].as_str().unwrap();
-    assert!(body.contains("a"));
-    assert!(body.contains("b"));
+    assert!(body.contains('a'));
+    assert!(body.contains('b'));
 
     let snapshot = client
         .post(

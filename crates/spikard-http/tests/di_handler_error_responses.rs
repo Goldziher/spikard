@@ -133,7 +133,7 @@ async fn resolution_failed_returns_structured_503() {
             })
         }
 
-        fn key(&self) -> &str {
+        fn key(&self) -> &'static str {
             "failing"
         }
 
