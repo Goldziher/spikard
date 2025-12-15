@@ -410,4 +410,33 @@ mod tests {
 
         assert!(err.to_string().contains("Unsupported schema/target combination"));
     }
+
+    #[test]
+    fn generates_openrpc_handlers_to_file() {
+        let dir = tempdir().unwrap();
+        let schema_path =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+
+        let output_path = dir.path().join("handlers.ts");
+        let outcome = CodegenEngine::execute(CodegenRequest {
+            schema_path,
+            schema_kind: SchemaKind::OpenRpc,
+            target: CodegenTargetKind::JsonRpcHandlers {
+                language: TargetLanguage::TypeScript,
+                output: output_path.clone(),
+            },
+            dto: None,
+        })
+        .unwrap();
+
+        match outcome {
+            CodegenOutcome::Files(assets) => {
+                assert_eq!(assets.len(), 1);
+                assert_eq!(assets[0].path, output_path);
+                let contents = fs::read_to_string(&assets[0].path).unwrap();
+                assert!(contents.contains("handleJsonRpcCall"));
+            }
+            other => panic!("expected file output, got {other:?}"),
+        }
+    }
 }

@@ -236,6 +236,7 @@ pub fn get_result_class_name(method_name: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn test_get_method_params_class_name() {
@@ -245,5 +246,90 @@ mod tests {
     #[test]
     fn test_get_result_class_name() {
         assert_eq!(get_result_class_name("user.getById"), "UserGetByIdResult");
+    }
+
+    #[test]
+    fn test_parse_openrpc_schema_rejects_unsupported_version() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("api.yaml");
+        std::fs::write(
+            &path,
+            r#"
+openrpc: "2.0.0"
+info:
+  title: Demo
+  version: "1.0.0"
+methods: []
+"#,
+        )
+        .unwrap();
+
+        let err = parse_openrpc_schema(&path).unwrap_err();
+        assert!(err.to_string().contains("Unsupported OpenRPC version"), "{err}");
+    }
+
+    #[test]
+    fn test_parse_openrpc_schema_supports_yaml() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("api.yaml");
+        std::fs::write(
+            &path,
+            r#"
+openrpc: "1.3.2"
+info:
+  title: Demo
+  version: "1.0.0"
+methods:
+  - name: demo.ping
+    params:
+      - name: value
+        required: true
+        schema:
+          type: string
+    result:
+      name: result
+      schema:
+        type: string
+"#,
+        )
+        .unwrap();
+
+        let spec = parse_openrpc_schema(&path).unwrap();
+        assert_eq!(spec.openrpc, "1.3.2");
+        assert_eq!(spec.methods.len(), 1);
+        assert_eq!(spec.methods[0].name, "demo.ping");
+    }
+
+    #[test]
+    fn test_extract_methods_returns_all_methods() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("api.yaml");
+        std::fs::write(
+            &path,
+            r#"
+openrpc: "1.3.2"
+info:
+  title: Demo
+  version: "1.0.0"
+methods:
+  - name: demo.a
+    result:
+      name: result
+      schema:
+        type: string
+  - name: demo.b
+    result:
+      name: result
+      schema:
+        type: string
+"#,
+        )
+        .unwrap();
+
+        let spec = parse_openrpc_schema(&path).unwrap();
+        let methods = extract_methods(&spec);
+        assert_eq!(methods.len(), 2);
+        assert_eq!(methods[0].name, "demo.a");
+        assert_eq!(methods[1].name, "demo.b");
     }
 }
