@@ -135,7 +135,7 @@ impl ProfileRunner {
             .and_then(|framework| {
                 suite_py_spy_output.as_ref().map(|output_path| {
                     format!(
-                        "py-spy record --format speedscope --rate 100 --output {} -- {}",
+                        "py-spy record --subprocess --format speedscope --rate 100 --output {} -- {}",
                         output_path.display(),
                         framework.start_cmd
                     )
