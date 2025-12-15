@@ -35,6 +35,9 @@ try:
 except Exception:
     _PyInstrumentProfiler = None
     _SpeedscopeRenderer = None
+    _PYINSTRUMENT_IMPORT_ERROR = traceback.format_exc()
+else:
+    _PYINSTRUMENT_IMPORT_ERROR = None
 
 
 @dataclass
@@ -106,6 +109,13 @@ class MetricsCollector:
                 ),
                 encoding="utf-8",
             )
+
+        if self.pyinstrument_output_path is not None and _PyInstrumentProfiler is None:
+            with suppress(builtins.BaseException):
+                self.pyinstrument_output_path.with_suffix(".pyinstrument.import_error").write_text(
+                    _PYINSTRUMENT_IMPORT_ERROR or "",
+                    encoding="utf-8",
+                )
 
         if self.pyinstrument_output_path is not None and _PyInstrumentProfiler is not None:
             try:
