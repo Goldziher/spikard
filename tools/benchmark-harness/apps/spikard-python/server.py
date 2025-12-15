@@ -160,6 +160,11 @@ class VeryLargePayload(msgspec.Struct):
     tags: list[Tag]
 
 
+class MultipartMetrics(msgspec.Struct):
+    files_received: int
+    total_bytes: int
+
+
 @post("/json/small")
 @profile_once("json-small")
 async def post_json_small(body: SmallPayload) -> SmallPayload:
@@ -190,35 +195,35 @@ async def post_json_very_large(body: VeryLargePayload) -> VeryLargePayload:
 
 @post("/multipart/small")
 @profile_once("multipart-small")
-async def post_multipart_small(body: dict[str, object]) -> dict[str, object]:
+async def post_multipart_small(body: MultipartMetrics) -> MultipartMetrics:
     """Small multipart form (~1KB)."""
-    return {"files_received": 1, "total_bytes": 1024}
+    return body
 
 
 @post("/multipart/medium")
 @profile_once("multipart-medium")
-async def post_multipart_medium(body: dict[str, object]) -> dict[str, object]:
+async def post_multipart_medium(body: MultipartMetrics) -> MultipartMetrics:
     """Medium multipart form (~10KB)."""
-    return {"files_received": 2, "total_bytes": 10240}
+    return body
 
 
 @post("/multipart/large")
 @profile_once("multipart-large")
-async def post_multipart_large(body: dict[str, object]) -> dict[str, object]:
+async def post_multipart_large(body: MultipartMetrics) -> MultipartMetrics:
     """Large multipart form (~100KB)."""
-    return {"files_received": 5, "total_bytes": 102400}
+    return body
 
 
 @post("/urlencoded/simple")
 @profile_once("urlencoded-simple")
-async def post_urlencoded_simple(body: dict[str, object]) -> dict[str, object]:
+async def post_urlencoded_simple(body: str) -> str:
     """Simple URL-encoded form (3-5 fields)."""
     return body
 
 
 @post("/urlencoded/complex")
 @profile_once("urlencoded-complex")
-async def post_urlencoded_complex(body: dict[str, object]) -> dict[str, object]:
+async def post_urlencoded_complex(body: str) -> str:
     """Complex URL-encoded form (10-20 fields)."""
     return body
 
