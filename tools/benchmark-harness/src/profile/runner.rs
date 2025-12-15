@@ -121,23 +121,12 @@ impl ProfileRunner {
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
 
-        let start_cmd_override = if suite_python_profiler {
-            suite_flamegraph_path.as_deref().map(|output| {
-                format!(
-                    "uv run python -m pyinstrument -r speedscope -o {} server.py {{port}}",
-                    output
-                )
-            })
-        } else {
-            None
-        };
-
         let server_config = ServerConfig {
             framework: Some(self.config.framework.clone()),
             port,
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
-            start_cmd_override,
+            start_cmd_override: None,
         };
 
         let server = start_server(server_config).await?;
