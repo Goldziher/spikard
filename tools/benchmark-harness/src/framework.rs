@@ -124,7 +124,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "robyn-dto",
             vec!["server.py".to_string()],
             None,
-            "uv run server.py {port}",
+            "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -166,7 +166,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "robyn-raw",
             vec!["server.py".to_string()],
             None,
-            "uv run server.py {port}",
+            "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(

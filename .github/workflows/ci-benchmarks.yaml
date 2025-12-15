@@ -201,6 +201,110 @@ jobs:
           path: results/spikard-python/
           retention-days: 30
 
+  bench-robyn-raw:
+    name: Benchmark robyn-raw
+    runs-on: ubuntu-latest
+    needs: build-harness
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download benchmark tools
+        uses: actions/download-artifact@v7
+        with:
+          name: bench-tools
+          path: ~/.cargo/bin
+
+      - name: Make benchmark tools executable
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
+
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.14"
+          cache-prefix: bench-robyn-raw
+
+      - name: Install benchmark app dependencies
+        working-directory: tools/benchmark-harness/apps/robyn-raw
+        run: uv run pip install -e .
+
+      - name: Create results directory
+        run: mkdir -p results/robyn-raw
+
+      - name: Run benchmarks
+        run: |
+          benchmark-harness profile \
+            --framework robyn-raw \
+            --app-dir tools/benchmark-harness/apps/robyn-raw \
+            --suite "$BENCH_SUITE" \
+            --duration "$BENCH_DURATION" \
+            --concurrency "$BENCH_CONCURRENCY" \
+            --warmup "$BENCH_WARMUP" \
+            --profiler python \
+            --output results/robyn-raw/profile.json
+        env:
+          SPIKARD_PYTHON_PROFILE_OUTPUT: ${{ github.workspace }}/results/robyn-raw/pyinstrument.speedscope.json
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: benchmark-results-robyn-raw
+          path: results/robyn-raw/
+          retention-days: 30
+
+  bench-robyn-dto:
+    name: Benchmark robyn-dto
+    runs-on: ubuntu-latest
+    needs: build-harness
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download benchmark tools
+        uses: actions/download-artifact@v7
+        with:
+          name: bench-tools
+          path: ~/.cargo/bin
+
+      - name: Make benchmark tools executable
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
+
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.14"
+          cache-prefix: bench-robyn-dto
+
+      - name: Install benchmark app dependencies
+        working-directory: tools/benchmark-harness/apps/robyn-dto
+        run: uv run pip install -e .
+
+      - name: Create results directory
+        run: mkdir -p results/robyn-dto
+
+      - name: Run benchmarks
+        run: |
+          benchmark-harness profile \
+            --framework robyn-dto \
+            --app-dir tools/benchmark-harness/apps/robyn-dto \
+            --suite "$BENCH_SUITE" \
+            --duration "$BENCH_DURATION" \
+            --concurrency "$BENCH_CONCURRENCY" \
+            --warmup "$BENCH_WARMUP" \
+            --profiler python \
+            --output results/robyn-dto/profile.json
+        env:
+          SPIKARD_PYTHON_PROFILE_OUTPUT: ${{ github.workspace }}/results/robyn-dto/pyinstrument.speedscope.json
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: benchmark-results-robyn-dto
+          path: results/robyn-dto/
+          retention-days: 30
+
   bench-spikard-node:
     name: Benchmark spikard-node
     runs-on: ubuntu-latest
