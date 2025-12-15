@@ -33,7 +33,7 @@ pub fn init_python_event_loop() -> PyResult<()> {
         let asyncio = py.import("asyncio")?;
         let event_loop = asyncio.call_method0("new_event_loop")?;
 
-        let task_locals = TaskLocals::new(event_loop.clone().into()).copy_context(py)?;
+        let task_locals = TaskLocals::new(event_loop.clone()).copy_context(py)?;
         PYTHON_TASK_LOCALS
             .set(task_locals)
             .map_err(|_| pyo3::exceptions::PyRuntimeError::new_err("Python async context already initialized"))?;
