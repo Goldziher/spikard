@@ -671,7 +671,10 @@ mod tests {
         });
         let source = JsonConfigSource::new(&value);
         let err = ConfigExtractor::extract_static_files_config(&source).expect_err("missing directory should error");
-        assert!(err.contains("Static files requires 'directory'"), "unexpected error: {err}");
+        assert!(
+            err.contains("Static files requires 'directory'"),
+            "unexpected error: {err}"
+        );
     }
 
     #[test]
