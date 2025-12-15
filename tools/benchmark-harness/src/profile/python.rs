@@ -2,12 +2,12 @@
 //!
 //! Supports multiple profiling approaches:
 //! - Application instrumentation for GC and timing metrics
-//! - Optional speedscope output produced by in-process profilers
+//! - Optional speedscope output produced by `py-spy`
 
 use crate::error::Result;
 use serde::Deserialize;
 use std::path::PathBuf;
-use std::process::Child;
+use std::process::{Child, Command, Stdio};
 
 /// Python profiler handle
 pub struct PythonProfiler {
@@ -37,8 +37,24 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PythonPr
         let _ = std::fs::create_dir_all(parent);
     }
 
+    let process = Command::new("py-spy")
+        .args([
+            "record",
+            "--pid",
+            &pid.to_string(),
+            "--format",
+            "speedscope",
+            "--output",
+            &output_path,
+            "--rate",
+            "100",
+        ])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()?;
+
     Ok(PythonProfiler {
-        process: None,
+        process: Some(process),
         output_path,
         pid,
     })

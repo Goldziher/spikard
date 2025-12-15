@@ -115,7 +115,6 @@ impl ProfileRunner {
 
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
-        let suite_flamegraph_path = self.suite_flamegraph_path();
 
         let server_config = ServerConfig {
             framework: Some(self.config.framework.clone()),
@@ -129,6 +128,21 @@ impl ProfileRunner {
         println!("✓ Server healthy on port {}", server.port);
         println!();
 
+        let suite_flamegraph_path = self.suite_flamegraph_path();
+        let suite_python_profiler = suite_flamegraph_path.is_some()
+            && self.config.profiler.as_deref() == Some("python")
+            && self.detect_language() == "python";
+
+        let suite_profiler_handle = if suite_python_profiler {
+            let python_pid = self.python_target_pid(&server);
+            Some(crate::profile::python::start_profiler(
+                python_pid,
+                suite_flamegraph_path.as_ref().map(PathBuf::from),
+            )?)
+        } else {
+            None
+        };
+
         let mut suite_results = Vec::new();
         let suite_result = self.run_suite(&server, suite_flamegraph_path.as_deref()).await?;
         suite_results.push(suite_result);
@@ -141,6 +155,7 @@ impl ProfileRunner {
             None
         };
 
+        drop(suite_profiler_handle.map(|p| p.stop()));
         self.try_flush_python_profiling(&server).await;
         server.kill()?;
 
@@ -211,6 +226,17 @@ impl ProfileRunner {
         }
 
         std::env::var("SPIKARD_PYSPY_OUTPUT").ok()
+    }
+
+    fn python_target_pid(&self, server: &ServerHandle) -> u32 {
+        #[cfg(target_os = "linux")]
+        {
+            find_linux_descendant_pid_by_comm(server.pid(), "python", 6).unwrap_or(server.pid())
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            server.pid()
+        }
     }
 
     fn with_suite_profiling(&self, mut result: WorkloadResult, suite_flamegraph_path: Option<&str>) -> WorkloadResult {
