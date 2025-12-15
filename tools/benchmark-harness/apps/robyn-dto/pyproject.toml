@@ -2,7 +2,7 @@
 name = "robyn-benchmark"
 version = "0.1.0"
 description = "Robyn benchmark application"
-requires-python = ">=3.11,<=3.14"
+requires-python = ">=3.11,<3.15"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.11",
