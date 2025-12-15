@@ -337,6 +337,7 @@ pub enum JsonRpcRequestOrBatch {
 mod tests {
     use super::*;
     use crate::handler_trait::{Handler, HandlerResult, RequestData};
+    use crate::jsonrpc::MethodMetadata;
     use axum::body::Body;
     use axum::http::Request;
     use serde_json::json;
@@ -408,6 +409,48 @@ mod tests {
         }
     }
 
+    /// Mock handler that returns success with non-JSON UTF-8 text
+    struct MockTextHandler;
+
+    impl Handler for MockTextHandler {
+        fn call(
+            &self,
+            _request: Request<Body>,
+            _request_data: RequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
+            Box::pin(async {
+                use axum::response::Response;
+                let response = Response::builder()
+                    .status(200)
+                    .header("content-type", "text/plain")
+                    .body(Body::from("hello"))
+                    .unwrap();
+                Ok(response)
+            })
+        }
+    }
+
+    /// Mock handler that returns success with non-UTF-8 bytes
+    struct MockBinaryHandler;
+
+    impl Handler for MockBinaryHandler {
+        fn call(
+            &self,
+            _request: Request<Body>,
+            _request_data: RequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
+            Box::pin(async {
+                use axum::response::Response;
+                let response = Response::builder()
+                    .status(200)
+                    .header("content-type", "application/octet-stream")
+                    .body(Body::from(vec![0xff, 0xfe, 0xfd]))
+                    .unwrap();
+                Ok(response)
+            })
+        }
+    }
+
     #[tokio::test]
     async fn test_route_single_invalid_method_name_empty() {
         let registry = Arc::new(JsonRpcMethodRegistry::new());
@@ -447,6 +490,48 @@ mod tests {
                 assert_eq!(err.id, json!(1));
             }
             _ => panic!("Expected error response for invalid method name"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_route_single_success_non_json_utf8_body_returns_string() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        registry
+            .register("echo", Arc::new(MockTextHandler), MethodMetadata::new("echo"))
+            .unwrap();
+
+        let router = JsonRpcRouter::new(registry, true, 100);
+        let request = JsonRpcRequest::new("echo", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+        match response {
+            JsonRpcResponseType::Success(ok) => {
+                assert_eq!(ok.result, Value::String("hello".to_string()));
+            }
+            other => panic!("Expected success response, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_route_single_success_non_utf8_body_returns_placeholder_string() {
+        let registry = Arc::new(JsonRpcMethodRegistry::new());
+        registry
+            .register("bin", Arc::new(MockBinaryHandler), MethodMetadata::new("bin"))
+            .unwrap();
+
+        let router = JsonRpcRouter::new(registry, true, 100);
+        let request = JsonRpcRequest::new("bin", None, Some(json!(1)));
+        let http_request = create_test_http_request();
+        let request_data = create_test_request_data();
+
+        let response = router.route_single(request, http_request, &request_data).await;
+        match response {
+            JsonRpcResponseType::Success(ok) => {
+                assert_eq!(ok.result, Value::String("[binary data]".to_string()));
+            }
+            other => panic!("Expected success response, got: {:?}", other),
         }
     }
 
