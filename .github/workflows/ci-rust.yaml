@@ -161,7 +161,20 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
-        run: cargo tarpaulin --workspace --out Lcov --output-dir target/tarpaulin --timeout 300 --fail-under 80 --exclude-files "**/tests/**" "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "**/src/main.rs" "**/src/bin/**" "**/examples/**" "**/tools/**" "**/packages/**" "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**" "**/crates/spikard-wasm/src/**" --exclude spikard-wasm --exclude spikard-php --exclude spikard-node --exclude spikard-rb --exclude spikard-py --verbose
+        run: >
+          cargo tarpaulin
+          -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared
+          --out Lcov
+          --output-dir target/tarpaulin
+          --timeout 300
+          --fail-under 80
+          --exclude-files
+          "**/tests/**" "**/*_test.rs" "**/benches/**" "**/*_bench.rs"
+          "**/src/main.rs" "**/src/bin/**"
+          "**/examples/**" "**/tools/**" "**/packages/**"
+          "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**" "**/crates/spikard-wasm/src/**"
+          --exclude spikard-wasm --exclude spikard-php --exclude spikard-node --exclude spikard-rb --exclude spikard-py
+          --verbose
 
       - name: Upload coverage to Codecov
         if: github.actor != 'dependabot[bot]'
@@ -222,7 +235,7 @@ jobs:
           PYO3_PYTHON: python
         run: |
           cargo tarpaulin \
-            --workspace \
+            -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared \
             --out Lcov \
             --output-dir target/tarpaulin-php \
             --timeout 300 \
