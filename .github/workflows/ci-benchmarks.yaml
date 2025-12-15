@@ -192,7 +192,6 @@ jobs:
           SPIKARD_METRICS_FILE: ${{ github.workspace }}/results/spikard-python/python-metrics.json
           SPIKARD_METRICS_DEBUG: "1"
           SPIKARD_PYSPY_OUTPUT: ${{ github.workspace }}/results/spikard-python/py-spy.speedscope.json
-          SPIKARD_PROFILE_SNAPSHOT_SECS: "5"
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v5
