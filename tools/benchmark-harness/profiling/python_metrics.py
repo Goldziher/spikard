@@ -15,29 +15,15 @@ import signal
 import sys
 import tempfile
 import time
-import traceback
 from collections.abc import Callable, Generator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from functools import wraps
 from pathlib import Path
 from threading import Lock
-from typing import TYPE_CHECKING, Optional, ParamSpec, TypeVar
+from typing import Optional, ParamSpec, TypeVar
 
 LOGGER = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from pyinstrument import Profiler as PyInstrumentProfiler
-
-try:
-    from pyinstrument import Profiler as _PyInstrumentProfiler
-    from pyinstrument.renderers.speedscope import SpeedscopeRenderer as _SpeedscopeRenderer
-except Exception:
-    _PyInstrumentProfiler = None
-    _SpeedscopeRenderer = None
-    _PYINSTRUMENT_IMPORT_ERROR = traceback.format_exc()
-else:
-    _PYINSTRUMENT_IMPORT_ERROR = None
 
 
 @dataclass
@@ -89,10 +75,6 @@ class MetricsCollector:
         env_path = os.environ.get("SPIKARD_METRICS_FILE")
         default_path = Path(tempfile.gettempdir()) / f"python-metrics-{os.getpid()}.json"
         self.output_path = Path(env_path) if env_path else default_path
-        self.pyinstrument_output_path = (
-            Path(os.environ["SPIKARD_PYSPY_OUTPUT"]) if "SPIKARD_PYSPY_OUTPUT" in os.environ else None
-        )
-        self.pyinstrument_profiler: PyInstrumentProfiler | None = None
 
         with suppress(builtins.BaseException):
             self.output_path.with_suffix(".env.json").write_text(
@@ -101,38 +83,12 @@ class MetricsCollector:
                         "pid": os.getpid(),
                         "python_executable": sys.executable,
                         "SPIKARD_METRICS_FILE": os.environ.get("SPIKARD_METRICS_FILE"),
-                        "SPIKARD_PYSPY_OUTPUT": os.environ.get("SPIKARD_PYSPY_OUTPUT"),
                         "SPIKARD_PROFILE_SNAPSHOT_SECS": os.environ.get("SPIKARD_PROFILE_SNAPSHOT_SECS"),
                     },
                     indent=2,
                 ),
                 encoding="utf-8",
             )
-
-        if self.pyinstrument_output_path is not None and _PyInstrumentProfiler is None:
-            with suppress(builtins.BaseException):
-                self.pyinstrument_output_path.with_suffix(".pyinstrument.import_error").write_text(
-                    _PYINSTRUMENT_IMPORT_ERROR or "",
-                    encoding="utf-8",
-                )
-
-        if self.pyinstrument_output_path is not None and _PyInstrumentProfiler is not None:
-            try:
-                self.pyinstrument_profiler = _PyInstrumentProfiler()
-                self.pyinstrument_profiler.start()
-                with suppress(builtins.BaseException):
-                    self.pyinstrument_output_path.with_suffix(".pyinstrument.started").write_text("1", encoding="utf-8")
-            except Exception:
-                if os.environ.get("SPIKARD_METRICS_DEBUG") == "1":
-                    with suppress(builtins.BaseException):
-                        if self.pyinstrument_output_path is not None:
-                            self.pyinstrument_output_path.with_suffix(".pyinstrument.error").write_text(
-                                traceback.format_exc(),
-                                encoding="utf-8",
-                            )
-                        if not LOGGER.handlers:
-                            logging.basicConfig(level=logging.INFO)
-                        LOGGER.exception("Failed to start pyinstrument profiler")
 
     @classmethod
     def instance(cls) -> "MetricsCollector":
@@ -231,30 +187,6 @@ class MetricsCollector:
                     if not LOGGER.handlers:
                         logging.basicConfig(level=logging.INFO)
                     LOGGER.exception("Failed to write python metrics to %s", self.output_path)
-
-        if (
-            self.pyinstrument_profiler is not None
-            and self.pyinstrument_output_path is not None
-            and _SpeedscopeRenderer is not None
-        ):
-            try:
-                self.pyinstrument_profiler.stop()
-                speedscope = self.pyinstrument_profiler.output(renderer=_SpeedscopeRenderer())
-                self.pyinstrument_output_path.parent.mkdir(parents=True, exist_ok=True)
-                self.pyinstrument_output_path.write_text(speedscope, encoding="utf-8")
-                with suppress(builtins.BaseException):
-                    self.pyinstrument_output_path.with_suffix(".pyinstrument.wrote").write_text("1", encoding="utf-8")
-            except Exception:
-                if os.environ.get("SPIKARD_METRICS_DEBUG") == "1":
-                    with suppress(builtins.BaseException):
-                        if self.pyinstrument_output_path is not None:
-                            self.pyinstrument_output_path.with_suffix(".pyinstrument.error").write_text(
-                                traceback.format_exc(),
-                                encoding="utf-8",
-                            )
-                        if not LOGGER.handlers:
-                            logging.basicConfig(level=logging.INFO)
-                        LOGGER.exception("Failed to write speedscope profile to %s", self.pyinstrument_output_path)
 
     def __del__(self) -> None:
         """No-op (finalization is handled via atexit/signal handlers)."""
