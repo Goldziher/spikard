@@ -84,7 +84,7 @@ jobs:
           chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha
 
       - name: Upload benchmark tools artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: bench-tools
           path: artifacts/bin/
@@ -132,7 +132,7 @@ jobs:
             --output results/spikard-rust/profile.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: benchmark-results-spikard-rust
@@ -194,7 +194,7 @@ jobs:
           SPIKARD_PYSPY_OUTPUT: ${{ github.workspace }}/results/spikard-python/py-spy.speedscope.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: benchmark-results-spikard-python
@@ -253,7 +253,7 @@ jobs:
           SPIKARD_NODE_METRICS_FILE: ${{ github.workspace }}/results/spikard-node/node-metrics.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: benchmark-results-spikard-node
@@ -314,7 +314,7 @@ jobs:
           SPIKARD_RUBY_METRICS_FILE: ${{ github.workspace }}/results/spikard-ruby/ruby-metrics.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: benchmark-results-spikard-ruby
@@ -398,7 +398,7 @@ jobs:
             --output results/spikard-php/profile.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: benchmark-results-spikard-php
@@ -463,7 +463,7 @@ jobs:
             --output results/spikard-wasm/profile.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: benchmark-results-spikard-wasm

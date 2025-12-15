@@ -54,7 +54,7 @@ jobs:
         run: cargo build --manifest-path tools/benchmark-harness/Cargo.toml --release
 
       - name: Upload benchmark harness
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: benchmark-harness
           path: target/release/benchmark-harness
