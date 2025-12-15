@@ -156,7 +156,7 @@ jobs:
           working-directory: packages/ruby
 
       - name: Download Ruby gem artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ruby-gem-${{ matrix.os }}
           path: packages/ruby/
@@ -184,7 +184,7 @@ jobs:
           working-directory: packages/ruby
 
       - name: Download Ruby gem artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ruby-gem-ubuntu-latest
           path: packages/ruby/
