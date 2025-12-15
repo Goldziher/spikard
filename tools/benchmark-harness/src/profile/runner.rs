@@ -208,11 +208,7 @@ impl ProfileRunner {
 
         let client = reqwest::Client::new();
         let url = format!("{}/__internal/flush-profile", server.base_url);
-        let _ = client
-            .get(url)
-            .timeout(std::time::Duration::from_secs(5))
-            .send()
-            .await;
+        let _ = client.get(url).timeout(std::time::Duration::from_secs(5)).send().await;
 
         let start = std::time::Instant::now();
         while start.elapsed() < std::time::Duration::from_secs(10) {
