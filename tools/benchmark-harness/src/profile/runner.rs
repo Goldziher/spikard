@@ -144,7 +144,25 @@ impl ProfileRunner {
         };
 
         let mut suite_results = Vec::new();
-        let suite_result = self.run_suite(&server, suite_flamegraph_path.as_deref()).await?;
+        let mut suite_result = self.run_suite(&server, suite_python_profiler).await?;
+
+        if let Some(suite_profiling) = suite_profiler_handle.map(|p| p.stop()) {
+            for workload in &mut suite_result.workloads {
+                if workload.results.profiling.is_some() {
+                    continue;
+                }
+                workload.results.profiling = Some(ProfilingData::Python(PythonProfilingData {
+                    gil_wait_time_ms: suite_profiling.gil_wait_time_ms,
+                    gil_contention_percent: suite_profiling.gil_contention_percent,
+                    ffi_overhead_ms: suite_profiling.ffi_overhead_ms,
+                    handler_time_ms: suite_profiling.handler_time_ms,
+                    serialization_time_ms: suite_profiling.serialization_time_ms,
+                    gc_collections: suite_profiling.gc_collections,
+                    gc_time_ms: suite_profiling.gc_time_ms,
+                    flamegraph_path: suite_profiling.flamegraph_path.clone(),
+                }));
+            }
+        }
         suite_results.push(suite_result);
 
         let summary = self.calculate_summary(&suite_results);
@@ -155,7 +173,6 @@ impl ProfileRunner {
             None
         };
 
-        drop(suite_profiler_handle.map(|p| p.stop()));
         self.try_flush_python_profiling(&server).await;
         server.kill()?;
 
@@ -185,14 +202,11 @@ impl ProfileRunner {
         let _ = client.get(url).send().await;
     }
 
-    async fn run_suite(&self, server: &ServerHandle, suite_flamegraph_path: Option<&str>) -> Result<SuiteResult> {
+    async fn run_suite(&self, server: &ServerHandle, suite_python_profiler: bool) -> Result<SuiteResult> {
         println!("📊 Running suite: {}", self.suite.name);
         println!();
 
         let mut workload_results = Vec::new();
-        let suite_python_profiler = suite_flamegraph_path.is_some()
-            && self.config.profiler.as_deref() == Some("python")
-            && self.detect_language() == "python";
 
         for (i, workload_def) in self.suite.workloads.iter().enumerate() {
             println!(
@@ -203,7 +217,6 @@ impl ProfileRunner {
             );
 
             let result = self.run_workload(workload_def, server, suite_python_profiler).await?;
-            let result = self.with_suite_profiling(result, suite_flamegraph_path);
             workload_results.push(result);
 
             println!("  ✓ Complete");
@@ -237,27 +250,6 @@ impl ProfileRunner {
         {
             server.pid()
         }
-    }
-
-    fn with_suite_profiling(&self, mut result: WorkloadResult, suite_flamegraph_path: Option<&str>) -> WorkloadResult {
-        let Some(path) = suite_flamegraph_path else {
-            return result;
-        };
-        if self.config.profiler.as_deref() != Some("python") || self.detect_language() != "python" {
-            return result;
-        }
-
-        result.results.profiling = Some(ProfilingData::Python(PythonProfilingData {
-            gil_wait_time_ms: None,
-            gil_contention_percent: None,
-            ffi_overhead_ms: None,
-            handler_time_ms: None,
-            serialization_time_ms: None,
-            gc_collections: None,
-            gc_time_ms: None,
-            flamegraph_path: Some(path.to_string()),
-        }));
-        result
     }
 
     async fn run_workload(

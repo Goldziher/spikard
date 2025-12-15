@@ -160,6 +160,16 @@ jobs:
       - name: Make benchmark tools executable
         run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
+      - name: Allow py-spy to attach (Linux)
+        run: |
+          if ! command -v setcap >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y libcap2-bin
+          fi
+          sudo sysctl kernel.yama.ptrace_scope=0 || true
+          sudo setcap cap_sys_ptrace,cap_dac_read_search+ep ~/.cargo/bin/py-spy || true
+          getcap ~/.cargo/bin/py-spy || true
+
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
         with:
@@ -176,7 +186,7 @@ jobs:
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-python
-        run: uv run pip install -e . pyinstrument
+        run: uv run pip install -e .
 
       - name: Create results directory
         run: mkdir -p results/spikard-python
