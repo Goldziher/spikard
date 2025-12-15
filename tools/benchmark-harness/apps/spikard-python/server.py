@@ -17,12 +17,13 @@ from spikard import Body, Path, Query, Spikard, get, post
 from spikard.config import ServerConfig
 
 profiling_module = PathLib(__file__).parent.parent.parent / "profiling" / "python_metrics.py"
+_profiling_collector = None
 if profiling_module.exists():
     sys.path.insert(0, str(profiling_module.parent))
     try:
         import python_metrics
 
-        python_metrics.enable_profiling()
+        _profiling_collector = python_metrics.enable_profiling()
     except ImportError:
         print("⚠ Failed to import profiling module", file=sys.stderr)
 
@@ -278,6 +279,15 @@ async def get_query_many(
 async def health() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok"}
+
+
+@get("/__internal/flush-profile")
+async def flush_profile() -> dict[str, str]:
+    """Flush profiling/metrics outputs to disk (best-effort)."""
+    if _profiling_collector is not None:
+        _profiling_collector.finalize()
+        return {"status": "flushed"}
+    return {"status": "no-profiler"}
 
 
 if __name__ == "__main__":
