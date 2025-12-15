@@ -94,6 +94,8 @@ class MetricsCollector:
             try:
                 self.pyinstrument_profiler = _PyInstrumentProfiler()
                 self.pyinstrument_profiler.start()
+                with suppress(builtins.BaseException):
+                    self.pyinstrument_output_path.with_suffix(".pyinstrument.started").write_text("1", encoding="utf-8")
             except Exception:
                 if os.environ.get("SPIKARD_METRICS_DEBUG") == "1":
                     with suppress(builtins.BaseException):
@@ -215,6 +217,8 @@ class MetricsCollector:
                 speedscope = self.pyinstrument_profiler.output(renderer=_SpeedscopeRenderer())
                 self.pyinstrument_output_path.parent.mkdir(parents=True, exist_ok=True)
                 self.pyinstrument_output_path.write_text(speedscope, encoding="utf-8")
+                with suppress(builtins.BaseException):
+                    self.pyinstrument_output_path.with_suffix(".pyinstrument.wrote").write_text("1", encoding="utf-8")
             except Exception:
                 if os.environ.get("SPIKARD_METRICS_DEBUG") == "1":
                     with suppress(builtins.BaseException):
