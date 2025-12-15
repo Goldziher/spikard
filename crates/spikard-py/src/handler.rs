@@ -32,12 +32,30 @@ pub fn init_python_event_loop() -> PyResult<()> {
 
         let asyncio = py.import("asyncio")?;
         let event_loop = asyncio.call_method0("new_event_loop")?;
-        asyncio.call_method1("set_event_loop", (event_loop.clone(),))?;
 
-        let task_locals = TaskLocals::new(event_loop.into()).copy_context(py)?;
+        let task_locals = TaskLocals::new(event_loop.clone().into()).copy_context(py)?;
         PYTHON_TASK_LOCALS
             .set(task_locals)
             .map_err(|_| pyo3::exceptions::PyRuntimeError::new_err("Python async context already initialized"))?;
+
+        let threading = py.import("threading")?;
+        let globals = PyDict::new(py);
+        globals.set_item("asyncio", asyncio)?;
+
+        let run_loop_code =
+            pyo3::ffi::c_str!("def run_loop(loop):\n    asyncio.set_event_loop(loop)\n    loop.run_forever()\n");
+        py.run(run_loop_code, Some(&globals), None)?;
+        let run_loop_fn = globals
+            .get_item("run_loop")?
+            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to load run_loop helper"))?;
+
+        let thread_kwargs = PyDict::new(py);
+        thread_kwargs.set_item("target", run_loop_fn)?;
+        thread_kwargs.set_item("args", (event_loop,))?;
+        thread_kwargs.set_item("daemon", true)?;
+
+        let thread = threading.call_method("Thread", (), Some(&thread_kwargs))?;
+        thread.call_method0("start")?;
 
         Ok(())
     })
