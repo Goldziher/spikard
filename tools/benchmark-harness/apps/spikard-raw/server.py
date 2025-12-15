@@ -30,6 +30,11 @@ if profiling_module.exists():
 app = Spikard()
 
 
+@get("/health")
+def health() -> dict[str, Any]:
+    return {"status": "ok"}
+
+
 @get("/__benchmark__/flush-profile")
 def flush_profile() -> dict[str, Any]:
     if _profiling_collector is not None:
