@@ -178,7 +178,7 @@ impl PythonProfiler {
 
         let app_metrics = collect_app_metrics(self.pid);
 
-        let flamegraph_path = self.output_path().and_then(|p| wait_for_profile_output(p));
+        let flamegraph_path = self.output_path().and_then(wait_for_profile_output);
         if flamegraph_path.is_none()
             && let Some(status) = profiler_exit_status
         {
