@@ -1018,6 +1018,168 @@ mod tests {
     }
 
     #[test]
+    fn test_optional_field_overrides_required_list() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "maybe": {
+                    "type": "string",
+                    "source": "query",
+                    "optional": true
+                }
+            },
+            "required": ["maybe"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let result = validator.validate_and_extract(
+            &json!({}),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+            &HashMap::new(),
+        );
+
+        assert!(result.is_ok(), "optional required field should not error: {result:?}");
+        assert_eq!(result.unwrap(), json!({}));
+    }
+
+    #[test]
+    fn test_header_name_is_normalized_for_lookup_and_errors() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "x_request_id": {
+                    "type": "string",
+                    "source": "header"
+                }
+            },
+            "required": ["x_request_id"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+
+        let mut headers = HashMap::new();
+        headers.insert("x-request-id".to_string(), "abc123".to_string());
+
+        let ok = validator
+            .validate_and_extract(&json!({}), &HashMap::new(), &HashMap::new(), &headers, &HashMap::new())
+            .unwrap();
+        assert_eq!(ok, json!({"x_request_id": "abc123"}));
+
+        let err = validator
+            .validate_and_extract(
+                &json!({}),
+                &HashMap::new(),
+                &HashMap::new(),
+                &HashMap::new(),
+                &HashMap::new(),
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.errors[0].loc,
+            vec!["headers".to_string(), "x-request-id".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_boolean_empty_string_coerces_to_false() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "flag": {
+                    "type": "boolean",
+                    "source": "query"
+                }
+            },
+            "required": ["flag"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("flag".to_string(), vec!["".to_string()]);
+
+        let result = validator
+            .validate_and_extract(
+                &json!({"flag": ""}),
+                &raw_query_params,
+                &HashMap::new(),
+                &HashMap::new(),
+                &HashMap::new(),
+            )
+            .unwrap();
+        assert_eq!(result, json!({"flag": false}));
+    }
+
+    #[test]
+    fn test_uuid_format_validation_returns_uuid_parsing_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "source": "query"
+                }
+            },
+            "required": ["id"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
+        raw_query_params.insert("id".to_string(), vec!["not-a-uuid".to_string()]);
+
+        let err = validator
+            .validate_and_extract(
+                &json!({"id": "not-a-uuid"}),
+                &raw_query_params,
+                &HashMap::new(),
+                &HashMap::new(),
+                &HashMap::new(),
+            )
+            .unwrap_err();
+
+        assert_eq!(err.errors[0].error_type, "uuid_parsing");
+        assert!(
+            err.errors[0].msg.contains("valid UUID"),
+            "msg was {}",
+            err.errors[0].msg
+        );
+    }
+
+    #[test]
+    fn test_array_query_parameter_coercion_error_reports_item_parse_failure() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "source": "query"
+                }
+            },
+            "required": ["ids"]
+        });
+
+        let validator = ParameterValidator::new(schema).unwrap();
+        let query_params = json!({ "ids": ["nope"] });
+
+        let err = validator
+            .validate_and_extract(
+                &query_params,
+                &HashMap::new(),
+                &HashMap::new(),
+                &HashMap::new(),
+                &HashMap::new(),
+            )
+            .unwrap_err();
+
+        assert_eq!(err.errors[0].error_type, "int_parsing");
+        assert_eq!(err.errors[0].loc, vec!["query".to_string(), "ids".to_string()]);
+    }
+
+    #[test]
     fn test_float_coercion_invalid_format_returns_error() {
         let schema = json!({
             "type": "object",

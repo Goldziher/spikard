@@ -97,6 +97,11 @@ impl ProfileRunner {
 
         let metadata = Metadata::collect();
 
+        let suite_flamegraph_path = self.suite_flamegraph_path();
+        let suite_python_profiler = suite_flamegraph_path.is_some()
+            && self.config.profiler.as_deref() == Some("python")
+            && self.detect_language() == "python";
+
         let framework_info = FrameworkInfo {
             name: self.config.framework.clone(),
             version: self.detect_framework_version(),
@@ -116,53 +121,31 @@ impl ProfileRunner {
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
 
+        let start_cmd_override = if suite_python_profiler {
+            suite_flamegraph_path
+                .as_deref()
+                .map(|output| format!("uv run python -m pyinstrument -r speedscope -o {} server.py {{port}}", output))
+        } else {
+            None
+        };
+
         let server_config = ServerConfig {
             framework: Some(self.config.framework.clone()),
             port,
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
-            start_cmd_override: None,
+            start_cmd_override,
         };
 
         let server = start_server(server_config).await?;
         println!("✓ Server healthy on port {}", server.port);
         println!();
 
-        let suite_flamegraph_path = self.suite_flamegraph_path();
-        let suite_python_profiler = suite_flamegraph_path.is_some()
-            && self.config.profiler.as_deref() == Some("python")
-            && self.detect_language() == "python";
-
-        let suite_profiler_handle = if suite_python_profiler {
-            let python_pid = self.python_target_pid(&server);
-            Some(crate::profile::python::start_profiler(
-                python_pid,
-                suite_flamegraph_path.as_ref().map(PathBuf::from),
-            )?)
-        } else {
-            None
-        };
+        let python_pid = suite_python_profiler.then(|| self.python_target_pid(&server));
 
         let mut suite_results = Vec::new();
-        let mut suite_result = self.run_suite(&server, suite_python_profiler).await?;
+        let suite_result = self.run_suite(&server, suite_python_profiler).await?;
 
-        if let Some(suite_profiling) = suite_profiler_handle.map(|p| p.stop()) {
-            for workload in &mut suite_result.workloads {
-                if workload.results.profiling.is_some() {
-                    continue;
-                }
-                workload.results.profiling = Some(ProfilingData::Python(PythonProfilingData {
-                    gil_wait_time_ms: suite_profiling.gil_wait_time_ms,
-                    gil_contention_percent: suite_profiling.gil_contention_percent,
-                    ffi_overhead_ms: suite_profiling.ffi_overhead_ms,
-                    handler_time_ms: suite_profiling.handler_time_ms,
-                    serialization_time_ms: suite_profiling.serialization_time_ms,
-                    gc_collections: suite_profiling.gc_collections,
-                    gc_time_ms: suite_profiling.gc_time_ms,
-                    flamegraph_path: suite_profiling.flamegraph_path.clone(),
-                }));
-            }
-        }
         suite_results.push(suite_result);
 
         let summary = self.calculate_summary(&suite_results);
@@ -173,8 +156,33 @@ impl ProfileRunner {
             None
         };
 
+        let suite_app_metrics = python_pid.and_then(crate::profile::python::collect_app_metrics);
         self.try_flush_python_profiling(&server).await;
         server.kill()?;
+
+        if suite_python_profiler && python_pid.is_some() {
+            let flamegraph_path = suite_flamegraph_path
+                .as_deref()
+                .and_then(crate::profile::python::wait_for_profile_output);
+
+            for suite in &mut suite_results {
+                for workload in &mut suite.workloads {
+                    if workload.results.profiling.is_some() {
+                        continue;
+                    }
+                    workload.results.profiling = Some(ProfilingData::Python(PythonProfilingData {
+                        gil_wait_time_ms: None,
+                        gil_contention_percent: None,
+                        ffi_overhead_ms: suite_app_metrics.as_ref().and_then(|m| m.ffi_overhead_ms),
+                        handler_time_ms: suite_app_metrics.as_ref().and_then(|m| m.handler_time_ms),
+                        serialization_time_ms: suite_app_metrics.as_ref().and_then(|m| m.serialization_time_ms),
+                        gc_collections: suite_app_metrics.as_ref().and_then(|m| m.gc_collections),
+                        gc_time_ms: suite_app_metrics.as_ref().and_then(|m| m.gc_time_ms),
+                        flamegraph_path: flamegraph_path.clone(),
+                    }));
+                }
+            }
+        }
 
         Ok(ProfileResult {
             metadata,
@@ -238,7 +246,9 @@ impl ProfileRunner {
             return None;
         }
 
-        std::env::var("SPIKARD_PYSPY_OUTPUT").ok()
+        std::env::var("SPIKARD_PYTHON_PROFILE_OUTPUT")
+            .ok()
+            .or_else(|| std::env::var("SPIKARD_PYSPY_OUTPUT").ok())
     }
 
     fn python_target_pid(&self, server: &ServerHandle) -> u32 {

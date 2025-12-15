@@ -76,16 +76,12 @@ jobs:
       - name: Install oha load generator
         run: cargo install oha --locked
 
-      - name: Install py-spy profiler
-        run: cargo install py-spy --locked
-
       - name: Package benchmark tools
         run: |
           mkdir -p artifacts/bin
           cp target/release/benchmark-harness artifacts/bin/benchmark-harness
           cp ~/.cargo/bin/oha artifacts/bin/oha
-          cp ~/.cargo/bin/py-spy artifacts/bin/py-spy
-          chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha artifacts/bin/py-spy
+          chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha
 
       - name: Upload benchmark tools artifact
         uses: actions/upload-artifact@v6
@@ -110,7 +106,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -158,17 +154,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
-
-      - name: Allow py-spy to attach (Linux)
-        run: |
-          if ! command -v setcap >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y libcap2-bin
-          fi
-          sudo sysctl kernel.yama.ptrace_scope=0 || true
-          sudo setcap cap_sys_ptrace,cap_dac_read_search+ep ~/.cargo/bin/py-spy || true
-          getcap ~/.cargo/bin/py-spy || true
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -205,7 +191,7 @@ jobs:
         env:
           SPIKARD_METRICS_FILE: ${{ github.workspace }}/results/spikard-python/python-metrics.json
           SPIKARD_METRICS_DEBUG: "1"
-          SPIKARD_PYSPY_OUTPUT: ${{ github.workspace }}/results/spikard-python/py-spy.speedscope.json
+          SPIKARD_PYTHON_PROFILE_OUTPUT: ${{ github.workspace }}/results/spikard-python/pyinstrument.speedscope.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
@@ -230,7 +216,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -289,7 +275,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -350,7 +336,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -434,7 +420,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust

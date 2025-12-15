@@ -8,6 +8,7 @@ use crate::error::Result;
 use serde::Deserialize;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
+use std::time::Duration;
 
 /// Python profiler handle
 pub struct PythonProfiler {
@@ -18,12 +19,61 @@ pub struct PythonProfiler {
 
 /// Metrics collected from Python application instrumentation
 #[derive(Debug, Deserialize)]
-struct PythonMetricsFile {
-    gc_collections: Option<u64>,
-    gc_time_ms: Option<f64>,
-    handler_time_ms: Option<f64>,
-    serialization_time_ms: Option<f64>,
-    ffi_overhead_ms: Option<f64>,
+pub struct PythonAppMetrics {
+    pub gc_collections: Option<u64>,
+    pub gc_time_ms: Option<f64>,
+    pub handler_time_ms: Option<f64>,
+    pub serialization_time_ms: Option<f64>,
+    pub ffi_overhead_ms: Option<f64>,
+}
+
+pub fn collect_app_metrics(pid: u32) -> Option<PythonAppMetrics> {
+    let metrics_path = std::env::var("SPIKARD_METRICS_FILE")
+        .ok()
+        .unwrap_or_else(|| format!("/tmp/python-metrics-{}.json", pid));
+
+    #[cfg(unix)]
+    {
+        unsafe {
+            libc::kill(pid as i32, libc::SIGUSR1);
+        }
+        let start = std::time::Instant::now();
+        while start.elapsed() < Duration::from_secs(2) {
+            if std::fs::metadata(&metrics_path).is_ok() {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(100));
+        }
+    }
+
+    match std::fs::read_to_string(&metrics_path) {
+        Ok(content) => match serde_json::from_str::<PythonAppMetrics>(&content) {
+            Ok(metrics) => {
+                println!("  ✓ Loaded application metrics from {}", metrics_path);
+                Some(metrics)
+            }
+            Err(e) => {
+                eprintln!("  ⚠ Failed to parse metrics file: {}", e);
+                None
+            }
+        },
+        Err(_) => {
+            eprintln!("  ⚠ Python metrics file not found or unreadable at {}", metrics_path);
+            None
+        }
+    }
+}
+
+pub fn wait_for_profile_output(path: &str) -> Option<String> {
+    let start = std::time::Instant::now();
+    while start.elapsed() < Duration::from_secs(5) {
+        if std::fs::metadata(path).is_ok() {
+            return Some(path.to_string());
+        }
+        std::thread::sleep(Duration::from_millis(100));
+    }
+    eprintln!("  ⚠ Python profile output not found at {}", path);
+    None
 }
 
 /// Start Python profiler for the given PID
@@ -31,6 +81,7 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PythonPr
     let desired_output_path = output_path
         .as_ref()
         .and_then(|p| p.to_str().map(|s| s.to_string()))
+        .or_else(|| std::env::var("SPIKARD_PYTHON_PROFILE_OUTPUT").ok())
         .or_else(|| std::env::var("SPIKARD_PYSPY_OUTPUT").ok());
     let output_path = desired_output_path.unwrap_or_else(|| format!("/tmp/python-profile-{}.speedscope.json", pid));
     if let Some(parent) = PathBuf::from(&output_path).parent() {
@@ -72,24 +123,6 @@ impl PythonProfiler {
 
     /// Stop the profiler and collect final metrics
     pub fn stop(mut self) -> ProfilingData {
-        let metrics_path = std::env::var("SPIKARD_METRICS_FILE")
-            .ok()
-            .unwrap_or_else(|| format!("/tmp/python-metrics-{}.json", self.pid));
-
-        #[cfg(unix)]
-        {
-            unsafe {
-                libc::kill(self.pid as i32, libc::SIGUSR1);
-            }
-            let start = std::time::Instant::now();
-            while start.elapsed() < std::time::Duration::from_secs(2) {
-                if std::fs::metadata(&metrics_path).is_ok() {
-                    break;
-                }
-                std::thread::sleep(std::time::Duration::from_millis(100));
-            }
-        }
-
         let mut profiler_exit_status = None;
         if let Some(mut process) = self.process.take() {
             #[cfg(unix)]
@@ -143,26 +176,14 @@ impl PythonProfiler {
             }
         }
 
-        let app_metrics = self.load_metrics_file(&metrics_path);
+        let app_metrics = collect_app_metrics(self.pid);
 
-        if app_metrics.is_none() {
-            eprintln!("  ⚠ Python metrics file not found or unreadable at {}", metrics_path);
+        let flamegraph_path = self.output_path().and_then(|p| wait_for_profile_output(p));
+        if flamegraph_path.is_none()
+            && let Some(status) = profiler_exit_status
+        {
+            eprintln!("  → profiler exit status: {}", status);
         }
-
-        let flamegraph_path = self.output_path().and_then(|p| {
-            let start = std::time::Instant::now();
-            while start.elapsed() < std::time::Duration::from_secs(2) {
-                if std::fs::metadata(p).is_ok() {
-                    return Some(p.to_string());
-                }
-                std::thread::sleep(std::time::Duration::from_millis(100));
-            }
-            eprintln!("  ⚠ Python profile output not found at {}", p);
-            if let Some(status) = profiler_exit_status {
-                eprintln!("  → profiler exit status: {}", status);
-            }
-            None
-        });
 
         ProfilingData {
             flamegraph_path,
@@ -173,23 +194,6 @@ impl PythonProfiler {
             ffi_overhead_ms: app_metrics.as_ref().and_then(|m| m.ffi_overhead_ms),
             gil_wait_time_ms: None,
             gil_contention_percent: None,
-        }
-    }
-
-    /// Load metrics from application instrumentation file
-    fn load_metrics_file(&self, path: &str) -> Option<PythonMetricsFile> {
-        match std::fs::read_to_string(path) {
-            Ok(content) => match serde_json::from_str::<PythonMetricsFile>(&content) {
-                Ok(metrics) => {
-                    println!("  ✓ Loaded application metrics from {}", path);
-                    Some(metrics)
-                }
-                Err(e) => {
-                    eprintln!("  ⚠ Failed to parse metrics file: {}", e);
-                    None
-                }
-            },
-            Err(_) => None,
         }
     }
 }
