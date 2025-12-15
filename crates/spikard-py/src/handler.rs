@@ -9,6 +9,7 @@ use axum::{
 use once_cell::sync::OnceCell;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
+use pyo3_async_runtimes::TaskLocals;
 use serde_json::{Value, json};
 use spikard_core::errors::StructuredError;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
@@ -18,39 +19,25 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-/// Global Python event loop for async handlers (tokio-driven via pyo3_async_runtimes).
-pub static PYTHON_EVENT_LOOP: OnceCell<Py<PyAny>> = OnceCell::new();
+/// Global Python async context for pyo3_async_runtimes.
+pub static PYTHON_TASK_LOCALS: OnceCell<TaskLocals> = OnceCell::new();
 
-/// Initialize Python event loop once using pyo3_async_runtimes to avoid per-request threads.
+/// Initialize Python async context once using pyo3_async_runtimes to avoid per-request event loop
+/// setup and to ensure async handlers run without blocking the GIL.
 pub fn init_python_event_loop() -> PyResult<()> {
     Python::attach(|py| {
-        if PYTHON_EVENT_LOOP.get().is_some() {
+        if PYTHON_TASK_LOCALS.get().is_some() {
             return Ok(());
         }
 
         let asyncio = py.import("asyncio")?;
-        let event_loop: Py<PyAny> = asyncio.call_method0("new_event_loop")?.unbind();
-        PYTHON_EVENT_LOOP
-            .set(event_loop.clone_ref(py))
-            .map_err(|_| pyo3::exceptions::PyRuntimeError::new_err("Event loop already initialized"))?;
+        let event_loop = asyncio.call_method0("new_event_loop")?;
+        asyncio.call_method1("set_event_loop", (event_loop.clone(),))?;
 
-        let threading = py.import("threading")?;
-        let globals = pyo3::types::PyDict::new(py);
-        globals.set_item("asyncio", asyncio)?;
-
-        let run_loop_code =
-            pyo3::ffi::c_str!("def run_loop(loop):\n    asyncio.set_event_loop(loop)\n    loop.run_forever()\n");
-        py.run(run_loop_code, Some(&globals), None)?;
-        let run_loop_fn = globals.get_item("run_loop")?.unwrap();
-
-        let loop_ref = PYTHON_EVENT_LOOP.get().unwrap().bind(py);
-        let thread_kwargs = pyo3::types::PyDict::new(py);
-        thread_kwargs.set_item("target", run_loop_fn)?;
-        thread_kwargs.set_item("args", (loop_ref,))?;
-        thread_kwargs.set_item("daemon", true)?;
-
-        let thread = threading.call_method("Thread", (), Some(&thread_kwargs))?;
-        thread.call_method0("start")?;
+        let task_locals = TaskLocals::new(event_loop.into()).copy_context(py)?;
+        PYTHON_TASK_LOCALS
+            .set(task_locals)
+            .map_err(|_| pyo3::exceptions::PyRuntimeError::new_err("Python async context already initialized"))?;
 
         Ok(())
     })
@@ -156,7 +143,7 @@ impl PythonHandler {
         let body_param_name = self.body_param_name.clone();
 
         let result = if is_async {
-            let output = Python::attach(|py| -> PyResult<Py<PyAny>> {
+            let (coroutine, task_locals) = Python::attach(|py| -> PyResult<(Py<PyAny>, TaskLocals)> {
                 let handler_obj = handler.bind(py);
 
                 let kwargs = if let Some(ref validated) = validated_params_for_task {
@@ -178,24 +165,26 @@ impl PythonHandler {
                     ));
                 }
 
-                Ok(coroutine.into())
+                let task_locals = PYTHON_TASK_LOCALS
+                    .get()
+                    .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Python async context not initialized"))?
+                    .clone();
+
+                Ok((coroutine.into(), task_locals))
             })
             .map_err(|e: PyErr| {
                 structured_error("python_call_error", format!("Python error calling handler: {}", e))
             })?;
 
-            let coroutine_result = Python::attach(|py| -> PyResult<Py<PyAny>> {
-                let asyncio = py.import("asyncio")?;
-                let event_loop = PYTHON_EVENT_LOOP
-                    .get()
-                    .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Python event loop not initialized"))?;
-
-                let loop_obj = event_loop.bind(py);
-                let future = asyncio.call_method1("run_coroutine_threadsafe", (output.bind(py), loop_obj))?;
-                let result = future.call_method0("result")?;
-                Ok(result.into())
+            let coroutine_future = Python::attach(|py| -> PyResult<_> {
+                let awaitable = coroutine.bind(py).clone();
+                pyo3_async_runtimes::into_future_with_locals(&task_locals, awaitable)
             })
             .map_err(|e: PyErr| structured_error("python_async_error", format!("Python async error: {}", e)))?;
+
+            let coroutine_result = coroutine_future
+                .await
+                .map_err(|e: PyErr| structured_error("python_async_error", format!("Python async error: {}", e)))?;
 
             Python::attach(|py| python_to_response_result(py, coroutine_result.bind(py)))
                 .map_err(|e: PyErr| structured_error("python_response_error", format!("Python error: {}", e)))?

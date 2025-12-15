@@ -141,6 +141,7 @@ impl ProfileRunner {
             None
         };
 
+        self.try_flush_python_profiling(&server).await;
         server.kill()?;
 
         Ok(ProfileResult {
@@ -151,6 +152,22 @@ impl ProfileRunner {
             summary,
             comparison,
         })
+    }
+
+    async fn try_flush_python_profiling(&self, server: &ServerHandle) {
+        if self.detect_language() != "python" {
+            return;
+        }
+
+        let Ok(client) = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(2))
+            .build()
+        else {
+            return;
+        };
+
+        let url = format!("{}/__benchmark__/flush-profile", server.base_url);
+        let _ = client.get(url).send().await;
     }
 
     async fn run_suite(&self, server: &ServerHandle, suite_flamegraph_path: Option<&str>) -> Result<SuiteResult> {

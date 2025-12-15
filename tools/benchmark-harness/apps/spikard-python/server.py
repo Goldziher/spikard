@@ -31,6 +31,14 @@ if profiling_module.exists():
 app = Spikard()
 
 
+@get("/__benchmark__/flush-profile")
+def flush_profile() -> dict[str, Any]:
+    if _profiling_collector is not None:
+        _profiling_collector.finalize()
+        return {"ok": True}
+    return {"ok": False}
+
+
 class SmallPayload(msgspec.Struct):
     """Small JSON payload - matches 01_simple_object_success.json."""
 
