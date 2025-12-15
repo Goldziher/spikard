@@ -122,9 +122,12 @@ impl ProfileRunner {
         let port = self.find_available_port();
 
         let start_cmd_override = if suite_python_profiler {
-            suite_flamegraph_path
-                .as_deref()
-                .map(|output| format!("uv run python -m pyinstrument -r speedscope -o {} server.py {{port}}", output))
+            suite_flamegraph_path.as_deref().map(|output| {
+                format!(
+                    "uv run python -m pyinstrument -r speedscope -o {} server.py {{port}}",
+                    output
+                )
+            })
         } else {
             None
         };
