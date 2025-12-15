@@ -221,7 +221,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.14"
+          python-version: "3.13"
           cache-prefix: bench-robyn-raw
 
       - name: Install benchmark app dependencies
@@ -273,7 +273,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.14"
+          python-version: "3.13"
           cache-prefix: bench-robyn-dto
 
       - name: Install benchmark app dependencies
