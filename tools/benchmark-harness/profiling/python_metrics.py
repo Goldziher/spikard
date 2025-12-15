@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import signal
+import sys
 import tempfile
 import time
 import traceback
@@ -90,6 +91,21 @@ class MetricsCollector:
             Path(os.environ["SPIKARD_PYSPY_OUTPUT"]) if "SPIKARD_PYSPY_OUTPUT" in os.environ else None
         )
         self.pyinstrument_profiler: PyInstrumentProfiler | None = None
+
+        with suppress(builtins.BaseException):
+            self.output_path.with_suffix(".env.json").write_text(
+                json.dumps(
+                    {
+                        "pid": os.getpid(),
+                        "python_executable": sys.executable,
+                        "SPIKARD_METRICS_FILE": os.environ.get("SPIKARD_METRICS_FILE"),
+                        "SPIKARD_PYSPY_OUTPUT": os.environ.get("SPIKARD_PYSPY_OUTPUT"),
+                        "SPIKARD_PROFILE_SNAPSHOT_SECS": os.environ.get("SPIKARD_PROFILE_SNAPSHOT_SECS"),
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
 
         if self.pyinstrument_output_path is not None and _PyInstrumentProfiler is not None:
             try:
