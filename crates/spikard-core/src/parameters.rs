@@ -632,6 +632,40 @@ mod tests {
     use serde_json::json;
 
     #[test]
+    fn test_parameter_schema_missing_source_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "foo": {
+                    "type": "string"
+                }
+            }
+        });
+
+        let err = ParameterValidator::new(schema).expect_err("schema missing source should error");
+        assert!(
+            err.contains("missing required 'source' field"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn test_parameter_schema_invalid_source_returns_error() {
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "foo": {
+                    "type": "string",
+                    "source": "invalid"
+                }
+            }
+        });
+
+        let err = ParameterValidator::new(schema).expect_err("invalid source should error");
+        assert!(err.contains("Invalid source"), "unexpected error: {err}");
+    }
+
+    #[test]
     fn test_array_query_parameter() {
         let schema = json!({
             "type": "object",

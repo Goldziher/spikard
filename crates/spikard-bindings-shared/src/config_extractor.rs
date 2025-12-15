@@ -661,6 +661,70 @@ mod tests {
     }
 
     #[test]
+    fn test_static_files_extraction_missing_required_fields_errors() {
+        let value = serde_json::json!({
+            "static_files": [
+                {
+                    "route_prefix": "/assets"
+                }
+            ]
+        });
+        let source = JsonConfigSource::new(&value);
+        let err = ConfigExtractor::extract_static_files_config(&source).expect_err("missing directory should error");
+        assert!(err.contains("Static files requires 'directory'"), "unexpected error: {err}");
+    }
+
+    #[test]
+    fn test_static_files_extraction_array_element_missing_errors() {
+        struct BrokenArraySource;
+
+        impl ConfigSource for BrokenArraySource {
+            fn get_bool(&self, _key: &str) -> Option<bool> {
+                None
+            }
+
+            fn get_u64(&self, _key: &str) -> Option<u64> {
+                None
+            }
+
+            fn get_u16(&self, _key: &str) -> Option<u16> {
+                None
+            }
+
+            fn get_string(&self, _key: &str) -> Option<String> {
+                None
+            }
+
+            fn get_vec_string(&self, _key: &str) -> Option<Vec<String>> {
+                None
+            }
+
+            fn get_nested(&self, _key: &str) -> Option<Box<dyn ConfigSource + '_>> {
+                None
+            }
+
+            fn has_key(&self, _key: &str) -> bool {
+                false
+            }
+
+            fn get_array_length(&self, key: &str) -> Option<usize> {
+                (key == "static_files").then_some(1)
+            }
+
+            fn get_array_element(&self, _key: &str, _index: usize) -> Option<Box<dyn ConfigSource + '_>> {
+                None
+            }
+        }
+
+        let err = ConfigExtractor::extract_static_files_config(&BrokenArraySource)
+            .expect_err("missing array element should error");
+        assert!(
+            err.contains("Failed to get static files array element"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
     fn test_server_config_prefers_host_key_variants() {
         let value = serde_json::json!({
             "Host": "0.0.0.0",
