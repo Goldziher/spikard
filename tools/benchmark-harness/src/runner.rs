@@ -57,6 +57,7 @@ impl BenchmarkRunner {
             port,
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
+            env: Vec::new(),
             start_cmd_override: None,
         };
 

@@ -11,7 +11,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "pydantic>=2.12.5",
+  "msgspec>=0.19",
   "pyinstrument>=5.1.1",
   "robyn>=0.72.2",
 ]

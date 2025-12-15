@@ -6,9 +6,9 @@ This is a raw variant without pydantic validation to measure framework overhead.
 
 import os
 import sys
-import signal
+from functools import wraps
 from pathlib import Path as PathLib
-from typing import Any
+from typing import Callable, Coroutine, ParamSpec, TypeVar
 
 from pyinstrument import Profiler
 from pyinstrument.renderers.speedscope import SpeedscopeRenderer
@@ -16,101 +16,127 @@ from robyn import Robyn, Request, jsonify
 
 app = Robyn(__file__)
 
-_pyinstrument_profiler: Profiler | None = None
-_pyinstrument_output: str | None = os.environ.get("SPIKARD_PYTHON_PROFILE_OUTPUT")
-_pyinstrument_dumped = False
-if _pyinstrument_output:
-    _pyinstrument_profiler = Profiler()
-    _pyinstrument_profiler.start()
+_profile_dir: str | None = os.environ.get("SPIKARD_PYTHON_PROFILE_DIR") or None
+_profiled_endpoints: set[str] = set()
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
-def _dump_profile_from_signal(_signum: int, _frame: Any) -> None:  # noqa: ANN401
-    global _pyinstrument_dumped
-    if _pyinstrument_dumped or _pyinstrument_profiler is None or _pyinstrument_output is None:
-        return
+def profile_once(
+    name: str,
+) -> Callable[[Callable[P, Coroutine[object, object, R]]], Callable[P, Coroutine[object, object, R]]]:
+    def decorator(func: Callable[P, Coroutine[object, object, R]]) -> Callable[P, Coroutine[object, object, R]]:
+        if _profile_dir is None:
+            return func
 
-    _pyinstrument_dumped = True
-    try:
-        _pyinstrument_profiler.stop()
-        out_path = PathLib(_pyinstrument_output)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(_pyinstrument_profiler.output(renderer=SpeedscopeRenderer()), encoding="utf-8")
-    except Exception:
-        pass
+        @wraps(func)
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            if name in _profiled_endpoints:
+                return await func(*args, **kwargs)
 
+            _profiled_endpoints.add(name)
+            profiler = Profiler(async_mode="enabled")
+            profiler.start()
+            try:
+                return await func(*args, **kwargs)
+            finally:
+                try:
+                    profiler.stop()
+                    out_dir = PathLib(_profile_dir)
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    out_path = out_dir / f"{name}.speedscope.json"
+                    out_path.write_text(
+                        profiler.output(renderer=SpeedscopeRenderer()),
+                        encoding="utf-8",
+                    )
+                except Exception as exc:
+                    print(f"⚠ Failed to write profile for {name}: {exc!r}", file=sys.stderr)
 
-if _pyinstrument_output:
-    signal.signal(signal.SIGUSR1, _dump_profile_from_signal)
+        return wrapper
+
+    return decorator
 
 
 @app.post("/json/small")
-async def post_json_small(request: Request):
+@profile_once("json-small")
+async def post_json_small(request: Request) -> object:
     """Small JSON payload (~100 bytes) - no validation."""
     body = request.json()
     return jsonify(body)
 
 
 @app.post("/json/medium")
-async def post_json_medium(request: Request):
+@profile_once("json-medium")
+async def post_json_medium(request: Request) -> object:
     """Medium JSON payload (~1KB) - no validation."""
     body = request.json()
     return jsonify(body)
 
 
 @app.post("/json/large")
-async def post_json_large(request: Request):
+@profile_once("json-large")
+async def post_json_large(request: Request) -> object:
     """Large JSON payload (~10KB) - no validation."""
     body = request.json()
     return jsonify(body)
 
 
 @app.post("/json/very-large")
-async def post_json_very_large(request: Request):
+@profile_once("json-very-large")
+async def post_json_very_large(request: Request) -> object:
     """Very large JSON payload (~100KB) - no validation."""
     body = request.json()
     return jsonify(body)
 
 
 @app.post("/multipart/small")
-async def post_multipart_small():
+@profile_once("multipart-small")
+async def post_multipart_small() -> object:
     """Small multipart form (~1KB)."""
     return jsonify({"files_received": 1, "total_bytes": 1024})
 
 
 @app.post("/multipart/medium")
-async def post_multipart_medium():
+@profile_once("multipart-medium")
+async def post_multipart_medium() -> object:
     """Medium multipart form (~10KB)."""
     return jsonify({"files_received": 2, "total_bytes": 10240})
 
 
 @app.post("/multipart/large")
-async def post_multipart_large():
+@profile_once("multipart-large")
+async def post_multipart_large() -> object:
     """Large multipart form (~100KB)."""
     return jsonify({"files_received": 5, "total_bytes": 102400})
 
 
 @app.post("/urlencoded/simple")
-async def post_urlencoded_simple(request: Request):
+@profile_once("urlencoded-simple")
+async def post_urlencoded_simple(request: Request) -> object:
     """Simple URL-encoded form - no validation."""
     body = request.json()
     return jsonify(body)
 
 
 @app.post("/urlencoded/complex")
-async def post_urlencoded_complex(request: Request):
+@profile_once("urlencoded-complex")
+async def post_urlencoded_complex(request: Request) -> object:
     """Complex URL-encoded form - no validation."""
     body = request.json()
     return jsonify(body)
 
 
 @app.get("/path/simple/:id")
-async def get_path_simple(request: Request):
+@profile_once("path-simple")
+async def get_path_simple(request: Request) -> object:
     """Single path parameter."""
     return jsonify({"id": request.path_params["id"]})
 
 
 @app.get("/path/multiple/:user_id/:post_id")
-async def get_path_multiple(request: Request):
+@profile_once("path-multiple")
+async def get_path_multiple(request: Request) -> object:
     """Multiple path parameters."""
     return jsonify(
         {
@@ -121,7 +147,8 @@ async def get_path_multiple(request: Request):
 
 
 @app.get("/path/deep/:org/:team/:project/:resource/:id")
-async def get_path_deep(request: Request):
+@profile_once("path-deep")
+async def get_path_deep(request: Request) -> object:
     """Deep nested path parameters."""
     return jsonify(
         {
@@ -135,58 +162,60 @@ async def get_path_deep(request: Request):
 
 
 @app.get("/path/int/:id")
-async def get_path_int(request: Request):
+@profile_once("path-int")
+async def get_path_int(request: Request) -> object:
     """Path parameter with int type."""
     return jsonify({"id": int(request.path_params["id"])})
 
 
 @app.get("/path/uuid/:uuid")
-async def get_path_uuid(request: Request):
+@profile_once("path-uuid")
+async def get_path_uuid(request: Request) -> object:
     """Path parameter with UUID."""
     return jsonify({"uuid": request.path_params["uuid"]})
 
 
 @app.get("/path/date/:date")
-async def get_path_date(request: Request):
+@profile_once("path-date")
+async def get_path_date(request: Request) -> object:
     """Path parameter with date."""
     return jsonify({"date": request.path_params["date"]})
 
 
 @app.get("/query/few")
-async def get_query_few(request: Request):
+@profile_once("query-few")
+async def get_query_few(request: Request) -> object:
     """Few query parameters (1-2)."""
     return jsonify(dict(request.query_params))
 
 
 @app.get("/query/medium")
-async def get_query_medium(request: Request):
+@profile_once("query-medium")
+async def get_query_medium(request: Request) -> object:
     """Medium query parameters (3-5)."""
     return jsonify(dict(request.query_params))
 
 
 @app.get("/query/many")
-async def get_query_many(request: Request):
+@profile_once("query-many")
+async def get_query_many(request: Request) -> object:
     """Many query parameters (6-10)."""
     return jsonify(dict(request.query_params))
 
 
 @app.get("/health")
-async def health():
+async def health() -> object:
     """Health check endpoint."""
     return jsonify({"status": "ok"})
 
 
 @app.get("/__benchmark__/flush-profile")
-async def flush_profile():
-    if _pyinstrument_profiler is None or _pyinstrument_output is None:
-        return jsonify({"ok": False})
-
-    os.kill(os.getpid(), signal.SIGUSR1)
+async def flush_profile() -> object:
     return jsonify({"ok": True})
 
 
 @app.get("/")
-async def root():
+async def root() -> object:
     """Root endpoint."""
     return jsonify({"status": "ok"})
 

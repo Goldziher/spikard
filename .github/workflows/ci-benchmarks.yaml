@@ -191,7 +191,7 @@ jobs:
         env:
           SPIKARD_METRICS_FILE: ${{ github.workspace }}/results/spikard-python/python-metrics.json
           SPIKARD_METRICS_DEBUG: "1"
-          SPIKARD_PYTHON_PROFILE_OUTPUT: ${{ github.workspace }}/results/spikard-python/pyinstrument.speedscope.json
+          SPIKARD_PYTHON_PROFILE_DIR: ${{ github.workspace }}/results/spikard-python/profiles
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
@@ -243,7 +243,7 @@ jobs:
             --profiler python \
             --output results/robyn-raw/profile.json
         env:
-          SPIKARD_PYTHON_PROFILE_OUTPUT: ${{ github.workspace }}/results/robyn-raw/pyinstrument.speedscope.json
+          SPIKARD_PYTHON_PROFILE_DIR: ${{ github.workspace }}/results/robyn-raw/profiles
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
@@ -295,7 +295,7 @@ jobs:
             --profiler python \
             --output results/robyn-dto/profile.json
         env:
-          SPIKARD_PYTHON_PROFILE_OUTPUT: ${{ github.workspace }}/results/robyn-dto/pyinstrument.speedscope.json
+          SPIKARD_PYTHON_PROFILE_DIR: ${{ github.workspace }}/results/robyn-dto/profiles
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
