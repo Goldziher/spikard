@@ -68,7 +68,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-python",
             vec!["server.py".to_string()],
             None,
-            "uv run --with pyinstrument python server.py {port}",
+            "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(

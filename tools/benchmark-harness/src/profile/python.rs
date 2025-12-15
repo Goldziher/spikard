@@ -50,7 +50,7 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PythonPr
             "100",
         ])
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stderr(Stdio::piped())
         .spawn()?;
 
     Ok(PythonProfiler {
@@ -112,6 +112,18 @@ impl PythonProfiler {
                 match process.try_wait() {
                     Ok(Some(status)) => {
                         profiler_exit_status = Some(status);
+                        if !status.success()
+                            && let Some(mut stderr) = process.stderr.take()
+                        {
+                            use std::io::Read;
+                            let mut buf = String::new();
+                            if stderr.read_to_string(&mut buf).is_ok() {
+                                let text = buf.trim();
+                                if !text.is_empty() {
+                                    eprintln!("  ⚠ py-spy stderr:\n{}", text);
+                                }
+                            }
+                        }
                         break;
                     }
                     Ok(None) => {
