@@ -80,7 +80,7 @@ jobs:
         run: pnpm run build:all
 
       - name: Upload WASM bindings
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: wasm-bindings
           path: |
@@ -177,7 +177,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: wasm-coverage-report
           path: packages/wasm/coverage/
@@ -287,7 +287,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: deno-e2e-coverage-report
           path: e2e/deno/coverage/
@@ -340,7 +340,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: cloudflare-e2e-coverage-report
           path: e2e/cloudflare/coverage/

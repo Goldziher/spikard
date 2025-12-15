@@ -102,7 +102,7 @@ jobs:
         run: bundle exec rake compile
 
       - name: Upload Ruby gem
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ruby-gem-${{ matrix.os }}
           path: |
@@ -206,7 +206,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ruby-coverage-report
           path: packages/ruby/coverage/
