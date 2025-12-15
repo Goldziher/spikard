@@ -89,6 +89,8 @@ pub struct ServerConfig {
     pub app_dir: PathBuf,
     /// Variant name (e.g., "sync", "async") - optional
     pub variant: Option<String>,
+    /// Extra environment variables injected into the server process.
+    pub env: Vec<(String, String)>,
     /// Optional override for the framework start command.
     ///
     /// The string is split by whitespace, so it must not require shell quoting.
@@ -171,6 +173,9 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     let mut cmd = Command::new(executable);
     cmd.args(args);
     cmd.env("PORT", port.to_string());
+    for (key, value) in &config.env {
+        cmd.env(key, value);
+    }
 
     let working_dir = if let Some(hint) = &framework_config.working_dir_hint {
         config.app_dir.join(hint)
@@ -332,6 +337,7 @@ mod tests {
             port: 8080,
             app_dir: PathBuf::from("."),
             variant: None,
+            env: Vec::new(),
             start_cmd_override: None,
         };
 
@@ -346,6 +352,7 @@ mod tests {
             port: 8080,
             app_dir: PathBuf::from("."),
             variant: None,
+            env: Vec::new(),
             start_cmd_override: None,
         };
 
@@ -462,6 +469,7 @@ mod tests {
             port: 8080,
             app_dir: PathBuf::from("."),
             variant: Some("async".to_string()),
+            env: Vec::new(),
             start_cmd_override: None,
         };
 

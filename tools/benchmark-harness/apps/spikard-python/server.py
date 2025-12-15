@@ -8,19 +8,19 @@ Uses msgspec.Struct for proper validation following ADR 0003.
 
 import os
 import sys
-import threading
+from functools import wraps
 from pathlib import Path as PathLib
-from typing import Any
+from typing import Callable, Coroutine, ParamSpec, TypeVar
 
 import msgspec
 from pyinstrument import Profiler
 from pyinstrument.renderers.speedscope import SpeedscopeRenderer
 
-from spikard import Body, Path, Query, Spikard, get, post
+from spikard import Path, Query, Spikard, get, post
 from spikard.config import ServerConfig
 
 profiling_module = PathLib(__file__).parent.parent.parent / "profiling" / "python_metrics.py"
-_profiling_collector = None
+_profiling_collector: object | None = None
 if profiling_module.exists():
     sys.path.insert(0, str(profiling_module.parent))
     try:
@@ -30,49 +30,64 @@ if profiling_module.exists():
     except ImportError:
         print("⚠ Failed to import profiling module", file=sys.stderr)
 
-_pyinstrument_profiler: Profiler | None = None
-_pyinstrument_output: str | None = os.environ.get("SPIKARD_PYTHON_PROFILE_OUTPUT")
-_pyinstrument_dump_started = False
-if _pyinstrument_output:
-    _pyinstrument_profiler = Profiler()
-    _pyinstrument_profiler.start()
+_profile_dir: str | None = os.environ.get("SPIKARD_PYTHON_PROFILE_DIR") or None
+_profiled_endpoints: set[str] = set()
 
 app = Spikard()
 
 
 @get("/health")
-def health() -> dict[str, Any]:
+def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
 @get("/__benchmark__/flush-profile")
-def flush_profile() -> dict[str, Any]:
+def flush_profile() -> dict[str, bool]:
     if _profiling_collector is not None:
-        _profiling_collector.finalize()
-        metrics_ok = True
-    else:
-        metrics_ok = False
+        finalize = getattr(_profiling_collector, "finalize", None)
+        if callable(finalize):
+            finalize()
+        return {"ok": True}
+    return {"ok": False}
 
-    profiler_ok = False
-    if _pyinstrument_profiler is not None and _pyinstrument_output is not None:
-        global _pyinstrument_dump_started
-        if not _pyinstrument_dump_started:
-            _pyinstrument_dump_started = True
 
-            def _dump_profile() -> None:
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def profile_once(
+    name: str,
+) -> Callable[[Callable[P, Coroutine[object, object, R]]], Callable[P, Coroutine[object, object, R]]]:
+    def decorator(func: Callable[P, Coroutine[object, object, R]]) -> Callable[P, Coroutine[object, object, R]]:
+        if _profile_dir is None:
+            return func
+
+        @wraps(func)
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            if name in _profiled_endpoints:
+                return await func(*args, **kwargs)
+
+            _profiled_endpoints.add(name)
+            profiler = Profiler(async_mode="enabled")
+            profiler.start()
+            try:
+                return await func(*args, **kwargs)
+            finally:
                 try:
-                    _pyinstrument_profiler.stop()
-                except RuntimeError:
-                    pass
-                out_path = PathLib(_pyinstrument_output)
-                out_path.parent.mkdir(parents=True, exist_ok=True)
-                out_path.write_text(_pyinstrument_profiler.output(renderer=SpeedscopeRenderer()), encoding="utf-8")
+                    profiler.stop()
+                    out_dir = PathLib(_profile_dir)
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    out_path = out_dir / f"{name}.speedscope.json"
+                    out_path.write_text(
+                        profiler.output(renderer=SpeedscopeRenderer()),
+                        encoding="utf-8",
+                    )
+                except Exception as exc:
+                    print(f"⚠ Failed to write profile for {name}: {exc!r}", file=sys.stderr)
 
-            threading.Thread(target=_dump_profile, daemon=True).start()
+        return wrapper
 
-        profiler_ok = True
-
-    return {"ok": metrics_ok or profiler_ok, "metrics": metrics_ok, "pyinstrument": profiler_ok}
+    return decorator
 
 
 class SmallPayload(msgspec.Struct):
@@ -146,79 +161,91 @@ class VeryLargePayload(msgspec.Struct):
 
 
 @post("/json/small")
+@profile_once("json-small")
 async def post_json_small(body: SmallPayload) -> SmallPayload:
     """Small JSON payload (~100-500 bytes)."""
     return body
 
 
 @post("/json/medium")
+@profile_once("json-medium")
 async def post_json_medium(body: MediumPayload) -> MediumPayload:
     """Medium JSON payload (~1-10KB)."""
     return body
 
 
 @post("/json/large")
+@profile_once("json-large")
 async def post_json_large(body: LargePayload) -> LargePayload:
     """Large JSON payload (~10-100KB)."""
     return body
 
 
 @post("/json/very-large")
+@profile_once("json-very-large")
 async def post_json_very_large(body: VeryLargePayload) -> VeryLargePayload:
     """Very large JSON payload (~100KB-1MB)."""
     return body
 
 
 @post("/multipart/small")
-async def post_multipart_small(body: dict[str, Any]) -> dict[str, Any]:
+@profile_once("multipart-small")
+async def post_multipart_small(body: dict[str, object]) -> dict[str, object]:
     """Small multipart form (~1KB)."""
     return {"files_received": 1, "total_bytes": 1024}
 
 
 @post("/multipart/medium")
-async def post_multipart_medium(body: dict[str, Any]) -> dict[str, Any]:
+@profile_once("multipart-medium")
+async def post_multipart_medium(body: dict[str, object]) -> dict[str, object]:
     """Medium multipart form (~10KB)."""
     return {"files_received": 2, "total_bytes": 10240}
 
 
 @post("/multipart/large")
-async def post_multipart_large(body: dict[str, Any]) -> dict[str, Any]:
+@profile_once("multipart-large")
+async def post_multipart_large(body: dict[str, object]) -> dict[str, object]:
     """Large multipart form (~100KB)."""
     return {"files_received": 5, "total_bytes": 102400}
 
 
 @post("/urlencoded/simple")
-async def post_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
+@profile_once("urlencoded-simple")
+async def post_urlencoded_simple(body: dict[str, object]) -> dict[str, object]:
     """Simple URL-encoded form (3-5 fields)."""
     return body
 
 
 @post("/urlencoded/complex")
-async def post_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
+@profile_once("urlencoded-complex")
+async def post_urlencoded_complex(body: dict[str, object]) -> dict[str, object]:
     """Complex URL-encoded form (10-20 fields)."""
     return body
 
 
 @get("/path/simple/{id}")
-async def get_path_simple(id: str = Path()) -> dict[str, Any]:
+@profile_once("path-simple")
+async def get_path_simple(id: str = Path()) -> dict[str, object]:
     """Single path parameter."""
     return {"id": id}
 
 
 @get("/path/multiple/{user_id}/{post_id}")
-async def get_path_multiple(user_id: str = Path(), post_id: str = Path()) -> dict[str, Any]:
+@profile_once("path-multiple")
+async def get_path_multiple(user_id: str = Path(), post_id: str = Path()) -> dict[str, object]:
     """Multiple path parameters."""
     return {"user_id": user_id, "post_id": post_id}
 
 
 @get("/path/deep/{org}/{team}/{project}/{resource}/{id}")
+@profile_once("path-deep")
 async def get_path_deep(
     org: str = Path(),
     team: str = Path(),
     project: str = Path(),
     resource: str = Path(),
     id: str = Path(),
-) -> dict[str, Any]:
+) -> dict[str, object]:
     """Deep path parameters (5 levels)."""
     return {
         "org": org,
@@ -230,34 +257,39 @@ async def get_path_deep(
 
 
 @get("/path/int/{id}")
-async def get_path_int(id: int = Path()) -> dict[str, Any]:
+@profile_once("path-int")
+async def get_path_int(id: int = Path()) -> dict[str, object]:
     """Integer path parameter."""
     return {"id": id}
 
 
 @get("/path/uuid/{uuid}")
-async def get_path_uuid(uuid: str = Path()) -> dict[str, Any]:
+@profile_once("path-uuid")
+async def get_path_uuid(uuid: str = Path()) -> dict[str, object]:
     """UUID path parameter."""
     return {"uuid": uuid}
 
 
 @get("/path/date/{date}")
-async def get_path_date(date: str = Path()) -> dict[str, Any]:
+@profile_once("path-date")
+async def get_path_date(date: str = Path()) -> dict[str, object]:
     """Date path parameter."""
     return {"date": date}
 
 
 @get("/query/few")
+@profile_once("query-few")
 async def get_query_few(
     q: str | None = Query(default=None),
     page: int | None = Query(default=None),
     limit: int | None = Query(default=None),
-) -> dict[str, Any]:
+) -> dict[str, object]:
     """Few query parameters (1-3)."""
     return {"q": q, "page": page, "limit": limit}
 
 
 @get("/query/medium")
+@profile_once("query-medium")
 async def get_query_medium(
     category: str | None = Query(default=None),
     tags: str | None = Query(default=None),
@@ -267,7 +299,7 @@ async def get_query_medium(
     order: str | None = Query(default=None),
     page: int | None = Query(default=None),
     limit: int | None = Query(default=None),
-) -> dict[str, Any]:
+) -> dict[str, object]:
     """Medium number of query parameters (5-10)."""
     return {
         "category": category,
@@ -282,6 +314,7 @@ async def get_query_medium(
 
 
 @get("/query/many")
+@profile_once("query-many")
 async def get_query_many(
     param1: str | None = Query(default=None),
     param2: str | None = Query(default=None),
@@ -298,7 +331,7 @@ async def get_query_many(
     param13: str | None = Query(default=None),
     param14: str | None = Query(default=None),
     param15: str | None = Query(default=None),
-) -> dict[str, Any]:
+) -> dict[str, object]:
     """Many query parameters (15+)."""
     return {
         "param1": param1,
@@ -317,12 +350,6 @@ async def get_query_many(
         "param14": param14,
         "param15": param15,
     }
-
-
-@get("/health")
-async def health() -> dict[str, str]:
-    """Health check endpoint."""
-    return {"status": "ok"}
 
 
 if __name__ == "__main__":

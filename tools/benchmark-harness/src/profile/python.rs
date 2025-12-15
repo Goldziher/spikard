@@ -2,19 +2,17 @@
 //!
 //! Supports multiple profiling approaches:
 //! - Application instrumentation for GC and timing metrics
-//! - Optional speedscope output produced by `py-spy`
+//! - Optional speedscope output produced by in-app instrumentation (e.g. `pyinstrument`)
 
 use crate::error::Result;
 use serde::Deserialize;
 use std::path::PathBuf;
-use std::process::{Child, Command, Stdio};
 use std::time::Duration;
 
 /// Python profiler handle
 pub struct PythonProfiler {
-    process: Option<Child>,
-    output_path: String,
     pid: u32,
+    output_path: Option<String>,
 }
 
 /// Metrics collected from Python application instrumentation
@@ -78,112 +76,31 @@ pub fn wait_for_profile_output(path: &str) -> Option<String> {
 
 /// Start Python profiler for the given PID
 pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PythonProfiler> {
-    let desired_output_path = output_path
+    let output_path = output_path
         .as_ref()
         .and_then(|p| p.to_str().map(|s| s.to_string()))
-        .or_else(|| std::env::var("SPIKARD_PYTHON_PROFILE_OUTPUT").ok())
-        .or_else(|| std::env::var("SPIKARD_PYSPY_OUTPUT").ok());
-    let output_path = desired_output_path.unwrap_or_else(|| format!("/tmp/python-profile-{}.speedscope.json", pid));
-    if let Some(parent) = PathBuf::from(&output_path).parent() {
+        .or_else(|| std::env::var("SPIKARD_PYTHON_PROFILE_OUTPUT").ok());
+
+    if let Some(ref path) = output_path
+        && let Some(parent) = PathBuf::from(path).parent()
+    {
         let _ = std::fs::create_dir_all(parent);
     }
 
-    let process = Command::new("py-spy")
-        .args([
-            "record",
-            "--pid",
-            &pid.to_string(),
-            "--format",
-            "speedscope",
-            "--output",
-            &output_path,
-            "--rate",
-            "100",
-        ])
-        .stdout(Stdio::null())
-        .stderr(Stdio::piped())
-        .spawn()?;
-
-    Ok(PythonProfiler {
-        process: Some(process),
-        output_path,
-        pid,
-    })
+    Ok(PythonProfiler { pid, output_path })
 }
 
 impl PythonProfiler {
     /// Get the output path for profiler data
     pub fn output_path(&self) -> Option<&str> {
-        if self.output_path.is_empty() {
-            None
-        } else {
-            Some(&self.output_path)
-        }
+        self.output_path.as_deref()
     }
 
     /// Stop the profiler and collect final metrics
-    pub fn stop(mut self) -> ProfilingData {
-        let mut profiler_exit_status = None;
-        if let Some(mut process) = self.process.take() {
-            #[cfg(unix)]
-            {
-                unsafe {
-                    libc::kill(process.id() as i32, libc::SIGINT);
-                }
-            }
-
-            #[cfg(not(unix))]
-            {
-                let _ = process.kill();
-            }
-
-            use std::time::{Duration, Instant};
-            let start = Instant::now();
-            let timeout = Duration::from_secs(10);
-
-            loop {
-                match process.try_wait() {
-                    Ok(Some(status)) => {
-                        profiler_exit_status = Some(status);
-                        if !status.success()
-                            && let Some(mut stderr) = process.stderr.take()
-                        {
-                            use std::io::Read;
-                            let mut buf = String::new();
-                            if stderr.read_to_string(&mut buf).is_ok() {
-                                let text = buf.trim();
-                                if !text.is_empty() {
-                                    eprintln!("  ⚠ py-spy stderr:\n{}", text);
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    Ok(None) => {
-                        if start.elapsed() > timeout {
-                            eprintln!("  ⚠ Profiler did not exit within timeout, terminating");
-                            #[cfg(unix)]
-                            unsafe {
-                                libc::kill(process.id() as i32, libc::SIGTERM);
-                            }
-                            let _ = process.kill();
-                            break;
-                        }
-                        std::thread::sleep(Duration::from_millis(100));
-                    }
-                    Err(_) => break,
-                }
-            }
-        }
-
+    pub fn stop(self) -> ProfilingData {
         let app_metrics = collect_app_metrics(self.pid);
 
         let flamegraph_path = self.output_path().and_then(wait_for_profile_output);
-        if flamegraph_path.is_none()
-            && let Some(status) = profiler_exit_status
-        {
-            eprintln!("  → profiler exit status: {}", status);
-        }
 
         ProfilingData {
             flamegraph_path,
@@ -208,12 +125,4 @@ pub struct ProfilingData {
     pub ffi_overhead_ms: Option<f64>,
     pub gil_wait_time_ms: Option<f64>,
     pub gil_contention_percent: Option<f64>,
-}
-
-impl Drop for PythonProfiler {
-    fn drop(&mut self) {
-        if let Some(ref mut process) = self.process {
-            let _ = process.kill();
-        }
-    }
 }
