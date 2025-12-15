@@ -4,12 +4,43 @@ Robyn is a Rust-based Python web framework with high performance.
 This is a raw variant without pydantic validation to measure framework overhead.
 """
 
+import os
 import sys
+import signal
+from pathlib import Path as PathLib
 from typing import Any
 
+from pyinstrument import Profiler
+from pyinstrument.renderers.speedscope import SpeedscopeRenderer
 from robyn import Robyn, Request, jsonify
 
 app = Robyn(__file__)
+
+_pyinstrument_profiler: Profiler | None = None
+_pyinstrument_output: str | None = os.environ.get("SPIKARD_PYTHON_PROFILE_OUTPUT")
+_pyinstrument_dumped = False
+if _pyinstrument_output:
+    _pyinstrument_profiler = Profiler()
+    _pyinstrument_profiler.start()
+
+
+def _dump_profile_from_signal(_signum: int, _frame: Any) -> None:  # noqa: ANN401
+    global _pyinstrument_dumped
+    if _pyinstrument_dumped or _pyinstrument_profiler is None or _pyinstrument_output is None:
+        return
+
+    _pyinstrument_dumped = True
+    try:
+        _pyinstrument_profiler.stop()
+        out_path = PathLib(_pyinstrument_output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(_pyinstrument_profiler.output(renderer=SpeedscopeRenderer()), encoding="utf-8")
+    except Exception:
+        pass
+
+
+if _pyinstrument_output:
+    signal.signal(signal.SIGUSR1, _dump_profile_from_signal)
 
 
 @app.post("/json/small")
@@ -143,6 +174,15 @@ async def get_query_many(request: Request):
 async def health():
     """Health check endpoint."""
     return jsonify({"status": "ok"})
+
+
+@app.get("/__benchmark__/flush-profile")
+async def flush_profile():
+    if _pyinstrument_profiler is None or _pyinstrument_output is None:
+        return jsonify({"ok": False})
+
+    os.kill(os.getpid(), signal.SIGUSR1)
+    return jsonify({"ok": True})
 
 
 @app.get("/")
