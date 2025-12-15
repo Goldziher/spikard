@@ -464,38 +464,4 @@ fn request_data_to_py_kwargs<'py>(
     Ok(converted.cast_into::<PyDict>()?)
 }
 
-/// Extract Python traceback from exception
-#[allow(dead_code)]
-fn get_python_traceback(py: Python<'_>, err: &PyErr) -> String {
-    let traceback_module = match py.import("traceback") {
-        Ok(module) => module,
-        Err(_) => return format!("{}", err),
-    };
-
-    let exc_type = err.get_type(py);
-    let exc_value = err.value(py);
-    let exc_traceback = err.traceback(py);
-
-    match exc_traceback {
-        Some(tb) => match traceback_module.call_method1("format_exception", (exc_type, exc_value, tb)) {
-            Ok(lines) => {
-                if let Ok(list) = lines.extract::<Vec<String>>() {
-                    list.join("")
-                } else {
-                    format!("{}", err)
-                }
-            }
-            Err(_) => format!("{}", err),
-        },
-        None => match traceback_module.call_method1("format_exception_only", (exc_type, exc_value)) {
-            Ok(lines) => {
-                if let Ok(list) = lines.extract::<Vec<String>>() {
-                    list.join("")
-                } else {
-                    format!("{}", err)
-                }
-            }
-            Err(_) => format!("{}", err),
-        },
-    }
-}
+// (intentionally no trailing items)
