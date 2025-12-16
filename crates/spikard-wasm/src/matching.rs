@@ -23,7 +23,7 @@ pub fn match_route(
             continue;
         }
         if let Some(params) = match_path_segments(&route.path, &path_only) {
-            return Ok((route.clone(), params, path_only, query_params.clone()));
+            return Ok((route.clone(), params, path_only, query_params));
         }
     }
 
