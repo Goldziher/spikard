@@ -589,10 +589,10 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         &path_without_query,
         path_params,
         &headers,
-        cookies.clone(),
-        query.clone(),
+        cookies,
+        query,
         params,
-        body_value.clone(),
+        body_value,
         body_metadata,
     );
 

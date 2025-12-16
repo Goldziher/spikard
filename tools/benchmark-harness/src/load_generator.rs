@@ -63,14 +63,35 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
     if let Some(fixture) = &config.fixture {
         cmd.arg("-m").arg(&fixture.request.method);
 
+        let content_type = fixture.request.headers.iter().find_map(|(key, value)| {
+            key.eq_ignore_ascii_case("content-type")
+                .then(|| value.to_ascii_lowercase())
+        });
+
         for (key, value) in &fixture.request.headers {
             cmd.arg("-H").arg(format!("{}: {}", key, value));
         }
 
-        if let Some(body) = &fixture.request.body {
-            let body_json = serde_json::to_string(body)?;
-            cmd.arg("-d").arg(body_json);
-            cmd.arg("-H").arg("Content-Type: application/json");
+        if let Some(body_raw) = &fixture.request.body_raw {
+            cmd.arg("-d").arg(body_raw);
+        } else if let Some(body) = &fixture.request.body {
+            let body_is_string = matches!(body, serde_json::Value::String(_));
+            let treat_string_as_raw = body_is_string
+                && content_type
+                    .as_deref()
+                    .is_some_and(|value| !value.contains("application/json"));
+
+            if treat_string_as_raw {
+                if let serde_json::Value::String(text) = body {
+                    cmd.arg("-d").arg(text);
+                }
+            } else {
+                let body_json = serde_json::to_string(body)?;
+                cmd.arg("-d").arg(body_json);
+                if content_type.is_none() {
+                    cmd.arg("-H").arg("Content-Type: application/json");
+                }
+            }
         }
     }
 
