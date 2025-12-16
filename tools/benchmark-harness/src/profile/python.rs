@@ -69,7 +69,7 @@ pub fn collect_app_metrics(pid: u32) -> Option<PythonAppMetrics> {
 
 pub fn wait_for_profile_output(path: &str) -> Option<String> {
     let start = std::time::Instant::now();
-    while start.elapsed() < Duration::from_secs(5) {
+    while start.elapsed() < Duration::from_secs(30) {
         if std::fs::metadata(path).is_ok() {
             return Some(path.to_string());
         }

@@ -6,8 +6,8 @@ against the pure Rust baseline.
 Uses msgspec.Struct for proper validation following ADR 0003.
 """
 
+import atexit
 import os
-import signal
 import sys
 from functools import wraps
 from pathlib import Path as PathLib
@@ -41,10 +41,9 @@ JsonScalar = str | int | float | bool | None
 _pyinstrument_output: str | None = os.environ.get("SPIKARD_PYINSTRUMENT_OUTPUT") or None
 _pyinstrument_profiler: Profiler | None = None
 _pyinstrument_dumped = False
-_previous_sigusr1_handler: object | None = None
 
 
-def _dump_profile_from_signal(_signum: int, _frame: object) -> None:
+def _dump_profile() -> None:
     global _pyinstrument_dumped
     if _pyinstrument_dumped or _pyinstrument_profiler is None or _pyinstrument_output is None:
         return
@@ -60,16 +59,12 @@ def _dump_profile_from_signal(_signum: int, _frame: object) -> None:
         )
     except Exception as exc:
         print(f"⚠ Failed to write pyinstrument profile: {exc!r}", file=sys.stderr)
-    finally:
-        if callable(_previous_sigusr1_handler) and _previous_sigusr1_handler is not _dump_profile_from_signal:
-            _previous_sigusr1_handler(_signum, _frame)
 
 
 if _pyinstrument_output:
     _pyinstrument_profiler = Profiler(async_mode="enabled")
     _pyinstrument_profiler.start()
-    _previous_sigusr1_handler = signal.getsignal(signal.SIGUSR1)
-    signal.signal(signal.SIGUSR1, _dump_profile_from_signal)
+    atexit.register(_dump_profile)
 
 
 @get("/health")
