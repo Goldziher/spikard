@@ -555,8 +555,8 @@ jobs:
       - name: Build spikard-wasm binding
         run: |
           cd "$GITHUB_WORKSPACE/crates/spikard-wasm"
-          pnpm run build:node
-          pnpm run build:web
+          PATH="$HOME/.cargo/bin:$PATH" pnpm exec wasm-pack build --target nodejs --out-dir dist-node --release --no-opt
+          PATH="$HOME/.cargo/bin:$PATH" pnpm exec wasm-pack build --target web --out-dir dist-web --release --no-opt
           cd "$GITHUB_WORKSPACE/packages/wasm"
           pnpm run build
 
