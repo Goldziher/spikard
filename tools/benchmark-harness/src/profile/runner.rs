@@ -123,8 +123,8 @@ impl ProfileRunner {
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
         let suite_wasm_profiler = self.config.profiler.as_deref() == Some("wasm") && framework_info.language == "wasm";
 
-        let python_profile_output = suite_python_profiler
-            .then(|| std::env::var("SPIKARD_PYINSTRUMENT_OUTPUT").ok().map(PathBuf::from))
+        let python_profile_dir = suite_python_profiler
+            .then(|| self.config.output_dir.as_ref().map(|dir| dir.join("profiles")))
             .flatten();
         let php_profile_output = suite_php_profiler
             .then(|| std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from))
@@ -137,10 +137,11 @@ impl ProfileRunner {
             .flatten();
 
         let mut server_env = Vec::new();
-        if let Some(ref output_path) = python_profile_output {
+        if let Some(ref output_dir) = python_profile_dir {
+            let _ = std::fs::create_dir_all(output_dir);
             server_env.push((
-                "SPIKARD_PYINSTRUMENT_OUTPUT".to_string(),
-                output_path.display().to_string(),
+                "SPIKARD_PYTHON_PROFILE_DIR".to_string(),
+                output_dir.display().to_string(),
             ));
         }
         if let Some(ref output_path) = php_profile_output {
@@ -176,7 +177,7 @@ impl ProfileRunner {
         println!("✓ Server healthy on port {}", server.port);
         println!();
 
-        let python_pid = suite_python_profiler.then(|| server.pid());
+        let python_pid = suite_python_profiler.then(|| self.python_target_pid(&server));
 
         let mut suite_results = Vec::new();
         let suite_result = self
@@ -193,18 +194,21 @@ impl ProfileRunner {
             None
         };
 
-        let suite_app_metrics = python_pid.and_then(crate::profile::python::collect_app_metrics);
         self.try_flush_python_profiling(&server).await;
+        let suite_app_metrics = python_pid.and_then(crate::profile::python::collect_app_metrics);
         server.kill()?;
 
         if suite_python_profiler {
-            let flamegraph_path = python_profile_output
-                .as_ref()
-                .and_then(|p| p.to_str())
-                .and_then(crate::profile::python::wait_for_profile_output);
-
             for suite in &mut suite_results {
                 for workload in &mut suite.workloads {
+                    let workload_profile_path = self
+                        .config
+                        .output_dir
+                        .as_ref()
+                        .map(|dir| dir.join("profiles").join(format!("{}.speedscope.json", workload.name)))
+                        .filter(|path| path.exists())
+                        .map(|path| path.display().to_string());
+
                     workload.results.profiling = Some(ProfilingData::Python(PythonProfilingData {
                         gil_wait_time_ms: None,
                         gil_contention_percent: None,
@@ -213,7 +217,7 @@ impl ProfileRunner {
                         serialization_time_ms: suite_app_metrics.as_ref().and_then(|m| m.serialization_time_ms),
                         gc_collections: suite_app_metrics.as_ref().and_then(|m| m.gc_collections),
                         gc_time_ms: suite_app_metrics.as_ref().and_then(|m| m.gc_time_ms),
-                        flamegraph_path: flamegraph_path.clone(),
+                        flamegraph_path: workload_profile_path,
                     }));
                 }
             }
