@@ -7,7 +7,8 @@ use crate::{
     monitor::ResourceMonitor,
     schema::{
         Configuration, FrameworkInfo, Latency, Metadata, NodeProfilingData, PhpProfilingData, ProfilingData,
-        PythonProfilingData, Resources, RubyProfilingData, RustProfilingData, Throughput, profile::*,
+        PythonProfilingData, Resources, RubyProfilingData, RustProfilingData, Throughput, WasmProfilingData,
+        profile::*,
         workload::WorkloadSuite,
     },
     server::{ServerConfig, ServerHandle, start_server},
@@ -121,28 +122,44 @@ impl ProfileRunner {
         let suite_python_profiler =
             self.config.profiler.as_deref() == Some("python") && framework_info.language == "python";
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
+        let suite_wasm_profiler =
+            self.config.profiler.as_deref() == Some("wasm") && framework_info.language == "wasm";
 
-        let suite_profile_output = if suite_python_profiler {
-            std::env::var("SPIKARD_PYINSTRUMENT_OUTPUT").ok().map(PathBuf::from)
-        } else if suite_php_profiler {
-            std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from)
-        } else {
-            None
-        };
+        let python_profile_output = suite_python_profiler
+            .then(|| std::env::var("SPIKARD_PYINSTRUMENT_OUTPUT").ok().map(PathBuf::from))
+            .flatten();
+        let php_profile_output = suite_php_profiler
+            .then(|| std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from))
+            .flatten();
+        let wasm_metrics_output = suite_wasm_profiler
+            .then(|| std::env::var("SPIKARD_WASM_METRICS_FILE").ok().map(PathBuf::from))
+            .flatten();
+        let wasm_v8_log_output = suite_wasm_profiler
+            .then(|| std::env::var("SPIKARD_WASM_V8_LOG_OUTPUT").ok().map(PathBuf::from))
+            .flatten();
 
         let mut server_env = Vec::new();
-        if let Some(ref output_path) = suite_profile_output {
-            if suite_python_profiler {
-                server_env.push((
-                    "SPIKARD_PYINSTRUMENT_OUTPUT".to_string(),
-                    output_path.display().to_string(),
-                ));
-            } else if suite_php_profiler {
-                server_env.push((
-                    "SPIKARD_PHP_PROFILE_OUTPUT".to_string(),
-                    output_path.display().to_string(),
-                ));
-            }
+        if let Some(ref output_path) = python_profile_output {
+            server_env.push((
+                "SPIKARD_PYINSTRUMENT_OUTPUT".to_string(),
+                output_path.display().to_string(),
+            ));
+        }
+        if let Some(ref output_path) = php_profile_output {
+            server_env.push((
+                "SPIKARD_PHP_PROFILE_OUTPUT".to_string(),
+                output_path.display().to_string(),
+            ));
+        }
+        if let Some(ref output_path) = wasm_metrics_output {
+            server_env.push((
+                "SPIKARD_WASM_METRICS_FILE".to_string(),
+                output_path.display().to_string(),
+            ));
+        }
+
+        if suite_wasm_profiler {
+            let _ = std::fs::remove_file(self.config.app_dir.join("v8.log"));
         }
 
         let server_config = ServerConfig {
@@ -151,7 +168,10 @@ impl ProfileRunner {
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
             env: server_env,
-            start_cmd_override: None,
+            start_cmd_override: suite_wasm_profiler.then_some(
+                "deno run --allow-net --allow-read --allow-env --allow-write --v8-flags=--prof server.ts {port}"
+                    .to_string(),
+            ),
         };
 
         let server = start_server(server_config).await?;
@@ -159,7 +179,6 @@ impl ProfileRunner {
         println!();
 
         let python_pid = suite_python_profiler.then(|| server.pid());
-        let php_pid = suite_php_profiler.then(|| server.pid());
 
         let mut suite_results = Vec::new();
         let suite_result = self.run_suite(&server, suite_python_profiler, suite_php_profiler)
@@ -180,7 +199,7 @@ impl ProfileRunner {
         server.kill()?;
 
         if suite_python_profiler {
-            let flamegraph_path = suite_profile_output
+            let flamegraph_path = python_profile_output
                 .as_ref()
                 .and_then(|p| p.to_str())
                 .and_then(crate::profile::python::wait_for_profile_output);
@@ -201,7 +220,7 @@ impl ProfileRunner {
             }
         }
         if suite_php_profiler {
-            let flamegraph_path = suite_profile_output
+            let flamegraph_path = php_profile_output
                 .as_ref()
                 .and_then(|p| p.to_str())
                 .and_then(crate::profile::php::wait_for_profile_output);
@@ -210,6 +229,28 @@ impl ProfileRunner {
                 for workload in &mut suite.workloads {
                     workload.results.profiling = Some(ProfilingData::Php(PhpProfilingData {
                         flamegraph_path: flamegraph_path.clone(),
+                    }));
+                }
+            }
+        }
+        if suite_wasm_profiler {
+            let metrics = wasm_metrics_output
+                .as_ref()
+                .and_then(|p| p.to_str())
+                .and_then(crate::profile::wasm::wait_for_metrics_output);
+            let v8_log_path = wasm_v8_log_output
+                .as_ref()
+                .and_then(|p| crate::profile::wasm::collect_v8_log(&self.config.app_dir, p).ok())
+                .flatten();
+
+            for suite in &mut suite_results {
+                for workload in &mut suite.workloads {
+                    workload.results.profiling = Some(ProfilingData::Wasm(WasmProfilingData {
+                        rss_mb: metrics.as_ref().and_then(|m| m.rss_mb),
+                        heap_total_mb: metrics.as_ref().and_then(|m| m.heap_total_mb),
+                        heap_used_mb: metrics.as_ref().and_then(|m| m.heap_used_mb),
+                        external_mb: metrics.as_ref().and_then(|m| m.external_mb),
+                        v8_log_path: v8_log_path.clone(),
                     }));
                 }
             }
@@ -347,6 +388,7 @@ impl ProfileRunner {
                 "rust" => Some(ProfilerHandle::Rust(crate::profile::rust::start_profiler(
                     server.pid(),
                 )?)),
+                "wasm" => None,
                 _ => {
                     eprintln!("  ⚠ Unknown profiler type: {}", profiler_type);
                     None
@@ -773,7 +815,9 @@ impl ProfileRunner {
     }
 
     fn detect_language(&self) -> String {
-        if self.config.app_dir.join("server.py").exists() {
+        if self.config.framework.contains("wasm") {
+            "wasm".to_string()
+        } else if self.config.app_dir.join("server.py").exists() {
             "python".to_string()
         } else if self.config.app_dir.join("server.ts").exists() {
             "node".to_string()
@@ -809,6 +853,14 @@ impl ProfileRunner {
                     return format!("Node {}", version.trim());
                 }
                 "Node.js".to_string()
+            }
+            "wasm" => {
+                if let Ok(output) = std::process::Command::new("deno").arg("--version").output()
+                    && let Ok(version) = String::from_utf8(output.stdout)
+                {
+                    return version.lines().next().unwrap_or("Deno").trim().to_string();
+                }
+                "Deno".to_string()
             }
             "ruby" => {
                 if let Ok(output) = std::process::Command::new("ruby").arg("--version").output()

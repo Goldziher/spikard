@@ -575,7 +575,11 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler wasm \
             --output results/spikard-wasm/profile.json
+        env:
+          SPIKARD_WASM_METRICS_FILE: ${{ github.workspace }}/results/spikard-wasm/wasm-metrics.json
+          SPIKARD_WASM_V8_LOG_OUTPUT: ${{ github.workspace }}/results/spikard-wasm/v8.log
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6

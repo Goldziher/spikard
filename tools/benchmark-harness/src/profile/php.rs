@@ -9,7 +9,6 @@ use std::time::Duration;
 
 /// PHP profiler handle (app-managed output)
 pub struct PhpProfiler {
-    pid: u32,
     output_path: Option<String>,
 }
 
@@ -29,6 +28,7 @@ pub fn wait_for_profile_output(path: &str) -> Option<String> {
 ///
 /// The benchmark app is expected to write profiling output when the process exits.
 pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PhpProfiler> {
+    let _ = pid;
     let output_path = output_path
         .as_ref()
         .and_then(|p| p.to_str().map(|s| s.to_string()))
@@ -40,7 +40,7 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PhpProfi
         let _ = std::fs::create_dir_all(parent);
     }
 
-    Ok(PhpProfiler { pid, output_path })
+    Ok(PhpProfiler { output_path })
 }
 
 impl PhpProfiler {
