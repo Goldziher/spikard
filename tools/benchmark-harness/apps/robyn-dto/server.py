@@ -4,6 +4,7 @@ Robyn is a Rust-based Python web framework with high performance.
 """
 
 import atexit
+import json
 import os
 import sys
 from functools import wraps
@@ -50,6 +51,31 @@ if _pyinstrument_output:
     _pyinstrument_profiler = Profiler(async_mode="enabled")
     _pyinstrument_profiler.start()
     atexit.register(_dump_profile)
+
+
+def _read_json(request: Request) -> object:
+    """Robust JSON extraction across Robyn versions."""
+    try:
+        data = request.json()
+    except Exception:
+        data = None
+
+    if data is not None:
+        return data
+
+    raw = getattr(request, "body", None)
+    if raw is None:
+        return {}
+
+    if isinstance(raw, (bytes, bytearray, memoryview)):
+        raw_text = bytes(raw).decode("utf-8", errors="replace")
+    else:
+        raw_text = str(raw)
+
+    if not raw_text:
+        return {}
+
+    return json.loads(raw_text)
 
 
 def profile_once(
@@ -153,7 +179,7 @@ class VeryLargePayload(msgspec.Struct):
 @profile_once("json-small")
 async def post_json_small(request: Request):
     """Small JSON body (~100 bytes)."""
-    body = request.json()
+    body = _read_json(request)
     payload = msgspec.convert(body, type=SmallPayload)
     return jsonify(msgspec.to_builtins(payload))
 
@@ -162,7 +188,7 @@ async def post_json_small(request: Request):
 @profile_once("json-medium")
 async def post_json_medium(request: Request):
     """Medium JSON body (~1KB)."""
-    body = request.json()
+    body = _read_json(request)
     payload = msgspec.convert(body, type=MediumPayload)
     return jsonify(msgspec.to_builtins(payload))
 
@@ -171,7 +197,7 @@ async def post_json_medium(request: Request):
 @profile_once("json-large")
 async def post_json_large(request: Request):
     """Large JSON body (~10KB)."""
-    body = request.json()
+    body = _read_json(request)
     payload = msgspec.convert(body, type=LargePayload)
     return jsonify(msgspec.to_builtins(payload))
 
@@ -180,7 +206,7 @@ async def post_json_large(request: Request):
 @profile_once("json-very-large")
 async def post_json_very_large(request: Request):
     """Very large JSON body (~100KB)."""
-    body = request.json()
+    body = _read_json(request)
     payload = msgspec.convert(body, type=VeryLargePayload)
     return jsonify(msgspec.to_builtins(payload))
 
