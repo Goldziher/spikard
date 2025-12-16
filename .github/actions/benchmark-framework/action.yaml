@@ -205,7 +205,7 @@ runs:
           --duration "${{ inputs.duration }}" \
           --concurrency "${{ inputs.concurrency }}" \
           --warmup "${{ inputs.warmup }}" \
-          --output "results/${{ inputs.framework }}"
+          --output "results/${{ inputs.framework }}/profile.json"
 
     - name: Upload benchmark results
       uses: actions/upload-artifact@v5

@@ -74,6 +74,7 @@ def health() -> dict[str, str]:
 
 @get("/__benchmark__/flush-profile")
 def flush_profile() -> dict[str, bool]:
+    _dump_profile()
     if _profiling_collector is not None:
         finalize = getattr(_profiling_collector, "finalize", None)
         if callable(finalize):
@@ -130,20 +131,19 @@ class SmallPayload(msgspec.Struct):
     tax: float | None = None
 
 
-class Seller(msgspec.Struct):
-    """Seller information for nested payload."""
-
-    name: str
-    email: str | None = None
-
-
 class MediumPayload(msgspec.Struct):
     """Medium JSON payload - matches 04_nested_object_success.json."""
 
     name: str
-    description: str
     price: float
-    seller: Seller
+    image: "Image"
+
+
+class Image(msgspec.Struct):
+    """Image data for nested structures."""
+
+    url: str
+    name: str
 
 
 class Country(msgspec.Struct):
@@ -176,19 +176,12 @@ class LargePayload(msgspec.Struct):
     seller: SellerWithAddress
 
 
-class Tag(msgspec.Struct):
-    """Tag object for array of objects."""
-
-    name: str
-
-
 class VeryLargePayload(msgspec.Struct):
     """Very large JSON payload - matches 05_array_of_objects.json."""
 
     name: str
-    description: str
-    price: float
-    tags: list[Tag]
+    tags: list[str]
+    images: list[Image]
 
 
 class MultipartMetrics(msgspec.Struct):
@@ -206,7 +199,7 @@ async def post_json_small(body: SmallPayload) -> SmallPayload:
 @post("/json/medium")
 @profile_once("json-medium")
 async def post_json_medium(body: MediumPayload) -> MediumPayload:
-    """Medium JSON payload (~1-10KB)."""
+    """Medium JSON payload (nested object)."""
     return body
 
 
@@ -220,7 +213,7 @@ async def post_json_large(body: LargePayload) -> LargePayload:
 @post("/json/very-large")
 @profile_once("json-very-large")
 async def post_json_very_large(body: VeryLargePayload) -> VeryLargePayload:
-    """Very large JSON payload (~100KB-1MB)."""
+    """Very large JSON payload (arrays of values and objects)."""
     return body
 
 

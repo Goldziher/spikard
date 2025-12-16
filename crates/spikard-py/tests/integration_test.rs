@@ -91,6 +91,15 @@ class Spikard:
                 internal_dir.join("converters.py"),
                 "def register_decoder(_decoder):\n    return None\n\ndef clear_decoders():\n    return None\n\ndef convert_params(params, handler_func=None, strict=False):\n    return params\n",
             );
+
+            let msgspec_stub = r#"
+class Struct:
+    pass
+
+def to_builtins(obj):
+    return dict(getattr(obj, '__dict__', {}))
+"#;
+            let _ = fs::write(dir.join("msgspec.py"), msgspec_stub);
             dir
         })
         .clone()
@@ -240,6 +249,59 @@ async def async_handler(path_params, query_params, body, headers, cookies):
     assert!(response.is_ok());
     let resp = response.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn test_msgspec_struct_response_serialization() {
+    init_python();
+
+    let code = r#"
+import msgspec
+
+class Payload(msgspec.Struct):
+    def __init__(self, x: int, y: str):
+        self.x = x
+        self.y = y
+
+def handler(path_params, query_params, body, headers, cookies):
+    return Payload(1, "ok")
+"#;
+
+    let handler = build_python_handler(code, "handler", false);
+
+    let request_data = RequestData {
+        path_params: HashMap::new().into(),
+        query_params: serde_json::Value::Null,
+        raw_query_params: HashMap::new().into(),
+        body: json!({"ignored": true}),
+        raw_body: None,
+        headers: HashMap::new().into(),
+        cookies: HashMap::new().into(),
+        method: "GET".to_string(),
+        path: "/test".to_string(),
+        #[cfg(feature = "di")]
+        dependencies: None,
+    };
+
+    let request = Request::builder()
+        .method(Method::GET)
+        .uri("/test")
+        .body(Body::empty())
+        .unwrap();
+
+    let response = handler
+        .call(request, request_data)
+        .await
+        .expect("handler should succeed");
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .expect("failed to read response body");
+    let body_text = String::from_utf8_lossy(&body_bytes);
+
+    assert!(body_text.contains(r#""x":1"#), "body: {body_text}");
+    assert!(body_text.contains(r#""y":"ok""#), "body: {body_text}");
 }
 
 #[tokio::test]

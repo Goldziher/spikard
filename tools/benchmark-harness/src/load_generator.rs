@@ -4,6 +4,87 @@ use crate::error::{Error, Result};
 use crate::fixture::Fixture;
 use crate::types::{OhaOutput, ThroughputMetrics};
 use std::process::Command;
+use std::time::Duration;
+
+async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
+    let method = reqwest::Method::from_bytes(fixture.request.method.as_bytes()).map_err(|e| {
+        Error::InvalidInput(format!(
+            "Invalid HTTP method '{}' for fixture {}: {}",
+            fixture.request.method, fixture.name, e
+        ))
+    })?;
+
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(10))
+        .build()
+        .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to build preflight HTTP client: {}", e)))?;
+
+    let mut request = client.request(method, url);
+
+    for (key, value) in &fixture.request.headers {
+        request = request.header(key, value);
+    }
+
+    if let Some(body_raw) = &fixture.request.body_raw {
+        request = request.body(body_raw.clone());
+    } else if let Some(body) = &fixture.request.body {
+        let content_type = fixture.request.headers.iter().find_map(|(key, value)| {
+            key.eq_ignore_ascii_case("content-type")
+                .then(|| value.to_ascii_lowercase())
+        });
+
+        let body_is_string = matches!(body, serde_json::Value::String(_));
+        let treat_string_as_raw = body_is_string
+            && content_type
+                .as_deref()
+                .is_some_and(|value| !value.contains("application/json"));
+
+        if treat_string_as_raw {
+            if let serde_json::Value::String(text) = body {
+                request = request.body(text.clone());
+            }
+        } else {
+            let json_body = serde_json::to_vec(body).map_err(|e| {
+                Error::LoadGeneratorFailed(format!(
+                    "Failed to serialize JSON body for fixture {}: {}",
+                    fixture.name, e
+                ))
+            })?;
+            request = request.body(json_body);
+            if content_type.is_none() {
+                request = request.header("Content-Type", "application/json");
+            }
+        }
+    }
+
+    let response = request
+        .send()
+        .await
+        .map_err(|e| Error::LoadGeneratorFailed(format!("Preflight request failed for {}: {}", fixture.name, e)))?;
+
+    let expected = fixture.expected_response.status_code;
+    let actual = response.status().as_u16();
+    if actual == expected {
+        return Ok(());
+    }
+
+    let body = response.text().await.unwrap_or_default();
+    let body_snippet = body.lines().take(20).collect::<Vec<_>>().join("\n").trim().to_string();
+
+    Err(Error::LoadGeneratorFailed(format!(
+        "Preflight check failed for fixture {} ({} {}): expected HTTP {}, got HTTP {}{}",
+        fixture.name,
+        fixture.request.method,
+        fixture.request.path,
+        expected,
+        actual,
+        if body_snippet.is_empty() {
+            String::new()
+        } else {
+            format!("\n\nResponse body (first lines):\n{}", body_snippet)
+        }
+    )))
+}
 
 /// Load generator type
 #[derive(Debug, Clone, Copy)]
@@ -51,6 +132,10 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
     } else {
         config.base_url.clone()
     };
+
+    if let Some(fixture) = &config.fixture {
+        preflight_fixture_request(&url, fixture).await?;
+    }
 
     let mut cmd = Command::new("oha");
     cmd.arg("--output-format")
