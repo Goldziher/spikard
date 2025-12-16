@@ -41,7 +41,7 @@ pub fn collect_app_metrics(pid: u32) -> Option<PythonAppMetrics> {
             }
         }
         let start = std::time::Instant::now();
-        while start.elapsed() < Duration::from_secs(2) {
+        while start.elapsed() < Duration::from_secs(10) {
             if std::fs::metadata(&metrics_path).is_ok() {
                 break;
             }
