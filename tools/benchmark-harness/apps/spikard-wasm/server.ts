@@ -6,6 +6,7 @@
  * against the pure Rust baseline.
  */
 
+import { dirname } from "node:path";
 import * as wasm from "../../../../crates/spikard-wasm/dist-web/spikard_wasm.js";
 
 if (typeof (wasm as { default?: unknown }).default === "function") {
@@ -16,6 +17,57 @@ if (typeof (wasm as { init?: unknown }).init === "function") {
 }
 
 const TestClient = (wasm as { TestClient: typeof wasm.TestClient }).TestClient;
+
+interface WasmMetricsFile {
+	readonly rss_mb: number;
+	readonly heap_total_mb: number;
+	readonly heap_used_mb: number;
+	readonly external_mb: number;
+}
+
+function bytesToMb(value: number): number {
+	return value / 1024 / 1024;
+}
+
+function getMetricsOutputPath(): string | null {
+	try {
+		return Deno.env.get("SPIKARD_WASM_METRICS_FILE") ?? null;
+	} catch {
+		return null;
+	}
+}
+
+function writeMetricsIfConfigured(): void {
+	const outputPath = getMetricsOutputPath();
+	if (!outputPath) {
+		return;
+	}
+
+	try {
+		const usage = Deno.memoryUsage();
+		const payload: WasmMetricsFile = {
+			rss_mb: bytesToMb(usage.rss),
+			heap_total_mb: bytesToMb(usage.heapTotal),
+			heap_used_mb: bytesToMb(usage.heapUsed),
+			external_mb: bytesToMb(usage.external),
+		};
+		Deno.mkdirSync(dirname(outputPath), { recursive: true });
+		Deno.writeTextFileSync(outputPath, JSON.stringify(payload));
+	} catch (err) {
+		console.error("Failed to write WASM metrics:", err);
+	}
+}
+
+addEventListener("unload", () => {
+	writeMetricsIfConfigured();
+});
+
+try {
+	Deno.addSignalListener("SIGTERM", () => writeMetricsIfConfigured());
+	Deno.addSignalListener("SIGINT", () => writeMetricsIfConfigured());
+} catch {
+	// Signal listeners may be unsupported on some platforms.
+}
 
 interface Route {
 	readonly method: string;
