@@ -233,31 +233,26 @@ Deno.serve({ port }, async (req: Request): Promise<Response> => {
 		const pathWithQuery = `${url.pathname}${url.search}`;
 		const isUrlencodedRoute = url.pathname.startsWith("/urlencoded/");
 
-		const requestHeaders = Object.fromEntries(req.headers);
-
 		let response: ServerResponse;
 		if (method === "GET") {
-			response = (await client.get(pathWithQuery, requestHeaders)) as ServerResponse;
+			response = (await client.get(pathWithQuery, null)) as ServerResponse;
 		} else if (method === "POST") {
 			const contentType = req.headers.get("content-type") ?? "";
 			if (req.body && contentType.includes("application/json") && !isUrlencodedRoute) {
 				const jsonBody = (await req.json()) as JsonBody;
-				response = (await client.post(pathWithQuery, { headers: requestHeaders, json: jsonBody })) as ServerResponse;
+				response = (await client.post(pathWithQuery, { json: jsonBody })) as ServerResponse;
 			} else if (req.body) {
 				const formRawBody = await req.text();
-				response = (await client.post(pathWithQuery, {
-					headers: requestHeaders,
-					formRaw: formRawBody,
-				})) as ServerResponse;
+				response = (await client.post(pathWithQuery, { formRaw: formRawBody })) as ServerResponse;
 			} else {
-				response = (await client.post(pathWithQuery, { headers: requestHeaders })) as ServerResponse;
+				response = (await client.post(pathWithQuery, {})) as ServerResponse;
 			}
 		} else {
 			response = (await client.handle_request(
 				JSON.stringify({
 					method,
 					path: pathWithQuery,
-					headers: requestHeaders,
+					headers: {},
 					body: null,
 				} satisfies Omit<ServerRequest, "body"> & { readonly body: null }),
 			)) as ServerResponse;
