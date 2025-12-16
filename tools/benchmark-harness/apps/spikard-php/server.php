@@ -19,6 +19,60 @@ use Spikard\Handlers\HandlerInterface;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
+/**
+ * Enable suite-level profiling if available.
+ *
+ * Uses the `excimer` extension when installed and writes a Speedscope JSON file
+ * at process exit, controlled by `SPIKARD_PHP_PROFILE_OUTPUT`.
+ */
+$profileOutput = getenv('SPIKARD_PHP_PROFILE_OUTPUT') ?: '';
+if ($profileOutput !== '' && class_exists('ExcimerProfiler')) {
+    try {
+        $profiler = new ExcimerProfiler();
+        if (defined('EXCIMER_CPU')) {
+            $profiler->setEventType(EXCIMER_CPU);
+        }
+        if (method_exists($profiler, 'setPeriod')) {
+            $profiler->setPeriod(0.001); // 1ms
+        }
+        $profiler->start();
+
+        register_shutdown_function(static function () use ($profiler, $profileOutput): void {
+            static $dumped = false;
+            if ($dumped) {
+                return;
+            }
+            $dumped = true;
+
+            try {
+                $profiler->stop();
+                $log = $profiler->getLog();
+
+                $payload = null;
+                if (is_object($log) && method_exists($log, 'formatSpeedscope')) {
+                    $payload = $log->formatSpeedscope();
+                } elseif (is_object($log) && method_exists($log, 'formatCollapsed')) {
+                    $payload = $log->formatCollapsed();
+                }
+
+                if (!is_string($payload) || $payload === '') {
+                    return;
+                }
+
+                $dir = dirname($profileOutput);
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0777, true);
+                }
+                file_put_contents($profileOutput, $payload);
+            } catch (Throwable) {
+                // Best-effort only; benchmarks must not crash due to profiling.
+            }
+        });
+    } catch (Throwable) {
+        // Best-effort only; benchmarks must not crash due to profiling.
+    }
+}
+
 $app = new App();
 
 // ============================================================================

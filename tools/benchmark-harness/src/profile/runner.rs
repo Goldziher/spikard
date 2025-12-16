@@ -6,8 +6,9 @@ use crate::{
     load_generator::{self, LoadGeneratorType, LoadTestConfig},
     monitor::ResourceMonitor,
     schema::{
-        Configuration, FrameworkInfo, Latency, Metadata, NodeProfilingData, ProfilingData, PythonProfilingData,
-        Resources, RubyProfilingData, RustProfilingData, Throughput, profile::*, workload::WorkloadSuite,
+        Configuration, FrameworkInfo, Latency, Metadata, NodeProfilingData, PhpProfilingData, ProfilingData,
+        PythonProfilingData, Resources, RubyProfilingData, RustProfilingData, Throughput, profile::*,
+        workload::WorkloadSuite,
     },
     server::{ServerConfig, ServerHandle, start_server},
 };
@@ -57,6 +58,7 @@ enum ProfilerHandle {
     Python(crate::profile::python::PythonProfiler),
     Node(crate::profile::node::NodeProfiler),
     Ruby(crate::profile::ruby::RubyProfiler),
+    Php(crate::profile::php::PhpProfiler),
     Rust(crate::profile::rust::RustProfiler),
 }
 
@@ -116,26 +118,31 @@ impl ProfileRunner {
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
 
-        let suite_python_profiler = self.config.profiler.as_deref() == Some("python")
-            && framework_info.language == "python"
-            && self.config.output_dir.is_some();
+        let suite_python_profiler =
+            self.config.profiler.as_deref() == Some("python") && framework_info.language == "python";
+        let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
 
-        let suite_profile_output = suite_python_profiler.then(|| {
-            let workspace_root = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-            let output_dir = self
-                .config
-                .output_dir
-                .as_ref()
-                .expect("suite_python_profiler implies output_dir is Some");
-            workspace_root.join(output_dir).join("pyinstrument.speedscope.json")
-        });
+        let suite_profile_output = if suite_python_profiler {
+            std::env::var("SPIKARD_PYINSTRUMENT_OUTPUT").ok().map(PathBuf::from)
+        } else if suite_php_profiler {
+            std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from)
+        } else {
+            None
+        };
 
         let mut server_env = Vec::new();
         if let Some(ref output_path) = suite_profile_output {
-            server_env.push((
-                "SPIKARD_PYINSTRUMENT_OUTPUT".to_string(),
-                output_path.display().to_string(),
-            ));
+            if suite_python_profiler {
+                server_env.push((
+                    "SPIKARD_PYINSTRUMENT_OUTPUT".to_string(),
+                    output_path.display().to_string(),
+                ));
+            } else if suite_php_profiler {
+                server_env.push((
+                    "SPIKARD_PHP_PROFILE_OUTPUT".to_string(),
+                    output_path.display().to_string(),
+                ));
+            }
         }
 
         let server_config = ServerConfig {
@@ -152,9 +159,11 @@ impl ProfileRunner {
         println!();
 
         let python_pid = suite_python_profiler.then(|| server.pid());
+        let php_pid = suite_php_profiler.then(|| server.pid());
 
         let mut suite_results = Vec::new();
-        let suite_result = self.run_suite(&server, suite_python_profiler).await?;
+        let suite_result = self.run_suite(&server, suite_python_profiler, suite_php_profiler)
+            .await?;
 
         suite_results.push(suite_result);
 
@@ -186,6 +195,20 @@ impl ProfileRunner {
                         serialization_time_ms: suite_app_metrics.as_ref().and_then(|m| m.serialization_time_ms),
                         gc_collections: suite_app_metrics.as_ref().and_then(|m| m.gc_collections),
                         gc_time_ms: suite_app_metrics.as_ref().and_then(|m| m.gc_time_ms),
+                        flamegraph_path: flamegraph_path.clone(),
+                    }));
+                }
+            }
+        }
+        if suite_php_profiler {
+            let flamegraph_path = suite_profile_output
+                .as_ref()
+                .and_then(|p| p.to_str())
+                .and_then(crate::profile::php::wait_for_profile_output);
+
+            for suite in &mut suite_results {
+                for workload in &mut suite.workloads {
+                    workload.results.profiling = Some(ProfilingData::Php(PhpProfilingData {
                         flamegraph_path: flamegraph_path.clone(),
                     }));
                 }
@@ -227,7 +250,12 @@ impl ProfileRunner {
         }
     }
 
-    async fn run_suite(&self, server: &ServerHandle, suite_python_profiler: bool) -> Result<SuiteResult> {
+    async fn run_suite(
+        &self,
+        server: &ServerHandle,
+        suite_python_profiler: bool,
+        suite_php_profiler: bool,
+    ) -> Result<SuiteResult> {
         println!("📊 Running suite: {}", self.suite.name);
         println!();
 
@@ -241,7 +269,9 @@ impl ProfileRunner {
                 workload_def.name
             );
 
-            let result = self.run_workload(workload_def, server, suite_python_profiler).await?;
+            let result = self
+                .run_workload(workload_def, server, suite_python_profiler, suite_php_profiler)
+                .await?;
             workload_results.push(result);
 
             println!("  ✓ Complete");
@@ -271,6 +301,7 @@ impl ProfileRunner {
         workload_def: &crate::schema::workload::WorkloadDef,
         server: &ServerHandle,
         suite_python_profiler: bool,
+        suite_php_profiler: bool,
     ) -> Result<WorkloadResult> {
         let fixture = self.create_fixture_from_workload(workload_def)?;
 
@@ -288,6 +319,21 @@ impl ProfileRunner {
                             .map(|dir| dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name)));
                         Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
                             python_pid,
+                            output_path,
+                        )?))
+                    }
+                }
+                "php" => {
+                    if suite_php_profiler {
+                        None
+                    } else {
+                        let output_path = self
+                            .config
+                            .output_dir
+                            .as_ref()
+                            .map(|dir| dir.join(format!("php-{}.speedscope.json", workload_def.name)));
+                        Some(ProfilerHandle::Php(crate::profile::php::start_profiler(
+                            server.pid(),
                             output_path,
                         )?))
                     }
@@ -337,6 +383,12 @@ impl ProfileRunner {
                     serialization_time_ms: data.serialization_time_ms,
                     gc_collections: data.gc_collections,
                     gc_time_ms: data.gc_time_ms,
+                    flamegraph_path: data.flamegraph_path,
+                })
+            }
+            ProfilerHandle::Php(p) => {
+                let data = p.stop();
+                ProfilingData::Php(PhpProfilingData {
                     flamegraph_path: data.flamegraph_path,
                 })
             }
