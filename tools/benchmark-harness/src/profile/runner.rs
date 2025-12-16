@@ -118,26 +118,12 @@ impl ProfileRunner {
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
 
-        let suite_python_profiler =
-            self.config.profiler.as_deref() == Some("python") && framework_info.language == "python";
+        // For Python, we always attach an external sampler (py-spy) per workload when `--profiler python`
+        // is selected, instead of relying on in-app profilers which are sensitive to threading.
+        let suite_python_profiler = false;
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
         let suite_wasm_profiler = self.config.profiler.as_deref() == Some("wasm") && framework_info.language == "wasm";
 
-        let python_profile_dir = suite_python_profiler
-            .then(|| {
-                let cwd = std::env::current_dir().ok();
-                self.config.output_dir.as_ref().map(|dir| {
-                    let profile_dir = dir.join("profiles");
-                    if profile_dir.is_absolute() {
-                        profile_dir
-                    } else if let Some(cwd) = cwd {
-                        cwd.join(profile_dir)
-                    } else {
-                        profile_dir
-                    }
-                })
-            })
-            .flatten();
         let php_profile_output = suite_php_profiler
             .then(|| std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from))
             .flatten();
@@ -149,13 +135,6 @@ impl ProfileRunner {
             .flatten();
 
         let mut server_env = Vec::new();
-        if let Some(ref output_dir) = python_profile_dir {
-            let _ = std::fs::create_dir_all(output_dir);
-            server_env.push((
-                "SPIKARD_PYTHON_PROFILE_DIR".to_string(),
-                output_dir.display().to_string(),
-            ));
-        }
         if let Some(ref output_path) = php_profile_output {
             server_env.push((
                 "SPIKARD_PHP_PROFILE_OUTPUT".to_string(),
@@ -189,7 +168,7 @@ impl ProfileRunner {
         println!("✓ Server healthy on port {}", server.port);
         println!();
 
-        let python_pid = suite_python_profiler.then(|| self.python_target_pid(&server));
+        let python_pid = (framework_info.language == "python").then(|| self.python_target_pid(&server));
 
         let mut suite_results = Vec::new();
         let suite_result = self
@@ -210,27 +189,27 @@ impl ProfileRunner {
         let suite_app_metrics = python_pid.and_then(crate::profile::python::collect_app_metrics);
         server.kill()?;
 
-        if suite_python_profiler {
+        if let Some(metrics) = suite_app_metrics.as_ref() {
             for suite in &mut suite_results {
                 for workload in &mut suite.workloads {
-                    let workload_profile_path = self
-                        .config
-                        .output_dir
-                        .as_ref()
-                        .map(|dir| dir.join("profiles").join(format!("{}.speedscope.json", workload.name)))
-                        .filter(|path| path.exists())
-                        .map(|path| path.display().to_string());
-
-                    workload.results.profiling = Some(ProfilingData::Python(PythonProfilingData {
-                        gil_wait_time_ms: None,
-                        gil_contention_percent: None,
-                        ffi_overhead_ms: suite_app_metrics.as_ref().and_then(|m| m.ffi_overhead_ms),
-                        handler_time_ms: suite_app_metrics.as_ref().and_then(|m| m.handler_time_ms),
-                        serialization_time_ms: suite_app_metrics.as_ref().and_then(|m| m.serialization_time_ms),
-                        gc_collections: suite_app_metrics.as_ref().and_then(|m| m.gc_collections),
-                        gc_time_ms: suite_app_metrics.as_ref().and_then(|m| m.gc_time_ms),
-                        flamegraph_path: workload_profile_path,
-                    }));
+                    let Some(ProfilingData::Python(data)) = workload.results.profiling.as_mut() else {
+                        continue;
+                    };
+                    if data.ffi_overhead_ms.is_none() {
+                        data.ffi_overhead_ms = metrics.ffi_overhead_ms;
+                    }
+                    if data.handler_time_ms.is_none() {
+                        data.handler_time_ms = metrics.handler_time_ms;
+                    }
+                    if data.serialization_time_ms.is_none() {
+                        data.serialization_time_ms = metrics.serialization_time_ms;
+                    }
+                    if data.gc_collections.is_none() {
+                        data.gc_collections = metrics.gc_collections;
+                    }
+                    if data.gc_time_ms.is_none() {
+                        data.gc_time_ms = metrics.gc_time_ms;
+                    }
                 }
             }
         }
@@ -375,6 +354,7 @@ impl ProfileRunner {
                         Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
                             python_pid,
                             output_path,
+                            self.config.duration_secs,
                         )?))
                     }
                 }
