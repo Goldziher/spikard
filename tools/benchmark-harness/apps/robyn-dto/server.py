@@ -96,50 +96,57 @@ class SmallPayload(msgspec.Struct):
     tax: float | None = None
 
 
-class Address(msgspec.Struct):
-    """Address nested model."""
+class Image(msgspec.Struct):
+    """Image nested model."""
 
-    street: str
-    city: str
-    state: str
-    zip_code: str
+    url: str
+    name: str
 
 
 class MediumPayload(msgspec.Struct):
     """Medium JSON payload model (~1KB)."""
 
     name: str
-    email: str
-    age: int
-    address: Address
-    tags: list[str]
-
-
-class Item(msgspec.Struct):
-    """Item nested model."""
-
-    id: str
-    name: str
     price: float
-    quantity: int
+    image: Image
+
+
+class Country(msgspec.Struct):
+    """Country nested model."""
+
+    name: str
+    code: str
+
+
+class Address(msgspec.Struct):
+    """Address nested model."""
+
+    street: str
+    city: str
+    country: Country
+
+
+class SellerWithAddress(msgspec.Struct):
+    """Seller nested model."""
+
+    name: str
+    address: Address
 
 
 class LargePayload(msgspec.Struct):
     """Large JSON payload model (~10KB)."""
 
-    user_id: str
     name: str
-    email: str
-    items: list[Item]
-    metadata: dict[str, object]
+    price: float
+    seller: SellerWithAddress
 
 
 class VeryLargePayload(msgspec.Struct):
     """Very large JSON payload model (~100KB)."""
 
-    batch_id: str
-    records: list[dict[str, object]]
-    summary: dict[str, object]
+    name: str
+    tags: list[str]
+    images: list[Image]
 
 
 @app.post("/json/small")
@@ -299,6 +306,7 @@ async def health():
 
 @app.get("/__benchmark__/flush-profile")
 async def flush_profile():
+    _dump_profile()
     return jsonify({"ok": True})
 
 

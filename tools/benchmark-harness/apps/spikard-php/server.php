@@ -188,6 +188,51 @@ function fixedHandler(array $data): HandlerInterface
 // ============================================================================
 
 $app = $app->addRoute('GET', '/health', fixedHandler(['status' => 'ok']));
+$app = $app->addRoute('GET', '/', fixedHandler(['status' => 'ok']));
+
+// ============================================================================
+// Benchmark Workloads (used by benchmark-harness suites)
+// ============================================================================
+
+// JSON bodies
+$app = $app->addRoute('POST', '/json/small', echoHandler());
+$app = $app->addRoute('POST', '/json/medium', echoHandler());
+$app = $app->addRoute('POST', '/json/large', echoHandler());
+$app = $app->addRoute('POST', '/json/very-large', echoHandler());
+
+// Multipart (body ignored; benchmark harness uses synthetic payloads)
+$app = $app->addRoute('POST', '/multipart/small', fixedHandler(['files_received' => 1, 'total_bytes' => 1024]));
+$app = $app->addRoute('POST', '/multipart/medium', fixedHandler(['files_received' => 2, 'total_bytes' => 10240]));
+$app = $app->addRoute('POST', '/multipart/large', fixedHandler(['files_received' => 5, 'total_bytes' => 102400]));
+
+// Forms (x-www-form-urlencoded)
+$app = $app->addRoute('POST', '/urlencoded/simple', echoHandler());
+$app = $app->addRoute('POST', '/urlencoded/complex', echoHandler());
+
+// Path params
+$app = $app->addRoute('GET', '/path/simple/{id}', new PathParamHandler());
+$app = $app->addRoute('GET', '/path/multiple/{user_id}/{post_id}', new PathParamHandler());
+$app = $app->addRoute('GET', '/path/deep/{org}/{team}/{project}/{resource}/{id}', new PathParamHandler());
+$app = $app->addRoute('GET', '/path/int/{id}', new PathParamHandler());
+$app = $app->addRoute('GET', '/path/uuid/{uuid}', new PathParamHandler());
+$app = $app->addRoute('GET', '/path/date/{date}', new PathParamHandler());
+
+// Query params (return the parsed query params)
+$app = $app->addRoute('GET', '/query/few', new class implements HandlerInterface {
+    public function matches(Request $request): bool { return true; }
+    public function handle(Request $request): Response { return new Response($request->queryParams, 200, []); }
+    public function __invoke(Request $request): Response { return $this->handle($request); }
+});
+$app = $app->addRoute('GET', '/query/medium', new class implements HandlerInterface {
+    public function matches(Request $request): bool { return true; }
+    public function handle(Request $request): Response { return new Response($request->queryParams, 200, []); }
+    public function __invoke(Request $request): Response { return $this->handle($request); }
+});
+$app = $app->addRoute('GET', '/query/many', new class implements HandlerInterface {
+    public function matches(Request $request): bool { return true; }
+    public function handle(Request $request): Response { return new Response($request->queryParams, 200, []); }
+    public function __invoke(Request $request): Response { return $this->handle($request); }
+});
 
 // ============================================================================
 // JSON Body Workloads - Small Payloads (~100-500 bytes)
