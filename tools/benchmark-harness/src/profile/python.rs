@@ -33,7 +33,12 @@ pub fn collect_app_metrics(pid: u32) -> Option<PythonAppMetrics> {
     #[cfg(unix)]
     {
         unsafe {
-            libc::kill(pid as i32, libc::SIGUSR1);
+            if libc::kill(-(pid as i32), libc::SIGUSR1) != 0 {
+                let err = std::io::Error::last_os_error();
+                if err.raw_os_error() == Some(libc::ESRCH) {
+                    libc::kill(pid as i32, libc::SIGUSR1);
+                }
+            }
         }
         let start = std::time::Instant::now();
         while start.elapsed() < Duration::from_secs(2) {
