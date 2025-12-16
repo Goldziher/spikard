@@ -118,36 +118,31 @@ impl ProfileRunner {
 
         let suite_python_profiler = self.config.profiler.as_deref() == Some("python")
             && framework_info.language == "python"
-            && which::which("py-spy").is_ok()
             && self.config.output_dir.is_some();
 
-        let suite_py_spy_output = suite_python_profiler.then(|| {
+        let suite_profile_output = suite_python_profiler.then(|| {
             self.config
                 .output_dir
                 .as_ref()
                 .expect("suite_python_profiler implies output_dir is Some")
-                .join("py-spy.speedscope.json")
+                .join("pyinstrument.speedscope.json")
         });
 
-        let start_cmd_override = suite_py_spy_output
-            .as_ref()
-            .and_then(|output_path| crate::framework::get_framework(&self.config.framework).map(|framework| (output_path, framework)))
-            .filter(|_| suite_python_profiler)
-            .map(|(output_path, framework)| {
-                format!(
-                    "py-spy record --subprocesses --format speedscope --rate 100 --output {} {}",
-                    output_path.display(),
-                    framework.start_cmd
-                )
-            });
+        let mut server_env = Vec::new();
+        if let Some(ref output_path) = suite_profile_output {
+            server_env.push((
+                "SPIKARD_PYINSTRUMENT_OUTPUT".to_string(),
+                output_path.display().to_string(),
+            ));
+        }
 
         let server_config = ServerConfig {
             framework: Some(self.config.framework.clone()),
             port,
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
-            env: Vec::new(),
-            start_cmd_override,
+            env: server_env,
+            start_cmd_override: None,
         };
 
         let server = start_server(server_config).await?;
@@ -174,7 +169,7 @@ impl ProfileRunner {
         server.kill()?;
 
         if suite_python_profiler {
-            let flamegraph_path = suite_py_spy_output
+            let flamegraph_path = suite_profile_output
                 .as_ref()
                 .and_then(|p| p.to_str())
                 .and_then(crate::profile::python::wait_for_profile_output);
