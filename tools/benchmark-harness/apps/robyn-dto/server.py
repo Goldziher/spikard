@@ -64,6 +64,10 @@ async def _read_json(request: Request) -> object:
         data = None
 
     if data is not None:
+        if isinstance(data, (bytes, bytearray, memoryview)):
+            return json.loads(bytes(data))
+        if isinstance(data, str):
+            return json.loads(data)
         return data
 
     raw = getattr(request, "body", None)
@@ -79,6 +83,21 @@ async def _read_json(request: Request) -> object:
         return {}
 
     return json.loads(raw_text)
+
+
+async def _decode_payload(request: Request, payload_type: type) -> object:
+    raw = getattr(request, "body", None)
+    if inspect.isawaitable(raw):
+        raw = await raw
+
+    if raw is not None:
+        if isinstance(raw, (bytes, bytearray, memoryview)):
+            return msgspec.json.decode(bytes(raw), type=payload_type)
+        if isinstance(raw, str):
+            return msgspec.json.decode(raw.encode("utf-8"), type=payload_type)
+
+    body = await _read_json(request)
+    return msgspec.convert(body, type=payload_type)
 
 
 def profile_once(
@@ -182,8 +201,7 @@ class VeryLargePayload(msgspec.Struct):
 @profile_once("json-small")
 async def post_json_small(request: Request):
     """Small JSON body (~100 bytes)."""
-    body = await _read_json(request)
-    payload = msgspec.convert(body, type=SmallPayload)
+    payload = await _decode_payload(request, SmallPayload)
     return jsonify(msgspec.to_builtins(payload))
 
 
@@ -191,8 +209,7 @@ async def post_json_small(request: Request):
 @profile_once("json-medium")
 async def post_json_medium(request: Request):
     """Medium JSON body (~1KB)."""
-    body = await _read_json(request)
-    payload = msgspec.convert(body, type=MediumPayload)
+    payload = await _decode_payload(request, MediumPayload)
     return jsonify(msgspec.to_builtins(payload))
 
 
@@ -200,8 +217,7 @@ async def post_json_medium(request: Request):
 @profile_once("json-large")
 async def post_json_large(request: Request):
     """Large JSON body (~10KB)."""
-    body = await _read_json(request)
-    payload = msgspec.convert(body, type=LargePayload)
+    payload = await _decode_payload(request, LargePayload)
     return jsonify(msgspec.to_builtins(payload))
 
 
@@ -209,8 +225,7 @@ async def post_json_large(request: Request):
 @profile_once("json-very-large")
 async def post_json_very_large(request: Request):
     """Very large JSON body (~100KB)."""
-    body = await _read_json(request)
-    payload = msgspec.convert(body, type=VeryLargePayload)
+    payload = await _decode_payload(request, VeryLargePayload)
     return jsonify(msgspec.to_builtins(payload))
 
 
