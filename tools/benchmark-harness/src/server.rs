@@ -192,6 +192,8 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         || executable == "uv"
         || executable.ends_with("/python")
         || executable.contains("py-spy")
+        || executable == "php"
+        || executable.ends_with("/php")
     {
         libc::SIGINT
     } else {
