@@ -80,10 +80,6 @@ interface PathParams {
 	readonly [key: string]: string;
 }
 
-interface QueryParams {
-	readonly [key: string]: string | readonly string[];
-}
-
 interface JsonBody {
 	readonly [key: string]: unknown;
 }
@@ -103,13 +99,8 @@ type HandlerFunction = (input: any) => Promise<unknown>;
 interface ServerRequest {
 	readonly method: string;
 	readonly path: string;
-	readonly query: QueryParams;
 	readonly headers: Record<string, string>;
 	readonly body: unknown;
-}
-
-interface ServerResponseBody {
-	readonly [key: string]: number;
 }
 
 interface ServerResponse {
@@ -239,65 +230,65 @@ Deno.serve({ port }, async (req: Request): Promise<Response> => {
 	try {
 		const url = new URL(req.url);
 		const method = req.method;
-		const path = url.pathname;
-		const query: QueryParams = Object.fromEntries(url.searchParams);
+		const pathWithQuery = `${url.pathname}${url.search}`;
+		const isUrlencodedRoute = url.pathname.startsWith("/urlencoded/");
 
-		let body: JsonBody | string | null = null;
-		if (method === "POST" && req.body) {
+		const requestHeaders = Object.fromEntries(req.headers);
+
+		let response: ServerResponse;
+		if (method === "GET") {
+			response = (await client.get(pathWithQuery, requestHeaders)) as ServerResponse;
+		} else if (method === "POST") {
 			const contentType = req.headers.get("content-type") ?? "";
-			if (contentType.includes("application/json")) {
-				body = (await req.json()) as JsonBody;
+			if (req.body && contentType.includes("application/json") && !isUrlencodedRoute) {
+				const jsonBody = (await req.json()) as JsonBody;
+				response = (await client.post(pathWithQuery, { headers: requestHeaders, json: jsonBody })) as ServerResponse;
+			} else if (req.body) {
+				const formRawBody = await req.text();
+				response = (await client.post(pathWithQuery, {
+					headers: requestHeaders,
+					formRaw: formRawBody,
+				})) as ServerResponse;
 			} else {
-				body = await req.text();
+				response = (await client.post(pathWithQuery, { headers: requestHeaders })) as ServerResponse;
 			}
+		} else {
+			response = (await client.handle_request(
+				JSON.stringify({
+					method,
+					path: pathWithQuery,
+					headers: requestHeaders,
+					body: null,
+				} satisfies Omit<ServerRequest, "body"> & { readonly body: null }),
+			)) as ServerResponse;
 		}
-
-		const requestPayload: ServerRequest = {
-			method,
-			path,
-			query,
-			headers: Object.fromEntries(req.headers),
-			body,
-		};
-
-		const response = (await client.handle_request(JSON.stringify(requestPayload))) as ServerResponse;
-
-		let bodyContent = "";
-		if (response.body) {
-			try {
-				let bodyBytes: Uint8Array;
-				if (response.body instanceof Uint8Array) {
-					bodyBytes = response.body;
-				} else if (Array.isArray(response.body)) {
-					bodyBytes = new Uint8Array(response.body);
-				} else if (response.body && typeof response.body === "object") {
-					const bodyObject = response.body as ServerResponseBody;
-					const keys = Object.keys(bodyObject).filter((k) => !Number.isNaN(Number(k)));
-					if (keys.length > 0) {
-						bodyBytes = new Uint8Array(keys.length);
-						for (let i = 0; i < keys.length; i++) {
-							const value = bodyObject[String(i)];
-							if (typeof value === "number") {
-								bodyBytes[i] = value;
-							}
-						}
-					} else {
-						bodyBytes = new Uint8Array(0);
-					}
+		let bodyBytes: Uint8Array | null = null;
+		if (response.body instanceof Uint8Array) {
+			bodyBytes = response.body;
+		} else if (response.body && typeof response.body === "object" && ArrayBuffer.isView(response.body)) {
+			const view = response.body as ArrayBufferView;
+			bodyBytes = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
+		} else if (response.body instanceof ArrayBuffer) {
+			bodyBytes = new Uint8Array(response.body);
+		} else if (Array.isArray(response.body)) {
+			bodyBytes = new Uint8Array(response.body);
+		} else if (response.body == null) {
+			bodyBytes = null;
+		} else {
+			const record = response.body as Record<string, unknown>;
+			if ("0" in record) {
+				const values = Object.values(record);
+				if (values.length > 0 && values.every((value) => typeof value === "number")) {
+					bodyBytes = Uint8Array.from(values as number[]);
 				} else {
 					bodyBytes = new Uint8Array(0);
 				}
-
-				if (bodyBytes.length > 0) {
-					const decoder = new TextDecoder();
-					bodyContent = decoder.decode(bodyBytes);
-				}
-			} catch (err) {
-				console.error("Failed to decode body:", err);
+			} else {
+				bodyBytes = new Uint8Array(0);
 			}
 		}
 
-		return new Response(bodyContent, {
+		return new Response(bodyBytes, {
 			status: response.status ?? 200,
 			headers: response.headers ?? { "content-type": "application/json" },
 		});
