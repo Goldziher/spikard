@@ -151,7 +151,7 @@ impl ProfileRunner {
         println!("✓ Server healthy on port {}", server.port);
         println!();
 
-        let python_pid = suite_python_profiler.then(|| self.python_target_pid(&server));
+        let python_pid = suite_python_profiler.then(|| server.pid());
 
         let mut suite_results = Vec::new();
         let suite_result = self.run_suite(&server, suite_python_profiler).await?;
