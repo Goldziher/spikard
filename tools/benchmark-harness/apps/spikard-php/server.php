@@ -51,6 +51,12 @@ if ($profileOutput !== '' && class_exists('ExcimerProfiler')) {
                 $payload = null;
                 if (is_object($log) && method_exists($log, 'formatSpeedscope')) {
                     $payload = $log->formatSpeedscope();
+                    if (!is_string($payload)) {
+                        $encoded = json_encode($payload);
+                        if (is_string($encoded)) {
+                            $payload = $encoded;
+                        }
+                    }
                 } elseif (is_object($log) && method_exists($log, 'formatCollapsed')) {
                     $payload = $log->formatCollapsed();
                 }
