@@ -121,11 +121,13 @@ impl ProfileRunner {
             && self.config.output_dir.is_some();
 
         let suite_profile_output = suite_python_profiler.then(|| {
-            self.config
+            let workspace_root = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+            let output_dir = self
+                .config
                 .output_dir
                 .as_ref()
-                .expect("suite_python_profiler implies output_dir is Some")
-                .join("pyinstrument.speedscope.json")
+                .expect("suite_python_profiler implies output_dir is Some");
+            workspace_root.join(output_dir).join("pyinstrument.speedscope.json")
         });
 
         let mut server_env = Vec::new();
