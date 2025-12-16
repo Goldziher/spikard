@@ -13,7 +13,6 @@ use std::time::Duration;
 
 /// Python profiler handle
 pub struct PythonProfiler {
-    pid: u32,
     output_path: Option<PathBuf>,
     child: Option<Child>,
 }
@@ -115,7 +114,6 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64
     };
 
     Ok(PythonProfiler {
-        pid,
         output_path,
         child,
     })
