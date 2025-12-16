@@ -14,6 +14,7 @@ use std::time::Duration;
 /// Python profiler handle
 pub struct PythonProfiler {
     output_path: Option<PathBuf>,
+    stderr_path: Option<PathBuf>,
     child: Option<Child>,
 }
 
@@ -85,12 +86,15 @@ pub fn wait_for_profile_output(path: &str) -> Option<String> {
 pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64) -> Result<PythonProfiler> {
     let output_path = output_path.or_else(|| std::env::var("SPIKARD_PYTHON_PROFILE_OUTPUT").ok().map(PathBuf::from));
 
-    let child = if let Some(ref path) = output_path {
+    let (child, stderr_path) = if let Some(ref path) = output_path {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
         }
 
         let record_secs = duration_secs.min(5).max(1);
+        let stderr_path = path.with_extension("stderr.log");
+        let stderr_file = std::fs::File::create(&stderr_path)?;
+
         let mut cmd = Command::new("py-spy");
         cmd.args([
             "record",
@@ -105,16 +109,18 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64
             "--rate",
             "100",
         ]);
-        cmd.stdout(Stdio::null()).stderr(Stdio::null());
-        Some(cmd.spawn().map_err(|e| {
+        cmd.stdout(Stdio::null()).stderr(Stdio::from(stderr_file));
+        let child = cmd.spawn().map_err(|e| {
             Error::BenchmarkFailed(format!("Failed to start py-spy profiler for pid {}: {}", pid, e))
-        })?)
+        })?;
+        (Some(child), Some(stderr_path))
     } else {
-        None
+        (None, None)
     };
 
     Ok(PythonProfiler {
         output_path,
+        stderr_path,
         child,
     })
 }
@@ -128,7 +134,9 @@ impl PythonProfiler {
     /// Stop the profiler and collect final metrics
     pub fn stop(self) -> ProfilingData {
         let PythonProfiler {
-            output_path, child, ..
+            output_path,
+            stderr_path,
+            child,
         } = self;
 
         if let Some(mut child) = child {
@@ -139,6 +147,17 @@ impl PythonProfiler {
             .as_ref()
             .and_then(|p| p.to_str())
             .and_then(wait_for_profile_output);
+
+        if flamegraph_path.is_none()
+            && let (Some(output_path), Some(stderr_path)) = (output_path.as_ref(), stderr_path.as_ref())
+            && stderr_path.exists()
+        {
+            eprintln!(
+                "  ⚠ py-spy did not produce profile output at {}; see {}",
+                output_path.display(),
+                stderr_path.display()
+            );
+        }
 
         ProfilingData {
             flamegraph_path,
