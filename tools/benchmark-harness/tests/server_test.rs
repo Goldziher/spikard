@@ -137,6 +137,7 @@ async fn test_start_server_framework_not_found() {
         port: 9999,
         app_dir: PathBuf::from("/tmp"),
         variant: None,
+        env: Vec::new(),
         start_cmd_override: None,
     };
 
@@ -155,6 +156,7 @@ async fn test_start_server_process_spawn_failure() {
         port: 9999,
         app_dir: PathBuf::from("/nonexistent/directory/that/does/not/exist"),
         variant: None,
+        env: Vec::new(),
         start_cmd_override: None,
     };
 
@@ -169,6 +171,7 @@ fn test_server_config_creation() {
         port: 8000,
         app_dir: PathBuf::from("/tmp/app"),
         variant: None,
+        env: Vec::new(),
         start_cmd_override: None,
     };
 
@@ -218,6 +221,7 @@ if __name__ == '__main__':
         port,
         app_dir: temp_dir.path().to_path_buf(),
         variant: None,
+        env: Vec::new(),
         start_cmd_override: None,
     };
 
