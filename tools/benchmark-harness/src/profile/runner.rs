@@ -8,8 +8,7 @@ use crate::{
     schema::{
         Configuration, FrameworkInfo, Latency, Metadata, NodeProfilingData, PhpProfilingData, ProfilingData,
         PythonProfilingData, Resources, RubyProfilingData, RustProfilingData, Throughput, WasmProfilingData,
-        profile::*,
-        workload::WorkloadSuite,
+        profile::*, workload::WorkloadSuite,
     },
     server::{ServerConfig, ServerHandle, start_server},
 };
@@ -122,8 +121,7 @@ impl ProfileRunner {
         let suite_python_profiler =
             self.config.profiler.as_deref() == Some("python") && framework_info.language == "python";
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
-        let suite_wasm_profiler =
-            self.config.profiler.as_deref() == Some("wasm") && framework_info.language == "wasm";
+        let suite_wasm_profiler = self.config.profiler.as_deref() == Some("wasm") && framework_info.language == "wasm";
 
         let python_profile_output = suite_python_profiler
             .then(|| std::env::var("SPIKARD_PYINSTRUMENT_OUTPUT").ok().map(PathBuf::from))
@@ -181,7 +179,8 @@ impl ProfileRunner {
         let python_pid = suite_python_profiler.then(|| server.pid());
 
         let mut suite_results = Vec::new();
-        let suite_result = self.run_suite(&server, suite_python_profiler, suite_php_profiler)
+        let suite_result = self
+            .run_suite(&server, suite_python_profiler, suite_php_profiler)
             .await?;
 
         suite_results.push(suite_result);
@@ -353,11 +352,10 @@ impl ProfileRunner {
                         None
                     } else {
                         let python_pid = self.python_target_pid(server);
-                        let output_path = self
-                            .config
-                            .output_dir
-                            .as_ref()
-                            .map(|dir| dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name)));
+                        let output_path = self.config.output_dir.as_ref().map(|dir| {
+                            dir.join("profiles")
+                                .join(format!("{}.speedscope.json", workload_def.name))
+                        });
                         Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
                             python_pid,
                             output_path,
