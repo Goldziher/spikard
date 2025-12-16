@@ -61,6 +61,7 @@ jobs:
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: wasm-bindings
+          use-sccache: 'false'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4

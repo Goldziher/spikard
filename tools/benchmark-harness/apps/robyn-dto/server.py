@@ -4,6 +4,7 @@ Robyn is a Rust-based Python web framework with high performance.
 """
 
 import atexit
+import inspect
 import json
 import os
 import sys
@@ -53,10 +54,12 @@ if _pyinstrument_output:
     atexit.register(_dump_profile)
 
 
-def _read_json(request: Request) -> object:
+async def _read_json(request: Request) -> object:
     """Robust JSON extraction across Robyn versions."""
     try:
         data = request.json()
+        if inspect.isawaitable(data):
+            data = await data
     except Exception:
         data = None
 
@@ -179,7 +182,7 @@ class VeryLargePayload(msgspec.Struct):
 @profile_once("json-small")
 async def post_json_small(request: Request):
     """Small JSON body (~100 bytes)."""
-    body = _read_json(request)
+    body = await _read_json(request)
     payload = msgspec.convert(body, type=SmallPayload)
     return jsonify(msgspec.to_builtins(payload))
 
@@ -188,7 +191,7 @@ async def post_json_small(request: Request):
 @profile_once("json-medium")
 async def post_json_medium(request: Request):
     """Medium JSON body (~1KB)."""
-    body = _read_json(request)
+    body = await _read_json(request)
     payload = msgspec.convert(body, type=MediumPayload)
     return jsonify(msgspec.to_builtins(payload))
 
@@ -197,7 +200,7 @@ async def post_json_medium(request: Request):
 @profile_once("json-large")
 async def post_json_large(request: Request):
     """Large JSON body (~10KB)."""
-    body = _read_json(request)
+    body = await _read_json(request)
     payload = msgspec.convert(body, type=LargePayload)
     return jsonify(msgspec.to_builtins(payload))
 
@@ -206,7 +209,7 @@ async def post_json_large(request: Request):
 @profile_once("json-very-large")
 async def post_json_very_large(request: Request):
     """Very large JSON body (~100KB)."""
-    body = _read_json(request)
+    body = await _read_json(request)
     payload = msgspec.convert(body, type=VeryLargePayload)
     return jsonify(msgspec.to_builtins(payload))
 
