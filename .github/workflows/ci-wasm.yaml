@@ -77,7 +77,10 @@ jobs:
       - name: Build WASM bindings
         working-directory: crates/spikard-wasm
         shell: bash
-        run: pnpm run build:all
+        run: |
+          PATH="$HOME/.cargo/bin:$PATH" pnpm exec wasm-pack build --target bundler --out-dir dist-bundler --release --no-opt
+          PATH="$HOME/.cargo/bin:$PATH" pnpm exec wasm-pack build --target nodejs --out-dir dist-node --release --no-opt
+          PATH="$HOME/.cargo/bin:$PATH" pnpm exec wasm-pack build --target web --out-dir dist-web --release --no-opt
 
       - name: Upload WASM bindings
         uses: actions/upload-artifact@v6
