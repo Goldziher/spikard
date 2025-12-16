@@ -4,6 +4,7 @@
 //! implementation with deep profiling integration (py-spy, perf, etc.).
 
 pub mod node;
+pub mod php;
 pub mod python;
 pub mod ruby;
 pub mod runner;

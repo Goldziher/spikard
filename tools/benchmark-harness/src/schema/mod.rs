@@ -113,6 +113,7 @@ pub enum ProfilingData {
     Python(PythonProfilingData),
     Node(NodeProfilingData),
     Ruby(RubyProfilingData),
+    Php(PhpProfilingData),
     Rust(RustProfilingData),
 }
 
@@ -143,6 +144,11 @@ pub struct RubyProfilingData {
     pub gc_time_ms: Option<f64>,
     pub heap_allocated_pages: Option<u64>,
     pub heap_live_slots: Option<u64>,
+    pub flamegraph_path: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PhpProfilingData {
     pub flamegraph_path: Option<String>,
 }
 

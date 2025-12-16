@@ -133,6 +133,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler rust \
             --output results/spikard-rust/profile.json
 
       - name: Upload benchmark results
@@ -463,7 +464,10 @@ jobs:
           php-version: "8.4"
           tools: composer
           coverage: none
-          extensions: fileinfo
+          extensions: fileinfo, excimer
+
+      - name: Verify PHP profiler extension
+        run: php -m | grep -i excimer
 
       - name: Install PHP development headers
         run: bash scripts/ci/php/install-dev-headers-linux.sh
@@ -503,7 +507,10 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler php \
             --output results/spikard-php/profile.json
+        env:
+          SPIKARD_PHP_PROFILE_OUTPUT: ${{ github.workspace }}/results/spikard-php/php.speedscope.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
