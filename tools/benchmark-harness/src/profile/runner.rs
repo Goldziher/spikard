@@ -124,7 +124,19 @@ impl ProfileRunner {
         let suite_wasm_profiler = self.config.profiler.as_deref() == Some("wasm") && framework_info.language == "wasm";
 
         let python_profile_dir = suite_python_profiler
-            .then(|| self.config.output_dir.as_ref().map(|dir| dir.join("profiles")))
+            .then(|| {
+                let cwd = std::env::current_dir().ok();
+                self.config.output_dir.as_ref().map(|dir| {
+                    let profile_dir = dir.join("profiles");
+                    if profile_dir.is_absolute() {
+                        profile_dir
+                    } else if let Some(cwd) = cwd {
+                        cwd.join(profile_dir)
+                    } else {
+                        profile_dir
+                    }
+                })
+            })
             .flatten();
         let php_profile_output = suite_php_profiler
             .then(|| std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from))
