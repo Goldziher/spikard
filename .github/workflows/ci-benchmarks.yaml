@@ -69,6 +69,7 @@ jobs:
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: build-harness
+          use-sccache: 'false'
 
       - name: Build benchmark-harness
         run: cargo build --manifest-path tools/benchmark-harness/Cargo.toml --release
@@ -116,6 +117,7 @@ jobs:
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: bench-rust
+          use-sccache: 'false'
 
       - name: Build spikard-rust benchmark app
         working-directory: tools/benchmark-harness/apps/spikard-rust
@@ -165,6 +167,7 @@ jobs:
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: bench-python-binding
+          use-sccache: 'false'
 
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
@@ -331,6 +334,7 @@ jobs:
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: bench-node-binding
+          use-sccache: 'false'
 
       - name: Setup Node Workspace
         uses: ./.github/actions/setup-node-workspace
@@ -390,6 +394,7 @@ jobs:
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: bench-ruby-binding
+          use-sccache: 'false'
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -451,6 +456,7 @@ jobs:
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: bench-php-binding
+          use-sccache: 'false'
 
       - name: Setup LLVM/Clang
         uses: ./.github/actions/setup-llvm-clang
@@ -541,6 +547,7 @@ jobs:
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: bench-wasm-binding
+          use-sccache: 'false'
 
       - name: Setup Node Workspace
         uses: ./.github/actions/setup-node-workspace
