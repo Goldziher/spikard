@@ -6,8 +6,31 @@
 //! Performance improvement: ~40-60% faster than json.dumps() → serde_json::from_str()
 
 use pyo3::prelude::*;
+use pyo3::sync::PyOnceLock;
 use pyo3::types::{PyBool, PyDict, PyFloat, PyList, PyNone, PyString};
 use serde_json::Value;
+
+static MSGSPEC_STRUCT_TYPE: PyOnceLock<Py<pyo3::types::PyType>> = PyOnceLock::new();
+static MSGSPEC_TO_BUILTINS: PyOnceLock<Py<PyAny>> = PyOnceLock::new();
+
+fn msgspec_struct_helpers(py: Python<'_>) -> Option<(&Py<pyo3::types::PyType>, &Py<PyAny>)> {
+    let struct_type = MSGSPEC_STRUCT_TYPE
+        .get_or_try_init(py, || -> PyResult<Py<pyo3::types::PyType>> {
+            let msgspec = py.import("msgspec")?;
+            let struct_type = msgspec.getattr("Struct")?.cast_into::<pyo3::types::PyType>()?;
+            Ok(struct_type.unbind())
+        })
+        .ok()?;
+
+    let to_builtins = MSGSPEC_TO_BUILTINS
+        .get_or_try_init(py, || -> PyResult<Py<PyAny>> {
+            let msgspec = py.import("msgspec")?;
+            Ok(msgspec.getattr("to_builtins")?.unbind())
+        })
+        .ok()?;
+
+    Some((struct_type, to_builtins))
+}
 
 /// Convert serde_json::Value to Python object using zero-copy construction
 ///
@@ -85,6 +108,18 @@ pub fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py
 pub fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     if obj.is_none() {
         return Ok(Value::Null);
+    }
+
+    // Fast path: msgspec.Struct (or nested msgspec types) → builtins → JSON.
+    //
+    // Spikard's Python surface is msgspec-centric; handlers frequently return msgspec.Struct
+    // instances. Falling back to `json.dumps()` is both slower and can fail because msgspec
+    // structs are not JSON-serializable by the stdlib `json` module by default.
+    if let Some((struct_type, to_builtins)) = msgspec_struct_helpers(py)
+        && obj.is_instance(struct_type.bind(py))?
+    {
+        let builtins = to_builtins.bind(py).call1((obj,))?;
+        return python_to_json(py, &builtins);
     }
 
     if let Ok(b) = obj.extract::<bool>() {

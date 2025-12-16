@@ -104,6 +104,15 @@ class Spikard:
                 "def register_decoder(_decoder):\n    return None\n\ndef clear_decoders():\n    return None\n\ndef convert_params(params, handler_func=None, strict=False):\n    return params\n",
             );
 
+            let msgspec_stub = r#"
+class Struct:
+    pass
+
+def to_builtins(obj):
+    return dict(getattr(obj, '__dict__', {}))
+"#;
+            let _ = fs::write(dir.join("msgspec.py"), msgspec_stub);
+
             dir
         })
         .clone()
