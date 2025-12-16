@@ -129,36 +129,17 @@ impl ProfileRunner {
                 .join("py-spy.speedscope.json")
         });
 
-        let start_cmd_override = suite_py_spy_output.as_ref().and_then(|output_path| {
-            if !suite_python_profiler {
-                return None;
-            }
-
-            let venv_python = self
-                .config
-                .app_dir
-                .join(".venv")
-                .join("bin")
-                .join("python");
-            let server_py = self.config.app_dir.join("server.py");
-
-            if venv_python.exists() && server_py.exists() {
-                return Some(format!(
-                    "py-spy record --subprocesses --format speedscope --rate 100 --output {} {} {} {{port}}",
-                    output_path.display(),
-                    venv_python.display(),
-                    server_py.display(),
-                ));
-            }
-
-            crate::framework::get_framework(&self.config.framework).map(|framework| {
+        let start_cmd_override = suite_py_spy_output
+            .as_ref()
+            .and_then(|output_path| crate::framework::get_framework(&self.config.framework).map(|framework| (output_path, framework)))
+            .filter(|_| suite_python_profiler)
+            .map(|(output_path, framework)| {
                 format!(
                     "py-spy record --subprocesses --format speedscope --rate 100 --output {} {}",
                     output_path.display(),
                     framework.start_cmd
                 )
-            })
-        });
+            });
 
         let server_config = ServerConfig {
             framework: Some(self.config.framework.clone()),
