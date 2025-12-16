@@ -5,8 +5,8 @@
 //! - Application-level memory metrics via `Deno.memoryUsage()` written on shutdown.
 //! - Optional V8 `v8.log` output when `--v8-flags=--prof` is enabled (best-effort).
 
-use serde::Deserialize;
 use crate::error::Result;
+use serde::Deserialize;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
