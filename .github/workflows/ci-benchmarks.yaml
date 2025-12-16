@@ -185,6 +185,10 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/spikard-python
 
+      - name: Allow py-spy ptrace
+        run: |
+          sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for py-spy" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -238,6 +242,10 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/robyn-raw
 
+      - name: Allow py-spy ptrace
+        run: |
+          sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for py-spy" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -287,6 +295,10 @@ jobs:
 
       - name: Create results directory
         run: mkdir -p results/robyn-dto
+
+      - name: Allow py-spy ptrace
+        run: |
+          sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for py-spy" >&2; true; }
 
       - name: Run benchmarks
         run: |
