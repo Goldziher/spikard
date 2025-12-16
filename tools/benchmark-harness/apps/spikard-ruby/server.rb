@@ -143,26 +143,23 @@ end
 # JSON Body Workloads
 # ============================================================================
 
-app.post '/json/small', handler_name: 'post_json_small' do |request|
-  payload = SmallPayload.new(request[:body])
-  payload.to_h
+app.post '/json/small', handler_name: 'post_json_small' do |request = {}|
+  body = request.is_a?(Hash) ? (request[:body] || request['body'] || {}) : {}
+  body
 end
 
-app.post '/json/medium', handler_name: 'post_json_medium' do |request|
-  payload = MediumPayload.new(request[:body])
-  payload.to_h
+app.post '/json/medium', handler_name: 'post_json_medium' do |request = {}|
+  body = request.is_a?(Hash) ? (request[:body] || request['body'] || {}) : {}
+  body
 end
 
-app.post '/json/large', handler_name: 'post_json_large' do |request|
-  payload = LargePayload.new(request[:body])
-  payload.to_h
+app.post '/json/large', handler_name: 'post_json_large' do |request = {}|
+  body = request.is_a?(Hash) ? (request[:body] || request['body'] || {}) : {}
+  body
 end
 
-app.post '/json/very-large', handler_name: 'post_json_very_large' do |request|
-  # For very large payloads, just validate it's a hash with expected keys
-  body = request[:body] || {}
-  raise ArgumentError, "data must be an Array" unless body['data'].is_a?(Array) || body[:data].is_a?(Array)
-  raise ArgumentError, "metadata must be a Hash" unless body['metadata'].is_a?(Hash) || body[:metadata].is_a?(Hash)
+app.post '/json/very-large', handler_name: 'post_json_very_large' do |request = {}|
+  body = request.is_a?(Hash) ? (request[:body] || request['body'] || {}) : {}
   body
 end
 
@@ -187,11 +184,11 @@ end
 # ============================================================================
 
 app.post '/urlencoded/simple', handler_name: 'post_urlencoded_simple' do |request|
-  request[:body] || {}
+  request.is_a?(Hash) ? (request[:body] || request['body'] || {}) : {}
 end
 
 app.post '/urlencoded/complex', handler_name: 'post_urlencoded_complex' do |request|
-  request[:body] || {}
+  request.is_a?(Hash) ? (request[:body] || request['body'] || {}) : {}
 end
 
 # ============================================================================

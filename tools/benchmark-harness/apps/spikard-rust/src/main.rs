@@ -31,18 +31,16 @@ struct SmallPayload {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Seller {
+struct MediumPayload {
     name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    email: Option<String>,
+    price: f64,
+    image: Image,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct MediumPayload {
+struct Image {
+    url: String,
     name: String,
-    description: String,
-    price: f64,
-    seller: Seller,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -72,16 +70,10 @@ struct LargePayload {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Tag {
-    name: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 struct VeryLargePayload {
     name: String,
-    description: String,
-    price: f64,
-    tags: Vec<Tag>,
+    tags: Vec<String>,
+    images: Vec<Image>,
 }
 
 async fn post_json_small(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
