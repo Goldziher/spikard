@@ -2,17 +2,20 @@
 //!
 //! Supports multiple profiling approaches:
 //! - Application instrumentation for GC and timing metrics
-//! - Optional speedscope output produced by in-app instrumentation (e.g. `pyinstrument`)
+//! - Sampling via `py-spy` (speedscope JSON)
 
+use crate::error::Error;
 use crate::error::Result;
 use serde::Deserialize;
 use std::path::PathBuf;
+use std::process::{Child, Command, Stdio};
 use std::time::Duration;
 
 /// Python profiler handle
 pub struct PythonProfiler {
     pid: u32,
-    output_path: Option<String>,
+    output_path: Option<PathBuf>,
+    child: Option<Child>,
 }
 
 /// Metrics collected from Python application instrumentation
@@ -80,40 +83,72 @@ pub fn wait_for_profile_output(path: &str) -> Option<String> {
 }
 
 /// Start Python profiler for the given PID
-pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PythonProfiler> {
-    let output_path = output_path
-        .as_ref()
-        .and_then(|p| p.to_str().map(|s| s.to_string()))
-        .or_else(|| std::env::var("SPIKARD_PYTHON_PROFILE_OUTPUT").ok());
+pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64) -> Result<PythonProfiler> {
+    let output_path = output_path.or_else(|| std::env::var("SPIKARD_PYTHON_PROFILE_OUTPUT").ok().map(PathBuf::from));
 
-    if let Some(ref path) = output_path
-        && let Some(parent) = PathBuf::from(path).parent()
-    {
-        let _ = std::fs::create_dir_all(parent);
-    }
+    let child = if let Some(ref path) = output_path {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
 
-    Ok(PythonProfiler { pid, output_path })
+        let record_secs = duration_secs.min(5).max(1);
+        let mut cmd = Command::new("py-spy");
+        cmd.args([
+            "record",
+            "--pid",
+            &pid.to_string(),
+            "--format",
+            "speedscope",
+            "--output",
+            &path.display().to_string(),
+            "--duration",
+            &record_secs.to_string(),
+            "--rate",
+            "100",
+        ]);
+        cmd.stdout(Stdio::null()).stderr(Stdio::null());
+        Some(cmd.spawn().map_err(|e| {
+            Error::BenchmarkFailed(format!("Failed to start py-spy profiler for pid {}: {}", pid, e))
+        })?)
+    } else {
+        None
+    };
+
+    Ok(PythonProfiler {
+        pid,
+        output_path,
+        child,
+    })
 }
 
 impl PythonProfiler {
     /// Get the output path for profiler data
-    pub fn output_path(&self) -> Option<&str> {
-        self.output_path.as_deref()
+    pub fn output_path(&self) -> Option<&PathBuf> {
+        self.output_path.as_ref()
     }
 
     /// Stop the profiler and collect final metrics
     pub fn stop(self) -> ProfilingData {
-        let app_metrics = collect_app_metrics(self.pid);
+        let PythonProfiler {
+            output_path, child, ..
+        } = self;
 
-        let flamegraph_path = self.output_path().and_then(wait_for_profile_output);
+        if let Some(mut child) = child {
+            let _ = child.wait();
+        }
+
+        let flamegraph_path = output_path
+            .as_ref()
+            .and_then(|p| p.to_str())
+            .and_then(wait_for_profile_output);
 
         ProfilingData {
             flamegraph_path,
-            gc_collections: app_metrics.as_ref().and_then(|m| m.gc_collections),
-            gc_time_ms: app_metrics.as_ref().and_then(|m| m.gc_time_ms),
-            handler_time_ms: app_metrics.as_ref().and_then(|m| m.handler_time_ms),
-            serialization_time_ms: app_metrics.as_ref().and_then(|m| m.serialization_time_ms),
-            ffi_overhead_ms: app_metrics.as_ref().and_then(|m| m.ffi_overhead_ms),
+            gc_collections: None,
+            gc_time_ms: None,
+            handler_time_ms: None,
+            serialization_time_ms: None,
+            ffi_overhead_ms: None,
             gil_wait_time_ms: None,
             gil_contention_percent: None,
         }
