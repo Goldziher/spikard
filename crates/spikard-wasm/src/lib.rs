@@ -38,6 +38,7 @@ use spikard_core::router::Route as CompiledRoute;
 use spikard_core::schema_registry::SchemaRegistry;
 use spikard_core::validation::{SchemaValidator, ValidationError};
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::sync::Arc;
 use uuid::Uuid;
 use wasm_bindgen::JsCast;
@@ -53,13 +54,13 @@ pub fn init() {
 
 #[wasm_bindgen]
 pub struct TestClient {
-    routes: Vec<RouteDefinition>,
-    handlers: HashMap<String, Function>,
+    routes: Rc<Vec<RouteDefinition>>,
+    handlers: Rc<HashMap<String, Function>>,
     config: ServerConfig,
     lifecycle_hooks: Option<Arc<WasmLifecycleHooks>>,
-    route_validators: HashMap<String, RouteValidators>,
+    route_validators: Rc<HashMap<String, RouteValidators>>,
     rate_state: std::rc::Rc<std::cell::RefCell<HashMap<String, RateLimiterState>>>,
-    dependencies: HashMap<String, DependencyDescriptor>,
+    dependencies: Rc<HashMap<String, DependencyDescriptor>>,
     dependency_singletons: std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
 }
 
@@ -109,8 +110,10 @@ impl TestClient {
         lifecycle_hooks: Option<JsValue>,
         dependencies: Option<JsValue>,
     ) -> Result<TestClient, JsValue> {
-        let routes: Vec<RouteDefinition> = serde_json::from_str(routes_json)
-            .map_err(|err| JsValue::from_str(&format!("Invalid routes JSON: {err}")))?;
+        let routes: Rc<Vec<RouteDefinition>> = Rc::new(
+            serde_json::from_str(routes_json)
+                .map_err(|err| JsValue::from_str(&format!("Invalid routes JSON: {err}")))?,
+        );
 
         let config: ServerConfig = if config.is_undefined() || config.is_null() {
             ServerConfig::default()
@@ -136,10 +139,11 @@ impl TestClient {
                 .map_err(|_| JsValue::from_str("Handler must be a function"))?;
             handler_map.insert(name, func);
         }
+        let handler_map = Rc::new(handler_map);
 
         let schema_registry = SchemaRegistry::new();
         let mut validator_map = HashMap::new();
-        for route in &routes {
+        for route in routes.iter() {
             let metadata = route_metadata_from_definition(route);
             let compiled = CompiledRoute::from_metadata(metadata, &schema_registry)
                 .map_err(|err| JsValue::from_str(&format!("Invalid route {}: {}", route.handler_name, err)))?;
@@ -152,11 +156,12 @@ impl TestClient {
                 },
             );
         }
+        let validator_map = Rc::new(validator_map);
 
         let lifecycle_hooks_value = lifecycle_hooks.unwrap_or(JsValue::UNDEFINED);
         let lifecycle_hooks = parse_hooks(&lifecycle_hooks_value)?.map(Arc::new);
 
-        let dependencies_map = parse_dependencies(dependencies.unwrap_or(JsValue::UNDEFINED))?;
+        let dependencies_map = Rc::new(parse_dependencies(dependencies.unwrap_or(JsValue::UNDEFINED))?);
 
         Ok(TestClient {
             routes,
@@ -216,12 +221,14 @@ impl TestClient {
         let context = match RequestContext::from_json(&request_json) {
             Ok(ctx) => {
                 let mut ctx = ctx;
-                ctx.routes = self.routes.clone();
-                ctx.handlers = self.handlers.clone();
+                ctx.routes = Rc::clone(&self.routes);
+                ctx.handlers = Rc::clone(&self.handlers);
                 ctx.config = self.config.clone();
                 ctx.lifecycle_hooks = self.lifecycle_hooks.clone();
-                ctx.route_validators = self.route_validators.clone();
+                ctx.route_validators = Rc::clone(&self.route_validators);
                 ctx.rate_state = self.rate_state.clone();
+                ctx.dependencies = Rc::clone(&self.dependencies);
+                ctx.dependency_singletons = self.dependency_singletons.clone();
                 ctx
             }
             Err(err) => {
@@ -243,13 +250,13 @@ impl TestClient {
             path,
             headers_val: headers,
             options,
-            routes: self.routes.clone(),
-            handlers: self.handlers.clone(),
+            routes: Rc::clone(&self.routes),
+            handlers: Rc::clone(&self.handlers),
             config: self.config.clone(),
             lifecycle_hooks: self.lifecycle_hooks.clone(),
-            route_validators: self.route_validators.clone(),
+            route_validators: Rc::clone(&self.route_validators),
             rate_state: self.rate_state.clone(),
-            dependencies: self.dependencies.clone(),
+            dependencies: Rc::clone(&self.dependencies),
             dependency_singletons: self.dependency_singletons.clone(),
         };
 
@@ -267,13 +274,13 @@ struct RequestContext {
     path: String,
     headers_val: JsValue,
     options: JsValue,
-    routes: Vec<RouteDefinition>,
-    handlers: HashMap<String, Function>,
+    routes: Rc<Vec<RouteDefinition>>,
+    handlers: Rc<HashMap<String, Function>>,
     config: ServerConfig,
     lifecycle_hooks: Option<Arc<WasmLifecycleHooks>>,
-    route_validators: HashMap<String, RouteValidators>,
+    route_validators: Rc<HashMap<String, RouteValidators>>,
     rate_state: std::rc::Rc<std::cell::RefCell<HashMap<String, RateLimiterState>>>,
-    dependencies: HashMap<String, DependencyDescriptor>,
+    dependencies: Rc<HashMap<String, DependencyDescriptor>>,
     dependency_singletons: std::rc::Rc<std::cell::RefCell<HashMap<String, String>>>,
 }
 
@@ -353,13 +360,13 @@ impl RequestContext {
             path,
             headers_val,
             options: options_obj.into(),
-            routes: Vec::new(),
-            handlers: HashMap::new(),
+            routes: Rc::new(Vec::new()),
+            handlers: Rc::new(HashMap::new()),
             config: ServerConfig::default(),
             lifecycle_hooks: None,
-            route_validators: HashMap::new(),
+            route_validators: Rc::new(HashMap::new()),
             rate_state: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
-            dependencies: HashMap::new(),
+            dependencies: Rc::new(HashMap::new()),
             dependency_singletons: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
         })
     }
@@ -476,8 +483,9 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
     let max_body_size = context.config.max_body_size.filter(|max| *max > 0);
     let request_timeout_seconds = context.config.request_timeout.filter(|seconds| *seconds > 0);
 
-    let (route, path_params, path_without_query, query) = match_route(&context.routes, &context.method, &context.path)
-        .map_err(|e| js_error_from_jsvalue("route_match_failed", e))?;
+    let (route, path_params, path_without_query, query) =
+        match_route(context.routes.as_ref(), &context.method, &context.path)
+            .map_err(|e| js_error_from_jsvalue("route_match_failed", e))?;
 
     if let Some(snapshot) = enforce_auth(&headers, &query.raw, &context.config) {
         return Ok(snapshot);
@@ -608,7 +616,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
 
     if let Some(request_id) = dependency_request_id.as_deref() {
         match resolve_dependency_map(
-            &context.dependencies,
+            context.dependencies.as_ref(),
             &context.dependency_singletons,
             request_id,
             &dependency_targets,

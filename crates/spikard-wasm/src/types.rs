@@ -529,6 +529,31 @@ fn parse_urlencoded_form(raw: &str) -> Value {
     for (key, value) in form_urlencoded::parse(raw.as_bytes()) {
         let key = key.into_owned();
         let value = value.into_owned();
+        if !key.contains('[') {
+            if !root.is_object() {
+                root = Value::Object(JsonMap::new());
+            }
+            let Some(obj) = root.as_object_mut() else {
+                continue;
+            };
+
+            match obj.get_mut(&key) {
+                None => {
+                    obj.insert(key, Value::String(value));
+                }
+                Some(existing) => match existing {
+                    Value::String(existing_value) => {
+                        let previous = std::mem::take(existing_value);
+                        *existing = Value::Array(vec![Value::String(previous), Value::String(value)]);
+                    }
+                    Value::Array(values) => values.push(Value::String(value)),
+                    _ => {
+                        *existing = Value::String(value);
+                    }
+                },
+            }
+            continue;
+        }
         let segments = parse_bracket_key(&key);
         insert_form_value(&mut root, &segments, value);
     }
