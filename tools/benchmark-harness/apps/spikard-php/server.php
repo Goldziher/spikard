@@ -37,7 +37,7 @@ if ($profileOutput !== '' && class_exists('ExcimerProfiler')) {
         }
         $profiler->start();
 
-        register_shutdown_function(static function () use ($profiler, $profileOutput): void {
+        $dumpProfile = static function () use ($profiler, $profileOutput): void {
             static $dumped = false;
             if ($dumped) {
                 return;
@@ -62,6 +62,9 @@ if ($profileOutput !== '' && class_exists('ExcimerProfiler')) {
                 }
 
                 if (!is_string($payload) || $payload === '') {
+                    $payload = json_encode(['error' => 'no profile samples captured']);
+                }
+                if (!is_string($payload)) {
                     return;
                 }
 
@@ -73,7 +76,23 @@ if ($profileOutput !== '' && class_exists('ExcimerProfiler')) {
             } catch (Throwable) {
                 // Best-effort only; benchmarks must not crash due to profiling.
             }
+        };
+
+        register_shutdown_function(static function () use ($dumpProfile): void {
+            $dumpProfile();
         });
+
+        if (function_exists('pcntl_async_signals') && function_exists('pcntl_signal')) {
+            pcntl_async_signals(true);
+            pcntl_signal(SIGINT, static function () use ($dumpProfile): void {
+                $dumpProfile();
+                exit(0);
+            });
+            pcntl_signal(SIGTERM, static function () use ($dumpProfile): void {
+                $dumpProfile();
+                exit(0);
+            });
+        }
     } catch (Throwable) {
         // Best-effort only; benchmarks must not crash due to profiling.
     }
