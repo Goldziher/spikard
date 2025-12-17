@@ -406,6 +406,8 @@ mod tests {
                 cookies: HashMap::new(),
                 body,
                 body_raw: None,
+                files: Vec::new(),
+                data: HashMap::new(),
             },
             expected_response: ExpectedResponse {
                 status_code: 200,

@@ -547,6 +547,8 @@ impl ProfileRunner {
             body,
             body_raw: None,
             cookies: std::collections::HashMap::new(),
+            files: Vec::new(),
+            data: std::collections::HashMap::new(),
         };
 
         let handler = Handler {

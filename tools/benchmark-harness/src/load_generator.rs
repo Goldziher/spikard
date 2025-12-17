@@ -5,6 +5,44 @@ use crate::fixture::Fixture;
 use crate::types::{OhaOutput, ThroughputMetrics};
 use std::process::Command;
 use std::time::Duration;
+use uuid::Uuid;
+
+/// Build a multipart form-data body with boundary parameter
+fn build_multipart_body(fixture: &Fixture) -> Result<(String, String)> {
+    let boundary = Uuid::new_v4().to_string();
+
+    let mut body = String::new();
+
+    for (key, value) in &fixture.request.data {
+        body.push_str(&format!("--{}\r\n", boundary));
+        body.push_str(&format!("Content-Disposition: form-data; name=\"{}\"\r\n\r\n", key));
+        body.push_str(value);
+        body.push_str("\r\n");
+    }
+
+    for file in &fixture.request.files {
+        body.push_str(&format!("--{}\r\n", boundary));
+        body.push_str(&format!(
+            "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n",
+            file.field_name, file.filename
+        ));
+
+        let content_type = if file.content_type.is_empty() {
+            "application/octet-stream".to_string()
+        } else {
+            file.content_type.clone()
+        };
+        body.push_str(&format!("Content-Type: {}\r\n\r\n", content_type));
+        body.push_str(&file.content);
+        body.push_str("\r\n");
+    }
+
+    body.push_str(&format!("--{}--\r\n", boundary));
+
+    let content_type = format!("multipart/form-data; boundary={}", boundary);
+
+    Ok((body, content_type))
+}
 
 async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
     let method = reqwest::Method::from_bytes(fixture.request.method.as_bytes()).map_err(|e| {
@@ -25,7 +63,11 @@ async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
         request = request.header(key, value);
     }
 
-    if let Some(body_raw) = &fixture.request.body_raw {
+    if !fixture.request.files.is_empty() || !fixture.request.data.is_empty() {
+        let (body, content_type) = build_multipart_body(fixture)?;
+        request = request.header("Content-Type", &content_type);
+        request = request.body(body);
+    } else if let Some(body_raw) = &fixture.request.body_raw {
         request = request.body(body_raw.clone());
     } else if let Some(body) = &fixture.request.body {
         let content_type = fixture.request.headers.iter().find_map(|(key, value)| {
@@ -157,7 +199,11 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
             cmd.arg("-H").arg(format!("{}: {}", key, value));
         }
 
-        if let Some(body_raw) = &fixture.request.body_raw {
+        if !fixture.request.files.is_empty() || !fixture.request.data.is_empty() {
+            let (body, content_type_header) = build_multipart_body(fixture)?;
+            cmd.arg("-H").arg(format!("Content-Type: {}", content_type_header));
+            cmd.arg("-d").arg(body);
+        } else if let Some(body_raw) = &fixture.request.body_raw {
             cmd.arg("-d").arg(body_raw);
         } else if let Some(body) = &fixture.request.body {
             let body_is_string = matches!(body, serde_json::Value::String(_));

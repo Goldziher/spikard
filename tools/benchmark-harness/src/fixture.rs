@@ -62,6 +62,25 @@ pub struct Request {
 
     #[serde(default)]
     pub body_raw: Option<String>,
+
+    #[serde(default)]
+    pub files: Vec<FileUpload>,
+
+    #[serde(default)]
+    pub data: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileUpload {
+    pub field_name: String,
+    pub filename: String,
+    pub content: String,
+
+    #[serde(default)]
+    pub content_encoding: String,
+
+    #[serde(default)]
+    pub content_type: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
