@@ -765,6 +765,13 @@ fn extract_error_message(error: &JsValue) -> String {
     if let Some(js_error) = error.dyn_ref::<js_sys::Error>() {
         return js_error.message().into();
     }
+    if let Some(obj) = error.dyn_ref::<Object>() {
+        if let Ok(msg_val) = Reflect::get(obj, &JsValue::from_str("message")) {
+            if let Some(msg_text) = msg_val.as_string() {
+                return msg_text;
+            }
+        }
+    }
     JSON::stringify(error)
         .ok()
         .and_then(|val| val.as_string())
