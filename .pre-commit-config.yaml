@@ -4,7 +4,7 @@ default_install_hook_types:
 
 repos:
   - repo: https://github.com/Goldziher/gitfluff
-    rev: v0.4.0
+    rev: v0.7.0
     hooks:
       - id: gitfluff-lint
         args: ["--write"]
@@ -37,12 +37,12 @@ repos:
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/biomejs/pre-commit
-    rev: v2.3.8
+    rev: v2.3.9
     hooks:
       - id: biome-format
       - id: biome-lint
   - repo: https://github.com/oxc-project/mirrors-oxlint
-    rev: v1.32.0
+    rev: v1.33.0
     hooks:
       - id: oxlint
         args: ["--fix"]
@@ -87,7 +87,7 @@ repos:
         args: ["--workspace"]
         pass_filenames: false
   - repo: https://github.com/rubocop/rubocop
-    rev: v1.81.7
+    rev: v1.82.0
     hooks:
       - id: rubocop
         args:

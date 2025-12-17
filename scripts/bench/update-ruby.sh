@@ -18,6 +18,14 @@ fi
 
 for app in hanami-api-dto hanami-api-raw roda-dto roda-raw spikard-ruby; do
 	echo "Updating $app..."
-	cd "tools/benchmark-harness/apps/$app" && RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle "_${BUNDLER_VERSION}_" update --all
+	cd "tools/benchmark-harness/apps/$app"
+
+	# For spikard-ruby, regenerate Gemfile.lock to avoid platform mismatch
+	# since it's a path-based gem with native extensions
+	if [[ "$app" == "spikard-ruby" ]]; then
+		rm -f Gemfile.lock
+	fi
+
+	RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle "_${BUNDLER_VERSION}_" update --all
 	cd - >/dev/null
 done

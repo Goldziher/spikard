@@ -91,7 +91,7 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64
             std::fs::create_dir_all(parent)?;
         }
 
-        let record_secs = duration_secs.min(5).max(1);
+        let record_secs = duration_secs.clamp(1, 5);
         let stderr_path = path.with_extension("stderr.log");
         let stderr_file = std::fs::File::create(&stderr_path)?;
 
@@ -110,9 +110,9 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64
             "100",
         ]);
         cmd.stdout(Stdio::null()).stderr(Stdio::from(stderr_file));
-        let child = cmd.spawn().map_err(|e| {
-            Error::BenchmarkFailed(format!("Failed to start py-spy profiler for pid {}: {}", pid, e))
-        })?;
+        let child = cmd
+            .spawn()
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to start py-spy profiler for pid {}: {}", pid, e)))?;
         (Some(child), Some(stderr_path))
     } else {
         (None, None)

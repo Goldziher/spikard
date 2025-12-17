@@ -10,10 +10,10 @@
 	},
 	"dependencies": {
 		"@morojs/moro": "^1.7.3",
-		"zod": "^4.1.13"
+		"zod": "^4.2.1"
 	},
 	"devDependencies": {
-		"@types/node": "^25.0.1",
+		"@types/node": "^25.0.3",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3"
 	},
