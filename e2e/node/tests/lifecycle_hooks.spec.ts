@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/node";
+import { TestClient } from "spikard";
 import { describe, expect, test } from "vitest";
 import {
 	createAppLifecycleHooksHookExecutionOrder,
@@ -119,8 +119,8 @@ describe("lifecycle_hooks", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Content-Type": "application/json",
 			Authorization: "Bearer valid-token-12345",
+			"Content-Type": "application/json",
 		};
 		const json = { action: "update_profile", user_id: "user-123" };
 		const response = await client.post("/api/full-lifecycle", { headers, json });
@@ -132,14 +132,14 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Action completed successfully");
 		expect(responseData).toHaveProperty("request_id");
-		expect(responseData.request_id).toBe(".*");
+		expect(responseData.request_id).toMatch(/.*/);
 		expect(responseData).toHaveProperty("user_id");
 		expect(responseData.user_id).toBe("user-123");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-response-time"]).toBe(".*ms");
-		expect(responseHeaders["x-request-id"]).toBe(".*");
-		expect(responseHeaders["x-frame-options"]).toBe("DENY");
+		expect(responseHeaders["x-response-time"]).toMatch(/.*ms/);
 		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
+		expect(responseHeaders["x-request-id"]).toMatch(/.*/);
+		expect(responseHeaders["x-frame-options"]).toBe("DENY");
 	});
 
 	test("Hook Execution Order", async () => {
@@ -170,7 +170,7 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Response with timing info");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-response-time"]).toBe(".*ms");
+		expect(responseHeaders["x-response-time"]).toMatch(/.*ms/);
 	});
 
 	test("preHandler - Authorization Forbidden Short Circuit", async () => {
@@ -200,7 +200,7 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("request_logged");
 		expect(responseData.request_logged).toBe(true);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-request-id"]).toBe(".*");
+		expect(responseHeaders["x-request-id"]).toMatch(/.*/);
 	});
 
 	test("preValidation - Rate Limiting", async () => {

@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/node";
+import { TestClient } from "spikard";
 import { describe, expect, test } from "vitest";
 import {
 	createAppHeaders30BearerTokenFormatValid,
@@ -378,9 +378,9 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"X-Request-Id": "req-12345",
 			"X-Client-Version": "1.2.3",
 			"X-Trace-Id": "trace-abc",
+			"X-Request-Id": "req-12345",
 		};
 		const response = await client.get("/headers/multiple", headers);
 

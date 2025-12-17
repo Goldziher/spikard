@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm/node";
+import { TestClient } from "spikard-wasm/node";
 import { describe, expect, test } from "vitest";
 import {
 	createAppStatusCodes200OkSuccess,
@@ -279,8 +279,8 @@ describe("status_codes", () => {
 		expect(response.statusCode).toBe(429);
 		const responseHeaders = response.headers();
 		expect(responseHeaders["retry-after"]).toBe("60");
-		expect(responseHeaders["x-ratelimit-remaining"]).toBe("0");
 		expect(responseHeaders["x-ratelimit-reset"]).toBe("1609459200");
+		expect(responseHeaders["x-ratelimit-remaining"]).toBe("0");
 		expect(responseHeaders["x-ratelimit-limit"]).toBe("100");
 	});
 
