@@ -146,12 +146,12 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 			}},
 				"devDependencies": {{
 					"{dependency}": "workspace:*",
-					"@cloudflare/vitest-pool-workers": "^0.10.15",
-					"@cloudflare/workers-types": "^4.20251212.0",
-					"@vitest/coverage-v8": "^4.0.15",
+					"@cloudflare/vitest-pool-workers": "^0.11.0",
+					"@cloudflare/workers-types": "^4.20251217.0",
+					"@vitest/coverage-v8": "^4.0.16",
 				"typescript": "^5.9.3",
-				"vitest": "^4.0.15",
-				"wrangler": "^4.54.0"
+				"vitest": "^4.0.16",
+				"wrangler": "^4.55.0"
 			}}
 	}}
 		"#,
@@ -172,10 +172,10 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 		}},
 			"devDependencies": {{
 				"{dependency}": "workspace:*",
-		        "@types/node": "^24.9.2",
-				"@vitest/coverage-v8": "^4.0.15",
+		        "@types/node": "^25.0.3",
+				"@vitest/coverage-v8": "^4.0.16",
 				"typescript": "^5.9.3",
-				"vitest": "^4.0.15"
+				"vitest": "^4.0.16"
 			}}
 	}}
 	"#,

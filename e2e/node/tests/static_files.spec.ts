@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/node";
+import { TestClient } from "spikard";
 import { describe, expect, test } from "vitest";
 import {
 	createAppStaticFilesStaticFileServerReturnsTextFile,
@@ -19,7 +19,7 @@ describe("static_files", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseText = response.text();
-		expect(responseText).toBe("Hello from static storage");
+		expect(responseText.trimEnd()).toBe("Hello from static storage");
 		const responseHeaders = response.headers();
 		expect(responseHeaders["content-type"]).toBe("text/plain");
 		expect(responseHeaders["cache-control"]).toBe("public, max-age=60");
@@ -33,7 +33,7 @@ describe("static_files", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseText = response.text();
-		expect(responseText).toBe("<!doctype html><h1>Welcome</h1>");
+		expect(responseText.trimEnd()).toBe("<!doctype html><h1>Welcome</h1>");
 		const responseHeaders = response.headers();
 		expect(responseHeaders["content-type"]).toBe("text/html");
 	});

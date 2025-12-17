@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/node";
+import { TestClient } from "spikard";
 import { describe, expect, test } from "vitest";
 import {
 	createAppEdgeCases11Utf8QueryParameter,

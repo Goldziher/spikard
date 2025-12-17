@@ -8,7 +8,7 @@
 		"test:watch": "vitest"
 	},
 	"devDependencies": {
-		"@spikard/wasm": "workspace:*",
+		"spikard-wasm": "workspace:*",
 		"@types/node": "^25.0.3",
 		"@vitest/coverage-v8": "^4.0.16",
 		"typescript": "^5.9.3",

@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "@spikard/wasm/node";
+import { TestClient } from "spikard-wasm/node";
 import { describe, expect, test } from "vitest";
 import {
 	createAppContentTypes13JsonWithCharsetUtf16,
@@ -113,7 +113,9 @@ describe("content_types", () => {
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=document.pdf");
 	});
 
-	test.skip("20_content_length_mismatch", async () => {});
+	test.skip("20_content_length_mismatch", async () => {
+		// Not supported by the in-memory HTTP client
+	});
 
 	test("17_vendor_json_accepted", async () => {
 		const app = createAppContentTypes17VendorJsonAccepted();
