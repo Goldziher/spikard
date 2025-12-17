@@ -2,7 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     bigdecimal (3.3.1)
-    concurrent-ruby (1.3.5)
+    concurrent-ruby (1.3.6)
     csv (3.3.5)
     dry-configurable (1.3.0)
       dry-core (~> 1.1)
@@ -35,11 +35,11 @@ GEM
       zeitwerk (~> 2.6)
     hanami-api (0.3.0)
       hanami-router (~> 2.0)
-    hanami-router (2.3.0)
+    hanami-router (2.3.1)
       csv (~> 3.3)
       mustermann (~> 3.0)
       mustermann-contrib (~> 3.0)
-      rack (>= 2.0)
+      rack (>= 2.2.16)
     hansi (0.2.1)
     json (2.18.0)
     logger (1.7.0)
@@ -55,7 +55,7 @@ GEM
     rackup (2.3.1)
       rack (>= 3)
     ruby2_keywords (0.0.5)
-    zeitwerk (2.7.3)
+    zeitwerk (2.7.4)
 
 PLATFORMS
   arm64-darwin-24

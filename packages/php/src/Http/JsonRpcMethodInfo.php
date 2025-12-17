@@ -35,9 +35,9 @@ final class JsonRpcMethodInfo
         }
 
         // Validate method name format: alphanumeric, dots, and underscores only
-        if (!preg_match('/^[a-zA-Z0-9_.]+$/', $methodName)) {
+        if (!\preg_match('/^[a-zA-Z0-9_.]+$/', $methodName)) {
             throw new \InvalidArgumentException(
-                sprintf(
+                \sprintf(
                     'Invalid JSON-RPC method name "%s". Must contain only alphanumeric characters, dots, and underscores.',
                     $methodName,
                 )
@@ -95,62 +95,62 @@ final class JsonRpcMethodInfo
             throw new \InvalidArgumentException('method_name is required');
         }
 
-        if (!is_string($methodName)) {
-            throw new \TypeError(sprintf(
+        if (!\is_string($methodName)) {
+            throw new \TypeError(\sprintf(
                 'method_name must be string, got %s',
-                get_debug_type($methodName),
+                \get_debug_type($methodName),
             ));
         }
 
         $description = $data['description'] ?? null;
-        if ($description !== null && !is_string($description)) {
-            throw new \TypeError(sprintf(
+        if ($description !== null && !\is_string($description)) {
+            throw new \TypeError(\sprintf(
                 'description must be string or null, got %s',
-                get_debug_type($description),
+                \get_debug_type($description),
             ));
         }
 
         $paramsSchema = $data['params_schema'] ?? null;
-        if ($paramsSchema !== null && !is_array($paramsSchema)) {
-            throw new \TypeError(sprintf(
+        if ($paramsSchema !== null && !\is_array($paramsSchema)) {
+            throw new \TypeError(\sprintf(
                 'params_schema must be array or null, got %s',
-                get_debug_type($paramsSchema),
+                \get_debug_type($paramsSchema),
             ));
         }
         /** @var array<string, mixed>|null $paramsSchema */
 
         $resultSchema = $data['result_schema'] ?? null;
-        if ($resultSchema !== null && !is_array($resultSchema)) {
-            throw new \TypeError(sprintf(
+        if ($resultSchema !== null && !\is_array($resultSchema)) {
+            throw new \TypeError(\sprintf(
                 'result_schema must be array or null, got %s',
-                get_debug_type($resultSchema),
+                \get_debug_type($resultSchema),
             ));
         }
         /** @var array<string, mixed>|null $resultSchema */
 
         $deprecated = $data['deprecated'] ?? false;
-        if (!is_bool($deprecated)) {
-            throw new \TypeError(sprintf(
+        if (!\is_bool($deprecated)) {
+            throw new \TypeError(\sprintf(
                 'deprecated must be bool, got %s',
-                get_debug_type($deprecated),
+                \get_debug_type($deprecated),
             ));
         }
 
         $tags = $data['tags'] ?? [];
-        if (!is_array($tags)) {
-            throw new \TypeError(sprintf(
+        if (!\is_array($tags)) {
+            throw new \TypeError(\sprintf(
                 'tags must be array, got %s',
-                get_debug_type($tags),
+                \get_debug_type($tags),
             ));
         }
 
         // Validate that all tags are strings
         foreach ($tags as $i => $tag) {
-            if (!is_string($tag)) {
-                throw new \TypeError(sprintf(
+            if (!\is_string($tag)) {
+                throw new \TypeError(\sprintf(
                     'tags[%d] must be string, got %s',
                     $i,
-                    get_debug_type($tag),
+                    \get_debug_type($tag),
                 ));
             }
         }

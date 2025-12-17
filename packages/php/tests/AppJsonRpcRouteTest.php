@@ -17,7 +17,7 @@ final class AppJsonRpcRouteTest extends TestCase
     public function testAddJsonRpcRouteStoresMetadata(): void
     {
         $app = new App();
-        $handler = new class implements HandlerInterface {
+        $handler = new class () implements HandlerInterface {
             public function matches(Request $request): bool
             {
                 return true;
@@ -47,12 +47,12 @@ final class AppJsonRpcRouteTest extends TestCase
 
         $routesProperty = (new ReflectionClass($withRoute))->getProperty('routes');
         $routesProperty->setAccessible(true);
-        /** @var mixed $routes */
+        /**  */
         $routes = $routesProperty->getValue($withRoute);
         self::assertIsArray($routes);
 
         self::assertCount(1, $routes);
-        /** @var mixed $route */
+        /**  */
         $route = $routes[0];
         self::assertIsArray($route);
         self::assertSame('POST', $route['method']);
