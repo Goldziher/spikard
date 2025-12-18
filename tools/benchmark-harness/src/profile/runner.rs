@@ -56,6 +56,8 @@ fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) ->
 /// Unified profiler handle for different languages
 enum ProfilerHandle {
     Python(crate::profile::python::PythonProfiler),
+    #[cfg(target_os = "linux")]
+    PerfPython(crate::profile::perf::PerfProfiler),
     Node(crate::profile::node::NodeProfiler),
     Ruby(crate::profile::ruby::RubyProfiler),
     Php(crate::profile::php::PhpProfiler),
@@ -497,6 +499,26 @@ impl ProfileRunner {
                         )?))
                     }
                 }
+                #[cfg(target_os = "linux")]
+                "perf" => {
+                    if self.detect_language() != "python" {
+                        eprintln!("  ⚠ perf profiler currently only supported for python targets");
+                        None
+                    } else {
+                        let output_path = absolutize_path(
+                            output_dir
+                                .join("profiles")
+                                .join(format!("{}.perf.svg", workload_def.name)),
+                        );
+                        let _ = std::fs::create_dir_all(output_path.parent().unwrap_or(&output_dir));
+                        let python_pid = self.python_target_pid(server);
+                        Some(ProfilerHandle::PerfPython(crate::profile::perf::start_profiler(
+                            python_pid,
+                            Some(output_path),
+                            self.config.duration_secs,
+                        )?))
+                    }
+                }
                 "php" => {
                     if suite_php_profiler {
                         None
@@ -569,6 +591,20 @@ impl ProfileRunner {
                     gc_collections: data.gc_collections,
                     gc_time_ms: data.gc_time_ms,
                     flamegraph_path: data.flamegraph_path,
+                })
+            }
+            #[cfg(target_os = "linux")]
+            ProfilerHandle::PerfPython(p) => {
+                let flamegraph_path = p.stop();
+                ProfilingData::Python(PythonProfilingData {
+                    gil_wait_time_ms: None,
+                    gil_contention_percent: None,
+                    ffi_overhead_ms: None,
+                    handler_time_ms: None,
+                    serialization_time_ms: None,
+                    gc_collections: None,
+                    gc_time_ms: None,
+                    flamegraph_path,
                 })
             }
             ProfilerHandle::Php(p) => {
