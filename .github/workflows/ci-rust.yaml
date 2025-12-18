@@ -163,7 +163,7 @@ jobs:
           PYO3_PYTHON: python
         run: >
           cargo tarpaulin
-          -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared
+          -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared -p spikard-cli -p spikard-codegen
           --out Lcov
           --output-dir target/tarpaulin
           --timeout 300
