@@ -60,6 +60,36 @@ def _dump_profile() -> None:
     except Exception as exc:
         print(f"⚠ Failed to write pyinstrument profile: {exc!r}", file=sys.stderr)
 
+def _start_pyinstrument(output_path: str) -> bool:
+    global _pyinstrument_dumped, _pyinstrument_output, _pyinstrument_profiler
+
+    if not output_path:
+        return False
+
+    _pyinstrument_output = output_path
+    _pyinstrument_dumped = False
+
+    if _pyinstrument_profiler is not None:
+        try:
+            _pyinstrument_profiler.stop()
+        except Exception:
+            pass
+
+    _pyinstrument_profiler = Profiler(async_mode="enabled")
+    _pyinstrument_profiler.start()
+    return True
+
+
+def _stop_pyinstrument() -> bool:
+    global _pyinstrument_profiler
+
+    if _pyinstrument_profiler is None:
+        return False
+
+    _dump_profile()
+    _pyinstrument_profiler = None
+    return True
+
 
 if _pyinstrument_output:
     _pyinstrument_profiler = Profiler(async_mode="enabled")
@@ -74,13 +104,24 @@ def health() -> dict[str, str]:
 
 @get("/__benchmark__/flush-profile")
 def flush_profile() -> dict[str, bool]:
-    _dump_profile()
+    _stop_pyinstrument()
     if _profiling_collector is not None:
         finalize = getattr(_profiling_collector, "finalize", None)
         if callable(finalize):
             finalize()
         return {"ok": True}
     return {"ok": False}
+
+@get("/__benchmark__/profile/start")
+def start_profile(output: str | None = Query(default=None)) -> dict[str, bool]:
+    if output is None:
+        return {"ok": False}
+    return {"ok": _start_pyinstrument(output)}
+
+
+@get("/__benchmark__/profile/stop")
+def stop_profile() -> dict[str, bool]:
+    return {"ok": _stop_pyinstrument()}
 
 
 P = ParamSpec("P")

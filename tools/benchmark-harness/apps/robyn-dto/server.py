@@ -47,6 +47,36 @@ def _dump_profile() -> None:
     except Exception as exc:
         print(f"⚠ Failed to write pyinstrument profile: {exc!r}", file=sys.stderr)
 
+def _start_pyinstrument(output_path: str) -> bool:
+    global _pyinstrument_dumped, _pyinstrument_output, _pyinstrument_profiler
+
+    if not output_path:
+        return False
+
+    _pyinstrument_output = output_path
+    _pyinstrument_dumped = False
+
+    if _pyinstrument_profiler is not None:
+        try:
+            _pyinstrument_profiler.stop()
+        except Exception:
+            pass
+
+    _pyinstrument_profiler = Profiler(async_mode="enabled")
+    _pyinstrument_profiler.start()
+    return True
+
+
+def _stop_pyinstrument() -> bool:
+    global _pyinstrument_profiler
+
+    if _pyinstrument_profiler is None:
+        return False
+
+    _dump_profile()
+    _pyinstrument_profiler = None
+    return True
+
 
 if _pyinstrument_output:
     _pyinstrument_profiler = Profiler(async_mode="enabled")
@@ -350,8 +380,20 @@ async def health():
 
 @app.get("/__benchmark__/flush-profile")
 async def flush_profile():
-    _dump_profile()
+    _stop_pyinstrument()
     return jsonify({"ok": True})
+
+
+@app.get("/__benchmark__/profile/start")
+async def start_profile(request: Request):
+    output = request.query_params.get("output")
+    ok = isinstance(output, str) and _start_pyinstrument(output)
+    return jsonify({"ok": ok})
+
+
+@app.get("/__benchmark__/profile/stop")
+async def stop_profile():
+    return jsonify({"ok": _stop_pyinstrument()})
 
 
 @app.get("/")

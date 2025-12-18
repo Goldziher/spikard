@@ -56,10 +56,12 @@ fn find_linux_descendant_pid_by_comm(root_pid: u32, needle: &str, max_depth: usi
 /// Unified profiler handle for different languages
 enum ProfilerHandle {
     Python(crate::profile::python::PythonProfiler),
+    PythonInApp(PathBuf),
     Node(crate::profile::node::NodeProfiler),
     Ruby(crate::profile::ruby::RubyProfiler),
     Php(crate::profile::php::PhpProfiler),
     Rust(crate::profile::rust::RustProfiler),
+    RustInApp(PathBuf),
 }
 
 /// Profile mode configuration
@@ -122,6 +124,7 @@ impl ProfileRunner {
         // is selected, instead of relying on in-app profilers which are sensitive to threading.
         let suite_python_profiler = false;
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
+        let suite_node_profiler = self.config.profiler.as_deref() == Some("node") && framework_info.language == "node";
         let suite_wasm_profiler = self.config.profiler.as_deref() == Some("wasm") && framework_info.language == "wasm";
 
         let php_profile_output = suite_php_profiler
@@ -148,9 +151,32 @@ impl ProfileRunner {
             ));
         }
 
+        let node_cpu_profile_dir = suite_node_profiler.then(|| {
+            self.config
+                .output_dir
+                .as_ref()
+                .map(|dir| dir.join("profiles"))
+                .unwrap_or_else(|| PathBuf::from("profiles"))
+        });
+        if let Some(ref dir) = node_cpu_profile_dir {
+            let _ = std::fs::create_dir_all(dir);
+        }
+
         if suite_wasm_profiler {
             let _ = std::fs::remove_file(self.config.app_dir.join("v8.log"));
         }
+
+        let node_start_cmd_override = node_cpu_profile_dir.as_ref().map(|dir| {
+            let tsx_cli = self
+                .config
+                .app_dir
+                .join("../../../../node_modules/tsx/dist/cli.mjs");
+            format!(
+                "node --cpu-prof --cpu-prof-dir {} {} server.ts {{port}}",
+                dir.display(),
+                tsx_cli.display()
+            )
+        });
 
         let server_config = ServerConfig {
             framework: Some(self.config.framework.clone()),
@@ -158,10 +184,14 @@ impl ProfileRunner {
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
             env: server_env,
-            start_cmd_override: suite_wasm_profiler.then_some(
-                "deno run --allow-net --allow-read --allow-env --allow-write --v8-flags=--prof server.ts {port}"
-                    .to_string(),
-            ),
+            start_cmd_override: if suite_wasm_profiler {
+                Some(
+                    "deno run --allow-net --allow-read --allow-env --allow-write --v8-flags=--prof,--logfile=v8.log server.ts {port}"
+                        .to_string(),
+                )
+            } else {
+                node_start_cmd_override
+            },
         };
 
         let server = start_server(server_config).await?;
@@ -223,6 +253,34 @@ impl ProfileRunner {
                 for workload in &mut suite.workloads {
                     workload.results.profiling = Some(ProfilingData::Php(PhpProfilingData {
                         flamegraph_path: flamegraph_path.clone(),
+                    }));
+                }
+            }
+        }
+        if suite_node_profiler {
+            let profile_path = node_cpu_profile_dir
+                .as_ref()
+                .and_then(|dir| find_latest_file_with_extension(dir, "cpuprofile"))
+                .map(|p| p.display().to_string());
+
+            for suite in &mut suite_results {
+                for workload in &mut suite.workloads {
+                    let profiling = workload.results.profiling.take();
+                    let (v8_heap_used_mb, v8_heap_total_mb, event_loop_lag_ms, gc_time_ms) = match profiling {
+                        Some(ProfilingData::Node(data)) => (
+                            data.v8_heap_used_mb,
+                            data.v8_heap_total_mb,
+                            data.event_loop_lag_ms,
+                            data.gc_time_ms,
+                        ),
+                        _ => (None, None, None, None),
+                    };
+                    workload.results.profiling = Some(ProfilingData::Node(NodeProfilingData {
+                        v8_heap_used_mb,
+                        v8_heap_total_mb,
+                        event_loop_lag_ms,
+                        gc_time_ms,
+                        flamegraph_path: profile_path.clone(),
                     }));
                 }
             }
@@ -331,6 +389,43 @@ impl ProfileRunner {
         }
     }
 
+    async fn try_profile_start(&self, server: &ServerHandle, output_path: &PathBuf) -> bool {
+        let Ok(client) = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(5))
+            .build()
+        else {
+            return false;
+        };
+
+        let Ok(mut url) = reqwest::Url::parse(&format!("{}/__benchmark__/profile/start", server.base_url)) else {
+            return false;
+        };
+        url.query_pairs_mut()
+            .append_pair("output", &output_path.display().to_string());
+
+        client
+            .get(url)
+            .send()
+            .await
+            .is_ok_and(|resp| resp.status().is_success())
+    }
+
+    async fn try_profile_stop(&self, server: &ServerHandle) -> bool {
+        let Ok(client) = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(5))
+            .build()
+        else {
+            return false;
+        };
+
+        let url = format!("{}/__benchmark__/profile/stop", server.base_url);
+        client
+            .get(url)
+            .send()
+            .await
+            .is_ok_and(|resp| resp.status().is_success())
+    }
+
     async fn run_workload(
         &self,
         workload_def: &crate::schema::workload::WorkloadDef,
@@ -340,48 +435,75 @@ impl ProfileRunner {
     ) -> Result<WorkloadResult> {
         let fixture = self.create_fixture_from_workload(workload_def)?;
 
+        let monitor = ResourceMonitor::new(server.pid());
+        let monitor_handle = monitor.start_monitoring(100);
+
+        if self.config.warmup_secs > 0 {
+            self.run_load_test(&server.base_url, &fixture, self.config.warmup_secs)
+                .await?;
+        }
+
+        let suite_node_profiler = self.config.profiler.as_deref() == Some("node") && self.detect_language() == "node";
+        let output_dir = self.config.output_dir.clone().unwrap_or_else(|| PathBuf::from("."));
+
         let profiler_handle = if let Some(ref profiler_type) = self.config.profiler {
             match profiler_type.as_str() {
                 "python" => {
                     if suite_python_profiler {
                         None
                     } else {
-                        let python_pid = self.python_target_pid(server);
-                        let output_path = self.config.output_dir.as_ref().map(|dir| {
-                            dir.join("profiles")
-                                .join(format!("{}.speedscope.json", workload_def.name))
-                        });
-                        Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
-                            python_pid,
-                            output_path,
-                            self.config.duration_secs,
-                        )?))
+                        let output_path =
+                            output_dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name));
+                        let _ = std::fs::create_dir_all(output_path.parent().unwrap_or(&output_dir));
+
+                        if self.detect_language() == "python" && self.try_profile_start(server, &output_path).await {
+                            Some(ProfilerHandle::PythonInApp(output_path))
+                        } else {
+                            let python_pid = self.python_target_pid(server);
+                            Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
+                                python_pid,
+                                Some(output_path),
+                                self.config.duration_secs,
+                            )?))
+                        }
                     }
                 }
                 "php" => {
                     if suite_php_profiler {
                         None
                     } else {
-                        let output_path = self
-                            .config
-                            .output_dir
-                            .as_ref()
-                            .map(|dir| dir.join(format!("php-{}.speedscope.json", workload_def.name)));
+                        let output_path = output_dir.join(format!("php-{}.speedscope.json", workload_def.name));
                         Some(ProfilerHandle::Php(crate::profile::php::start_profiler(
                             server.pid(),
-                            output_path,
+                            Some(output_path),
                         )?))
                     }
                 }
-                "node" => Some(ProfilerHandle::Node(crate::profile::node::start_profiler(
-                    server.pid(),
-                )?)),
-                "ruby" => Some(ProfilerHandle::Ruby(crate::profile::ruby::start_profiler(
-                    server.pid(),
-                )?)),
-                "rust" => Some(ProfilerHandle::Rust(crate::profile::rust::start_profiler(
-                    server.pid(),
-                )?)),
+                "node" => {
+                    if suite_node_profiler {
+                        None
+                    } else {
+                        Some(ProfilerHandle::Node(crate::profile::node::start_profiler(server.pid())?))
+                    }
+                }
+                "ruby" => {
+                    let output_path =
+                        output_dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name));
+                    Some(ProfilerHandle::Ruby(crate::profile::ruby::start_profiler(
+                        server.pid(),
+                        Some(output_path),
+                        self.config.duration_secs,
+                    )?))
+                }
+                "rust" => {
+                    let output_path = output_dir.join("profiles").join(format!("{}.svg", workload_def.name));
+                    let _ = std::fs::create_dir_all(output_path.parent().unwrap_or(&output_dir));
+                    if self.try_profile_start(server, &output_path).await {
+                        Some(ProfilerHandle::RustInApp(output_path))
+                    } else {
+                        Some(ProfilerHandle::Rust(crate::profile::rust::start_profiler(server.pid())?))
+                    }
+                }
                 "wasm" => None,
                 _ => {
                     eprintln!("  ⚠ Unknown profiler type: {}", profiler_type);
@@ -392,17 +514,13 @@ impl ProfileRunner {
             None
         };
 
-        let monitor = ResourceMonitor::new(server.pid());
-        let monitor_handle = monitor.start_monitoring(100);
-
-        if self.config.warmup_secs > 0 {
-            self.run_load_test(&server.base_url, &fixture, self.config.warmup_secs)
-                .await?;
-        }
-
         let (oha_output, throughput) = self
             .run_load_test(&server.base_url, &fixture, self.config.duration_secs)
             .await?;
+
+        if matches!(profiler_handle, Some(ProfilerHandle::PythonInApp(_)) | Some(ProfilerHandle::RustInApp(_))) {
+            let _ = self.try_profile_stop(server).await;
+        }
 
         let monitor_with_samples = monitor_handle.stop().await;
         let resource_metrics = monitor_with_samples.calculate_metrics();
@@ -420,6 +538,21 @@ impl ProfileRunner {
                     gc_collections: data.gc_collections,
                     gc_time_ms: data.gc_time_ms,
                     flamegraph_path: data.flamegraph_path,
+                })
+            }
+            ProfilerHandle::PythonInApp(path) => {
+                let flamegraph_path = path
+                    .to_str()
+                    .and_then(crate::profile::python::wait_for_profile_output);
+                ProfilingData::Python(PythonProfilingData {
+                    gil_wait_time_ms: None,
+                    gil_contention_percent: None,
+                    ffi_overhead_ms: None,
+                    handler_time_ms: None,
+                    serialization_time_ms: None,
+                    gc_collections: None,
+                    gc_time_ms: None,
+                    flamegraph_path,
                 })
             }
             ProfilerHandle::Php(p) => {
@@ -453,6 +586,15 @@ impl ProfileRunner {
                 ProfilingData::Rust(RustProfilingData {
                     heap_allocated_mb: data.heap_allocated_mb,
                     flamegraph_path: data.flamegraph_path,
+                })
+            }
+            ProfilerHandle::RustInApp(path) => {
+                let flamegraph_path = path
+                    .to_str()
+                    .and_then(crate::profile::python::wait_for_profile_output);
+                ProfilingData::Rust(RustProfilingData {
+                    heap_allocated_mb: None,
+                    flamegraph_path,
                 })
             }
         });
@@ -878,4 +1020,24 @@ impl ProfileRunner {
             _ => "unknown".to_string(),
         }
     }
+}
+
+fn find_latest_file_with_extension(dir: &PathBuf, ext: &str) -> Option<PathBuf> {
+    let Ok(read_dir) = std::fs::read_dir(dir) else {
+        return None;
+    };
+
+    read_dir
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) == Some(ext) {
+                let modified = entry.metadata().ok()?.modified().ok()?;
+                Some((modified, path))
+            } else {
+                None
+            }
+        })
+        .max_by_key(|(modified, _)| *modified)
+        .map(|(_, path)| path)
 }

@@ -42,7 +42,7 @@ impl ServerHandle {
                 }
             }
 
-            let max_wait_iters = if self.stop_signal == libc::SIGINT { 150 } else { 50 };
+            let max_wait_iters = 150;
             for _ in 0..max_wait_iters {
                 match self.process.try_wait() {
                     Ok(Some(_)) => return Ok(()),
