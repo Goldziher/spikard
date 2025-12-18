@@ -46,6 +46,7 @@ packages/ruby/.simplecov
 [Tt][Oo][Dd][Oo]*
 __pycache__/
 AGENTS.md
+artifacts/
 benchmark-results/
 build/
 Cargo.lock

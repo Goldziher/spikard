@@ -80,13 +80,17 @@ jobs:
       - name: Install py-spy profiler
         run: cargo install py-spy --locked
 
+      - name: Install rbspy profiler
+        run: cargo install rbspy --locked
+
       - name: Package benchmark tools
         run: |
           mkdir -p artifacts/bin
           cp target/release/benchmark-harness artifacts/bin/benchmark-harness
           cp ~/.cargo/bin/oha artifacts/bin/oha
           cp ~/.cargo/bin/py-spy artifacts/bin/py-spy
-          chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha artifacts/bin/py-spy
+          cp ~/.cargo/bin/rbspy artifacts/bin/rbspy
+          chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha artifacts/bin/py-spy artifacts/bin/rbspy
 
       - name: Upload benchmark tools artifact
         uses: actions/upload-artifact@v6
@@ -111,7 +115,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -161,7 +165,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -227,7 +231,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
 
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
@@ -281,7 +285,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
 
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
@@ -335,7 +339,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -395,7 +399,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -419,6 +423,10 @@ jobs:
 
       - name: Create results directory
         run: mkdir -p results/spikard-ruby
+
+      - name: Allow rbspy ptrace
+        run: |
+          sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for rbspy" >&2; true; }
 
       - name: Run benchmarks
         run: |
@@ -457,7 +465,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -548,7 +556,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust

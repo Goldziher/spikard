@@ -6,10 +6,13 @@
 use axum::body::Body;
 use axum::http::{Response, StatusCode};
 use clap::Parser;
+use pprof::ProfilerGuard;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use spikard::{App, RequestContext, ServerConfig, get, post};
 use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::{Mutex, OnceLock};
 
 #[derive(Parser, Debug)]
 #[command(name = "spikard-rust-bench")]
@@ -20,6 +23,8 @@ struct Args {
     port: u16,
 }
 
+static CPU_PROFILER: OnceLock<Mutex<Option<ProfilerGuard<'static>>>> = OnceLock::new();
+static CPU_PROFILE_OUTPUT: OnceLock<Mutex<Option<PathBuf>>> = OnceLock::new();
 
 #[derive(Debug, Serialize, Deserialize)]
 struct SmallPayload {
@@ -322,6 +327,86 @@ async fn health(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, Str
         .unwrap())
 }
 
+async fn benchmark_profile_start(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    let params: HashMap<String, String> = ctx.query().unwrap_or_default();
+    let Some(output) = params.get("output").filter(|s| !s.is_empty()) else {
+        let result = serde_json::json!({ "ok": false, "error": "missing_output" });
+        return Ok(Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .header("content-type", "application/json")
+            .body(Body::from(result.to_string()))
+            .unwrap());
+    };
+
+    let output_path = PathBuf::from(output);
+    if let Some(parent) = output_path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    }
+
+    let guard = ProfilerGuard::new(100).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let profiler_slot = CPU_PROFILER.get_or_init(|| Mutex::new(None));
+    let output_slot = CPU_PROFILE_OUTPUT.get_or_init(|| Mutex::new(None));
+
+    *profiler_slot.lock().map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "profiler_lock".to_string()))? =
+        Some(guard);
+    *output_slot.lock().map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "output_lock".to_string()))? =
+        Some(output_path);
+
+    let result = serde_json::json!({ "ok": true });
+    Ok(Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/json")
+        .body(Body::from(result.to_string()))
+        .unwrap())
+}
+
+async fn benchmark_profile_stop(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    let profiler_slot = CPU_PROFILER.get_or_init(|| Mutex::new(None));
+    let output_slot = CPU_PROFILE_OUTPUT.get_or_init(|| Mutex::new(None));
+
+    let guard = profiler_slot
+        .lock()
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "profiler_lock".to_string()))?
+        .take();
+    let output_path = output_slot
+        .lock()
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "output_lock".to_string()))?
+        .take();
+
+    let Some(guard) = guard else {
+        let result = serde_json::json!({ "ok": false, "error": "not_running" });
+        return Ok(Response::builder()
+            .status(StatusCode::OK)
+            .header("content-type", "application/json")
+            .body(Body::from(result.to_string()))
+            .unwrap());
+    };
+    let Some(output_path) = output_path else {
+        let result = serde_json::json!({ "ok": false, "error": "missing_output" });
+        return Ok(Response::builder()
+            .status(StatusCode::OK)
+            .header("content-type", "application/json")
+            .body(Body::from(result.to_string()))
+            .unwrap());
+    };
+
+    let report = guard
+        .report()
+        .build()
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let file = std::fs::File::create(&output_path).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    report
+        .flamegraph(file)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let result = serde_json::json!({ "ok": true });
+    Ok(Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/json")
+        .body(Body::from(result.to_string()))
+        .unwrap())
+}
 
 #[tokio::main]
 async fn main() {
@@ -337,6 +422,10 @@ async fn main() {
     let mut app = App::new().config(config);
 
     app.route(get("/health"), health).unwrap();
+    app.route(get("/__benchmark__/profile/start"), benchmark_profile_start)
+        .unwrap();
+    app.route(get("/__benchmark__/profile/stop"), benchmark_profile_stop)
+        .unwrap();
 
     app.route(post("/json/small"), post_json_small).unwrap();
     app.route(post("/json/medium"), post_json_medium).unwrap();
