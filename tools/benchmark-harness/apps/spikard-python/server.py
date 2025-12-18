@@ -9,6 +9,8 @@ Uses msgspec.Struct for proper validation following ADR 0003.
 import atexit
 import os
 import sys
+import signal
+import threading
 from functools import wraps
 from pathlib import Path as PathLib
 from typing import Callable, Coroutine, ParamSpec, TypeVar
@@ -33,6 +35,9 @@ if profiling_module.exists():
 
 _profile_dir: str | None = os.environ.get("SPIKARD_PYTHON_PROFILE_DIR") or None
 _profiled_endpoints: set[str] = set()
+_profile_lock = threading.Lock()
+_profile_state: dict[str, tuple[int, int, Profiler]] = {}
+_profile_target_requests = int(os.environ.get("SPIKARD_PYINSTRUMENT_REQUESTS") or "200")
 
 app = Spikard()
 
@@ -95,6 +100,11 @@ if _pyinstrument_output:
     _pyinstrument_profiler = Profiler(async_mode="enabled")
     _pyinstrument_profiler.start()
     atexit.register(_dump_profile)
+    try:
+        if hasattr(signal, "SIGUSR2"):
+            signal.signal(signal.SIGUSR2, lambda *_args: _dump_profile())
+    except Exception:
+        pass
 
 
 @get("/health")
@@ -137,26 +147,53 @@ def profile_once(
 
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            if name in _profiled_endpoints:
-                return await func(*args, **kwargs)
+            thread_id = threading.get_ident()
 
-            _profiled_endpoints.add(name)
-            profiler = Profiler(async_mode="enabled")
-            profiler.start()
+            with _profile_lock:
+                if name in _profiled_endpoints:
+                    return await func(*args, **kwargs)
+
+                state = _profile_state.get(name)
+                if state is None:
+                    profiler = Profiler(async_mode="enabled", interval=0.00001)
+                    profiler.start()
+                    _profile_state[name] = (thread_id, 0, profiler)
+                    state = _profile_state[name]
+
+                owner_thread_id, count, profiler = state
+                if owner_thread_id != thread_id:
+                    profiler = None
+
             try:
                 return await func(*args, **kwargs)
             finally:
-                try:
-                    profiler.stop()
-                    out_dir = PathLib(_profile_dir)
-                    out_dir.mkdir(parents=True, exist_ok=True)
-                    out_path = out_dir / f"{name}.speedscope.json"
-                    out_path.write_text(
-                        profiler.output(renderer=SpeedscopeRenderer()),
-                        encoding="utf-8",
-                    )
-                except Exception as exc:
-                    print(f"⚠ Failed to write profile for {name}: {exc!r}", file=sys.stderr)
+                if profiler is not None:
+                    dump_profiler: Profiler | None = None
+                    with _profile_lock:
+                        state = _profile_state.get(name)
+                        if state is not None:
+                            owner_thread_id, count, active_profiler = state
+                            if owner_thread_id == thread_id:
+                                count += 1
+                                if count >= _profile_target_requests:
+                                    _profile_state.pop(name, None)
+                                    _profiled_endpoints.add(name)
+                                    dump_profiler = active_profiler
+                                else:
+                                    _profile_state[name] = (owner_thread_id, count, active_profiler)
+
+                    if dump_profiler is not None:
+                        try:
+                            dump_profiler.stop()
+                            out_dir = PathLib(_profile_dir)
+                            out_dir.mkdir(parents=True, exist_ok=True)
+                            out_path = out_dir / f"{name}.speedscope.json"
+                            out_path.write_text(
+                                dump_profiler.output(renderer=SpeedscopeRenderer()),
+                                encoding="utf-8",
+                            )
+                        except Exception as exc:
+                            print(f"⚠ Failed to write profile for {name}: {exc!r}", file=sys.stderr)
 
         return wrapper
 

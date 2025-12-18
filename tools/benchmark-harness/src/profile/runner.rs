@@ -13,40 +13,40 @@ use crate::{
     server::{ServerConfig, ServerHandle, start_server},
 };
 use std::path::PathBuf;
-#[cfg(target_os = "linux")]
-fn read_linux_children_pids(pid: u32) -> Vec<u32> {
-    let path = format!("/proc/{}/task/{}/children", pid, pid);
-    let Ok(contents) = std::fs::read_to_string(path) else {
-        return Vec::new();
-    };
-    contents
-        .split_whitespace()
-        .filter_map(|s| s.parse::<u32>().ok())
-        .collect()
-}
+use sysinfo::{Pid, System};
+fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) -> Option<u32> {
+    let mut system = System::new();
+    system.refresh_all();
 
-#[cfg(target_os = "linux")]
-fn read_linux_comm(pid: u32) -> Option<String> {
-    let path = format!("/proc/{}/comm", pid);
-    std::fs::read_to_string(path).ok().map(|s| s.trim().to_string())
-}
+    let root = Pid::from_u32(root_pid);
 
-#[cfg(target_os = "linux")]
-fn find_linux_descendant_pid_by_comm(root_pid: u32, needle: &str, max_depth: usize) -> Option<u32> {
-    let mut queue: std::collections::VecDeque<(u32, usize)> = std::collections::VecDeque::new();
-    queue.push_back((root_pid, 0));
+    let mut children: std::collections::HashMap<Pid, Vec<Pid>> = std::collections::HashMap::new();
+    for (&pid, proc_) in system.processes() {
+        if let Some(parent) = proc_.parent() {
+            children.entry(parent).or_default().push(pid);
+        }
+    }
+
+    let needle = needle.to_lowercase();
+    let mut queue: std::collections::VecDeque<(Pid, usize)> = std::collections::VecDeque::new();
+    queue.push_back((root, 0));
 
     while let Some((pid, depth)) = queue.pop_front() {
         if depth > max_depth {
             continue;
         }
 
-        if read_linux_comm(pid).is_some_and(|comm| comm.contains(needle)) {
-            return Some(pid);
+        if let Some(proc_) = system.process(pid) {
+            let name = proc_.name().to_string_lossy().to_lowercase();
+            if name.contains(&needle) {
+                return Some(pid.as_u32());
+            }
         }
 
-        for child in read_linux_children_pids(pid) {
-            queue.push_back((child, depth + 1));
+        if let Some(kids) = children.get(&pid) {
+            for &child in kids {
+                queue.push_back((child, depth + 1));
+            }
         }
     }
 
@@ -56,7 +56,6 @@ fn find_linux_descendant_pid_by_comm(root_pid: u32, needle: &str, max_depth: usi
 /// Unified profiler handle for different languages
 enum ProfilerHandle {
     Python(crate::profile::python::PythonProfiler),
-    PythonInApp(PathBuf),
     Node(crate::profile::node::NodeProfiler),
     Ruby(crate::profile::ruby::RubyProfiler),
     Php(crate::profile::php::PhpProfiler),
@@ -120,9 +119,10 @@ impl ProfileRunner {
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
 
-        // For Python, we always attach an external sampler (py-spy) per workload when `--profiler python`
-        // is selected, instead of relying on in-app profilers which are sensitive to threading.
-        let suite_python_profiler = false;
+        // For Python, prefer in-app per-endpoint profiling (pyinstrument) written to
+        // `SPIKARD_PYTHON_PROFILE_DIR` to avoid py-spy / ptrace issues on newer Python versions.
+        let suite_python_profiler =
+            self.config.profiler.as_deref() == Some("python") && framework_info.language == "python";
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
         let suite_node_profiler = self.config.profiler.as_deref() == Some("node") && framework_info.language == "node";
         let suite_wasm_profiler = self.config.profiler.as_deref() == Some("wasm") && framework_info.language == "wasm";
@@ -130,6 +130,14 @@ impl ProfileRunner {
         let php_profile_output = suite_php_profiler
             .then(|| std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from))
             .flatten();
+        let python_profile_dir = suite_python_profiler.then(|| {
+            let base = self
+                .config
+                .output_dir
+                .clone()
+                .unwrap_or_else(|| PathBuf::from("results"));
+            absolutize_path(base.join("profiles"))
+        });
         let wasm_metrics_output = suite_wasm_profiler
             .then(|| std::env::var("SPIKARD_WASM_METRICS_FILE").ok().map(PathBuf::from))
             .flatten();
@@ -143,6 +151,12 @@ impl ProfileRunner {
                 "SPIKARD_PHP_PROFILE_OUTPUT".to_string(),
                 output_path.display().to_string(),
             ));
+        }
+        if let Some(ref dir) = python_profile_dir {
+            let _ = std::fs::create_dir_all(dir);
+            server_env.push(("SPIKARD_PYTHON_PROFILE_DIR".to_string(), dir.display().to_string()));
+            let target = (self.config.duration_secs.saturating_mul(200)).clamp(500, 10_000);
+            server_env.push(("SPIKARD_PYINSTRUMENT_REQUESTS".to_string(), target.to_string()));
         }
         if let Some(ref output_path) = wasm_metrics_output {
             server_env.push((
@@ -253,6 +267,29 @@ impl ProfileRunner {
                 for workload in &mut suite.workloads {
                     workload.results.profiling = Some(ProfilingData::Php(PhpProfilingData {
                         flamegraph_path: flamegraph_path.clone(),
+                    }));
+                }
+            }
+        }
+        if suite_python_profiler {
+            for suite in &mut suite_results {
+                for workload in &mut suite.workloads {
+                    let path = python_profile_dir
+                        .as_ref()
+                        .map(|dir| dir.join(format!("{}.speedscope.json", workload.name)));
+                    let flamegraph_path = path
+                        .as_ref()
+                        .and_then(|p| p.to_str())
+                        .and_then(crate::profile::python::wait_for_profile_output);
+                    workload.results.profiling = Some(ProfilingData::Python(PythonProfilingData {
+                        gil_wait_time_ms: None,
+                        gil_contention_percent: None,
+                        ffi_overhead_ms: None,
+                        handler_time_ms: None,
+                        serialization_time_ms: None,
+                        gc_collections: None,
+                        gc_time_ms: None,
+                        flamegraph_path,
                     }));
                 }
             }
@@ -379,14 +416,9 @@ impl ProfileRunner {
     }
 
     fn python_target_pid(&self, server: &ServerHandle) -> u32 {
-        #[cfg(target_os = "linux")]
-        {
-            find_linux_descendant_pid_by_comm(server.pid(), "python", 6).unwrap_or(server.pid())
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            server.pid()
-        }
+        // The server is frequently started via a wrapper (e.g. `uv`), so we find the actual
+        // Python child process when possible.
+        find_descendant_pid_by_name(server.pid(), "python", 10).unwrap_or(server.pid())
     }
 
     async fn try_profile_start(&self, server: &ServerHandle, output_path: &PathBuf) -> bool {
@@ -452,20 +484,17 @@ impl ProfileRunner {
                     if suite_python_profiler {
                         None
                     } else {
-                        let output_path =
-                            output_dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name));
+                        let output_path = absolutize_path(
+                            output_dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name)),
+                        );
                         let _ = std::fs::create_dir_all(output_path.parent().unwrap_or(&output_dir));
 
-                        if self.detect_language() == "python" && self.try_profile_start(server, &output_path).await {
-                            Some(ProfilerHandle::PythonInApp(output_path))
-                        } else {
-                            let python_pid = self.python_target_pid(server);
-                            Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
-                                python_pid,
-                                Some(output_path),
-                                self.config.duration_secs,
-                            )?))
-                        }
+                        let python_pid = self.python_target_pid(server);
+                        Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
+                            python_pid,
+                            Some(output_path),
+                            self.config.duration_secs,
+                        )?))
                     }
                 }
                 "php" => {
@@ -487,8 +516,9 @@ impl ProfileRunner {
                     }
                 }
                 "ruby" => {
-                    let output_path =
-                        output_dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name));
+                    let output_path = absolutize_path(
+                        output_dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name)),
+                    );
                     Some(ProfilerHandle::Ruby(crate::profile::ruby::start_profiler(
                         server.pid(),
                         Some(output_path),
@@ -496,7 +526,8 @@ impl ProfileRunner {
                     )?))
                 }
                 "rust" => {
-                    let output_path = output_dir.join("profiles").join(format!("{}.svg", workload_def.name));
+                    let output_path =
+                        absolutize_path(output_dir.join("profiles").join(format!("{}.svg", workload_def.name)));
                     let _ = std::fs::create_dir_all(output_path.parent().unwrap_or(&output_dir));
                     if self.try_profile_start(server, &output_path).await {
                         Some(ProfilerHandle::RustInApp(output_path))
@@ -518,7 +549,7 @@ impl ProfileRunner {
             .run_load_test(&server.base_url, &fixture, self.config.duration_secs)
             .await?;
 
-        if matches!(profiler_handle, Some(ProfilerHandle::PythonInApp(_)) | Some(ProfilerHandle::RustInApp(_))) {
+        if matches!(profiler_handle, Some(ProfilerHandle::RustInApp(_))) {
             let _ = self.try_profile_stop(server).await;
         }
 
@@ -538,21 +569,6 @@ impl ProfileRunner {
                     gc_collections: data.gc_collections,
                     gc_time_ms: data.gc_time_ms,
                     flamegraph_path: data.flamegraph_path,
-                })
-            }
-            ProfilerHandle::PythonInApp(path) => {
-                let flamegraph_path = path
-                    .to_str()
-                    .and_then(crate::profile::python::wait_for_profile_output);
-                ProfilingData::Python(PythonProfilingData {
-                    gil_wait_time_ms: None,
-                    gil_contention_percent: None,
-                    ffi_overhead_ms: None,
-                    handler_time_ms: None,
-                    serialization_time_ms: None,
-                    gc_collections: None,
-                    gc_time_ms: None,
-                    flamegraph_path,
                 })
             }
             ProfilerHandle::Php(p) => {
@@ -1040,4 +1056,15 @@ fn find_latest_file_with_extension(dir: &PathBuf, ext: &str) -> Option<PathBuf> 
         })
         .max_by_key(|(modified, _)| *modified)
         .map(|(_, path)| path)
+}
+
+fn absolutize_path(path: PathBuf) -> PathBuf {
+    if path.is_absolute() {
+        return path;
+    }
+
+    match std::env::current_dir() {
+        Ok(cwd) => cwd.join(path),
+        Err(_) => path,
+    }
 }
