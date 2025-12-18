@@ -86,7 +86,7 @@ impl PerfProfiler {
         }
 
         let mut folded = Vec::<u8>::new();
-        if Folder::new()
+        if Folder::default()
             .collapse(Cursor::new(script_output.stdout), &mut folded)
             .is_err()
         {
