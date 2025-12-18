@@ -4,6 +4,8 @@
 //! implementation with deep profiling integration (py-spy, perf, etc.).
 
 pub mod node;
+#[cfg(target_os = "linux")]
+pub mod perf;
 pub mod php;
 pub mod python;
 pub mod ruby;
