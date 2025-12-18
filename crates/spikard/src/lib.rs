@@ -656,6 +656,50 @@ mod tests {
         );
     }
 
+    #[test]
+    fn normalize_path_adds_leading_slash() {
+        assert_eq!(normalize_path("users".to_string()), "/users");
+        assert_eq!(normalize_path("/users".to_string()), "/users");
+    }
+
+    #[test]
+    fn default_handler_name_includes_method_prefix() {
+        assert_eq!(default_handler_name(&Method::Get, "/items/{id}"), "get_items_id");
+        assert_eq!(default_handler_name(&Method::Post, "items"), "post_items");
+    }
+
+    #[test]
+    fn schema_for_returns_embedded_schema_object() {
+        #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+        struct Payload {
+            message: String,
+        }
+
+        let schema = schema_for::<Payload>();
+        assert!(schema.is_object());
+        assert_eq!(schema.get("type").and_then(|v| v.as_str()), Some("object"));
+        assert!(schema.get("properties").is_some());
+    }
+
+    #[test]
+    fn route_builder_sets_defaults_and_metadata() {
+        let builder = post("items").sync();
+        let meta = builder.into_metadata();
+        assert_eq!(meta.method, "POST");
+        assert_eq!(meta.path, "items");
+        assert_eq!(meta.handler_name, "post_items");
+        assert!(!meta.is_async);
+        assert!(meta.request_schema.is_none());
+        assert!(meta.response_schema.is_none());
+    }
+
+    #[test]
+    fn app_error_maps_to_status_code_and_message() {
+        let (status, msg): (StatusCode, String) = AppError::Decode("bad json".to_string()).into();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(msg, "bad json");
+    }
+
     #[tokio::test]
     async fn registers_route_with_schema() {
         let mut app = App::new();

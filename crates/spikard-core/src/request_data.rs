@@ -489,6 +489,52 @@ mod tests {
         assert_eq!(data.raw_body, Some(raw_body_bytes));
     }
 
+    #[cfg(not(feature = "di"))]
+    #[test]
+    fn request_data_serializes_and_deserializes() {
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+
+        let mut cookies = HashMap::new();
+        cookies.insert("session".to_string(), "abc".to_string());
+
+        let mut raw_query_params = HashMap::new();
+        raw_query_params.insert("tags".to_string(), vec!["rust".to_string(), "http".to_string()]);
+
+        let mut path_params = HashMap::new();
+        path_params.insert("id".to_string(), "123".to_string());
+
+        let mut data = create_request_data(
+            "/api/items/123",
+            "POST",
+            json!({"name": "demo"}),
+            json!({"tags": ["rust", "http"]}),
+            RequestDataCollections {
+                raw_query_params,
+                headers,
+                cookies,
+                path_params,
+            },
+        );
+        data.raw_body = Some(vec![9, 8, 7]);
+
+        let encoded = serde_json::to_string(&data).expect("serialize RequestData");
+        let decoded: RequestData = serde_json::from_str(&encoded).expect("deserialize RequestData");
+
+        assert_eq!(decoded.path, "/api/items/123");
+        assert_eq!(decoded.method, "POST");
+        assert_eq!(decoded.body["name"], "demo");
+        assert_eq!(decoded.query_params["tags"][0], "rust");
+        assert_eq!(
+            decoded.raw_query_params.get("tags").unwrap(),
+            &vec!["rust".to_string(), "http".to_string()]
+        );
+        assert_eq!(decoded.headers.get("content-type").unwrap(), "application/json");
+        assert_eq!(decoded.cookies.get("session").unwrap(), "abc");
+        assert_eq!(decoded.path_params.get("id").unwrap(), "123");
+        assert_eq!(decoded.raw_body, Some(vec![9, 8, 7]));
+    }
+
     #[test]
     fn test_request_data_multiple_query_param_values() {
         let mut raw_query_params = HashMap::new();
