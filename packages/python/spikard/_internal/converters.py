@@ -370,6 +370,29 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 converted[key] = value
                 continue
 
+            # Fast path: for msgspec.Struct request bodies coming from Rust as raw JSON bytes,
+            # decode directly into the target struct using a cached msgspec decoder.
+            #
+            # The generic code path below first decodes JSON bytes into Python builtins
+            # (`msgspec.json.decode`) and then (for msgspec.Struct) constructs the struct via
+            # `target_type(**dict)`. That does extra work and can be significantly slower for
+            # nested payloads.
+            if (
+                params.get("_raw_json")
+                and isinstance(target_type, type)
+                and issubclass(target_type, msgspec.Struct)
+                and not _is_upload_file_type(target_type)
+            ):
+                try:
+                    decoder = _get_or_create_decoder(target_type)
+                    converted[key] = decoder.decode(value)
+                    continue
+                except (TypeError, ValueError, msgspec.DecodeError):
+                    if strict:
+                        raise
+                    converted[key] = value
+                    continue
+
             try:
                 decoded_value = msgspec.json.decode(value)
 
