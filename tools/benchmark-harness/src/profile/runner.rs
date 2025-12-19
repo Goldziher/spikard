@@ -121,10 +121,14 @@ impl ProfileRunner {
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
 
-        // For Python, prefer in-app per-endpoint profiling (pyinstrument) written to
+        // For spikard-python, prefer in-app per-endpoint profiling (pyinstrument) written to
         // `SPIKARD_PYTHON_PROFILE_DIR` to avoid py-spy / ptrace issues on newer Python versions.
-        let suite_python_profiler =
-            self.config.profiler.as_deref() == Some("python") && framework_info.language == "python";
+        //
+        // IMPORTANT: other Python frameworks (robyn, etc.) do not implement this in-app profiler,
+        // so we must not enable it for them.
+        let suite_python_profiler = self.config.profiler.as_deref() == Some("python")
+            && framework_info.language == "python"
+            && framework_info.name == "spikard-python";
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
         let suite_node_profiler = self.config.profiler.as_deref() == Some("node") && framework_info.language == "node";
         let suite_wasm_profiler = self.config.profiler.as_deref() == Some("wasm") && framework_info.language == "wasm";
