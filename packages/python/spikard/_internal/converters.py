@@ -22,7 +22,6 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import is_dataclass
 from datetime import date, datetime, time, timedelta
-from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Union, get_args, get_origin, get_type_hints
 
 import msgspec
@@ -48,6 +47,8 @@ DecoderFunc = Callable[[type, Any], Any]
 _CUSTOM_DECODERS: list[DecoderFunc] = []
 
 _MSGSPEC_DECODER_CACHE: dict[type, msgspec.json.Decoder[typing.Any]] = {}
+
+_HANDLER_METADATA_CACHE: dict[int, tuple[dict[str, Any] | None, set[str] | None, str | None]] = {}
 
 
 def register_decoder(decoder: DecoderFunc) -> None:
@@ -81,7 +82,7 @@ def clear_decoders() -> None:
     Useful for testing or when you want to reset the decoder registry.
     """
     _CUSTOM_DECODERS.clear()
-    _handler_metadata.cache_clear()
+    _HANDLER_METADATA_CACHE.clear()
 
 
 def _is_typed_dict(type_: type) -> bool:
@@ -105,26 +106,31 @@ def _get_or_create_decoder(target_type: type) -> msgspec.json.Decoder[typing.Any
         )
     return _MSGSPEC_DECODER_CACHE[target_type]
 
-
-@lru_cache(maxsize=4096)
 def _handler_metadata(
     handler_func: Callable[..., Any],
-) -> tuple[dict[str, Any], set[str], str | None]:
+) -> tuple[dict[str, Any] | None, set[str] | None, str | None]:
     """Cache handler signature and type hints for conversion.
 
     `inspect.signature()` and `get_type_hints()` are both expensive. We call them on
     every request unless we cache. Since handlers are long-lived, caching provides
     a significant speedup under load.
     """
+    cache_key = id(handler_func)
+    cached = _HANDLER_METADATA_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         type_hints = get_type_hints(handler_func)
     except (AttributeError, NameError, TypeError, ValueError):
-        type_hints = {}
+        _HANDLER_METADATA_CACHE[cache_key] = (None, None, None)
+        return None, None, None
 
     try:
         sig = inspect.signature(handler_func)
     except (ValueError, TypeError, AttributeError):
-        return type_hints, set(), None
+        _HANDLER_METADATA_CACHE[cache_key] = (type_hints, None, None)
+        return type_hints, None, None
 
     handler_params: set[str] = set(sig.parameters.keys())
     first_param_name: str | None = None
@@ -133,6 +139,7 @@ def _handler_metadata(
             first_param_name = param_name
             break
 
+    _HANDLER_METADATA_CACHE[cache_key] = (type_hints, handler_params, first_param_name)
     return type_hints, handler_params, first_param_name
 
 
@@ -273,6 +280,8 @@ def needs_conversion(handler_func: Callable[..., Any]) -> bool:
         True if the handler needs type conversion, False to skip it
     """
     type_hints, handler_params, _first_param_name = _handler_metadata(handler_func)
+    if type_hints is None or handler_params is None:
+        return True
     if not handler_params:
         return False
 
@@ -330,7 +339,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
         ```
     """
     type_hints, handler_params, first_param_name = _handler_metadata(handler_func)
-    if not handler_params:
+    if type_hints is None:
         return params
 
     if "body" in params and first_param_name and first_param_name != "body" and first_param_name not in params:
@@ -339,7 +348,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
 
     converted = {}
     for key, raw_value in params.items():
-        if key not in handler_params:
+        if handler_params is not None and key not in handler_params:
             continue
 
         if key not in type_hints:
