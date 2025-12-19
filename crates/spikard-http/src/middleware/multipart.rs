@@ -3,9 +3,11 @@
 use axum::extract::Multipart;
 use serde_json::json;
 
-/// Size threshold for streaming vs buffering multipart fields
-/// Fields larger than this will be streamed chunk-by-chunk
-const MULTIPART_STREAMING_THRESHOLD: usize = 1024 * 1024;
+/// Max bytes of file content to inline into the JSON "content" field for non-text uploads.
+///
+/// Keeping this small avoids turning file uploads into large JSON strings (CPU + memory),
+/// while still supporting fixtures that assert on small binary payloads.
+const MULTIPART_INLINE_CONTENT_LIMIT: usize = 8 * 1024;
 
 /// Parse multipart/form-data to JSON
 ///
@@ -13,13 +15,9 @@ const MULTIPART_STREAMING_THRESHOLD: usize = 1024 * 1024;
 /// - File uploads → {"filename": "...", "size": N, "content": "...", "content_type": "..."}
 /// - Form fields → plain string values
 /// - Mixed files and data → combined in single JSON object
-/// - Large files → streamed chunk-by-chunk (async)
-/// - Small files → buffered in memory
+/// - Large binary files → placeholder content
+/// - Small files → content inlined into JSON
 /// - Multiple values with same field name → aggregated into arrays
-///
-/// Streaming strategy:
-/// - Files > 1MB: Use field.chunk().await for async streaming
-/// - Files <= 1MB: Use field.bytes().await for buffered loading
 pub async fn parse_multipart_to_json(
     mut multipart: Multipart,
 ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
@@ -41,7 +39,7 @@ pub async fn parse_multipart_to_json(
             let size = bytes.len();
 
             let is_text_like = content_type.starts_with("text/") || content_type == "application/json";
-            let content = if is_text_like || size <= MULTIPART_STREAMING_THRESHOLD {
+            let content = if is_text_like || size <= MULTIPART_INLINE_CONTENT_LIMIT {
                 String::from_utf8_lossy(&bytes).to_string()
             } else {
                 format!("<binary data, {} bytes>", size)
