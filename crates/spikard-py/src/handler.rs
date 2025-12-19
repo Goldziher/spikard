@@ -8,6 +8,7 @@ use axum::{
 };
 use once_cell::sync::OnceCell;
 use pyo3::prelude::*;
+use pyo3::sync::PyOnceLock;
 use pyo3::types::{PyDict, PyTuple};
 use pyo3_async_runtimes::TaskLocals;
 use serde_json::{Value, json};
@@ -21,6 +22,22 @@ use std::sync::Arc;
 
 /// Global Python async context for pyo3_async_runtimes.
 pub static PYTHON_TASK_LOCALS: OnceCell<TaskLocals> = OnceCell::new();
+
+static CONVERT_PARAMS: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
+
+fn convert_params<'py>(
+    py: Python<'py>,
+    params: Bound<'py, PyDict>,
+    handler: Bound<'py, PyAny>,
+) -> PyResult<Bound<'py, PyDict>> {
+    let func = CONVERT_PARAMS.get_or_try_init(py, || {
+        let converter_module = py.import("spikard._internal.converters")?;
+        Ok::<pyo3::Py<pyo3::PyAny>, PyErr>(converter_module.getattr("convert_params")?.unbind())
+    })?;
+
+    let converted = func.bind(py).call1((params, handler))?;
+    Ok(converted.cast_into::<PyDict>()?)
+}
 
 /// Initialize Python async context once using pyo3_async_runtimes to avoid per-request event loop
 /// setup and to ensure async handlers run without blocking the GIL.
@@ -410,11 +427,7 @@ fn validated_params_to_py_kwargs<'py>(
     #[cfg(feature = "di")]
     inject_di_dependencies(py, &params_dict, request_data)?;
 
-    let converter_module = py.import("spikard._internal.converters")?;
-    let convert_params_func = converter_module.getattr("convert_params")?;
-    let converted = convert_params_func.call1((params_dict, handler))?;
-
-    Ok(converted.cast_into::<PyDict>()?)
+    convert_params(py, params_dict, handler)
 }
 
 /// Convert request data (path params, query params, body) to Python keyword arguments
@@ -476,10 +489,7 @@ fn request_data_to_py_kwargs<'py>(
     #[cfg(feature = "di")]
     inject_di_dependencies(py, &kwargs, request_data)?;
 
-    let converter_module = py.import("spikard._internal.converters")?;
-    let convert_params_func = converter_module.getattr("convert_params")?;
-    let converted = convert_params_func.call1((kwargs, handler))?;
-    Ok(converted.cast_into::<PyDict>()?)
+    convert_params(py, kwargs, handler)
 }
 
 // (intentionally no trailing items)

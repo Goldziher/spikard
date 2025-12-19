@@ -183,10 +183,7 @@ impl ProfileRunner {
         }
 
         let node_start_cmd_override = node_cpu_profile_dir.as_ref().map(|dir| {
-            let tsx_cli = self
-                .config
-                .app_dir
-                .join("../../../../node_modules/tsx/dist/cli.mjs");
+            let tsx_cli = self.config.app_dir.join("../../../../node_modules/tsx/dist/cli.mjs");
             format!(
                 "node --cpu-prof --cpu-prof-dir {} {} server.ts {{port}}",
                 dir.display(),
@@ -487,7 +484,9 @@ impl ProfileRunner {
                         None
                     } else {
                         let output_path = absolutize_path(
-                            output_dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name)),
+                            output_dir
+                                .join("profiles")
+                                .join(format!("{}.speedscope.json", workload_def.name)),
                         );
                         let _ = std::fs::create_dir_all(output_path.parent().unwrap_or(&output_dir));
 
@@ -534,12 +533,16 @@ impl ProfileRunner {
                     if suite_node_profiler {
                         None
                     } else {
-                        Some(ProfilerHandle::Node(crate::profile::node::start_profiler(server.pid())?))
+                        Some(ProfilerHandle::Node(crate::profile::node::start_profiler(
+                            server.pid(),
+                        )?))
                     }
                 }
                 "ruby" => {
                     let output_path = absolutize_path(
-                        output_dir.join("profiles").join(format!("{}.speedscope.json", workload_def.name)),
+                        output_dir
+                            .join("profiles")
+                            .join(format!("{}.speedscope.json", workload_def.name)),
                     );
                     Some(ProfilerHandle::Ruby(crate::profile::ruby::start_profiler(
                         server.pid(),
@@ -554,7 +557,9 @@ impl ProfileRunner {
                     if self.try_profile_start(server, &output_path).await {
                         Some(ProfilerHandle::RustInApp(output_path))
                     } else {
-                        Some(ProfilerHandle::Rust(crate::profile::rust::start_profiler(server.pid())?))
+                        Some(ProfilerHandle::Rust(crate::profile::rust::start_profiler(
+                            server.pid(),
+                        )?))
                     }
                 }
                 "wasm" => None,
@@ -641,9 +646,7 @@ impl ProfileRunner {
                 })
             }
             ProfilerHandle::RustInApp(path) => {
-                let flamegraph_path = path
-                    .to_str()
-                    .and_then(crate::profile::python::wait_for_profile_output);
+                let flamegraph_path = path.to_str().and_then(crate::profile::python::wait_for_profile_output);
                 ProfilingData::Rust(RustProfilingData {
                     heap_allocated_mb: None,
                     flamegraph_path,
