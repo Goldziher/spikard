@@ -453,16 +453,11 @@ fn request_data_to_py_kwargs<'py>(
         // Always expose raw bytes for handlers which want them (e.g. `body: bytes`).
         kwargs.set_item("_raw_body", pyo3::types::PyBytes::new(py, raw_bytes))?;
 
-        // If the server already parsed JSON into `request_data.body` (e.g. for request-body
-        // validation), prefer passing builtins to Python to avoid re-parsing the same JSON
-        // again via msgspec.
-        if !request_data.body.is_null() {
-            let py_body = json_to_python(py, &request_data.body)?;
-            kwargs.set_item(body_param_name, py_body)?;
-        } else {
-            kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
-            kwargs.set_item("_raw_json", true)?;
-        }
+        // Keep the fast path: when raw JSON bytes are available, pass them through so
+        // Python can decode via msgspec without round-tripping through `serde_json::Value`
+        // → Python builtins.
+        kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
+        kwargs.set_item("_raw_json", true)?;
     } else {
         let py_body = json_to_python(py, &request_data.body)?;
         kwargs.set_item(body_param_name, py_body)?;
