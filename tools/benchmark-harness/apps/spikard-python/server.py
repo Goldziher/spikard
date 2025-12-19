@@ -274,8 +274,8 @@ class MultipartFile(msgspec.Struct):
     content_type: str
 
 
-MultipartField = str | MultipartFile | list[MultipartFile]
-MultipartBody = dict[str, MultipartField]
+class MultipartBody(msgspec.Struct):
+    file: MultipartFile | list[MultipartFile] | None = None
 
 
 @post("/json/small")
@@ -307,16 +307,14 @@ async def post_json_very_large(body: VeryLargePayload) -> VeryLargePayload:
 
 
 def _multipart_body_metrics(body: MultipartBody) -> MultipartMetrics:
-    file_value = body.get("file")
+    file_value = body.file
     if isinstance(file_value, list):
         total = sum(item.size for item in file_value)
         return MultipartMetrics(files_received=len(file_value), total_bytes=total)
     if isinstance(file_value, MultipartFile):
         return MultipartMetrics(files_received=1, total_bytes=file_value.size)
 
-    files = [value for value in body.values() if isinstance(value, MultipartFile)]
-    total = sum(value.size for value in files)
-    return MultipartMetrics(files_received=len(files), total_bytes=total)
+    return MultipartMetrics(files_received=0, total_bytes=0)
 
 
 @post("/multipart/small")

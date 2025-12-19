@@ -22,50 +22,43 @@ class SmallPayload(BaseModel):
     tax: float | None = None
 
 
-class Address(BaseModel):
-    """Address model for nested payloads."""
-
-    street: str
-    city: str
-    state: str
-    zip_code: str
+class Image(BaseModel):
+    url: str
+    name: str
 
 
 class MediumPayload(BaseModel):
-    """Medium JSON payload with nested objects."""
-
-    user_id: int
-    username: str
-    email: str
-    is_active: bool
-    address: Address
-    tags: list[str]
-
-
-class Item(BaseModel):
-    """Item model for large payloads."""
-
-    id: int
     name: str
     price: float
-    in_stock: bool
+    image: Image
+
+
+class Country(BaseModel):
+    name: str
+    code: str
+
+
+class Address(BaseModel):
+    street: str
+    city: str
+    country: Country
+
+
+class SellerWithAddress(BaseModel):
+    name: str
+    address: Address
 
 
 class LargePayload(BaseModel):
-    """Large JSON payload with arrays."""
-
-    order_id: str
-    customer_name: str
-    items: list[Item]
-    total: float
-    notes: str
+    name: str
+    price: float
+    seller: SellerWithAddress
 
 
 class VeryLargePayload(BaseModel):
-    """Very large JSON payload."""
-
-    data: list[dict[str, Any]]
-    metadata: dict[str, Any]
+    name: str
+    tags: list[str]
+    images: list[Image]
 
 
 @app.post("/json/small")
@@ -113,15 +106,15 @@ async def post_multipart_large() -> dict[str, Any]:
 @app.post("/urlencoded/simple")
 async def post_urlencoded_simple(request: Request) -> dict[str, Any]:
     """Simple URL-encoded form."""
-    body = await request.json()
-    return body
+    form = await request.form()
+    return dict(form)
 
 
 @app.post("/urlencoded/complex")
 async def post_urlencoded_complex(request: Request) -> dict[str, Any]:
     """Complex URL-encoded form."""
-    body = await request.json()
-    return body
+    form = await request.form()
+    return dict(form)
 
 
 @app.get("/path/simple/{id}")
@@ -197,8 +190,16 @@ async def root() -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    import uvicorn
-
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
-    print(f"[fastapi-granian] Starting server on port {port}", file=sys.stderr)
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="error")
+    from granian import Granian
+    from granian.constants import Interfaces
+
+    print(f"[fastapi-granian-dto] Starting server on port {port}", file=sys.stderr, flush=True)
+    Granian(
+        "__main__:app",
+        address="0.0.0.0",
+        port=port,
+        interface=Interfaces.ASGI,
+        workers=1,
+        log_level="error",
+    ).serve()

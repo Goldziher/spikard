@@ -62,15 +62,15 @@ async def post_multipart_large() -> dict[str, Any]:
 @app.post("/urlencoded/simple")
 async def post_urlencoded_simple(request: Request) -> dict[str, Any]:
     """Simple URL-encoded form."""
-    body = await request.json()
-    return body
+    form = await request.form()
+    return dict(form)
 
 
 @app.post("/urlencoded/complex")
 async def post_urlencoded_complex(request: Request) -> dict[str, Any]:
     """Complex URL-encoded form."""
-    body = await request.json()
-    return body
+    form = await request.form()
+    return dict(form)
 
 
 @app.get("/path/simple/{id}")
