@@ -166,15 +166,15 @@ post("/urlencoded/complex")(async function urlencodedComplex(body: unknown): Pro
 	return body;
 });
 
-get("/path/simple/:id")(async function pathSimple(params: PathParams): Promise<PathResponse> {
+get("/path/simple/{id}")(async function pathSimple(params: PathParams): Promise<PathResponse> {
 	return { id: params.id ?? "" };
 });
 
-get("/path/multiple/:user_id/:post_id")(async function pathMultiple(params: PathParams): Promise<PathResponse> {
+get("/path/multiple/{user_id}/{post_id}")(async function pathMultiple(params: PathParams): Promise<PathResponse> {
 	return { user_id: params.user_id ?? "", post_id: params.post_id ?? "" };
 });
 
-get("/path/deep/:org/:team/:project/:api/:item")(async function pathDeep(params: PathParams): Promise<PathResponse> {
+get("/path/deep/{org}/{team}/{project}/{api}/{item}")(async function pathDeep(params: PathParams): Promise<PathResponse> {
 	return {
 		org: params.org ?? "",
 		team: params.team ?? "",
@@ -184,15 +184,15 @@ get("/path/deep/:org/:team/:project/:api/:item")(async function pathDeep(params:
 	};
 });
 
-get("/path/int/:id")(async function pathInt(params: PathParams): Promise<PathResponse> {
+get("/path/int/{id}")(async function pathInt(params: PathParams): Promise<PathResponse> {
 	return { id: Number.parseInt(params.id ?? "0", 10) };
 });
 
-get("/path/uuid/:id")(async function pathUuid(params: PathParams): Promise<PathResponse> {
+get("/path/uuid/{id}")(async function pathUuid(params: PathParams): Promise<PathResponse> {
 	return { id: params.id ?? "" };
 });
 
-get("/path/date/:date")(async function pathDate(params: PathParams): Promise<PathResponse> {
+get("/path/date/{date}")(async function pathDate(params: PathParams): Promise<PathResponse> {
 	return { date: params.date ?? "" };
 });
 
