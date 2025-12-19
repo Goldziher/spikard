@@ -26,6 +26,17 @@ pub static PYTHON_TASK_LOCALS: OnceCell<TaskLocals> = OnceCell::new();
 static CONVERT_PARAMS: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
 static MSGSPEC_JSON_ENCODE: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
 
+fn is_json_content_type(headers: &HashMap<String, String>) -> bool {
+    let ct = headers
+        .get("content-type")
+        .or_else(|| headers.get("Content-Type"))
+        .map(|s| s.as_str())
+        .unwrap_or("");
+
+    let ct = ct.to_ascii_lowercase();
+    ct.contains("application/json") || ct.contains("+json")
+}
+
 fn convert_params<'py>(
     py: Python<'py>,
     params: Bound<'py, PyDict>,
@@ -366,8 +377,17 @@ fn validated_params_to_py_kwargs<'py>(
     let params_dict: Bound<'_, PyDict> = params_dict.extract()?;
 
     if let Some(raw_bytes) = &request_data.raw_body {
-        params_dict.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
-        params_dict.set_item("_raw_json", true)?;
+        params_dict.set_item("_raw_body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+
+        if is_json_content_type(&request_data.headers) {
+            params_dict.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+            params_dict.set_item("_raw_json", true)?;
+        } else if !request_data.body.is_null() {
+            let py_body = json_to_python(py, &request_data.body)?;
+            params_dict.set_item("body", py_body)?;
+        } else {
+            params_dict.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+        }
     } else if !request_data.body.is_null() {
         let py_body = json_to_python(py, &request_data.body)?;
         params_dict.set_item("body", py_body)?;
@@ -515,11 +535,18 @@ fn request_data_to_py_kwargs<'py>(
         // Always expose raw bytes for handlers which want them (e.g. `body: bytes`).
         kwargs.set_item("_raw_body", pyo3::types::PyBytes::new(py, raw_bytes))?;
 
-        // Keep the fast path: when raw JSON bytes are available, pass them through so
-        // Python can decode via msgspec without round-tripping through `serde_json::Value`
-        // → Python builtins.
-        kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
-        kwargs.set_item("_raw_json", true)?;
+        if is_json_content_type(&request_data.headers) {
+            // Keep the fast path for JSON: pass raw bytes through so Python can decode via msgspec.
+            kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
+            kwargs.set_item("_raw_json", true)?;
+        } else if !request_data.body.is_null() {
+            // For non-JSON payloads (multipart/urlencoded), the Rust middleware already parsed
+            // the body into JSON-like builtins; prefer that over raw bytes.
+            let py_body = json_to_python(py, &request_data.body)?;
+            kwargs.set_item(body_param_name, py_body)?;
+        } else {
+            kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
+        }
     } else {
         let py_body = json_to_python(py, &request_data.body)?;
         kwargs.set_item(body_param_name, py_body)?;

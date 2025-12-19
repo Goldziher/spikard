@@ -8,6 +8,14 @@ use std::process::Command;
 use std::time::Duration;
 use uuid::Uuid;
 
+fn multipart_spec_from_fixture(fixture: &Fixture) -> Option<(usize, usize)> {
+    let body = fixture.request.body.as_ref()?;
+    let obj = body.as_object()?;
+    let files_received = obj.get("files_received")?.as_u64()? as usize;
+    let total_bytes = obj.get("total_bytes")?.as_u64()? as usize;
+    Some((files_received.max(1), total_bytes))
+}
+
 /// Build a multipart form-data body with boundary parameter
 fn build_multipart_body(fixture: &Fixture) -> Result<(String, String)> {
     let boundary = Uuid::new_v4().to_string();
@@ -38,19 +46,40 @@ fn build_multipart_body(fixture: &Fixture) -> Result<(String, String)> {
         body.push_str("\r\n");
     }
 
-    // Some fixtures declare `Content-Type: multipart/form-data` but provide the payload as a raw
-    // body file (e.g. `multipart-small.bin`) rather than structured `files`/`data`. In that case,
-    // synthesize a single file part so the request includes a boundary and passes Content-Type
-    // validation. Most benchmark apps ignore the multipart payload contents but require a valid
-    // header format.
+    // Some workload definitions represent multipart payloads via a synthetic JSON body
+    // (files_received/total_bytes) rather than concrete `files`/`data`. In that case, synthesize
+    // file parts so the request includes a boundary and matches the expected size/count.
     if fixture.request.files.is_empty() && fixture.request.data.is_empty() {
-        let synthetic_content = fixture.request.body_raw.as_deref().unwrap_or("x").to_string();
+        if let Some((file_count, total_bytes)) = multipart_spec_from_fixture(fixture) {
+            let per_file = (total_bytes / file_count).max(1);
+            let mut remaining = total_bytes;
 
-        body.push_str(&format!("--{}\r\n", boundary));
-        body.push_str("Content-Disposition: form-data; name=\"file\"; filename=\"upload.bin\"\r\n");
-        body.push_str("Content-Type: application/octet-stream\r\n\r\n");
-        body.push_str(&synthetic_content);
-        body.push_str("\r\n");
+            for idx in 0..file_count {
+                let size = if idx + 1 == file_count {
+                    remaining.max(1)
+                } else {
+                    remaining = remaining.saturating_sub(per_file);
+                    per_file
+                };
+
+                body.push_str(&format!("--{}\r\n", boundary));
+                body.push_str(&format!(
+                    "Content-Disposition: form-data; name=\"file\"; filename=\"upload-{}.bin\"\r\n",
+                    idx + 1
+                ));
+                body.push_str("Content-Type: application/octet-stream\r\n\r\n");
+                body.push_str(&"x".repeat(size));
+                body.push_str("\r\n");
+            }
+        } else {
+            let synthetic_content = fixture.request.body_raw.as_deref().unwrap_or("x").to_string();
+
+            body.push_str(&format!("--{}\r\n", boundary));
+            body.push_str("Content-Disposition: form-data; name=\"file\"; filename=\"upload.bin\"\r\n");
+            body.push_str("Content-Type: application/octet-stream\r\n\r\n");
+            body.push_str(&synthetic_content);
+            body.push_str("\r\n");
+        }
     }
 
     body.push_str(&format!("--{}--\r\n", boundary));
@@ -248,7 +277,7 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
                 .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to create temp dir: {}", e)))?;
 
             let mut temp_paths: Vec<PathBuf> = Vec::new();
-            let mut add_temp_file = |field_name: &str, filename: &str, content: &str| -> Result<()> {
+            let mut add_temp_file = |field_name: &str, filename: &str, content: &[u8]| -> Result<()> {
                 let file_path = temp_dir.join(format!("{}-{}-{}", field_name, filename, Uuid::new_v4()));
                 std::fs::write(&file_path, content)
                     .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to write temp file: {}", e)))?;
@@ -258,7 +287,25 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
             };
 
             if fixture.request.files.is_empty() {
-                add_temp_file("file", "upload.bin", fixture.request.body_raw.as_deref().unwrap_or("x"))?;
+                if let Some((file_count, total_bytes)) = multipart_spec_from_fixture(fixture) {
+                    let per_file = (total_bytes / file_count).max(1);
+                    let mut remaining = total_bytes;
+                    for idx in 0..file_count {
+                        let size = if idx + 1 == file_count {
+                            remaining.max(1)
+                        } else {
+                            remaining = remaining.saturating_sub(per_file);
+                            per_file
+                        };
+                        add_temp_file("file", &format!("upload-{}.bin", idx + 1), &vec![b'x'; size])?;
+                    }
+                } else {
+                    add_temp_file(
+                        "file",
+                        "upload.bin",
+                        fixture.request.body_raw.as_deref().unwrap_or("x").as_bytes(),
+                    )?;
+                }
             } else {
                 for file in &fixture.request.files {
                     let field_name = if file.field_name.is_empty() {
@@ -271,7 +318,7 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
                     } else {
                         &file.filename
                     };
-                    add_temp_file(field_name, filename, &file.content)?;
+                    add_temp_file(field_name, filename, file.content.as_bytes())?;
                 }
             }
 

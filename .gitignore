@@ -93,3 +93,6 @@ temp-test-*
 todo.md
 *.profraw
 tarpaulin-report*
+perf.data*
+*.folded
+*.stacks

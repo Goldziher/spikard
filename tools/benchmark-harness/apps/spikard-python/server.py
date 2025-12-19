@@ -295,25 +295,38 @@ async def post_json_very_large(body: VeryLargePayload) -> VeryLargePayload:
     return body
 
 
+def _multipart_body_metrics(body: dict[str, object]) -> dict[str, int]:
+    file_value = body.get("file")
+    if isinstance(file_value, list):
+        total = sum(int(getattr(item, "get", lambda _k: 0)("size")) for item in file_value)
+        return {"files_received": len(file_value), "total_bytes": total}
+    if isinstance(file_value, dict):
+        return {"files_received": 1, "total_bytes": int(file_value.get("size", 0))}
+
+    dict_values = [value for value in body.values() if isinstance(value, dict)]
+    total = sum(int(value.get("size", 0)) for value in dict_values)
+    return {"files_received": len(dict_values), "total_bytes": total}
+
+
 @post("/multipart/small")
 @profile_once("multipart-small")
-async def post_multipart_small(body: MultipartMetrics) -> MultipartMetrics:
+async def post_multipart_small(body: dict[str, object]) -> dict[str, int]:
     """Small multipart form (~1KB)."""
-    return body
+    return _multipart_body_metrics(body)
 
 
 @post("/multipart/medium")
 @profile_once("multipart-medium")
-async def post_multipart_medium(body: MultipartMetrics) -> MultipartMetrics:
+async def post_multipart_medium(body: dict[str, object]) -> dict[str, int]:
     """Medium multipart form (~10KB)."""
-    return body
+    return _multipart_body_metrics(body)
 
 
 @post("/multipart/large")
 @profile_once("multipart-large")
-async def post_multipart_large(body: MultipartMetrics) -> MultipartMetrics:
+async def post_multipart_large(body: dict[str, object]) -> dict[str, int]:
     """Large multipart form (~100KB)."""
-    return body
+    return _multipart_body_metrics(body)
 
 
 @post("/urlencoded/simple")
