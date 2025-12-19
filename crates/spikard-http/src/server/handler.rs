@@ -40,15 +40,16 @@ impl Handler for ValidatingHandler {
         let parameter_validator = self.parameter_validator.clone();
 
         Box::pin(async move {
-            if request_data.body.is_null()
+            let is_json_body = request_data.body.is_null()
                 && request_data.raw_body.is_some()
                 && request_data
                     .headers
                     .get("content-type")
                     .and_then(|s| s.parse::<mime::Mime>().ok())
                     .as_ref()
-                    .is_some_and(crate::middleware::validation::is_json_content_type)
-            {
+                    .is_some_and(crate::middleware::validation::is_json_content_type);
+
+            if is_json_body && request_validator.is_none() && !inner.prefers_raw_json_body() {
                 let raw_bytes = request_data.raw_body.as_ref().unwrap();
                 request_data.body = serde_json::from_slice::<Value>(raw_bytes)
                     .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?;
