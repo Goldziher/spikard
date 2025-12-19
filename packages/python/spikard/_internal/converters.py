@@ -301,7 +301,7 @@ def needs_conversion(handler_func: Callable[..., Any]) -> bool:
         if target_type in (str, int, float, bool, bytes):
             continue
 
-        if origin is Union:
+        if origin is Union or origin is types.UnionType:
             non_none_args = [arg for arg in args if arg is not type(None)]
             if non_none_args and all(arg in (str, int, float, bool, bytes) for arg in non_none_args):
                 continue
