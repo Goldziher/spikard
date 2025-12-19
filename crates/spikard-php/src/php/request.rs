@@ -9,6 +9,7 @@ use ext_php_rs::types::Zval;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
+use bytes::Bytes;
 
 /// PHP-visible HTTP request mirroring `RequestData`.
 #[php_class]
@@ -22,7 +23,7 @@ pub struct PhpRequest {
     pub(crate) path_params: HashMap<String, String>,
     pub(crate) body: Value,
     pub(crate) files: Value,
-    pub(crate) raw_body: Option<Vec<u8>>,
+    pub(crate) raw_body: Option<Bytes>,
     #[php(prop, name = "queryParams")]
     pub(crate) raw_query: HashMap<String, Vec<String>>,
     #[php(prop)]
@@ -133,7 +134,7 @@ impl PhpRequest {
     /// Get raw body bytes.
     #[php(name = "getRawBody")]
     pub fn get_raw_body(&self) -> Option<Vec<u8>> {
-        self.raw_body.clone()
+        self.raw_body.as_ref().map(|b| b.to_vec())
     }
 
     /// Get headers as a PHP array.
@@ -190,7 +191,7 @@ impl PhpRequest {
             path_params: (*data.path_params).clone(),
             body: data.body.clone(),
             files: Value::Object(serde_json::Map::new()),
-            raw_body: data.raw_body.as_ref().map(|b| b.to_vec()),
+            raw_body: data.raw_body.clone(),
             raw_query: (*data.raw_query_params).clone(),
             headers: (*data.headers).clone(),
             cookies: (*data.cookies).clone(),
@@ -213,7 +214,7 @@ impl PhpRequest {
             path_params: Self::unwrap_arc_map(data.path_params),
             body: data.body,
             files: Value::Object(serde_json::Map::new()),
-            raw_body: data.raw_body.map(|b| b.to_vec()),
+            raw_body: data.raw_body,
             raw_query: Self::unwrap_arc_multimap(data.raw_query_params),
             headers: Self::unwrap_arc_map(data.headers),
             cookies: Self::unwrap_arc_map(data.cookies),
@@ -227,7 +228,7 @@ impl PhpRequest {
         path: String,
         body: Value,
         files: Value,
-        raw_body: Option<Vec<u8>>,
+        raw_body: Option<Bytes>,
         headers: HashMap<String, String>,
         cookies: HashMap<String, String>,
         raw_query: HashMap<String, Vec<String>>,
