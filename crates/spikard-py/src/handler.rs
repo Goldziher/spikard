@@ -24,6 +24,7 @@ use std::sync::Arc;
 pub static PYTHON_TASK_LOCALS: OnceCell<TaskLocals> = OnceCell::new();
 
 static CONVERT_PARAMS: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
+static MSGSPEC_JSON_ENCODE: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
 
 fn convert_params<'py>(
     py: Python<'py>,
@@ -37,6 +38,18 @@ fn convert_params<'py>(
 
     let converted = func.bind(py).call1((params, handler))?;
     Ok(converted.cast_into::<PyDict>()?)
+}
+
+fn msgspec_json_encode(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
+    let encode = MSGSPEC_JSON_ENCODE.get_or_try_init(py, || {
+        let msgspec = py.import("msgspec")?;
+        let json_mod = msgspec.getattr("json")?;
+        Ok::<pyo3::Py<pyo3::PyAny>, PyErr>(json_mod.getattr("encode")?.unbind())
+    })?;
+
+    let encoded = encode.bind(py).call1((obj,))?;
+    let py_bytes = encoded.cast_into::<pyo3::types::PyBytes>()?;
+    Ok(py_bytes.as_bytes().to_vec())
 }
 
 /// Initialize Python async context once using pyo3_async_runtimes to avoid per-request event loop
@@ -106,6 +119,12 @@ pub enum ResponseResult {
     },
     /// Plain JSON response (defaults to 200 OK)
     Json(Value),
+    /// Pre-serialized response body (typically JSON bytes)
+    Raw {
+        body: Vec<u8>,
+        status_code: u16,
+        headers: HashMap<String, String>,
+    },
     /// Streaming response backed by async iterator
     Stream(HandlerResponse),
 }
@@ -173,6 +192,7 @@ impl PythonHandler {
         let handler = self.handler.clone();
         let is_async = self.is_async;
         let response_validator = self.response_validator.clone();
+        let prefer_msgspec_json = response_validator.is_none();
         let _request_data_for_error = request_data.clone();
         let validated_params_for_task = validated_params.clone();
         let body_param_name = self.body_param_name.clone();
@@ -216,7 +236,7 @@ impl PythonHandler {
                 .await
                 .map_err(|e: PyErr| structured_error("python_async_error", format!("Python async error: {}", e)))?;
 
-            Python::attach(|py| python_to_response_result(py, coroutine_result.bind(py)))
+            Python::attach(|py| python_to_response_result(py, coroutine_result.bind(py), prefer_msgspec_json))
                 .map_err(|e: PyErr| structured_error("python_response_error", format!("Python error: {}", e)))?
         } else {
             tokio::task::spawn_blocking(move || {
@@ -235,7 +255,7 @@ impl PythonHandler {
                         let empty_args = PyTuple::empty(py);
                         handler_obj.call(empty_args, Some(&kwargs))?
                     };
-                    python_to_response_result(py, &py_result)
+                    python_to_response_result(py, &py_result, prefer_msgspec_json)
                 })
             })
             .await
@@ -243,7 +263,7 @@ impl PythonHandler {
             .map_err(|e: PyErr| structured_error("python_error", format!("Python error: {}", e)))?
         };
 
-        let (json_value, status_code, headers) = match result {
+        let (json_value, status_code, headers, raw_body_bytes) = match result {
             ResponseResult::Stream(handler_response) => {
                 return Ok(handler_response.into_response());
             }
@@ -251,8 +271,13 @@ impl PythonHandler {
                 content,
                 status_code,
                 headers,
-            } => (content, status_code, headers),
-            ResponseResult::Json(json_value) => (json_value, 200, HashMap::new()),
+            } => (content, status_code, headers, None),
+            ResponseResult::Json(json_value) => (json_value, 200, HashMap::new(), None),
+            ResponseResult::Raw {
+                body,
+                status_code,
+                headers,
+            } => (Value::Null, status_code, headers, Some(body)),
         };
 
         let content_type = headers
@@ -261,7 +286,9 @@ impl PythonHandler {
             .map(|s| s.as_str())
             .unwrap_or("application/json");
 
-        let body_bytes = if content_type.starts_with("text/") || content_type.starts_with("application/json") {
+        let body_bytes = if let Some(raw) = raw_body_bytes {
+            raw
+        } else if content_type.starts_with("text/") || content_type.starts_with("application/json") {
             if let Value::String(s) = &json_value {
                 if !content_type.starts_with("application/json") {
                     s.as_bytes().to_vec()
@@ -330,7 +357,11 @@ impl Handler for PythonHandler {
 ///
 /// Checks if the object is a Response instance with custom status/headers,
 /// otherwise treats it as JSON data
-fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<ResponseResult> {
+fn python_to_response_result(
+    py: Python<'_>,
+    obj: &Bound<'_, PyAny>,
+    prefer_msgspec_json: bool,
+) -> PyResult<ResponseResult> {
     if obj.is_instance_of::<StreamingResponse>() {
         let streaming: Py<StreamingResponse> = obj.extract()?;
         let handler_response = streaming.borrow(py).to_handler_response(py)?;
@@ -365,6 +396,17 @@ fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult
             headers,
         })
     } else {
+        if prefer_msgspec_json {
+            let bytes = msgspec_json_encode(py, obj)?;
+            let mut headers = HashMap::new();
+            headers.insert("content-type".to_string(), "application/json".to_string());
+            return Ok(ResponseResult::Raw {
+                body: bytes,
+                status_code: 200,
+                headers,
+            });
+        }
+
         let json_value = python_to_json(py, obj)?;
         Ok(ResponseResult::Json(json_value))
     }
