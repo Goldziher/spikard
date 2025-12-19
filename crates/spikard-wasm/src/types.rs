@@ -238,6 +238,12 @@ pub struct BodyPayload {
     pub metadata: BodyMetadata,
 }
 
+/// Max bytes of file content to inline into the JSON "content" field for non-text uploads.
+///
+/// Keeping this small avoids turning file uploads into large JSON strings (CPU + memory),
+/// while still supporting fixtures that assert on small binary payloads.
+const MULTIPART_INLINE_CONTENT_LIMIT: usize = 8 * 1024;
+
 #[derive(Default, Deserialize)]
 #[serde(default)]
 pub struct RequestOptions {
@@ -357,10 +363,17 @@ impl RequestOptions {
                 let content_type = file.content_type.clone().unwrap_or_default();
                 let size = file.size.unwrap_or_else(|| file.content.as_bytes().len());
 
+                let is_text_like = content_type.starts_with("text/") || content_type == "application/json";
+                let content = if is_text_like || file.content.as_bytes().len() <= MULTIPART_INLINE_CONTENT_LIMIT {
+                    file.content.clone()
+                } else {
+                    format!("<binary data, {} bytes>", size)
+                };
+
                 let file_obj = json!({
                     "filename": filename,
                     "size": size,
-                    "content": file.content,
+                    "content": content,
                     "content_type": content_type,
                 });
 
