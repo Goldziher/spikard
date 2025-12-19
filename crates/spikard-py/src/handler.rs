@@ -178,7 +178,7 @@ impl PythonHandler {
         let body_param_name = self.body_param_name.clone();
 
         let result = if is_async {
-            let (coroutine, task_locals) = Python::attach(|py| -> PyResult<(Py<PyAny>, TaskLocals)> {
+            let coroutine_future = Python::attach(|py| -> PyResult<_> {
                 let handler_obj = handler.bind(py);
 
                 let kwargs = if let Some(ref validated) = validated_params_for_task {
@@ -205,17 +205,12 @@ impl PythonHandler {
                     .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Python async context not initialized"))?
                     .clone();
 
-                Ok((coroutine.into(), task_locals))
+                let awaitable = coroutine.clone();
+                pyo3_async_runtimes::into_future_with_locals(&task_locals, awaitable)
             })
             .map_err(|e: PyErr| {
                 structured_error("python_call_error", format!("Python error calling handler: {}", e))
             })?;
-
-            let coroutine_future = Python::attach(|py| -> PyResult<_> {
-                let awaitable = coroutine.bind(py).clone();
-                pyo3_async_runtimes::into_future_with_locals(&task_locals, awaitable)
-            })
-            .map_err(|e: PyErr| structured_error("python_async_error", format!("Python async error: {}", e)))?;
 
             let coroutine_result = coroutine_future
                 .await
@@ -413,14 +408,14 @@ fn validated_params_to_py_kwargs<'py>(
     request_data: &RequestData,
     handler: Bound<'py, PyAny>,
 ) -> PyResult<Bound<'py, PyDict>> {
-    let params_dict = pythonize::pythonize(py, validated_params)?;
+    let params_dict = json_to_python(py, validated_params)?;
     let params_dict: Bound<'_, PyDict> = params_dict.extract()?;
 
     if let Some(raw_bytes) = &request_data.raw_body {
         params_dict.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
         params_dict.set_item("_raw_json", true)?;
     } else if !request_data.body.is_null() {
-        let py_body = pythonize::pythonize(py, &request_data.body)?;
+        let py_body = json_to_python(py, &request_data.body)?;
         params_dict.set_item("body", py_body)?;
     }
 
