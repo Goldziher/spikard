@@ -56,6 +56,7 @@ fn create_method_router(
     has_path_params: bool,
     handler: Arc<dyn Handler>,
     hooks: Option<Arc<crate::LifecycleHooks>>,
+    include_raw_query_params: bool,
 ) -> axum::routing::MethodRouter {
     let expects_body = method_expects_body(&method);
 
@@ -67,8 +68,13 @@ fn create_method_router(
                 crate::Method::Post => axum::routing::post(
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
-                        let request_data =
-                            request_extraction::create_request_data_with_body(&parts, path_params.0, body).await?;
+                        let request_data = request_extraction::create_request_data_with_body(
+                            &parts,
+                            path_params.0,
+                            body,
+                            include_raw_query_params,
+                        )
+                        .await?;
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
@@ -77,8 +83,13 @@ fn create_method_router(
                 crate::Method::Put => axum::routing::put(
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
-                        let request_data =
-                            request_extraction::create_request_data_with_body(&parts, path_params.0, body).await?;
+                        let request_data = request_extraction::create_request_data_with_body(
+                            &parts,
+                            path_params.0,
+                            body,
+                            include_raw_query_params,
+                        )
+                        .await?;
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
@@ -87,8 +98,13 @@ fn create_method_router(
                 crate::Method::Patch => axum::routing::patch(
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
-                        let request_data =
-                            request_extraction::create_request_data_with_body(&parts, path_params.0, body).await?;
+                        let request_data = request_extraction::create_request_data_with_body(
+                            &parts,
+                            path_params.0,
+                            body,
+                            include_raw_query_params,
+                        )
+                        .await?;
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
                         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
@@ -106,24 +122,39 @@ fn create_method_router(
             match method {
                 crate::Method::Post => axum::routing::post(move |req: axum::extract::Request| async move {
                     let (parts, body) = req.into_parts();
-                    let request_data =
-                        request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
+                    let request_data = request_extraction::create_request_data_with_body(
+                        &parts,
+                        HashMap::new(),
+                        body,
+                        include_raw_query_params,
+                    )
+                    .await?;
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
                 crate::Method::Put => axum::routing::put(move |req: axum::extract::Request| async move {
                     let (parts, body) = req.into_parts();
-                    let request_data =
-                        request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
+                    let request_data = request_extraction::create_request_data_with_body(
+                        &parts,
+                        HashMap::new(),
+                        body,
+                        include_raw_query_params,
+                    )
+                    .await?;
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
                 crate::Method::Patch => axum::routing::patch(move |req: axum::extract::Request| async move {
                     let (parts, body) = req.into_parts();
-                    let request_data =
-                        request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
+                    let request_data = request_extraction::create_request_data_with_body(
+                        &parts,
+                        HashMap::new(),
+                        body,
+                        include_raw_query_params,
+                    )
+                    .await?;
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -146,6 +177,7 @@ fn create_method_router(
                         req.method(),
                         req.headers(),
                         path_params.0,
+                        include_raw_query_params,
                     );
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -158,6 +190,7 @@ fn create_method_router(
                         req.method(),
                         req.headers(),
                         path_params.0,
+                        include_raw_query_params,
                     );
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -170,6 +203,7 @@ fn create_method_router(
                         req.method(),
                         req.headers(),
                         path_params.0,
+                        include_raw_query_params,
                     );
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -182,6 +216,7 @@ fn create_method_router(
                         req.method(),
                         req.headers(),
                         path_params.0,
+                        include_raw_query_params,
                     );
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -194,6 +229,7 @@ fn create_method_router(
                         req.method(),
                         req.headers(),
                         path_params.0,
+                        include_raw_query_params,
                     );
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -211,6 +247,7 @@ fn create_method_router(
                     req.method(),
                     req.headers(),
                     HashMap::new(),
+                    include_raw_query_params,
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
@@ -220,6 +257,7 @@ fn create_method_router(
                     req.method(),
                     req.headers(),
                     HashMap::new(),
+                    include_raw_query_params,
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
@@ -229,6 +267,7 @@ fn create_method_router(
                     req.method(),
                     req.headers(),
                     HashMap::new(),
+                    include_raw_query_params,
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
@@ -238,6 +277,7 @@ fn create_method_router(
                     req.method(),
                     req.headers(),
                     HashMap::new(),
+                    include_raw_query_params,
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
@@ -247,6 +287,7 @@ fn create_method_router(
                     req.method(),
                     req.headers(),
                     HashMap::new(),
+                    include_raw_query_params,
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
@@ -402,10 +443,26 @@ fn build_router_with_handlers_inner(
                             crate::cors::handle_preflight(req.headers(), &cors_config).map_err(|e| *e)
                         })
                     } else {
-                        create_method_router(method, has_path_params, handler, hooks.clone())
+                        let include_raw_query_params = route.parameter_validator.is_some();
+                        create_method_router(
+                            method,
+                            has_path_params,
+                            handler,
+                            hooks.clone(),
+                            include_raw_query_params,
+                        )
                     }
                 }
-                method => create_method_router(method, has_path_params, handler, hooks.clone()),
+                method => {
+                    let include_raw_query_params = route.parameter_validator.is_some();
+                    create_method_router(
+                        method,
+                        has_path_params,
+                        handler,
+                        hooks.clone(),
+                        include_raw_query_params,
+                    )
+                }
             };
 
             combined_router = Some(match combined_router {
