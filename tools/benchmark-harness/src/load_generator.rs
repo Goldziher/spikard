@@ -59,11 +59,17 @@ async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
 
     let mut request = client.request(method, url);
 
+    let is_multipart = !fixture.request.files.is_empty() || !fixture.request.data.is_empty();
     for (key, value) in &fixture.request.headers {
+        // Multipart requests require a boundary parameter, so we always override the fixture
+        // content-type with a boundary-aware header built from the generated body.
+        if is_multipart && key.eq_ignore_ascii_case("content-type") {
+            continue;
+        }
         request = request.header(key, value);
     }
 
-    if !fixture.request.files.is_empty() || !fixture.request.data.is_empty() {
+    if is_multipart {
         let (body, content_type) = build_multipart_body(fixture)?;
         request = request.header("Content-Type", &content_type);
         request = request.body(body);
@@ -190,16 +196,20 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
     if let Some(fixture) = &config.fixture {
         cmd.arg("-m").arg(&fixture.request.method);
 
+        let is_multipart = !fixture.request.files.is_empty() || !fixture.request.data.is_empty();
         let content_type = fixture.request.headers.iter().find_map(|(key, value)| {
             key.eq_ignore_ascii_case("content-type")
                 .then(|| value.to_ascii_lowercase())
         });
 
         for (key, value) in &fixture.request.headers {
+            if is_multipart && key.eq_ignore_ascii_case("content-type") {
+                continue;
+            }
             cmd.arg("-H").arg(format!("{}: {}", key, value));
         }
 
-        if !fixture.request.files.is_empty() || !fixture.request.data.is_empty() {
+        if is_multipart {
             let (body, content_type_header) = build_multipart_body(fixture)?;
             cmd.arg("-H").arg(format!("Content-Type: {}", content_type_header));
             cmd.arg("-d").arg(body);
