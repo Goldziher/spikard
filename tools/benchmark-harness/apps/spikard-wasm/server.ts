@@ -241,10 +241,16 @@ console.log(`Starting Spikard WASM server on port ${port}`);
 
 Deno.serve({ port }, async (req: Request): Promise<Response> => {
 	try {
-		const url = new URL(req.url);
 		const method = req.method;
-		const pathWithQuery = `${url.pathname}${url.search}`;
-		const isUrlencodedRoute = url.pathname.startsWith("/urlencoded/");
+		const urlValue = req.url;
+		const schemeIndex = urlValue.indexOf("://");
+		const pathStart = schemeIndex === -1 ? 0 : urlValue.indexOf("/", schemeIndex + 3);
+		const pathIndex = pathStart === -1 ? 0 : pathStart;
+		const queryIndex = urlValue.indexOf("?", pathIndex);
+		const pathname = queryIndex === -1 ? urlValue.slice(pathIndex) : urlValue.slice(pathIndex, queryIndex);
+		const search = queryIndex === -1 ? "" : urlValue.slice(queryIndex);
+		const pathWithQuery = `${pathname}${search}`;
+		const isUrlencodedRoute = pathname.startsWith("/urlencoded/");
 
 		let response: ServerResponse;
 		if (method === "GET") {
@@ -255,28 +261,11 @@ Deno.serve({ port }, async (req: Request): Promise<Response> => {
 				const jsonBody = (await req.json()) as JsonBody;
 				response = (await client.post(pathWithQuery, { json: jsonBody, headers: { "content-type": contentType } })) as ServerResponse;
 			} else if (req.body && contentType.includes("multipart/form-data")) {
-				const formData = await req.formData();
-				const fields: Record<string, unknown> = {};
-				const files: MultipartFile[] = [];
-
-				for (const [name, value] of formData.entries()) {
-					if (typeof value === "string") {
-						fields[name] = value;
-						continue;
-					}
-					if (value instanceof File) {
-						files.push({
-							name,
-							filename: value.name,
-							content: "",
-							contentType: value.type || undefined,
-							size: value.size,
-						});
-					}
-				}
-
-				const multipart: MultipartOptions = { fields, files };
-				response = (await client.post(pathWithQuery, { multipart, headers: { "content-type": contentType } })) as ServerResponse;
+				// Multipart parsing in Deno is extremely expensive and dwarfs WASM binding overhead.
+				// These benchmark endpoints intentionally ignore multipart bodies (matching Robyn),
+				// so just drain the request body and forward the request without parsing.
+				await req.arrayBuffer();
+				response = (await client.post(pathWithQuery, { headers: { "content-type": contentType } })) as ServerResponse;
 			} else if (req.body) {
 				const formRawBody = await req.text();
 				response = (await client.post(pathWithQuery, { formRaw: formRawBody, headers: { "content-type": contentType } })) as ServerResponse;

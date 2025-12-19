@@ -142,7 +142,7 @@ function get(path: string, handler: HandlerFunction): void {
 	registerRoute("GET", path, handler);
 }
 
-function post(path: string, handler: HandlerFunction, requestSchema: unknown = {}): void {
+function post(path: string, handler: HandlerFunction, requestSchema?: unknown): void {
 	registerRoute("POST", path, handler, requestSchema);
 }
 

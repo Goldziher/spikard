@@ -109,15 +109,21 @@ impl Route {
     pub fn from_metadata(metadata: RouteMetadata, registry: &SchemaRegistry) -> Result<Self, String> {
         let method = metadata.method.parse()?;
 
+        fn is_empty_schema(schema: &Value) -> bool {
+            matches!(schema, Value::Object(map) if map.is_empty())
+        }
+
         let request_validator = metadata
             .request_schema
             .as_ref()
+            .filter(|schema| !is_empty_schema(schema))
             .map(|schema| registry.get_or_compile(schema))
             .transpose()?;
 
         let response_validator = metadata
             .response_schema
             .as_ref()
+            .filter(|schema| !is_empty_schema(schema))
             .map(|schema| registry.get_or_compile(schema))
             .transpose()?;
 
@@ -126,10 +132,14 @@ impl Route {
             metadata.parameter_schema,
         ) {
             (Some(auto_schema), Some(explicit_schema)) => {
-                Some(crate::type_hints::merge_parameter_schemas(auto_schema, explicit_schema))
+                if is_empty_schema(&explicit_schema) {
+                    Some(auto_schema)
+                } else {
+                    Some(crate::type_hints::merge_parameter_schemas(auto_schema, explicit_schema))
+                }
             }
             (Some(auto_schema), None) => Some(auto_schema),
-            (None, Some(explicit_schema)) => Some(explicit_schema),
+            (None, Some(explicit_schema)) => (!is_empty_schema(&explicit_schema)).then_some(explicit_schema),
             (None, None) => None,
         };
 
