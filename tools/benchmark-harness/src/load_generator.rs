@@ -37,11 +37,32 @@ fn build_multipart_body(fixture: &Fixture) -> Result<(String, String)> {
         body.push_str("\r\n");
     }
 
+    // Some fixtures declare `Content-Type: multipart/form-data` but provide the payload as a raw
+    // body file (e.g. `multipart-small.bin`) rather than structured `files`/`data`. In that case,
+    // synthesize a single file part so the request includes a boundary and passes Content-Type
+    // validation. Most benchmark apps ignore the multipart payload contents but require a valid
+    // header format.
+    if fixture.request.files.is_empty() && fixture.request.data.is_empty() {
+        let synthetic_content = fixture.request.body_raw.as_deref().unwrap_or("x").to_string();
+
+        body.push_str(&format!("--{}\r\n", boundary));
+        body.push_str("Content-Disposition: form-data; name=\"file\"; filename=\"upload.bin\"\r\n");
+        body.push_str("Content-Type: application/octet-stream\r\n\r\n");
+        body.push_str(&synthetic_content);
+        body.push_str("\r\n");
+    }
+
     body.push_str(&format!("--{}--\r\n", boundary));
 
     let content_type = format!("multipart/form-data; boundary={}", boundary);
 
     Ok((body, content_type))
+}
+
+fn fixture_declares_multipart(fixture: &Fixture) -> bool {
+    fixture.request.headers.iter().any(|(key, value)| {
+        key.eq_ignore_ascii_case("content-type") && value.to_ascii_lowercase().contains("multipart/form-data")
+    })
 }
 
 async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
@@ -59,7 +80,8 @@ async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
 
     let mut request = client.request(method, url);
 
-    let is_multipart = !fixture.request.files.is_empty() || !fixture.request.data.is_empty();
+    let is_multipart =
+        fixture_declares_multipart(fixture) || !fixture.request.files.is_empty() || !fixture.request.data.is_empty();
     for (key, value) in &fixture.request.headers {
         // Multipart requests require a boundary parameter, so we always override the fixture
         // content-type with a boundary-aware header built from the generated body.
@@ -196,7 +218,9 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
     if let Some(fixture) = &config.fixture {
         cmd.arg("-m").arg(&fixture.request.method);
 
-        let is_multipart = !fixture.request.files.is_empty() || !fixture.request.data.is_empty();
+        let is_multipart = fixture_declares_multipart(fixture)
+            || !fixture.request.files.is_empty()
+            || !fixture.request.data.is_empty();
         let content_type = fixture.request.headers.iter().find_map(|(key, value)| {
             key.eq_ignore_ascii_case("content-type")
                 .then(|| value.to_ascii_lowercase())
