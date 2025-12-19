@@ -5,6 +5,8 @@
 #[cfg(target_os = "linux")]
 use crate::error::{Error, Result};
 #[cfg(target_os = "linux")]
+use inferno::collapse::Collapse;
+#[cfg(target_os = "linux")]
 use inferno::collapse::perf::Folder;
 #[cfg(target_os = "linux")]
 use inferno::flamegraph::{self, Options};
