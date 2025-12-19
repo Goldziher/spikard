@@ -53,12 +53,16 @@ fn basic_route(method: Method, path: &str, expects_json_body: bool) -> Route {
 #[tokio::test]
 async fn request_id_is_generated_and_propagated() {
     let route = basic_route(Method::Get, "/rid", false);
+    let config = ServerConfig {
+        enable_request_id: true,
+        ..Default::default()
+    };
     let router = build_router_with_handlers_and_config(
         vec![(
             route,
             Arc::new(PlainTextHandler { body: "ok".to_string() }) as Arc<dyn Handler>,
         )],
-        ServerConfig::default(),
+        config,
         Vec::new(),
     )
     .expect("router");
