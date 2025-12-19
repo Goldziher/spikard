@@ -727,7 +727,9 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     }
 
     py.detach(|| {
-        tokio::runtime::Builder::new_multi_thread()
+        // Spikard-Python is fundamentally bound by the Python GIL. Running the HTTP runtime on a
+        // single Tokio thread significantly reduces cross-thread GIL handoff overhead under load.
+        tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .map_err(|e| {
