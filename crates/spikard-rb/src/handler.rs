@@ -11,7 +11,7 @@ use axum::http::{HeaderName, HeaderValue, Request, StatusCode};
 use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
 use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
-use serde_json::{Map as JsonMap, Value as JsonValue};
+use serde_json::Value as JsonValue;
 use spikard_bindings_shared::ErrorResponseBuilder;
 use spikard_core::problem::ProblemDetails;
 use spikard_http::ParameterValidator;
@@ -460,27 +460,27 @@ fn build_ruby_request(
 
 /// Build default params from request data path/query/headers/cookies.
 fn build_default_params(ruby: &Ruby, request_data: &RequestData) -> Result<Value, Error> {
-    let mut map = JsonMap::new();
+    let hash = ruby.hash_new();
 
     for (key, value) in request_data.path_params.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
+        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
     }
 
     if let JsonValue::Object(obj) = &request_data.query_params {
         for (key, value) in obj {
-            map.insert(key.clone(), value.clone());
+            hash.aset(ruby.str_new(key), json_to_ruby(ruby, value)?)?;
         }
     }
 
     for (key, value) in request_data.headers.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
+        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
     }
 
     for (key, value) in request_data.cookies.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
+        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
     }
 
-    json_to_ruby(ruby, &JsonValue::Object(map))
+    Ok(hash.as_value())
 }
 
 /// Interpret a Ruby handler response into our response types.

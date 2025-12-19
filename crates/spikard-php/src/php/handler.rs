@@ -111,15 +111,15 @@ impl Handler for PhpHandler {
         _req: Request<Body>,
         request_data: RequestData,
     ) -> Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
-        let result = invoke_php_handler(self.handler_index, &self.inner.handler_name, &request_data);
+        let result = invoke_php_handler(self.handler_index, &self.inner.handler_name, request_data);
         Box::pin(async move { result })
     }
 }
 
 /// Invoke the PHP callable registered at index and return a HandlerResult.
-fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &RequestData) -> HandlerResult {
+fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: RequestData) -> HandlerResult {
     let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
-        let php_request = crate::php::request::PhpRequest::from_request_data(request_data);
+        let php_request = crate::php::request::PhpRequest::from_request_data_owned(request_data);
         let request_zval = php_request.into_zval(false).map_err(|e| {
             ErrorResponseBuilder::structured_error(
                 StatusCode::INTERNAL_SERVER_ERROR,

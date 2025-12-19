@@ -8,6 +8,7 @@ use ext_php_rs::types::ZendHashTable;
 use ext_php_rs::types::Zval;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// PHP-visible HTTP request mirroring `RequestData`.
 #[php_class]
@@ -193,6 +194,29 @@ impl PhpRequest {
             raw_query: (*data.raw_query_params).clone(),
             headers: (*data.headers).clone(),
             cookies: (*data.cookies).clone(),
+        }
+    }
+
+    fn unwrap_arc_map<K: Clone, V: Clone>(map: Arc<HashMap<K, V>>) -> HashMap<K, V> {
+        Arc::try_unwrap(map).unwrap_or_else(|map| (*map).clone())
+    }
+
+    fn unwrap_arc_multimap(map: Arc<HashMap<String, Vec<String>>>) -> HashMap<String, Vec<String>> {
+        Arc::try_unwrap(map).unwrap_or_else(|map| (*map).clone())
+    }
+
+    /// Build from RequestData by-value to avoid unnecessary cloning when possible.
+    pub fn from_request_data_owned(data: spikard_http::RequestData) -> Self {
+        Self {
+            method: data.method,
+            path: data.path,
+            path_params: Self::unwrap_arc_map(data.path_params),
+            body: data.body,
+            files: Value::Object(serde_json::Map::new()),
+            raw_body: data.raw_body.map(|b| b.to_vec()),
+            raw_query: Self::unwrap_arc_multimap(data.raw_query_params),
+            headers: Self::unwrap_arc_map(data.headers),
+            cookies: Self::unwrap_arc_map(data.cookies),
         }
     }
 
