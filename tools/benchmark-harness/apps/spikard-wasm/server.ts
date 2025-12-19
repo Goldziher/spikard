@@ -235,7 +235,7 @@ Deno.serve({ port }, async (req: Request): Promise<Response> => {
 
 		let response: ServerResponse;
 		if (method === "GET") {
-			response = (await client.get(pathWithQuery, null)) as ServerResponse;
+			response = (await client.get(pathWithQuery, undefined)) as ServerResponse;
 		} else if (method === "POST") {
 			const contentType = req.headers.get("content-type") ?? "";
 			if (req.body && contentType.includes("application/json") && !isUrlencodedRoute) {

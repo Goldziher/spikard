@@ -5,8 +5,10 @@ This is a raw variant without pydantic validation to measure framework overhead.
 """
 
 import atexit
+import inspect
 import os
 import sys
+import urllib.parse
 from functools import wraps
 from pathlib import Path as PathLib
 from typing import Callable, Coroutine, ParamSpec, TypeVar
@@ -174,7 +176,15 @@ async def post_multipart_large():
 @profile_once("urlencoded-simple")
 async def post_urlencoded_simple(request: Request):
     """Simple URL-encoded form - no validation."""
-    body = request.json()
+    raw = getattr(request, "body", b"")
+    if inspect.isawaitable(raw):
+        raw = await raw
+    if isinstance(raw, (bytes, bytearray, memoryview)):
+        text = bytes(raw).decode("utf-8", errors="replace")
+    else:
+        text = str(raw or "")
+    parsed = urllib.parse.parse_qs(text, keep_blank_values=True, strict_parsing=False)
+    body = {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
     return jsonify(body)
 
 
@@ -182,7 +192,15 @@ async def post_urlencoded_simple(request: Request):
 @profile_once("urlencoded-complex")
 async def post_urlencoded_complex(request: Request):
     """Complex URL-encoded form - no validation."""
-    body = request.json()
+    raw = getattr(request, "body", b"")
+    if inspect.isawaitable(raw):
+        raw = await raw
+    if isinstance(raw, (bytes, bytearray, memoryview)):
+        text = bytes(raw).decode("utf-8", errors="replace")
+    else:
+        text = str(raw or "")
+    parsed = urllib.parse.parse_qs(text, keep_blank_values=True, strict_parsing=False)
+    body = {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
     return jsonify(body)
 
 
