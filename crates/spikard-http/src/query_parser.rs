@@ -184,6 +184,40 @@ fn parse_boolean(s: &str) -> Result<bool, ()> {
     }
 }
 
+/// Convert already-decoded query pairs into a JSON Value.
+///
+/// This is useful when callers need both:
+/// - the raw decoded pairs (for error messages / multi-value handling), and
+/// - a JSON object with type coercion (for downstream consumers),
+///
+/// while avoiding a second URL-decoding pass.
+#[inline]
+pub fn parse_query_pairs_to_json(pairs: &[(String, String)], parse_numbers: bool) -> Value {
+    let mut array_map: FxHashMap<String, Vec<Value>> = FxHashMap::default();
+
+    for (key, value) in pairs {
+        match array_map.get_mut(key) {
+            Some(entry) => {
+                entry.push(decode_value(value.clone(), parse_numbers));
+            }
+            None => {
+                array_map.insert(key.clone(), vec![decode_value(value.clone(), parse_numbers)]);
+            }
+        }
+    }
+
+    array_map
+        .iter()
+        .map(|(key, value)| {
+            if value.len() == 1 {
+                (key, value[0].to_owned())
+            } else {
+                (key, Value::Array(value.to_owned()))
+            }
+        })
+        .collect::<Value>()
+}
+
 /// Parse a query string into a JSON Value.
 ///
 /// This function:
@@ -202,29 +236,8 @@ fn parse_boolean(s: &str) -> Result<bool, ()> {
 /// ```
 #[inline]
 pub fn parse_query_string_to_json(qs: &[u8], parse_numbers: bool) -> Value {
-    let mut array_map: FxHashMap<String, Vec<Value>> = FxHashMap::default();
-
-    for (key, value) in parse_query_string(qs, '&') {
-        match array_map.get_mut(&key) {
-            Some(entry) => {
-                entry.push(decode_value(value, parse_numbers));
-            }
-            None => {
-                array_map.insert(key, vec![decode_value(value, parse_numbers)]);
-            }
-        }
-    }
-
-    array_map
-        .iter()
-        .map(|(key, value)| {
-            if value.len() == 1 {
-                (key, value[0].to_owned())
-            } else {
-                (key, Value::Array(value.to_owned()))
-            }
-        })
-        .collect::<Value>()
+    let pairs = parse_query_string(qs, '&');
+    parse_query_pairs_to_json(&pairs, parse_numbers)
 }
 
 #[cfg(test)]

@@ -1,12 +1,29 @@
 //! Request parsing and data extraction utilities
 
 use crate::handler_trait::RequestData;
-use crate::query_parser::parse_query_string_to_json;
+use crate::query_parser::{parse_query_pairs_to_json, parse_query_string};
 use axum::body::Body;
 use http_body_util::BodyExt;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
+
+fn extract_query_params_and_raw(uri: &axum::http::Uri) -> (Value, HashMap<String, Vec<String>>) {
+    let query_string = uri.query().unwrap_or("");
+    if query_string.is_empty() {
+        return (Value::Object(serde_json::Map::new()), HashMap::new());
+    }
+
+    let pairs = parse_query_string(query_string.as_bytes(), '&');
+
+    let mut raw: HashMap<String, Vec<String>> = HashMap::new();
+    for (k, v) in &pairs {
+        raw.entry(k.clone()).or_insert_with(Vec::new).push(v.clone());
+    }
+
+    let json = parse_query_pairs_to_json(&pairs, true);
+    (json, raw)
+}
 
 /// Extract and parse query parameters from request URI
 pub fn extract_query_params(uri: &axum::http::Uri) -> Value {
@@ -14,7 +31,7 @@ pub fn extract_query_params(uri: &axum::http::Uri) -> Value {
     if query_string.is_empty() {
         Value::Object(serde_json::Map::new())
     } else {
-        parse_query_string_to_json(query_string.as_bytes(), true)
+        crate::query_parser::parse_query_string_to_json(query_string.as_bytes(), true)
     }
 }
 
@@ -25,7 +42,7 @@ pub fn extract_raw_query_params(uri: &axum::http::Uri) -> HashMap<String, Vec<St
     if query_string.is_empty() {
         HashMap::new()
     } else {
-        crate::query_parser::parse_query_string(query_string.as_bytes(), '&')
+        parse_query_string(query_string.as_bytes(), '&')
             .into_iter()
             .fold(HashMap::new(), |mut acc, (k, v)| {
                 acc.entry(k).or_insert_with(Vec::new).push(v);
@@ -67,10 +84,11 @@ pub fn create_request_data_without_body(
     headers: &axum::http::HeaderMap,
     path_params: HashMap<String, String>,
 ) -> RequestData {
+    let (query_params, raw_query_params) = extract_query_params_and_raw(uri);
     RequestData {
         path_params: Arc::new(path_params),
-        query_params: extract_query_params(uri),
-        raw_query_params: Arc::new(extract_raw_query_params(uri)),
+        query_params,
+        raw_query_params: Arc::new(raw_query_params),
         headers: Arc::new(extract_headers(headers)),
         cookies: Arc::new(extract_cookies(headers)),
         body: Value::Null,
@@ -103,10 +121,12 @@ pub async fn create_request_data_with_body(
         })?
         .to_bytes();
 
+    let (query_params, raw_query_params) = extract_query_params_and_raw(&parts.uri);
+
     Ok(RequestData {
         path_params: Arc::new(path_params),
-        query_params: extract_query_params(&parts.uri),
-        raw_query_params: Arc::new(extract_raw_query_params(&parts.uri)),
+        query_params,
+        raw_query_params: Arc::new(raw_query_params),
         headers: Arc::new(extract_headers(&parts.headers)),
         cookies: Arc::new(extract_cookies(&parts.headers)),
         body: Value::Null,
