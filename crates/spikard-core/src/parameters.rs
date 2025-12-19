@@ -3,10 +3,11 @@
 //! This module provides validation for request parameters (query, path, header, cookie)
 //! using JSON Schema as the validation contract.
 
-use crate::debug_log_module;
-use crate::validation::{ValidationError, ValidationErrorDetail};
+use crate::validation::{SchemaValidator, ValidationError, ValidationErrorDetail};
 use serde_json::{Value, json};
 use std::collections::HashMap;
+use std::fmt;
+use std::sync::Arc;
 
 /// Parameter source - where the parameter comes from
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -33,17 +34,34 @@ impl ParameterSource {
 #[derive(Debug, Clone)]
 struct ParameterDef {
     name: String,
+    lookup_key: String,
+    error_key: String,
     source: ParameterSource,
     expected_type: Option<String>,
     format: Option<String>,
     required: bool,
 }
 
-/// Parameter validator that uses JSON Schema
-#[derive(Clone, Debug)]
-pub struct ParameterValidator {
+#[derive(Clone)]
+struct ParameterValidatorInner {
     schema: Value,
+    schema_validator: SchemaValidator,
     parameter_defs: Vec<ParameterDef>,
+}
+
+/// Parameter validator that uses JSON Schema
+#[derive(Clone)]
+pub struct ParameterValidator {
+    inner: Arc<ParameterValidatorInner>,
+}
+
+impl fmt::Debug for ParameterValidator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ParameterValidator")
+            .field("schema", &self.inner.schema)
+            .field("parameter_defs_len", &self.inner.parameter_defs.len())
+            .finish()
+    }
 }
 
 impl ParameterValidator {
@@ -53,8 +71,16 @@ impl ParameterValidator {
     /// Each property MUST have a "source" field indicating where the parameter comes from.
     pub fn new(schema: Value) -> Result<Self, String> {
         let parameter_defs = Self::extract_parameter_defs(&schema)?;
+        let validation_schema = Self::create_validation_schema(&schema);
+        let schema_validator = SchemaValidator::new(validation_schema)?;
 
-        Ok(Self { schema, parameter_defs })
+        Ok(Self {
+            inner: Arc::new(ParameterValidatorInner {
+                schema,
+                schema_validator,
+                parameter_defs,
+            }),
+        })
     }
 
     /// Extract parameter definitions from the schema
@@ -95,8 +121,17 @@ impl ParameterValidator {
             let is_optional = prop.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
             let required = required_list.contains(&name.as_str()) && !is_optional;
 
+            let (lookup_key, error_key) = if source == ParameterSource::Header {
+                let header_key = name.replace('_', "-").to_lowercase();
+                (header_key.clone(), header_key)
+            } else {
+                (name.clone(), name.clone())
+            };
+
             defs.push(ParameterDef {
                 name: name.clone(),
+                lookup_key,
+                error_key,
                 source,
                 expected_type,
                 format,
@@ -109,7 +144,7 @@ impl ParameterValidator {
 
     /// Get the underlying JSON Schema
     pub fn schema(&self) -> &Value {
-        &self.schema
+        &self.inner.schema
     }
 
     /// Validate and extract parameters from the request
@@ -126,35 +161,17 @@ impl ParameterValidator {
         headers: &HashMap<String, String>,
         cookies: &HashMap<String, String>,
     ) -> Result<Value, ValidationError> {
-        tracing::debug!(
-            "validate_and_extract called with query_params: {:?}, path_params: {:?}, headers: {} items, cookies: {} items",
-            query_params,
-            path_params,
-            headers.len(),
-            cookies.len()
-        );
-        tracing::debug!("parameter_defs count: {}", self.parameter_defs.len());
-
         let mut params_map = serde_json::Map::new();
         let mut errors = Vec::new();
-        let mut raw_values_map: HashMap<String, String> = HashMap::new();
-
-        for param_def in &self.parameter_defs {
-            tracing::debug!(
-                "Processing param: {:?}, source: {:?}, required: {}, expected_type: {:?}",
-                param_def.name,
-                param_def.source,
-                param_def.required,
-                param_def.expected_type
-            );
-
+        for param_def in &self.inner.parameter_defs {
             if param_def.source == ParameterSource::Query && param_def.expected_type.as_deref() == Some("array") {
+                let raw_values = raw_query_params.get(&param_def.lookup_key);
                 let query_value = query_params.get(&param_def.name);
 
-                if param_def.required && query_value.is_none() {
+                if param_def.required && raw_values.is_none() && query_value.is_none() {
                     errors.push(ValidationErrorDetail {
                         error_type: "missing".to_string(),
-                        loc: vec!["query".to_string(), param_def.name.clone()],
+                        loc: vec!["query".to_string(), param_def.error_key.clone()],
                         msg: "Field required".to_string(),
                         input: Value::Null,
                         ctx: None,
@@ -162,7 +179,59 @@ impl ParameterValidator {
                     continue;
                 }
 
-                if let Some(value) = query_value {
+                if let Some(values) = raw_values {
+                    let (item_type, item_format) = self.array_item_type_and_format(&param_def.name);
+                    let mut out = Vec::with_capacity(values.len());
+                    for value in values {
+                        match Self::coerce_value(value, item_type, item_format) {
+                            Ok(coerced) => out.push(coerced),
+                            Err(e) => {
+                                errors.push(ValidationErrorDetail {
+                                    error_type: match item_type {
+                                        Some("integer") => "int_parsing".to_string(),
+                                        Some("number") => "float_parsing".to_string(),
+                                        Some("boolean") => "bool_parsing".to_string(),
+                                        Some("string") => match item_format {
+                                            Some("uuid") => "uuid_parsing".to_string(),
+                                            Some("date") => "date_parsing".to_string(),
+                                            Some("date-time") => "datetime_parsing".to_string(),
+                                            Some("time") => "time_parsing".to_string(),
+                                            Some("duration") => "duration_parsing".to_string(),
+                                            _ => "type_error".to_string(),
+                                        },
+                                        _ => "type_error".to_string(),
+                                    },
+                                    loc: vec!["query".to_string(), param_def.error_key.clone()],
+                                    msg: match item_type {
+                                        Some("integer") => {
+                                            "Input should be a valid integer, unable to parse string as an integer"
+                                                .to_string()
+                                        }
+                                        Some("number") => {
+                                            "Input should be a valid number, unable to parse string as a number"
+                                                .to_string()
+                                        }
+                                        Some("boolean") => {
+                                            "Input should be a valid boolean, unable to interpret input".to_string()
+                                        }
+                                        Some("string") => match item_format {
+                                            Some("uuid") => format!("Input should be a valid UUID, {}", e),
+                                            Some("date") => format!("Input should be a valid date, {}", e),
+                                            Some("date-time") => format!("Input should be a valid datetime, {}", e),
+                                            Some("time") => format!("Input should be a valid time, {}", e),
+                                            Some("duration") => format!("Input should be a valid duration, {}", e),
+                                            _ => e,
+                                        },
+                                        _ => e,
+                                    },
+                                    input: Value::String(value.clone()),
+                                    ctx: None,
+                                });
+                            }
+                        }
+                    }
+                    params_map.insert(param_def.name.clone(), Value::Array(out));
+                } else if let Some(value) = query_value {
                     let array_value = if value.is_array() {
                         value.clone()
                     } else {
@@ -193,7 +262,7 @@ impl ParameterValidator {
                                                     },
                                                     _ => "type_error".to_string(),
                                                 },
-                                                loc: vec!["query".to_string(), param_def.name.clone()],
+                                                loc: vec!["query".to_string(), param_def.error_key.clone()],
                                                 msg: match item_type {
                                                     Some("integer") => "Input should be a valid integer, unable to parse string as an integer".to_string(),
                                                     Some("number") => "Input should be a valid number, unable to parse string as a number".to_string(),
@@ -227,20 +296,7 @@ impl ParameterValidator {
                 continue;
             }
 
-            let raw_value_string = match param_def.source {
-                ParameterSource::Query => raw_query_params
-                    .get(&param_def.name)
-                    .and_then(|values| values.first())
-                    .map(String::as_str),
-                ParameterSource::Path => path_params.get(&param_def.name).map(String::as_str),
-                ParameterSource::Header => {
-                    let header_name = param_def.name.replace('_', "-").to_lowercase();
-                    headers.get(&header_name).map(String::as_str)
-                }
-                ParameterSource::Cookie => cookies.get(&param_def.name).map(String::as_str),
-            };
-
-            tracing::debug!("raw_value_string for {}: {:?}", param_def.name, raw_value_string);
+            let raw_value_string = self.raw_value_for_error(param_def, raw_query_params, path_params, headers, cookies);
 
             if param_def.required && raw_value_string.is_none() {
                 let source_str = match param_def.source {
@@ -249,14 +305,9 @@ impl ParameterValidator {
                     ParameterSource::Header => "headers",
                     ParameterSource::Cookie => "cookie",
                 };
-                let param_name_for_error = if param_def.source == ParameterSource::Header {
-                    param_def.name.replace('_', "-").to_lowercase()
-                } else {
-                    param_def.name.clone()
-                };
                 errors.push(ValidationErrorDetail {
                     error_type: "missing".to_string(),
-                    loc: vec![source_str.to_string(), param_name_for_error],
+                    loc: vec![source_str.to_string(), param_def.error_key.clone()],
                     msg: "Field required".to_string(),
                     input: Value::Null,
                     ctx: None,
@@ -265,24 +316,15 @@ impl ParameterValidator {
             }
 
             if let Some(value_str) = raw_value_string {
-                tracing::debug!(
-                    "Coercing value '{}' to type {:?} with format {:?}",
-                    value_str,
-                    param_def.expected_type,
-                    param_def.format
-                );
                 match Self::coerce_value(
                     value_str,
                     param_def.expected_type.as_deref(),
                     param_def.format.as_deref(),
                 ) {
                     Ok(coerced) => {
-                        tracing::debug!("Coerced to: {:?}", coerced);
                         params_map.insert(param_def.name.clone(), coerced);
-                        raw_values_map.insert(param_def.name.clone(), value_str.to_string());
                     }
                     Err(e) => {
-                        tracing::debug!("Coercion failed: {}", e);
                         let source_str = match param_def.source {
                             ParameterSource::Query => "query",
                             ParameterSource::Path => "path",
@@ -318,16 +360,11 @@ impl ParameterValidator {
                                 (Some("string"), Some("duration")) => {
                                     ("duration_parsing", format!("Input should be a valid duration, {}", e))
                                 }
-                                _ => ("type_error", e.clone()),
+                                _ => ("type_error", e),
                             };
-                        let param_name_for_error = if param_def.source == ParameterSource::Header {
-                            param_def.name.replace('_', "-").to_lowercase()
-                        } else {
-                            param_def.name.clone()
-                        };
                         errors.push(ValidationErrorDetail {
                             error_type: error_type.to_string(),
-                            loc: vec![source_str.to_string(), param_name_for_error],
+                            loc: vec![source_str.to_string(), param_def.error_key.clone()],
                             msg: error_msg,
                             input: Value::String(value_str.to_string()),
                             ctx: None,
@@ -338,48 +375,17 @@ impl ParameterValidator {
         }
 
         if !errors.is_empty() {
-            tracing::debug!("Errors during extraction: {:?}", errors);
             return Err(ValidationError { errors });
         }
 
-        let params_json = Value::Object(params_map.clone());
-        tracing::debug!("params_json after coercion: {:?}", params_json);
-
-        let validation_schema = self.create_validation_schema();
-        tracing::debug!("validation_schema: {:?}", validation_schema);
-
-        let validator = crate::validation::SchemaValidator::new(validation_schema).map_err(|e| ValidationError {
-            errors: vec![ValidationErrorDetail {
-                error_type: "schema_error".to_string(),
-                loc: vec!["schema".to_string()],
-                msg: e,
-                input: Value::Null,
-                ctx: None,
-            }],
-        })?;
-
-        tracing::debug!("About to validate params_json against schema");
-        tracing::debug!("params_json = {:?}", params_json);
-        tracing::debug!(
-            "params_json pretty = {}",
-            serde_json::to_string_pretty(&params_json).unwrap_or_default()
-        );
-        tracing::debug!(
-            "schema = {}",
-            serde_json::to_string_pretty(&self.schema).unwrap_or_default()
-        );
-        match validator.validate(&params_json) {
-            Ok(_) => {
-                tracing::debug!("Validation succeeded");
-                Ok(params_json)
-            }
+        let params_json = Value::Object(params_map);
+        match self.inner.schema_validator.validate(&params_json) {
+            Ok(_) => Ok(params_json),
             Err(mut validation_err) => {
-                tracing::debug!("Validation failed: {:?}", validation_err);
-
                 for error in &mut validation_err.errors {
                     if error.loc.len() >= 2 && error.loc[0] == "body" {
                         let param_name = &error.loc[1];
-                        if let Some(param_def) = self.parameter_defs.iter().find(|p| &p.name == param_name) {
+                        if let Some(param_def) = self.inner.parameter_defs.iter().find(|p| &p.name == param_name) {
                             let source_str = match param_def.source {
                                 ParameterSource::Query => "query",
                                 ParameterSource::Path => "path",
@@ -387,51 +393,44 @@ impl ParameterValidator {
                                 ParameterSource::Cookie => "cookie",
                             };
                             error.loc[0] = source_str.to_string();
-
                             if param_def.source == ParameterSource::Header {
-                                error.loc[1] = param_def.name.replace('_', "-").to_lowercase();
+                                error.loc[1] = param_def.error_key.clone();
                             }
-
-                            if let Some(raw_value) = raw_values_map.get(&param_def.name) {
-                                error.input = Value::String(raw_value.clone());
+                            if let Some(raw_value) =
+                                self.raw_value_for_error(param_def, raw_query_params, path_params, headers, cookies)
+                            {
+                                error.input = Value::String(raw_value.to_string());
                             }
                         }
                     }
                 }
-
-                debug_log_module!(
-                    "parameters",
-                    "Returning {} validation errors",
-                    validation_err.errors.len()
-                );
-                for (i, error) in validation_err.errors.iter().enumerate() {
-                    debug_log_module!(
-                        "parameters",
-                        "  Error {}: type={}, loc={:?}, msg={}, input={}, ctx={:?}",
-                        i,
-                        error.error_type,
-                        error.loc,
-                        error.msg,
-                        error.input,
-                        error.ctx
-                    );
-                }
-                #[allow(clippy::collapsible_if)]
-                if crate::debug::is_enabled() {
-                    if let Ok(json_errors) = serde_json::to_value(&validation_err.errors) {
-                        if let Ok(json_str) = serde_json::to_string_pretty(&json_errors) {
-                            debug_log_module!("parameters", "Serialized errors:\n{}", json_str);
-                        }
-                    }
-                }
-
                 Err(validation_err)
             }
         }
     }
 
+    fn raw_value_for_error<'a>(
+        &self,
+        param_def: &ParameterDef,
+        raw_query_params: &'a HashMap<String, Vec<String>>,
+        path_params: &'a HashMap<String, String>,
+        headers: &'a HashMap<String, String>,
+        cookies: &'a HashMap<String, String>,
+    ) -> Option<&'a str> {
+        match param_def.source {
+            ParameterSource::Query => raw_query_params
+                .get(&param_def.lookup_key)
+                .and_then(|values| values.first())
+                .map(String::as_str),
+            ParameterSource::Path => path_params.get(&param_def.lookup_key).map(String::as_str),
+            ParameterSource::Header => headers.get(&param_def.lookup_key).map(String::as_str),
+            ParameterSource::Cookie => cookies.get(&param_def.lookup_key).map(String::as_str),
+        }
+    }
+
     fn array_item_type_and_format(&self, name: &str) -> (Option<&str>, Option<&str>) {
         let Some(prop) = self
+            .inner
             .schema
             .get("properties")
             .and_then(|value| value.as_object())
@@ -596,8 +595,8 @@ impl ParameterValidator {
 
     /// Create a validation schema without the "source" fields
     /// (JSON Schema doesn't recognize "source" as a standard field)
-    fn create_validation_schema(&self) -> Value {
-        let mut schema = self.schema.clone();
+    fn create_validation_schema(schema: &Value) -> Value {
+        let mut schema = schema.clone();
         let mut optional_fields: Vec<String> = Vec::new();
 
         if let Some(properties) = schema.get_mut("properties").and_then(|p| p.as_object_mut()) {
