@@ -8,7 +8,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 use rustc_hash::FxHashMap;
-use serde_json::{Value, from_str};
+use serde_json::{from_str, Value};
 use std::borrow::Cow;
 use std::convert::Infallible;
 
@@ -128,11 +128,11 @@ pub fn parse_query_string(qs: &[u8], separator: char) -> Vec<(String, String)> {
 /// - Numbers (if parse_numbers is true)
 /// - Strings (fallback)
 #[inline]
-fn decode_value(json_str: String, parse_numbers: bool) -> Value {
-    if PARENTHESES_RE.is_match(json_str.as_str()) {
-        let result: Value = match from_str(json_str.as_str()) {
+fn decode_value(raw: &str, parse_numbers: bool) -> Value {
+    if PARENTHESES_RE.is_match(raw) {
+        let result: Value = match from_str(raw) {
             Ok(value) => value,
-            Err(_) => match from_str(json_str.replace('\'', "\"").as_str()) {
+            Err(_) => match from_str(raw.replace('\'', "\"").as_str()) {
                 Ok(normalized) => normalized,
                 Err(_) => Value::Null,
             },
@@ -140,27 +140,31 @@ fn decode_value(json_str: String, parse_numbers: bool) -> Value {
         return result;
     }
 
-    let normalized = json_str.replace('"', "");
+    let normalized = if raw.as_bytes().contains(&b'"') {
+        Cow::Owned(raw.replace('"', ""))
+    } else {
+        Cow::Borrowed(raw)
+    };
 
     let json_boolean = parse_boolean(&normalized);
-    let json_null = Ok::<_, Infallible>(normalized == "null");
+    let json_null = Ok::<_, Infallible>(normalized.as_ref() == "null");
 
     if parse_numbers {
-        let json_integer = normalized.parse::<i64>();
-        let json_float = normalized.parse::<f64>();
+        let json_integer = normalized.as_ref().parse::<i64>();
+        let json_float = normalized.as_ref().parse::<f64>();
         return match (json_integer, json_float, json_boolean, json_null) {
             (Ok(json_integer), _, _, _) => Value::from(json_integer),
             (_, Ok(json_float), _, _) => Value::from(json_float),
             (_, _, Ok(json_boolean), _) => Value::from(json_boolean),
             (_, _, _, Ok(true)) => Value::Null,
-            _ => Value::from(normalized),
+            _ => Value::from(normalized.as_ref()),
         };
     }
 
     match (json_boolean, json_null) {
         (Ok(json_boolean), _) => Value::from(json_boolean),
         (_, Ok(true)) => Value::Null,
-        _ => Value::from(normalized),
+        _ => Value::from(normalized.as_ref()),
     }
 }
 
@@ -174,10 +178,9 @@ fn decode_value(json_str: String, parse_numbers: bool) -> Value {
 /// - "" (empty string) → Err (don't coerce, preserve as empty string)
 #[inline]
 fn parse_boolean(s: &str) -> Result<bool, ()> {
-    let lower = s.to_lowercase();
-    if lower == "true" || s == "1" {
+    if s.eq_ignore_ascii_case("true") || s == "1" {
         Ok(true)
-    } else if lower == "false" || s == "0" {
+    } else if s.eq_ignore_ascii_case("false") || s == "0" {
         Ok(false)
     } else {
         Err(())
@@ -198,10 +201,10 @@ pub fn parse_query_pairs_to_json(pairs: &[(String, String)], parse_numbers: bool
     for (key, value) in pairs {
         match array_map.get_mut(key) {
             Some(entry) => {
-                entry.push(decode_value(value.clone(), parse_numbers));
+                entry.push(decode_value(value, parse_numbers));
             }
             None => {
-                array_map.insert(key.clone(), vec![decode_value(value.clone(), parse_numbers)]);
+                array_map.insert(key.clone(), vec![decode_value(value, parse_numbers)]);
             }
         }
     }
