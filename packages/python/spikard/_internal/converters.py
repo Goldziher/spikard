@@ -360,7 +360,16 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
         args = get_args(target_type)
         value = raw_value
 
-        is_body_param = key == first_param_name and isinstance(value, bytes)
+        # Allow Rust to provide both a parsed JSON body (builtins) and the original raw bytes.
+        # If the handler expects `bytes`, prefer raw bytes to avoid round-tripping through JSON.
+        is_body_param_name = key == first_param_name
+        if is_body_param_name and target_type is bytes and not isinstance(value, bytes):
+            raw_body_bytes = params.get("_raw_body")
+            if isinstance(raw_body_bytes, bytes):
+                converted[key] = raw_body_bytes
+                continue
+
+        is_body_param = is_body_param_name and isinstance(value, bytes)
         if is_body_param:
             if not value:
                 converted[key] = None if target_type in (type(None), None) else {}
