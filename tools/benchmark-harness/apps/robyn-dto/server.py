@@ -424,7 +424,9 @@ async def flush_profile():
 
 @app.get("/__benchmark__/profile/start")
 async def start_profile(request: Request):
-    output = request.query_params.get("output")
+    output = request.query_params.get("output", None)
+    if isinstance(output, str):
+        output = urllib.parse.unquote(output)
     ok = isinstance(output, str) and _start_pyinstrument(output)
     return jsonify({"ok": ok})
 

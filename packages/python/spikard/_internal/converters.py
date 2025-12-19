@@ -290,12 +290,21 @@ def needs_conversion(handler_func: Callable[..., Any]) -> bool:
             continue
         target_type = type_hints[param_name]
         origin = get_origin(target_type)
+        args = get_args(target_type)
 
         if target_type in (dict, Any) or origin is dict:
             continue
 
         if _is_typed_dict(target_type):
             continue
+
+        if target_type in (str, int, float, bool, bytes):
+            continue
+
+        if origin is Union:
+            non_none_args = [arg for arg in args if arg is not type(None)]
+            if non_none_args and all(arg in (str, int, float, bool, bytes) for arg in non_none_args):
+                continue
 
         return True
 

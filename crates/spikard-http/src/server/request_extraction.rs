@@ -18,7 +18,7 @@ fn extract_query_params_and_raw(uri: &axum::http::Uri) -> (Value, HashMap<String
 
     let mut raw: HashMap<String, Vec<String>> = HashMap::new();
     for (k, v) in &pairs {
-        raw.entry(k.clone()).or_insert_with(Vec::new).push(v.clone());
+        raw.entry(k.clone()).or_default().push(v.clone());
     }
 
     let json = parse_query_pairs_to_json(&pairs, true);
