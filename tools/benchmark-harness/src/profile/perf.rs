@@ -52,9 +52,9 @@ pub fn start_profiler(pid: u32, svg_path: Option<PathBuf>, duration_secs: u64) -
         ]);
         cmd.stdout(Stdio::null()).stderr(Stdio::null());
 
-        let child = cmd.spawn().map_err(|e| {
-            Error::BenchmarkFailed(format!("Failed to start perf profiler for pid {}: {}", pid, e))
-        })?;
+        let child = cmd
+            .spawn()
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to start perf profiler for pid {}: {}", pid, e)))?;
         (Some(child), Some(perf_data_path))
     } else {
         (None, None)
