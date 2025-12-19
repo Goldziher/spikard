@@ -216,6 +216,8 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
         .arg("-c")
         .arg(config.concurrency.to_string());
 
+    let mut temp_paths_to_cleanup: Vec<PathBuf> = Vec::new();
+
     if let Some(fixture) = &config.fixture {
         cmd.arg("-m").arg(&fixture.request.method);
 
@@ -273,10 +275,7 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
                 }
             }
 
-            // Best-effort cleanup.
-            for path in temp_paths {
-                let _ = std::fs::remove_file(path);
-            }
+            temp_paths_to_cleanup.extend(temp_paths);
         } else if let Some(body_raw) = &fixture.request.body_raw {
             cmd.arg("-d").arg(body_raw);
         } else if let Some(body) = &fixture.request.body {
@@ -305,6 +304,11 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
     let output = cmd
         .output()
         .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to run oha: {}", e)))?;
+
+    // Best-effort cleanup (multipart temp files).
+    for path in temp_paths_to_cleanup {
+        let _ = std::fs::remove_file(path);
+    }
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
