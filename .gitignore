@@ -47,6 +47,7 @@ packages/ruby/.simplecov
 __pycache__/
 AGENTS.md
 artifacts/
+inferno_api
 benchmark-results/
 build/
 Cargo.lock

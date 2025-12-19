@@ -181,6 +181,9 @@ jobs:
 
       - name: Build spikard-python binding
         uses: ./.github/actions/build-python-binding
+        env:
+          CARGO_PROFILE_RELEASE_DEBUG: "1"
+          CARGO_PROFILE_RELEASE_STRIP: "none"
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-python
