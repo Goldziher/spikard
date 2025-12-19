@@ -264,6 +264,8 @@ pub struct MultipartFile {
     pub name: String,
     pub filename: Option<String>,
     pub content: String,
+    #[serde(default)]
+    pub size: Option<usize>,
     #[serde(rename = "contentType")]
     pub content_type: Option<String>,
 }
@@ -353,7 +355,7 @@ impl RequestOptions {
             for file in &multipart.files {
                 let filename = file.filename.clone().unwrap_or_default();
                 let content_type = file.content_type.clone().unwrap_or_default();
-                let size = file.content.as_bytes().len();
+                let size = file.size.unwrap_or_else(|| file.content.as_bytes().len());
 
                 let file_obj = json!({
                     "filename": filename,

@@ -96,6 +96,19 @@ interface PathResponse {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HandlerFunction = (input: any) => Promise<unknown>;
 
+interface MultipartFile {
+	readonly name: string;
+	readonly filename?: string;
+	readonly content: string;
+	readonly contentType?: string;
+	readonly size?: number;
+}
+
+interface MultipartOptions {
+	readonly fields: Record<string, unknown>;
+	readonly files: readonly MultipartFile[];
+}
+
 interface ServerRequest {
 	readonly method: string;
 	readonly path: string;
@@ -240,10 +253,33 @@ Deno.serve({ port }, async (req: Request): Promise<Response> => {
 			const contentType = req.headers.get("content-type") ?? "";
 			if (req.body && contentType.includes("application/json") && !isUrlencodedRoute) {
 				const jsonBody = (await req.json()) as JsonBody;
-				response = (await client.post(pathWithQuery, { json: jsonBody })) as ServerResponse;
+				response = (await client.post(pathWithQuery, { json: jsonBody, headers: { "content-type": contentType } })) as ServerResponse;
+			} else if (req.body && contentType.includes("multipart/form-data")) {
+				const formData = await req.formData();
+				const fields: Record<string, unknown> = {};
+				const files: MultipartFile[] = [];
+
+				for (const [name, value] of formData.entries()) {
+					if (typeof value === "string") {
+						fields[name] = value;
+						continue;
+					}
+					if (value instanceof File) {
+						files.push({
+							name,
+							filename: value.name,
+							content: "",
+							contentType: value.type || undefined,
+							size: value.size,
+						});
+					}
+				}
+
+				const multipart: MultipartOptions = { fields, files };
+				response = (await client.post(pathWithQuery, { multipart, headers: { "content-type": contentType } })) as ServerResponse;
 			} else if (req.body) {
 				const formRawBody = await req.text();
-				response = (await client.post(pathWithQuery, { formRaw: formRawBody })) as ServerResponse;
+				response = (await client.post(pathWithQuery, { formRaw: formRawBody, headers: { "content-type": contentType } })) as ServerResponse;
 			} else {
 				response = (await client.post(pathWithQuery, {})) as ServerResponse;
 			}
