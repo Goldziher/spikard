@@ -70,6 +70,7 @@ impl Handler for ValidatingHandler {
             }
 
             if let Some(validator) = parameter_validator
+                && !inner.prefers_parameter_extraction()
                 && let Err(errors) = validator.validate_and_extract(
                     &request_data.query_params,
                     &request_data.raw_query_params,

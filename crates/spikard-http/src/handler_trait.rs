@@ -225,6 +225,15 @@ pub trait Handler: Send + Sync {
     fn prefers_raw_json_body(&self) -> bool {
         false
     }
+
+    /// Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
+    ///
+    /// When `true`, the server will skip `ParameterValidator::validate_and_extract` in `ValidatingHandler`.
+    /// This is useful for language bindings which need to transform validated parameters into
+    /// language-specific values (e.g., Python kwargs) without duplicating work.
+    fn prefers_parameter_extraction(&self) -> bool {
+        false
+    }
 }
 
 /// Validated parameters from request (path, query, headers, cookies)
