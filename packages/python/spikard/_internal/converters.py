@@ -22,6 +22,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import is_dataclass
 from datetime import date, datetime, time, timedelta
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Union, get_args, get_origin, get_type_hints
 
 import msgspec
@@ -80,6 +81,7 @@ def clear_decoders() -> None:
     Useful for testing or when you want to reset the decoder registry.
     """
     _CUSTOM_DECODERS.clear()
+    _handler_metadata.cache_clear()
 
 
 def _is_typed_dict(type_: type) -> bool:
@@ -102,6 +104,36 @@ def _get_or_create_decoder(target_type: type) -> msgspec.json.Decoder[typing.Any
             dec_hook=_default_dec_hook,
         )
     return _MSGSPEC_DECODER_CACHE[target_type]
+
+
+@lru_cache(maxsize=4096)
+def _handler_metadata(
+    handler_func: Callable[..., Any],
+) -> tuple[dict[str, Any], set[str], str | None]:
+    """Cache handler signature and type hints for conversion.
+
+    `inspect.signature()` and `get_type_hints()` are both expensive. We call them on
+    every request unless we cache. Since handlers are long-lived, caching provides
+    a significant speedup under load.
+    """
+    try:
+        type_hints = get_type_hints(handler_func)
+    except (AttributeError, NameError, TypeError, ValueError):
+        type_hints = {}
+
+    try:
+        sig = inspect.signature(handler_func)
+    except (ValueError, TypeError, AttributeError):
+        return type_hints, set(), None
+
+    handler_params: set[str] = set(sig.parameters.keys())
+    first_param_name: str | None = None
+    for param_name in sig.parameters:
+        if param_name not in ("self", "cls"):
+            first_param_name = param_name
+            break
+
+    return type_hints, handler_params, first_param_name
 
 
 def _default_dec_hook(type_: type, obj: Any) -> Any:
@@ -240,16 +272,11 @@ def needs_conversion(handler_func: Callable[..., Any]) -> bool:
     Returns:
         True if the handler needs type conversion, False to skip it
     """
-    try:
-        sig = inspect.signature(handler_func)
-        type_hints = get_type_hints(handler_func)
-    except (AttributeError, NameError, TypeError, ValueError):
-        return True
-
-    if not sig.parameters:
+    type_hints, handler_params, _first_param_name = _handler_metadata(handler_func)
+    if not handler_params:
         return False
 
-    for param_name in sig.parameters:
+    for param_name in handler_params:
         if param_name not in type_hints:
             continue
         target_type = type_hints[param_name]
@@ -302,24 +329,9 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
         # Result: {"date_param": date(2023, 7, 15), "count": 42}
         ```
     """
-    try:
-        type_hints = get_type_hints(handler_func)
-    except (AttributeError, NameError, TypeError, ValueError):
+    type_hints, handler_params, first_param_name = _handler_metadata(handler_func)
+    if not handler_params:
         return params
-
-    try:
-        sig = inspect.signature(handler_func)
-    except (ValueError, TypeError, AttributeError):
-        sig = None
-
-    handler_params = set()
-    first_param_name = None
-    if sig:
-        handler_params = set(sig.parameters.keys())
-        for param_name in sig.parameters:
-            if param_name not in ("self", "cls"):
-                first_param_name = param_name
-                break
 
     if "body" in params and first_param_name and first_param_name != "body" and first_param_name not in params:
         params = params.copy()
@@ -327,7 +339,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
 
     converted = {}
     for key, raw_value in params.items():
-        if sig and key not in handler_params:
+        if key not in handler_params:
             continue
 
         if key not in type_hints:
