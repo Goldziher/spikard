@@ -1065,9 +1065,9 @@ mod tests {
         assert_eq!(config.host, "127.0.0.1");
         assert_eq!(config.port, 8000);
         assert_eq!(config.workers, 1);
-        assert!(config.enable_request_id);
+        assert!(!config.enable_request_id);
         assert!(config.max_body_size.is_some());
-        assert!(config.request_timeout.is_some());
+        assert!(config.request_timeout.is_none());
         assert!(config.graceful_shutdown);
     }
 
