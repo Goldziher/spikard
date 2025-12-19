@@ -3,6 +3,7 @@
 use crate::error::{Error, Result};
 use crate::fixture::Fixture;
 use crate::types::{OhaOutput, ThroughputMetrics};
+use std::path::PathBuf;
 use std::process::Command;
 use std::time::Duration;
 use uuid::Uuid;
@@ -234,9 +235,48 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
         }
 
         if is_multipart {
-            let (body, content_type_header) = build_multipart_body(fixture)?;
-            cmd.arg("-H").arg(format!("Content-Type: {}", content_type_header));
-            cmd.arg("-d").arg(body);
+            // Use oha's curl-compatible multipart mode (`-F`) instead of `-d`, because multipart
+            // bodies must start with `--<boundary>` and clap rejects values that look like flags.
+            for (key, value) in &fixture.request.data {
+                cmd.arg("-F").arg(format!("{}={}", key, value));
+            }
+
+            let temp_dir = std::env::temp_dir().join("spikard-bench-multipart");
+            std::fs::create_dir_all(&temp_dir)
+                .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to create temp dir: {}", e)))?;
+
+            let mut temp_paths: Vec<PathBuf> = Vec::new();
+            let mut add_temp_file = |field_name: &str, filename: &str, content: &str| -> Result<()> {
+                let file_path = temp_dir.join(format!("{}-{}-{}", field_name, filename, Uuid::new_v4()));
+                std::fs::write(&file_path, content)
+                    .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to write temp file: {}", e)))?;
+                cmd.arg("-F").arg(format!("{}=@{}", field_name, file_path.display()));
+                temp_paths.push(file_path);
+                Ok(())
+            };
+
+            if fixture.request.files.is_empty() {
+                add_temp_file("file", "upload.bin", fixture.request.body_raw.as_deref().unwrap_or("x"))?;
+            } else {
+                for file in &fixture.request.files {
+                    let field_name = if file.field_name.is_empty() {
+                        "file"
+                    } else {
+                        &file.field_name
+                    };
+                    let filename = if file.filename.is_empty() {
+                        "upload.bin"
+                    } else {
+                        &file.filename
+                    };
+                    add_temp_file(field_name, filename, &file.content)?;
+                }
+            }
+
+            // Best-effort cleanup.
+            for path in temp_paths {
+                let _ = std::fs::remove_file(path);
+            }
         } else if let Some(body_raw) = &fixture.request.body_raw {
             cmd.arg("-d").arg(body_raw);
         } else if let Some(body) = &fixture.request.body {

@@ -245,21 +245,42 @@ async def get_path_date(request: Request):
 @profile_once("query-few")
 async def get_query_few(request: Request):
     """Few query parameters (1-2)."""
-    return jsonify(dict(request.query_params))
+    qp = getattr(request, "query_params", None)
+    if qp is None:
+        return jsonify({})
+    if isinstance(qp, dict):
+        return jsonify(qp)
+    if hasattr(qp, "items"):
+        return jsonify({k: v for k, v in qp.items()})
+    return jsonify({})
 
 
 @app.get("/query/medium")
 @profile_once("query-medium")
 async def get_query_medium(request: Request):
     """Medium query parameters (3-5)."""
-    return jsonify(dict(request.query_params))
+    qp = getattr(request, "query_params", None)
+    if qp is None:
+        return jsonify({})
+    if isinstance(qp, dict):
+        return jsonify(qp)
+    if hasattr(qp, "items"):
+        return jsonify({k: v for k, v in qp.items()})
+    return jsonify({})
 
 
 @app.get("/query/many")
 @profile_once("query-many")
 async def get_query_many(request: Request):
     """Many query parameters (6-10)."""
-    return jsonify(dict(request.query_params))
+    qp = getattr(request, "query_params", None)
+    if qp is None:
+        return jsonify({})
+    if isinstance(qp, dict):
+        return jsonify(qp)
+    if hasattr(qp, "items"):
+        return jsonify({k: v for k, v in qp.items()})
+    return jsonify({})
 
 
 @app.get("/health")
