@@ -123,14 +123,14 @@ def flush_profile() -> dict[str, bool]:
     return {"ok": False}
 
 @get("/__benchmark__/profile/start")
-def start_profile(output: str | None = Query(default=None)) -> dict[str, bool]:
+async def start_profile(output: str | None = Query(default=None)) -> dict[str, bool]:
     if output is None:
         return {"ok": False}
     return {"ok": _start_pyinstrument(output)}
 
 
 @get("/__benchmark__/profile/stop")
-def stop_profile() -> dict[str, bool]:
+async def stop_profile() -> dict[str, bool]:
     return {"ok": _stop_pyinstrument()}
 
 

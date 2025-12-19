@@ -197,6 +197,14 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/spikard-python
 
+      - name: Install perf
+        run: |
+          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
+
+      - name: Allow perf profiling
+        run: |
+          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -206,6 +214,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler perf \
             --output results/spikard-python/profile.json
         env:
           SPIKARD_METRICS_FILE: ${{ github.workspace }}/results/spikard-python/python-metrics.json

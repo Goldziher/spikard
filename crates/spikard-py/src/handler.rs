@@ -15,7 +15,7 @@ use serde_json::{Value, json};
 use spikard_core::errors::StructuredError;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, ParameterValidator, RequestData};
 use spikard_http::{ProblemDetails, SchemaValidator};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -25,6 +25,8 @@ pub static PYTHON_TASK_LOCALS: OnceCell<TaskLocals> = OnceCell::new();
 
 static CONVERT_PARAMS: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
 static MSGSPEC_JSON_ENCODE: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
+static NEEDS_CONVERSION: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
+static HANDLER_METADATA: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
 
 fn is_json_content_type(headers: &HashMap<String, String>) -> bool {
     let ct = headers
@@ -49,6 +51,39 @@ fn convert_params<'py>(
 
     let converted = func.bind(py).call1((params, handler))?;
     Ok(converted.cast_into::<PyDict>()?)
+}
+
+fn needs_param_conversion<'py>(py: Python<'py>, handler: Bound<'py, PyAny>) -> PyResult<bool> {
+    let func = NEEDS_CONVERSION.get_or_try_init(py, || {
+        let converter_module = py.import("spikard._internal.converters")?;
+        Ok::<pyo3::Py<pyo3::PyAny>, PyErr>(converter_module.getattr("needs_conversion")?.unbind())
+    })?;
+
+    func.bind(py).call1((handler,))?.extract::<bool>()
+}
+
+fn handler_param_names<'py>(
+    py: Python<'py>,
+    handler: Bound<'py, PyAny>,
+) -> PyResult<Option<HashSet<String>>> {
+    let func = HANDLER_METADATA.get_or_try_init(py, || {
+        let converter_module = py.import("spikard._internal.converters")?;
+        Ok::<pyo3::Py<pyo3::PyAny>, PyErr>(converter_module.getattr("_handler_metadata")?.unbind())
+    })?;
+
+    let metadata = func.bind(py).call1((handler,))?;
+    let tuple = metadata.cast_into::<pyo3::types::PyTuple>()?;
+    let params_obj = tuple.get_item(1)?;
+    if params_obj.is_none() {
+        return Ok(None);
+    }
+
+    let params_set = params_obj.cast_into::<pyo3::types::PySet>()?;
+    let mut out = HashSet::with_capacity(params_set.len());
+    for item in params_set.iter() {
+        out.insert(item.extract::<String>()?);
+    }
+    Ok(Some(out))
 }
 
 fn msgspec_json_encode(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
@@ -148,6 +183,8 @@ pub struct PythonHandler {
     response_validator: Option<Arc<SchemaValidator>>,
     parameter_validator: Option<ParameterValidator>,
     body_param_name: String,
+    needs_param_conversion: bool,
+    handler_params: Option<Arc<HashSet<String>>>,
 }
 
 impl PythonHandler {
@@ -159,12 +196,21 @@ impl PythonHandler {
         parameter_validator: Option<ParameterValidator>,
         body_param_name: Option<String>,
     ) -> Self {
+        let (needs_param_conversion, handler_params) = Python::attach(|py| {
+            let handler_obj = handler.bind(py);
+            let needs = needs_param_conversion(py, handler_obj.clone()).unwrap_or(true);
+            let params = handler_param_names(py, handler_obj.clone()).unwrap_or(None).map(Arc::new);
+            (needs, params)
+        });
+
         Self {
             handler: Arc::new(handler),
             is_async,
             response_validator,
             parameter_validator,
             body_param_name: body_param_name.unwrap_or_else(|| "body".to_string()),
+            needs_param_conversion,
+            handler_params,
         }
     }
 
@@ -197,13 +243,23 @@ impl PythonHandler {
         let _request_data_for_error = request_data.clone();
         let body_param_name = self.body_param_name.clone();
         let validated_params_for_task = validated_params.clone();
+        let needs_param_conversion = self.needs_param_conversion;
+        let handler_params = self.handler_params.clone();
 
         let result = if is_async {
             let coroutine_future = Python::attach(|py| -> PyResult<_> {
                 let handler_obj = handler.bind(py);
 
                 let kwargs = if let Some(ref validated) = validated_params_for_task {
-                    validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
+                    validated_params_to_py_kwargs(
+                        py,
+                        validated,
+                        &request_data,
+                        handler_obj.clone(),
+                        &body_param_name,
+                        needs_param_conversion,
+                        handler_params.as_deref(),
+                    )?
                 } else {
                     request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
                 };
@@ -240,12 +296,21 @@ impl PythonHandler {
             Python::attach(|py| python_to_response_result(py, coroutine_result.bind(py), prefer_msgspec_json))
                 .map_err(|e: PyErr| structured_error("python_response_error", format!("Python error: {}", e)))?
         } else {
+            let handler_params = handler_params.clone();
             tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
 
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
-                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
+                        validated_params_to_py_kwargs(
+                            py,
+                            validated,
+                            &request_data,
+                            handler_obj.clone(),
+                            &body_param_name,
+                            needs_param_conversion,
+                            handler_params.as_deref(),
+                        )?
                     } else {
                         request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
                     };
@@ -372,31 +437,56 @@ fn validated_params_to_py_kwargs<'py>(
     validated_params: &Value,
     request_data: &RequestData,
     handler: Bound<'py, PyAny>,
+    body_param_name: &str,
+    needs_param_conversion: bool,
+    handler_params: Option<&HashSet<String>>,
 ) -> PyResult<Bound<'py, PyDict>> {
     let params_dict = json_to_python(py, validated_params)?;
     let params_dict: Bound<'_, PyDict> = params_dict.extract()?;
 
     if let Some(raw_bytes) = &request_data.raw_body {
-        params_dict.set_item("_raw_body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+        if needs_param_conversion {
+            params_dict.set_item("_raw_body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+        }
 
         if is_json_content_type(&request_data.headers) {
-            params_dict.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
-            params_dict.set_item("_raw_json", true)?;
+            if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+                params_dict.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
+            }
+            if needs_param_conversion {
+                params_dict.set_item("_raw_json", true)?;
+            }
         } else if !request_data.body.is_null() {
             let py_body = json_to_python(py, &request_data.body)?;
-            params_dict.set_item("body", py_body)?;
-        } else {
-            params_dict.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+            if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+                params_dict.set_item(body_param_name, py_body)?;
+            }
+        } else if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+            params_dict.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
         }
     } else if !request_data.body.is_null() {
         let py_body = json_to_python(py, &request_data.body)?;
-        params_dict.set_item("body", py_body)?;
+        if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+            params_dict.set_item(body_param_name, py_body)?;
+        }
     }
 
     #[cfg(feature = "di")]
     inject_di_dependencies(py, &params_dict, request_data)?;
 
-    convert_params(py, params_dict, handler)
+    if needs_param_conversion {
+        convert_params(py, params_dict, handler)
+    } else if let Some(allowed) = handler_params {
+        let filtered = PyDict::new(py);
+        for name in allowed {
+            if let Some(value) = params_dict.get_item(name)? {
+                filtered.set_item(name, value)?;
+            }
+        }
+        Ok(filtered)
+    } else {
+        Ok(params_dict)
+    }
 }
 
 /// Convert Python object to ResponseResult
