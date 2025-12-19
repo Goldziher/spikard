@@ -1,19 +1,33 @@
 name: Build Python Binding
 description: Build spikard-python binding with maturin
 
+inputs:
+  python-version:
+    description: Python version to build against
+    required: false
+    default: "3.14"
+  cache-prefix:
+    description: Cache prefix for setup-python-env
+    required: false
+    default: benchmark-python
+  rust-cache-key-prefix:
+    description: Cache key prefix for setup-rust
+    required: false
+    default: benchmark-python-binding
+
 runs:
   using: composite
   steps:
     - name: Setup Python
       uses: ./.github/actions/setup-python-env
       with:
-        python-version: "3.14"
-        cache-prefix: benchmark-python
+        python-version: ${{ inputs.python-version }}
+        cache-prefix: ${{ inputs.cache-prefix }}
 
     - name: Setup Rust
       uses: ./.github/actions/setup-rust
       with:
-        cache-key-prefix: benchmark-python-binding
+        cache-key-prefix: ${{ inputs.rust-cache-key-prefix }}
 
     - name: Install maturin
       shell: bash
