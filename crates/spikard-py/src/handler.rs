@@ -14,7 +14,7 @@ use pyo3_async_runtimes::TaskLocals;
 use serde_json::{Value, json};
 use spikard_core::errors::StructuredError;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
-use spikard_http::{ParameterValidator, ProblemDetails, SchemaValidator};
+use spikard_http::{ProblemDetails, SchemaValidator};
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -134,9 +134,7 @@ pub enum ResponseResult {
 pub struct PythonHandler {
     handler: Arc<Py<PyAny>>,
     is_async: bool,
-    request_validator: Option<Arc<SchemaValidator>>,
     response_validator: Option<Arc<SchemaValidator>>,
-    parameter_validator: Option<ParameterValidator>,
     body_param_name: String,
 }
 
@@ -145,17 +143,13 @@ impl PythonHandler {
     pub fn new(
         handler: Py<PyAny>,
         is_async: bool,
-        request_validator: Option<Arc<SchemaValidator>>,
         response_validator: Option<Arc<SchemaValidator>>,
-        parameter_validator: Option<ParameterValidator>,
         body_param_name: Option<String>,
     ) -> Self {
         Self {
             handler: Arc::new(handler),
             is_async,
-            request_validator,
             response_validator,
-            parameter_validator,
             body_param_name: body_param_name.unwrap_or_else(|| "body".to_string()),
         }
     }
@@ -164,48 +158,18 @@ impl PythonHandler {
     ///
     /// This runs the Python code in a blocking task to avoid blocking the Tokio runtime
     pub async fn call(&self, _req: Request<Body>, request_data: RequestData) -> HandlerResult {
-        if let Some(validator) = &self.request_validator
-            && let Err(errors) = validator.validate(&request_data.body)
-        {
-            let problem = ProblemDetails::from_validation_error(&errors);
-            return Err(structured_error_response(problem));
-        }
-
-        let validated_params = if let Some(validator) = &self.parameter_validator {
-            match validator.validate_and_extract(
-                &request_data.query_params,
-                &request_data.raw_query_params,
-                &request_data.path_params,
-                &request_data.headers,
-                &request_data.cookies,
-            ) {
-                Ok(params) => Some(params),
-                Err(errors) => {
-                    let problem = ProblemDetails::from_validation_error(&errors);
-                    return Err(structured_error_response(problem));
-                }
-            }
-        } else {
-            None
-        };
-
         let handler = self.handler.clone();
         let is_async = self.is_async;
         let response_validator = self.response_validator.clone();
         let prefer_msgspec_json = response_validator.is_none();
         let _request_data_for_error = request_data.clone();
-        let validated_params_for_task = validated_params.clone();
         let body_param_name = self.body_param_name.clone();
 
         let result = if is_async {
             let coroutine_future = Python::attach(|py| -> PyResult<_> {
                 let handler_obj = handler.bind(py);
 
-                let kwargs = if let Some(ref validated) = validated_params_for_task {
-                    validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
-                } else {
-                    request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
-                };
+                let kwargs = request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?;
 
                 let coroutine = if kwargs.is_empty() {
                     handler_obj.call0()?
@@ -243,11 +207,7 @@ impl PythonHandler {
                 Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
 
-                    let kwargs = if let Some(ref validated) = validated_params_for_task {
-                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
-                    } else {
-                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
-                    };
+                    let kwargs = request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?;
 
                     let py_result = if kwargs.is_empty() {
                         handler_obj.call0()?
@@ -344,6 +304,10 @@ impl PythonHandler {
 
 /// Implement the spikard_http::Handler trait for PythonHandler
 impl Handler for PythonHandler {
+    fn prefers_raw_json_body(&self) -> bool {
+        true
+    }
+
     fn call(
         &self,
         request: Request<Body>,
@@ -435,36 +399,6 @@ fn inject_di_dependencies<'py>(
         }
     }
     Ok(())
-}
-
-/// Convert validated parameters to Python keyword arguments using pythonize
-/// This uses already-validated parameter values and converts them directly to Python
-/// objects using the optimized pythonize crate, then lets Python's convert_params
-/// filter and convert based on handler signature.
-///
-/// OPTIMIZATION: Use pythonize to convert serde_json::Value → Python objects directly,
-/// which is faster than manual conversion or JSON round-trip.
-fn validated_params_to_py_kwargs<'py>(
-    py: Python<'py>,
-    validated_params: &Value,
-    request_data: &RequestData,
-    handler: Bound<'py, PyAny>,
-) -> PyResult<Bound<'py, PyDict>> {
-    let params_dict = json_to_python(py, validated_params)?;
-    let params_dict: Bound<'_, PyDict> = params_dict.extract()?;
-
-    if let Some(raw_bytes) = &request_data.raw_body {
-        params_dict.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
-        params_dict.set_item("_raw_json", true)?;
-    } else if !request_data.body.is_null() {
-        let py_body = json_to_python(py, &request_data.body)?;
-        params_dict.set_item("body", py_body)?;
-    }
-
-    #[cfg(feature = "di")]
-    inject_di_dependencies(py, &params_dict, request_data)?;
-
-    convert_params(py, params_dict, handler)
 }
 
 /// Convert request data (path params, query params, body) to Python keyword arguments

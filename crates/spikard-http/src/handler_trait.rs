@@ -216,6 +216,15 @@ pub trait Handler: Send + Sync {
         request: Request<Body>,
         request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>>;
+
+    /// Whether this handler prefers consuming `RequestData::raw_body` over the parsed
+    /// `RequestData::body` for JSON requests.
+    ///
+    /// When `true`, the server may skip eager JSON parsing when there is no request-body
+    /// schema validator attached to the route.
+    fn prefers_raw_json_body(&self) -> bool {
+        false
+    }
 }
 
 /// Validated parameters from request (path, query, headers, cookies)

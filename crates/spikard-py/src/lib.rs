@@ -295,9 +295,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
             let python_handler = PythonHandler::new(
                 py_handler,
                 route.is_async,
-                route.request_validator.clone(),
                 route.response_validator.clone(),
-                route.parameter_validator.clone(),
                 metadata.body_param_name.clone(),
             );
             let arc_handler: std::sync::Arc<dyn spikard_http::Handler> = std::sync::Arc::new(python_handler);
@@ -671,9 +669,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
                     let python_handler = PythonHandler::new(
                         rwh.handler,
                         rwh.metadata.is_async,
-                        route.request_validator.clone(),
                         route.response_validator.clone(),
-                        route.parameter_validator.clone(),
                         rwh.metadata.body_param_name.clone(),
                     );
                     let arc_handler: Arc<dyn spikard_http::Handler> = Arc::new(python_handler);
