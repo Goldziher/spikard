@@ -11,7 +11,6 @@ import { PerformanceObserver, monitorEventLoopDelay } from "node:perf_hooks";
 import process from "node:process";
 import v8 from "node:v8";
 import { writeFile } from "node:fs/promises";
-import { z } from "zod";
 
 const require = createRequire(import.meta.url);
 const native = require("../../../../packages/node/index.js") as {
@@ -151,63 +150,20 @@ function ok(body: unknown): HandlerOutput {
 	return { status: 200, body };
 }
 
-const SmallPayloadSchema = z.object({
-	name: z.string(),
-	description: z.string(),
-	price: z.number(),
-	tax: z.number().optional(),
-});
-
-const MediumPayloadSchema = z.object({
-	name: z.string(),
-	price: z.number(),
-	image: z.object({
-		url: z.string(),
-		name: z.string(),
-	}),
-});
-
-const LargePayloadSchema = z.object({
-	name: z.string(),
-	price: z.number(),
-	seller: z.object({
-		name: z.string(),
-		address: z.object({
-			street: z.string(),
-			city: z.string(),
-			country: z.object({
-				name: z.string(),
-				code: z.string(),
-			}),
-		}),
-	}),
-});
-
-const VeryLargePayloadSchema = z.object({
-	name: z.string(),
-	tags: z.array(z.string()),
-	images: z.array(
-		z.object({
-			url: z.string(),
-			name: z.string(),
-		}),
-	),
-});
-
 async function post_json_small(request: HandlerInput): Promise<HandlerOutput> {
-	return ok(SmallPayloadSchema.parse(request.body));
+	return ok(request.body);
 }
 
 async function post_json_medium(request: HandlerInput): Promise<HandlerOutput> {
-	return ok(MediumPayloadSchema.parse(request.body));
+	return ok(request.body);
 }
 
 async function post_json_large(request: HandlerInput): Promise<HandlerOutput> {
-	return ok(LargePayloadSchema.parse(request.body));
+	return ok(request.body);
 }
 
 async function post_json_very_large(request: HandlerInput): Promise<HandlerOutput> {
-	return ok(VeryLargePayloadSchema.parse(request.body));
+	return ok(request.body);
 }
 
 async function post_multipart_small(_request: HandlerInput): Promise<HandlerOutput> {

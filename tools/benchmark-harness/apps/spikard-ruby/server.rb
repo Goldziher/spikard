@@ -233,15 +233,15 @@ end
 # ============================================================================
 
 app.get '/query/few', handler_name: 'get_query_few' do |request|
-  request[:query_params] || {}
+  request[:query] || {}
 end
 
 app.get '/query/medium', handler_name: 'get_query_medium' do |request|
-  request[:query_params] || {}
+  request[:query] || {}
 end
 
 app.get '/query/many', handler_name: 'get_query_many' do |request|
-  request[:query_params] || {}
+  request[:query] || {}
 end
 
 # ============================================================================
