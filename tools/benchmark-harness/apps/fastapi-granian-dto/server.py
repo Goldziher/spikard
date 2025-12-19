@@ -4,6 +4,7 @@ Uses ORJSONResponse for optimal JSON performance + Granian Rust server.
 """
 
 import sys
+import urllib.parse
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -11,6 +12,12 @@ from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel
 
 app = FastAPI(default_response_class=ORJSONResponse)
+
+async def _parse_urlencoded(request: Request) -> dict[str, Any]:
+    raw = await request.body()
+    text = raw.decode("utf-8", errors="replace")
+    parsed = urllib.parse.parse_qs(text, keep_blank_values=True, strict_parsing=False)
+    return {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
 
 
 class SmallPayload(BaseModel):
@@ -106,15 +113,13 @@ async def post_multipart_large() -> dict[str, Any]:
 @app.post("/urlencoded/simple")
 async def post_urlencoded_simple(request: Request) -> dict[str, Any]:
     """Simple URL-encoded form."""
-    form = await request.form()
-    return dict(form)
+    return await _parse_urlencoded(request)
 
 
 @app.post("/urlencoded/complex")
 async def post_urlencoded_complex(request: Request) -> dict[str, Any]:
     """Complex URL-encoded form."""
-    form = await request.form()
-    return dict(form)
+    return await _parse_urlencoded(request)
 
 
 @app.get("/path/simple/{id}")
