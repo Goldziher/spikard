@@ -45,7 +45,7 @@ use magnus::{
     Error, Module, RArray, RHash, RString, Ruby, TryConvert, Value, function, gc::Marker, method, r_hash::ForEach,
 };
 use once_cell::sync::Lazy;
-use serde_json::{Map as JsonMap, Value as JsonValue};
+use serde_json::Value as JsonValue;
 use spikard_http::testing::{
     MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
 };
@@ -1227,27 +1227,27 @@ fn build_ruby_request(
 }
 
 fn build_default_params(ruby: &Ruby, request_data: &RequestData) -> Result<Value, Error> {
-    let mut map = JsonMap::new();
+    let hash = ruby.hash_new();
 
     for (key, value) in request_data.path_params.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
+        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
     }
 
     if let JsonValue::Object(obj) = &request_data.query_params {
         for (key, value) in obj {
-            map.insert(key.clone(), value.clone());
+            hash.aset(ruby.str_new(key), json_to_ruby(ruby, value)?)?;
         }
     }
 
     for (key, value) in request_data.headers.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
+        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
     }
 
     for (key, value) in request_data.cookies.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
+        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
     }
 
-    json_to_ruby(ruby, &JsonValue::Object(map))
+    Ok(hash.as_value())
 }
 
 fn interpret_handler_response(

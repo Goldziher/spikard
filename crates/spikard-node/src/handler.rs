@@ -55,7 +55,7 @@ impl Handler for NodeHandler {
         request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let input = HandlerInput::from(&request_data);
+            let input = HandlerInput::from(request_data);
 
             let output = self
                 .handler_fn

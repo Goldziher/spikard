@@ -8,6 +8,7 @@ use napi_derive::napi;
 use serde_json::Value;
 use spikard_http::RequestData;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Structured handler input passed to JavaScript handlers
 ///
@@ -41,6 +42,24 @@ impl From<&RequestData> for HandlerInput {
             query_params: data.query_params.clone(),
             body: data.body.clone(),
             path_params: (*data.path_params).clone(),
+        }
+    }
+}
+
+fn unwrap_arc_map<K: Clone, V: Clone>(map: Arc<HashMap<K, V>>) -> HashMap<K, V> {
+    Arc::try_unwrap(map).unwrap_or_else(|map| (*map).clone())
+}
+
+impl From<RequestData> for HandlerInput {
+    fn from(data: RequestData) -> Self {
+        Self {
+            method: data.method,
+            path: data.path,
+            headers: unwrap_arc_map(data.headers),
+            cookies: unwrap_arc_map(data.cookies),
+            query_params: data.query_params,
+            body: data.body,
+            path_params: unwrap_arc_map(data.path_params),
         }
     }
 }
