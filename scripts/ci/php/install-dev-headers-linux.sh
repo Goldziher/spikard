@@ -2,4 +2,4 @@
 set -euo pipefail
 
 sudo apt-get update
-sudo apt-get install -y php-dev
+sudo apt-get install -y --no-install-recommends php-dev

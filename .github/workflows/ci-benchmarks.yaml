@@ -263,6 +263,14 @@ jobs:
         run: |
           sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for py-spy" >&2; true; }
 
+      - name: Install perf
+        run: |
+          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
+
+      - name: Allow perf profiling
+        run: |
+          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -272,7 +280,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --profiler python \
+            --profiler perf \
             --output results/robyn-raw/profile.json
 
       - name: Upload benchmark results
@@ -317,6 +325,14 @@ jobs:
         run: |
           sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for py-spy" >&2; true; }
 
+      - name: Install perf
+        run: |
+          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
+
+      - name: Allow perf profiling
+        run: |
+          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -326,7 +342,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --profiler python \
+            --profiler perf \
             --output results/robyn-dto/profile.json
 
       - name: Upload benchmark results
