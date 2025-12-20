@@ -234,6 +234,21 @@ pub trait Handler: Send + Sync {
     fn prefers_parameter_extraction(&self) -> bool {
         false
     }
+
+    /// Whether this handler needs the parsed headers map in `RequestData`.
+    ///
+    /// When `false`, the server may skip building `RequestData::headers` for requests without a body.
+    /// (Requests with bodies still typically need `Content-Type` decisions.)
+    fn wants_headers(&self) -> bool {
+        true
+    }
+
+    /// Whether this handler needs the parsed cookies map in `RequestData`.
+    ///
+    /// When `false`, the server may skip parsing cookies for requests without a body.
+    fn wants_cookies(&self) -> bool {
+        true
+    }
 }
 
 /// Validated parameters from request (path, query, headers, cookies)

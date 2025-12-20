@@ -60,6 +60,14 @@ fn create_method_router(
     include_query_params_json: bool,
 ) -> axum::routing::MethodRouter {
     let expects_body = method_expects_body(&method);
+    let include_headers = handler.wants_headers();
+    let include_cookies = handler.wants_cookies();
+    let without_body_options = request_extraction::WithoutBodyExtractionOptions {
+        include_raw_query_params,
+        include_query_params_json,
+        include_headers,
+        include_cookies,
+    };
 
     if expects_body {
         if has_path_params {
@@ -184,8 +192,7 @@ fn create_method_router(
                         req.method(),
                         req.headers(),
                         path_params.0,
-                        include_raw_query_params,
-                        include_query_params_json,
+                        without_body_options,
                     );
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -198,8 +205,7 @@ fn create_method_router(
                         req.method(),
                         req.headers(),
                         path_params.0,
-                        include_raw_query_params,
-                        include_query_params_json,
+                        without_body_options,
                     );
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -212,8 +218,7 @@ fn create_method_router(
                         req.method(),
                         req.headers(),
                         path_params.0,
-                        include_raw_query_params,
-                        include_query_params_json,
+                        without_body_options,
                     );
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -226,8 +231,7 @@ fn create_method_router(
                         req.method(),
                         req.headers(),
                         path_params.0,
-                        include_raw_query_params,
-                        include_query_params_json,
+                        without_body_options,
                     );
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -240,8 +244,7 @@ fn create_method_router(
                         req.method(),
                         req.headers(),
                         path_params.0,
-                        include_raw_query_params,
-                        include_query_params_json,
+                        without_body_options,
                     );
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
@@ -259,8 +262,7 @@ fn create_method_router(
                     req.method(),
                     req.headers(),
                     HashMap::new(),
-                    include_raw_query_params,
-                    include_query_params_json,
+                    without_body_options,
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
@@ -270,8 +272,7 @@ fn create_method_router(
                     req.method(),
                     req.headers(),
                     HashMap::new(),
-                    include_raw_query_params,
-                    include_query_params_json,
+                    without_body_options,
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
@@ -281,8 +282,7 @@ fn create_method_router(
                     req.method(),
                     req.headers(),
                     HashMap::new(),
-                    include_raw_query_params,
-                    include_query_params_json,
+                    without_body_options,
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
@@ -292,8 +292,7 @@ fn create_method_router(
                     req.method(),
                     req.headers(),
                     HashMap::new(),
-                    include_raw_query_params,
-                    include_query_params_json,
+                    without_body_options,
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
@@ -303,8 +302,7 @@ fn create_method_router(
                     req.method(),
                     req.headers(),
                     HashMap::new(),
-                    include_raw_query_params,
-                    include_query_params_json,
+                    without_body_options,
                 );
                 lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
             }),

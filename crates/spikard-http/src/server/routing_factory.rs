@@ -81,6 +81,8 @@ impl MethodRouterFactory {
             .ok_or_else(|| format!("[spikard-router] unsupported HTTP method: {}", method))?;
 
         let include_query_params_json = !handler.prefers_parameter_extraction();
+        let include_headers = handler.wants_headers();
+        let include_cookies = handler.wants_cookies();
 
         Ok(if has_path_params {
             Self::create_with_path_params(
@@ -89,6 +91,8 @@ impl MethodRouterFactory {
                 hooks,
                 include_raw_query_params,
                 include_query_params_json,
+                include_headers,
+                include_cookies,
             )
         } else {
             Self::create_without_path_params(
@@ -97,6 +101,8 @@ impl MethodRouterFactory {
                 hooks,
                 include_raw_query_params,
                 include_query_params_json,
+                include_headers,
+                include_cookies,
             )
         })
     }
@@ -108,9 +114,17 @@ impl MethodRouterFactory {
         hooks: Option<Arc<crate::LifecycleHooks>>,
         include_raw_query_params: bool,
         include_query_params_json: bool,
+        include_headers: bool,
+        include_cookies: bool,
     ) -> MethodRouter {
         let handler_clone = handler.clone();
         let hooks_clone = hooks.clone();
+        let without_body_options = request_extraction::WithoutBodyExtractionOptions {
+            include_raw_query_params,
+            include_query_params_json,
+            include_headers,
+            include_cookies,
+        };
 
         if method.expects_body() {
             match method {
@@ -218,8 +232,7 @@ impl MethodRouterFactory {
                                     req.method(),
                                     req.headers(),
                                     path_params.0,
-                                    include_raw_query_params,
-                                    include_query_params_json,
+                                    without_body_options,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -242,8 +255,7 @@ impl MethodRouterFactory {
                                     req.method(),
                                     req.headers(),
                                     path_params.0,
-                                    include_raw_query_params,
-                                    include_query_params_json,
+                                    without_body_options,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -266,8 +278,7 @@ impl MethodRouterFactory {
                                     req.method(),
                                     req.headers(),
                                     path_params.0,
-                                    include_raw_query_params,
-                                    include_query_params_json,
+                                    without_body_options,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -290,8 +301,7 @@ impl MethodRouterFactory {
                                     req.method(),
                                     req.headers(),
                                     path_params.0,
-                                    include_raw_query_params,
-                                    include_query_params_json,
+                                    without_body_options,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -314,8 +324,7 @@ impl MethodRouterFactory {
                                     req.method(),
                                     req.headers(),
                                     path_params.0,
-                                    include_raw_query_params,
-                                    include_query_params_json,
+                                    without_body_options,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -337,9 +346,17 @@ impl MethodRouterFactory {
         hooks: Option<Arc<crate::LifecycleHooks>>,
         include_raw_query_params: bool,
         include_query_params_json: bool,
+        include_headers: bool,
+        include_cookies: bool,
     ) -> MethodRouter {
         let handler_clone = handler.clone();
         let hooks_clone = hooks.clone();
+        let without_body_options = request_extraction::WithoutBodyExtractionOptions {
+            include_raw_query_params,
+            include_query_params_json,
+            include_headers,
+            include_cookies,
+        };
 
         if method.expects_body() {
             match method {
@@ -440,8 +457,7 @@ impl MethodRouterFactory {
                                 req.method(),
                                 req.headers(),
                                 HashMap::new(),
-                                include_raw_query_params,
-                                include_query_params_json,
+                                without_body_options,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -462,8 +478,7 @@ impl MethodRouterFactory {
                                 req.method(),
                                 req.headers(),
                                 HashMap::new(),
-                                include_raw_query_params,
-                                include_query_params_json,
+                                without_body_options,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -484,8 +499,7 @@ impl MethodRouterFactory {
                                 req.method(),
                                 req.headers(),
                                 HashMap::new(),
-                                include_raw_query_params,
-                                include_query_params_json,
+                                without_body_options,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -506,8 +520,7 @@ impl MethodRouterFactory {
                                 req.method(),
                                 req.headers(),
                                 HashMap::new(),
-                                include_raw_query_params,
-                                include_query_params_json,
+                                without_body_options,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -528,8 +541,7 @@ impl MethodRouterFactory {
                                 req.method(),
                                 req.headers(),
                                 HashMap::new(),
-                                include_raw_query_params,
-                                include_query_params_json,
+                                without_body_options,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));

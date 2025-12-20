@@ -458,6 +458,36 @@ impl Handler for PythonHandler {
         self.parameter_validator.is_some()
     }
 
+    fn wants_headers(&self) -> bool {
+        if self
+            .parameter_validator
+            .as_ref()
+            .is_some_and(spikard_core::ParameterValidator::requires_headers)
+        {
+            return true;
+        }
+
+        match self.handler_params.as_ref() {
+            None => true,
+            Some(allowed) => allowed.contains("headers"),
+        }
+    }
+
+    fn wants_cookies(&self) -> bool {
+        if self
+            .parameter_validator
+            .as_ref()
+            .is_some_and(spikard_core::ParameterValidator::requires_cookies)
+        {
+            return true;
+        }
+
+        match self.handler_params.as_ref() {
+            None => true,
+            Some(allowed) => allowed.contains("cookies"),
+        }
+    }
+
     fn call(
         &self,
         request: Request<Body>,
