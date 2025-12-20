@@ -47,9 +47,7 @@ pub(crate) fn map_ext_php_err(e: ExtPhpError) -> PhpException {
 }
 
 pub(crate) fn php_table_with_capacity(len: usize) -> ZBox<ZendHashTable> {
-    if len == 0 {
-        ZendHashTable::new()
-    } else if len > (u32::MAX as usize) {
+    if len == 0 || len > (u32::MAX as usize) {
         ZendHashTable::new()
     } else {
         ZendHashTable::with_capacity(len as u32)
@@ -63,7 +61,13 @@ pub(crate) fn table_insert_str_fast<V: IntoZval>(table: &mut ZendHashTable, key:
     // - `val` is a valid Zval owned by Rust; the table takes over after update and we release it.
     let mut val = value.into_zval(false).map_err(map_ext_php_err)?;
     unsafe { zend_hash_str_update(table, key.as_ptr().cast::<i8>(), key.len(), &raw mut val) };
-    val.release();
+    // ext-php-rs internally uses `Zval::release()` (crate-private) to prevent dropping the value
+    // after transferring ownership to Zend. We emulate the same effect by setting the Zval to
+    // `Null` so its Drop impl doesn't free the underlying value.
+    #[allow(clippy::used_underscore_items)]
+    {
+        val.u1.type_info = ext_php_rs::flags::ZvalTypeFlags::Null.bits();
+    }
     Ok(())
 }
 

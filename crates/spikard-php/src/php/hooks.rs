@@ -275,75 +275,73 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
         let callback_index = self.callback_index;
         Box::pin(async move {
             let php_req = axum_request_to_php_sync(&req);
-            let result = tokio::task::spawn_blocking(move || {
-                PHP_HOOK_REGISTRY.with(|registry| -> Option<Result<Option<PhpResponse>, String>> {
-                    let registry = registry.borrow();
-                    let callback_zval = registry.get(callback_index)?;
-                    let callable = ext_php_rs::types::ZendCallable::new(callback_zval).ok()?;
-                    let req_zval = match php_req.into_zval(false) {
-                        Ok(z) => z,
-                        Err(e) => return Some(Err(format!("Failed to convert request to Zval: {:?}", e))),
-                    };
-                    let result_zval = match callable.try_call(vec![&req_zval]) {
-                        Ok(z) => z,
-                        Err(e) => return Some(Err(format!("PHP hook failed: {:?}", e))),
-                    };
-                    if result_zval.is_null() {
-                        Some(Ok(None))
-                    } else if let Some(obj) = result_zval.object() {
-                        let status = obj
-                            .try_call_method("getStatus", vec![])
-                            .ok()
-                            .and_then(|v| v.long())
-                            .unwrap_or(200);
-                        let body_str = obj
-                            .try_call_method("getBody", vec![])
-                            .ok()
-                            .and_then(|v| v.string())
-                            .map(|s| s.to_string())
-                            .unwrap_or_else(|| "{}".to_string());
-                        let body: Value = serde_json::from_str(&body_str).unwrap_or_else(|_| Value::String(body_str));
-                        let mut headers = HashMap::new();
-                        if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
-                            && let Some(arr) = headers_zval.array()
-                        {
-                            for (key, val) in arr.iter() {
-                                let key_str = match key {
-                                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                                };
-                                if let Some(val_str) = val.string() {
-                                    headers.insert(key_str, val_str.to_string());
-                                }
+            let result = PHP_HOOK_REGISTRY.with(|registry| -> Option<Result<Option<PhpResponse>, String>> {
+                let registry = registry.borrow();
+                let callback_zval = registry.get(callback_index)?;
+                let callable = ext_php_rs::types::ZendCallable::new(callback_zval).ok()?;
+                let req_zval = match php_req.into_zval(false) {
+                    Ok(z) => z,
+                    Err(e) => return Some(Err(format!("Failed to convert request to Zval: {:?}", e))),
+                };
+                let result_zval = match callable.try_call(vec![&req_zval]) {
+                    Ok(z) => z,
+                    Err(e) => return Some(Err(format!("PHP hook failed: {:?}", e))),
+                };
+                if result_zval.is_null() {
+                    Some(Ok(None))
+                } else if let Some(obj) = result_zval.object() {
+                    let status = obj
+                        .try_call_method("getStatus", vec![])
+                        .ok()
+                        .and_then(|v| v.long())
+                        .unwrap_or(200);
+                    let body_str = obj
+                        .try_call_method("getBody", vec![])
+                        .ok()
+                        .and_then(|v| v.string())
+                        .map(|s| s.to_string())
+                        .unwrap_or_else(|| "{}".to_string());
+                    let body: Value = serde_json::from_str(&body_str).unwrap_or_else(|_| Value::String(body_str));
+                    let mut headers = HashMap::new();
+                    if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
+                        && let Some(arr) = headers_zval.array()
+                    {
+                        for (key, val) in arr.iter() {
+                            let key_str = match key {
+                                ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                                ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                                ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                            };
+                            if let Some(val_str) = val.string() {
+                                headers.insert(key_str, val_str.to_string());
                             }
                         }
-                        Some(Ok(Some(PhpResponse {
-                            status_code: status,
-                            body,
-                            headers,
-                            cookies: HashMap::new(),
-                        })))
-                    } else {
-                        Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                     }
-                })
-            })
-            .await;
+                    Some(Ok(Some(PhpResponse {
+                        status_code: status,
+                        body,
+                        headers,
+                        cookies: HashMap::new(),
+                    })))
+                } else {
+                    Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
+                }
+            });
+
             match result {
-                Ok(Some(Ok(None))) => Ok(HookResult::Continue(req)),
-                Ok(Some(Ok(Some(php_resp)))) => match php_response_to_axum(&php_resp) {
+                Some(Ok(None)) => Ok(HookResult::Continue(req)),
+                Some(Ok(Some(php_resp))) => match php_response_to_axum(&php_resp) {
                     Ok(resp) => Ok(HookResult::ShortCircuit(resp)),
                     Err(e) => {
                         tracing_error!("Failed to convert PHP response: {}", e);
                         Ok(HookResult::Continue(req))
                     }
                 },
-                Ok(Some(Err(e))) => {
+                Some(Err(e)) => {
                     tracing_error!("Hook error: {}", e);
                     Ok(HookResult::Continue(req))
                 }
-                _ => Ok(HookResult::Continue(req)),
+                None => Ok(HookResult::Continue(req)),
             }
         })
     }
