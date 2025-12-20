@@ -187,7 +187,9 @@ get("/path/multiple/{user_id}/{post_id}")(async function pathMultiple(params: Pa
 	return { user_id: params.user_id ?? "", post_id: params.post_id ?? "" };
 });
 
-get("/path/deep/{org}/{team}/{project}/{api}/{item}")(async function pathDeep(params: PathParams): Promise<PathResponse> {
+get("/path/deep/{org}/{team}/{project}/{api}/{item}")(async function pathDeep(
+	params: PathParams,
+): Promise<PathResponse> {
 	return {
 		org: params.org ?? "",
 		team: params.team ?? "",
@@ -259,7 +261,10 @@ Deno.serve({ port }, async (req: Request): Promise<Response> => {
 			const contentType = req.headers.get("content-type") ?? "";
 			if (req.body && contentType.includes("application/json") && !isUrlencodedRoute) {
 				const jsonBody = (await req.json()) as JsonBody;
-				response = (await client.post(pathWithQuery, { json: jsonBody, headers: { "content-type": contentType } })) as ServerResponse;
+				response = (await client.post(pathWithQuery, {
+					json: jsonBody,
+					headers: { "content-type": contentType },
+				})) as ServerResponse;
 			} else if (req.body && contentType.includes("multipart/form-data")) {
 				// Multipart parsing in Deno is extremely expensive and dwarfs WASM binding overhead.
 				// These benchmark endpoints intentionally ignore multipart bodies (matching Robyn),
@@ -268,7 +273,10 @@ Deno.serve({ port }, async (req: Request): Promise<Response> => {
 				response = (await client.post(pathWithQuery, { headers: { "content-type": contentType } })) as ServerResponse;
 			} else if (req.body) {
 				const formRawBody = await req.text();
-				response = (await client.post(pathWithQuery, { formRaw: formRawBody, headers: { "content-type": contentType } })) as ServerResponse;
+				response = (await client.post(pathWithQuery, {
+					formRaw: formRawBody,
+					headers: { "content-type": contentType },
+				})) as ServerResponse;
 			} else {
 				response = (await client.post(pathWithQuery, {})) as ServerResponse;
 			}

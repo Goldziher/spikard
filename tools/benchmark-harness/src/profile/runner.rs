@@ -58,7 +58,10 @@ enum ProfilerHandle {
     Python(crate::profile::python::PythonProfiler),
     PythonInApp(PathBuf),
     #[cfg(target_os = "linux")]
-    PerfPython(crate::profile::perf::PerfProfiler),
+    Perf {
+        profiler: crate::profile::perf::PerfProfiler,
+        language: String,
+    },
     Node(crate::profile::node::NodeProfiler),
     Ruby(crate::profile::ruby::RubyProfiler),
     Php(crate::profile::php::PhpProfiler),
@@ -124,7 +127,8 @@ impl ProfileRunner {
 
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
         let suite_node_profiler = self.config.profiler.as_deref() == Some("node") && framework_info.language == "node";
-        let suite_wasm_profiler = self.config.profiler.as_deref() == Some("wasm") && framework_info.language == "wasm";
+        let suite_wasm_profiler =
+            matches!(self.config.profiler.as_deref(), Some("wasm") | Some("perf")) && framework_info.language == "wasm";
 
         let php_profile_output = suite_php_profiler
             .then(|| std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from))
@@ -146,6 +150,12 @@ impl ProfileRunner {
         if let Some(ref output_path) = wasm_metrics_output {
             server_env.push((
                 "SPIKARD_WASM_METRICS_FILE".to_string(),
+                output_path.display().to_string(),
+            ));
+        }
+        if let Some(ref output_path) = wasm_v8_log_output {
+            server_env.push((
+                "SPIKARD_WASM_V8_LOG_OUTPUT".to_string(),
                 output_path.display().to_string(),
             ));
         }
@@ -291,12 +301,20 @@ impl ProfileRunner {
 
             for suite in &mut suite_results {
                 for workload in &mut suite.workloads {
+                    let existing_flamegraph = match workload.results.profiling.take() {
+                        Some(ProfilingData::Wasm(data)) => data.flamegraph_path,
+                        other => {
+                            workload.results.profiling = other;
+                            None
+                        }
+                    };
                     workload.results.profiling = Some(ProfilingData::Wasm(WasmProfilingData {
                         rss_mb: metrics.as_ref().and_then(|m| m.rss_mb),
                         heap_total_mb: metrics.as_ref().and_then(|m| m.heap_total_mb),
                         heap_used_mb: metrics.as_ref().and_then(|m| m.heap_used_mb),
                         external_mb: metrics.as_ref().and_then(|m| m.external_mb),
                         v8_log_path: v8_log_path.clone(),
+                        flamegraph_path: existing_flamegraph,
                     }));
                 }
             }
@@ -374,6 +392,11 @@ impl ProfileRunner {
         // The server is frequently started via a wrapper (e.g. `uv`), so we find the actual
         // Python child process when possible.
         find_descendant_pid_by_name(server.pid(), "python", 10).unwrap_or(server.pid())
+    }
+
+    #[cfg(target_os = "linux")]
+    fn node_target_pid(&self, server: &ServerHandle) -> u32 {
+        find_descendant_pid_by_name(server.pid(), "node", 10).unwrap_or(server.pid())
     }
 
     async fn try_profile_start(&self, server: &ServerHandle, output_path: &std::path::Path) -> bool {
@@ -468,24 +491,29 @@ impl ProfileRunner {
                 }
                 #[cfg(target_os = "linux")]
                 "perf" => {
-                    if self.detect_language() != "python" {
-                        eprintln!("  ⚠ perf profiler currently only supported for python targets");
-                        None
-                    } else {
-                        let output_path = absolutize_path(
-                            output_dir
-                                .join("profiles")
-                                .join(&self.config.framework)
-                                .join(format!("{}.perf.svg", workload_def.name)),
-                        );
-                        let _ = std::fs::create_dir_all(output_path.parent().unwrap_or(&output_dir));
-                        let python_pid = self.python_target_pid(server);
-                        Some(ProfilerHandle::PerfPython(crate::profile::perf::start_profiler(
-                            python_pid,
+                    let output_path = absolutize_path(
+                        output_dir
+                            .join("profiles")
+                            .join(&self.config.framework)
+                            .join(format!("{}.perf.svg", workload_def.name)),
+                    );
+                    let _ = std::fs::create_dir_all(output_path.parent().unwrap_or(&output_dir));
+
+                    let language = self.detect_language();
+                    let target_pid = match language.as_str() {
+                        "python" => self.python_target_pid(server),
+                        "node" => self.node_target_pid(server),
+                        _ => server.pid(),
+                    };
+
+                    Some(ProfilerHandle::Perf {
+                        profiler: crate::profile::perf::start_profiler(
+                            target_pid,
                             Some(output_path),
                             self.config.duration_secs,
-                        )?))
-                    }
+                        )?,
+                        language,
+                    })
                 }
                 "php" => {
                     if suite_php_profiler {
@@ -589,18 +617,51 @@ impl ProfileRunner {
                 })
             }
             #[cfg(target_os = "linux")]
-            ProfilerHandle::PerfPython(p) => {
-                let flamegraph_path = p.stop();
-                ProfilingData::Python(PythonProfilingData {
-                    gil_wait_time_ms: None,
-                    gil_contention_percent: None,
-                    ffi_overhead_ms: None,
-                    handler_time_ms: None,
-                    serialization_time_ms: None,
-                    gc_collections: None,
-                    gc_time_ms: None,
-                    flamegraph_path,
-                })
+            ProfilerHandle::Perf { profiler, language } => {
+                let flamegraph_path = profiler.stop();
+                match language.as_str() {
+                    "python" => ProfilingData::Python(PythonProfilingData {
+                        gil_wait_time_ms: None,
+                        gil_contention_percent: None,
+                        ffi_overhead_ms: None,
+                        handler_time_ms: None,
+                        serialization_time_ms: None,
+                        gc_collections: None,
+                        gc_time_ms: None,
+                        flamegraph_path,
+                    }),
+                    "node" => ProfilingData::Node(NodeProfilingData {
+                        v8_heap_used_mb: None,
+                        v8_heap_total_mb: None,
+                        event_loop_lag_ms: None,
+                        gc_time_ms: None,
+                        flamegraph_path,
+                    }),
+                    "ruby" => ProfilingData::Ruby(RubyProfilingData {
+                        gc_count: None,
+                        gc_time_ms: None,
+                        heap_allocated_pages: None,
+                        heap_live_slots: None,
+                        flamegraph_path,
+                    }),
+                    "php" => ProfilingData::Php(PhpProfilingData { flamegraph_path }),
+                    "rust" => ProfilingData::Rust(RustProfilingData {
+                        heap_allocated_mb: None,
+                        flamegraph_path,
+                    }),
+                    "wasm" => ProfilingData::Wasm(WasmProfilingData {
+                        rss_mb: None,
+                        heap_total_mb: None,
+                        heap_used_mb: None,
+                        external_mb: None,
+                        v8_log_path: None,
+                        flamegraph_path,
+                    }),
+                    _ => ProfilingData::Rust(RustProfilingData {
+                        heap_allocated_mb: None,
+                        flamegraph_path,
+                    }),
+                }
             }
             ProfilerHandle::Php(p) => {
                 let data = p.stop();

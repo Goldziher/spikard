@@ -35,7 +35,7 @@ indexmap = { version = "2.12", features = ["serde"] }
 regex = "1.12"
 
 [dev-dependencies]
-insta = "1.44"  # For snapshot testing
+insta = "1.45"  # For snapshot testing
 tempfile = "3.23"
 
 [features]

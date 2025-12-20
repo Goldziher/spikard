@@ -166,6 +166,7 @@ pub struct WasmProfilingData {
     pub heap_used_mb: Option<f64>,
     pub external_mb: Option<f64>,
     pub v8_log_path: Option<String>,
+    pub flamegraph_path: Option<String>,
 }
 
 /// Statistical comparison

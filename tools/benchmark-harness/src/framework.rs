@@ -61,7 +61,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-rust",
             vec!["Cargo.toml".to_string(), "src/main.rs".to_string()],
             Some("cargo build --release".to_string()),
-            "cargo run --release -- {port}",
+            "./target/release/spikard-rust-bench {port}",
             None,
         ),
         FrameworkConfig::new(
