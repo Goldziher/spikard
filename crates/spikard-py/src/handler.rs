@@ -1,6 +1,7 @@
 //! Python handler implementation for spikard_http::Handler trait
 
 use crate::conversion::{json_to_python, python_to_json};
+use crate::handler_request::PyHandlerRequest;
 use crate::response::StreamingResponse;
 use axum::{
     body::Body,
@@ -62,7 +63,10 @@ fn needs_param_conversion<'py>(py: Python<'py>, handler: Bound<'py, PyAny>) -> P
     func.bind(py).call1((handler,))?.extract::<bool>()
 }
 
-fn handler_param_names<'py>(py: Python<'py>, handler: Bound<'py, PyAny>) -> PyResult<Option<HashSet<String>>> {
+fn handler_param_names<'py>(
+    py: Python<'py>,
+    handler: Bound<'py, PyAny>,
+) -> PyResult<(Option<HashSet<String>>, Option<String>)> {
     let func = HANDLER_METADATA.get_or_try_init(py, || {
         let converter_module = py.import("spikard._internal.converters")?;
         Ok::<pyo3::Py<pyo3::PyAny>, PyErr>(converter_module.getattr("_handler_metadata")?.unbind())
@@ -71,8 +75,16 @@ fn handler_param_names<'py>(py: Python<'py>, handler: Bound<'py, PyAny>) -> PyRe
     let metadata = func.bind(py).call1((handler,))?;
     let tuple = metadata.cast_into::<pyo3::types::PyTuple>()?;
     let params_obj = tuple.get_item(1)?;
+    let first_param_obj = tuple.get_item(2)?;
+
+    let first_param_name = if first_param_obj.is_none() {
+        None
+    } else {
+        Some(first_param_obj.extract::<String>()?)
+    };
+
     if params_obj.is_none() {
-        return Ok(None);
+        return Ok((None, first_param_name));
     }
 
     let params_set = params_obj.cast_into::<pyo3::types::PySet>()?;
@@ -80,7 +92,7 @@ fn handler_param_names<'py>(py: Python<'py>, handler: Bound<'py, PyAny>) -> PyRe
     for item in params_set.iter() {
         out.insert(item.extract::<String>()?);
     }
-    Ok(Some(out))
+    Ok((Some(out), first_param_name))
 }
 
 fn msgspec_json_encode(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
@@ -209,6 +221,7 @@ pub struct PythonHandler {
     body_param_name: String,
     needs_param_conversion: bool,
     handler_params: Option<Arc<HashSet<String>>>,
+    request_only_handler: bool,
 }
 
 impl PythonHandler {
@@ -220,13 +233,13 @@ impl PythonHandler {
         parameter_validator: Option<ParameterValidator>,
         body_param_name: Option<String>,
     ) -> Self {
-        let (needs_param_conversion, handler_params) = Python::attach(|py| {
+        let (needs_param_conversion, handler_params, request_only_handler) = Python::attach(|py| {
             let handler_obj = handler.bind(py);
             let needs = needs_param_conversion(py, handler_obj.clone()).unwrap_or(true);
-            let params = handler_param_names(py, handler_obj.clone())
-                .unwrap_or(None)
-                .map(Arc::new);
-            (needs, params)
+            let (params, first_param_name) = handler_param_names(py, handler_obj.clone()).unwrap_or((None, None));
+            let request_only = matches!(first_param_name.as_deref(), Some("request" | "req"))
+                && params.as_ref().is_some_and(|set| set.len() == 1);
+            (needs, params.map(Arc::new), request_only)
         });
 
         Self {
@@ -237,6 +250,7 @@ impl PythonHandler {
             body_param_name: body_param_name.unwrap_or_else(|| "body".to_string()),
             needs_param_conversion,
             handler_params,
+            request_only_handler,
         }
     }
 
@@ -271,37 +285,43 @@ impl PythonHandler {
         let validated_params_for_task = validated_params.clone();
         let needs_param_conversion = self.needs_param_conversion;
         let handler_params = self.handler_params.clone();
+        let request_only_handler = self.request_only_handler;
 
         let result = if is_async {
             let coroutine_future = Python::attach(|py| -> PyResult<_> {
                 let handler_obj = handler.bind(py);
 
-                let kwargs = if let Some(ref validated) = validated_params_for_task {
-                    validated_params_to_py_kwargs(
-                        py,
-                        validated,
-                        &request_data,
-                        handler_obj.clone(),
-                        &body_param_name,
-                        needs_param_conversion,
-                        handler_params.as_deref(),
-                    )?
+                let coroutine = if request_only_handler {
+                    let req_obj = Py::new(py, PyHandlerRequest::new(request_data.clone()))?;
+                    handler_obj.call1((req_obj,))?
                 } else {
-                    request_data_to_py_kwargs(
-                        py,
-                        &request_data,
-                        handler_obj.clone(),
-                        &body_param_name,
-                        needs_param_conversion,
-                        handler_params.as_deref(),
-                    )?
-                };
+                    let kwargs = if let Some(ref validated) = validated_params_for_task {
+                        validated_params_to_py_kwargs(
+                            py,
+                            validated,
+                            &request_data,
+                            handler_obj.clone(),
+                            &body_param_name,
+                            needs_param_conversion,
+                            handler_params.as_deref(),
+                        )?
+                    } else {
+                        request_data_to_py_kwargs(
+                            py,
+                            &request_data,
+                            handler_obj.clone(),
+                            &body_param_name,
+                            needs_param_conversion,
+                            handler_params.as_deref(),
+                        )?
+                    };
 
-                let coroutine = if kwargs.is_empty() {
-                    handler_obj.call0()?
-                } else {
-                    let empty_args = PyTuple::empty(py);
-                    handler_obj.call(empty_args, Some(&kwargs))?
+                    if kwargs.is_empty() {
+                        handler_obj.call0()?
+                    } else {
+                        let empty_args = PyTuple::empty(py);
+                        handler_obj.call(empty_args, Some(&kwargs))?
+                    }
                 };
 
                 if !coroutine.hasattr("__await__")? {
@@ -330,36 +350,42 @@ impl PythonHandler {
                 .map_err(|e: PyErr| structured_error("python_response_error", format!("Python error: {}", e)))?
         } else {
             let handler_params = handler_params.clone();
+            let request_data_for_sync = request_data.clone();
             tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
 
-                    let kwargs = if let Some(ref validated) = validated_params_for_task {
-                        validated_params_to_py_kwargs(
-                            py,
-                            validated,
-                            &request_data,
-                            handler_obj.clone(),
-                            &body_param_name,
-                            needs_param_conversion,
-                            handler_params.as_deref(),
-                        )?
+                    let py_result = if request_only_handler {
+                        let req_obj = Py::new(py, PyHandlerRequest::new(request_data_for_sync))?;
+                        handler_obj.call1((req_obj,))?
                     } else {
-                        request_data_to_py_kwargs(
-                            py,
-                            &request_data,
-                            handler_obj.clone(),
-                            &body_param_name,
-                            needs_param_conversion,
-                            handler_params.as_deref(),
-                        )?
-                    };
+                        let kwargs = if let Some(ref validated) = validated_params_for_task {
+                            validated_params_to_py_kwargs(
+                                py,
+                                validated,
+                                &request_data_for_sync,
+                                handler_obj.clone(),
+                                &body_param_name,
+                                needs_param_conversion,
+                                handler_params.as_deref(),
+                            )?
+                        } else {
+                            request_data_to_py_kwargs(
+                                py,
+                                &request_data_for_sync,
+                                handler_obj.clone(),
+                                &body_param_name,
+                                needs_param_conversion,
+                                handler_params.as_deref(),
+                            )?
+                        };
 
-                    let py_result = if kwargs.is_empty() {
-                        handler_obj.call0()?
-                    } else {
-                        let empty_args = PyTuple::empty(py);
-                        handler_obj.call(empty_args, Some(&kwargs))?
+                        if kwargs.is_empty() {
+                            handler_obj.call0()?
+                        } else {
+                            let empty_args = PyTuple::empty(py);
+                            handler_obj.call(empty_args, Some(&kwargs))?
+                        }
                     };
                     python_to_response_result(py, &py_result, prefer_msgspec_json)
                 })

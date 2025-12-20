@@ -133,7 +133,7 @@ def extract_schemas(
     request_schema = None
     if params:
         first_param = params[0]
-        if first_param.name not in ("self", "cls"):
+        if first_param.name not in ("self", "cls", "request", "req"):
             param_type = type_hints.get(first_param.name)
             if param_type:
                 is_upload_file = param_type is UploadFile
