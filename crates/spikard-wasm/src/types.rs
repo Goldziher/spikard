@@ -281,6 +281,20 @@ impl RequestOptions {
         if value.is_null() || value.is_undefined() {
             return Ok(RequestOptions::default());
         }
+
+        // Fast-path: when multipart is present, avoid serde_wasm_bindgen deserialization because it
+        // eagerly converts `files[].content` into Rust Strings (catastrophic for large uploads).
+        // The fallback parser below selectively inlines only small or text-like content.
+        if let Ok(obj) = value.clone().dyn_into::<Object>() {
+            let multipart_key = JsValue::from_str("multipart");
+            if Reflect::has(&obj, &multipart_key).ok().unwrap_or(false) {
+                let multipart_value = Reflect::get(&obj, &multipart_key).unwrap_or(JsValue::UNDEFINED);
+                if !multipart_value.is_null() && !multipart_value.is_undefined() {
+                    return RequestOptions::from_js_fallback(value);
+                }
+            }
+        }
+
         match serde_wasm_bindgen::from_value::<RequestOptions>(value.clone()) {
             Ok(options) => Ok(options),
             Err(_) => RequestOptions::from_js_fallback(value),
@@ -331,10 +345,7 @@ impl RequestOptions {
             let multipart_value = Reflect::get(&obj, &JsValue::from_str("multipart"))
                 .map_err(|_| JsValue::from_str("Failed to read multipart"))?;
             if !multipart_value.is_null() && !multipart_value.is_undefined() {
-                options.multipart = Some(
-                    serde_wasm_bindgen::from_value(multipart_value)
-                        .map_err(|err| JsValue::from_str(&err.to_string()))?,
-                );
+                options.multipart = Some(parse_multipart_options(&multipart_value)?);
             }
         }
 
@@ -450,6 +461,124 @@ impl RequestOptions {
             metadata: BodyMetadata::default(),
         }
     }
+}
+
+fn parse_multipart_options(value: &JsValue) -> Result<MultipartOptions, JsValue> {
+    let obj: Object = value
+        .clone()
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("multipart must be an object"))?;
+
+    let fields = if Reflect::has(&obj, &JsValue::from_str("fields")).ok().unwrap_or(false) {
+        let fields_value = Reflect::get(&obj, &JsValue::from_str("fields"))
+            .map_err(|_| JsValue::from_str("Failed to read multipart.fields"))?;
+        if fields_value.is_null() || fields_value.is_undefined() {
+            HashMap::new()
+        } else {
+            js_value_to_value_map(&fields_value)?
+        }
+    } else {
+        HashMap::new()
+    };
+
+    let files = if Reflect::has(&obj, &JsValue::from_str("files")).ok().unwrap_or(false) {
+        let files_value = Reflect::get(&obj, &JsValue::from_str("files"))
+            .map_err(|_| JsValue::from_str("Failed to read multipart.files"))?;
+        parse_multipart_files(&files_value)?
+    } else {
+        Vec::new()
+    };
+
+    Ok(MultipartOptions { fields, files })
+}
+
+fn parse_multipart_files(value: &JsValue) -> Result<Vec<MultipartFile>, JsValue> {
+    if value.is_null() || value.is_undefined() {
+        return Ok(Vec::new());
+    }
+
+    let array: Array = value
+        .clone()
+        .dyn_into()
+        .map_err(|_| JsValue::from_str("multipart.files must be an array"))?;
+
+    let mut files = Vec::with_capacity(array.length() as usize);
+    for idx in 0..array.length() {
+        let file_value = array.get(idx);
+        if file_value.is_null() || file_value.is_undefined() {
+            continue;
+        }
+
+        let file_obj: Object = file_value
+            .dyn_into()
+            .map_err(|_| JsValue::from_str("multipart.files entries must be objects"))?;
+
+        let name = Reflect::get(&file_obj, &JsValue::from_str("name"))
+            .ok()
+            .and_then(|v| v.as_string())
+            .unwrap_or_default();
+        if name.is_empty() {
+            continue;
+        }
+
+        let filename = Reflect::get(&file_obj, &JsValue::from_str("filename"))
+            .ok()
+            .and_then(|v| v.as_string());
+
+        let content_type = Reflect::get(&file_obj, &JsValue::from_str("contentType"))
+            .ok()
+            .and_then(|v| v.as_string());
+
+        let size = Reflect::get(&file_obj, &JsValue::from_str("size"))
+            .ok()
+            .and_then(|v| v.as_f64())
+            .and_then(|n| {
+                if n.is_finite() && n >= 0.0 {
+                    Some(n as usize)
+                } else {
+                    None
+                }
+            });
+
+        let is_text_like = content_type
+            .as_deref()
+            .is_some_and(|ct| ct.starts_with("text/") || ct == "application/json");
+
+        let content_key = JsValue::from_str("content");
+        let content_js = Reflect::get(&file_obj, &content_key).unwrap_or(JsValue::UNDEFINED);
+
+        let content_len_hint = if let Some(size) = size {
+            Some(size)
+        } else if let Ok(js_string) = content_js.clone().dyn_into::<js_sys::JsString>() {
+            Some(js_string.length() as usize)
+        } else {
+            None
+        };
+
+        let should_inline_content = is_text_like
+            || content_len_hint
+                .map(|len| len <= MULTIPART_INLINE_CONTENT_LIMIT)
+                .unwrap_or(true);
+
+        let (content, computed_size) = if should_inline_content {
+            let content = content_js.as_string().unwrap_or_default();
+            let computed_size = size.or_else(|| Some(content.as_bytes().len()));
+            (content, computed_size)
+        } else {
+            let len = content_len_hint.unwrap_or_default();
+            (format!("<binary data, {} bytes>", len), size.or(Some(len)))
+        };
+
+        files.push(MultipartFile {
+            name,
+            filename,
+            content,
+            size: computed_size,
+            content_type,
+        });
+    }
+
+    Ok(files)
 }
 
 fn js_value_to_value_map(value: &JsValue) -> Result<HashMap<String, Value>, JsValue> {

@@ -460,7 +460,27 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     let mut handler_map = std::collections::HashMap::new();
 
     for route in &regular_routes {
-        let js_handler: Function<HandlerInput, Promise<HandlerOutput>> = handlers_obj
+        if route.is_async {
+            let js_handler: Function<HandlerInput, Promise<HandlerOutput>> = handlers_obj
+                .get_named_property(&route.handler_name)
+                .map_err(|e| Error::from_reason(format!("Failed to get handler '{}': {}", route.handler_name, e)))?;
+
+            let tsfn = js_handler
+                .build_threadsafe_function()
+                .build_callback(|ctx| Ok(ctx.value))
+                .map_err(|e| {
+                    Error::from_reason(format!(
+                        "Failed to build ThreadsafeFunction for '{}': {}",
+                        route.handler_name, e
+                    ))
+                })?;
+
+            let handler = Arc::new(handler::NodeHandler::new_async(route.handler_name.clone(), tsfn));
+            handler_map.insert(route.handler_name.clone(), handler);
+            continue;
+        }
+
+        let js_handler: Function<HandlerInput, HandlerOutput> = handlers_obj
             .get_named_property(&route.handler_name)
             .map_err(|e| Error::from_reason(format!("Failed to get handler '{}': {}", route.handler_name, e)))?;
 
@@ -474,7 +494,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                 ))
             })?;
 
-        let handler = Arc::new(handler::NodeHandler::new(route.handler_name.clone(), tsfn));
+        let handler = Arc::new(handler::NodeHandler::new_sync(route.handler_name.clone(), tsfn));
 
         handler_map.insert(route.handler_name.clone(), handler);
     }

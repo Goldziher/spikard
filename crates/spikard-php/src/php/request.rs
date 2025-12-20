@@ -2,6 +2,7 @@
 
 #![allow(non_snake_case)]
 
+use bytes::Bytes;
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendHashTable;
@@ -9,7 +10,6 @@ use ext_php_rs::types::Zval;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
-use bytes::Bytes;
 
 /// PHP-visible HTTP request mirroring `RequestData`.
 #[php_class]
