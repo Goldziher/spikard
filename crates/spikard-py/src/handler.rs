@@ -124,12 +124,11 @@ pub fn init_python_event_loop() -> PyResult<()> {
 
         // Prefer uvloop when available for faster asyncio primitives (notably call_soon_threadsafe),
         // while remaining fully compatible with standard asyncio when uvloop isn't installed.
-        if let Ok(uvloop) = py.import("uvloop") {
-            if let Ok(policy_type) = uvloop.getattr("EventLoopPolicy") {
-                if let Ok(policy) = policy_type.call0() {
-                    let _ = asyncio.call_method1("set_event_loop_policy", (policy,));
-                }
-            }
+        if let Ok(uvloop) = py.import("uvloop")
+            && let Ok(policy_type) = uvloop.getattr("EventLoopPolicy")
+            && let Ok(policy) = policy_type.call0()
+        {
+            let _ = asyncio.call_method1("set_event_loop_policy", (policy,));
         }
 
         let event_loop = asyncio.call_method0("new_event_loop")?;
@@ -693,16 +692,12 @@ fn request_data_to_py_kwargs<'py>(
             if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
                 kwargs.set_item(body_param_name, py_body)?;
             }
-        } else {
-            if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
-                kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
-            }
+        } else if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+            kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
         }
-    } else {
-        if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
-            let py_body = json_to_python(py, &request_data.body)?;
-            kwargs.set_item(body_param_name, py_body)?;
-        }
+    } else if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+        let py_body = json_to_python(py, &request_data.body)?;
+        kwargs.set_item(body_param_name, py_body)?;
     }
 
     #[cfg(feature = "di")]
