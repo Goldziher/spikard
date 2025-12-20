@@ -80,10 +80,24 @@ impl MethodRouterFactory {
         let http_method = HttpMethod::from_str(method)
             .ok_or_else(|| format!("[spikard-router] unsupported HTTP method: {}", method))?;
 
+        let include_query_params_json = !handler.prefers_parameter_extraction();
+
         Ok(if has_path_params {
-            Self::create_with_path_params(http_method, handler, hooks, include_raw_query_params)
+            Self::create_with_path_params(
+                http_method,
+                handler,
+                hooks,
+                include_raw_query_params,
+                include_query_params_json,
+            )
         } else {
-            Self::create_without_path_params(http_method, handler, hooks, include_raw_query_params)
+            Self::create_without_path_params(
+                http_method,
+                handler,
+                hooks,
+                include_raw_query_params,
+                include_query_params_json,
+            )
         })
     }
 
@@ -93,6 +107,7 @@ impl MethodRouterFactory {
         handler: Arc<dyn Handler>,
         hooks: Option<Arc<crate::LifecycleHooks>>,
         include_raw_query_params: bool,
+        include_query_params_json: bool,
     ) -> MethodRouter {
         let handler_clone = handler.clone();
         let hooks_clone = hooks.clone();
@@ -114,6 +129,7 @@ impl MethodRouterFactory {
                                         path_params.0,
                                         body,
                                         include_raw_query_params,
+                                        include_query_params_json,
                                     )
                                         .await?;
                                 let mut req = Request::from_parts(
@@ -142,6 +158,7 @@ impl MethodRouterFactory {
                                         path_params.0,
                                         body,
                                         include_raw_query_params,
+                                        include_query_params_json,
                                     )
                                         .await?;
                                 let mut req = Request::from_parts(
@@ -170,6 +187,7 @@ impl MethodRouterFactory {
                                         path_params.0,
                                         body,
                                         include_raw_query_params,
+                                        include_query_params_json,
                                     )
                                         .await?;
                                 let mut req = Request::from_parts(
@@ -201,6 +219,7 @@ impl MethodRouterFactory {
                                     req.headers(),
                                     path_params.0,
                                     include_raw_query_params,
+                                    include_query_params_json,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -224,6 +243,7 @@ impl MethodRouterFactory {
                                     req.headers(),
                                     path_params.0,
                                     include_raw_query_params,
+                                    include_query_params_json,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -247,6 +267,7 @@ impl MethodRouterFactory {
                                     req.headers(),
                                     path_params.0,
                                     include_raw_query_params,
+                                    include_query_params_json,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -270,6 +291,7 @@ impl MethodRouterFactory {
                                     req.headers(),
                                     path_params.0,
                                     include_raw_query_params,
+                                    include_query_params_json,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -293,6 +315,7 @@ impl MethodRouterFactory {
                                     req.headers(),
                                     path_params.0,
                                     include_raw_query_params,
+                                    include_query_params_json,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -313,6 +336,7 @@ impl MethodRouterFactory {
         handler: Arc<dyn Handler>,
         hooks: Option<Arc<crate::LifecycleHooks>>,
         include_raw_query_params: bool,
+        include_query_params_json: bool,
     ) -> MethodRouter {
         let handler_clone = handler.clone();
         let hooks_clone = hooks.clone();
@@ -327,14 +351,15 @@ impl MethodRouterFactory {
                         let hooks = hooks_clone.clone();
                         async move {
                             let (parts, body) = req.into_parts();
-                            let request_data =
-                                request_extraction::create_request_data_with_body(
-                                    &parts,
-                                    HashMap::new(),
-                                    body,
-                                    include_raw_query_params,
-                                )
-                                .await?;
+                                let request_data =
+                                    request_extraction::create_request_data_with_body(
+                                        &parts,
+                                        HashMap::new(),
+                                        body,
+                                        include_raw_query_params,
+                                        include_query_params_json,
+                                    )
+                                        .await?;
                             let mut req = Request::from_parts(
                                 parts,
                                 Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
@@ -359,6 +384,7 @@ impl MethodRouterFactory {
                                     HashMap::new(),
                                     body,
                                     include_raw_query_params,
+                                    include_query_params_json,
                                 )
                                 .await?;
                             let mut req = Request::from_parts(
@@ -385,6 +411,7 @@ impl MethodRouterFactory {
                                     HashMap::new(),
                                     body,
                                     include_raw_query_params,
+                                    include_query_params_json,
                                 )
                                 .await?;
                             let mut req = Request::from_parts(
@@ -414,6 +441,7 @@ impl MethodRouterFactory {
                                 req.headers(),
                                 HashMap::new(),
                                 include_raw_query_params,
+                                include_query_params_json,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -435,6 +463,7 @@ impl MethodRouterFactory {
                                 req.headers(),
                                 HashMap::new(),
                                 include_raw_query_params,
+                                include_query_params_json,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -456,6 +485,7 @@ impl MethodRouterFactory {
                                 req.headers(),
                                 HashMap::new(),
                                 include_raw_query_params,
+                                include_query_params_json,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -477,6 +507,7 @@ impl MethodRouterFactory {
                                 req.headers(),
                                 HashMap::new(),
                                 include_raw_query_params,
+                                include_query_params_json,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -498,6 +529,7 @@ impl MethodRouterFactory {
                                 req.headers(),
                                 HashMap::new(),
                                 include_raw_query_params,
+                                include_query_params_json,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));

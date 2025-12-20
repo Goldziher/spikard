@@ -30,6 +30,14 @@ impl ValidatingHandler {
 }
 
 impl Handler for ValidatingHandler {
+    fn prefers_raw_json_body(&self) -> bool {
+        self.inner.prefers_raw_json_body()
+    }
+
+    fn prefers_parameter_extraction(&self) -> bool {
+        self.inner.prefers_parameter_extraction()
+    }
+
     fn call(
         &self,
         req: axum::http::Request<Body>,
