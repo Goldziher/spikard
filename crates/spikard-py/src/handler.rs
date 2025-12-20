@@ -265,7 +265,7 @@ impl PythonHandler {
         let handler = self.handler.clone();
         let is_async = self.is_async;
         let response_validator = self.response_validator.clone();
-        let prefer_msgspec_json = response_validator.is_none();
+        let prefer_msgspec_json = true;
         let _request_data_for_error = request_data.clone();
         let body_param_name = self.body_param_name.clone();
         let validated_params_for_task = validated_params.clone();
@@ -393,6 +393,17 @@ impl PythonHandler {
             .unwrap_or("application/json");
 
         let body_bytes = if let Some(raw) = raw_body_bytes {
+            if content_type.starts_with("application/json")
+                && let Some(validator) = &response_validator
+            {
+                let json_value = serde_json::from_slice::<Value>(&raw).map_err(|e| {
+                    structured_error("response_parse_error", format!("Failed to parse response: {}", e))
+                })?;
+                if let Err(errors) = validator.validate(&json_value) {
+                    let problem = ProblemDetails::from_validation_error(&errors);
+                    return Err(structured_error_response(problem));
+                }
+            }
             raw
         } else if content_type.starts_with("text/") || content_type.starts_with("application/json") {
             if let Value::String(s) = &json_value {
