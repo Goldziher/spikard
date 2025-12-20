@@ -87,8 +87,6 @@ pub fn run_server(
             ruby,
             handler_value,
             route_meta.handler_name.clone(),
-            route_meta.method.clone(),
-            route_meta.path.clone(),
             json_module,
             &route,
         )?;

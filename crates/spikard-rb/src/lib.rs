@@ -27,6 +27,7 @@ mod handler;
 mod integration;
 mod lifecycle;
 mod metadata;
+mod request;
 mod runtime;
 mod server;
 mod sse;
@@ -61,9 +62,10 @@ use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
 
 use crate::config::extract_server_config;
-use crate::conversion::{extract_files, map_to_ruby_hash, multimap_to_ruby_hash, problem_to_json};
+use crate::conversion::{extract_files, problem_to_json};
 use crate::integration::build_dependency_container;
-use crate::metadata::{build_route_metadata, json_to_ruby, ruby_value_to_json};
+use crate::metadata::{build_route_metadata, ruby_value_to_json};
+use crate::request::NativeRequest;
 use crate::runtime::{normalize_route_metadata, run_server};
 
 static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
@@ -111,8 +113,6 @@ struct RubyHandler {
 struct RubyHandlerInner {
     handler_proc: Opaque<Value>,
     handler_name: String,
-    method: String,
-    path: String,
     json_module: Opaque<Value>,
     request_validator: Option<Arc<SchemaValidator>>,
     response_validator: Option<Arc<SchemaValidator>>,
@@ -710,8 +710,6 @@ impl RubyHandler {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
                 handler_name: route.handler_name.clone(),
-                method: route.method.as_str().to_string(),
-                path: route.path.clone(),
                 json_module: Opaque::from(json_module),
                 request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
@@ -729,8 +727,6 @@ impl RubyHandler {
         _ruby: &Ruby,
         handler_value: Value,
         handler_name: String,
-        method: String,
-        path: String,
         json_module: Value,
         route: &Route,
     ) -> Result<Self, Error> {
@@ -738,8 +734,6 @@ impl RubyHandler {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
                 handler_name,
-                method,
-                path,
                 json_module: Opaque::from(json_module),
                 request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
@@ -793,14 +787,17 @@ impl RubyHandler {
             )
         })?;
 
-        let request_value = build_ruby_request(&ruby, &self.inner, &request_data, validated_params.as_ref())
+        #[cfg(feature = "di")]
+        let dependencies = request_data.dependencies.clone();
+
+        let request_value = build_ruby_request(&ruby, request_data, validated_params)
             .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
 
         let handler_proc = self.inner.handler_proc.get_inner_with(&ruby);
 
         #[cfg(feature = "di")]
         let handler_result = {
-            if let Some(deps) = &request_data.dependencies {
+            if let Some(deps) = &dependencies {
                 let kwargs_hash = ruby.hash_new();
 
                 for key in &self.inner.handler_dependencies {
@@ -1189,65 +1186,12 @@ fn parse_request_config(ruby: &Ruby, options: Value) -> Result<RequestConfig, Er
 
 fn build_ruby_request(
     ruby: &Ruby,
-    handler: &RubyHandlerInner,
-    request_data: &RequestData,
-    validated_params: Option<&JsonValue>,
+    request_data: RequestData,
+    validated_params: Option<JsonValue>,
 ) -> Result<Value, Error> {
-    let hash = ruby.hash_new();
+    let native_request = NativeRequest::from_request_data(request_data, validated_params);
 
-    hash.aset(ruby.intern("method"), ruby.str_new(&handler.method))?;
-    hash.aset(ruby.intern("path"), ruby.str_new(&handler.path))?;
-
-    let path_params = map_to_ruby_hash(ruby, request_data.path_params.as_ref())?;
-    hash.aset(ruby.intern("path_params"), path_params)?;
-
-    let query_value = json_to_ruby(ruby, &request_data.query_params)?;
-    hash.aset(ruby.intern("query"), query_value)?;
-
-    let raw_query = multimap_to_ruby_hash(ruby, request_data.raw_query_params.as_ref())?;
-    hash.aset(ruby.intern("raw_query"), raw_query)?;
-
-    let headers = map_to_ruby_hash(ruby, request_data.headers.as_ref())?;
-    hash.aset(ruby.intern("headers"), headers)?;
-
-    let cookies = map_to_ruby_hash(ruby, request_data.cookies.as_ref())?;
-    hash.aset(ruby.intern("cookies"), cookies)?;
-
-    let body_value = json_to_ruby(ruby, &request_data.body)?;
-    hash.aset(ruby.intern("body"), body_value)?;
-
-    let params_value = if let Some(validated) = validated_params {
-        json_to_ruby(ruby, validated)?
-    } else {
-        build_default_params(ruby, request_data)?
-    };
-    hash.aset(ruby.intern("params"), params_value)?;
-
-    Ok(hash.as_value())
-}
-
-fn build_default_params(ruby: &Ruby, request_data: &RequestData) -> Result<Value, Error> {
-    let hash = ruby.hash_new();
-
-    for (key, value) in request_data.path_params.as_ref() {
-        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
-    }
-
-    if let JsonValue::Object(obj) = &request_data.query_params {
-        for (key, value) in obj {
-            hash.aset(ruby.str_new(key), json_to_ruby(ruby, value)?)?;
-        }
-    }
-
-    for (key, value) in request_data.headers.as_ref() {
-        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
-    }
-
-    for (key, value) in request_data.cookies.as_ref() {
-        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
-    }
-
-    Ok(hash.as_value())
+    Ok(ruby.obj_wrap(native_request).as_value())
 }
 
 fn interpret_handler_response(
@@ -1599,6 +1543,20 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     built_response_class.define_method("status_code", method!(NativeBuiltResponse::status_code, 0))?;
     built_response_class.define_method("headers", method!(NativeBuiltResponse::headers, 0))?;
 
+    let request_class = native.define_class("Request", ruby.class_object())?;
+    request_class.define_method("method", method!(NativeRequest::method, 0))?;
+    request_class.define_method("path", method!(NativeRequest::path, 0))?;
+    request_class.define_method("path_params", method!(NativeRequest::path_params, 0))?;
+    request_class.define_method("query", method!(NativeRequest::query, 0))?;
+    request_class.define_method("raw_query", method!(NativeRequest::raw_query, 0))?;
+    request_class.define_method("headers", method!(NativeRequest::headers, 0))?;
+    request_class.define_method("cookies", method!(NativeRequest::cookies, 0))?;
+    request_class.define_method("body", method!(NativeRequest::body, 0))?;
+    request_class.define_method("raw_body", method!(NativeRequest::raw_body, 0))?;
+    request_class.define_method("params", method!(NativeRequest::params, 0))?;
+    request_class.define_method("to_h", method!(NativeRequest::to_h, 0))?;
+    request_class.define_method("[]", method!(NativeRequest::index, 1))?;
+
     let lifecycle_registry_class = native.define_class("LifecycleRegistry", ruby.class_object())?;
     lifecycle_registry_class.define_alloc_func::<NativeLifecycleRegistry>();
     lifecycle_registry_class.define_method("add_on_request", method!(NativeLifecycleRegistry::add_on_request, 1))?;
@@ -1626,6 +1584,7 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     let _ = NativeBuiltResponse::mark as fn(&NativeBuiltResponse, &Marker);
     let _ = NativeLifecycleRegistry::mark as fn(&NativeLifecycleRegistry, &Marker);
     let _ = NativeDependencyRegistry::mark as fn(&NativeDependencyRegistry, &Marker);
+    let _ = NativeRequest::mark as fn(&NativeRequest, &Marker);
     let _ = RubyHandler::mark as fn(&RubyHandler, &Marker);
     let _ = mark as fn(&NativeTestClient, &Marker);
 

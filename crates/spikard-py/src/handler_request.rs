@@ -141,11 +141,7 @@ impl PyHandlerRequest {
     /// Expose raw body bytes when available.
     #[getter]
     fn raw_body<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyBytes>>> {
-        Ok(self
-            .request_data
-            .raw_body
-            .as_ref()
-            .map(|raw| PyBytes::new(py, raw)))
+        Ok(self.request_data.raw_body.as_ref().map(|raw| PyBytes::new(py, raw)))
     }
 
     /// True when `.body` represents raw JSON bytes (to be decoded in Python).
