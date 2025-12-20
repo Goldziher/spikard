@@ -109,43 +109,95 @@ pub async fn validate_content_type_middleware(
         validation::validate_content_type_headers(headers, 0)?;
 
         let out_bytes: bytes::Bytes = if let Some(content_type) = headers.get(axum::http::header::CONTENT_TYPE) {
-            if content_type.to_str().is_ok() {
-                let is_multipart = validation::is_multipart_form_data(content_type);
-                let is_form_urlencoded = validation::is_form_urlencoded(content_type);
+            // `validate_content_type_headers()` already enforced basic Content-Type validity for us.
+            let is_multipart = validation::is_multipart_form_data(content_type);
+            let is_form_urlencoded = validation::is_form_urlencoded(content_type);
 
-                if is_multipart {
-                    let body_bytes = match to_bytes(body, usize::MAX).await {
-                        Ok(bytes) => bytes,
-                        Err(_) => {
-                            let error_body = json!({
-                                "error": "Failed to read request body"
-                            });
-                            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-                        }
-                    };
+            if is_multipart {
+                let body_bytes = match to_bytes(body, usize::MAX).await {
+                    Ok(bytes) => bytes,
+                    Err(_) => {
+                        let error_body = json!({
+                            "error": "Failed to read request body"
+                        });
+                        return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    }
+                };
 
-                    validation::validate_content_length(headers, body_bytes.len())?;
+                validation::validate_content_length(headers, body_bytes.len())?;
 
-                    let mut parse_request = HttpRequest::new(Body::from(body_bytes));
-                    *parse_request.headers_mut() = parts.headers.clone();
+                let mut parse_request = HttpRequest::new(Body::from(body_bytes));
+                *parse_request.headers_mut() = parts.headers.clone();
 
-                    let multipart = match Multipart::from_request(parse_request, &()).await {
-                        Ok(mp) => mp,
-                        Err(e) => {
-                            let error_body = json!({
-                                "error": format!("Failed to parse multipart data: {}", e)
-                            });
-                            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-                        }
-                    };
+                let multipart = match Multipart::from_request(parse_request, &()).await {
+                    Ok(mp) => mp,
+                    Err(e) => {
+                        let error_body = json!({
+                            "error": format!("Failed to parse multipart data: {}", e)
+                        });
+                        return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    }
+                };
 
-                    let json_body = match multipart::parse_multipart_to_json(multipart).await {
-                        Ok(json) => json,
-                        Err(e) => {
-                            let error_body = json!({
-                                "error": format!("Failed to process multipart data: {}", e)
-                            });
-                            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                let json_body = match multipart::parse_multipart_to_json(multipart).await {
+                    Ok(json) => json,
+                    Err(e) => {
+                        let error_body = json!({
+                            "error": format!("Failed to process multipart data: {}", e)
+                        });
+                        return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    }
+                };
+
+                let json_bytes = match serde_json::to_vec(&json_body) {
+                    Ok(bytes) => bytes,
+                    Err(e) => {
+                        let error_body = json!({
+                            "error": format!("Failed to serialize multipart data to JSON: {}", e)
+                        });
+                        return Err((StatusCode::INTERNAL_SERVER_ERROR, axum::Json(error_body)).into_response());
+                    }
+                };
+
+                parts.headers.insert(
+                    axum::http::header::CONTENT_TYPE,
+                    axum::http::HeaderValue::from_static("application/json"),
+                );
+                if let Ok(value) = axum::http::HeaderValue::from_str(&json_bytes.len().to_string()) {
+                    parts.headers.insert(axum::http::header::CONTENT_LENGTH, value);
+                }
+                bytes::Bytes::from(json_bytes)
+            } else if is_form_urlencoded {
+                let body_bytes = match to_bytes(body, usize::MAX).await {
+                    Ok(bytes) => bytes,
+                    Err(_) => {
+                        let error_body = json!({
+                            "error": "Failed to read request body"
+                        });
+                        return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    }
+                };
+
+                validation::validate_content_length(headers, body_bytes.len())?;
+
+                parts.headers.insert(
+                    axum::http::header::CONTENT_TYPE,
+                    axum::http::HeaderValue::from_static("application/json"),
+                );
+                if let Some(cached) = URLENCODED_JSON_CACHE.with(|cache| cache.borrow_mut().get(&body_bytes).cloned()) {
+                    cached
+                } else {
+                    let json_body = if body_bytes.is_empty() {
+                        serde_json::json!({})
+                    } else {
+                        match urlencoded::parse_urlencoded_to_json(&body_bytes) {
+                            Ok(json_body) => json_body,
+                            Err(e) => {
+                                let error_body = json!({
+                                    "error": format!("Failed to parse URL-encoded form data: {}", e)
+                                });
+                                return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                            }
                         }
                     };
 
@@ -153,97 +205,17 @@ pub async fn validate_content_type_middleware(
                         Ok(bytes) => bytes,
                         Err(e) => {
                             let error_body = json!({
-                                "error": format!("Failed to serialize multipart data to JSON: {}", e)
+                                "error": format!("Failed to serialize URL-encoded form data to JSON: {}", e)
                             });
                             return Err((StatusCode::INTERNAL_SERVER_ERROR, axum::Json(error_body)).into_response());
                         }
                     };
 
-                    parts.headers.insert(
-                        axum::http::header::CONTENT_TYPE,
-                        axum::http::HeaderValue::from_static("application/json"),
-                    );
-                    if let Ok(value) = axum::http::HeaderValue::from_str(&json_bytes.len().to_string()) {
-                        parts.headers.insert(axum::http::header::CONTENT_LENGTH, value);
-                    }
-                    bytes::Bytes::from(json_bytes)
-                } else if is_form_urlencoded {
-                    let body_bytes = match to_bytes(body, usize::MAX).await {
-                        Ok(bytes) => bytes,
-                        Err(_) => {
-                            let error_body = json!({
-                                "error": "Failed to read request body"
-                            });
-                            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-                        }
-                    };
-
-                    validation::validate_content_length(headers, body_bytes.len())?;
-
-                    parts.headers.insert(
-                        axum::http::header::CONTENT_TYPE,
-                        axum::http::HeaderValue::from_static("application/json"),
-                    );
-                    if let Some(cached) =
-                        URLENCODED_JSON_CACHE.with(|cache| cache.borrow_mut().get(&body_bytes).cloned())
-                    {
-                        cached
-                    } else {
-                        let json_body = if body_bytes.is_empty() {
-                            serde_json::json!({})
-                        } else {
-                            match urlencoded::parse_urlencoded_to_json(&body_bytes) {
-                                Ok(json_body) => json_body,
-                                Err(e) => {
-                                    let error_body = json!({
-                                        "error": format!("Failed to parse URL-encoded form data: {}", e)
-                                    });
-                                    return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-                                }
-                            }
-                        };
-
-                        let json_bytes = match serde_json::to_vec(&json_body) {
-                            Ok(bytes) => bytes,
-                            Err(e) => {
-                                let error_body = json!({
-                                    "error": format!("Failed to serialize URL-encoded form data to JSON: {}", e)
-                                });
-                                return Err((StatusCode::INTERNAL_SERVER_ERROR, axum::Json(error_body)).into_response());
-                            }
-                        };
-
-                        let json_bytes = bytes::Bytes::from(json_bytes);
-                        URLENCODED_JSON_CACHE.with(|cache| {
-                            cache.borrow_mut().put(body_bytes.clone(), json_bytes.clone());
-                        });
-                        json_bytes
-                    }
-                } else {
-                    let body_bytes = match to_bytes(body, usize::MAX).await {
-                        Ok(bytes) => bytes,
-                        Err(_) => {
-                            let error_body = json!({
-                                "error": "Failed to read request body"
-                            });
-                            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-                        }
-                    };
-
-                    validation::validate_content_length(headers, body_bytes.len())?;
-
-                    let should_validate_json = route_info.expects_json_body && validation::is_json_like(content_type);
-                    if should_validate_json
-                        && !body_bytes.is_empty()
-                        && serde_json::from_slice::<serde_json::Value>(&body_bytes).is_err()
-                    {
-                        let error_body = json!({
-                            "detail": "Invalid request format"
-                        });
-                        return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-                    }
-
-                    body_bytes
+                    let json_bytes = bytes::Bytes::from(json_bytes);
+                    URLENCODED_JSON_CACHE.with(|cache| {
+                        cache.borrow_mut().put(body_bytes.clone(), json_bytes.clone());
+                    });
+                    json_bytes
                 }
             } else {
                 let body_bytes = match to_bytes(body, usize::MAX).await {
@@ -257,6 +229,18 @@ pub async fn validate_content_type_middleware(
                 };
 
                 validation::validate_content_length(headers, body_bytes.len())?;
+
+                let should_validate_json = route_info.expects_json_body && validation::is_json_like(content_type);
+                if should_validate_json
+                    && !body_bytes.is_empty()
+                    && serde_json::from_slice::<serde_json::Value>(&body_bytes).is_err()
+                {
+                    let error_body = json!({
+                        "detail": "Invalid request format"
+                    });
+                    return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                }
+
                 body_bytes
             }
         } else {

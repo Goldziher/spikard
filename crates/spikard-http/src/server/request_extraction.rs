@@ -7,6 +7,7 @@ use http_body_util::BodyExt;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Copy)]
 pub struct WithoutBodyExtractionOptions {
@@ -26,24 +27,32 @@ fn extract_query_params_and_raw(
         return (Value::Object(serde_json::Map::new()), HashMap::new());
     }
 
-    let pairs = parse_query_string(query_string.as_bytes(), '&');
-
-    let raw = if include_raw_query_params {
-        let mut raw: HashMap<String, Vec<String>> = HashMap::new();
-        for (k, v) in &pairs {
-            raw.entry(k.clone()).or_default().push(v.clone());
+    match (include_raw_query_params, include_query_params_json) {
+        (false, false) => (Value::Null, HashMap::new()),
+        (false, true) => (
+            crate::query_parser::parse_query_string_to_json(query_string.as_bytes(), true),
+            HashMap::new(),
+        ),
+        (true, false) => {
+            let raw =
+                parse_query_string(query_string.as_bytes(), '&')
+                    .into_iter()
+                    .fold(HashMap::new(), |mut acc, (k, v)| {
+                        acc.entry(k).or_insert_with(Vec::new).push(v);
+                        acc
+                    });
+            (Value::Null, raw)
         }
-        raw
-    } else {
-        HashMap::new()
-    };
-
-    let json = if include_query_params_json {
-        parse_query_pairs_to_json(&pairs, true)
-    } else {
-        Value::Null
-    };
-    (json, raw)
+        (true, true) => {
+            let pairs = parse_query_string(query_string.as_bytes(), '&');
+            let json = parse_query_pairs_to_json(&pairs, true);
+            let raw = pairs.into_iter().fold(HashMap::new(), |mut acc, (k, v)| {
+                acc.entry(k).or_insert_with(Vec::new).push(v);
+                acc
+            });
+            (json, raw)
+        }
+    }
 }
 
 /// Extract and parse query parameters from request URI
@@ -74,10 +83,11 @@ pub fn extract_raw_query_params(uri: &axum::http::Uri) -> HashMap<String, Vec<St
 
 /// Extract headers from request
 pub fn extract_headers(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
-    let mut map = HashMap::new();
+    let mut map = HashMap::with_capacity(headers.len());
     for (name, value) in headers.iter() {
         if let Ok(val_str) = value.to_str() {
-            map.insert(name.as_str().to_lowercase(), val_str.to_string());
+            // `HeaderName::as_str()` is already normalized to lowercase.
+            map.insert(name.as_str().to_string(), val_str.to_string());
         }
     }
     map
@@ -96,6 +106,16 @@ pub fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, Strin
     cookies
 }
 
+fn empty_string_map() -> Arc<HashMap<String, String>> {
+    static EMPTY: OnceLock<Arc<HashMap<String, String>>> = OnceLock::new();
+    Arc::clone(EMPTY.get_or_init(|| Arc::new(HashMap::new())))
+}
+
+fn empty_raw_query_map() -> Arc<HashMap<String, Vec<String>>> {
+    static EMPTY: OnceLock<Arc<HashMap<String, Vec<String>>>> = OnceLock::new();
+    Arc::clone(EMPTY.get_or_init(|| Arc::new(HashMap::new())))
+}
+
 /// Create RequestData from request parts (for requests without body)
 ///
 /// Wraps HashMaps in Arc to enable cheap cloning without duplicating data.
@@ -111,17 +131,21 @@ pub fn create_request_data_without_body(
     RequestData {
         path_params: Arc::new(path_params),
         query_params,
-        raw_query_params: Arc::new(raw_query_params),
-        headers: Arc::new(if options.include_headers {
-            extract_headers(headers)
+        raw_query_params: if raw_query_params.is_empty() {
+            empty_raw_query_map()
         } else {
-            HashMap::new()
-        }),
-        cookies: Arc::new(if options.include_cookies {
-            extract_cookies(headers)
+            Arc::new(raw_query_params)
+        },
+        headers: if options.include_headers {
+            Arc::new(extract_headers(headers))
         } else {
-            HashMap::new()
-        }),
+            empty_string_map()
+        },
+        cookies: if options.include_cookies {
+            Arc::new(extract_cookies(headers))
+        } else {
+            empty_string_map()
+        },
         body: Value::Null,
         raw_body: None,
         method: method.as_str().to_string(),
@@ -165,17 +189,21 @@ pub async fn create_request_data_with_body(
     Ok(RequestData {
         path_params: Arc::new(path_params),
         query_params,
-        raw_query_params: Arc::new(raw_query_params),
-        headers: Arc::new(if include_headers {
-            extract_headers(&parts.headers)
+        raw_query_params: if raw_query_params.is_empty() {
+            empty_raw_query_map()
         } else {
-            HashMap::new()
-        }),
-        cookies: Arc::new(if include_cookies {
-            extract_cookies(&parts.headers)
+            Arc::new(raw_query_params)
+        },
+        headers: if include_headers {
+            Arc::new(extract_headers(&parts.headers))
         } else {
-            HashMap::new()
-        }),
+            empty_string_map()
+        },
+        cookies: if include_cookies {
+            Arc::new(extract_cookies(&parts.headers))
+        } else {
+            empty_string_map()
+        },
         body: Value::Null,
         raw_body: if body_bytes.is_empty() { None } else { Some(body_bytes) },
         method: parts.method.as_str().to_string(),

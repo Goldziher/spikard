@@ -35,6 +35,25 @@ fn token_before_semicolon(bytes: &[u8]) -> &[u8] {
     trim_ascii_whitespace(&bytes[..i])
 }
 
+#[inline]
+fn is_json_like_token(token: &[u8]) -> bool {
+    if token.eq_ignore_ascii_case(b"application/json") {
+        return true;
+    }
+    // vendor JSON: application/vnd.foo+json
+    token.len() >= 5 && token[token.len() - 5..].eq_ignore_ascii_case(b"+json")
+}
+
+#[inline]
+fn is_multipart_form_data_token(token: &[u8]) -> bool {
+    token.eq_ignore_ascii_case(b"multipart/form-data")
+}
+
+#[inline]
+fn is_form_urlencoded_token(token: &[u8]) -> bool {
+    token.eq_ignore_ascii_case(b"application/x-www-form-urlencoded")
+}
+
 fn is_valid_content_type_token(token: &[u8]) -> bool {
     // Minimal fast validation:
     // - exactly one '/' separating type and subtype
@@ -76,11 +95,7 @@ fn ascii_contains_ignore_case(haystack: &[u8], needle: &[u8]) -> bool {
 /// Fast classification: does this Content-Type represent JSON (application/json or +json)?
 pub fn is_json_like(content_type: &HeaderValue) -> bool {
     let token = token_before_semicolon(content_type.as_bytes());
-    if token.eq_ignore_ascii_case(b"application/json") {
-        return true;
-    }
-    // vendor JSON: application/vnd.foo+json
-    token.len() >= 5 && token[token.len() - 5..].eq_ignore_ascii_case(b"+json")
+    is_json_like_token(token)
 }
 
 /// Fast classification for already-extracted header strings.
@@ -88,22 +103,19 @@ pub fn is_json_like(content_type: &HeaderValue) -> bool {
 /// This is used in hot paths where headers are stored as `String` values in `RequestData`.
 pub fn is_json_like_str(content_type: &str) -> bool {
     let token = token_before_semicolon(content_type.as_bytes());
-    if token.eq_ignore_ascii_case(b"application/json") {
-        return true;
-    }
-    token.len() >= 5 && token[token.len() - 5..].eq_ignore_ascii_case(b"+json")
+    is_json_like_token(token)
 }
 
 /// Fast classification: is this Content-Type multipart/form-data?
 pub fn is_multipart_form_data(content_type: &HeaderValue) -> bool {
     let token = token_before_semicolon(content_type.as_bytes());
-    token.eq_ignore_ascii_case(b"multipart/form-data")
+    is_multipart_form_data_token(token)
 }
 
 /// Fast classification: is this Content-Type application/x-www-form-urlencoded?
 pub fn is_form_urlencoded(content_type: &HeaderValue) -> bool {
     let token = token_before_semicolon(content_type.as_bytes());
-    token.eq_ignore_ascii_case(b"application/x-www-form-urlencoded")
+    is_form_urlencoded_token(token)
 }
 
 fn multipart_has_boundary(content_type: &HeaderValue) -> bool {
@@ -142,11 +154,14 @@ fn json_charset_value(content_type: &HeaderValue) -> Option<&[u8]> {
 /// Validate that Content-Type is JSON-compatible when route expects JSON
 #[allow(clippy::result_large_err)]
 pub fn validate_json_content_type(headers: &HeaderMap) -> Result<(), Response> {
-    if let Some(content_type_header) = headers.get(axum::http::header::CONTENT_TYPE)
-        && content_type_header.to_str().is_ok()
-    {
-        let is_json = is_json_like(content_type_header);
-        let is_form = is_form_urlencoded(content_type_header) || is_multipart_form_data(content_type_header);
+    if let Some(content_type_header) = headers.get(axum::http::header::CONTENT_TYPE) {
+        if content_type_header.to_str().is_err() {
+            return Ok(());
+        }
+
+        let token = token_before_semicolon(content_type_header.as_bytes());
+        let is_json = is_json_like_token(token);
+        let is_form = is_form_urlencoded_token(token) || is_multipart_form_data_token(token);
 
         if !is_json && !is_form {
             let problem = ProblemDetails::new(
@@ -172,33 +187,46 @@ pub fn validate_json_content_type(headers: &HeaderMap) -> Result<(), Response> {
 #[allow(clippy::result_large_err, clippy::collapsible_if)]
 pub fn validate_content_length(headers: &HeaderMap, actual_size: usize) -> Result<(), Response> {
     if let Some(content_length_header) = headers.get(axum::http::header::CONTENT_LENGTH) {
-        if let Ok(content_length_str) = content_length_header.to_str() {
-            if let Ok(declared_length) = content_length_str.parse::<usize>() {
-                if declared_length != actual_size {
-                    let problem = ProblemDetails::bad_request(format!(
-                        "Content-Length header ({}) does not match actual body size ({})",
-                        declared_length, actual_size
-                    ));
+        let Some(declared_length) = parse_ascii_usize(content_length_header.as_bytes()) else {
+            return Ok(());
+        };
+        if declared_length != actual_size {
+            let problem = ProblemDetails::bad_request(format!(
+                "Content-Length header ({}) does not match actual body size ({})",
+                declared_length, actual_size
+            ));
 
-                    let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                    return Err((
-                        StatusCode::BAD_REQUEST,
-                        [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
-                        body,
-                    )
-                        .into_response());
-                }
-            }
+            let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+            return Err((
+                StatusCode::BAD_REQUEST,
+                [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
+                body,
+            )
+                .into_response());
         }
     }
     Ok(())
+}
+
+fn parse_ascii_usize(bytes: &[u8]) -> Option<usize> {
+    if bytes.is_empty() {
+        return None;
+    }
+    let mut value: usize = 0;
+    for &b in bytes {
+        if !b.is_ascii_digit() {
+            return None;
+        }
+        value = value.saturating_mul(10).saturating_add((b - b'0') as usize);
+    }
+    Some(value)
 }
 
 /// Validate Content-Type header and related requirements
 #[allow(clippy::result_large_err)]
 pub fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: usize) -> Result<(), Response> {
     if let Some(content_type) = headers.get(axum::http::header::CONTENT_TYPE) {
-        if content_type.to_str().is_err() {
+        if !content_type.as_bytes().is_ascii() && content_type.to_str().is_err() {
             // Keep legacy behavior: invalid bytes should fail fast.
             let error_body = json!({
                 "error": "Invalid Content-Type header"
@@ -214,8 +242,8 @@ pub fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: u
             return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
         }
 
-        let is_json = is_json_like(content_type);
-        let is_multipart = is_multipart_form_data(content_type);
+        let is_json = is_json_like_token(token);
+        let is_multipart = is_multipart_form_data_token(token);
 
         if is_multipart && !multipart_has_boundary(content_type) {
             let error_body = json!({
