@@ -59,7 +59,7 @@ pub struct PhpHandler {
 
 // NOTE: This is thread_local because Zval is not Send/Sync (contains raw pointers
 thread_local! {
-    static PHP_HANDLER_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = const {
+    static PHP_HANDLER_REGISTRY: std::cell::RefCell<Vec<ZendCallable<'static>>> = const {
         std::cell::RefCell::new(Vec::new())
     };
 }
@@ -90,7 +90,13 @@ impl PhpHandler {
             }
 
             let zval_copy = callable_zval.shallow_clone();
-            registry.push(zval_copy);
+            let callable = ZendCallable::new_owned(zval_copy).map_err(|e| {
+                format!(
+                    "Handler '{}' is not callable (callable reconstruction failed): {:?}",
+                    handler_name, e
+                )
+            })?;
+            registry.push(callable);
             Ok(idx)
         })?;
 
@@ -138,21 +144,13 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: Re
         let response_zval =
             PHP_HANDLER_REGISTRY.with(|registry| -> Result<ext_php_rs::types::Zval, (StatusCode, String)> {
                 let registry = registry.borrow();
-                let Some(callable_zval) = registry.get(handler_index) else {
+                let Some(callable) = registry.get(handler_index) else {
                     return Err(ErrorResponseBuilder::structured_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "handler_not_found",
                         format!("PHP handler not found: index {}", handler_index),
                     ));
                 };
-
-                let callable = ZendCallable::new(callable_zval).map_err(|e| {
-                    ErrorResponseBuilder::structured_error(
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        "callable_reconstruct_failed",
-                        format!("Failed to reconstruct PHP callable: {:?}", e),
-                    )
-                })?;
 
                 callable.try_call(vec![&request_zval]).map_err(|e| {
                     ErrorResponseBuilder::structured_error(
