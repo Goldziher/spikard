@@ -8,11 +8,17 @@ use std::sync::RwLock;
 static BACKGROUND_HANDLE: Lazy<RwLock<Option<BackgroundHandle>>> = Lazy::new(|| RwLock::new(None));
 
 pub fn install_handle(handle: BackgroundHandle) {
-    *BACKGROUND_HANDLE.write().unwrap() = Some(handle);
+    match BACKGROUND_HANDLE.write() {
+        Ok(mut guard) => *guard = Some(handle),
+        Err(poisoned) => *poisoned.into_inner() = Some(handle),
+    }
 }
 
 pub fn clear_handle() {
-    *BACKGROUND_HANDLE.write().unwrap() = None;
+    match BACKGROUND_HANDLE.write() {
+        Ok(mut guard) => *guard = None,
+        Err(poisoned) => *poisoned.into_inner() = None,
+    }
 }
 
 #[pyfunction]

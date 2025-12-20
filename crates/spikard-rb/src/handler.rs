@@ -62,12 +62,12 @@ pub enum RubyHandlerResult {
 impl StreamingResponsePayload {
     /// Convert streaming response into a `HandlerResponse`.
     pub fn into_response(self) -> Result<HandlerResponse, Error> {
-        let ruby = match Ruby::get() {
-            Ok(r) => r,
-            Err(_) => {
-                panic!("Ruby VM became unavailable during streaming response construction");
-            }
-        };
+        let ruby = Ruby::get().map_err(|_| {
+            Error::new(
+                magnus::exception::runtime_error(),
+                "Ruby VM became unavailable during streaming response construction",
+            )
+        })?;
 
         let status = StatusCode::from_u16(self.status).map_err(|err| {
             Error::new(
