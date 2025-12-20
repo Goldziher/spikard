@@ -184,9 +184,9 @@ mod di_builder_tests {
         assert_eq!(config.port, 8000);
         assert_eq!(config.host, "127.0.0.1");
         assert_eq!(config.workers, 1);
-        assert!(config.enable_request_id);
+        assert!(!config.enable_request_id);
         assert_eq!(config.max_body_size, Some(10 * 1024 * 1024));
-        assert_eq!(config.request_timeout, Some(30));
+        assert_eq!(config.request_timeout, None);
         assert!(config.graceful_shutdown);
         assert_eq!(config.shutdown_timeout, 30);
     }
