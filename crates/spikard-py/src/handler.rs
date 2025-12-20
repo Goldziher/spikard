@@ -29,6 +29,44 @@ static MSGSPEC_JSON_ENCODE: PyOnceLock<Option<pyo3::Py<pyo3::PyAny>>> = PyOnceLo
 static NEEDS_CONVERSION: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
 static HANDLER_METADATA: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
 
+fn create_msgspec_decoder<'py>(
+    py: Python<'py>,
+    handler: Bound<'py, PyAny>,
+    body_param_name: &str,
+) -> PyResult<Option<pyo3::Py<pyo3::PyAny>>> {
+    let func = HANDLER_METADATA.get_or_try_init(py, || {
+        let converter_module = py.import("spikard._internal.converters")?;
+        Ok::<pyo3::Py<pyo3::PyAny>, PyErr>(converter_module.getattr("_handler_metadata")?.unbind())
+    })?;
+
+    let metadata = func.bind(py).call1((handler,))?;
+    let tuple = metadata.cast_into::<pyo3::types::PyTuple>()?;
+    let type_hints_obj = tuple.get_item(0)?;
+    if type_hints_obj.is_none() {
+        return Ok(None);
+    }
+
+    let type_hints = type_hints_obj.cast_into::<pyo3::types::PyDict>()?;
+    let target_type = match type_hints.get_item(body_param_name)? {
+        Some(t) => t,
+        None => return Ok(None),
+    };
+
+    let converters = py.import("spikard._internal.converters")?;
+    let dec_hook = converters.getattr("_default_dec_hook")?;
+
+    let msgspec = py.import("msgspec")?;
+    let json_mod = msgspec.getattr("json")?;
+    let decoder_type = json_mod.getattr("Decoder")?;
+
+    let kwargs = PyDict::new(py);
+    kwargs.set_item("type", target_type)?;
+    kwargs.set_item("dec_hook", dec_hook)?;
+
+    let decoder = decoder_type.call((), Some(&kwargs))?;
+    Ok(Some(decoder.unbind()))
+}
+
 fn is_json_content_type(headers: &HashMap<String, String>) -> bool {
     let ct = headers
         .get("content-type")
@@ -222,6 +260,8 @@ pub struct PythonHandler {
     needs_param_conversion: bool,
     handler_params: Option<Arc<HashSet<String>>>,
     request_only_handler: bool,
+    body_only_handler: bool,
+    msgspec_body_decoder: Option<Arc<Py<PyAny>>>,
 }
 
 impl PythonHandler {
@@ -233,24 +273,44 @@ impl PythonHandler {
         parameter_validator: Option<ParameterValidator>,
         body_param_name: Option<String>,
     ) -> Self {
-        let (needs_param_conversion, handler_params, request_only_handler) = Python::attach(|py| {
-            let handler_obj = handler.bind(py);
-            let needs = needs_param_conversion(py, handler_obj.clone()).unwrap_or(true);
-            let (params, first_param_name) = handler_param_names(py, handler_obj.clone()).unwrap_or((None, None));
-            let request_only = matches!(first_param_name.as_deref(), Some("request" | "req"))
-                && params.as_ref().is_some_and(|set| set.len() == 1);
-            (needs, params.map(Arc::new), request_only)
-        });
+        let body_param_name = body_param_name.unwrap_or_else(|| "body".to_string());
+
+        let (needs_param_conversion, handler_params, request_only_handler, body_only_handler, msgspec_body_decoder) =
+            Python::attach(|py| {
+                let handler_obj = handler.bind(py);
+                let needs = needs_param_conversion(py, handler_obj.clone()).unwrap_or(true);
+                let (params, first_param_name) = handler_param_names(py, handler_obj.clone()).unwrap_or((None, None));
+                let request_only = matches!(first_param_name.as_deref(), Some("request" | "req"))
+                    && params.as_ref().is_some_and(|set| set.len() == 1);
+
+                let body_only = matches!(first_param_name.as_deref(), Some(name) if name == body_param_name)
+                    && params
+                        .as_ref()
+                        .is_some_and(|set| set.len() == 1 && set.contains(&body_param_name));
+
+                let decoder = if body_only && needs {
+                    create_msgspec_decoder(py, handler_obj.clone(), &body_param_name)
+                        .ok()
+                        .flatten()
+                        .map(Arc::new)
+                } else {
+                    None
+                };
+
+                (needs, params.map(Arc::new), request_only, body_only, decoder)
+            });
 
         Self {
             handler: Arc::new(handler),
             is_async,
             response_validator,
             parameter_validator,
-            body_param_name: body_param_name.unwrap_or_else(|| "body".to_string()),
+            body_param_name,
             needs_param_conversion,
             handler_params,
             request_only_handler,
+            body_only_handler,
+            msgspec_body_decoder,
         }
     }
 
@@ -286,6 +346,8 @@ impl PythonHandler {
         let needs_param_conversion = self.needs_param_conversion;
         let handler_params = self.handler_params.clone();
         let request_only_handler = self.request_only_handler;
+        let body_only_handler = self.body_only_handler;
+        let msgspec_body_decoder = self.msgspec_body_decoder.clone();
 
         let result = if is_async {
             let coroutine_future = Python::attach(|py| -> PyResult<_> {
@@ -294,6 +356,23 @@ impl PythonHandler {
                 let coroutine = if request_only_handler {
                     let req_obj = Py::new(py, PyHandlerRequest::new(request_data.clone()))?;
                     handler_obj.call1((req_obj,))?
+                } else if body_only_handler
+                    && request_data.raw_body.is_some()
+                    && is_json_content_type(&request_data.headers)
+                    && let Some(decoder) = msgspec_body_decoder.as_ref()
+                {
+                    let raw = request_data.raw_body.as_ref().unwrap();
+                    let decoded = decoder
+                        .bind(py)
+                        .call_method1("decode", (pyo3::types::PyBytes::new(py, raw),))?;
+                    handler_obj.call1((decoded,))?
+                } else if body_only_handler
+                    && request_data.raw_body.is_some()
+                    && is_json_content_type(&request_data.headers)
+                    && !needs_param_conversion
+                {
+                    let raw = request_data.raw_body.as_ref().unwrap();
+                    handler_obj.call1((pyo3::types::PyBytes::new(py, raw),))?
                 } else {
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
                         validated_params_to_py_kwargs(
@@ -351,6 +430,7 @@ impl PythonHandler {
         } else {
             let handler_params = handler_params.clone();
             let request_data_for_sync = request_data.clone();
+            let msgspec_body_decoder = msgspec_body_decoder.clone();
             tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
@@ -358,6 +438,23 @@ impl PythonHandler {
                     let py_result = if request_only_handler {
                         let req_obj = Py::new(py, PyHandlerRequest::new(request_data_for_sync))?;
                         handler_obj.call1((req_obj,))?
+                    } else if body_only_handler
+                        && request_data_for_sync.raw_body.is_some()
+                        && is_json_content_type(&request_data_for_sync.headers)
+                        && let Some(decoder) = msgspec_body_decoder.as_ref()
+                    {
+                        let raw = request_data_for_sync.raw_body.as_ref().unwrap();
+                        let decoded = decoder
+                            .bind(py)
+                            .call_method1("decode", (pyo3::types::PyBytes::new(py, raw),))?;
+                        handler_obj.call1((decoded,))?
+                    } else if body_only_handler
+                        && request_data_for_sync.raw_body.is_some()
+                        && is_json_content_type(&request_data_for_sync.headers)
+                        && !needs_param_conversion
+                    {
+                        let raw = request_data_for_sync.raw_body.as_ref().unwrap();
+                        handler_obj.call1((pyo3::types::PyBytes::new(py, raw),))?
                     } else {
                         let kwargs = if let Some(ref validated) = validated_params_for_task {
                             validated_params_to_py_kwargs(
@@ -506,7 +603,9 @@ impl Handler for PythonHandler {
 
         match self.handler_params.as_ref() {
             None => true,
-            Some(allowed) => allowed.contains("headers"),
+            // Even when a handler doesn't request `headers`, we still need `Content-Type`
+            // to correctly interpret `raw_body` (e.g. to set the `_raw_json` marker for msgspec).
+            Some(allowed) => allowed.contains("headers") || allowed.contains(&self.body_param_name),
         }
     }
 

@@ -786,7 +786,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
 
 /// Python module for spikard
 #[pymodule]
-fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
+pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<request::PyRequest>()?;
     m.add_class::<handler_request::PyHandlerRequest>()?;
     m.add_class::<response::Response>()?;
