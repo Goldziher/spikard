@@ -65,6 +65,7 @@ def _dump_profile() -> None:
     except Exception as exc:
         print(f"⚠ Failed to write pyinstrument profile: {exc!r}", file=sys.stderr)
 
+
 def _start_pyinstrument(output_path: str) -> bool:
     global _pyinstrument_dumped, _pyinstrument_output, _pyinstrument_profiler
 
@@ -121,6 +122,7 @@ def flush_profile() -> dict[str, bool]:
             finalize()
         return {"ok": True}
     return {"ok": False}
+
 
 @get("/__benchmark__/profile/start")
 async def start_profile(output: str | None = Query(default=None)) -> dict[str, bool]:

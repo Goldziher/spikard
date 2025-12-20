@@ -48,6 +48,7 @@ def _dump_profile() -> None:
     except Exception as exc:
         print(f"⚠ Failed to write pyinstrument profile: {exc!r}", file=sys.stderr)
 
+
 def _start_pyinstrument(output_path: str) -> bool:
     global _pyinstrument_dumped, _pyinstrument_output, _pyinstrument_profiler
 

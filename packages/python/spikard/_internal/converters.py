@@ -106,6 +106,7 @@ def _get_or_create_decoder(target_type: type) -> msgspec.json.Decoder[typing.Any
         )
     return _MSGSPEC_DECODER_CACHE[target_type]
 
+
 def _handler_metadata(
     handler_func: Callable[..., Any],
 ) -> tuple[dict[str, Any] | None, set[str] | None, str | None]:
