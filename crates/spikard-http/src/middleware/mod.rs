@@ -114,7 +114,19 @@ pub async fn validate_content_type_middleware(
                 let is_form_urlencoded = validation::is_form_urlencoded(content_type);
 
                 if is_multipart {
-                    let mut parse_request = HttpRequest::new(body);
+                    let body_bytes = match to_bytes(body, usize::MAX).await {
+                        Ok(bytes) => bytes,
+                        Err(_) => {
+                            let error_body = json!({
+                                "error": "Failed to read request body"
+                            });
+                            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                        }
+                    };
+
+                    validation::validate_content_length(headers, body_bytes.len())?;
+
+                    let mut parse_request = HttpRequest::new(Body::from(body_bytes));
                     *parse_request.headers_mut() = parts.headers.clone();
 
                     let multipart = match Multipart::from_request(parse_request, &()).await {
@@ -147,12 +159,13 @@ pub async fn validate_content_type_middleware(
                         }
                     };
 
-                    validation::validate_content_length(headers, json_bytes.len())?;
-
                     parts.headers.insert(
                         axum::http::header::CONTENT_TYPE,
                         axum::http::HeaderValue::from_static("application/json"),
                     );
+                    if let Ok(value) = axum::http::HeaderValue::from_str(&json_bytes.len().to_string()) {
+                        parts.headers.insert(axum::http::header::CONTENT_LENGTH, value);
+                    }
                     bytes::Bytes::from(json_bytes)
                 } else if is_form_urlencoded {
                     let body_bytes = match to_bytes(body, usize::MAX).await {

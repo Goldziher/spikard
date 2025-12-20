@@ -27,17 +27,17 @@ describe("http_methods", () => {
 
 		const headers = {
 			"Access-Control-Request-Method": "POST",
-			"Access-Control-Request-Headers": "Content-Type",
 			Origin: "https://example.com",
+			"Access-Control-Request-Headers": "Content-Type",
 		};
 		const response = await client.options("/items/", { headers });
 
 		expect(response.statusCode).toBe(200);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["access-control-max-age"]).toBe("86400");
+		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type");
 		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST, PUT, DELETE, OPTIONS");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://example.com");
-		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type");
+		expect(responseHeaders["access-control-max-age"]).toBe("86400");
 	});
 
 	test("DELETE - Remove resource", async () => {

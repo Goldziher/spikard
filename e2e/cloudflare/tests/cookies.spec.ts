@@ -334,7 +334,7 @@ describe("cookies", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Cookie: "session_id=session123; googall_tracker=ga789; fatebook_tracker=tracker456",
+			Cookie: "fatebook_tracker=tracker456; session_id=session123; googall_tracker=ga789",
 		};
 		const response = await client.get("/items/", headers);
 

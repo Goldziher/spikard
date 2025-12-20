@@ -537,7 +537,7 @@ describe("query_params", () => {
 		const app = createAppQueryParamsMultipleQueryParametersWithDifferentTypes();
 		const client = new TestClient(app);
 
-		const response = await client.get("/query/multi-type?active=true&name=john&age=30&score=95.5");
+		const response = await client.get("/query/multi-type?active=true&score=95.5&age=30&name=john");
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
