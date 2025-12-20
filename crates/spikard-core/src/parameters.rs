@@ -87,6 +87,22 @@ impl ParameterValidator {
         })
     }
 
+    /// Whether this validator needs access to request headers.
+    pub fn requires_headers(&self) -> bool {
+        self.inner
+            .parameter_defs
+            .iter()
+            .any(|def| def.source == ParameterSource::Header)
+    }
+
+    /// Whether this validator needs access to request cookies.
+    pub fn requires_cookies(&self) -> bool {
+        self.inner
+            .parameter_defs
+            .iter()
+            .any(|def| def.source == ParameterSource::Cookie)
+    }
+
     /// Determine whether a parameter schema needs full JSON Schema validation.
     ///
     /// The hot path in `validate_and_extract()` already enforces:

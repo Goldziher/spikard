@@ -8,6 +8,14 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+#[derive(Debug, Clone, Copy)]
+pub struct WithoutBodyExtractionOptions {
+    pub include_raw_query_params: bool,
+    pub include_query_params_json: bool,
+    pub include_headers: bool,
+    pub include_cookies: bool,
+}
+
 fn extract_query_params_and_raw(
     uri: &axum::http::Uri,
     include_raw_query_params: bool,
@@ -96,17 +104,24 @@ pub fn create_request_data_without_body(
     method: &axum::http::Method,
     headers: &axum::http::HeaderMap,
     path_params: HashMap<String, String>,
-    include_raw_query_params: bool,
-    include_query_params_json: bool,
+    options: WithoutBodyExtractionOptions,
 ) -> RequestData {
     let (query_params, raw_query_params) =
-        extract_query_params_and_raw(uri, include_raw_query_params, include_query_params_json);
+        extract_query_params_and_raw(uri, options.include_raw_query_params, options.include_query_params_json);
     RequestData {
         path_params: Arc::new(path_params),
         query_params,
         raw_query_params: Arc::new(raw_query_params),
-        headers: Arc::new(extract_headers(headers)),
-        cookies: Arc::new(extract_cookies(headers)),
+        headers: Arc::new(if options.include_headers {
+            extract_headers(headers)
+        } else {
+            HashMap::new()
+        }),
+        cookies: Arc::new(if options.include_cookies {
+            extract_cookies(headers)
+        } else {
+            HashMap::new()
+        }),
         body: Value::Null,
         raw_body: None,
         method: method.as_str().to_string(),
@@ -163,6 +178,27 @@ mod tests {
     use axum::http::{HeaderMap, HeaderValue, Method, Uri};
     use futures_util::stream;
     use serde_json::json;
+
+    const OPTIONS_ALL: WithoutBodyExtractionOptions = WithoutBodyExtractionOptions {
+        include_raw_query_params: true,
+        include_query_params_json: true,
+        include_headers: true,
+        include_cookies: true,
+    };
+
+    const OPTIONS_SKIP_HEADERS: WithoutBodyExtractionOptions = WithoutBodyExtractionOptions {
+        include_raw_query_params: true,
+        include_query_params_json: true,
+        include_headers: false,
+        include_cookies: true,
+    };
+
+    const OPTIONS_SKIP_COOKIES: WithoutBodyExtractionOptions = WithoutBodyExtractionOptions {
+        include_raw_query_params: true,
+        include_query_params_json: true,
+        include_headers: true,
+        include_cookies: false,
+    };
 
     #[test]
     fn test_extract_query_params_empty() {
@@ -374,7 +410,7 @@ mod tests {
         let headers = HeaderMap::new();
         let path_params = HashMap::new();
 
-        let result = create_request_data_without_body(&uri, &method, &headers, path_params, true, true);
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
         assert_eq!(result.method, "GET");
         assert_eq!(result.path, "/test");
@@ -395,7 +431,7 @@ mod tests {
         let mut path_params = HashMap::new();
         path_params.insert("user_id".to_string(), "42".to_string());
 
-        let result = create_request_data_without_body(&uri, &method, &headers, path_params, true, true);
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
         assert_eq!(result.path_params.get("user_id"), Some(&"42".to_string()));
     }
@@ -407,7 +443,7 @@ mod tests {
         let headers = HeaderMap::new();
         let path_params = HashMap::new();
 
-        let result = create_request_data_without_body(&uri, &method, &headers, path_params, true, true);
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
         assert_eq!(result.query_params, json!({"q": "rust", "limit": 10}));
         assert_eq!(result.raw_query_params.get("q"), Some(&vec!["rust".to_string()]));
@@ -423,7 +459,7 @@ mod tests {
         headers.insert("authorization", HeaderValue::from_static("Bearer token"));
         let path_params = HashMap::new();
 
-        let result = create_request_data_without_body(&uri, &method, &headers, path_params, true, true);
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
         assert_eq!(
             result.headers.get("content-type"),
@@ -443,10 +479,36 @@ mod tests {
         );
         let path_params = HashMap::new();
 
-        let result = create_request_data_without_body(&uri, &method, &headers, path_params, true, true);
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
         assert_eq!(result.cookies.get("session"), Some(&"xyz".to_string()));
         assert_eq!(result.cookies.get("theme"), Some(&"dark".to_string()));
+    }
+
+    #[test]
+    fn test_create_request_data_without_body_skip_headers() {
+        let uri: Uri = "/test".parse().unwrap();
+        let method = Method::GET;
+        let mut headers = HeaderMap::new();
+        headers.insert("authorization", HeaderValue::from_static("Bearer token"));
+        let path_params = HashMap::new();
+
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_SKIP_HEADERS);
+
+        assert!(result.headers.is_empty());
+    }
+
+    #[test]
+    fn test_create_request_data_without_body_skip_cookies() {
+        let uri: Uri = "/test".parse().unwrap();
+        let method = Method::GET;
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::COOKIE, HeaderValue::from_static("session=xyz"));
+        let path_params = HashMap::new();
+
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_SKIP_COOKIES);
+
+        assert!(result.cookies.is_empty());
     }
 
     #[test]
@@ -456,7 +518,7 @@ mod tests {
         let path_params = HashMap::new();
 
         for method in &[Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH] {
-            let result = create_request_data_without_body(&uri, method, &headers, path_params.clone(), true, true);
+            let result = create_request_data_without_body(&uri, method, &headers, path_params.clone(), OPTIONS_ALL);
             assert_eq!(result.method, method.as_str());
         }
     }
@@ -632,7 +694,7 @@ mod tests {
         let mut path_params = HashMap::new();
         path_params.insert("id".to_string(), "1".to_string());
 
-        let request_data = create_request_data_without_body(&uri, &method, &headers, path_params.clone(), true, true);
+        let request_data = create_request_data_without_body(&uri, &method, &headers, path_params.clone(), OPTIONS_ALL);
 
         let cloned = request_data.clone();
 
