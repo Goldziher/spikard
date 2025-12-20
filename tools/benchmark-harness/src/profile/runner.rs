@@ -337,11 +337,7 @@ impl ProfileRunner {
         }
     }
 
-    async fn run_suite(
-        &self,
-        server: &ServerHandle,
-        suite_php_profiler: bool,
-    ) -> Result<SuiteResult> {
+    async fn run_suite(&self, server: &ServerHandle, suite_php_profiler: bool) -> Result<SuiteResult> {
         println!("📊 Running suite: {}", self.suite.name);
         println!();
 
@@ -355,9 +351,7 @@ impl ProfileRunner {
                 workload_def.name
             );
 
-            let result = self
-                .run_workload(workload_def, server, suite_php_profiler)
-                .await?;
+            let result = self.run_workload(workload_def, server, suite_php_profiler).await?;
             workload_results.push(result);
 
             println!("  ✓ Complete");
@@ -522,8 +516,12 @@ impl ProfileRunner {
                     )?))
                 }
                 "rust" => {
-                    let output_path =
-                        absolutize_path(output_dir.join("profiles").join(&self.config.framework).join(format!("{}.svg", workload_def.name)));
+                    let output_path = absolutize_path(
+                        output_dir
+                            .join("profiles")
+                            .join(&self.config.framework)
+                            .join(format!("{}.svg", workload_def.name)),
+                    );
                     let _ = std::fs::create_dir_all(output_path.parent().unwrap_or(&output_dir));
                     if self.try_profile_start(server, &output_path).await {
                         Some(ProfilerHandle::RustInApp(output_path))

@@ -8,7 +8,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 use rustc_hash::FxHashMap;
-use serde_json::{from_str, Value};
+use serde_json::{Value, from_str};
 use std::borrow::Cow;
 use std::convert::Infallible;
 
