@@ -265,7 +265,23 @@ get("/query/many", get_query_many);
 get("/health", get_health);
 get("/", get_root);
 
-const port = process.argv[2] ? parseInt(process.argv[2], 10) : process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
+function resolvePort(defaultPort = 8000): number {
+	for (const arg of process.argv.slice(2)) {
+		const parsed = Number.parseInt(arg, 10);
+		if (Number.isFinite(parsed) && parsed >= 0 && parsed < 65536) {
+			return parsed;
+		}
+	}
+
+	const envPort = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : Number.NaN;
+	if (Number.isFinite(envPort) && envPort >= 0 && envPort < 65536) {
+		return envPort;
+	}
+
+	return defaultPort;
+}
+
+const port = resolvePort();
 
 console.error(`[spikard-node] Starting server on port ${port}`);
 const config = {

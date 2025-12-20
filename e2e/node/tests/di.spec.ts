@@ -156,8 +156,8 @@ describe("di", () => {
 		expect(responseData).toHaveProperty("logged");
 		expect(responseData.logged).toBe(true);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-log-level"]).toBe("debug");
 		expect(responseHeaders["x-auth-mode"]).toBe("strict");
+		expect(responseHeaders["x-log-level"]).toBe("debug");
 	});
 
 	test("Ruby keyword argument injection - success", async () => {

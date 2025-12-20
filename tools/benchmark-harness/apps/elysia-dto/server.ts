@@ -123,7 +123,23 @@ app.get("/health", () => ({ status: "ok" }));
 
 app.get("/", () => ({ status: "ok" }));
 
-const port = Bun.argv[2] ? parseInt(Bun.argv[2], 10) : 8000;
+function resolvePort(defaultPort = 8000): number {
+	for (const arg of Bun.argv.slice(2)) {
+		const parsed = Number.parseInt(arg, 10);
+		if (Number.isFinite(parsed) && parsed >= 0 && parsed < 65536) {
+			return parsed;
+		}
+	}
+
+	const envPort = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : Number.NaN;
+	if (Number.isFinite(envPort) && envPort >= 0 && envPort < 65536) {
+		return envPort;
+	}
+
+	return defaultPort;
+}
+
+const port = resolvePort();
 
 app.listen(port, () => {
 	console.error(`[elysia] Starting server on port ${port}`);

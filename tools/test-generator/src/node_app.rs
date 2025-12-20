@@ -144,17 +144,17 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 			"test": "vitest run",
 			"test:watch": "vitest"
 			}},
-				"devDependencies": {{
-					"{dependency}": "workspace:*",
-					"@cloudflare/vitest-pool-workers": "^0.11.0",
-					"@cloudflare/workers-types": "^4.20251217.0",
-					"@vitest/coverage-v8": "^4.0.16",
-				"typescript": "^5.9.3",
-				"vitest": "^4.0.16",
-				"wrangler": "^4.55.0"
-			}}
-	}}
-		"#,
+					"devDependencies": {{
+						"{dependency}": "workspace:*",
+						"@cloudflare/vitest-pool-workers": "^0.11.1",
+						"@cloudflare/workers-types": "^4.20251218.0",
+						"@vitest/coverage-v8": "^4.0.16",
+					"typescript": "^5.9.3",
+					"vitest": "^4.0.16",
+					"wrangler": "^4.56.0"
+				}}
+		}}
+			"#,
                 name = target.e2e_package_name,
                 dependency = target.dependency_package
             )
@@ -2348,10 +2348,13 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
             if i > 0 {
                 code.push_str(", ");
             }
-            code.push_str(&format!("_{}", to_camel_case(depend_key)));
+            code.push_str(&to_camel_case(depend_key));
         }
         code.push_str("): AsyncGenerator<unknown, void, unknown> {\n");
         code.push_str(&format!("\t// Factory for {} with cleanup\n", dep.key));
+        for depend_key in &dep.depends_on {
+            code.push_str(&format!("\tvoid {};\n", to_camel_case(depend_key)));
+        }
         code.push_str("\t// Initialize cleanup state\n");
         code.push_str(&format!(
             "\tCLEANUP_STATE[\"{}\"] = CLEANUP_STATE[\"{}\"] || [];\n",
@@ -2382,10 +2385,13 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
             if i > 0 {
                 code.push_str(", ");
             }
-            code.push_str(&format!("_{}", to_camel_case(depend_key)));
+            code.push_str(&to_camel_case(depend_key));
         }
         code.push_str("): Promise<unknown> {\n");
         code.push_str(&format!("\t// Async factory for {}\n", dep.key));
+        for depend_key in &dep.depends_on {
+            code.push_str(&format!("\tvoid {};\n", to_camel_case(depend_key)));
+        }
 
         if dep.key.contains("db") || dep.key.contains("database") {
             code.push_str("\t// Simulate async DB connection\n");
@@ -2409,10 +2415,13 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
             if i > 0 {
                 code.push_str(", ");
             }
-            code.push_str(&format!("_{}", to_camel_case(depend_key)));
+            code.push_str(&to_camel_case(depend_key));
         }
         code.push_str("): unknown {\n");
         code.push_str(&format!("\t// Factory for {}\n", dep.key));
+        for depend_key in &dep.depends_on {
+            code.push_str(&format!("\tvoid {};\n", to_camel_case(depend_key)));
+        }
         code.push_str(&format!(
             "\treturn {{ _factory: \"{}\", _random: Math.random() }};\n",
             dep.key
