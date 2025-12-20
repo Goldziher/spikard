@@ -9,8 +9,8 @@
 //! works with any `ConfigSource` implementation.
 
 use spikard_http::{
-    ApiKeyConfig, BackgroundTaskConfig, CompressionConfig, ContactInfo, JsonRpcConfig, JwtConfig, LicenseInfo,
-    OpenApiConfig, RateLimitConfig, SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
+    ApiKeyConfig, CompressionConfig, ContactInfo, JsonRpcConfig, JwtConfig, LicenseInfo, OpenApiConfig,
+    RateLimitConfig, SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
 };
 use std::collections::HashMap;
 
@@ -67,77 +67,81 @@ pub struct ConfigExtractor;
 impl ConfigExtractor {
     /// Extract a complete ServerConfig from a ConfigSource
     pub fn extract_server_config(source: &dyn ConfigSource) -> Result<ServerConfig, String> {
-        let host = source
-            .get_string("host")
-            .or_else(|| source.get_string("Host"))
-            .unwrap_or_else(|| "127.0.0.1".to_string());
+        let mut config = ServerConfig::default();
 
-        let port = source
+        if let Some(host) = source.get_string("host").or_else(|| source.get_string("Host")) {
+            config.host = host;
+        }
+
+        if let Some(port) = source
             .get_u16("port")
             .or_else(|| source.get_u32("port").map(|p| p as u16))
-            .unwrap_or(8000);
+        {
+            config.port = port;
+        }
 
-        let workers = source
+        if let Some(workers) = source
             .get_usize("workers")
             .or_else(|| source.get_u32("workers").map(|w| w as usize))
-            .unwrap_or(1);
+        {
+            config.workers = workers;
+        }
 
-        let enable_request_id = source.get_bool("enable_request_id").unwrap_or(true);
+        if let Some(enable_request_id) = source.get_bool("enable_request_id") {
+            config.enable_request_id = enable_request_id;
+        }
 
-        let max_body_size = source.get_usize("max_body_size");
+        // `max_body_size = 0` is treated as unlimited.
+        if let Some(max_body_size) = source
+            .get_usize("max_body_size")
+            .or_else(|| source.get_u32("max_body_size").map(|v| v as usize))
+        {
+            config.max_body_size = if max_body_size == 0 { None } else { Some(max_body_size) };
+        }
 
-        let request_timeout = source.get_u64("request_timeout");
+        if let Some(request_timeout) = source.get_u64("request_timeout") {
+            config.request_timeout = Some(request_timeout);
+        }
 
-        let graceful_shutdown = source.get_bool("graceful_shutdown").unwrap_or(true);
+        if let Some(graceful_shutdown) = source.get_bool("graceful_shutdown") {
+            config.graceful_shutdown = graceful_shutdown;
+        }
 
-        let shutdown_timeout = source.get_u64("shutdown_timeout").unwrap_or(30);
+        if let Some(shutdown_timeout) = source.get_u64("shutdown_timeout") {
+            config.shutdown_timeout = shutdown_timeout;
+        }
 
-        let compression = source
+        config.compression = source
             .get_nested("compression")
             .and_then(|cfg| Self::extract_compression_config(cfg.as_ref()).ok());
 
-        let rate_limit = source
+        config.rate_limit = source
             .get_nested("rate_limit")
             .and_then(|cfg| Self::extract_rate_limit_config(cfg.as_ref()).ok());
 
-        let jwt_auth = source
+        config.jwt_auth = source
             .get_nested("jwt_auth")
             .and_then(|cfg| Self::extract_jwt_config(cfg.as_ref()).ok());
 
-        let api_key_auth = source
+        config.api_key_auth = source
             .get_nested("api_key_auth")
             .and_then(|cfg| Self::extract_api_key_config(cfg.as_ref()).ok());
 
-        let static_files = Self::extract_static_files_config(source)?;
+        config.static_files = Self::extract_static_files_config(source)?;
 
-        let openapi = source
+        config.openapi = source
             .get_nested("openapi")
             .and_then(|cfg| Self::extract_openapi_config(cfg.as_ref()).ok());
 
-        let jsonrpc = source
+        config.jsonrpc = source
             .get_nested("jsonrpc")
             .and_then(|cfg| Self::extract_jsonrpc_config(cfg.as_ref()).ok());
 
-        Ok(ServerConfig {
-            host,
-            port,
-            workers,
-            enable_request_id,
-            max_body_size,
-            request_timeout,
-            compression,
-            rate_limit,
-            jwt_auth,
-            api_key_auth,
-            static_files,
-            graceful_shutdown,
-            shutdown_timeout,
-            background_tasks: BackgroundTaskConfig::default(),
-            openapi,
-            jsonrpc,
-            lifecycle_hooks: None,
-            di_container: None,
-        })
+        if let Some(enable_http_trace) = source.get_bool("enable_http_trace") {
+            config.enable_http_trace = enable_http_trace;
+        }
+
+        Ok(config)
     }
 
     /// Extract CompressionConfig from a ConfigSource
@@ -559,8 +563,8 @@ mod tests {
         assert_eq!(config.host, "127.0.0.1");
         assert_eq!(config.port, 8000);
         assert_eq!(config.workers, 1);
-        assert!(config.enable_request_id);
-        assert_eq!(config.max_body_size, None);
+        assert!(!config.enable_request_id);
+        assert_eq!(config.max_body_size, Some(10 * 1024 * 1024));
         assert_eq!(config.request_timeout, None);
         assert!(config.graceful_shutdown);
         assert_eq!(config.shutdown_timeout, 30);

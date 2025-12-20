@@ -539,6 +539,7 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         graceful_shutdown,
         shutdown_timeout,
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
+        enable_http_trace: false,
         openapi: openapi_config,
         jsonrpc: None,
         lifecycle_hooks: None,

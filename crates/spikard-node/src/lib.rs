@@ -68,21 +68,51 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
     };
     use std::collections::HashMap;
 
-    let host = config.get::<String>("host")?.unwrap_or_else(|| "127.0.0.1".to_string());
+    let mut server_config = ServerConfig::default();
 
-    let port = config.get::<u32>("port")?.unwrap_or(8000) as u16;
+    if let Some(host) = config.get::<String>("host")? {
+        server_config.host = host;
+    }
 
-    let workers = config.get::<u32>("workers")?.unwrap_or(1) as usize;
+    if let Some(port) = config.get::<u32>("port")? {
+        server_config.port = port as u16;
+    }
 
-    let enable_request_id = config.get::<bool>("enableRequestId")?.unwrap_or(true);
+    if let Some(workers) = config.get::<u32>("workers")? {
+        server_config.workers = workers as usize;
+    }
 
-    let max_body_size = config.get::<u32>("maxBodySize")?.map(|v| v as usize);
+    if let Some(enable_request_id) = config.get::<bool>("enableRequestId")? {
+        server_config.enable_request_id = enable_request_id;
+    }
 
-    let request_timeout = config.get::<u32>("requestTimeout")?.map(|v| v as u64);
+    if let Some(enable_http_trace) = config.get::<bool>("enableHttpTrace")? {
+        server_config.enable_http_trace = enable_http_trace;
+    }
 
-    let graceful_shutdown = config.get::<bool>("gracefulShutdown")?.unwrap_or(true);
+    if let Some(max_body_size) = config.get::<u32>("maxBodySize")? {
+        server_config.max_body_size = if max_body_size == 0 {
+            None
+        } else {
+            Some(max_body_size as usize)
+        };
+    }
 
-    let shutdown_timeout = config.get::<u32>("shutdownTimeout")?.unwrap_or(30) as u64;
+    if let Some(request_timeout) = config.get::<u32>("requestTimeout")? {
+        server_config.request_timeout = if request_timeout == 0 {
+            None
+        } else {
+            Some(request_timeout as u64)
+        };
+    }
+
+    if let Some(graceful_shutdown) = config.get::<bool>("gracefulShutdown")? {
+        server_config.graceful_shutdown = graceful_shutdown;
+    }
+
+    if let Some(shutdown_timeout) = config.get::<u32>("shutdownTimeout")? {
+        server_config.shutdown_timeout = shutdown_timeout as u64;
+    }
 
     let compression = config.get::<Object>("compression")?.and_then(|comp| {
         let gzip = comp.get::<bool>("gzip").ok()?.unwrap_or(true);
@@ -225,26 +255,14 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         })
     });
 
-    Ok(ServerConfig {
-        host,
-        port,
-        workers,
-        enable_request_id,
-        max_body_size,
-        request_timeout,
-        compression,
-        rate_limit,
-        jwt_auth,
-        api_key_auth,
-        static_files,
-        graceful_shutdown,
-        shutdown_timeout,
-        background_tasks: spikard_http::BackgroundTaskConfig::default(),
-        openapi,
-        jsonrpc: None,
-        lifecycle_hooks: None,
-        di_container: None,
-    })
+    server_config.compression = compression;
+    server_config.rate_limit = rate_limit;
+    server_config.jwt_auth = jwt_auth;
+    server_config.api_key_auth = api_key_auth;
+    server_config.static_files = static_files;
+    server_config.openapi = openapi;
+
+    Ok(server_config)
 }
 
 /// Extract JSON-RPC method metadata from a Node.js object

@@ -418,6 +418,7 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
         graceful_shutdown,
         shutdown_timeout,
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
+        enable_http_trace: false,
         openapi: openapi_config,
         jsonrpc: None,
         lifecycle_hooks: None,
