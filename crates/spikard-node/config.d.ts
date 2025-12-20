@@ -253,6 +253,8 @@ export interface ServerConfig {
 
 	/** Add X-Request-ID header to responses (default: true) */
 	enableRequestId?: boolean;
+	/** Enable per-request HTTP tracing via tower-http TraceLayer (default: false) */
+	enableHttpTrace?: boolean;
 	/** Maximum request body size in bytes (default: 10MB, 0 or null for unlimited) */
 	maxBodySize?: number | null;
 	/** Request timeout in seconds (default: 30, null for no timeout) */

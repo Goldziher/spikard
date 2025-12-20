@@ -144,6 +144,8 @@ pub struct ServerConfig {
     pub lifecycle_hooks: Option<std::sync::Arc<LifecycleHooks>>,
     /// Background task executor configuration
     pub background_tasks: BackgroundTaskConfig,
+    /// Enable per-request HTTP tracing (tower-http `TraceLayer`)
+    pub enable_http_trace: bool,
     /// Dependency injection container (requires 'di' feature)
     #[cfg(feature = "di")]
     pub di_container: Option<std::sync::Arc<spikard_core::di::DependencyContainer>>,
@@ -169,6 +171,7 @@ impl Default for ServerConfig {
             jsonrpc: None,
             lifecycle_hooks: None,
             background_tasks: BackgroundTaskConfig::default(),
+            enable_http_trace: false,
             #[cfg(feature = "di")]
             di_container: None,
         }
@@ -255,6 +258,12 @@ impl ServerConfigBuilder {
     /// Enable or disable request ID generation and propagation
     pub fn enable_request_id(mut self, enable: bool) -> Self {
         self.config.enable_request_id = enable;
+        self
+    }
+
+    /// Enable or disable per-request HTTP tracing (tower-http `TraceLayer`)
+    pub fn enable_http_trace(mut self, enable: bool) -> Self {
+        self.config.enable_http_trace = enable;
         self
     }
 

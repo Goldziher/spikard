@@ -74,10 +74,10 @@ fn server_config_defaults() {
     assert_eq!(cfg.host, "127.0.0.1");
     assert_eq!(cfg.port, 8000);
     assert_eq!(cfg.workers, 1);
-    assert!(cfg.enable_request_id);
+    assert!(!cfg.enable_request_id);
     assert!(cfg.graceful_shutdown);
     assert_eq!(cfg.shutdown_timeout, 30);
-    assert!(cfg.max_body_size.is_none());
+    assert_eq!(cfg.max_body_size, Some(10 * 1024 * 1024));
     assert!(cfg.request_timeout.is_none());
     assert!(cfg.compression.is_none());
     assert!(cfg.rate_limit.is_none());

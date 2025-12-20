@@ -343,7 +343,7 @@ pub fn build_router_with_handlers(
     routes: Vec<(crate::Route, Arc<dyn Handler>)>,
     hooks: Option<Arc<crate::LifecycleHooks>>,
 ) -> Result<AxumRouter, String> {
-    build_router_with_handlers_inner(routes, hooks, None)
+    build_router_with_handlers_inner(routes, hooks, None, true)
 }
 
 /// Build an Axum router from routes and foreign handlers with optional DI container
@@ -353,7 +353,7 @@ pub fn build_router_with_handlers(
     hooks: Option<Arc<crate::LifecycleHooks>>,
     di_container: Option<Arc<spikard_core::di::DependencyContainer>>,
 ) -> Result<AxumRouter, String> {
-    build_router_with_handlers_inner(routes, hooks, di_container)
+    build_router_with_handlers_inner(routes, hooks, di_container, true)
 }
 
 fn build_router_with_handlers_inner(
@@ -361,6 +361,7 @@ fn build_router_with_handlers_inner(
     hooks: Option<Arc<crate::LifecycleHooks>>,
     #[cfg(feature = "di")] di_container: Option<Arc<spikard_core::di::DependencyContainer>>,
     #[cfg(not(feature = "di"))] _di_container: Option<()>,
+    enable_http_trace: bool,
 ) -> Result<AxumRouter, String> {
     let mut app = AxumRouter::new();
 
@@ -501,7 +502,9 @@ fn build_router_with_handlers_inner(
     app = app.layer(axum::middleware::from_fn(
         crate::middleware::validate_content_type_middleware,
     ));
-    app = app.layer(TraceLayer::new_for_http());
+    if enable_http_trace {
+        app = app.layer(TraceLayer::new_for_http());
+    }
 
     app = app.layer(axum::Extension(route_registry));
 
@@ -582,9 +585,10 @@ pub fn build_router_with_handlers_and_config(
     };
 
     #[cfg(feature = "di")]
-    let mut app = build_router_with_handlers(routes, hooks, config.di_container.clone())?;
+    let mut app =
+        build_router_with_handlers_inner(routes, hooks, config.di_container.clone(), config.enable_http_trace)?;
     #[cfg(not(feature = "di"))]
-    let mut app = build_router_with_handlers(routes, hooks)?;
+    let mut app = build_router_with_handlers_inner(routes, hooks, None, config.enable_http_trace)?;
 
     app = app.layer(SetSensitiveRequestHeadersLayer::new([
         axum::http::header::AUTHORIZATION,
@@ -916,7 +920,9 @@ impl Server {
 
         // TODO: Add routes from self.router
 
-        app = app.layer(TraceLayer::new_for_http());
+        if self.config.enable_http_trace {
+            app = app.layer(TraceLayer::new_for_http());
+        }
 
         app
     }
