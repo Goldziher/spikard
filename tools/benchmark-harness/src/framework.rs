@@ -215,7 +215,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "express-dto",
             vec!["server.ts".to_string()],
             None,
-            "pnpm run start:ts -- {port}",
+            "pnpm start -- {port}",
             None,
         ),
         FrameworkConfig::new(
