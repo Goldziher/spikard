@@ -10,6 +10,7 @@
 use bytes::Bytes;
 use magnus::prelude::*;
 use magnus::value::InnerValue;
+use magnus::value::LazyId;
 use magnus::value::Opaque;
 use magnus::{Error, RHash, RString, Ruby, Symbol, Value, gc::Marker};
 use serde_json::Value as JsonValue;
@@ -50,6 +51,17 @@ pub(crate) struct NativeRequest {
     validated_params: Option<JsonValue>,
     cache: RefCell<RequestCache>,
 }
+
+static KEY_METHOD: LazyId = LazyId::new("method");
+static KEY_PATH: LazyId = LazyId::new("path");
+static KEY_PATH_PARAMS: LazyId = LazyId::new("path_params");
+static KEY_QUERY: LazyId = LazyId::new("query");
+static KEY_RAW_QUERY: LazyId = LazyId::new("raw_query");
+static KEY_HEADERS: LazyId = LazyId::new("headers");
+static KEY_COOKIES: LazyId = LazyId::new("cookies");
+static KEY_BODY: LazyId = LazyId::new("body");
+static KEY_RAW_BODY: LazyId = LazyId::new("raw_body");
+static KEY_PARAMS: LazyId = LazyId::new("params");
 
 impl NativeRequest {
     pub(crate) fn from_request_data(request_data: RequestData, validated_params: Option<JsonValue>) -> Self {
@@ -210,42 +222,65 @@ impl NativeRequest {
         }
 
         let hash = ruby.hash_new_capa(10);
-        hash.aset(ruby.to_symbol("method"), Self::method(ruby, this)?)?;
-        hash.aset(ruby.to_symbol("path"), Self::path(ruby, this)?)?;
-        hash.aset(ruby.to_symbol("path_params"), Self::path_params(ruby, this)?)?;
-        hash.aset(ruby.to_symbol("query"), Self::query(ruby, this)?)?;
-        hash.aset(ruby.to_symbol("raw_query"), Self::raw_query(ruby, this)?)?;
-        hash.aset(ruby.to_symbol("headers"), Self::headers(ruby, this)?)?;
-        hash.aset(ruby.to_symbol("cookies"), Self::cookies(ruby, this)?)?;
-        hash.aset(ruby.to_symbol("body"), Self::body(ruby, this)?)?;
-        hash.aset(ruby.to_symbol("raw_body"), Self::raw_body(ruby, this)?)?;
-        hash.aset(ruby.to_symbol("params"), Self::params(ruby, this)?)?;
+        hash.aset(ruby.intern("method"), Self::method(ruby, this)?)?;
+        hash.aset(ruby.intern("path"), Self::path(ruby, this)?)?;
+        hash.aset(ruby.intern("path_params"), Self::path_params(ruby, this)?)?;
+        hash.aset(ruby.intern("query"), Self::query(ruby, this)?)?;
+        hash.aset(ruby.intern("raw_query"), Self::raw_query(ruby, this)?)?;
+        hash.aset(ruby.intern("headers"), Self::headers(ruby, this)?)?;
+        hash.aset(ruby.intern("cookies"), Self::cookies(ruby, this)?)?;
+        hash.aset(ruby.intern("body"), Self::body(ruby, this)?)?;
+        hash.aset(ruby.intern("raw_body"), Self::raw_body(ruby, this)?)?;
+        hash.aset(ruby.intern("params"), Self::params(ruby, this)?)?;
 
         Ok(Self::cache_set(&mut cache.to_h, hash.as_value()))
     }
 
     pub(crate) fn index(ruby: &Ruby, this: &Self, key: Value) -> Result<Value, Error> {
-        let key_str = if let Ok(sym) = Symbol::try_convert(key) {
-            sym.name()?.into_owned()
-        } else if let Ok(text) = RString::try_convert(key) {
-            text.to_string()?
-        } else {
-            return Ok(ruby.qnil().as_value());
-        };
-
-        match key_str.as_str() {
-            "method" => Self::method(ruby, this),
-            "path" => Self::path(ruby, this),
-            "path_params" => Self::path_params(ruby, this),
-            "query" => Self::query(ruby, this),
-            "raw_query" => Self::raw_query(ruby, this),
-            "headers" => Self::headers(ruby, this),
-            "cookies" => Self::cookies(ruby, this),
-            "body" => Self::body(ruby, this),
-            "raw_body" => Self::raw_body(ruby, this),
-            "params" => Self::params(ruby, this),
-            _ => Ok(ruby.qnil().as_value()),
+        if let Ok(sym) = Symbol::try_convert(key) {
+            return if sym == KEY_METHOD {
+                Self::method(ruby, this)
+            } else if sym == KEY_PATH {
+                Self::path(ruby, this)
+            } else if sym == KEY_PATH_PARAMS {
+                Self::path_params(ruby, this)
+            } else if sym == KEY_QUERY {
+                Self::query(ruby, this)
+            } else if sym == KEY_RAW_QUERY {
+                Self::raw_query(ruby, this)
+            } else if sym == KEY_HEADERS {
+                Self::headers(ruby, this)
+            } else if sym == KEY_COOKIES {
+                Self::cookies(ruby, this)
+            } else if sym == KEY_BODY {
+                Self::body(ruby, this)
+            } else if sym == KEY_RAW_BODY {
+                Self::raw_body(ruby, this)
+            } else if sym == KEY_PARAMS {
+                Self::params(ruby, this)
+            } else {
+                Ok(ruby.qnil().as_value())
+            };
         }
+
+        if let Ok(text) = RString::try_convert(key) {
+            let slice = unsafe { text.as_slice() };
+            return match slice {
+                b"method" => Self::method(ruby, this),
+                b"path" => Self::path(ruby, this),
+                b"path_params" => Self::path_params(ruby, this),
+                b"query" => Self::query(ruby, this),
+                b"raw_query" => Self::raw_query(ruby, this),
+                b"headers" => Self::headers(ruby, this),
+                b"cookies" => Self::cookies(ruby, this),
+                b"body" => Self::body(ruby, this),
+                b"raw_body" => Self::raw_body(ruby, this),
+                b"params" => Self::params(ruby, this),
+                _ => Ok(ruby.qnil().as_value()),
+            };
+        }
+
+        Ok(ruby.qnil().as_value())
     }
 
     #[allow(dead_code)]
