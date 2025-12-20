@@ -142,8 +142,8 @@ impl PhpRequest {
     }
 
     #[php(name = "__get")]
-    pub fn __get(&self, name: String) -> PhpResult<Zval> {
-        match name.as_str() {
+    pub fn __get(&self, name: &str) -> PhpResult<Zval> {
+        match name {
             "body" => self.get_cached_json_or_raw_body(),
             "files" => self.get_cached_json_field(&self.files, &self.cached_files),
             "headers" => self.get_cached_string_map(&self.headers, &self.cached_headers),
