@@ -207,8 +207,7 @@ impl RubyHandler {
 
     /// Handle a request synchronously.
     pub fn handle(&self, request_data: RequestData) -> HandlerResult {
-        let cloned = request_data.clone();
-        let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(cloned)));
+        let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(request_data)));
         match result {
             Ok(res) => res,
             Err(_) => Err(ErrorResponseBuilder::structured_error(
@@ -426,7 +425,7 @@ fn build_ruby_request(
     request_data: &RequestData,
     validated_params: Option<&JsonValue>,
 ) -> Result<Value, Error> {
-    let hash = ruby.hash_new();
+    let hash = ruby.hash_new_capa(9);
 
     hash.aset(ruby.intern("method"), ruby.str_new(&handler.method))?;
     hash.aset(ruby.intern("path"), ruby.str_new(&handler.path))?;
