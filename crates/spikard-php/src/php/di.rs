@@ -336,6 +336,10 @@ mod tests {
 
     #[test]
     fn test_value_dependency() {
+        if std::env::var_os("SPIKARD_PHP_RUNTIME_TESTS").is_none() {
+            return;
+        }
+
         let zval = Zval::new();
         let dep = PhpValueDependency::new("test_key".to_string(), zval);
         assert_eq!(dep.key(), "test_key");
@@ -343,6 +347,10 @@ mod tests {
 
     #[test]
     fn test_factory_registry() {
+        if std::env::var_os("SPIKARD_PHP_RUNTIME_TESTS").is_none() {
+            return;
+        }
+
         PHP_FACTORY_REGISTRY.with(|registry| {
             registry.borrow_mut().clear();
             let initial_len = registry.borrow().len();

@@ -14,7 +14,7 @@ use once_cell::sync::Lazy;
 use spikard_http::{Handler, Route, RouteMetadata, SchemaRegistry, Server};
 use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 
 use crate::config::extract_server_config;
 use crate::handler::RubyHandler;
@@ -23,12 +23,33 @@ use crate::handler::RubyHandler;
 ///
 /// Initialized once and reused for all async operations throughout the lifetime
 /// of the Ruby process.
-pub static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Builder::new_current_thread().enable_all().build().unwrap_or_else(|e| {
-        eprintln!("Failed to initialise global Tokio runtime: {}", e);
-        panic!("Cannot continue without Tokio runtime");
+pub static GLOBAL_RUNTIME: Lazy<Result<Runtime, std::io::Error>> =
+    Lazy::new(|| Builder::new_current_thread().enable_all().build());
+
+pub fn global_runtime_raw() -> Result<&'static Runtime, std::io::Error> {
+    match &*GLOBAL_RUNTIME {
+        Ok(runtime) => Ok(runtime),
+        Err(err) => Err(std::io::Error::new(err.kind(), err.to_string())),
+    }
+}
+
+pub fn global_runtime(ruby: &Ruby) -> Result<&'static Runtime, Error> {
+    global_runtime_raw().map_err(|err| {
+        Error::new(
+            ruby.exception_runtime_error(),
+            format!("Failed to initialise global Tokio runtime: {err}"),
+        )
     })
-});
+}
+
+pub fn global_runtime_or_err() -> Result<&'static Runtime, Error> {
+    global_runtime_raw().map_err(|err| {
+        Error::new(
+            magnus::exception::runtime_error(),
+            format!("Failed to initialise global Tokio runtime: {err}"),
+        )
+    })
+}
 
 /// Start the Spikard HTTP server from Ruby
 ///
@@ -256,28 +277,29 @@ pub fn run_server(
 
     let background_config = config.background_tasks.clone();
 
-    runtime.block_on(async move {
-        let listener = tokio::net::TcpListener::bind(socket_addr)
-            .await
-            .unwrap_or_else(|_| panic!("Failed to bind to {}", socket_addr));
+    runtime
+        .block_on(async move {
+            let listener = tokio::net::TcpListener::bind(socket_addr)
+                .await
+                .map_err(|err| format!("Failed to bind to {socket_addr}: {err}"))?;
 
-        info!("Server listening on {}", socket_addr);
+            info!("Server listening on {}", socket_addr);
 
-        let background_runtime = spikard_http::BackgroundRuntime::start(background_config.clone()).await;
-        crate::background::install_handle(background_runtime.handle());
+            let background_runtime = spikard_http::BackgroundRuntime::start(background_config.clone()).await;
+            crate::background::install_handle(background_runtime.handle());
 
-        let serve_result = axum::serve(listener, app_router).await;
+            let serve_result = axum::serve(listener, app_router).await;
 
-        crate::background::clear_handle();
+            crate::background::clear_handle();
 
-        if let Err(err) = background_runtime.shutdown().await {
-            warn!("Failed to drain background tasks during shutdown: {:?}", err);
-        }
+            if let Err(err) = background_runtime.shutdown().await {
+                warn!("Failed to drain background tasks during shutdown: {:?}", err);
+            }
 
-        if let Err(e) = serve_result {
-            error!("Server error: {}", e);
-        }
-    });
+            serve_result.map_err(|e| format!("Server error: {e}"))?;
+            Ok::<(), String>(())
+        })
+        .map_err(|msg| Error::new(ruby.exception_runtime_error(), msg))?;
 
     Ok(())
 }

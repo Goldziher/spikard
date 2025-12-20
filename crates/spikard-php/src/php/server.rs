@@ -458,10 +458,12 @@ impl PhpServer {
         for route in &self.routes {
             let method = route.method.parse().unwrap_or(Method::Get);
 
-            let handler_zval = self
-                .handlers
-                .get(route.handler_index)
-                .expect("handler index should be valid");
+            let handler_zval = self.handlers.get(route.handler_index).ok_or_else(|| {
+                format!(
+                    "Invalid handler index {} for route {} {}",
+                    route.handler_index, route.method, route.path
+                )
+            })?;
 
             let handler = PhpHandler::register_from_zval(
                 handler_zval,

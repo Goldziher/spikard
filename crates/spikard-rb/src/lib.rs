@@ -45,7 +45,6 @@ use magnus::value::{InnerValue, Opaque};
 use magnus::{
     Error, Module, RArray, RHash, RString, Ruby, TryConvert, Value, function, gc::Marker, method, r_hash::ForEach,
 };
-use once_cell::sync::Lazy;
 use serde_json::Value as JsonValue;
 use spikard_http::testing::{
     MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
@@ -59,7 +58,6 @@ use std::io;
 use std::mem;
 use std::pin::Pin;
 use std::sync::Arc;
-use tokio::runtime::{Builder, Runtime};
 
 use crate::config::extract_server_config;
 use crate::conversion::{extract_files, problem_to_json};
@@ -67,13 +65,6 @@ use crate::integration::build_dependency_container;
 use crate::metadata::{build_route_metadata, ruby_value_to_json};
 use crate::request::NativeRequest;
 use crate::runtime::{normalize_route_metadata, run_server};
-
-static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("Failed to initialise global Tokio runtime")
-});
 
 #[derive(Default)]
 #[magnus::wrap(class = "Spikard::Native::TestClient", free_immediately, mark)]
@@ -171,12 +162,12 @@ struct NativeDependencyRegistry {
 
 impl StreamingResponsePayload {
     fn into_response(self) -> Result<HandlerResponse, Error> {
-        let ruby = match Ruby::get() {
-            Ok(r) => r,
-            Err(_) => {
-                panic!("Ruby VM became unavailable during streaming response construction");
-            }
-        };
+        let ruby = Ruby::get().map_err(|_| {
+            Error::new(
+                magnus::exception::runtime_error(),
+                "Ruby VM became unavailable during streaming response construction",
+            )
+        })?;
 
         let status = StatusCode::from_u16(self.status).map_err(|err| {
             Error::new(
@@ -596,7 +587,8 @@ impl NativeTestClient {
             );
         }
 
-        let http_server = GLOBAL_RUNTIME
+        let runtime = crate::server::global_runtime(ruby)?;
+        let http_server = runtime
             .block_on(async { TestServer::new(router.clone()) })
             .map_err(|err| {
                 Error::new(
@@ -609,7 +601,7 @@ impl NativeTestClient {
             transport: Some(Transport::HttpRandomPort),
             ..Default::default()
         };
-        let transport_server = GLOBAL_RUNTIME
+        let transport_server = runtime
             .block_on(async { TestServer::new_with_config(router, ws_config) })
             .map_err(|err| {
                 Error::new(
@@ -642,7 +634,8 @@ impl NativeTestClient {
 
         let request_config = parse_request_config(ruby, options)?;
 
-        let response = GLOBAL_RUNTIME
+        let runtime = crate::server::global_runtime(ruby)?;
+        let response = runtime
             .block_on(execute_request(
                 inner.http_server.clone(),
                 http_method,
@@ -674,10 +667,10 @@ impl NativeTestClient {
 
         drop(inner_borrow);
 
-        let handle =
-            GLOBAL_RUNTIME.spawn(async move { spikard_http::testing::connect_websocket(&server, &path).await });
+        let runtime = crate::server::global_runtime(ruby)?;
+        let handle = runtime.spawn(async move { spikard_http::testing::connect_websocket(&server, &path).await });
 
-        let ws = GLOBAL_RUNTIME.block_on(async {
+        let ws = runtime.block_on(async {
             handle
                 .await
                 .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("WebSocket task failed: {}", e)))
@@ -693,7 +686,8 @@ impl NativeTestClient {
             .as_ref()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
 
-        let response = GLOBAL_RUNTIME
+        let runtime = crate::server::global_runtime(ruby)?;
+        let response = runtime
             .block_on(async {
                 let axum_response = inner.transport_server.get(&path).await;
                 snapshot_response(axum_response).await
@@ -1593,7 +1587,6 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use serde_json::json;
 
     /// Test that NativeBuiltResponse can extract parts safely
@@ -1676,7 +1669,7 @@ mod tests {
     /// Test global runtime initialization
     #[test]
     fn test_global_runtime_initialization() {
-        let _ = &*GLOBAL_RUNTIME;
+        assert!(crate::server::global_runtime_raw().is_ok());
     }
 
     /// Test path normalization logic for routes

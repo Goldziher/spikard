@@ -357,21 +357,20 @@ impl PythonHandler {
                     let req_obj = Py::new(py, PyHandlerRequest::new(request_data.clone()))?;
                     handler_obj.call1((req_obj,))?
                 } else if body_only_handler
-                    && request_data.raw_body.is_some()
                     && is_json_content_type(&request_data.headers)
                     && let Some(decoder) = msgspec_body_decoder.as_ref()
                 {
-                    let raw = request_data.raw_body.as_ref().unwrap();
+                    let raw = request_data.raw_body.as_deref().ok_or_else(|| {
+                        pyo3::exceptions::PyRuntimeError::new_err("Missing raw body bytes for JSON request")
+                    })?;
                     let decoded = decoder
                         .bind(py)
                         .call_method1("decode", (pyo3::types::PyBytes::new(py, raw),))?;
                     handler_obj.call1((decoded,))?
-                } else if body_only_handler
-                    && request_data.raw_body.is_some()
-                    && is_json_content_type(&request_data.headers)
-                    && !needs_param_conversion
-                {
-                    let raw = request_data.raw_body.as_ref().unwrap();
+                } else if body_only_handler && is_json_content_type(&request_data.headers) && !needs_param_conversion {
+                    let raw = request_data.raw_body.as_deref().ok_or_else(|| {
+                        pyo3::exceptions::PyRuntimeError::new_err("Missing raw body bytes for JSON request")
+                    })?;
                     handler_obj.call1((pyo3::types::PyBytes::new(py, raw),))?
                 } else {
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
@@ -439,21 +438,23 @@ impl PythonHandler {
                         let req_obj = Py::new(py, PyHandlerRequest::new(request_data_for_sync))?;
                         handler_obj.call1((req_obj,))?
                     } else if body_only_handler
-                        && request_data_for_sync.raw_body.is_some()
                         && is_json_content_type(&request_data_for_sync.headers)
                         && let Some(decoder) = msgspec_body_decoder.as_ref()
                     {
-                        let raw = request_data_for_sync.raw_body.as_ref().unwrap();
+                        let raw = request_data_for_sync.raw_body.as_deref().ok_or_else(|| {
+                            pyo3::exceptions::PyRuntimeError::new_err("Missing raw body bytes for JSON request")
+                        })?;
                         let decoded = decoder
                             .bind(py)
                             .call_method1("decode", (pyo3::types::PyBytes::new(py, raw),))?;
                         handler_obj.call1((decoded,))?
                     } else if body_only_handler
-                        && request_data_for_sync.raw_body.is_some()
                         && is_json_content_type(&request_data_for_sync.headers)
                         && !needs_param_conversion
                     {
-                        let raw = request_data_for_sync.raw_body.as_ref().unwrap();
+                        let raw = request_data_for_sync.raw_body.as_deref().ok_or_else(|| {
+                            pyo3::exceptions::PyRuntimeError::new_err("Missing raw body bytes for JSON request")
+                        })?;
                         handler_obj.call1((pyo3::types::PyBytes::new(py, raw),))?
                     } else {
                         let kwargs = if let Some(ref validated) = validated_params_for_task {

@@ -58,7 +58,11 @@ impl PyHandlerRequest {
 
         let obj = dict.into_any().unbind();
         let _ = self.cached_path_params.set(obj);
-        Ok(self.cached_path_params.get().expect("set above").bind(py).clone())
+        let obj = self
+            .cached_path_params
+            .get()
+            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to cache path_params"))?;
+        Ok(obj.bind(py).clone())
     }
 
     #[getter]
@@ -80,7 +84,11 @@ impl PyHandlerRequest {
 
         let obj = py_value.unbind();
         let _ = self.cached_query_params.set(obj);
-        Ok(self.cached_query_params.get().expect("set above").bind(py).clone())
+        let obj = self
+            .cached_query_params
+            .get()
+            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to cache query_params"))?;
+        Ok(obj.bind(py).clone())
     }
 
     #[getter]
@@ -96,7 +104,11 @@ impl PyHandlerRequest {
 
         let obj = dict.into_any().unbind();
         let _ = self.cached_headers.set(obj);
-        Ok(self.cached_headers.get().expect("set above").bind(py).clone())
+        let obj = self
+            .cached_headers
+            .get()
+            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to cache headers"))?;
+        Ok(obj.bind(py).clone())
     }
 
     #[getter]
@@ -112,7 +124,11 @@ impl PyHandlerRequest {
 
         let obj = dict.into_any().unbind();
         let _ = self.cached_cookies.set(obj);
-        Ok(self.cached_cookies.get().expect("set above").bind(py).clone())
+        let obj = self
+            .cached_cookies
+            .get()
+            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to cache cookies"))?;
+        Ok(obj.bind(py).clone())
     }
 
     #[getter]
@@ -135,7 +151,11 @@ impl PyHandlerRequest {
 
         let obj = body_obj.unbind();
         let _ = self.cached_body.set(obj);
-        Ok(self.cached_body.get().expect("set above").bind(py).clone())
+        let obj = self
+            .cached_body
+            .get()
+            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to cache body"))?;
+        Ok(obj.bind(py).clone())
     }
 
     /// Expose raw body bytes when available.

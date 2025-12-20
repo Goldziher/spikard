@@ -11,7 +11,7 @@ use magnus::prelude::*;
 use magnus::{Error, RHash, Ruby, TryConvert, Value, r_hash::ForEach};
 use spikard_http::{Handler, Route, RouteMetadata, SchemaRegistry, Server};
 use std::sync::Arc;
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 
 /// Start the Spikard HTTP server from Ruby
 ///
@@ -269,28 +269,29 @@ pub fn run_server(
 
     let background_config = config.background_tasks.clone();
 
-    runtime.block_on(async move {
-        let listener = tokio::net::TcpListener::bind(socket_addr)
-            .await
-            .unwrap_or_else(|_| panic!("Failed to bind to {}", socket_addr));
+    runtime
+        .block_on(async move {
+            let listener = tokio::net::TcpListener::bind(socket_addr)
+                .await
+                .map_err(|err| format!("Failed to bind to {socket_addr}: {err}"))?;
 
-        info!("Server listening on {}", socket_addr);
+            info!("Server listening on {}", socket_addr);
 
-        let background_runtime = spikard_http::BackgroundRuntime::start(background_config.clone()).await;
-        crate::background::install_handle(background_runtime.handle());
+            let background_runtime = spikard_http::BackgroundRuntime::start(background_config.clone()).await;
+            crate::background::install_handle(background_runtime.handle());
 
-        let serve_result = axum::serve(listener, app_router).await;
+            let serve_result = axum::serve(listener, app_router).await;
 
-        crate::background::clear_handle();
+            crate::background::clear_handle();
 
-        if let Err(err) = background_runtime.shutdown().await {
-            warn!("Failed to drain background tasks during shutdown: {:?}", err);
-        }
+            if let Err(err) = background_runtime.shutdown().await {
+                warn!("Failed to drain background tasks during shutdown: {:?}", err);
+            }
 
-        if let Err(e) = serve_result {
-            error!("Server error: {}", e);
-        }
-    });
+            serve_result.map_err(|e| format!("Server error: {e}"))?;
+            Ok::<(), String>(())
+        })
+        .map_err(|msg| Error::new(ruby.exception_runtime_error(), msg))?;
 
     Ok(())
 }

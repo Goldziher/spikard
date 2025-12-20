@@ -23,7 +23,6 @@ use std::sync::Arc;
 
 use crate::conversion::{parse_request_config, response_to_ruby};
 use crate::handler::RubyHandler;
-use crate::server::GLOBAL_RUNTIME;
 
 /// Request configuration built from Ruby options hash.
 pub struct RequestConfig {
@@ -196,7 +195,8 @@ impl NativeTestClient {
             );
         }
 
-        let http_server = GLOBAL_RUNTIME
+        let runtime = crate::server::global_runtime(ruby)?;
+        let http_server = runtime
             .block_on(async { TestServer::new(router.clone()) })
             .map_err(|err| {
                 Error::new(
@@ -209,7 +209,7 @@ impl NativeTestClient {
             transport: Some(Transport::HttpRandomPort),
             ..Default::default()
         };
-        let transport_server = GLOBAL_RUNTIME
+        let transport_server = runtime
             .block_on(async { TestServer::new_with_config(router, ws_config) })
             .map_err(|err| {
                 Error::new(
@@ -251,7 +251,8 @@ impl NativeTestClient {
 
         let request_config = parse_request_config(ruby, options)?;
 
-        let response = GLOBAL_RUNTIME
+        let runtime = crate::server::global_runtime(ruby)?;
+        let response = runtime
             .block_on(execute_request(
                 inner.http_server.clone(),
                 http_method,
@@ -285,10 +286,10 @@ impl NativeTestClient {
 
         drop(inner_borrow);
 
-        let handle =
-            GLOBAL_RUNTIME.spawn(async move { spikard_http::testing::connect_websocket(&server, &path).await });
+        let runtime = crate::server::global_runtime(ruby)?;
+        let handle = runtime.spawn(async move { spikard_http::testing::connect_websocket(&server, &path).await });
 
-        let ws = GLOBAL_RUNTIME.block_on(async {
+        let ws = runtime.block_on(async {
             handle
                 .await
                 .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("WebSocket task failed: {}", e)))
@@ -305,7 +306,8 @@ impl NativeTestClient {
             .as_ref()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
 
-        let response = GLOBAL_RUNTIME
+        let runtime = crate::server::global_runtime(ruby)?;
+        let response = runtime
             .block_on(async {
                 let axum_response = inner.transport_server.get(&path).await;
                 snapshot_response(axum_response).await

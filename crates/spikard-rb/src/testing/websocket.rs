@@ -6,8 +6,6 @@ use serde_json::Value as JsonValue;
 use spikard_http::testing::{WebSocketConnection as RustWebSocketConnection, WebSocketMessage as RustWebSocketMessage};
 use std::cell::RefCell;
 
-use crate::server::GLOBAL_RUNTIME;
-
 /// Ruby wrapper for WebSocket test client
 #[derive(Default)]
 #[magnus::wrap(class = "Spikard::Native::WebSocketTestConnection", free_immediately)]
@@ -30,7 +28,8 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(magnus::exception::runtime_error(), "WebSocket closed"))?;
 
-        GLOBAL_RUNTIME.block_on(async {
+        let runtime = crate::server::global_runtime_or_err()?;
+        runtime.block_on(async {
             ws.send_text(text).await;
         });
 
@@ -45,7 +44,8 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "WebSocket closed"))?;
 
-        GLOBAL_RUNTIME.block_on(async {
+        let runtime = crate::server::global_runtime(ruby)?;
+        runtime.block_on(async {
             ws.send_json(&json_value).await;
         });
 
@@ -59,7 +59,8 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(magnus::exception::runtime_error(), "WebSocket closed"))?;
 
-        let text = GLOBAL_RUNTIME.block_on(async { ws.receive_text().await });
+        let runtime = crate::server::global_runtime_or_err()?;
+        let text = runtime.block_on(async { ws.receive_text().await });
 
         Ok(text)
     }
@@ -71,7 +72,8 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "WebSocket closed"))?;
 
-        let json_value: JsonValue = GLOBAL_RUNTIME.block_on(async { ws.receive_json().await });
+        let runtime = crate::server::global_runtime(ruby)?;
+        let json_value: JsonValue = runtime.block_on(async { ws.receive_json().await });
 
         json_to_ruby(ruby, &json_value)
     }
@@ -83,7 +85,8 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "WebSocket closed"))?;
 
-        let bytes = GLOBAL_RUNTIME.block_on(async { ws.receive_bytes().await });
+        let runtime = crate::server::global_runtime(ruby)?;
+        let bytes = runtime.block_on(async { ws.receive_bytes().await });
 
         Ok(ruby.str_from_slice(&bytes).as_value())
     }
@@ -95,7 +98,8 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "WebSocket closed"))?;
 
-        let msg = GLOBAL_RUNTIME.block_on(async { ws.receive_message().await });
+        let runtime = crate::server::global_runtime(ruby)?;
+        let msg = runtime.block_on(async { ws.receive_message().await });
 
         let ws_msg = WebSocketMessage::new(msg);
         Ok(ruby.obj_wrap(ws_msg).as_value())
