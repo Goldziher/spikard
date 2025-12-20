@@ -19,6 +19,11 @@ fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) ->
     system.refresh_all();
 
     let root = Pid::from_u32(root_pid);
+    let needle = needle.to_lowercase();
+    let root_matches = system
+        .process(root)
+        .map(|proc_| proc_.name().to_string_lossy().to_lowercase().contains(&needle))
+        .unwrap_or(false);
 
     let mut children: std::collections::HashMap<Pid, Vec<Pid>> = std::collections::HashMap::new();
     for (&pid, proc_) in system.processes() {
@@ -27,7 +32,6 @@ fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) ->
         }
     }
 
-    let needle = needle.to_lowercase();
     let mut queue: std::collections::VecDeque<(Pid, usize)> = std::collections::VecDeque::new();
     queue.push_back((root, 0));
 
@@ -38,7 +42,10 @@ fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) ->
 
         if let Some(proc_) = system.process(pid) {
             let name = proc_.name().to_string_lossy().to_lowercase();
-            if name.contains(&needle) {
+            // Avoid selecting the root process when it's just a wrapper (e.g. `pnpm`/`uv`)
+            // that happens to share the runtime name. If no matching descendant exists,
+            // we'll fall back to the root PID after traversal.
+            if depth > 0 && name.contains(&needle) {
                 return Some(pid.as_u32());
             }
         }
@@ -50,7 +57,7 @@ fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) ->
         }
     }
 
-    None
+    root_matches.then_some(root_pid)
 }
 
 /// Unified profiler handle for different languages
