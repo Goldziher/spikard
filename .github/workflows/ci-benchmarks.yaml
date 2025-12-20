@@ -258,18 +258,6 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/robyn-raw
 
-      - name: Allow py-spy ptrace
-        run: |
-          sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for py-spy" >&2; true; }
-
-      - name: Install perf
-        run: |
-          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
-
-      - name: Allow perf profiling
-        run: |
-          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
-
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -279,7 +267,6 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --profiler perf \
             --output results/robyn-raw/profile.json
 
       - name: Upload benchmark results
@@ -320,18 +307,6 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/robyn-dto
 
-      - name: Allow py-spy ptrace
-        run: |
-          sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for py-spy" >&2; true; }
-
-      - name: Install perf
-        run: |
-          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
-
-      - name: Allow perf profiling
-        run: |
-          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
-
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -341,7 +316,6 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --profiler perf \
             --output results/robyn-dto/profile.json
 
       - name: Upload benchmark results
@@ -605,6 +579,68 @@ jobs:
         with:
           name: benchmark-results-spikard-node
           path: results/spikard-node/
+          retention-days: 30
+
+  bench-typescript-frameworks:
+    name: Benchmark TypeScript (${{ matrix.framework }})
+    runs-on: ubuntu-latest
+    needs: build-harness
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - express-raw
+          - express-dto
+          - fastify-raw
+          - fastify-dto
+          - hono-raw
+          - hono-dto
+          - elysia-dto
+          - morojs-dto
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download benchmark tools
+        uses: actions/download-artifact@v7
+        with:
+          name: bench-tools
+          path: ~/.cargo/bin
+
+      - name: Make benchmark tools executable
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
+
+      - name: Setup Node Workspace
+        uses: ./.github/actions/setup-node-workspace
+        with:
+          node-version: "24"
+
+      - name: Setup Bun (for Elysia)
+        if: matrix.framework == 'elysia-dto'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.22"
+
+      - name: Create results directory
+        run: mkdir -p results/${{ matrix.framework }}
+
+      - name: Run benchmarks
+        run: |
+          benchmark-harness profile \
+            --framework "${{ matrix.framework }}" \
+            --app-dir "tools/benchmark-harness/apps/${{ matrix.framework }}" \
+            --suite "$BENCH_SUITE" \
+            --duration "$BENCH_DURATION" \
+            --concurrency "$BENCH_CONCURRENCY" \
+            --warmup "$BENCH_WARMUP" \
+            --output "results/${{ matrix.framework }}/profile.json"
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: benchmark-results-${{ matrix.framework }}
+          path: results/${{ matrix.framework }}/
           retention-days: 30
 
   bench-spikard-ruby:
