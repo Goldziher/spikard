@@ -124,8 +124,7 @@ def _handler_metadata(
     try:
         type_hints = get_type_hints(handler_func)
     except (AttributeError, NameError, TypeError, ValueError):
-        _HANDLER_METADATA_CACHE[cache_key] = (None, None, None)
-        return None, None, None
+        type_hints = None
 
     try:
         sig = inspect.signature(handler_func)

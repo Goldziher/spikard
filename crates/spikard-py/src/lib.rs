@@ -7,6 +7,7 @@ pub mod conversion;
 #[cfg(feature = "di")]
 pub mod di;
 pub mod handler;
+mod handler_request;
 pub mod lifecycle;
 pub mod request;
 pub mod response;
@@ -787,6 +788,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
 #[pymodule]
 fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<request::PyRequest>()?;
+    m.add_class::<handler_request::PyHandlerRequest>()?;
     m.add_class::<response::Response>()?;
     m.add_class::<response::StreamingResponse>()?;
     m.add_class::<testing::client::TestClient>()?;

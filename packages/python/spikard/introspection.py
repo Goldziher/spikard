@@ -49,7 +49,7 @@ def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) 
         path_param_names = set(re.findall(r"\{(\w+)\}", path))
 
     sig = inspect.signature(func)
-    params_list = [p for p in sig.parameters.values() if p.name not in ("self", "cls")]
+    params_list = [p for p in sig.parameters.values() if p.name not in ("self", "cls", "request", "req")]
     first_param_is_body = False
     if params_list:
         first_param_name = params_list[0].name
@@ -62,6 +62,8 @@ def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) 
     schema: dict[str, Any] = {"type": "object", "properties": {}, "required": []}
 
     for idx, (param_name, field_def) in enumerate(parsed_sig.parameters.items()):
+        if param_name in {"request", "req"}:
+            continue
         if idx == 0 and (first_param_is_body or param_name in {"body", "_body"}):
             continue
 

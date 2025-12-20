@@ -88,7 +88,7 @@ class Spikard:
             sig = inspect.signature(func)
             wrapped_func = func
 
-            standard_params = {"self", "cls", "path_params", "query_params", "headers", "cookies"}
+            standard_params = {"self", "cls", "request", "req", "path_params", "query_params", "headers", "cookies"}
             potential_dependencies = [param_name for param_name in sig.parameters if param_name not in standard_params]
 
             request_bound_params = set()
