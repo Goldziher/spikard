@@ -326,10 +326,15 @@ impl ProfileRunner {
 
         let url = format!("{}/__benchmark__/flush-profile", server.base_url);
         for attempt in 1..=5 {
-            if let Ok(resp) = client.get(&url).send().await
-                && resp.status().is_success()
-            {
-                return;
+            if let Ok(resp) = client.get(&url).send().await {
+                if resp.status().is_success() {
+                    return;
+                }
+                if resp.status() == reqwest::StatusCode::NOT_FOUND
+                    || resp.status() == reqwest::StatusCode::METHOD_NOT_ALLOWED
+                {
+                    return;
+                }
             }
             if attempt < 5 {
                 tokio::time::sleep(std::time::Duration::from_millis(250 * attempt)).await;

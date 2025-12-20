@@ -12,6 +12,5 @@ classifiers = [
 ]
 dependencies = [
   "msgspec>=0.20",
-  "pyinstrument>=5.1.1",
   "robyn>=0.72.2",
 ]
