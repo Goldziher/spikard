@@ -24,7 +24,7 @@ async def test_handler_can_accept_request_object() -> None:
     app = Spikard()
 
     @app.post("/items/{id}")
-    async def handler(request: HandlerRequest):
+    async def handler(request: HandlerRequest) -> dict[str, object]:
         decoded: dict[str, object] = msgspec.json.decode(request.body, type=dict[str, object])
 
         name = decoded.get("name")

@@ -40,6 +40,7 @@ packages/ruby/.simplecov
 .dSYM/
 .task/
 .venv/
+.venv-codex/
 .vscode/
 .windsurfrules
 /*_TODO.md

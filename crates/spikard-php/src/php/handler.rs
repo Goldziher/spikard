@@ -107,9 +107,10 @@ impl PhpHandler {
 
 impl Handler for PhpHandler {
     fn prefers_raw_json_body(&self) -> bool {
-        // Many PHP handlers (and benchmarks) don't need to inspect the request body.
-        // Avoid eager JSON parsing when the route has no request-body schema attached.
-        true
+        // PHP handlers commonly access `Request::$body` (which is an array/object in PHP),
+        // so parsing JSON once in Rust (and reusing the parsed Value for zval conversion)
+        // is typically cheaper than deferring to a per-request parse in `PhpRequest::__get`.
+        false
     }
 
     fn call(

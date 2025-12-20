@@ -5,104 +5,74 @@
 
 use axum::body::Body;
 use axum::http::{Method, Request, StatusCode};
+use http_body_util::BodyExt;
 use pyo3::prelude::*;
 use serde_json::json;
 use spikard_http::handler_trait::{Handler, RequestData};
 use std::collections::HashMap;
 use std::ffi::CString;
-use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
+use std::{process::Command, str};
 
 /// Helper function to initialize Python for tests
 fn init_python() {
-    let package_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../packages/python")
-        .canonicalize()
-        .expect("failed to resolve python package path");
-    let stub_path = ensure_stub_dir();
-    let mut python_paths = vec![stub_path.clone(), package_path];
-    if let Some(current) = std::env::var_os("PYTHONPATH")
-        && !current.is_empty()
-    {
-        python_paths.extend(std::env::split_paths(&current));
-    }
+    static PYTHON_INIT: OnceLock<()> = OnceLock::new();
+    PYTHON_INIT.get_or_init(|| {
+        use _spikard::_spikard as spikard_pymodule;
 
-    let new_pythonpath = std::env::join_paths(python_paths).expect("failed to build PYTHONPATH");
-    unsafe {
-        std::env::set_var("PYTHONPATH", &new_pythonpath);
-    }
-    Python::initialize();
-    let _ = _spikard::init_python_event_loop();
+        let package_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../packages/python")
+            .canonicalize()
+            .expect("failed to resolve python package path");
+        let mut python_paths = vec![package_path];
+        python_paths.extend(python_site_packages_paths());
+        if let Some(current) = std::env::var_os("PYTHONPATH")
+            && !current.is_empty()
+        {
+            python_paths.extend(std::env::split_paths(&current));
+        }
+
+        let new_pythonpath = std::env::join_paths(python_paths).expect("failed to build PYTHONPATH");
+        unsafe {
+            std::env::set_var("PYTHONPATH", &new_pythonpath);
+        }
+
+        pyo3::append_to_inittab!(spikard_pymodule);
+        Python::initialize();
+        let _ = _spikard::init_python_event_loop();
+    });
 }
 
-fn ensure_stub_dir() -> PathBuf {
-    static STUB_DIR: OnceLock<PathBuf> = OnceLock::new();
-    STUB_DIR
-        .get_or_init(|| {
-            let dir = std::env::temp_dir().join("spikard_py_stub");
-            let _ = fs::create_dir_all(&dir);
-            let stub = r#"
-class Response:
-    def __init__(self, status_code: int = 200, body=None, headers=None):
-        self.status_code = status_code
-        self.body = body
-        self.headers = headers or {}
+fn python_site_packages_paths() -> Vec<PathBuf> {
+    let Ok(pyo3_python) = std::env::var("PYO3_PYTHON") else {
+        return Vec::new();
+    };
 
-class StreamingResponse(Response):
-    ...
+    let output = Command::new(pyo3_python)
+        .args([
+            "-c",
+            "import sysconfig\nprint(sysconfig.get_paths().get('purelib',''))\nprint(sysconfig.get_paths().get('platlib',''))",
+        ])
+        .output();
 
-def background_run(_awaitable):
-    # Raise to force Python fallback in background.py
-    raise RuntimeError("stub")
-"#;
-            let _ = fs::write(dir.join("_spikard.py"), stub);
-            let pkg_dir = dir.join("spikard");
-            let _ = fs::create_dir_all(&pkg_dir);
-            let pkg_init = r#"
-class Route:
-    def __init__(self, method, path, handler, body_schema=None, parameter_schema=None, file_params=None, body_param_name=None):
-        self.method = method
-        self.path = path
-        self.handler = handler
-        self.handler_name = getattr(handler, "__name__", "handler")
-        self.request_schema = body_schema
-        self.response_schema = None
-        self.parameter_schema = parameter_schema
-        self.file_params = file_params
-        self.is_async = False
-        self.body_param_name = body_param_name
+    let Ok(output) = output else {
+        return Vec::new();
+    };
 
-class Spikard:
-    def __init__(self):
-        self._routes = []
+    if !output.status.success() {
+        return Vec::new();
+    }
 
-    def register_route(self, method, path, handler, body_schema=None, parameter_schema=None, file_params=None, body_param_name=None):
-        self._routes.append(Route(method, path, handler, body_schema, parameter_schema, file_params, body_param_name))
+    let Ok(stdout) = str::from_utf8(&output.stdout) else {
+        return Vec::new();
+    };
 
-    def get_routes(self):
-        return self._routes
-"#;
-            let _ = fs::write(pkg_dir.join("__init__.py"), pkg_init);
-            let internal_dir = pkg_dir.join("_internal");
-            let _ = fs::create_dir_all(&internal_dir);
-            let _ = fs::write(internal_dir.join("__init__.py"), "");
-            let _ = fs::write(
-                internal_dir.join("converters.py"),
-                "def register_decoder(_decoder):\n    return None\n\ndef clear_decoders():\n    return None\n\ndef convert_params(params, handler_func=None, strict=False):\n    return params\n",
-            );
-
-            let msgspec_stub = r#"
-class Struct:
-    pass
-
-def to_builtins(obj):
-    return dict(getattr(obj, '__dict__', {}))
-"#;
-            let _ = fs::write(dir.join("msgspec.py"), msgspec_stub);
-            dir
-        })
-        .clone()
+    stdout
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(PathBuf::from)
+        .collect()
 }
 
 fn module_from_code<'py>(py: Python<'py>, code: &str, filename: &str, module_name: &str) -> Bound<'py, PyModule> {
@@ -117,6 +87,61 @@ fn module_from_code<'py>(py: Python<'py>, code: &str, filename: &str, module_nam
         module_cstr.as_c_str(),
     )
     .expect("failed to compile inline Python module")
+}
+
+#[tokio::test]
+async fn body_only_handler_uses_decoder_fast_path() {
+    init_python();
+
+    let (py_handler, request_data) = Python::attach(|py| -> PyResult<_> {
+        let module = module_from_code(
+            py,
+            r#"
+import msgspec
+
+class Payload(msgspec.Struct):
+    name: str
+
+def handler(body: Payload):
+    return {"name": body.name}
+"#,
+            "body_only.py",
+            "body_only",
+        );
+        let handler = module.getattr("handler")?.unbind();
+
+        let py_handler = _spikard::handler::PythonHandler::new(handler, false, None, None, Some("body".to_string()));
+
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+        let request_data = RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: json!({}),
+            raw_query_params: Arc::new(HashMap::new()),
+            body: json!(null),
+            raw_body: Some(bytes::Bytes::from_static(br#"{"name":"x"}"#)),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/json/small".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        Ok((py_handler, request_data))
+    })
+    .expect("failed to construct handler");
+
+    let request = Request::builder()
+        .method(Method::POST)
+        .uri("/json/small")
+        .body(Body::empty())
+        .unwrap();
+
+    let response = py_handler.call(request, request_data).await.unwrap();
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let parsed: serde_json::Value = serde_json::from_slice(body.as_ref()).unwrap();
+    assert_eq!(parsed, json!({"name": "x"}));
 }
 
 fn build_python_handler(code: &str, function: &str, is_async: bool) -> Arc<dyn Handler> {
@@ -257,9 +282,8 @@ async fn test_msgspec_struct_response_serialization() {
 import msgspec
 
 class Payload(msgspec.Struct):
-    def __init__(self, x: int, y: str):
-        self.x = x
-        self.y = y
+    x: int
+    y: str
 
 def handler(path_params, query_params, body, headers, cookies):
     return Payload(1, "ok")
@@ -410,9 +434,30 @@ fn test_extract_routes_from_app() {
 
     let route_list = Python::attach(|py| -> PyResult<_> {
         let code = r#"
-from spikard import Spikard
+class Route:
+    def __init__(self, method, path, handler, body_schema=None, parameter_schema=None, file_params=None, body_param_name=None):
+        self.method = method
+        self.path = path
+        self.handler = handler
+        self.handler_name = getattr(handler, "__name__", "handler")
+        self.request_schema = body_schema
+        self.response_schema = None
+        self.parameter_schema = parameter_schema
+        self.file_params = file_params
+        self.is_async = False
+        self.body_param_name = body_param_name
 
-app = Spikard()
+class App:
+    def __init__(self):
+        self._routes = []
+
+    def register_route(self, method, path, handler, body_schema=None, parameter_schema=None, file_params=None, body_param_name=None):
+        self._routes.append(Route(method, path, handler, body_schema, parameter_schema, file_params, body_param_name))
+
+    def get_routes(self):
+        return self._routes
+
+app = App()
 
 def handler1():
     return {"message": "handler1"}
@@ -439,10 +484,6 @@ app.register_route(
     file_params=None
 )
 "#;
-
-        let sys = py.import("sys")?;
-        let sys_path = sys.getattr("path")?;
-        sys_path.call_method1("insert", (0, "packages/python"))?;
 
         let module = module_from_code(py, code, "test_app.py", "test_app");
         let app = module.getattr("app")?;

@@ -54,6 +54,11 @@ jobs:
         with:
           python-version: "3.14"
 
+      - name: Install Python deps for embedded tests
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "msgspec>=0.19" "typing-extensions>=4"
+
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
         with:
@@ -92,6 +97,11 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.14"
+
+      - name: Install Python deps for embedded tests
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "msgspec>=0.19" "typing-extensions>=4"
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
