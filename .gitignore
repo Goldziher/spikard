@@ -44,6 +44,7 @@ packages/ruby/.simplecov
 .windsurfrules
 /*_TODO.md
 [Tt][Oo][Dd][Oo]*
+!examples/schemas/todo-api.openapi.yaml
 __pycache__/
 AGENTS.md
 artifacts/

@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 app = FastAPI(default_response_class=ORJSONResponse)
 
+
 async def _parse_urlencoded(request: Request) -> dict[str, Any]:
     raw = await request.body()
     text = raw.decode("utf-8", errors="replace")

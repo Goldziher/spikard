@@ -1,0 +1,868 @@
+openapi: 3.1.0
+info:
+  title: Todo API
+  version: 1.0.0
+  description: |
+    A comprehensive REST API for managing todos with full CRUD operations.
+
+    Demonstrates core Spikard features:
+    - Request/response validation with JSON Schema
+    - Authentication (Bearer tokens)
+    - Path and query parameter extraction
+    - Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError)
+    - Structured error responses (RFC 9457)
+    - Multiple status codes and response schemas
+    - Rate limiting
+
+  contact:
+    name: Spikard Team
+    url: https://github.com/spikard/spikard
+
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+    variables:
+      protocol:
+        default: https
+
+  - url: http://localhost:8000/v1
+    description: Local development server
+
+tags:
+  - name: Todos
+    description: Todo management operations
+  - name: Health
+    description: Service health checks
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns server status and version information.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  summary: Healthy service
+                  value:
+                    status: ok
+                    version: "1.0.0"
+                    timestamp: "2024-01-15T10:30:00Z"
+      x-spikard-lifecycle:
+        onRequest: Check feature flags
+        onResponse: Add X-Response-Time header
+
+  /todos:
+    get:
+      tags:
+        - Todos
+      summary: List all todos
+      description: |
+        Retrieves a paginated list of todos with optional filtering and sorting.
+
+        **Lifecycle hooks used:**
+        - onRequest: Log request ID
+        - preValidation: Validate query parameters
+        - onResponse: Add pagination headers
+      operationId: listTodos
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          description: Filter by status
+          required: false
+          schema:
+            type: string
+            enum: [pending, completed, archived]
+        - name: sort
+          in: query
+          description: Sort field
+          required: false
+          schema:
+            type: string
+            enum: [created_at, updated_at, title, due_date]
+            default: created_at
+        - name: order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: search
+          in: query
+          description: Search in title and description
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful retrieval of todos
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of todos
+            X-Page-Count:
+              schema:
+                type: integer
+              description: Total number of pages
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: Rate limit cap
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Requests remaining in window
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Unix timestamp when limit resets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodoListResponse'
+              examples:
+                withTodos:
+                  summary: List with todos
+                  value:
+                    todos:
+                      - id: "550e8400-e29b-41d4-a716-446655440000"
+                        title: "Implement Spikard bindings"
+                        description: "Add Python, Node, Ruby bindings"
+                        status: pending
+                        priority: high
+                        due_date: "2024-02-15"
+                        created_at: "2024-01-15T10:30:00Z"
+                        updated_at: "2024-01-15T10:30:00Z"
+                        tags: ["feature", "rust"]
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 1
+                      pages: 1
+                empty:
+                  summary: Empty list
+                  value:
+                    todos: []
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 0
+                      pages: 0
+        '400':
+          description: Bad request - invalid parameters
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidPage:
+                  summary: Invalid page parameter
+                  value:
+                    type: "about:blank"
+                    title: "Bad Request"
+                    status: 400
+                    detail: "Query parameter validation failed"
+                    instance: "/todos?page=invalid"
+                    errors:
+                      - path: "/page"
+                        message: "Must be a positive integer"
+                        code: "INVALID_TYPE"
+        '401':
+          description: Unauthorized - missing or invalid token
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+        '429':
+          description: Too many requests
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until next request allowed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Todos
+      summary: Create a new todo
+      description: |
+        Creates a new todo item with validation.
+
+        **Validation rules:**
+        - title: required, 1-200 chars
+        - description: optional, max 1000 chars
+        - priority: optional, enum [low, medium, high]
+        - due_date: optional, ISO 8601 date
+        - tags: optional, array of strings
+
+        **Lifecycle hooks used:**
+        - preValidation: Validate request body schema
+        - preHandler: Enrich with user context
+        - onResponse: Log creation
+      operationId: createTodo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTodoRequest'
+            examples:
+              minimal:
+                summary: Minimal todo
+                value:
+                  title: "Buy groceries"
+              complete:
+                summary: Complete todo
+                value:
+                  title: "Implement feature X"
+                  description: "Add support for WebSocket connections"
+                  priority: high
+                  due_date: "2024-02-15"
+                  tags: ["feature", "backend"]
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Todo created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+              description: URL of the created resource
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodoResponse'
+              examples:
+                created:
+                  summary: Created todo
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440000"
+                    title: "Implement feature X"
+                    description: "Add support for WebSocket connections"
+                    status: pending
+                    priority: high
+                    due_date: "2024-02-15"
+                    created_at: "2024-01-15T10:30:00Z"
+                    updated_at: "2024-01-15T10:30:00Z"
+                    tags: ["feature", "backend"]
+        '400':
+          description: Bad request - validation failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingTitle:
+                  summary: Missing required field
+                  value:
+                    type: "about:blank"
+                    title: "Validation Error"
+                    status: 422
+                    detail: "Request body validation failed"
+                    instance: "/todos"
+                    errors:
+                      - path: "/title"
+                        message: "Title is required"
+                        code: "REQUIRED"
+                invalidData:
+                  summary: Invalid data format
+                  value:
+                    type: "about:blank"
+                    title: "Validation Error"
+                    status: 422
+                    detail: "Request body validation failed"
+                    instance: "/todos"
+                    errors:
+                      - path: "/title"
+                        message: "Title must be 1-200 characters"
+                        code: "STRING_TOO_LONG"
+                      - path: "/due_date"
+                        message: "Invalid ISO 8601 date format"
+                        code: "INVALID_FORMAT"
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /todos/{id}:
+    parameters:
+      - name: id
+        in: path
+        description: Todo ID (UUID)
+        required: true
+        schema:
+          type: string
+          format: uuid
+        examples:
+          valid:
+            value: "550e8400-e29b-41d4-a716-446655440000"
+
+    get:
+      tags:
+        - Todos
+      summary: Get a todo by ID
+      description: Retrieves a single todo by its UUID.
+      operationId: getTodoById
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Todo found
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Entity tag for caching
+            Cache-Control:
+              schema:
+                type: string
+              description: Cache control directive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodoResponse'
+        '400':
+          description: Invalid todo ID format
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidUUID:
+                  summary: Invalid UUID format
+                  value:
+                    type: "about:blank"
+                    title: "Bad Request"
+                    status: 400
+                    detail: "Path parameter validation failed"
+                    instance: "/todos/not-a-uuid"
+                    errors:
+                      - path: "/id"
+                        message: "Must be a valid UUID"
+                        code: "INVALID_FORMAT"
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+        '404':
+          description: Todo not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+              examples:
+                notFound:
+                  summary: Todo not found
+                  value:
+                    type: "about:blank"
+                    title: "Not Found"
+                    status: 404
+                    detail: "Todo not found"
+                    instance: "/todos/550e8400-e29b-41d4-a716-446655440000"
+
+    put:
+      tags:
+        - Todos
+      summary: Update a todo
+      description: |
+        Updates an existing todo with partial updates supported.
+
+        **Lifecycle hooks used:**
+        - preValidation: Check todo exists
+        - preHandler: Check permissions
+        - onResponse: Log update
+      operationId: updateTodo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTodoRequest'
+            examples:
+              updateTitle:
+                summary: Update title only
+                value:
+                  title: "New title"
+              updateStatus:
+                summary: Mark as completed
+                value:
+                  status: completed
+              fullUpdate:
+                summary: Update multiple fields
+                value:
+                  title: "Updated title"
+                  description: "Updated description"
+                  status: completed
+                  priority: low
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Todo updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodoResponse'
+        '400':
+          description: Bad request or validation failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Access denied
+                  value:
+                    type: "about:blank"
+                    title: "Forbidden"
+                    status: 403
+                    detail: "You do not have permission to update this todo"
+                    instance: "/todos/550e8400-e29b-41d4-a716-446655440000"
+        '404':
+          description: Todo not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+        '409':
+          description: Conflict - todo state changed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                conflict:
+                  summary: Concurrent modification
+                  value:
+                    type: "about:blank"
+                    title: "Conflict"
+                    status: 409
+                    detail: "Todo was modified by another request"
+                    instance: "/todos/550e8400-e29b-41d4-a716-446655440000"
+
+    delete:
+      tags:
+        - Todos
+      summary: Delete a todo
+      description: |
+        Deletes a todo permanently.
+
+        **Lifecycle hooks used:**
+        - preValidation: Check todo exists
+        - preHandler: Check permissions
+        - onResponse: Log deletion
+      operationId: deleteTodo
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Todo deleted successfully
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Todo not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+        '409':
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # Request/Response Schemas
+    HealthResponse:
+      type: object
+      description: Service health status
+      required:
+        - status
+        - version
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, unhealthy]
+          description: Current service status
+        version:
+          type: string
+          pattern: '^\d+\.\d+\.\d+$'
+          description: API version in semver format
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp
+
+    TodoListResponse:
+      type: object
+      description: Paginated list of todos
+      required:
+        - todos
+        - pagination
+      properties:
+        todos:
+          type: array
+          items:
+            $ref: '#/components/schemas/TodoResponse'
+          description: Array of todos
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    TodoResponse:
+      type: object
+      description: A todo item
+      required:
+        - id
+        - title
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Todo title
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          description: Detailed description
+        status:
+          type: string
+          enum: [pending, completed, archived]
+          default: pending
+          description: Current status
+        priority:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+          description: Priority level
+        due_date:
+          type: string
+          format: date
+          nullable: true
+          description: Due date in YYYY-MM-DD format
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          maxItems: 20
+          description: Associated tags
+        created_at:
+          type: string
+          format: date-time
+          description: ISO 8601 creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: ISO 8601 last update timestamp
+        created_by:
+          type: string
+          nullable: true
+          description: User ID who created
+        updated_by:
+          type: string
+          nullable: true
+          description: User ID who last updated
+
+    CreateTodoRequest:
+      type: object
+      description: Request to create a new todo
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Todo title
+        description:
+          type: string
+          maxLength: 1000
+          description: Detailed description
+        priority:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+          description: Priority level
+        due_date:
+          type: string
+          format: date
+          description: Due date in YYYY-MM-DD format
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          maxItems: 20
+          description: Associated tags
+
+    UpdateTodoRequest:
+      type: object
+      description: Request to update a todo (all fields optional)
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Updated title
+        description:
+          type: string
+          maxLength: 1000
+          description: Updated description
+        status:
+          type: string
+          enum: [pending, completed, archived]
+          description: Updated status
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Updated priority
+        due_date:
+          type: string
+          format: date
+          nullable: true
+          description: Updated due date
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          maxItems: 20
+          description: Updated tags
+
+    PaginationMeta:
+      type: object
+      description: Pagination metadata
+      required:
+        - page
+        - limit
+        - total
+        - pages
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Items per page
+        total:
+          type: integer
+          minimum: 0
+          description: Total items
+        pages:
+          type: integer
+          minimum: 0
+          description: Total pages
+
+    # Error Schemas (RFC 9457)
+    ErrorResponse:
+      type: object
+      description: RFC 9457 Problem Details for HTTP APIs
+      required:
+        - type
+        - title
+        - status
+        - detail
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          default: "about:blank"
+          description: URI reference identifying the problem type
+        title:
+          type: string
+          description: Short, human-readable summary
+        status:
+          type: integer
+          minimum: 100
+          maximum: 599
+          description: HTTP status code
+        detail:
+          type: string
+          description: Detailed explanation specific to this occurrence
+        instance:
+          type: string
+          format: uri-reference
+          description: URI reference identifying the specific occurrence
+        errors:
+          type: array
+          description: Validation errors per field
+          items:
+            type: object
+            required:
+              - path
+              - message
+              - code
+            properties:
+              path:
+                type: string
+                description: JSON pointer to the invalid field
+              message:
+                type: string
+                description: Human-readable error message
+              code:
+                type: string
+                enum:
+                  - REQUIRED
+                  - INVALID_TYPE
+                  - STRING_TOO_LONG
+                  - STRING_TOO_SHORT
+                  - INVALID_FORMAT
+                  - INVALID_ENUM
+                  - INVALID_PATTERN
+                  - NUMBER_TOO_LARGE
+                  - NUMBER_TOO_SMALL
+                  - ARRAY_TOO_LONG
+                  - ARRAY_TOO_SHORT
+                description: Machine-readable error code
+
+    AuthErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            title:
+              default: Unauthorized
+            status:
+              default: 401
+            detail:
+              example: "Missing or invalid Authorization header"
+
+    NotFoundResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            title:
+              default: Not Found
+            status:
+              default: 404
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT bearer token for authentication.
+
+        Format: `Authorization: Bearer {token}`
+
+        Token is required for all operations except health check.
+
+security:
+  - bearerAuth: []
