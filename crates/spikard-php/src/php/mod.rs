@@ -8,6 +8,8 @@
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::convert::IntoZval;
+use ext_php_rs::error::Error as ExtPhpError;
+use ext_php_rs::ffi::zend_hash_str_update;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
@@ -39,6 +41,31 @@ pub use testing::{
     PhpHttpTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse, PhpWebSocketTestConnection,
 };
 pub use websocket::{PhpWebSocketHandler, create_websocket_state};
+
+fn map_ext_php_err(e: ExtPhpError) -> PhpException {
+    PhpException::default(e.to_string())
+}
+
+fn php_table_with_capacity(len: usize) -> ZBox<ZendHashTable> {
+    if len == 0 {
+        ZendHashTable::new()
+    } else if len > (u32::MAX as usize) {
+        ZendHashTable::new()
+    } else {
+        ZendHashTable::with_capacity(len as u32)
+    }
+}
+
+fn table_insert_str_fast<V: IntoZval>(table: &mut ZendHashTable, key: &str, value: V) -> PhpResult<()> {
+    // SAFETY:
+    // - `zend_hash_str_update` uses (ptr, len) and does not require NUL termination.
+    // - `key` lives for the duration of this call.
+    // - `val` is a valid Zval owned by Rust; the table takes over after update and we release it.
+    let mut val = value.into_zval(false).map_err(map_ext_php_err)?;
+    unsafe { zend_hash_str_update(table, key.as_ptr().cast::<i8>(), key.len(), &raw mut val) };
+    val.release();
+    Ok(())
+}
 
 /// Background task wrapper to make wrap_function! work
 #[php_function]
@@ -125,29 +152,33 @@ pub fn spikard_parse_json(json: String) -> PhpResult<ZBox<ZendHashTable>> {
 }
 /// Convert a serde_json Value to a ZendHashTable.
 pub fn json_to_php_table(value: &Value) -> PhpResult<ZBox<ZendHashTable>> {
-    let mut table = ZendHashTable::new();
+    let mut table = match value {
+        Value::Object(map) => php_table_with_capacity(map.len()),
+        Value::Array(arr) => php_table_with_capacity(arr.len()),
+        _ => ZendHashTable::new(),
+    };
 
     match value {
         Value::Object(map) => {
             for (k, v) in map {
                 match v {
-                    Value::Null => table.insert(k.as_str(), ())?,
-                    Value::Bool(b) => table.insert(k.as_str(), *b)?,
+                    Value::Null => table_insert_str_fast(&mut table, k.as_str(), ())?,
+                    Value::Bool(b) => table_insert_str_fast(&mut table, k.as_str(), *b)?,
                     Value::Number(n) => {
                         if let Some(i) = n.as_i64() {
-                            table.insert(k.as_str(), i)?;
+                            table_insert_str_fast(&mut table, k.as_str(), i)?;
                         } else if let Some(f) = n.as_f64() {
-                            table.insert(k.as_str(), f)?;
+                            table_insert_str_fast(&mut table, k.as_str(), f)?;
                         }
                     }
-                    Value::String(s) => table.insert(k.as_str(), s.as_str())?,
+                    Value::String(s) => table_insert_str_fast(&mut table, k.as_str(), s.as_str())?,
                     Value::Array(arr) => {
                         let inner = json_array_to_php(arr)?;
-                        table.insert(k.as_str(), inner)?;
+                        table_insert_str_fast(&mut table, k.as_str(), inner)?;
                     }
                     Value::Object(_) => {
                         let inner = json_to_php_table(v)?;
-                        table.insert(k.as_str(), inner)?;
+                        table_insert_str_fast(&mut table, k.as_str(), inner)?;
                     }
                 };
             }
@@ -163,50 +194,49 @@ pub fn json_to_php_table(value: &Value) -> PhpResult<ZBox<ZendHashTable>> {
 
 /// Convert a serde_json Value into a PHP Zval.
 pub fn json_to_zval(value: &Value) -> PhpResult<Zval> {
-    let map_err = |e: ext_php_rs::error::Error| PhpException::default(e.to_string());
     match value {
         Value::Null => Ok(Zval::new()),
-        Value::Bool(b) => b.into_zval(false).map_err(map_err),
+        Value::Bool(b) => b.into_zval(false).map_err(map_ext_php_err),
         Value::Number(n) => {
             if let Some(i) = n.as_i64() {
-                i.into_zval(false).map_err(map_err)
+                i.into_zval(false).map_err(map_ext_php_err)
             } else if let Some(f) = n.as_f64() {
-                f.into_zval(false).map_err(map_err)
+                f.into_zval(false).map_err(map_ext_php_err)
             } else {
                 Ok(Zval::new())
             }
         }
-        Value::String(s) => s.as_str().into_zval(false).map_err(map_err),
+        Value::String(s) => s.as_str().into_zval(false).map_err(map_ext_php_err),
         Value::Array(_) | Value::Object(_) => {
             let table = json_to_php_table(value)?;
-            table.into_zval(false).map_err(map_err)
+            table.into_zval(false).map_err(map_ext_php_err)
         }
     }
 }
 
 /// Convert a JSON array to a ZendHashTable.
 fn json_array_to_php(arr: &[Value]) -> PhpResult<ZBox<ZendHashTable>> {
-    let mut table = ZendHashTable::new();
+    let mut table = php_table_with_capacity(arr.len());
 
     for v in arr {
         match v {
-            Value::Null => table.push(())?,
-            Value::Bool(b) => table.push(*b)?,
+            Value::Null => table.push(()).map_err(map_ext_php_err)?,
+            Value::Bool(b) => table.push(*b).map_err(map_ext_php_err)?,
             Value::Number(n) => {
                 if let Some(i) = n.as_i64() {
-                    table.push(i)?;
+                    table.push(i).map_err(map_ext_php_err)?;
                 } else if let Some(f) = n.as_f64() {
-                    table.push(f)?;
+                    table.push(f).map_err(map_ext_php_err)?;
                 }
             }
-            Value::String(s) => table.push(s.as_str())?,
+            Value::String(s) => table.push(s.as_str()).map_err(map_ext_php_err)?,
             Value::Array(inner_arr) => {
                 let inner = json_array_to_php(inner_arr)?;
-                table.push(inner)?;
+                table.push(inner).map_err(map_ext_php_err)?;
             }
             Value::Object(_) => {
                 let inner = json_to_php_table(v)?;
-                table.push(inner)?;
+                table.push(inner).map_err(map_ext_php_err)?;
             }
         };
     }
