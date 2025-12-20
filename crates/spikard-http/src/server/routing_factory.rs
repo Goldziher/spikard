@@ -144,6 +144,8 @@ impl MethodRouterFactory {
                                         body,
                                         include_raw_query_params,
                                         include_query_params_json,
+                                        include_headers,
+                                        include_cookies,
                                     )
                                         .await?;
                                 let mut req = Request::from_parts(
@@ -173,6 +175,8 @@ impl MethodRouterFactory {
                                         body,
                                         include_raw_query_params,
                                         include_query_params_json,
+                                        include_headers,
+                                        include_cookies,
                                     )
                                         .await?;
                                 let mut req = Request::from_parts(
@@ -202,6 +206,8 @@ impl MethodRouterFactory {
                                         body,
                                         include_raw_query_params,
                                         include_query_params_json,
+                                        include_headers,
+                                        include_cookies,
                                     )
                                         .await?;
                                 let mut req = Request::from_parts(
@@ -375,6 +381,8 @@ impl MethodRouterFactory {
                                         body,
                                         include_raw_query_params,
                                         include_query_params_json,
+                                        include_headers,
+                                        include_cookies,
                                     )
                                         .await?;
                             let mut req = Request::from_parts(
@@ -402,6 +410,8 @@ impl MethodRouterFactory {
                                     body,
                                     include_raw_query_params,
                                     include_query_params_json,
+                                    include_headers,
+                                    include_cookies,
                                 )
                                 .await?;
                             let mut req = Request::from_parts(
@@ -429,6 +439,8 @@ impl MethodRouterFactory {
                                     body,
                                     include_raw_query_params,
                                     include_query_params_json,
+                                    include_headers,
+                                    include_cookies,
                                 )
                                 .await?;
                             let mut req = Request::from_parts(

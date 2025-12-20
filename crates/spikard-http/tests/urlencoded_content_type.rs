@@ -1,46 +1,45 @@
 #![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! Integration coverage for validate_content_type_middleware with urlencoded bodies.
 
+use axum::Router;
+use axum::extract::Extension;
 use axum::http::{HeaderMap, StatusCode};
 use axum::middleware;
 use axum::routing::post;
-use axum::{Extension, Router};
-use spikard_http::middleware::{RouteInfo, RouteRegistry, validate_content_type_middleware};
-use std::collections::HashMap;
-use std::sync::Arc;
+use spikard_http::middleware::PreReadBody;
+use spikard_http::middleware::{RouteInfo, validate_content_type_middleware};
 
-/// Build a router with the content-type middleware and a route registry entry.
-fn build_router(registry: RouteRegistry) -> Router {
+/// Build a router with the content-type middleware and route configuration.
+fn build_router(route_info: RouteInfo) -> Router {
     Router::new()
         .route(
             "/forms",
-            post(|headers: HeaderMap, body: axum::body::Bytes| async move {
-                let content_type = headers
-                    .get(axum::http::header::CONTENT_TYPE)
-                    .and_then(|h| h.to_str().ok())
-                    .unwrap_or_default()
-                    .to_string();
-                let body_str = String::from_utf8(body.to_vec()).unwrap();
-                (
-                    StatusCode::OK,
-                    axum::Json(serde_json::json!({ "content_type": content_type, "body": body_str })),
-                )
-            }),
+            post(
+                |headers: HeaderMap, Extension(pre_read): Extension<PreReadBody>| async move {
+                    let content_type = headers
+                        .get(axum::http::header::CONTENT_TYPE)
+                        .and_then(|h| h.to_str().ok())
+                        .unwrap_or_default()
+                        .to_string();
+                    let body_str = String::from_utf8(pre_read.0.to_vec()).unwrap();
+                    (
+                        StatusCode::OK,
+                        axum::Json(serde_json::json!({ "content_type": content_type, "body": body_str })),
+                    )
+                },
+            ),
         )
-        .layer(Extension(registry))
-        .layer(middleware::from_fn(validate_content_type_middleware))
+        .layer(middleware::from_fn_with_state(
+            route_info,
+            validate_content_type_middleware,
+        ))
 }
 
 #[tokio::test]
 async fn urlencoded_body_is_transformed_to_json() {
-    let registry: RouteRegistry = Arc::new(HashMap::from([(
-        ("POST".to_string(), "/forms".to_string()),
-        RouteInfo {
-            expects_json_body: true,
-        },
-    )]));
-
-    let app = build_router(registry);
+    let app = build_router(RouteInfo {
+        expects_json_body: true,
+    });
     let server = axum_test::TestServer::new(app).expect("start test server");
 
     let response = server
@@ -63,14 +62,9 @@ async fn urlencoded_body_is_transformed_to_json() {
 
 #[tokio::test]
 async fn invalid_charset_on_json_returns_unsupported_media_type() {
-    let registry: RouteRegistry = Arc::new(HashMap::from([(
-        ("POST".to_string(), "/forms".to_string()),
-        RouteInfo {
-            expects_json_body: true,
-        },
-    )]));
-
-    let app = build_router(registry);
+    let app = build_router(RouteInfo {
+        expects_json_body: true,
+    });
     let server = axum_test::TestServer::new(app).expect("start test server");
 
     let response = server

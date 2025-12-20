@@ -33,6 +33,7 @@ futures = "0.3"
 jsonschema.workspace = true
 serde_qs = "0.15"
 lazy_static = "1.5"
+lru = "0.16"
 regex = "1"
 rustc-hash = "2.1"
 urlencoding = "2.1"

@@ -83,6 +83,8 @@ fn create_method_router(
                             body,
                             include_raw_query_params,
                             include_query_params_json,
+                            include_headers,
+                            include_cookies,
                         )
                         .await?;
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
@@ -99,6 +101,8 @@ fn create_method_router(
                             body,
                             include_raw_query_params,
                             include_query_params_json,
+                            include_headers,
+                            include_cookies,
                         )
                         .await?;
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
@@ -115,6 +119,8 @@ fn create_method_router(
                             body,
                             include_raw_query_params,
                             include_query_params_json,
+                            include_headers,
+                            include_cookies,
                         )
                         .await?;
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
@@ -140,6 +146,8 @@ fn create_method_router(
                         body,
                         include_raw_query_params,
                         include_query_params_json,
+                        include_headers,
+                        include_cookies,
                     )
                     .await?;
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
@@ -154,6 +162,8 @@ fn create_method_router(
                         body,
                         include_raw_query_params,
                         include_query_params_json,
+                        include_headers,
+                        include_cookies,
                     )
                     .await?;
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
@@ -168,6 +178,8 @@ fn create_method_router(
                         body,
                         include_raw_query_params,
                         include_query_params_json,
+                        include_headers,
+                        include_cookies,
                     )
                     .await?;
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
@@ -380,23 +392,6 @@ fn build_router_with_handlers_inner(
 ) -> Result<AxumRouter, String> {
     let mut app = AxumRouter::new();
 
-    let mut registry = HashMap::new();
-    for (route, _) in &routes {
-        let axum_path = type_hints::strip_type_hints(&route.path);
-        let axum_path = if axum_path.starts_with('/') {
-            axum_path
-        } else {
-            format!("/{}", axum_path)
-        };
-        registry.insert(
-            (route.method.as_str().to_string(), axum_path),
-            crate::middleware::RouteInfo {
-                expects_json_body: route.expects_json_body,
-            },
-        );
-    }
-    let route_registry: crate::middleware::RouteRegistry = Arc::new(registry);
-
     let mut routes_by_path: HashMap<String, Vec<RouteHandlerPair>> = HashMap::new();
     for (route, handler) in routes {
         routes_by_path
@@ -485,6 +480,13 @@ fn build_router_with_handlers_inner(
                 }
             };
 
+            let method_router = method_router.layer(axum::middleware::from_fn_with_state(
+                crate::middleware::RouteInfo {
+                    expects_json_body: route.expects_json_body,
+                },
+                crate::middleware::validate_content_type_middleware,
+            ));
+
             combined_router = Some(match combined_router {
                 None => method_router,
                 Some(existing) => existing.merge(method_router),
@@ -518,14 +520,9 @@ fn build_router_with_handlers_inner(
         }
     }
 
-    app = app.layer(axum::middleware::from_fn(
-        crate::middleware::validate_content_type_middleware,
-    ));
     if enable_http_trace {
         app = app.layer(TraceLayer::new_for_http());
     }
-
-    app = app.layer(axum::Extension(route_registry));
 
     Ok(app)
 }
