@@ -144,7 +144,11 @@ pub struct RubyHandler {
 impl RubyHandler {
     /// Create a new RubyHandler from a route and handler Proc.
     pub fn new(route: &spikard_http::Route, handler_value: Value, json_module: Value) -> Result<Self, Error> {
-        let upload_file_class = lookup_upload_file_class()?;
+        let upload_file_class = if route.file_params.is_some() {
+            lookup_upload_file_class()?
+        } else {
+            None
+        };
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
@@ -172,7 +176,11 @@ impl RubyHandler {
         json_module: Value,
         route: &spikard_http::Route,
     ) -> Result<Self, Error> {
-        let upload_file_class = lookup_upload_file_class()?;
+        let upload_file_class = if route.file_params.is_some() {
+            lookup_upload_file_class()?
+        } else {
+            None
+        };
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
@@ -451,36 +459,37 @@ fn build_ruby_request(
     let params_value = if let Some(validated) = validated_params {
         json_to_ruby(ruby, validated)?
     } else {
-        build_default_params(ruby, request_data)?
+        build_default_params_from_converted(ruby, path_params, query_value, headers, cookies)?
     };
     hash.aset(ruby.intern("params"), params_value)?;
 
     Ok(hash.as_value())
 }
 
-/// Build default params from request data path/query/headers/cookies.
-fn build_default_params(ruby: &Ruby, request_data: &RequestData) -> Result<Value, Error> {
-    let hash = ruby.hash_new();
+/// Build default params from already converted Ruby values, avoiding double conversion.
+fn build_default_params_from_converted(
+    ruby: &Ruby,
+    path_params: Value,
+    query: Value,
+    headers: Value,
+    cookies: Value,
+) -> Result<Value, Error> {
+    let params = ruby.hash_new();
 
-    for (key, value) in request_data.path_params.as_ref() {
-        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
+    if let Some(hash) = RHash::from_value(path_params) {
+        let _: Value = params.funcall("merge!", (hash,))?;
+    }
+    if let Some(hash) = RHash::from_value(query) {
+        let _: Value = params.funcall("merge!", (hash,))?;
+    }
+    if let Some(hash) = RHash::from_value(headers) {
+        let _: Value = params.funcall("merge!", (hash,))?;
+    }
+    if let Some(hash) = RHash::from_value(cookies) {
+        let _: Value = params.funcall("merge!", (hash,))?;
     }
 
-    if let JsonValue::Object(obj) = &request_data.query_params {
-        for (key, value) in obj {
-            hash.aset(ruby.str_new(key), json_to_ruby(ruby, value)?)?;
-        }
-    }
-
-    for (key, value) in request_data.headers.as_ref() {
-        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
-    }
-
-    for (key, value) in request_data.cookies.as_ref() {
-        hash.aset(ruby.str_new(key), ruby.str_new(value))?;
-    }
-
-    Ok(hash.as_value())
+    Ok(params.as_value())
 }
 
 /// Interpret a Ruby handler response into our response types.
