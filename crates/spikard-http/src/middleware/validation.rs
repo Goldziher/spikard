@@ -83,6 +83,17 @@ pub fn is_json_like(content_type: &HeaderValue) -> bool {
     token.len() >= 5 && token[token.len() - 5..].eq_ignore_ascii_case(b"+json")
 }
 
+/// Fast classification for already-extracted header strings.
+///
+/// This is used in hot paths where headers are stored as `String` values in `RequestData`.
+pub fn is_json_like_str(content_type: &str) -> bool {
+    let token = token_before_semicolon(content_type.as_bytes());
+    if token.eq_ignore_ascii_case(b"application/json") {
+        return true;
+    }
+    token.len() >= 5 && token[token.len() - 5..].eq_ignore_ascii_case(b"+json")
+}
+
 /// Fast classification: is this Content-Type multipart/form-data?
 pub fn is_multipart_form_data(content_type: &HeaderValue) -> bool {
     let token = token_before_semicolon(content_type.as_bytes());
