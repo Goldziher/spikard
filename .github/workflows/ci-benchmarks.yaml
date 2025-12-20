@@ -130,6 +130,14 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/spikard-rust
 
+      - name: Install perf
+        run: |
+          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
+
+      - name: Allow perf profiling
+        run: |
+          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -139,6 +147,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler perf \
             --output results/spikard-rust/profile.json
 
       - name: Upload benchmark results
@@ -560,6 +569,14 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/spikard-node
 
+      - name: Install perf
+        run: |
+          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
+
+      - name: Allow perf profiling
+        run: |
+          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -569,6 +586,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler perf \
             --output results/spikard-node/profile.json
         env:
           SPIKARD_NODE_METRICS_FILE: ${{ github.workspace }}/results/spikard-node/node-metrics.json
@@ -683,6 +701,14 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/spikard-ruby
 
+      - name: Install perf
+        run: |
+          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
+
+      - name: Allow perf profiling
+        run: |
+          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -692,6 +718,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler perf \
             --output results/spikard-ruby/profile.json
         env:
           SPIKARD_RUBY_METRICS_FILE: ${{ github.workspace }}/results/spikard-ruby/ruby-metrics.json
@@ -777,6 +804,14 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/spikard-php
 
+      - name: Install perf
+        run: |
+          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
+
+      - name: Allow perf profiling
+        run: |
+          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -786,6 +821,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler perf \
             --output results/spikard-php/profile.json
 
       - name: Upload benchmark results
@@ -843,6 +879,14 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/spikard-wasm
 
+      - name: Install perf
+        run: |
+          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
+
+      - name: Allow perf profiling
+        run: |
+          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -852,6 +896,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler perf \
             --output results/spikard-wasm/profile.json
         env:
           SPIKARD_WASM_METRICS_FILE: ${{ github.workspace }}/results/spikard-wasm/wasm-metrics.json

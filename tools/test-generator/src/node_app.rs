@@ -965,21 +965,15 @@ fn generate_handler_function(
         route
     ));
     code.push_str(&format!(
-        "async function {}(requestJson: string, context?: HandlerContext): Promise<string> {{\n",
+        "async function {}(requestJson: string, _context?: HandlerContext): Promise<string> {{\n",
         to_camel_case(handler_name)
     ));
     code.push_str("\tconst request = JSON.parse(requestJson);\n");
 
-    let mut uses_body = has_body && ((expected_status == 200 && expected_body.is_none()) || expected_status == 422);
-    if background.is_some() {
-        uses_body = true;
-    }
-    let body_var = if uses_body { "body" } else { "_body" };
+    let body_var = "_body";
     code.push_str(&format!("\tconst {} = request.body ?? null;\n", body_var));
 
-    let uses_params =
-        !params.is_empty() && ((expected_status == 200 && expected_body.is_none()) || expected_status == 422);
-    let params_var = if uses_params { "params" } else { "_params" };
+    let params_var = "_params";
     code.push_str(&format!("\tconst {} = request.params ?? {{}};\n", params_var));
 
     if let Ok(Some(di_cfg)) = DependencyConfig::from_fixture(fixture) {
@@ -987,7 +981,7 @@ fn generate_handler_function(
         for dep_key in &di_cfg.handler_dependencies {
             if seen.insert(dep_key.clone()) {
                 code.push_str(&format!(
-                    "\tconst {} = request.dependencies?.{} ?? null;\n",
+                    "\tconst _{} = request.dependencies?.{} ?? null;\n",
                     dep_key, dep_key
                 ));
             }
@@ -1009,7 +1003,7 @@ fn generate_handler_function(
     }
 
     if let Some(timeout) = metadata.request_timeout.as_ref().and_then(|cfg| cfg.sleep_ms) {
-        code.push_str("\tconst signal = isAbortSignalLike(context?.signal) ? context?.signal : undefined;\n");
+        code.push_str("\tconst signal = isAbortSignalLike(_context?.signal) ? _context?.signal : undefined;\n");
         code.push_str(&format!("\tawait sleep({}, signal);\n", timeout));
     }
 
@@ -2341,7 +2335,7 @@ fn generate_all_dependency_factories_ts(di_config: &DependencyConfig, fixture_id
 
 /// Generate a single dependency factory function for TypeScript
 fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<String> {
-    let factory_name = to_camel_case(&format!("{}_{}", fixture_id, &dep.key));
+    let factory_name = format!("_{}", to_camel_case(&format!("{}_{}", fixture_id, &dep.key)));
     let is_async = dep.is_async_factory();
     let has_cleanup = dep.cleanup;
     let (cleanup_open_event, cleanup_close_event) = cleanup_event_names(&dep.key);
@@ -2354,7 +2348,7 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
             if i > 0 {
                 code.push_str(", ");
             }
-            code.push_str(&to_camel_case(depend_key));
+            code.push_str(&format!("_{}", to_camel_case(depend_key)));
         }
         code.push_str("): AsyncGenerator<unknown, void, unknown> {\n");
         code.push_str(&format!("\t// Factory for {} with cleanup\n", dep.key));
@@ -2388,7 +2382,7 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
             if i > 0 {
                 code.push_str(", ");
             }
-            code.push_str(&to_camel_case(depend_key));
+            code.push_str(&format!("_{}", to_camel_case(depend_key)));
         }
         code.push_str("): Promise<unknown> {\n");
         code.push_str(&format!("\t// Async factory for {}\n", dep.key));
@@ -2415,7 +2409,7 @@ fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<
             if i > 0 {
                 code.push_str(", ");
             }
-            code.push_str(&to_camel_case(depend_key));
+            code.push_str(&format!("_{}", to_camel_case(depend_key)));
         }
         code.push_str("): unknown {\n");
         code.push_str(&format!("\t// Factory for {}\n", dep.key));
@@ -2466,7 +2460,7 @@ fn generate_di_providers_ts(di_config: &DependencyConfig, fixture_id: &str) -> R
                         code.push_str(&format!("\tapp.provide(\"{}\", {});\n", camel_key, value_literal));
                     }
                 } else {
-                    let factory_name = to_camel_case(&format!("{}_{}", fixture_id, &key));
+                    let factory_name = format!("_{}", to_camel_case(&format!("{}_{}", fixture_id, &key)));
                     let mut options = Vec::new();
 
                     if dep.singleton {
