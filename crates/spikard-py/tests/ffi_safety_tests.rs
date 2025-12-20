@@ -139,9 +139,7 @@ fn build_python_handler(code: &str, function_name: &str, is_async: bool) -> Arc<
         let module = module_from_code(py, code, "test.py", "test");
         let handler_fn = module.getattr(function_name)?;
         let handler_py: Py<PyAny> = handler_fn.into();
-        Ok(_spikard::PythonHandler::new(
-            handler_py, is_async, None, None, None, None,
-        ))
+        Ok(_spikard::PythonHandler::new(handler_py, is_async, None, None, None))
     })
     .expect("failed to build Python handler");
 

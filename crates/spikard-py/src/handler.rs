@@ -24,7 +24,7 @@ use std::sync::Arc;
 pub static PYTHON_TASK_LOCALS: OnceCell<TaskLocals> = OnceCell::new();
 
 static CONVERT_PARAMS: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
-static MSGSPEC_JSON_ENCODE: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
+static MSGSPEC_JSON_ENCODE: PyOnceLock<Option<pyo3::Py<pyo3::PyAny>>> = PyOnceLock::new();
 static NEEDS_CONVERSION: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
 static HANDLER_METADATA: PyOnceLock<pyo3::Py<pyo3::PyAny>> = PyOnceLock::new();
 
@@ -62,10 +62,7 @@ fn needs_param_conversion<'py>(py: Python<'py>, handler: Bound<'py, PyAny>) -> P
     func.bind(py).call1((handler,))?.extract::<bool>()
 }
 
-fn handler_param_names<'py>(
-    py: Python<'py>,
-    handler: Bound<'py, PyAny>,
-) -> PyResult<Option<HashSet<String>>> {
+fn handler_param_names<'py>(py: Python<'py>, handler: Bound<'py, PyAny>) -> PyResult<Option<HashSet<String>>> {
     let func = HANDLER_METADATA.get_or_try_init(py, || {
         let converter_module = py.import("spikard._internal.converters")?;
         Ok::<pyo3::Py<pyo3::PyAny>, PyErr>(converter_module.getattr("_handler_metadata")?.unbind())
@@ -89,13 +86,30 @@ fn handler_param_names<'py>(
 fn msgspec_json_encode(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
     let encode = MSGSPEC_JSON_ENCODE.get_or_try_init(py, || {
         let msgspec = py.import("msgspec")?;
-        let json_mod = msgspec.getattr("json")?;
-        Ok::<pyo3::Py<pyo3::PyAny>, PyErr>(json_mod.getattr("encode")?.unbind())
+        let json_mod = match msgspec.getattr("json") {
+            Ok(json_mod) => json_mod,
+            Err(_) => return Ok::<Option<pyo3::Py<pyo3::PyAny>>, PyErr>(None),
+        };
+
+        let encode = match json_mod.getattr("encode") {
+            Ok(encode) => encode,
+            Err(_) => return Ok::<Option<pyo3::Py<pyo3::PyAny>>, PyErr>(None),
+        };
+
+        Ok::<Option<pyo3::Py<pyo3::PyAny>>, PyErr>(Some(encode.unbind()))
     })?;
 
-    let encoded = encode.bind(py).call1((obj,))?;
-    let py_bytes = encoded.cast_into::<pyo3::types::PyBytes>()?;
-    Ok(py_bytes.as_bytes().to_vec())
+    if let Some(encode) = encode {
+        let encoded = encode.bind(py).call1((obj,))?;
+        let py_bytes = encoded.cast_into::<pyo3::types::PyBytes>()?;
+        Ok(py_bytes.as_bytes().to_vec())
+    } else {
+        // Fallback: `msgspec.json` isn't available (e.g. in test stubs), so convert to serde_json
+        // and serialize in Rust.
+        let json_value = python_to_json(py, obj)?;
+        serde_json::to_vec(&json_value)
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to encode JSON: {e}")))
+    }
 }
 
 /// Initialize Python async context once using pyo3_async_runtimes to avoid per-request event loop
@@ -107,6 +121,17 @@ pub fn init_python_event_loop() -> PyResult<()> {
         }
 
         let asyncio = py.import("asyncio")?;
+
+        // Prefer uvloop when available for faster asyncio primitives (notably call_soon_threadsafe),
+        // while remaining fully compatible with standard asyncio when uvloop isn't installed.
+        if let Ok(uvloop) = py.import("uvloop") {
+            if let Ok(policy_type) = uvloop.getattr("EventLoopPolicy") {
+                if let Ok(policy) = policy_type.call0() {
+                    let _ = asyncio.call_method1("set_event_loop_policy", (policy,));
+                }
+            }
+        }
+
         let event_loop = asyncio.call_method0("new_event_loop")?;
 
         let task_locals = TaskLocals::new(event_loop.clone()).copy_context(py)?;
@@ -199,7 +224,9 @@ impl PythonHandler {
         let (needs_param_conversion, handler_params) = Python::attach(|py| {
             let handler_obj = handler.bind(py);
             let needs = needs_param_conversion(py, handler_obj.clone()).unwrap_or(true);
-            let params = handler_param_names(py, handler_obj.clone()).unwrap_or(None).map(Arc::new);
+            let params = handler_param_names(py, handler_obj.clone())
+                .unwrap_or(None)
+                .map(Arc::new);
             (needs, params)
         });
 
@@ -261,7 +288,14 @@ impl PythonHandler {
                         handler_params.as_deref(),
                     )?
                 } else {
-                    request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
+                    request_data_to_py_kwargs(
+                        py,
+                        &request_data,
+                        handler_obj.clone(),
+                        &body_param_name,
+                        needs_param_conversion,
+                        handler_params.as_deref(),
+                    )?
                 };
 
                 let coroutine = if kwargs.is_empty() {
@@ -312,7 +346,14 @@ impl PythonHandler {
                             handler_params.as_deref(),
                         )?
                     } else {
-                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
+                        request_data_to_py_kwargs(
+                            py,
+                            &request_data,
+                            handler_obj.clone(),
+                            &body_param_name,
+                            needs_param_conversion,
+                            handler_params.as_deref(),
+                        )?
                     };
 
                     let py_result = if kwargs.is_empty() {
@@ -580,72 +621,98 @@ fn request_data_to_py_kwargs<'py>(
     request_data: &RequestData,
     handler: Bound<'py, PyAny>,
     body_param_name: &str,
+    needs_param_conversion: bool,
+    handler_params: Option<&HashSet<String>>,
 ) -> PyResult<Bound<'py, PyDict>> {
     let kwargs = PyDict::new(py);
 
-    let path_params = PyDict::new(py);
-    for (key, value) in request_data.path_params.iter() {
-        if let Ok(int_val) = value.parse::<i64>() {
-            path_params.set_item(key, int_val)?;
-        } else if let Ok(float_val) = value.parse::<f64>() {
-            path_params.set_item(key, float_val)?;
-        } else if value == "true" || value == "false" {
-            let bool_val = value == "true";
-            path_params.set_item(key, bool_val)?;
+    if handler_params.is_none() || handler_params.is_some_and(|set| set.contains("path_params")) {
+        let path_params = PyDict::new(py);
+        for (key, value) in request_data.path_params.iter() {
+            if let Ok(int_val) = value.parse::<i64>() {
+                path_params.set_item(key, int_val)?;
+            } else if let Ok(float_val) = value.parse::<f64>() {
+                path_params.set_item(key, float_val)?;
+            } else if value == "true" || value == "false" {
+                let bool_val = value == "true";
+                path_params.set_item(key, bool_val)?;
+            } else {
+                path_params.set_item(key, value)?;
+            }
+        }
+        kwargs.set_item("path_params", path_params)?;
+    }
+
+    if handler_params.is_none() || handler_params.is_some_and(|set| set.contains("query_params")) {
+        if let Value::Object(query_map) = &request_data.query_params {
+            let query_params = PyDict::new(py);
+            for (key, value) in query_map {
+                let py_value = json_to_python(py, value)?;
+                query_params.set_item(key.as_str(), py_value)?;
+            }
+            kwargs.set_item("query_params", query_params)?;
         } else {
-            path_params.set_item(key, value)?;
+            kwargs.set_item("query_params", PyDict::new(py))?;
         }
     }
-    kwargs.set_item("path_params", path_params)?;
 
-    if let Value::Object(query_map) = &request_data.query_params {
-        let query_params = PyDict::new(py);
-        for (key, value) in query_map {
-            let py_value = json_to_python(py, value)?;
-            query_params.set_item(key.as_str(), py_value)?;
+    if handler_params.is_none() || handler_params.is_some_and(|set| set.contains("headers")) {
+        let headers_dict = PyDict::new(py);
+        for (k, v) in request_data.headers.iter() {
+            headers_dict.set_item(k, v)?;
         }
-        kwargs.set_item("query_params", query_params)?;
-    } else {
-        kwargs.set_item("query_params", PyDict::new(py))?;
+        kwargs.set_item("headers", headers_dict)?;
     }
 
-    let headers_dict = PyDict::new(py);
-    for (k, v) in request_data.headers.iter() {
-        headers_dict.set_item(k, v)?;
+    if handler_params.is_none() || handler_params.is_some_and(|set| set.contains("cookies")) {
+        let cookies_dict = PyDict::new(py);
+        for (k, v) in request_data.cookies.iter() {
+            cookies_dict.set_item(k, v)?;
+        }
+        kwargs.set_item("cookies", cookies_dict)?;
     }
-    kwargs.set_item("headers", headers_dict)?;
-
-    let cookies_dict = PyDict::new(py);
-    for (k, v) in request_data.cookies.iter() {
-        cookies_dict.set_item(k, v)?;
-    }
-    kwargs.set_item("cookies", cookies_dict)?;
 
     if let Some(raw_bytes) = &request_data.raw_body {
-        // Always expose raw bytes for handlers which want them (e.g. `body: bytes`).
-        kwargs.set_item("_raw_body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+        // Only expose these internal fields when conversion logic is enabled.
+        if needs_param_conversion {
+            kwargs.set_item("_raw_body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+        }
 
         if is_json_content_type(&request_data.headers) {
             // Keep the fast path for JSON: pass raw bytes through so Python can decode via msgspec.
-            kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
-            kwargs.set_item("_raw_json", true)?;
+            if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+                kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
+            }
+            if needs_param_conversion {
+                kwargs.set_item("_raw_json", true)?;
+            }
         } else if !request_data.body.is_null() {
             // For non-JSON payloads (multipart/urlencoded), the Rust middleware already parsed
             // the body into JSON-like builtins; prefer that over raw bytes.
             let py_body = json_to_python(py, &request_data.body)?;
-            kwargs.set_item(body_param_name, py_body)?;
+            if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+                kwargs.set_item(body_param_name, py_body)?;
+            }
         } else {
-            kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
+            if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+                kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
+            }
         }
     } else {
-        let py_body = json_to_python(py, &request_data.body)?;
-        kwargs.set_item(body_param_name, py_body)?;
+        if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+            let py_body = json_to_python(py, &request_data.body)?;
+            kwargs.set_item(body_param_name, py_body)?;
+        }
     }
 
     #[cfg(feature = "di")]
     inject_di_dependencies(py, &kwargs, request_data)?;
 
-    convert_params(py, kwargs, handler)
+    if needs_param_conversion || handler_params.is_none() {
+        convert_params(py, kwargs, handler)
+    } else {
+        Ok(kwargs)
+    }
 }
 
 // (intentionally no trailing items)
