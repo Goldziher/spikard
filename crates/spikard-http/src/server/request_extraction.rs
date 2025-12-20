@@ -142,17 +142,22 @@ pub async fn create_request_data_with_body(
     body: Body,
     include_raw_query_params: bool,
     include_query_params_json: bool,
+    include_headers: bool,
+    include_cookies: bool,
 ) -> Result<RequestData, (axum::http::StatusCode, String)> {
-    let body_bytes = body
-        .collect()
-        .await
-        .map_err(|e| {
-            (
-                axum::http::StatusCode::BAD_REQUEST,
-                format!("Failed to read body: {}", e),
-            )
-        })?
-        .to_bytes();
+    let body_bytes = if let Some(pre_read) = parts.extensions.get::<crate::middleware::PreReadBody>() {
+        pre_read.0.clone()
+    } else {
+        body.collect()
+            .await
+            .map_err(|e| {
+                (
+                    axum::http::StatusCode::BAD_REQUEST,
+                    format!("Failed to read body: {}", e),
+                )
+            })?
+            .to_bytes()
+    };
 
     let (query_params, raw_query_params) =
         extract_query_params_and_raw(&parts.uri, include_raw_query_params, include_query_params_json);
@@ -161,8 +166,16 @@ pub async fn create_request_data_with_body(
         path_params: Arc::new(path_params),
         query_params,
         raw_query_params: Arc::new(raw_query_params),
-        headers: Arc::new(extract_headers(&parts.headers)),
-        cookies: Arc::new(extract_cookies(&parts.headers)),
+        headers: Arc::new(if include_headers {
+            extract_headers(&parts.headers)
+        } else {
+            HashMap::new()
+        }),
+        cookies: Arc::new(if include_cookies {
+            extract_cookies(&parts.headers)
+        } else {
+            HashMap::new()
+        }),
         body: Value::Null,
         raw_body: if body_bytes.is_empty() { None } else { Some(body_bytes) },
         method: parts.method.as_str().to_string(),
@@ -535,7 +548,7 @@ mod tests {
         let body = Body::empty();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts.0, path_params, body, true, true)
+        let result = create_request_data_with_body(&parts.0, path_params, body, true, true, true, true)
             .await
             .unwrap();
 
@@ -557,7 +570,7 @@ mod tests {
         let (parts, _) = request.into_parts();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts, path_params, request_body, true, true)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -579,7 +592,7 @@ mod tests {
         let (parts, _) = request.into_parts();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts, path_params, request_body, true, true)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -600,7 +613,7 @@ mod tests {
         let (parts, _) = request.into_parts();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts, path_params, request_body, true, true)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -624,7 +637,7 @@ mod tests {
         let (parts, _) = request.into_parts();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts, path_params, request_body, true, true)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -649,7 +662,7 @@ mod tests {
         let (parts, _) = request.into_parts();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts, path_params, request_body, true, true)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -672,7 +685,7 @@ mod tests {
         let mut path_params = HashMap::new();
         path_params.insert("user_id".to_string(), "42".to_string());
 
-        let result = create_request_data_with_body(&parts, path_params, request_body, true, true)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -718,7 +731,7 @@ mod tests {
         });
         let body = Body::from_stream(stream);
 
-        let err = create_request_data_with_body(&parts, HashMap::new(), body, true, true)
+        let err = create_request_data_with_body(&parts, HashMap::new(), body, true, true, true, true)
             .await
             .unwrap_err();
         assert_eq!(err.0, axum::http::StatusCode::BAD_REQUEST);

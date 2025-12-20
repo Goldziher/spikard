@@ -9,14 +9,20 @@ pub mod validation;
 
 use axum::{
     body::Body,
+    extract::State,
     extract::{FromRequest, Multipart, Request},
     http::StatusCode,
     middleware::Next,
     response::{IntoResponse, Response},
 };
 use serde_json::json;
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::cell::RefCell;
+use std::num::NonZeroUsize;
+
+thread_local! {
+    static URLENCODED_JSON_CACHE: RefCell<lru::LruCache<bytes::Bytes, bytes::Bytes>> =
+        RefCell::new(lru::LruCache::new(NonZeroUsize::new(256).expect("non-zero cache size")));
+}
 
 /// Route information for middleware validation
 #[derive(Debug, Clone)]
@@ -25,8 +31,12 @@ pub struct RouteInfo {
     pub expects_json_body: bool,
 }
 
-/// Registry of route metadata indexed by (method, path)
-pub type RouteRegistry = Arc<HashMap<(String, String), RouteInfo>>;
+/// Request extension carrying the already-collected request body.
+///
+/// This avoids double-reading the body stream: middleware can read once for
+/// content-length / syntax checks, and request extraction can reuse the bytes.
+#[derive(Debug, Clone)]
+pub struct PreReadBody(pub bytes::Bytes);
 
 /// Middleware to validate Content-Type headers and related requirements
 ///
@@ -50,7 +60,7 @@ pub type RouteRegistry = Arc<HashMap<(String, String), RouteInfo>>;
 /// # Behavior
 ///
 /// For request methods POST, PUT, and PATCH:
-/// 1. Checks if the route expects a JSON body (via `RouteRegistry`)
+/// 1. Checks if the route expects a JSON body (via route state)
 /// 2. Validates Content-Type headers based on route configuration
 /// 3. Parses the request body according to Content-Type:
 ///    - `multipart/form-data` → JSON (form fields as object properties)
@@ -79,48 +89,35 @@ pub type RouteRegistry = Arc<HashMap<(String, String), RouteInfo>>;
 ///
 /// Coverage: Tested via integration tests (multipart and form parsing tested end-to-end)
 #[cfg(not(tarpaulin_include))]
-pub async fn validate_content_type_middleware(request: Request, next: Next) -> Result<Response, Response> {
+pub async fn validate_content_type_middleware(
+    State(route_info): State<RouteInfo>,
+    request: Request,
+    next: Next,
+) -> Result<Response, Response> {
     use axum::body::to_bytes;
     use axum::http::Request as HttpRequest;
 
-    let (parts, body) = request.into_parts();
+    let (mut parts, body) = request.into_parts();
     let headers = &parts.headers;
-
-    let route_info = parts.extensions.get::<RouteRegistry>().and_then(|registry| {
-        let method = parts.method.as_str();
-        let path = parts.uri.path();
-        registry.get(&(method.to_string(), path.to_string())).cloned()
-    });
 
     let method = &parts.method;
     if method == axum::http::Method::POST || method == axum::http::Method::PUT || method == axum::http::Method::PATCH {
-        if let Some(info) = &route_info
-            && info.expects_json_body
-        {
+        if route_info.expects_json_body {
             validation::validate_json_content_type(headers)?;
         }
 
         validation::validate_content_type_headers(headers, 0)?;
 
-        let (final_parts, final_body) = if let Some(content_type) = headers.get(axum::http::header::CONTENT_TYPE) {
-            if let Ok(content_type_str) = content_type.to_str() {
-                let parsed_mime = content_type_str.parse::<mime::Mime>().ok();
-
-                let is_multipart = parsed_mime
-                    .as_ref()
-                    .map(|mime| mime.type_() == mime::MULTIPART && mime.subtype() == "form-data")
-                    .unwrap_or(false);
-
-                let is_form_urlencoded = parsed_mime
-                    .as_ref()
-                    .map(|mime| mime.type_() == mime::APPLICATION && mime.subtype() == "x-www-form-urlencoded")
-                    .unwrap_or(false);
+        let out_bytes: bytes::Bytes = if let Some(content_type) = headers.get(axum::http::header::CONTENT_TYPE) {
+            if content_type.to_str().is_ok() {
+                let is_multipart = validation::is_multipart_form_data(content_type);
+                let is_form_urlencoded = validation::is_form_urlencoded(content_type);
 
                 if is_multipart {
-                    let mut response_headers = parts.headers.clone();
+                    let mut parse_request = HttpRequest::new(body);
+                    *parse_request.headers_mut() = parts.headers.clone();
 
-                    let request = HttpRequest::from_parts(parts, body);
-                    let multipart = match Multipart::from_request(request, &()).await {
+                    let multipart = match Multipart::from_request(parse_request, &()).await {
                         Ok(mp) => mp,
                         Err(e) => {
                             let error_body = json!({
@@ -150,15 +147,13 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
                         }
                     };
 
-                    response_headers.insert(
+                    validation::validate_content_length(headers, json_bytes.len())?;
+
+                    parts.headers.insert(
                         axum::http::header::CONTENT_TYPE,
                         axum::http::HeaderValue::from_static("application/json"),
                     );
-
-                    let mut new_request = axum::http::Request::new(Body::from(json_bytes));
-                    *new_request.headers_mut() = response_headers;
-
-                    return Ok(next.run(new_request).await);
+                    bytes::Bytes::from(json_bytes)
                 } else if is_form_urlencoded {
                     let body_bytes = match to_bytes(body, usize::MAX).await {
                         Ok(bytes) => bytes,
@@ -172,37 +167,45 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
 
                     validation::validate_content_length(headers, body_bytes.len())?;
 
-                    let json_body = if body_bytes.is_empty() {
-                        serde_json::json!({})
-                    } else {
-                        match urlencoded::parse_urlencoded_to_json(&body_bytes) {
-                            Ok(json_body) => json_body,
-                            Err(e) => {
-                                let error_body = json!({
-                                    "error": format!("Failed to parse URL-encoded form data: {}", e)
-                                });
-                                return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-                            }
-                        }
-                    };
-
-                    let json_bytes = match serde_json::to_vec(&json_body) {
-                        Ok(bytes) => bytes,
-                        Err(e) => {
-                            let error_body = json!({
-                                "error": format!("Failed to serialize URL-encoded form data to JSON: {}", e)
-                            });
-                            return Err((StatusCode::INTERNAL_SERVER_ERROR, axum::Json(error_body)).into_response());
-                        }
-                    };
-
-                    let mut new_parts = parts;
-                    new_parts.headers.insert(
+                    parts.headers.insert(
                         axum::http::header::CONTENT_TYPE,
                         axum::http::HeaderValue::from_static("application/json"),
                     );
+                    if let Some(cached) =
+                        URLENCODED_JSON_CACHE.with(|cache| cache.borrow_mut().get(&body_bytes).cloned())
+                    {
+                        cached
+                    } else {
+                        let json_body = if body_bytes.is_empty() {
+                            serde_json::json!({})
+                        } else {
+                            match urlencoded::parse_urlencoded_to_json(&body_bytes) {
+                                Ok(json_body) => json_body,
+                                Err(e) => {
+                                    let error_body = json!({
+                                        "error": format!("Failed to parse URL-encoded form data: {}", e)
+                                    });
+                                    return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                                }
+                            }
+                        };
 
-                    (new_parts, Body::from(json_bytes))
+                        let json_bytes = match serde_json::to_vec(&json_body) {
+                            Ok(bytes) => bytes,
+                            Err(e) => {
+                                let error_body = json!({
+                                    "error": format!("Failed to serialize URL-encoded form data to JSON: {}", e)
+                                });
+                                return Err((StatusCode::INTERNAL_SERVER_ERROR, axum::Json(error_body)).into_response());
+                            }
+                        };
+
+                        let json_bytes = bytes::Bytes::from(json_bytes);
+                        URLENCODED_JSON_CACHE.with(|cache| {
+                            cache.borrow_mut().put(body_bytes.clone(), json_bytes.clone());
+                        });
+                        json_bytes
+                    }
                 } else {
                     let body_bytes = match to_bytes(body, usize::MAX).await {
                         Ok(bytes) => bytes,
@@ -216,12 +219,8 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
 
                     validation::validate_content_length(headers, body_bytes.len())?;
 
-                    let is_json = parsed_mime
-                        .as_ref()
-                        .map(validation::is_json_content_type)
-                        .unwrap_or(false);
-
-                    if is_json
+                    let should_validate_json = route_info.expects_json_body && validation::is_json_like(content_type);
+                    if should_validate_json
                         && !body_bytes.is_empty()
                         && serde_json::from_slice::<serde_json::Value>(&body_bytes).is_err()
                     {
@@ -231,7 +230,7 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
                         return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
                     }
 
-                    (parts, Body::from(body_bytes))
+                    body_bytes
                 }
             } else {
                 let body_bytes = match to_bytes(body, usize::MAX).await {
@@ -245,8 +244,7 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
                 };
 
                 validation::validate_content_length(headers, body_bytes.len())?;
-
-                (parts, Body::from(body_bytes))
+                body_bytes
             }
         } else {
             let body_bytes = match to_bytes(body, usize::MAX).await {
@@ -260,11 +258,12 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
             };
 
             validation::validate_content_length(headers, body_bytes.len())?;
-
-            (parts, Body::from(body_bytes))
+            body_bytes
         };
 
-        let request = HttpRequest::from_parts(final_parts, final_body);
+        parts.extensions.insert(PreReadBody(out_bytes));
+
+        let request = HttpRequest::from_parts(parts, Body::empty());
         Ok(next.run(request).await)
     } else {
         validation::validate_content_type_headers(headers, 0)?;
@@ -302,63 +301,6 @@ mod tests {
             expects_json_body: false,
         };
         assert_eq!(info.expects_json_body, false);
-    }
-
-    #[test]
-    fn test_route_registry_empty() {
-        let registry: RouteRegistry = Arc::new(std::collections::HashMap::new());
-        assert_eq!(registry.len(), 0);
-    }
-
-    #[test]
-    fn test_route_registry_single_entry() {
-        let mut map = std::collections::HashMap::new();
-        map.insert(
-            ("POST".to_string(), "/api/users".to_string()),
-            RouteInfo {
-                expects_json_body: true,
-            },
-        );
-        let registry: RouteRegistry = Arc::new(map);
-
-        let key = ("POST".to_string(), "/api/users".to_string());
-        assert!(registry.contains_key(&key));
-        assert_eq!(registry[&key].expects_json_body, true);
-    }
-
-    #[test]
-    fn test_route_registry_multiple_entries() {
-        let mut map = std::collections::HashMap::new();
-        map.insert(
-            ("POST".to_string(), "/api/users".to_string()),
-            RouteInfo {
-                expects_json_body: true,
-            },
-        );
-        map.insert(
-            ("GET".to_string(), "/api/users".to_string()),
-            RouteInfo {
-                expects_json_body: false,
-            },
-        );
-        map.insert(
-            ("PUT".to_string(), "/api/users/{id}".to_string()),
-            RouteInfo {
-                expects_json_body: true,
-            },
-        );
-        let registry: RouteRegistry = Arc::new(map);
-
-        assert_eq!(registry.len(), 3);
-    }
-
-    #[test]
-    fn test_route_registry_lookup_missing_route() {
-        let map = std::collections::HashMap::new();
-        let registry: RouteRegistry = Arc::new(map);
-
-        let key = ("POST".to_string(), "/api/users".to_string());
-        assert!(!registry.contains_key(&key));
     }
 
     #[test]

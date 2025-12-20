@@ -1,5 +1,6 @@
 //! JSON schema validation middleware
 
+use axum::http::HeaderValue;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use serde_json::json;
@@ -10,18 +11,131 @@ pub fn is_json_content_type(mime: &mime::Mime) -> bool {
     (mime.type_() == mime::APPLICATION && mime.subtype() == mime::JSON) || mime.suffix() == Some(mime::JSON)
 }
 
+fn trim_ascii_whitespace(bytes: &[u8]) -> &[u8] {
+    let mut start = 0usize;
+    let mut end = bytes.len();
+    while start < end && (bytes[start] == b' ' || bytes[start] == b'\t') {
+        start += 1;
+    }
+    while end > start && (bytes[end - 1] == b' ' || bytes[end - 1] == b'\t') {
+        end -= 1;
+    }
+    &bytes[start..end]
+}
+
+fn token_before_semicolon(bytes: &[u8]) -> &[u8] {
+    let mut i = 0usize;
+    while i < bytes.len() {
+        let b = bytes[i];
+        if b == b';' {
+            break;
+        }
+        i += 1;
+    }
+    trim_ascii_whitespace(&bytes[..i])
+}
+
+fn is_valid_content_type_token(token: &[u8]) -> bool {
+    // Minimal fast validation:
+    // - exactly one '/' separating type and subtype
+    // - no whitespace
+    // - type and subtype are non-empty
+    if token.is_empty() {
+        return false;
+    }
+    let mut slash_pos: Option<usize> = None;
+    for (idx, &b) in token.iter().enumerate() {
+        if b == b' ' || b == b'\t' {
+            return false;
+        }
+        if b == b'/' {
+            if slash_pos.is_some() {
+                return false;
+            }
+            slash_pos = Some(idx);
+        }
+    }
+    match slash_pos {
+        None => false,
+        Some(0) => false,
+        Some(pos) if pos + 1 >= token.len() => false,
+        Some(_) => true,
+    }
+}
+
+fn ascii_contains_ignore_case(haystack: &[u8], needle: &[u8]) -> bool {
+    if needle.is_empty() {
+        return true;
+    }
+    if haystack.len() < needle.len() {
+        return false;
+    }
+    haystack.windows(needle.len()).any(|w| w.eq_ignore_ascii_case(needle))
+}
+
+/// Fast classification: does this Content-Type represent JSON (application/json or +json)?
+pub fn is_json_like(content_type: &HeaderValue) -> bool {
+    let token = token_before_semicolon(content_type.as_bytes());
+    if token.eq_ignore_ascii_case(b"application/json") {
+        return true;
+    }
+    // vendor JSON: application/vnd.foo+json
+    token.len() >= 5 && token[token.len() - 5..].eq_ignore_ascii_case(b"+json")
+}
+
+/// Fast classification: is this Content-Type multipart/form-data?
+pub fn is_multipart_form_data(content_type: &HeaderValue) -> bool {
+    let token = token_before_semicolon(content_type.as_bytes());
+    token.eq_ignore_ascii_case(b"multipart/form-data")
+}
+
+/// Fast classification: is this Content-Type application/x-www-form-urlencoded?
+pub fn is_form_urlencoded(content_type: &HeaderValue) -> bool {
+    let token = token_before_semicolon(content_type.as_bytes());
+    token.eq_ignore_ascii_case(b"application/x-www-form-urlencoded")
+}
+
+fn multipart_has_boundary(content_type: &HeaderValue) -> bool {
+    ascii_contains_ignore_case(content_type.as_bytes(), b"boundary=")
+}
+
+fn json_charset_value(content_type: &HeaderValue) -> Option<&[u8]> {
+    let bytes = content_type.as_bytes();
+    if !ascii_contains_ignore_case(bytes, b"charset=") {
+        return None;
+    }
+
+    // Extract first charset token after "charset=" up to ';' or whitespace.
+    let mut i = 0usize;
+    while i + 8 <= bytes.len() {
+        if bytes[i..i + 8].eq_ignore_ascii_case(b"charset=") {
+            let mut j = i + 8;
+            while j < bytes.len() && (bytes[j] == b' ' || bytes[j] == b'\t') {
+                j += 1;
+            }
+            let start = j;
+            while j < bytes.len() {
+                let b = bytes[j];
+                if b == b';' || b == b' ' || b == b'\t' {
+                    break;
+                }
+                j += 1;
+            }
+            return Some(&bytes[start..j]);
+        }
+        i += 1;
+    }
+    None
+}
+
 /// Validate that Content-Type is JSON-compatible when route expects JSON
 #[allow(clippy::result_large_err)]
 pub fn validate_json_content_type(headers: &HeaderMap) -> Result<(), Response> {
     if let Some(content_type_header) = headers.get(axum::http::header::CONTENT_TYPE)
-        && let Ok(content_type_str) = content_type_header.to_str()
-        && let Ok(parsed_mime) = content_type_str.parse::<mime::Mime>()
+        && content_type_header.to_str().is_ok()
     {
-        let is_json = (parsed_mime.type_() == mime::APPLICATION && parsed_mime.subtype() == mime::JSON)
-            || parsed_mime.suffix() == Some(mime::JSON);
-
-        let is_form = (parsed_mime.type_() == mime::APPLICATION && parsed_mime.subtype() == "x-www-form-urlencoded")
-            || (parsed_mime.type_() == mime::MULTIPART && parsed_mime.subtype() == "form-data");
+        let is_json = is_json_like(content_type_header);
+        let is_form = is_form_urlencoded(content_type_header) || is_multipart_form_data(content_type_header);
 
         if !is_json && !is_form {
             let problem = ProblemDetails::new(
@@ -72,53 +186,56 @@ pub fn validate_content_length(headers: &HeaderMap, actual_size: usize) -> Resul
 /// Validate Content-Type header and related requirements
 #[allow(clippy::result_large_err)]
 pub fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: usize) -> Result<(), Response> {
-    if let Some(content_type_str) = headers
-        .get(axum::http::header::CONTENT_TYPE)
-        .and_then(|h| h.to_str().ok())
-    {
-        let parsed_mime = match content_type_str.parse::<mime::Mime>() {
-            Ok(m) => m,
-            Err(_) => {
-                let error_body = json!({
-                    "error": format!("Invalid Content-Type header: {}", content_type_str)
-                });
-                return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-            }
-        };
+    if let Some(content_type) = headers.get(axum::http::header::CONTENT_TYPE) {
+        if content_type.to_str().is_err() {
+            // Keep legacy behavior: invalid bytes should fail fast.
+            let error_body = json!({
+                "error": "Invalid Content-Type header"
+            });
+            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+        }
 
-        let is_json = is_json_content_type(&parsed_mime);
-        let is_multipart = parsed_mime.type_() == mime::MULTIPART && parsed_mime.subtype() == "form-data";
+        let token = token_before_semicolon(content_type.as_bytes());
+        if !is_valid_content_type_token(token) {
+            let error_body = json!({
+                "error": "Invalid Content-Type header"
+            });
+            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+        }
 
-        if is_multipart && parsed_mime.get_param(mime::BOUNDARY).is_none() {
+        let is_json = is_json_like(content_type);
+        let is_multipart = is_multipart_form_data(content_type);
+
+        if is_multipart && !multipart_has_boundary(content_type) {
             let error_body = json!({
                 "error": "multipart/form-data requires 'boundary' parameter"
             });
             return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
         }
 
-        #[allow(clippy::collapsible_if)]
-        if is_json {
-            if let Some(charset) = parsed_mime.get_param(mime::CHARSET).map(|c| c.as_str()) {
-                if !charset.eq_ignore_ascii_case("utf-8") && !charset.eq_ignore_ascii_case("utf8") {
-                    let problem = ProblemDetails::new(
-                        "https://spikard.dev/errors/unsupported-charset",
-                        "Unsupported Charset",
-                        StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                    )
-                    .with_detail(format!(
-                        "Unsupported charset '{}' for JSON. Only UTF-8 is supported.",
-                        charset
-                    ));
+        if is_json
+            && let Some(charset) = json_charset_value(content_type)
+            && !charset.eq_ignore_ascii_case(b"utf-8")
+            && !charset.eq_ignore_ascii_case(b"utf8")
+        {
+            let charset_str = String::from_utf8_lossy(charset);
+            let problem = ProblemDetails::new(
+                "https://spikard.dev/errors/unsupported-charset",
+                "Unsupported Charset",
+                StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            )
+            .with_detail(format!(
+                "Unsupported charset '{}' for JSON. Only UTF-8 is supported.",
+                charset_str
+            ));
 
-                    let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                    return Err((
-                        StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                        [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
-                        body,
-                    )
-                        .into_response());
-                }
-            }
+            let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+            return Err((
+                StatusCode::UNSUPPORTED_MEDIA_TYPE,
+                [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
+                body,
+            )
+                .into_response());
         }
     }
 
