@@ -4,10 +4,12 @@
 
 use bytes::Bytes;
 use ext_php_rs::boxed::ZBox;
+use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendHashTable;
 use ext_php_rs::types::Zval;
 use serde_json::Value;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -19,17 +21,21 @@ pub struct PhpRequest {
     pub(crate) method: String,
     #[php(prop)]
     pub(crate) path: String,
-    #[php(prop, name = "pathParams")]
     pub(crate) path_params: HashMap<String, String>,
     pub(crate) body: Value,
     pub(crate) files: Value,
     pub(crate) raw_body: Option<Bytes>,
-    #[php(prop, name = "queryParams")]
     pub(crate) raw_query: HashMap<String, Vec<String>>,
-    #[php(prop)]
     pub(crate) headers: HashMap<String, String>,
-    #[php(prop)]
     pub(crate) cookies: HashMap<String, String>,
+
+    // Cached PHP-side conversions (built on-demand via __get).
+    cached_body: RefCell<Option<Zval>>,
+    cached_files: RefCell<Option<Zval>>,
+    cached_headers: RefCell<Option<Zval>>,
+    cached_cookies: RefCell<Option<Zval>>,
+    cached_query_params: RefCell<Option<Zval>>,
+    cached_path_params: RefCell<Option<Zval>>,
 }
 
 #[php_impl]
@@ -98,6 +104,12 @@ impl PhpRequest {
             raw_query: queryParams.unwrap_or_default(),
             headers: headers.unwrap_or_default(),
             cookies: cookies.unwrap_or_default(),
+            cached_body: RefCell::new(None),
+            cached_files: RefCell::new(None),
+            cached_headers: RefCell::new(None),
+            cached_cookies: RefCell::new(None),
+            cached_query_params: RefCell::new(None),
+            cached_path_params: RefCell::new(None),
         })
     }
 
@@ -116,6 +128,13 @@ impl PhpRequest {
     /// Get the body as a JSON string.
     #[php(name = "getBody")]
     pub fn get_body(&self) -> String {
+        if self.body.is_null()
+            && let Some(raw) = self.raw_body.as_ref()
+            && !raw.is_empty()
+        {
+            return String::from_utf8_lossy(raw.as_ref()).to_string();
+        }
+
         match &self.body {
             Value::String(s) => s.clone(),
             _ => serde_json::to_string(&self.body).unwrap_or_else(|_| "{}".to_string()),
@@ -125,8 +144,12 @@ impl PhpRequest {
     #[php(name = "__get")]
     pub fn __get(&self, name: String) -> PhpResult<Zval> {
         match name.as_str() {
-            "body" => crate::php::json_to_zval(&self.body),
-            "files" => crate::php::json_to_zval(&self.files),
+            "body" => self.get_cached_json_or_raw_body(),
+            "files" => self.get_cached_json_field(&self.files, &self.cached_files),
+            "headers" => self.get_cached_string_map(&self.headers, &self.cached_headers),
+            "cookies" => self.get_cached_string_map(&self.cookies, &self.cached_cookies),
+            "queryParams" => self.get_cached_multimap(&self.raw_query, &self.cached_query_params),
+            "pathParams" => self.get_cached_string_map(&self.path_params, &self.cached_path_params),
             _ => Ok(Zval::new()),
         }
     }
@@ -140,49 +163,109 @@ impl PhpRequest {
     /// Get headers as a PHP array.
     #[php(name = "getHeaders")]
     pub fn get_headers(&self) -> PhpResult<ZBox<ZendHashTable>> {
-        let mut table = ZendHashTable::new();
-        for (k, v) in &self.headers {
-            table.insert(k.as_str(), v.as_str())?;
-        }
-        Ok(table)
+        self.build_string_map_table(&self.headers)
     }
 
     /// Get cookies as a PHP array.
     #[php(name = "getCookies")]
     pub fn get_cookies(&self) -> PhpResult<ZBox<ZendHashTable>> {
-        let mut table = ZendHashTable::new();
-        for (k, v) in &self.cookies {
-            table.insert(k.as_str(), v.as_str())?;
-        }
-        Ok(table)
+        self.build_string_map_table(&self.cookies)
     }
 
     /// Get query params as a PHP array.
     #[php(name = "getQueryParams")]
     pub fn get_query_params(&self) -> PhpResult<ZBox<ZendHashTable>> {
-        let mut table = ZendHashTable::new();
-        for (k, values) in &self.raw_query {
-            let mut inner = ZendHashTable::new();
-            for v in values {
-                inner.push(v.as_str())?;
-            }
-            table.insert(k.as_str(), inner)?;
-        }
-        Ok(table)
+        self.build_multimap_table(&self.raw_query)
     }
 
     /// Get path params as a PHP array.
     #[php(name = "getPathParams")]
     pub fn get_path_params(&self) -> PhpResult<ZBox<ZendHashTable>> {
-        let mut table = ZendHashTable::new();
-        for (k, v) in &self.path_params {
-            table.insert(k.as_str(), v.as_str())?;
-        }
-        Ok(table)
+        self.build_string_map_table(&self.path_params)
     }
 }
 
 impl PhpRequest {
+    fn build_string_map_table(&self, map: &HashMap<String, String>) -> PhpResult<ZBox<ZendHashTable>> {
+        let mut table = crate::php::php_table_with_capacity(map.len());
+        for (k, v) in map {
+            crate::php::table_insert_str_fast(&mut table, k.as_str(), v.as_str())?;
+        }
+        Ok(table)
+    }
+
+    fn build_multimap_table(&self, map: &HashMap<String, Vec<String>>) -> PhpResult<ZBox<ZendHashTable>> {
+        let mut table = crate::php::php_table_with_capacity(map.len());
+        for (k, values) in map {
+            let mut inner = crate::php::php_table_with_capacity(values.len());
+            for v in values {
+                inner.push(v.as_str()).map_err(crate::php::map_ext_php_err)?;
+            }
+            crate::php::table_insert_str_fast(&mut table, k.as_str(), inner)?;
+        }
+        Ok(table)
+    }
+
+    fn get_cached_json_field(&self, value: &Value, cache: &RefCell<Option<Zval>>) -> PhpResult<Zval> {
+        if let Some(zv) = cache.borrow().as_ref() {
+            return Ok(zv.shallow_clone());
+        }
+        let zv = crate::php::json_to_zval(value)?;
+        *cache.borrow_mut() = Some(zv.shallow_clone());
+        Ok(zv)
+    }
+
+    fn get_cached_string_map(&self, map: &HashMap<String, String>, cache: &RefCell<Option<Zval>>) -> PhpResult<Zval> {
+        if let Some(zv) = cache.borrow().as_ref() {
+            return Ok(zv.shallow_clone());
+        }
+        let table = self.build_string_map_table(map)?;
+        let zv = table.into_zval(false).map_err(crate::php::map_ext_php_err)?;
+        *cache.borrow_mut() = Some(zv.shallow_clone());
+        Ok(zv)
+    }
+
+    fn get_cached_multimap(
+        &self,
+        map: &HashMap<String, Vec<String>>,
+        cache: &RefCell<Option<Zval>>,
+    ) -> PhpResult<Zval> {
+        if let Some(zv) = cache.borrow().as_ref() {
+            return Ok(zv.shallow_clone());
+        }
+        let table = self.build_multimap_table(map)?;
+        let zv = table.into_zval(false).map_err(crate::php::map_ext_php_err)?;
+        *cache.borrow_mut() = Some(zv.shallow_clone());
+        Ok(zv)
+    }
+
+    fn get_cached_json_or_raw_body(&self) -> PhpResult<Zval> {
+        if let Some(zv) = self.cached_body.borrow().as_ref() {
+            return Ok(zv.shallow_clone());
+        }
+
+        let value = if !self.body.is_null() { Some(&self.body) } else { None };
+
+        let zv = if let Some(value) = value {
+            crate::php::json_to_zval(value)?
+        } else if let Some(raw) = self.raw_body.as_ref()
+            && !raw.is_empty()
+        {
+            match serde_json::from_slice::<Value>(raw.as_ref()) {
+                Ok(parsed) => crate::php::json_to_zval(&parsed)?,
+                Err(_) => String::from_utf8_lossy(raw.as_ref())
+                    .as_ref()
+                    .into_zval(false)
+                    .map_err(crate::php::map_ext_php_err)?,
+            }
+        } else {
+            Zval::new()
+        };
+
+        *self.cached_body.borrow_mut() = Some(zv.shallow_clone());
+        Ok(zv)
+    }
+
     /// Build from RequestData (used by Handler bridge).
     pub fn from_request_data(data: &spikard_http::RequestData) -> Self {
         Self {
@@ -195,6 +278,12 @@ impl PhpRequest {
             raw_query: (*data.raw_query_params).clone(),
             headers: (*data.headers).clone(),
             cookies: (*data.cookies).clone(),
+            cached_body: RefCell::new(None),
+            cached_files: RefCell::new(None),
+            cached_headers: RefCell::new(None),
+            cached_cookies: RefCell::new(None),
+            cached_query_params: RefCell::new(None),
+            cached_path_params: RefCell::new(None),
         }
     }
 
@@ -218,6 +307,12 @@ impl PhpRequest {
             raw_query: Self::unwrap_arc_multimap(data.raw_query_params),
             headers: Self::unwrap_arc_map(data.headers),
             cookies: Self::unwrap_arc_map(data.cookies),
+            cached_body: RefCell::new(None),
+            cached_files: RefCell::new(None),
+            cached_headers: RefCell::new(None),
+            cached_cookies: RefCell::new(None),
+            cached_query_params: RefCell::new(None),
+            cached_path_params: RefCell::new(None),
         }
     }
 
@@ -244,6 +339,12 @@ impl PhpRequest {
             raw_query,
             headers,
             cookies,
+            cached_body: RefCell::new(None),
+            cached_files: RefCell::new(None),
+            cached_headers: RefCell::new(None),
+            cached_cookies: RefCell::new(None),
+            cached_query_params: RefCell::new(None),
+            cached_path_params: RefCell::new(None),
         }
     }
 }

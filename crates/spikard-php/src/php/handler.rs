@@ -106,6 +106,12 @@ impl PhpHandler {
 }
 
 impl Handler for PhpHandler {
+    fn prefers_raw_json_body(&self) -> bool {
+        // Many PHP handlers (and benchmarks) don't need to inspect the request body.
+        // Avoid eager JSON parsing when the route has no request-body schema attached.
+        true
+    }
+
     fn call(
         &self,
         _req: Request<Body>,

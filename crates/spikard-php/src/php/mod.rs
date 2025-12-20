@@ -42,11 +42,11 @@ pub use testing::{
 };
 pub use websocket::{PhpWebSocketHandler, create_websocket_state};
 
-fn map_ext_php_err(e: ExtPhpError) -> PhpException {
+pub(crate) fn map_ext_php_err(e: ExtPhpError) -> PhpException {
     PhpException::default(e.to_string())
 }
 
-fn php_table_with_capacity(len: usize) -> ZBox<ZendHashTable> {
+pub(crate) fn php_table_with_capacity(len: usize) -> ZBox<ZendHashTable> {
     if len == 0 {
         ZendHashTable::new()
     } else if len > (u32::MAX as usize) {
@@ -56,7 +56,7 @@ fn php_table_with_capacity(len: usize) -> ZBox<ZendHashTable> {
     }
 }
 
-fn table_insert_str_fast<V: IntoZval>(table: &mut ZendHashTable, key: &str, value: V) -> PhpResult<()> {
+pub(crate) fn table_insert_str_fast<V: IntoZval>(table: &mut ZendHashTable, key: &str, value: V) -> PhpResult<()> {
     // SAFETY:
     // - `zend_hash_str_update` uses (ptr, len) and does not require NUL termination.
     // - `key` lives for the duration of this call.
