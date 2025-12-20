@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "spikard";
+import { TestClient } from "@spikard/node";
 import { describe, expect, test } from "vitest";
 import {
 	createAppCookies24CookieSamesiteStrict,
@@ -334,7 +334,7 @@ describe("cookies", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Cookie: "session_id=session123; googall_tracker=ga789; fatebook_tracker=tracker456",
+			Cookie: "googall_tracker=ga789; session_id=session123; fatebook_tracker=tracker456",
 		};
 		const response = await client.get("/items/", headers);
 

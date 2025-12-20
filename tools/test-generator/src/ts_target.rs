@@ -15,7 +15,7 @@ pub enum Runtime {
 
 #[derive(Debug, Clone, Copy)]
 pub struct TypeScriptTarget {
-    /// The npm package path used when importing the bindings (e.g. `spikard` or `spikard-wasm/node`).
+    /// The npm package path used when importing the bindings (e.g. `@spikard/node` or `@spikard/wasm/node`).
     pub binding_package: &'static str,
     /// The npm package that must appear in devDependencies.
     pub dependency_package: &'static str,
@@ -26,15 +26,15 @@ pub struct TypeScriptTarget {
 }
 
 pub const NODE_TARGET: TypeScriptTarget = TypeScriptTarget {
-    binding_package: "spikard",
-    dependency_package: "spikard",
+    binding_package: "@spikard/node",
+    dependency_package: "@spikard/node",
     e2e_package_name: "spikard-e2e-node",
     runtime: Runtime::Node,
 };
 
 pub const WASM_TARGET: TypeScriptTarget = TypeScriptTarget {
-    binding_package: "spikard-wasm/node",
-    dependency_package: "spikard-wasm",
+    binding_package: "@spikard/wasm/node",
+    dependency_package: "@spikard/wasm",
     e2e_package_name: "spikard-e2e-wasm",
     runtime: Runtime::NodeWasm,
 };

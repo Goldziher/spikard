@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "spikard";
+import { TestClient } from "@spikard/node";
 import { describe, expect, test } from "vitest";
 import {
 	createAppLifecycleHooksHookExecutionOrder,
@@ -32,10 +32,10 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Response with security headers");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-frame-options"]).toBe("DENY");
-		expect(responseHeaders["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");
-		expect(responseHeaders["x-xss-protection"]).toBe("1; mode=block");
 		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
+		expect(responseHeaders["x-frame-options"]).toBe("DENY");
+		expect(responseHeaders["x-xss-protection"]).toBe("1; mode=block");
+		expect(responseHeaders["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");
 	});
 
 	test("preHandler - Authentication Failed Short Circuit", async () => {
@@ -136,10 +136,10 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("user_id");
 		expect(responseData.user_id).toBe("user-123");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
-		expect(responseHeaders["x-request-id"]).toMatch(/.*/);
-		expect(responseHeaders["x-frame-options"]).toBe("DENY");
 		expect(responseHeaders["x-response-time"]).toMatch(/.*ms/);
+		expect(responseHeaders["x-request-id"]).toMatch(/.*/);
+		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
+		expect(responseHeaders["x-frame-options"]).toBe("DENY");
 	});
 
 	test("Hook Execution Order", async () => {

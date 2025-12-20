@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "spikard-wasm/node";
+import { TestClient } from "@spikard/wasm/node";
 import { describe, expect, test } from "vitest";
 import {
 	createAppHttpMethodsDeleteRemoveResource,
@@ -26,18 +26,18 @@ describe("http_methods", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Method": "POST",
 			Origin: "https://example.com",
 			"Access-Control-Request-Headers": "Content-Type",
+			"Access-Control-Request-Method": "POST",
 		};
 		const response = await client.options("/items/", { headers });
 
 		expect(response.statusCode).toBe(200);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST, PUT, DELETE, OPTIONS");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://example.com");
-		expect(responseHeaders["access-control-max-age"]).toBe("86400");
 		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type");
+		expect(responseHeaders["access-control-max-age"]).toBe("86400");
+		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST, PUT, DELETE, OPTIONS");
 	});
 
 	test("DELETE - Remove resource", async () => {

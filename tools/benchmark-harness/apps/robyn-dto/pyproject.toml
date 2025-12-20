@@ -11,6 +11,6 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "msgspec>=0.20",
+  "msgspec>=0.20.0",
   "robyn>=0.72.2",
 ]

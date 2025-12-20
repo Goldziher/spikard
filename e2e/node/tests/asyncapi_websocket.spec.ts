@@ -5,7 +5,7 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { TestClient } from "spikard";
+import { TestClient } from "@spikard/node";
 import { describe, expect, test } from "vitest";
 import {
 	ChatMessageMessageSchema,
