@@ -129,7 +129,7 @@ jobs:
     name: Rust Code Coverage (80% minimum)
     runs-on: ubuntu-latest
     needs: [test-rust-workspace]
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v6
 
@@ -198,7 +198,7 @@ jobs:
     name: Rust PHP FFI Coverage (50% minimum, Linux only)
     runs-on: ubuntu-latest
     needs: [test-rust-workspace]
-    timeout-minutes: 45
+    timeout-minutes: 75
     permissions:
       contents: read
     steps:
