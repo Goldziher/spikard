@@ -140,6 +140,8 @@ pub struct RubyHandlerInner {
     pub handler_name: String,
     pub method: String,
     pub path: String,
+    method_value: Opaque<Value>,
+    path_value: Opaque<Value>,
     pub json_module: Opaque<Value>,
     pub request_validator: Option<Arc<SchemaValidator>>,
     pub response_validator: Option<Arc<SchemaValidator>>,
@@ -161,12 +163,26 @@ impl RubyHandler {
         } else {
             None
         };
+        let method = route.method.as_str().to_string();
+        let path = route.path.clone();
+
+        let Ok(ruby) = Ruby::get() else {
+            return Err(Error::new(
+                magnus::exception::runtime_error(),
+                "Ruby VM unavailable while creating handler",
+            ));
+        };
+        let method_value = Opaque::from(ruby.str_new(&method).as_value());
+        let path_value = Opaque::from(ruby.str_new(&path).as_value());
+
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
                 handler_name: route.handler_name.clone(),
-                method: route.method.as_str().to_string(),
-                path: route.path.clone(),
+                method,
+                path,
+                method_value,
+                path_value,
                 json_module: Opaque::from(json_module),
                 request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
@@ -193,12 +209,23 @@ impl RubyHandler {
         } else {
             None
         };
+        let Ok(ruby) = Ruby::get() else {
+            return Err(Error::new(
+                magnus::exception::runtime_error(),
+                "Ruby VM unavailable while creating handler",
+            ));
+        };
+        let method_value = Opaque::from(ruby.str_new(&method).as_value());
+        let path_value = Opaque::from(ruby.str_new(&path).as_value());
+
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
                 handler_name,
                 method,
                 path,
+                method_value,
+                path_value,
                 json_module: Opaque::from(json_module),
                 request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
@@ -214,6 +241,8 @@ impl RubyHandler {
         if let Ok(ruby) = Ruby::get() {
             let proc_val = self.inner.handler_proc.get_inner_with(&ruby);
             marker.mark(proc_val);
+            marker.mark(self.inner.method_value.get_inner_with(&ruby));
+            marker.mark(self.inner.path_value.get_inner_with(&ruby));
         }
     }
 
@@ -439,8 +468,8 @@ fn build_ruby_request(
 ) -> Result<Value, Error> {
     let hash = ruby.hash_new_capa(9);
 
-    hash.aset(*KEY_METHOD, ruby.str_new(&handler.method))?;
-    hash.aset(*KEY_PATH, ruby.str_new(&handler.path))?;
+    hash.aset(*KEY_METHOD, handler.method_value.get_inner_with(ruby))?;
+    hash.aset(*KEY_PATH, handler.path_value.get_inner_with(ruby))?;
 
     let path_params = map_to_ruby_hash(ruby, request_data.path_params.as_ref())?;
     hash.aset(*KEY_PATH_PARAMS, path_params)?;
