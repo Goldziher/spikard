@@ -9,6 +9,7 @@
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Request, StatusCode};
 use magnus::prelude::*;
+use magnus::value::LazyId;
 use magnus::value::{InnerValue, Opaque};
 use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
 use serde_json::Value as JsonValue;
@@ -25,6 +26,17 @@ use std::sync::Arc;
 use crate::conversion::{
     json_to_ruby, json_to_ruby_with_uploads, map_to_ruby_hash, multimap_to_ruby_hash, ruby_value_to_json,
 };
+
+static KEY_METHOD: LazyId = LazyId::new("method");
+static KEY_PATH: LazyId = LazyId::new("path");
+static KEY_PATH_PARAMS: LazyId = LazyId::new("path_params");
+static KEY_QUERY: LazyId = LazyId::new("query");
+static KEY_RAW_QUERY: LazyId = LazyId::new("raw_query");
+static KEY_HEADERS: LazyId = LazyId::new("headers");
+static KEY_COOKIES: LazyId = LazyId::new("cookies");
+static KEY_BODY: LazyId = LazyId::new("body");
+static KEY_RAW_BODY: LazyId = LazyId::new("raw_body");
+static KEY_PARAMS: LazyId = LazyId::new("params");
 
 /// Response payload with status, headers, and body data.
 pub struct HandlerResponsePayload {
@@ -427,32 +439,32 @@ fn build_ruby_request(
 ) -> Result<Value, Error> {
     let hash = ruby.hash_new_capa(9);
 
-    hash.aset(ruby.intern("method"), ruby.str_new(&handler.method))?;
-    hash.aset(ruby.intern("path"), ruby.str_new(&handler.path))?;
+    hash.aset(*KEY_METHOD, ruby.str_new(&handler.method))?;
+    hash.aset(*KEY_PATH, ruby.str_new(&handler.path))?;
 
     let path_params = map_to_ruby_hash(ruby, request_data.path_params.as_ref())?;
-    hash.aset(ruby.intern("path_params"), path_params)?;
+    hash.aset(*KEY_PATH_PARAMS, path_params)?;
 
     let query_value = json_to_ruby(ruby, &request_data.query_params)?;
-    hash.aset(ruby.intern("query"), query_value)?;
+    hash.aset(*KEY_QUERY, query_value)?;
 
     let raw_query = multimap_to_ruby_hash(ruby, request_data.raw_query_params.as_ref())?;
-    hash.aset(ruby.intern("raw_query"), raw_query)?;
+    hash.aset(*KEY_RAW_QUERY, raw_query)?;
 
     let headers = map_to_ruby_hash(ruby, request_data.headers.as_ref())?;
-    hash.aset(ruby.intern("headers"), headers)?;
+    hash.aset(*KEY_HEADERS, headers)?;
 
     let cookies = map_to_ruby_hash(ruby, request_data.cookies.as_ref())?;
-    hash.aset(ruby.intern("cookies"), cookies)?;
+    hash.aset(*KEY_COOKIES, cookies)?;
 
     let upload_class_value = handler.upload_file_class.as_ref().map(|cls| cls.get_inner_with(ruby));
     let body_value = json_to_ruby_with_uploads(ruby, &request_data.body, upload_class_value.as_ref())?;
-    hash.aset(ruby.intern("body"), body_value)?;
+    hash.aset(*KEY_BODY, body_value)?;
     if let Some(raw) = &request_data.raw_body {
         let raw_str = ruby.str_from_slice(raw);
-        hash.aset(ruby.intern("raw_body"), raw_str)?;
+        hash.aset(*KEY_RAW_BODY, raw_str)?;
     } else {
-        hash.aset(ruby.intern("raw_body"), ruby.qnil())?;
+        hash.aset(*KEY_RAW_BODY, ruby.qnil())?;
     }
 
     let params_value = if let Some(validated) = validated_params {
@@ -460,7 +472,7 @@ fn build_ruby_request(
     } else {
         build_default_params_from_converted(ruby, path_params, query_value, headers, cookies)?
     };
-    hash.aset(ruby.intern("params"), params_value)?;
+    hash.aset(*KEY_PARAMS, params_value)?;
 
     Ok(hash.as_value())
 }
