@@ -45,7 +45,7 @@ struct ParameterDef {
 #[derive(Clone)]
 struct ParameterValidatorInner {
     schema: Value,
-    schema_validator: SchemaValidator,
+    schema_validator: Option<SchemaValidator>,
     parameter_defs: Vec<ParameterDef>,
 }
 
@@ -72,7 +72,11 @@ impl ParameterValidator {
     pub fn new(schema: Value) -> Result<Self, String> {
         let parameter_defs = Self::extract_parameter_defs(&schema)?;
         let validation_schema = Self::create_validation_schema(&schema);
-        let schema_validator = SchemaValidator::new(validation_schema)?;
+        let schema_validator = if Self::requires_full_schema_validation(&validation_schema) {
+            Some(SchemaValidator::new(validation_schema)?)
+        } else {
+            None
+        };
 
         Ok(Self {
             inner: Arc::new(ParameterValidatorInner {
@@ -81,6 +85,45 @@ impl ParameterValidator {
                 parameter_defs,
             }),
         })
+    }
+
+    /// Determine whether a parameter schema needs full JSON Schema validation.
+    ///
+    /// The hot path in `validate_and_extract()` already enforces:
+    /// - required vs optional presence
+    /// - type coercion
+    /// - format parsing (uuid/date/date-time/time/duration)
+    ///
+    /// When the schema contains only structural keywords and metadata, we can skip the
+    /// (relatively expensive) jsonschema validator without changing semantics.
+    fn requires_full_schema_validation(schema: &Value) -> bool {
+        fn recurse(value: &Value) -> bool {
+            let Some(obj) = value.as_object() else {
+                return false;
+            };
+
+            for (key, child) in obj {
+                match key.as_str() {
+                    // Structural keywords we support in the coercion pass.
+                    "type" | "format" | "properties" | "required" | "items" | "additionalProperties" => {}
+
+                    // Metadata keywords which don't affect validation semantics.
+                    "title" | "description" | "default" | "examples" | "deprecated" | "readOnly" | "writeOnly"
+                    | "$schema" | "$id" => {}
+
+                    // Anything else may impose constraints we don't enforce manually.
+                    _ => return true,
+                }
+
+                if recurse(child) {
+                    return true;
+                }
+            }
+
+            false
+        }
+
+        recurse(schema)
     }
 
     /// Extract parameter definitions from the schema
@@ -379,33 +422,37 @@ impl ParameterValidator {
         }
 
         let params_json = Value::Object(params_map);
-        match self.inner.schema_validator.validate(&params_json) {
-            Ok(_) => Ok(params_json),
-            Err(mut validation_err) => {
-                for error in &mut validation_err.errors {
-                    if error.loc.len() >= 2 && error.loc[0] == "body" {
-                        let param_name = &error.loc[1];
-                        if let Some(param_def) = self.inner.parameter_defs.iter().find(|p| &p.name == param_name) {
-                            let source_str = match param_def.source {
-                                ParameterSource::Query => "query",
-                                ParameterSource::Path => "path",
-                                ParameterSource::Header => "headers",
-                                ParameterSource::Cookie => "cookie",
-                            };
-                            error.loc[0] = source_str.to_string();
-                            if param_def.source == ParameterSource::Header {
-                                error.loc[1] = param_def.error_key.clone();
-                            }
-                            if let Some(raw_value) =
-                                self.raw_value_for_error(param_def, raw_query_params, path_params, headers, cookies)
-                            {
-                                error.input = Value::String(raw_value.to_string());
+        if let Some(schema_validator) = &self.inner.schema_validator {
+            match schema_validator.validate(&params_json) {
+                Ok(_) => Ok(params_json),
+                Err(mut validation_err) => {
+                    for error in &mut validation_err.errors {
+                        if error.loc.len() >= 2 && error.loc[0] == "body" {
+                            let param_name = &error.loc[1];
+                            if let Some(param_def) = self.inner.parameter_defs.iter().find(|p| &p.name == param_name) {
+                                let source_str = match param_def.source {
+                                    ParameterSource::Query => "query",
+                                    ParameterSource::Path => "path",
+                                    ParameterSource::Header => "headers",
+                                    ParameterSource::Cookie => "cookie",
+                                };
+                                error.loc[0] = source_str.to_string();
+                                if param_def.source == ParameterSource::Header {
+                                    error.loc[1] = param_def.error_key.clone();
+                                }
+                                if let Some(raw_value) =
+                                    self.raw_value_for_error(param_def, raw_query_params, path_params, headers, cookies)
+                                {
+                                    error.input = Value::String(raw_value.to_string());
+                                }
                             }
                         }
                     }
+                    Err(validation_err)
                 }
-                Err(validation_err)
             }
+        } else {
+            Ok(params_json)
         }
     }
 
