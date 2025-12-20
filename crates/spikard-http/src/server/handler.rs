@@ -53,9 +53,7 @@ impl Handler for ValidatingHandler {
                 && request_data
                     .headers
                     .get("content-type")
-                    .and_then(|s| s.parse::<mime::Mime>().ok())
-                    .as_ref()
-                    .is_some_and(crate::middleware::validation::is_json_content_type);
+                    .is_some_and(|ct| crate::middleware::validation::is_json_like_str(ct));
 
             if is_json_body && request_validator.is_none() && !inner.prefers_raw_json_body() {
                 let raw_bytes = request_data.raw_body.as_ref().unwrap();
