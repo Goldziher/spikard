@@ -3,7 +3,7 @@
  * @generated
  */
 
-import { TestClient } from "spikard-wasm/node";
+import { TestClient } from "@spikard/wasm/node";
 import { describe, expect, test } from "vitest";
 import {
 	createAppContentTypes13JsonWithCharsetUtf16,
@@ -109,8 +109,8 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("pdf_binary_data");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("application/pdf");
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=document.pdf");
+		expect(responseHeaders["content-type"]).toBe("application/pdf");
 	});
 
 	test.skip("20_content_length_mismatch", async () => {
