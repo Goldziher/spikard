@@ -18,43 +18,46 @@ const SmallPayloadSchema = z.object({
 	name: z.string(),
 	description: z.string(),
 	price: z.number(),
-	tax: z.number().optional(),
+	tax: z.number(),
+});
+
+const ImageSchema = z.object({
+	url: z.string(),
+	name: z.string(),
+});
+
+const MediumPayloadSchema = z.object({
+	name: z.string(),
+	price: z.number(),
+	image: ImageSchema,
+});
+
+const CountrySchema = z.object({
+	name: z.string(),
+	code: z.string(),
 });
 
 const AddressSchema = z.object({
 	street: z.string(),
 	city: z.string(),
-	state: z.string(),
-	zip_code: z.string(),
+	country: CountrySchema,
 });
 
-const MediumPayloadSchema = z.object({
-	user_id: z.number(),
-	username: z.string(),
-	email: z.string(),
-	is_active: z.boolean(),
-	address: AddressSchema,
-	tags: z.array(z.string()),
-});
-
-const ItemSchema = z.object({
-	id: z.number(),
+const SellerSchema = z.object({
 	name: z.string(),
-	price: z.number(),
-	in_stock: z.boolean(),
+	address: AddressSchema,
 });
 
 const LargePayloadSchema = z.object({
-	order_id: z.string(),
-	customer_name: z.string(),
-	items: z.array(ItemSchema),
-	total: z.number(),
-	notes: z.string(),
+	name: z.string(),
+	price: z.number(),
+	seller: SellerSchema,
 });
 
 const VeryLargePayloadSchema = z.object({
-	data: z.array(z.record(z.string(), z.unknown())),
-	metadata: z.record(z.string(), z.unknown()),
+	name: z.string(),
+	tags: z.array(z.string()),
+	images: z.array(ImageSchema),
 });
 
 type SmallPayload = z.infer<typeof SmallPayloadSchema>;

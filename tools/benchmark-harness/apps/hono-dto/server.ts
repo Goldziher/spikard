@@ -21,7 +21,7 @@ const SmallPayloadSchema = z.object({
 	name: z.string(),
 	description: z.string(),
 	price: z.number(),
-	tax: z.number().optional(),
+	tax: z.number(),
 });
 
 type SmallPayload = z.infer<typeof SmallPayloadSchema>;
@@ -29,23 +29,18 @@ type SmallPayload = z.infer<typeof SmallPayloadSchema>;
 /**
  * Address nested schema
  */
-const AddressSchema = z.object({
-	street: z.string(),
-	city: z.string(),
-	state: z.string(),
-	zip_code: z.string(),
+const ImageSchema = z.object({
+	url: z.string(),
+	name: z.string(),
 });
 
 /**
  * Medium JSON payload schema (~1KB)
  */
 const MediumPayloadSchema = z.object({
-	user_id: z.number(),
-	username: z.string(),
-	email: z.string(),
-	is_active: z.boolean(),
-	address: AddressSchema,
-	tags: z.array(z.string()),
+	name: z.string(),
+	price: z.number(),
+	image: ImageSchema,
 });
 
 type MediumPayload = z.infer<typeof MediumPayloadSchema>;
@@ -53,22 +48,29 @@ type MediumPayload = z.infer<typeof MediumPayloadSchema>;
 /**
  * Item nested schema
  */
-const ItemSchema = z.object({
-	id: z.number(),
+const CountrySchema = z.object({
 	name: z.string(),
-	price: z.number(),
-	in_stock: z.boolean(),
+	code: z.string(),
 });
 
 /**
  * Large JSON payload schema (~10KB)
  */
+const AddressSchema = z.object({
+	street: z.string(),
+	city: z.string(),
+	country: CountrySchema,
+});
+
+const SellerSchema = z.object({
+	name: z.string(),
+	address: AddressSchema,
+});
+
 const LargePayloadSchema = z.object({
-	order_id: z.string(),
-	customer_name: z.string(),
-	items: z.array(ItemSchema),
-	total: z.number(),
-	notes: z.string(),
+	name: z.string(),
+	price: z.number(),
+	seller: SellerSchema,
 });
 
 type LargePayload = z.infer<typeof LargePayloadSchema>;
@@ -77,8 +79,9 @@ type LargePayload = z.infer<typeof LargePayloadSchema>;
  * Very large JSON payload schema (~100KB)
  */
 const VeryLargePayloadSchema = z.object({
-	data: z.array(z.record(z.string(), z.unknown())),
-	metadata: z.record(z.string(), z.unknown()),
+	name: z.string(),
+	tags: z.array(z.string()),
+	images: z.array(ImageSchema),
 });
 
 type VeryLargePayload = z.infer<typeof VeryLargePayloadSchema>;

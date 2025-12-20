@@ -8,11 +8,13 @@
  */
 
 import formbody from "@fastify/formbody";
+import multipart from "@fastify/multipart";
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 
 const fastify = Fastify({ logger: false });
 
 await fastify.register(formbody);
+await fastify.register(multipart);
 
 interface SimpleParams {
 	id: string;
