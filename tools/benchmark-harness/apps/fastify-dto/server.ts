@@ -5,87 +5,94 @@
  * Fastify is a high-performance Node.js web framework with built-in JSON Schema validation.
  */
 
+import formbody from "@fastify/formbody";
+import multipart from "@fastify/multipart";
 import Fastify from "fastify";
 
 const fastify = Fastify({ logger: false });
 
+await fastify.register(formbody);
+await fastify.register(multipart);
+
 const smallPayloadSchema = {
 	type: "object",
-	required: ["name", "description", "price"],
+	required: ["name", "description", "price", "tax"],
 	properties: {
 		name: { type: "string" },
 		description: { type: "string" },
 		price: { type: "number" },
-		tax: { type: "number", nullable: true },
+		tax: { type: "number" },
 	},
 } as const;
 
 const mediumPayloadSchema = {
 	type: "object",
-	required: ["name", "email", "age", "address", "tags"],
+	required: ["name", "price", "image"],
 	properties: {
 		name: { type: "string" },
-		email: { type: "string" },
-		age: { type: "integer" },
-		address: {
+		price: { type: "number" },
+		image: {
 			type: "object",
-			required: ["street", "city", "state", "zip_code"],
+			required: ["url", "name"],
 			properties: {
-				street: { type: "string" },
-				city: { type: "string" },
-				state: { type: "string" },
-				zip_code: { type: "string" },
+				url: { type: "string" },
+				name: { type: "string" },
 			},
-		},
-		tags: {
-			type: "array",
-			items: { type: "string" },
 		},
 	},
 } as const;
 
 const largePayloadSchema = {
 	type: "object",
-	required: ["user_id", "name", "email", "items", "metadata"],
+	required: ["name", "price", "seller"],
 	properties: {
-		user_id: { type: "string" },
 		name: { type: "string" },
-		email: { type: "string" },
-		items: {
-			type: "array",
-			items: {
-				type: "object",
-				required: ["id", "name", "price", "quantity"],
-				properties: {
-					id: { type: "string" },
-					name: { type: "string" },
-					price: { type: "number" },
-					quantity: { type: "integer" },
+		price: { type: "number" },
+		seller: {
+			type: "object",
+			required: ["name", "address"],
+			properties: {
+				name: { type: "string" },
+				address: {
+					type: "object",
+					required: ["street", "city", "country"],
+					properties: {
+						street: { type: "string" },
+						city: { type: "string" },
+						country: {
+							type: "object",
+							required: ["name", "code"],
+							properties: {
+								name: { type: "string" },
+								code: { type: "string" },
+							},
+						},
+					},
 				},
 			},
-		},
-		metadata: {
-			type: "object",
-			additionalProperties: true,
 		},
 	},
 } as const;
 
 const veryLargePayloadSchema = {
 	type: "object",
-	required: ["batch_id", "records", "summary"],
+	required: ["name", "tags", "images"],
 	properties: {
-		batch_id: { type: "string" },
-		records: {
+		name: { type: "string" },
+		tags: {
+			type: "array",
+			items: { type: "string" },
+		},
+		images: {
 			type: "array",
 			items: {
 				type: "object",
-				additionalProperties: true,
+				required: ["url", "name"],
+				properties: {
+					url: { type: "string" },
+					name: { type: "string" },
+				},
 			},
-		},
-		summary: {
-			type: "object",
-			additionalProperties: true,
 		},
 	},
 } as const;

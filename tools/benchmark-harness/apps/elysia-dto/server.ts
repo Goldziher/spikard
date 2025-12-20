@@ -16,43 +16,46 @@ const SmallPayloadSchema = t.Object({
 	name: t.String(),
 	description: t.String(),
 	price: t.Number(),
-	tax: t.Optional(t.Nullable(t.Number())),
+	tax: t.Number(),
+});
+
+const ImageSchema = t.Object({
+	url: t.String(),
+	name: t.String(),
+});
+
+const MediumPayloadSchema = t.Object({
+	name: t.String(),
+	price: t.Number(),
+	image: ImageSchema,
+});
+
+const CountrySchema = t.Object({
+	name: t.String(),
+	code: t.String(),
 });
 
 const AddressSchema = t.Object({
 	street: t.String(),
 	city: t.String(),
-	state: t.String(),
-	zip_code: t.String(),
+	country: CountrySchema,
 });
 
-const MediumPayloadSchema = t.Object({
+const SellerSchema = t.Object({
 	name: t.String(),
-	email: t.String(),
-	age: t.Integer(),
 	address: AddressSchema,
-	tags: t.Array(t.String()),
-});
-
-const ItemSchema = t.Object({
-	id: t.String(),
-	name: t.String(),
-	price: t.Number(),
-	quantity: t.Integer(),
 });
 
 const LargePayloadSchema = t.Object({
-	user_id: t.String(),
 	name: t.String(),
-	email: t.String(),
-	items: t.Array(ItemSchema),
-	metadata: t.Record(t.String(), t.Any()),
+	price: t.Number(),
+	seller: SellerSchema,
 });
 
 const VeryLargePayloadSchema = t.Object({
-	batch_id: t.String(),
-	records: t.Array(t.Record(t.String(), t.Any())),
-	summary: t.Record(t.String(), t.Any()),
+	name: t.String(),
+	tags: t.Array(t.String()),
+	images: t.Array(ImageSchema),
 });
 
 app.post("/json/small", ({ body }) => body, {
