@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-12-21
+
+### Added
+- **Benchmark consolidation**: consolidated benchmark profile output with snapshot artifacts for repeatable analysis
+- **Profiling coverage**: flamegraph + pyinstrument speedscope generation across all Spikard bindings
+- **Runtime test clients**: native WebSocket/SSE test clients for PHP and Ruby; WASM runtime WebSocket support with test coverage
+- **Benchmark suites**: expanded FastAPI/Robyn coverage in benchmark CI and fixture-driven baselines
+
+### Changed
+- **Performance defaults**: disabled TraceLayer/request-id/timeout/compression by default for higher baseline throughput
+- **Core/HTTP performance**: reduced per-request parsing, skipped unused query/body work, cached schema validation, and avoided mime parsing overhead
+- **Binding hot paths**: faster JSON and request conversion in Python/Ruby/PHP/Node/WASM, fewer allocations, and better handler fast paths
+- **CI focus**: benchmark CI now prioritizes profiling Spikard bindings and consolidating results
+
+### Fixed
+- **Benchmark harness**: repaired TS/Node/WASM baseline startup, multipart boundaries, Express/DTO command, and correct PID targeting for perf
+- **FFI safety**: removed unwraps/panics across bindings and tightened error boundary handling
+- **E2E stability**: corrected scoped package references, WASM header parsing, and Ruby gem dependency setup
+
 ## [0.4.0] - 2025-12-10
 
 ### Added
