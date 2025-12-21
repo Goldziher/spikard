@@ -29,6 +29,8 @@ pub struct RequestData {
     pub path_params: Arc<HashMap<String, String>>,
     /// Query parameters parsed as JSON
     pub query_params: Value,
+    /// Validated parameters produced by ParameterValidator (query/path/header/cookie combined).
+    pub validated_params: Option<Value>,
     /// Raw query parameters as key-value pairs
     pub raw_query_params: Arc<HashMap<String, Vec<String>>>,
     /// Parsed request body as JSON
@@ -57,9 +59,10 @@ impl Serialize for RequestData {
         S: serde::Serializer,
     {
         use serde::ser::SerializeStruct;
-        let mut state = serializer.serialize_struct("RequestData", 9)?;
+        let mut state = serializer.serialize_struct("RequestData", 10)?;
         state.serialize_field("path_params", &*self.path_params)?;
         state.serialize_field("query_params", &self.query_params)?;
+        state.serialize_field("validated_params", &self.validated_params)?;
         state.serialize_field("raw_query_params", &*self.raw_query_params)?;
         state.serialize_field("body", &self.body)?;
         #[cfg(feature = "di")]
@@ -84,6 +87,7 @@ impl<'de> Deserialize<'de> for RequestData {
         enum Field {
             PathParams,
             QueryParams,
+            ValidatedParams,
             RawQueryParams,
             Body,
             RawBody,
@@ -108,6 +112,7 @@ impl<'de> Deserialize<'de> for RequestData {
             {
                 let mut path_params = None;
                 let mut query_params = None;
+                let mut validated_params = None;
                 let mut raw_query_params = None;
                 let mut body = None;
                 let mut raw_body = None;
@@ -123,6 +128,9 @@ impl<'de> Deserialize<'de> for RequestData {
                         }
                         Field::QueryParams => {
                             query_params = Some(map.next_value()?);
+                        }
+                        Field::ValidatedParams => {
+                            validated_params = Some(map.next_value()?);
                         }
                         Field::RawQueryParams => {
                             raw_query_params = Some(Arc::new(map.next_value()?));
@@ -159,6 +167,7 @@ impl<'de> Deserialize<'de> for RequestData {
                 Ok(RequestData {
                     path_params: path_params.ok_or_else(|| serde::de::Error::missing_field("path_params"))?,
                     query_params: query_params.ok_or_else(|| serde::de::Error::missing_field("query_params"))?,
+                    validated_params,
                     raw_query_params: raw_query_params
                         .ok_or_else(|| serde::de::Error::missing_field("raw_query_params"))?,
                     body: body.ok_or_else(|| serde::de::Error::missing_field("body"))?,
@@ -176,6 +185,7 @@ impl<'de> Deserialize<'de> for RequestData {
         const FIELDS: &[&str] = &[
             "path_params",
             "query_params",
+            "validated_params",
             "raw_query_params",
             "body",
             "raw_body",
@@ -211,6 +221,7 @@ mod tests {
         RequestData {
             path_params: Arc::new(collections.path_params),
             query_params,
+            validated_params: None,
             raw_query_params: Arc::new(collections.raw_query_params),
             body,
             raw_body: None,

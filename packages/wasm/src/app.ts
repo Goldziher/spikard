@@ -5,7 +5,8 @@
 import type { HandlerFunction, RouteMetadata, SpikardApp } from "./index";
 import type { Request } from "./request";
 import { runServer, type ServerOptions } from "./server";
-import type { MaybePromise, StructuredHandlerResponse } from "./types";
+import type { MaybePromise, StructuredHandlerResponse, WebSocketHandlerLike } from "./types";
+import type { JsonSchema } from "./index";
 
 /**
  * Dependency value or factory configuration
@@ -84,6 +85,8 @@ export interface LifecycleHooks {
 export class Spikard implements SpikardApp {
 	routes: RouteMetadata[] = [];
 	handlers: Record<string, HandlerFunction> = {};
+	websocketRoutes: RouteMetadata[] = [];
+	websocketHandlers: Record<string, WebSocketHandlerLike> = {};
 	lifecycleHooks: LifecycleHooks = {
 		onRequest: [],
 		preValidation: [],
@@ -102,6 +105,28 @@ export class Spikard implements SpikardApp {
 	addRoute(metadata: RouteMetadata, handler: HandlerFunction): void {
 		this.routes.push(metadata);
 		this.handlers[metadata.handler_name] = handler;
+	}
+
+	/**
+	 * Register a WebSocket route (message-based)
+	 */
+	websocket(path: string, handler: WebSocketHandlerLike, options: WebSocketOptions = {}): void {
+		const handlerName =
+			options.handlerName ?? `ws_${this.websocketRoutes.length}_${path}`.replace(/[^a-zA-Z0-9_]/g, "_");
+
+		const route: RouteMetadata = {
+			method: "GET",
+			path,
+			handler_name: handlerName,
+			request_schema: options.messageSchema as never,
+			response_schema: options.responseSchema as never,
+			parameter_schema: undefined,
+			file_params: undefined,
+			is_async: true,
+		};
+
+		this.websocketRoutes.push(route);
+		this.websocketHandlers[handlerName] = handler;
 	}
 
 	/**
@@ -270,11 +295,21 @@ export class Spikard implements SpikardApp {
 	}
 }
 
+export interface WebSocketOptions {
+	handlerName?: string;
+	messageSchema?: JsonSchema;
+	responseSchema?: JsonSchema;
+}
+
 function normalizeDependencyKey(key: string): string {
-	if (key.includes("_")) {
-		return key.toLowerCase();
+	if (key.startsWith("__spikard_")) {
+		return key;
 	}
-	return key
+	const trimmed = key.replace(/^_+/, "");
+	if (trimmed.includes("_")) {
+		return trimmed.toLowerCase();
+	}
+	return trimmed
 		.replace(/([a-z0-9])([A-Z])/g, "$1_$2")
 		.replace(/([A-Z])([A-Z][a-z])/g, "$1_$2")
 		.toLowerCase();

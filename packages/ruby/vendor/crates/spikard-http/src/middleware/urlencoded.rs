@@ -1,6 +1,7 @@
 //! URL-encoded form data parsing
 
 use std::collections::HashMap;
+use url::form_urlencoded;
 
 /// Parse URL-encoded form data to JSON
 ///
@@ -15,9 +16,8 @@ use std::collections::HashMap;
 /// - If brackets present → use serde_qs (handles nested objects, arrays with [])
 /// - Otherwise → use custom parser that preserves empty strings and handles duplicate keys
 pub fn parse_urlencoded_to_json(data: &[u8]) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-    let body_str = std::str::from_utf8(data)?;
-
-    if body_str.contains('[') {
+    if data.contains(&b'[') {
+        let body_str = std::str::from_utf8(data)?;
         let config = serde_qs::Config::new(10, false);
         let parsed: HashMap<String, serde_json::Value> = config.deserialize_str(body_str)?;
         let mut json_value = serde_json::to_value(parsed)?;
@@ -31,49 +31,23 @@ pub fn parse_urlencoded_to_json(data: &[u8]) -> Result<serde_json::Value, Box<dy
 /// Parse simple URL-encoded data (no brackets) while preserving empty strings
 fn parse_urlencoded_simple(data: &[u8]) -> serde_json::Value {
     use rustc_hash::FxHashMap;
-    use urlencoding::decode;
 
     let mut array_map: FxHashMap<String, Vec<serde_json::Value>> = FxHashMap::default();
 
-    let body_str = String::from_utf8_lossy(data);
-    let body_str = body_str.replace('+', " ");
-
-    for pair in body_str.split('&') {
-        if pair.is_empty() {
-            continue;
-        }
-
-        let (key, value) = if let Some((k, v)) = pair.split_once('=') {
-            (
-                decode(k).unwrap_or_default().to_string(),
-                decode(v).unwrap_or_default().to_string(),
-            )
-        } else {
-            (pair.to_string(), String::new())
-        };
-
+    for (key, value) in form_urlencoded::parse(data) {
         let json_value = convert_string_to_json_value(&value);
-
-        match array_map.get_mut(&key) {
-            Some(entry) => {
-                entry.push(json_value);
-            }
-            None => {
-                array_map.insert(key, vec![json_value]);
-            }
-        }
+        array_map.entry(key.into_owned()).or_default().push(json_value);
     }
 
-    array_map
-        .iter()
-        .map(|(key, value)| {
-            if value.len() == 1 {
-                (key, value[0].clone())
-            } else {
-                (key, serde_json::Value::Array(value.clone()))
-            }
-        })
-        .collect::<serde_json::Value>()
+    let mut obj = serde_json::Map::with_capacity(array_map.len());
+    for (key, mut values) in array_map {
+        if values.len() == 1 {
+            obj.insert(key, values.pop().unwrap_or(serde_json::Value::Null));
+        } else {
+            obj.insert(key, serde_json::Value::Array(values));
+        }
+    }
+    serde_json::Value::Object(obj)
 }
 
 /// Try to parse a string as an integer
@@ -90,10 +64,12 @@ fn try_parse_float(s: &str) -> Option<serde_json::Value> {
 
 /// Try to parse a string as a boolean (true/false, case-insensitive)
 fn try_parse_boolean(s: &str) -> Option<serde_json::Value> {
-    match s.to_lowercase().as_str() {
-        "true" => Some(serde_json::Value::Bool(true)),
-        "false" => Some(serde_json::Value::Bool(false)),
-        _ => None,
+    if s.eq_ignore_ascii_case("true") {
+        Some(serde_json::Value::Bool(true))
+    } else if s.eq_ignore_ascii_case("false") {
+        Some(serde_json::Value::Bool(false))
+    } else {
+        None
     }
 }
 
@@ -341,7 +317,6 @@ mod tests {
         assert!(try_parse_float("10.0").is_some());
         assert!(try_parse_float("-2.5").is_some());
         assert!(try_parse_float("abc").is_none());
-        // Note: integers parse as floats too (f64::parse accepts "123")
         assert!(try_parse_float("123").is_some());
     }
 
@@ -371,7 +346,6 @@ mod tests {
 
     #[test]
     fn test_deeply_nested_objects() {
-        // Test single level nesting - serde_qs supports profile[name] style
         let data = b"user[profile]=test&user[id]=123";
         let result = parse_urlencoded_to_json(data).unwrap();
 
@@ -447,7 +421,6 @@ mod tests {
         let data = b"code=00123&id=007";
         let result = parse_urlencoded_to_json(data).unwrap();
 
-        // These should parse as integers, stripping leading zeros
         assert!(result["code"].is_number());
         assert!(result["id"].is_number());
     }
@@ -491,7 +464,6 @@ mod tests {
 
     #[test]
     fn test_plus_vs_space_encoding() {
-        // Plus signs should be converted to spaces
         let data = b"message=Hello+World&greeting=Hi%20There";
         let result = parse_urlencoded_to_json(data).unwrap();
 

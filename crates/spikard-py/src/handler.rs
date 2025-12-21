@@ -53,6 +53,10 @@ fn create_msgspec_decoder<'py>(
     };
 
     let converters = py.import("spikard._internal.converters")?;
+    let supports_decoder = converters.getattr("supports_msgspec_decoder")?;
+    if !supports_decoder.call1((target_type.clone(),))?.extract::<bool>()? {
+        return Ok(None);
+    }
     let dec_hook = converters.getattr("_default_dec_hook")?;
 
     let msgspec = py.import("msgspec")?;
@@ -131,6 +135,48 @@ fn handler_param_names<'py>(
         out.insert(item.extract::<String>()?);
     }
     Ok((Some(out), first_param_name))
+}
+
+fn request_param_is_request_type<'py>(
+    py: Python<'py>,
+    handler: Bound<'py, PyAny>,
+    param_name: &str,
+) -> PyResult<Option<bool>> {
+    let func = HANDLER_METADATA.get_or_try_init(py, || {
+        let converter_module = py.import("spikard._internal.converters")?;
+        Ok::<pyo3::Py<pyo3::PyAny>, PyErr>(converter_module.getattr("_handler_metadata")?.unbind())
+    })?;
+
+    let metadata = func.bind(py).call1((handler,))?;
+    let tuple = metadata.cast_into::<pyo3::types::PyTuple>()?;
+    let type_hints_obj = tuple.get_item(0)?;
+    if type_hints_obj.is_none() {
+        return Ok(None);
+    }
+
+    let type_hints = type_hints_obj.cast_into::<pyo3::types::PyDict>()?;
+    let Some(param_type) = type_hints.get_item(param_name)? else {
+        return Ok(None);
+    };
+
+    let request_type = py.import("spikard.request")?.getattr("Request")?;
+    if param_type.is(&request_type) {
+        return Ok(Some(true));
+    }
+
+    let typing = py.import("typing")?;
+    let origin = typing.getattr("get_origin")?.call1((param_type.clone(),))?;
+    if !origin.is_none() {
+        let args = typing.getattr("get_args")?.call1((param_type,))?;
+        let args = args.cast_into::<pyo3::types::PyTuple>()?;
+        for arg in args.iter() {
+            if arg.is(&request_type) {
+                return Ok(Some(true));
+            }
+        }
+    }
+
+    Ok(Some(false))
 }
 
 fn msgspec_json_encode(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
@@ -255,7 +301,8 @@ pub struct PythonHandler {
     handler: Arc<Py<PyAny>>,
     is_async: bool,
     response_validator: Option<Arc<SchemaValidator>>,
-    parameter_validator: Option<ParameterValidator>,
+    requires_headers: bool,
+    requires_cookies: bool,
     body_param_name: String,
     needs_param_conversion: bool,
     handler_params: Option<Arc<HashSet<String>>>,
@@ -274,37 +321,73 @@ impl PythonHandler {
         body_param_name: Option<String>,
     ) -> Self {
         let body_param_name = body_param_name.unwrap_or_else(|| "body".to_string());
+        let requires_headers = parameter_validator.as_ref().is_some_and(|v| v.requires_headers());
+        let requires_cookies = parameter_validator.as_ref().is_some_and(|v| v.requires_cookies());
 
-        let (needs_param_conversion, handler_params, request_only_handler, body_only_handler, msgspec_body_decoder) =
-            Python::attach(|py| {
-                let handler_obj = handler.bind(py);
-                let needs = needs_param_conversion(py, handler_obj.clone()).unwrap_or(true);
-                let (params, first_param_name) = handler_param_names(py, handler_obj.clone()).unwrap_or((None, None));
-                let request_only = matches!(first_param_name.as_deref(), Some("request" | "req"))
-                    && params.as_ref().is_some_and(|set| set.len() == 1);
+        let validator_has_params = parameter_validator.as_ref().is_some_and(|v| v.has_params());
+        let (
+            needs_param_conversion,
+            handler_params,
+            request_only_handler,
+            body_only_handler,
+            msgspec_body_decoder,
+            body_param_name,
+        ) = Python::attach(|py| {
+            let handler_obj = handler.bind(py);
+            let needs = needs_param_conversion(py, handler_obj.clone()).unwrap_or(true);
+            let (params, first_param_name) = handler_param_names(py, handler_obj.clone()).unwrap_or((None, None));
+            let request_param_is_request = if matches!(first_param_name.as_deref(), Some("request" | "req")) {
+                request_param_is_request_type(py, handler_obj.clone(), first_param_name.as_deref().unwrap())
+                    .ok()
+                    .flatten()
+            } else {
+                None
+            };
+            let request_only = matches!(first_param_name.as_deref(), Some("request" | "req"))
+                && params.as_ref().is_some_and(|set| set.len() == 1)
+                && matches!(request_param_is_request, Some(true) | None);
 
-                let body_only = matches!(first_param_name.as_deref(), Some(name) if name == body_param_name)
-                    && params
-                        .as_ref()
-                        .is_some_and(|set| set.len() == 1 && set.contains(&body_param_name));
+            let mut effective_body_param = body_param_name.clone();
+            if effective_body_param == "body"
+                && let Some(first_param) = first_param_name.as_deref()
+                && !request_only
+                && !validator_has_params
+                && !matches!(first_param, "headers" | "cookies" | "query_params" | "path_params")
+                && params.as_ref().is_some_and(|set| set.contains(first_param))
+            {
+                effective_body_param = first_param.to_string();
+            }
 
-                let decoder = if body_only && needs {
-                    create_msgspec_decoder(py, handler_obj.clone(), &body_param_name)
-                        .ok()
-                        .flatten()
-                        .map(Arc::new)
-                } else {
-                    None
-                };
+            let body_only = matches!(first_param_name.as_deref(), Some(name) if name == effective_body_param)
+                && params
+                    .as_ref()
+                    .is_some_and(|set| set.len() == 1 && set.contains(&effective_body_param));
 
-                (needs, params.map(Arc::new), request_only, body_only, decoder)
-            });
+            let decoder = if body_only && needs {
+                create_msgspec_decoder(py, handler_obj.clone(), &effective_body_param)
+                    .ok()
+                    .flatten()
+                    .map(Arc::new)
+            } else {
+                None
+            };
+
+            (
+                needs,
+                params.map(Arc::new),
+                request_only,
+                body_only,
+                decoder,
+                effective_body_param,
+            )
+        });
 
         Self {
             handler: Arc::new(handler),
             is_async,
             response_validator,
-            parameter_validator,
+            requires_headers,
+            requires_cookies,
             body_param_name,
             needs_param_conversion,
             handler_params,
@@ -318,23 +401,7 @@ impl PythonHandler {
     ///
     /// This runs the Python code in a blocking task to avoid blocking the Tokio runtime
     pub async fn call(&self, _req: Request<Body>, request_data: RequestData) -> HandlerResult {
-        let validated_params = if let Some(validator) = &self.parameter_validator {
-            match validator.validate_and_extract(
-                &request_data.query_params,
-                &request_data.raw_query_params,
-                &request_data.path_params,
-                &request_data.headers,
-                &request_data.cookies,
-            ) {
-                Ok(params) => Some(params),
-                Err(errors) => {
-                    let problem = ProblemDetails::from_validation_error(&errors);
-                    return Err(structured_error_response(problem));
-                }
-            }
-        } else {
-            None
-        };
+        let validated_params = request_data.validated_params.clone();
 
         let handler = self.handler.clone();
         let is_async = self.is_async;
@@ -357,6 +424,7 @@ impl PythonHandler {
                     let req_obj = Py::new(py, PyHandlerRequest::new(request_data.clone()))?;
                     handler_obj.call1((req_obj,))?
                 } else if body_only_handler
+                    && request_data.body.is_null()
                     && is_json_content_type(&request_data.headers)
                     && let Some(decoder) = msgspec_body_decoder.as_ref()
                 {
@@ -371,7 +439,14 @@ impl PythonHandler {
                     let raw = request_data.raw_body.as_deref().ok_or_else(|| {
                         pyo3::exceptions::PyRuntimeError::new_err("Missing raw body bytes for JSON request")
                     })?;
-                    handler_obj.call1((pyo3::types::PyBytes::new(py, raw),))?
+                    let body_value = if !request_data.body.is_null() {
+                        request_data.body.clone()
+                    } else {
+                        serde_json::from_slice::<Value>(raw)
+                            .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {}", e)))?
+                    };
+                    let py_body = json_to_python(py, &body_value)?;
+                    handler_obj.call1((py_body,))?
                 } else {
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
                         validated_params_to_py_kwargs(
@@ -438,6 +513,7 @@ impl PythonHandler {
                         let req_obj = Py::new(py, PyHandlerRequest::new(request_data_for_sync))?;
                         handler_obj.call1((req_obj,))?
                     } else if body_only_handler
+                        && request_data_for_sync.body.is_null()
                         && is_json_content_type(&request_data_for_sync.headers)
                         && let Some(decoder) = msgspec_body_decoder.as_ref()
                     {
@@ -455,7 +531,15 @@ impl PythonHandler {
                         let raw = request_data_for_sync.raw_body.as_deref().ok_or_else(|| {
                             pyo3::exceptions::PyRuntimeError::new_err("Missing raw body bytes for JSON request")
                         })?;
-                        handler_obj.call1((pyo3::types::PyBytes::new(py, raw),))?
+                        let body_value = if !request_data_for_sync.body.is_null() {
+                            request_data_for_sync.body.clone()
+                        } else {
+                            serde_json::from_slice::<Value>(raw).map_err(|e| {
+                                pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {}", e))
+                            })?
+                        };
+                        let py_body = json_to_python(py, &body_value)?;
+                        handler_obj.call1((py_body,))?
                     } else {
                         let kwargs = if let Some(ref validated) = validated_params_for_task {
                             validated_params_to_py_kwargs(
@@ -590,15 +674,11 @@ impl Handler for PythonHandler {
     }
 
     fn prefers_parameter_extraction(&self) -> bool {
-        self.parameter_validator.is_some()
+        false
     }
 
     fn wants_headers(&self) -> bool {
-        if self
-            .parameter_validator
-            .as_ref()
-            .is_some_and(spikard_core::ParameterValidator::requires_headers)
-        {
+        if self.requires_headers {
             return true;
         }
 
@@ -611,11 +691,7 @@ impl Handler for PythonHandler {
     }
 
     fn wants_cookies(&self) -> bool {
-        if self
-            .parameter_validator
-            .as_ref()
-            .is_some_and(spikard_core::ParameterValidator::requires_cookies)
-        {
+        if self.requires_cookies {
             return true;
         }
 
@@ -657,10 +733,21 @@ fn validated_params_to_py_kwargs<'py>(
         }
 
         if is_json_content_type(&request_data.headers) {
-            if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
-                params_dict.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
-            }
-            if needs_param_conversion {
+            if !needs_param_conversion {
+                let body_value = if !request_data.body.is_null() {
+                    request_data.body.clone()
+                } else {
+                    serde_json::from_slice::<Value>(raw_bytes)
+                        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {}", e)))?
+                };
+                let py_body = json_to_python(py, &body_value)?;
+                if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+                    params_dict.set_item(body_param_name, py_body)?;
+                }
+            } else {
+                if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+                    params_dict.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
+                }
                 params_dict.set_item("_raw_json", true)?;
             }
         } else if !request_data.body.is_null() {
@@ -679,7 +766,7 @@ fn validated_params_to_py_kwargs<'py>(
     }
 
     #[cfg(feature = "di")]
-    inject_di_dependencies(py, &params_dict, request_data)?;
+    inject_di_dependencies(py, &params_dict, request_data, handler_params)?;
 
     if needs_param_conversion {
         convert_params(py, params_dict, handler)
@@ -764,11 +851,15 @@ fn inject_di_dependencies<'py>(
     py: Python<'py>,
     kwargs: &Bound<'py, PyDict>,
     request_data: &RequestData,
+    handler_params: Option<&HashSet<String>>,
 ) -> PyResult<()> {
     if let Some(ref dependencies) = request_data.dependencies {
         let keys = dependencies.keys();
 
         for key in keys {
+            if handler_params.is_some_and(|set| !set.contains(&key)) {
+                continue;
+            }
             if let Some(value) = dependencies.get_arc(&key)
                 && let Ok(py_obj) = value.downcast::<pyo3::Py<PyAny>>()
             {
@@ -845,11 +936,22 @@ fn request_data_to_py_kwargs<'py>(
         }
 
         if is_json_content_type(&request_data.headers) {
-            // Keep the fast path for JSON: pass raw bytes through so Python can decode via msgspec.
-            if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
-                kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
-            }
-            if needs_param_conversion {
+            if !needs_param_conversion {
+                let body_value = if !request_data.body.is_null() {
+                    request_data.body.clone()
+                } else {
+                    serde_json::from_slice::<Value>(raw_bytes)
+                        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {}", e)))?
+                };
+                let py_body = json_to_python(py, &body_value)?;
+                if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+                    kwargs.set_item(body_param_name, py_body)?;
+                }
+            } else {
+                // Keep the fast path for JSON: pass raw bytes through so Python can decode via msgspec.
+                if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
+                    kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
+                }
                 kwargs.set_item("_raw_json", true)?;
             }
         } else if !request_data.body.is_null() {
@@ -868,7 +970,7 @@ fn request_data_to_py_kwargs<'py>(
     }
 
     #[cfg(feature = "di")]
-    inject_di_dependencies(py, &kwargs, request_data)?;
+    inject_di_dependencies(py, &kwargs, request_data, handler_params)?;
 
     if needs_param_conversion || handler_params.is_none() {
         convert_params(py, kwargs, handler)

@@ -37,6 +37,9 @@ export type {
 	JsonValue,
 	MaybePromise,
 	StructuredHandlerResponse,
+	WebSocketHandler,
+	WebSocketHandlerLike,
+	WebSocketServerSocket,
 } from "./types";
 
 /**
@@ -106,6 +109,10 @@ export interface SpikardApp {
 	routes: RouteMetadata[];
 	/** Handler functions mapped by handler_name */
 	handlers: Record<string, HandlerFunction>;
+	/** WebSocket route metadata array */
+	websocketRoutes?: RouteMetadata[];
+	/** WebSocket handlers mapped by handler_name */
+	websocketHandlers?: Record<string, import("./types").WebSocketHandlerLike>;
 	/** Optional server configuration (for middleware, auth, etc.) */
 	config?: import("./config").ServerConfig;
 	/** Optional lifecycle hooks */

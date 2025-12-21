@@ -13,6 +13,12 @@ use serde_json::Value;
 use std::sync::Arc;
 use tracing::{debug, error, info, warn};
 
+fn trace_ws(message: &str) {
+    if std::env::var("SPIKARD_WS_TRACE").ok().as_deref() == Some("1") {
+        eprintln!("[spikard-ws] {message}");
+    }
+}
+
 /// WebSocket message handler trait
 ///
 /// Implement this trait to create custom WebSocket message handlers for your application.
@@ -221,85 +227,110 @@ pub async fn websocket_handler<H: WebSocketHandler + 'static>(
 /// Handle an individual WebSocket connection
 async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSocketState<H>) {
     info!("WebSocket client connected");
+    trace_ws("socket:connected");
 
     state.handler.on_connect().await;
+    trace_ws("socket:on_connect:done");
 
     while let Some(msg) = socket.recv().await {
         match msg {
             Ok(Message::Text(text)) => {
                 debug!("Received text message: {}", text);
+                trace_ws(&format!("recv:text len={}", text.len()));
 
                 match serde_json::from_str::<Value>(&text) {
                     Ok(json_msg) => {
+                        trace_ws("recv:text:json-ok");
                         if let Some(validator) = &state.message_schema
                             && !validator.is_valid(&json_msg)
                         {
                             error!("Message validation failed");
+                            trace_ws("recv:text:validation-failed");
                             let error_response = serde_json::json!({
                                 "error": "Message validation failed"
                             });
                             if let Ok(error_text) = serde_json::to_string(&error_response) {
+                                trace_ws(&format!("send:validation-error len={}", error_text.len()));
                                 let _ = socket.send(Message::Text(error_text.into())).await;
                             }
                             continue;
                         }
 
                         if let Some(response) = state.handler.handle_message(json_msg).await {
+                            trace_ws("handler:response:some");
                             if let Some(validator) = &state.response_schema
                                 && !validator.is_valid(&response)
                             {
                                 error!("Response validation failed");
+                                trace_ws("send:response:validation-failed");
                                 continue;
                             }
 
                             let response_text = serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string());
+                            let response_len = response_text.len();
 
                             if let Err(e) = socket.send(Message::Text(response_text.into())).await {
                                 error!("Failed to send response: {}", e);
+                                trace_ws("send:response:error");
                                 break;
                             }
+                            trace_ws(&format!("send:response len={}", response_len));
+                        } else {
+                            trace_ws("handler:response:none");
                         }
                     }
                     Err(e) => {
                         warn!("Failed to parse JSON message: {}", e);
+                        trace_ws("recv:text:json-error");
                         let error_msg = serde_json::json!({
                             "type": "error",
                             "message": "Invalid JSON"
                         });
                         let error_text = serde_json::to_string(&error_msg).unwrap_or_else(|_| "{}".to_string());
+                        trace_ws(&format!("send:json-error len={}", error_text.len()));
                         let _ = socket.send(Message::Text(error_text.into())).await;
                     }
                 }
             }
             Ok(Message::Binary(data)) => {
                 debug!("Received binary message: {} bytes", data.len());
+                trace_ws(&format!("recv:binary len={}", data.len()));
                 if let Err(e) = socket.send(Message::Binary(data)).await {
                     error!("Failed to send binary response: {}", e);
+                    trace_ws("send:binary:error");
                     break;
                 }
+                trace_ws("send:binary:ok");
             }
             Ok(Message::Ping(data)) => {
                 debug!("Received ping");
+                trace_ws(&format!("recv:ping len={}", data.len()));
                 if let Err(e) = socket.send(Message::Pong(data)).await {
                     error!("Failed to send pong: {}", e);
+                    trace_ws("send:pong:error");
                     break;
                 }
+                trace_ws("send:pong:ok");
             }
             Ok(Message::Pong(_)) => {
                 debug!("Received pong");
+                trace_ws("recv:pong");
             }
             Ok(Message::Close(_)) => {
                 info!("Client closed connection");
+                trace_ws("recv:close");
                 break;
             }
             Err(e) => {
                 error!("WebSocket error: {}", e);
+                trace_ws(&format!("recv:error {}", e));
                 break;
             }
         }
     }
 
     state.handler.on_disconnect().await;
+    trace_ws("socket:on_disconnect:done");
     info!("WebSocket client disconnected");
 }
 

@@ -107,7 +107,6 @@ impl Dependency for FactoryDependency {
         request_data: &RequestData,
         resolved: &ResolvedDependencies,
     ) -> Pin<Box<dyn Future<Output = Result<Arc<dyn Any + Send + Sync>, DependencyError>> + Send>> {
-        // Call the factory function
         (self.factory)(request, request_data, resolved)
     }
 
@@ -350,6 +349,7 @@ mod tests {
         RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: serde_json::Value::Null,
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: serde_json::Value::Null,
             raw_body: None,
@@ -406,7 +406,6 @@ mod tests {
         let factory = FactoryDependency::builder("async_value")
             .factory(|_req, _data, _resolved| {
                 Box::pin(async {
-                    // Simulate async work
                     tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
                     Ok(Arc::new(100i32) as Arc<dyn Any + Send + Sync>)
                 })
@@ -426,7 +425,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_factory_depends_on() {
-        // Create resolved dependencies with a value
         let mut resolved = ResolvedDependencies::new();
         resolved.insert("config".to_string(), Arc::new("test_config".to_string()));
 
@@ -435,7 +433,6 @@ mod tests {
             .factory(|_req, _data, resolved| {
                 let resolved = resolved.clone();
                 Box::pin(async move {
-                    // Access the config dependency
                     let config: Option<Arc<String>> = resolved.get("config");
                     let config_value = config.map(|c| (*c).clone()).unwrap_or_default();
 
@@ -505,7 +502,6 @@ mod tests {
         let request_data = make_request_data();
         let resolved = ResolvedDependencies::new();
 
-        // Call factory multiple times
         for i in 0..3 {
             let result = factory.resolve(&request, &request_data, &resolved).await;
             let value: Arc<u32> = result.unwrap().downcast().unwrap();

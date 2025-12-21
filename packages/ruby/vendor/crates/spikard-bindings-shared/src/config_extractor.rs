@@ -9,7 +9,7 @@
 //! works with any `ConfigSource` implementation.
 
 use spikard_http::{
-    ApiKeyConfig, BackgroundTaskConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig,
+    ApiKeyConfig, CompressionConfig, ContactInfo, JsonRpcConfig, JwtConfig, LicenseInfo, OpenApiConfig,
     RateLimitConfig, SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
 };
 use std::collections::HashMap;
@@ -67,72 +67,81 @@ pub struct ConfigExtractor;
 impl ConfigExtractor {
     /// Extract a complete ServerConfig from a ConfigSource
     pub fn extract_server_config(source: &dyn ConfigSource) -> Result<ServerConfig, String> {
-        let host = source
-            .get_string("host")
-            .or_else(|| source.get_string("Host"))
-            .unwrap_or_else(|| "127.0.0.1".to_string());
+        let mut config = ServerConfig::default();
 
-        let port = source
+        if let Some(host) = source.get_string("host").or_else(|| source.get_string("Host")) {
+            config.host = host;
+        }
+
+        if let Some(port) = source
             .get_u16("port")
             .or_else(|| source.get_u32("port").map(|p| p as u16))
-            .unwrap_or(8000);
+        {
+            config.port = port;
+        }
 
-        let workers = source
+        if let Some(workers) = source
             .get_usize("workers")
             .or_else(|| source.get_u32("workers").map(|w| w as usize))
-            .unwrap_or(1);
+        {
+            config.workers = workers;
+        }
 
-        let enable_request_id = source.get_bool("enable_request_id").unwrap_or(true);
+        if let Some(enable_request_id) = source.get_bool("enable_request_id") {
+            config.enable_request_id = enable_request_id;
+        }
 
-        let max_body_size = source.get_usize("max_body_size");
+        // `max_body_size = 0` is treated as unlimited.
+        if let Some(max_body_size) = source
+            .get_usize("max_body_size")
+            .or_else(|| source.get_u32("max_body_size").map(|v| v as usize))
+        {
+            config.max_body_size = if max_body_size == 0 { None } else { Some(max_body_size) };
+        }
 
-        let request_timeout = source.get_u64("request_timeout");
+        if let Some(request_timeout) = source.get_u64("request_timeout") {
+            config.request_timeout = Some(request_timeout);
+        }
 
-        let graceful_shutdown = source.get_bool("graceful_shutdown").unwrap_or(true);
+        if let Some(graceful_shutdown) = source.get_bool("graceful_shutdown") {
+            config.graceful_shutdown = graceful_shutdown;
+        }
 
-        let shutdown_timeout = source.get_u64("shutdown_timeout").unwrap_or(30);
+        if let Some(shutdown_timeout) = source.get_u64("shutdown_timeout") {
+            config.shutdown_timeout = shutdown_timeout;
+        }
 
-        let compression = source
+        config.compression = source
             .get_nested("compression")
             .and_then(|cfg| Self::extract_compression_config(cfg.as_ref()).ok());
 
-        let rate_limit = source
+        config.rate_limit = source
             .get_nested("rate_limit")
             .and_then(|cfg| Self::extract_rate_limit_config(cfg.as_ref()).ok());
 
-        let jwt_auth = source
+        config.jwt_auth = source
             .get_nested("jwt_auth")
             .and_then(|cfg| Self::extract_jwt_config(cfg.as_ref()).ok());
 
-        let api_key_auth = source
+        config.api_key_auth = source
             .get_nested("api_key_auth")
             .and_then(|cfg| Self::extract_api_key_config(cfg.as_ref()).ok());
 
-        let static_files = Self::extract_static_files_config(source)?;
+        config.static_files = Self::extract_static_files_config(source)?;
 
-        let openapi = source
+        config.openapi = source
             .get_nested("openapi")
             .and_then(|cfg| Self::extract_openapi_config(cfg.as_ref()).ok());
 
-        Ok(ServerConfig {
-            host,
-            port,
-            workers,
-            enable_request_id,
-            max_body_size,
-            request_timeout,
-            compression,
-            rate_limit,
-            jwt_auth,
-            api_key_auth,
-            static_files,
-            graceful_shutdown,
-            shutdown_timeout,
-            background_tasks: BackgroundTaskConfig::default(),
-            openapi,
-            lifecycle_hooks: None,
-            di_container: None,
-        })
+        config.jsonrpc = source
+            .get_nested("jsonrpc")
+            .and_then(|cfg| Self::extract_jsonrpc_config(cfg.as_ref()).ok());
+
+        if let Some(enable_http_trace) = source.get_bool("enable_http_trace") {
+            config.enable_http_trace = enable_http_trace;
+        }
+
+        Ok(config)
     }
 
     /// Extract CompressionConfig from a ConfigSource
@@ -315,14 +324,32 @@ impl ConfigExtractor {
         _source: &dyn ConfigSource,
     ) -> Result<HashMap<String, SecuritySchemeInfo>, String> {
         // TODO: Implement when bindings support iterating HashMap-like structures
-        // For now, return empty map as default
         Ok(HashMap::new())
+    }
+
+    /// Extract JsonRpcConfig from a ConfigSource
+    pub fn extract_jsonrpc_config(source: &dyn ConfigSource) -> Result<JsonRpcConfig, String> {
+        let enabled = source.get_bool("enabled").unwrap_or(true);
+        let endpoint_path = source.get_string("endpoint_path").unwrap_or_else(|| "/rpc".to_string());
+        let enable_batch = source.get_bool("enable_batch").unwrap_or(true);
+        let max_batch_size = source
+            .get_usize("max_batch_size")
+            .or_else(|| source.get_u32("max_batch_size").map(|s| s as usize))
+            .unwrap_or(100);
+
+        Ok(JsonRpcConfig {
+            enabled,
+            endpoint_path,
+            enable_batch,
+            max_batch_size,
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::Value;
 
     struct MockConfigSource {
         data: HashMap<String, String>,
@@ -536,8 +563,8 @@ mod tests {
         assert_eq!(config.host, "127.0.0.1");
         assert_eq!(config.port, 8000);
         assert_eq!(config.workers, 1);
-        assert!(config.enable_request_id);
-        assert_eq!(config.max_body_size, None);
+        assert!(!config.enable_request_id);
+        assert_eq!(config.max_body_size, Some(10 * 1024 * 1024));
         assert_eq!(config.request_timeout, None);
         assert!(config.graceful_shutdown);
         assert_eq!(config.shutdown_timeout, 30);
@@ -557,5 +584,169 @@ mod tests {
 
         let schemes = ConfigExtractor::extract_security_schemes_config(&source).unwrap();
         assert_eq!(schemes.len(), 0);
+    }
+
+    struct JsonConfigSource<'a> {
+        value: &'a Value,
+    }
+
+    impl<'a> JsonConfigSource<'a> {
+        fn new(value: &'a Value) -> Self {
+            Self { value }
+        }
+    }
+
+    impl ConfigSource for JsonConfigSource<'_> {
+        fn get_bool(&self, key: &str) -> Option<bool> {
+            self.value.get(key)?.as_bool()
+        }
+
+        fn get_u64(&self, key: &str) -> Option<u64> {
+            self.value.get(key)?.as_u64()
+        }
+
+        fn get_u16(&self, key: &str) -> Option<u16> {
+            u16::try_from(self.get_u64(key)?).ok()
+        }
+
+        fn get_string(&self, key: &str) -> Option<String> {
+            self.value.get(key)?.as_str().map(str::to_string)
+        }
+
+        fn get_vec_string(&self, key: &str) -> Option<Vec<String>> {
+            self.value
+                .get(key)?
+                .as_array()
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(str::to_string)).collect())
+        }
+
+        fn get_nested(&self, key: &str) -> Option<Box<dyn ConfigSource + '_>> {
+            let nested = self.value.get(key)?;
+            nested
+                .is_object()
+                .then(|| Box::new(JsonConfigSource::new(nested)) as Box<dyn ConfigSource>)
+        }
+
+        fn has_key(&self, key: &str) -> bool {
+            self.value.get(key).is_some()
+        }
+
+        fn get_array_length(&self, key: &str) -> Option<usize> {
+            self.value.get(key)?.as_array().map(Vec::len)
+        }
+
+        fn get_array_element(&self, key: &str, index: usize) -> Option<Box<dyn ConfigSource + '_>> {
+            let arr = self.value.get(key)?.as_array()?;
+            let elem = arr.get(index)?;
+            elem.is_object()
+                .then(|| Box::new(JsonConfigSource::new(elem)) as Box<dyn ConfigSource>)
+        }
+    }
+
+    #[test]
+    fn test_static_files_extraction_supports_arrays() {
+        let value = serde_json::json!({
+            "static_files": [
+                {
+                    "directory": "public",
+                    "route_prefix": "/assets",
+                    "index_file": true,
+                    "cache_control": "public, max-age=3600"
+                }
+            ]
+        });
+        let source = JsonConfigSource::new(&value);
+        let configs = ConfigExtractor::extract_static_files_config(&source).expect("extract");
+        assert_eq!(configs.len(), 1);
+        assert_eq!(configs[0].directory, "public");
+        assert_eq!(configs[0].route_prefix, "/assets");
+        assert!(configs[0].index_file);
+        assert_eq!(configs[0].cache_control.as_deref(), Some("public, max-age=3600"));
+    }
+
+    #[test]
+    fn test_static_files_extraction_missing_required_fields_errors() {
+        let value = serde_json::json!({
+            "static_files": [
+                {
+                    "route_prefix": "/assets"
+                }
+            ]
+        });
+        let source = JsonConfigSource::new(&value);
+        let err = ConfigExtractor::extract_static_files_config(&source).expect_err("missing directory should error");
+        assert!(
+            err.contains("Static files requires 'directory'"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn test_static_files_extraction_array_element_missing_errors() {
+        struct BrokenArraySource;
+
+        impl ConfigSource for BrokenArraySource {
+            fn get_bool(&self, _key: &str) -> Option<bool> {
+                None
+            }
+
+            fn get_u64(&self, _key: &str) -> Option<u64> {
+                None
+            }
+
+            fn get_u16(&self, _key: &str) -> Option<u16> {
+                None
+            }
+
+            fn get_string(&self, _key: &str) -> Option<String> {
+                None
+            }
+
+            fn get_vec_string(&self, _key: &str) -> Option<Vec<String>> {
+                None
+            }
+
+            fn get_nested(&self, _key: &str) -> Option<Box<dyn ConfigSource + '_>> {
+                None
+            }
+
+            fn has_key(&self, _key: &str) -> bool {
+                false
+            }
+
+            fn get_array_length(&self, key: &str) -> Option<usize> {
+                (key == "static_files").then_some(1)
+            }
+
+            fn get_array_element(&self, _key: &str, _index: usize) -> Option<Box<dyn ConfigSource + '_>> {
+                None
+            }
+        }
+
+        let err = ConfigExtractor::extract_static_files_config(&BrokenArraySource)
+            .expect_err("missing array element should error");
+        assert!(
+            err.contains("Failed to get static files array element"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn test_server_config_prefers_host_key_variants() {
+        let value = serde_json::json!({
+            "Host": "0.0.0.0",
+            "port": 9000,
+            "workers": 2,
+            "enable_request_id": false,
+            "graceful_shutdown": true,
+            "shutdown_timeout": 1,
+            "static_files": []
+        });
+        let source = JsonConfigSource::new(&value);
+        let cfg = ConfigExtractor::extract_server_config(&source).expect("extract");
+        assert_eq!(cfg.host, "0.0.0.0");
+        assert_eq!(cfg.port, 9000);
+        assert_eq!(cfg.workers, 2);
+        assert!(!cfg.enable_request_id);
     }
 }

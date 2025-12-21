@@ -112,6 +112,16 @@ impl ProblemDetails {
         self
     }
 
+    /// Add all extensions from a JSON object
+    pub fn with_extensions(mut self, extensions: Value) -> Self {
+        if let Some(obj) = extensions.as_object() {
+            for (key, value) in obj {
+                self.extensions.insert(key.clone(), value.clone());
+            }
+        }
+        self
+    }
+
     /// Create a validation error Problem Details from ValidationError
     ///
     /// This converts the FastAPI-style validation errors to RFC 9457 format:
@@ -301,6 +311,30 @@ mod tests {
         assert!(problem.extensions.contains_key("exception"));
         assert!(problem.extensions.contains_key("traceback"));
         assert!(problem.extensions.contains_key("request_data"));
+    }
+
+    #[test]
+    fn test_validation_error_conversion_single_error_uses_singular_detail() {
+        let validation_error = ValidationError {
+            errors: vec![ValidationErrorDetail {
+                error_type: "missing".to_string(),
+                loc: vec!["query".to_string(), "id".to_string()],
+                msg: "Field required".to_string(),
+                input: Value::Null,
+                ctx: None,
+            }],
+        };
+
+        let problem = ProblemDetails::from_validation_error(&validation_error);
+        assert_eq!(problem.status, 422);
+        assert_eq!(problem.detail, Some("1 validation error in request".to_string()));
+    }
+
+    #[test]
+    fn test_with_extensions_ignores_non_object_values() {
+        let problem =
+            ProblemDetails::new("about:blank", "Test", StatusCode::BAD_REQUEST).with_extensions(Value::Bool(true));
+        assert!(problem.extensions.is_empty());
     }
 
     #[test]

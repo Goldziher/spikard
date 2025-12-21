@@ -7,7 +7,6 @@ use axum::body::Body;
 use axum::http::Request;
 use serde_json::json;
 use spikard_bindings_shared::handler_base::{HandlerError, HandlerExecutor, LanguageHandler};
-use spikard_core::parameters::ParameterValidator;
 use spikard_core::validation::{SchemaValidator, ValidationError, ValidationErrorDetail};
 use spikard_http::handler_trait::{Handler, RequestData};
 use std::collections::HashMap;
@@ -15,7 +14,6 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-// Mock handler that returns controlled responses
 struct MockHandler {
     should_fail_prepare: bool,
     should_fail_invoke: bool,
@@ -62,7 +60,6 @@ impl LanguageHandler for MockHandler {
 
 #[tokio::test]
 async fn test_handler_executor_with_validation_error() {
-    // Create a validator that will reject the request
     let schema = json!({
         "type": "object",
         "properties": {
@@ -79,14 +76,14 @@ async fn test_handler_executor_with_validation_error() {
         should_fail_interpret: false,
     });
 
-    let executor = HandlerExecutor::new(handler, Some(validator), None);
+    let executor = HandlerExecutor::new(handler, Some(validator));
 
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
-        // Missing required field 'age'
         body: json!({"username": "john"}),
         raw_body: None,
         headers: Arc::new(HashMap::new()),
@@ -98,82 +95,6 @@ async fn test_handler_executor_with_validation_error() {
 
     let result = executor.call(request, request_data).await;
     assert!(result.is_err());
-}
-
-#[tokio::test]
-async fn test_handler_executor_with_parameter_validation() {
-    // Create a parameter validator with schema
-    let param_schema = json!({
-        "type": "object",
-        "properties": {
-            "page": {"type": "number", "source": "query"}
-        },
-        "required": ["page"]
-    });
-    let param_validator = ParameterValidator::new(param_schema).unwrap();
-
-    let handler = Arc::new(MockHandler {
-        should_fail_prepare: false,
-        should_fail_invoke: false,
-        should_fail_interpret: false,
-    });
-
-    let executor = HandlerExecutor::new(handler, None, Some(Arc::new(param_validator)));
-
-    let request = Request::builder().body(Body::empty()).unwrap();
-    let request_data = RequestData {
-        path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
-        raw_query_params: Arc::new(HashMap::new()),
-        body: json!({}),
-        raw_body: None,
-        headers: Arc::new(HashMap::new()),
-        cookies: Arc::new(HashMap::new()),
-        method: "GET".to_string(),
-        path: "/test".to_string(),
-        dependencies: None,
-    };
-
-    // Missing required query param should fail validation
-    let result = executor.call(request, request_data).await;
-    assert!(result.is_err());
-}
-
-#[tokio::test]
-async fn test_handler_executor_with_valid_parameters() {
-    // Create a parameter validator with optional param
-    let param_schema = json!({
-        "type": "object",
-        "properties": {
-            "page": {"type": "number", "source": "query"}
-        }
-    });
-    let param_validator = ParameterValidator::new(param_schema).unwrap();
-
-    let handler = Arc::new(MockHandler {
-        should_fail_prepare: false,
-        should_fail_invoke: false,
-        should_fail_interpret: false,
-    });
-
-    let executor = HandlerExecutor::new(handler, None, Some(Arc::new(param_validator)));
-
-    let request = Request::builder().body(Body::empty()).unwrap();
-    let request_data = RequestData {
-        path_params: Arc::new(HashMap::new()),
-        query_params: json!({"page": 1}),
-        raw_query_params: Arc::new(HashMap::new()),
-        body: json!({}),
-        raw_body: None,
-        headers: Arc::new(HashMap::new()),
-        cookies: Arc::new(HashMap::new()),
-        method: "GET".to_string(),
-        path: "/test".to_string(),
-        dependencies: None,
-    };
-
-    let result = executor.call(request, request_data).await;
-    assert!(result.is_ok());
 }
 
 #[tokio::test]
@@ -190,6 +111,7 @@ async fn test_handler_executor_prepare_failure() {
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
         body: json!({}),
         raw_body: None,
@@ -218,6 +140,7 @@ async fn test_handler_executor_invoke_failure() {
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
         body: json!({}),
         raw_body: None,
@@ -246,6 +169,7 @@ async fn test_handler_executor_interpret_failure() {
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
         body: json!({}),
         raw_body: None,
@@ -261,8 +185,7 @@ async fn test_handler_executor_interpret_failure() {
 }
 
 #[tokio::test]
-async fn test_handler_executor_with_both_validators() {
-    // Create both request and parameter validators
+async fn test_handler_executor_with_request_validator() {
     let schema = json!({
         "type": "object",
         "properties": {
@@ -272,32 +195,23 @@ async fn test_handler_executor_with_both_validators() {
     });
     let request_validator = Arc::new(SchemaValidator::new(schema).unwrap());
 
-    let param_schema = json!({
-        "type": "object",
-        "properties": {
-            "x-api-key": {"type": "string", "source": "header"}
-        },
-        "required": ["x-api-key"]
-    });
-    let param_validator = ParameterValidator::new(param_schema).unwrap();
-
     let handler = Arc::new(MockHandler {
         should_fail_prepare: false,
         should_fail_invoke: false,
         should_fail_interpret: false,
     });
 
-    let executor = HandlerExecutor::new(handler, Some(request_validator), Some(Arc::new(param_validator)));
+    let executor = HandlerExecutor::new(handler, Some(request_validator));
 
     let request = Request::builder().body(Body::empty()).unwrap();
 
-    // Valid request with all requirements
     let mut headers = HashMap::new();
     headers.insert("x-api-key".to_string(), "test-key".to_string());
 
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
         body: json!({"name": "test"}),
         raw_body: None,
@@ -310,43 +224,6 @@ async fn test_handler_executor_with_both_validators() {
 
     let result = executor.call(request, request_data).await;
     assert!(result.is_ok());
-}
-
-#[tokio::test]
-async fn test_handler_executor_parameter_validation_failure() {
-    let param_schema = json!({
-        "type": "object",
-        "properties": {
-            "authorization": {"type": "string", "source": "header"}
-        },
-        "required": ["authorization"]
-    });
-    let param_validator = ParameterValidator::new(param_schema).unwrap();
-
-    let handler = Arc::new(MockHandler {
-        should_fail_prepare: false,
-        should_fail_invoke: false,
-        should_fail_interpret: false,
-    });
-
-    let executor = HandlerExecutor::with_handler(handler).with_parameter_validator(Arc::new(param_validator));
-
-    let request = Request::builder().body(Body::empty()).unwrap();
-    let request_data = RequestData {
-        path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
-        raw_query_params: Arc::new(HashMap::new()),
-        body: json!({}),
-        raw_body: None,
-        headers: Arc::new(HashMap::new()), // Missing required header
-        cookies: Arc::new(HashMap::new()),
-        method: "GET".to_string(),
-        path: "/test".to_string(),
-        dependencies: None,
-    };
-
-    let result = executor.call(request, request_data).await;
-    assert!(result.is_err());
 }
 
 #[test]
@@ -375,29 +252,19 @@ async fn test_handler_executor_builder_pattern() {
     });
     let request_validator = Arc::new(SchemaValidator::new(schema).unwrap());
 
-    let param_schema = json!({
-        "type": "object",
-        "properties": {
-            "session_id": {"type": "string", "source": "cookie"}
-        }
-    });
-    let param_validator = ParameterValidator::new(param_schema).unwrap();
-
     let handler = Arc::new(MockHandler {
         should_fail_prepare: false,
         should_fail_invoke: false,
         should_fail_interpret: false,
     });
 
-    // Test builder pattern chaining
-    let executor = HandlerExecutor::with_handler(handler)
-        .with_request_validator(request_validator)
-        .with_parameter_validator(Arc::new(param_validator));
+    let executor = HandlerExecutor::with_handler(handler).with_request_validator(request_validator);
 
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
         body: json!({"email": "test@example.com"}),
         raw_body: None,

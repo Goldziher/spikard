@@ -136,6 +136,7 @@ pub fn create_request_data_without_body(
         } else {
             Arc::new(raw_query_params)
         },
+        validated_params: None,
         headers: if options.include_headers {
             Arc::new(extract_headers(headers))
         } else {
@@ -194,6 +195,7 @@ pub async fn create_request_data_with_body(
         } else {
             Arc::new(raw_query_params)
         },
+        validated_params: None,
         headers: if include_headers {
             Arc::new(extract_headers(&parts.headers))
         } else {

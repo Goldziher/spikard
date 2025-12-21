@@ -9,7 +9,6 @@ use std::sync::Arc;
 
 use axum::body::Body;
 use axum::http::{Request, Response};
-use spikard_core::parameters::ParameterValidator;
 use spikard_core::validation::{SchemaValidator, ValidationError};
 use spikard_http::Handler;
 use spikard_http::handler_trait::{HandlerResult, RequestData};
@@ -70,7 +69,6 @@ pub trait LanguageHandler: Send + Sync {
 /// Universal handler executor that works with any language binding
 ///
 /// This struct consolidates the common handler execution flow:
-/// - Parameter validation
 /// - Request body validation
 /// - Handler invocation
 /// - Error handling and formatting
@@ -79,20 +77,14 @@ pub trait LanguageHandler: Send + Sync {
 pub struct HandlerExecutor<L: LanguageHandler> {
     language_handler: Arc<L>,
     request_validator: Option<Arc<SchemaValidator>>,
-    parameter_validator: Option<Arc<ParameterValidator>>,
 }
 
 impl<L: LanguageHandler> HandlerExecutor<L> {
     /// Create a new handler executor
-    pub fn new(
-        language_handler: Arc<L>,
-        request_validator: Option<Arc<SchemaValidator>>,
-        parameter_validator: Option<Arc<ParameterValidator>>,
-    ) -> Self {
+    pub fn new(language_handler: Arc<L>, request_validator: Option<Arc<SchemaValidator>>) -> Self {
         Self {
             language_handler,
             request_validator,
-            parameter_validator,
         }
     }
 
@@ -101,7 +93,6 @@ impl<L: LanguageHandler> HandlerExecutor<L> {
         Self {
             language_handler,
             request_validator: None,
-            parameter_validator: None,
         }
     }
 
@@ -110,38 +101,15 @@ impl<L: LanguageHandler> HandlerExecutor<L> {
         self.request_validator = Some(validator);
         self
     }
-
-    /// Add parameter validation to this executor
-    pub fn with_parameter_validator(mut self, validator: Arc<ParameterValidator>) -> Self {
-        self.parameter_validator = Some(validator);
-        self
-    }
 }
 
 impl<L: LanguageHandler + 'static> Handler for HandlerExecutor<L> {
     fn call(
         &self,
         _request: Request<Body>,
-        mut request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            if let Some(validator) = &self.parameter_validator {
-                match validator.validate_and_extract(
-                    &request_data.query_params,
-                    &request_data.raw_query_params,
-                    &request_data.path_params,
-                    &request_data.headers,
-                    &request_data.cookies,
-                ) {
-                    Ok(validated_params) => {
-                        request_data.query_params = validated_params;
-                    }
-                    Err(validation_err) => {
-                        return Err(ErrorResponseBuilder::validation_error(&validation_err));
-                    }
-                }
-            }
-
             if let Some(validator) = &self.request_validator
                 && let Err(validation_err) = validator.validate(&request_data.body)
             {
@@ -199,12 +167,13 @@ mod tests {
     #[tokio::test]
     async fn test_handler_executor_basic() {
         let mock_handler = Arc::new(MockLanguageHandler);
-        let executor = HandlerExecutor::new(mock_handler, None, None);
+        let executor = HandlerExecutor::new(mock_handler, None);
 
         let request = Request::builder().body(Body::empty()).unwrap();
         let request_data = RequestData {
             path_params: Arc::new(std::collections::HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(std::collections::HashMap::new()),
             body: json!({}),
             raw_body: None,
@@ -228,6 +197,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(std::collections::HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(std::collections::HashMap::new()),
             body: json!({}),
             raw_body: None,

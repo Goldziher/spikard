@@ -18,7 +18,8 @@ namespace :ext do
   task build: [:clean] do
     Dir.chdir(File.expand_path('ext/spikard_rb', __dir__)) do
       profile = ENV.fetch('CARGO_PROFILE', 'release')
-      sh({ 'CARGO_PROFILE' => profile }, 'bundle exec ruby extconf.rb')
+      bundle_bin = ENV.fetch('BUNDLE_BIN', 'bundle')
+      sh({ 'CARGO_PROFILE' => profile }, "#{bundle_bin} exec ruby extconf.rb")
       sh({ 'CARGO_PROFILE' => profile }, 'make')
 
       extension_dir = File.expand_path('lib', __dir__)
@@ -44,5 +45,6 @@ task compile: ['ext:build']
 
 desc 'Run the Ruby spec suite'
 task :spec do
-  sh 'bundle exec rspec'
+  bundle_bin = ENV.fetch('BUNDLE_BIN', 'bundle')
+  sh "#{bundle_bin} exec rspec"
 end

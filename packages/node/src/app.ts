@@ -41,6 +41,85 @@ interface DependencyDescriptor {
 	cacheable: boolean;
 }
 
+const ASYNC_GENERATOR_REGISTRY = new Map<string, AsyncGenerator<unknown, unknown, unknown>>();
+let ASYNC_GENERATOR_COUNTER = 0;
+
+const isAsyncGenerator = (value: unknown): value is AsyncGenerator<unknown, unknown, unknown> => {
+	return typeof value === "object" && value !== null && Symbol.asyncIterator in value;
+};
+
+const normalizeDependencyKey = (key: string): string =>
+	key
+		.replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+		.replace(/-/g, "_")
+		.toLowerCase();
+
+const inferDependsOn = (factory: DependencyFactory): string[] => {
+	const source = factory.toString();
+	const parenMatch = source.match(/^[^(]*\(([^)]*)\)/);
+	if (parenMatch) {
+		const rawParams = (parenMatch[1] ?? "")
+			.split(",")
+			.map((param) => param.trim())
+			.filter((param) => param.length > 0);
+		return rawParams
+			.filter((param) => !param.startsWith("{") && !param.startsWith("["))
+			.map((param) => param.replace(/^\.{3}/, ""))
+			.map((param) => param.split("=")[0]?.trim() ?? "")
+			.filter((param) => param.length > 0)
+			.map((param) => normalizeDependencyKey(param));
+	}
+
+	const arrowMatch = source.match(/^\s*([A-Za-z0-9_$]+)\s*=>/);
+	if (arrowMatch) {
+		return [normalizeDependencyKey(arrowMatch[1] ?? "")].filter((param) => param.length > 0);
+	}
+
+	return [];
+};
+
+const parseDependencies = (payload: unknown): Record<string, DependencyValue> => {
+	if (typeof payload === "string") {
+		try {
+			const parsed = JSON.parse(payload) as Record<string, DependencyValue>;
+			return parsed ?? {};
+		} catch {
+			return {};
+		}
+	}
+	if (typeof payload === "object" && payload !== null) {
+		return payload as Record<string, DependencyValue>;
+	}
+	return {};
+};
+
+const wrapDependencyFactory = (factory: DependencyFactory): DependencyFactory => {
+	return async (payload: Record<string, DependencyValue> | string) => {
+		const deps = parseDependencies(payload);
+		const cleanupId = (deps as Record<string, DependencyValue>).__cleanup_id__;
+		if (typeof cleanupId === "string") {
+			const generator = ASYNC_GENERATOR_REGISTRY.get(cleanupId);
+			if (generator) {
+				ASYNC_GENERATOR_REGISTRY.delete(cleanupId);
+				if (typeof generator.return === "function") {
+					await generator.return(undefined);
+				}
+			}
+			return JSON.stringify({ ok: true });
+		}
+
+		const result = await factory(deps);
+		if (isAsyncGenerator(result)) {
+			const { value } = await result.next();
+			const id = `gen_${ASYNC_GENERATOR_COUNTER++}`;
+			ASYNC_GENERATOR_REGISTRY.set(id, result);
+			return JSON.stringify({ __async_generator__: true, value, cleanup_id: id });
+		}
+
+		return result === undefined ? "null" : JSON.stringify(result);
+	};
+};
+
 /**
  * Payload type provided to lifecycle hooks
  */
@@ -292,13 +371,19 @@ export class Spikard implements SpikardApp {
 	 * ```
 	 */
 	provide(key: string, valueOrFactory: DependencyValue | DependencyFactory, options?: DependencyOptions): this {
+		const normalizedKey = normalizeDependencyKey(key);
 		const isFactory = typeof valueOrFactory === "function";
+		const factory = isFactory ? wrapDependencyFactory(valueOrFactory as DependencyFactory) : undefined;
+		const explicitDependsOn = options?.dependsOn;
+		const inferredDependsOn =
+			isFactory && explicitDependsOn === undefined ? inferDependsOn(valueOrFactory as DependencyFactory) : [];
+		const dependsOn = (explicitDependsOn ?? inferredDependsOn).map((depKey) => normalizeDependencyKey(depKey));
 
-		this.dependencies[key] = {
+		this.dependencies[normalizedKey] = {
 			isFactory,
 			value: isFactory ? undefined : valueOrFactory,
-			factory: isFactory ? (valueOrFactory as DependencyFactory) : undefined,
-			dependsOn: options?.dependsOn ?? [],
+			factory,
+			dependsOn,
 			singleton: options?.singleton ?? false,
 			cacheable: options?.cacheable ?? !isFactory,
 		};

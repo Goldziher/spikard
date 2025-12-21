@@ -331,8 +331,22 @@ describe("Spikard", () => {
 			const app: SpikardApp = new Spikard();
 			expect(app).toHaveProperty("routes");
 			expect(app).toHaveProperty("handlers");
+			expect(app).toHaveProperty("websocketRoutes");
+			expect(app).toHaveProperty("websocketHandlers");
 			expect(app.routes).toBeInstanceOf(Array);
+			expect(app.websocketRoutes).toBeInstanceOf(Array);
 			expect(typeof app.handlers).toBe("object");
+			expect(typeof app.websocketHandlers).toBe("object");
+		});
+	});
+
+	describe("WebSocket routes", () => {
+		it("should register websocket handlers", () => {
+			app.websocket("/ws", async (message) => ({ echo: message }));
+
+			expect(app.websocketRoutes).toHaveLength(1);
+			expect(Object.keys(app.websocketHandlers)).toHaveLength(1);
+			expect(app.websocketRoutes[0]?.path).toBe("/ws");
 		});
 	});
 

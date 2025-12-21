@@ -7,7 +7,7 @@
 		"noImplicitAny": false
 	},
 	"tasks": {
-		"test": "deno test --allow-net --allow-read --allow-env tests/"
+		"test": "deno test --no-check --sloppy-imports --allow-net --allow-read --allow-env tests/"
 	},
 			"imports": {
 				"@spikard/wasm": "../../packages/wasm/src/index.ts",

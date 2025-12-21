@@ -756,10 +756,17 @@ export class TestClient {
 
 		const handlersMap = Object.fromEntries(
 			handlerEntries.map(([name, handler]) => {
-				if (isNativeHandler(handler) || this.looksLikeStringHandler(handler)) {
-					return [name, handler as NativeHandlerFunction];
+				const prefersParsedBody = this.looksLikeStringHandler(handler);
+				const nativeHandler =
+					isNativeHandler(handler) || prefersParsedBody
+						? (handler as NativeHandlerFunction)
+						: wrapHandler(handler as HandlerFunction);
+				if (prefersParsedBody) {
+					(nativeHandler as { __spikard_raw_body?: boolean }).__spikard_raw_body = false;
+				} else if ((nativeHandler as { __spikard_raw_body?: boolean }).__spikard_raw_body === undefined) {
+					(nativeHandler as { __spikard_raw_body?: boolean }).__spikard_raw_body = true;
 				}
-				return [name, wrapHandler(handler as HandlerFunction)];
+				return [name, nativeHandler];
 			}),
 		);
 		const websocketHandlersMap = app.websocketHandlers || {};

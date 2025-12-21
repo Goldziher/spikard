@@ -37,7 +37,7 @@ routes = [
 
 # Define handlers
 handlers = {
-  'root' => lambda do |_request|
+  'root' => lambda do |request|
     {
       message: 'Welcome to Spikard Ruby!',
       version: Spikard::VERSION,
@@ -86,7 +86,7 @@ host = ENV['HOST'] || '127.0.0.1'
 port = (ENV['PORT'] || 8000).to_i
 
 puts "Starting server on #{host}:#{port}"
-puts 'Press Ctrl+C to stop'
+puts "Press Ctrl+C to stop"
 puts
 
 Spikard.run_server(app, host, port)

@@ -141,6 +141,7 @@ mod tests {
         crate::handler_trait::RequestData {
             path_params: std::sync::Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: std::sync::Arc::new(HashMap::new()),
             body: json!(null),
             raw_body: None,

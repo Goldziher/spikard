@@ -177,7 +177,7 @@ def extract_schemas(
     return request_schema, response_schema
 
 
-def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C901, PLR0912, PLR0915
+def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C901, PLR0911, PLR0912, PLR0915
     """Extract JSON Schema from various Python schema sources.
 
     Supports multiple schema formats through duck typing:
@@ -222,6 +222,13 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
 
     if schema_source is None or schema_source in (int, str, float, bool):
         return None
+
+    origin = get_origin(schema_source)
+    args = get_args(schema_source)
+    if origin is dict and len(args) == 2 and args[1] is object:
+        return {"type": "object"}
+    if origin is list and len(args) == 1 and args[0] is object:
+        return {"type": "array", "items": {}}
 
     if isinstance(schema_source, dict) and is_json_schema_dict(schema_source):
         return dict(schema_source)

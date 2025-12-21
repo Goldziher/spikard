@@ -26,6 +26,8 @@ pub struct HandlerInput {
     pub cookies: HashMap<String, String>,
     /// Parsed query parameters
     pub query_params: Value,
+    /// Validated parameters (query/path/header/cookie combined)
+    pub validated_params: Option<Value>,
     /// Parsed request body
     pub body: Value,
     /// Extracted path parameters
@@ -40,6 +42,7 @@ impl From<&RequestData> for HandlerInput {
             headers: (*data.headers).clone(),
             cookies: (*data.cookies).clone(),
             query_params: data.query_params.clone(),
+            validated_params: data.validated_params.clone(),
             body: data.body.clone(),
             path_params: (*data.path_params).clone(),
         }
@@ -58,6 +61,7 @@ impl From<RequestData> for HandlerInput {
             headers: unwrap_arc_map(data.headers),
             cookies: unwrap_arc_map(data.cookies),
             query_params: data.query_params,
+            validated_params: data.validated_params,
             body: data.body,
             path_params: unwrap_arc_map(data.path_params),
         }

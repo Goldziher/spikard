@@ -23,6 +23,7 @@ mod background;
 mod config;
 mod conversion;
 mod di;
+mod gvl;
 mod handler;
 mod integration;
 mod lifecycle;
@@ -46,11 +47,11 @@ use magnus::{
     Error, Module, RArray, RHash, RString, Ruby, TryConvert, Value, function, gc::Marker, method, r_hash::ForEach,
 };
 use serde_json::Value as JsonValue;
+use spikard_http::ProblemDetails;
 use spikard_http::testing::{
-    MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
+    MultipartFilePart, ResponseSnapshot, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
 };
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
-use spikard_http::{ParameterValidator, ProblemDetails};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -58,6 +59,8 @@ use std::io;
 use std::mem;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::time::Duration;
+use url::Url;
 
 use crate::config::extract_server_config;
 use crate::conversion::{extract_files, problem_to_json};
@@ -105,9 +108,7 @@ struct RubyHandlerInner {
     handler_proc: Opaque<Value>,
     handler_name: String,
     json_module: Opaque<Value>,
-    request_validator: Option<Arc<SchemaValidator>>,
     response_validator: Option<Arc<SchemaValidator>>,
-    parameter_validator: Option<ParameterValidator>,
     #[cfg(feature = "di")]
     handler_dependencies: Vec<String>,
 }
@@ -667,13 +668,25 @@ impl NativeTestClient {
 
         drop(inner_borrow);
 
-        let runtime = crate::server::global_runtime(ruby)?;
-        let handle = runtime.spawn(async move { spikard_http::testing::connect_websocket(&server, &path).await });
-
-        let ws = runtime.block_on(async {
-            handle
-                .await
-                .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("WebSocket task failed: {}", e)))
+        let timeout_duration = websocket_timeout();
+        let ws = crate::call_without_gvl!(
+            block_on_websocket_connect,
+            args: (
+                server, Arc<TestServer>,
+                path, String,
+                timeout_duration, Duration
+            ),
+            return_type: Result<crate::testing::websocket::WebSocketConnection, WebSocketConnectError>
+        )
+        .map_err(|err| match err {
+            WebSocketConnectError::Timeout => Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket connect timed out after {}ms", timeout_duration.as_millis()),
+            ),
+            WebSocketConnectError::Other(message) => Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket connect failed: {}", message),
+            ),
         })?;
 
         let ws_conn = testing::websocket::WebSocketTestConnection::new(ws);
@@ -687,15 +700,72 @@ impl NativeTestClient {
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
 
         let runtime = crate::server::global_runtime(ruby)?;
+        let request_config = RequestConfig {
+            query: None,
+            headers: HashMap::new(),
+            cookies: HashMap::new(),
+            body: None,
+        };
         let response = runtime
-            .block_on(async {
-                let axum_response = inner.transport_server.get(&path).await;
-                snapshot_response(axum_response).await
-            })
-            .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", e)))?;
+            .block_on(execute_request(
+                inner.http_server.clone(),
+                Method::GET,
+                path.clone(),
+                request_config,
+            ))
+            .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", err.0)))?;
 
-        testing::sse::sse_stream_from_response(ruby, &response)
+        let body = response.body_text.unwrap_or_default().into_bytes();
+        let snapshot = ResponseSnapshot {
+            status: response.status,
+            headers: response.headers,
+            body,
+        };
+
+        testing::sse::sse_stream_from_response(ruby, &snapshot)
     }
+}
+
+fn websocket_timeout() -> Duration {
+    const DEFAULT_TIMEOUT_MS: u64 = 30_000;
+    let timeout_ms = std::env::var("SPIKARD_RB_WS_TIMEOUT_MS")
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .unwrap_or(DEFAULT_TIMEOUT_MS);
+    Duration::from_millis(timeout_ms)
+}
+
+#[derive(Debug)]
+enum WebSocketConnectError {
+    Timeout,
+    Other(String),
+}
+
+fn block_on_websocket_connect(
+    server: Arc<TestServer>,
+    path: String,
+    timeout_duration: Duration,
+) -> Result<crate::testing::websocket::WebSocketConnection, WebSocketConnectError> {
+    let url = server
+        .server_url(&path)
+        .map_err(|err| WebSocketConnectError::Other(err.to_string()))?;
+    let ws_url = to_ws_url(url)?;
+
+    match crate::testing::websocket::WebSocketConnection::connect(ws_url, timeout_duration) {
+        Ok(ws) => Ok(ws),
+        Err(crate::testing::websocket::WebSocketIoError::Timeout) => Err(WebSocketConnectError::Timeout),
+        Err(err) => Err(WebSocketConnectError::Other(format!("{:?}", err))),
+    }
+}
+
+fn to_ws_url(mut url: Url) -> Result<Url, WebSocketConnectError> {
+    let scheme = match url.scheme() {
+        "https" => "wss",
+        _ => "ws",
+    };
+    url.set_scheme(scheme)
+        .map_err(|_| WebSocketConnectError::Other("Failed to set WebSocket scheme".to_string()))?;
+    Ok(url)
 }
 
 impl RubyHandler {
@@ -705,9 +775,7 @@ impl RubyHandler {
                 handler_proc: Opaque::from(handler_value),
                 handler_name: route.handler_name.clone(),
                 json_module: Opaque::from(json_module),
-                request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
-                parameter_validator: route.parameter_validator.clone(),
                 #[cfg(feature = "di")]
                 handler_dependencies: route.handler_dependencies.clone(),
             }),
@@ -729,9 +797,7 @@ impl RubyHandler {
                 handler_proc: Opaque::from(handler_value),
                 handler_name,
                 json_module: Opaque::from(json_module),
-                request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
-                parameter_validator: route.parameter_validator.clone(),
                 #[cfg(feature = "di")]
                 handler_dependencies: route.handler_dependencies.clone(),
             }),
@@ -748,31 +814,7 @@ impl RubyHandler {
     }
 
     fn handle(&self, request_data: RequestData) -> HandlerResult {
-        if let Some(validator) = &self.inner.request_validator
-            && let Err(errors) = validator.validate(&request_data.body)
-        {
-            let problem = ProblemDetails::from_validation_error(&errors);
-            let error_json = problem_to_json(&problem);
-            return Err((problem.status_code(), error_json));
-        }
-
-        let validated_params = if let Some(validator) = &self.inner.parameter_validator {
-            match validator.validate_and_extract(
-                &request_data.query_params,
-                request_data.raw_query_params.as_ref(),
-                request_data.path_params.as_ref(),
-                request_data.headers.as_ref(),
-                request_data.cookies.as_ref(),
-            ) {
-                Ok(value) => Some(value),
-                Err(errors) => {
-                    let problem = ProblemDetails::from_validation_error(&errors);
-                    return Err((problem.status_code(), problem_to_json(&problem)));
-                }
-            }
-        } else {
-            None
-        };
+        let validated_params = request_data.validated_params.clone();
 
         let ruby = Ruby::get().map_err(|_| {
             (

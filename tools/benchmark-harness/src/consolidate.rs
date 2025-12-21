@@ -215,10 +215,8 @@ impl FrameworkAccumulator {
 pub fn consolidate_profile_dir(input_dir: &Path, pattern: &str) -> Result<ConsolidatedProfileReport> {
     let pattern = normalize_pattern(input_dir, pattern);
     let mut paths = Vec::new();
-    for entry in glob(&pattern).map_err(|e| Error::InvalidInput(format!("Invalid glob pattern: {}", e)))? {
-        if let Ok(path) = entry {
-            paths.push(path);
-        }
+    for path in (glob(&pattern).map_err(|e| Error::InvalidInput(format!("Invalid glob pattern: {}", e)))?).flatten() {
+        paths.push(path);
     }
     consolidate_profile_paths(&paths)
 }
@@ -337,10 +335,7 @@ pub fn consolidate_profile_paths(paths: &[PathBuf]) -> Result<ConsolidatedProfil
         warnings.extend(acc.warnings.iter().cloned());
     }
 
-    let frameworks = frameworks
-        .into_values()
-        .map(|acc| build_framework_consolidation(acc))
-        .collect();
+    let frameworks = frameworks.into_values().map(build_framework_consolidation).collect();
 
     Ok(ConsolidatedProfileReport {
         metadata: ConsolidationMetadata {
@@ -432,19 +427,11 @@ fn average_workload_latency(profile: &ProfileResult) -> f64 {
         total += workload.results.latency.mean_ms;
         count += 1;
     }
-    if count > 0 {
-        total / count as f64
-    } else {
-        0.0
-    }
+    if count > 0 { total / count as f64 } else { 0.0 }
 }
 
 fn profile_workloads(profile: &ProfileResult) -> Vec<&WorkloadResult> {
-    profile
-        .suites
-        .iter()
-        .flat_map(|suite| suite.workloads.iter())
-        .collect()
+    profile.suites.iter().flat_map(|suite| suite.workloads.iter()).collect()
 }
 
 fn framework_key(info: &FrameworkInfo) -> String {

@@ -38,7 +38,8 @@ pub use server::PhpServer;
 pub use sse::{PhpSseEventProducer, create_sse_state};
 pub use streaming::{StreamingConfig, create_handler_response as create_streaming_response, register_generator};
 pub use testing::{
-    PhpHttpTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse, PhpWebSocketTestConnection,
+    PhpHttpTestClient, PhpNativeTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse,
+    PhpWebSocketTestConnection,
 };
 pub use websocket::{PhpWebSocketHandler, create_websocket_state};
 
@@ -118,6 +119,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<PhpResponse>()
         .class::<PhpServer>()
         .class::<PhpTestClient>()
+        .class::<PhpNativeTestClient>()
         .class::<PhpTestResponse>()
         .class::<PhpHttpTestClient>()
         .class::<PhpWebSocketTestConnection>()

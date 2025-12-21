@@ -44,9 +44,14 @@ pub mod handler_input;
 pub mod handler_output;
 mod lifecycle;
 mod response;
+mod test_client;
+mod test_sse;
+mod test_websocket;
 pub mod testing;
 mod websocket;
 
+#[cfg(feature = "di")]
+use crate::di::NO_DI_DEP_KEY;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use spikard_http::{BackgroundRuntime, RouteMetadata, Server, ServerConfig};
@@ -57,6 +62,38 @@ use tracing::{error, info, warn};
 pub use background::background_run;
 pub use handler_input::HandlerInput;
 pub use handler_output::HandlerOutput;
+pub use test_client::TestClient;
+
+fn normalize_route_path(path: &str) -> String {
+    if !path.contains(':') {
+        return path.to_string();
+    }
+
+    let mut normalized = String::new();
+    for (idx, segment) in path.split('/').enumerate() {
+        if idx > 0 {
+            normalized.push('/');
+        }
+
+        if segment.starts_with('{') {
+            normalized.push_str(segment);
+            continue;
+        }
+
+        if let Some(stripped) = segment.strip_prefix(':') {
+            if let Some(base) = stripped.strip_suffix(":path") {
+                let base = if base.is_empty() { "path" } else { base };
+                normalized.push_str(&format!("{{{}:path}}", base));
+            } else {
+                normalized.push_str(&format!("{{{}}}", stripped));
+            }
+        } else {
+            normalized.push_str(segment);
+        }
+    }
+
+    normalized
+}
 
 /// Extract ServerConfig from Node.js Object
 ///
@@ -393,10 +430,20 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         let method: String = route_obj.get_named_property("method")?;
 
         let path: String = route_obj.get_named_property("path")?;
+        let path = normalize_route_path(&path);
 
         let handler_name: String = route_obj.get_named_property("handler_name")?;
 
         let is_async: bool = route_obj.get_named_property("is_async")?;
+
+        #[cfg(feature = "di")]
+        let handler_dependencies = if route_obj.has_named_property("handler_dependencies").unwrap_or(false) {
+            Some(Vec::new())
+        } else {
+            Some(vec![NO_DI_DEP_KEY.to_string()])
+        };
+        #[cfg(not(feature = "di"))]
+        let handler_dependencies = None;
 
         let route_meta = RouteMetadata {
             method,
@@ -409,7 +456,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             is_async,
             cors: extract_optional_cors(&route_obj),
             body_param_name: route_obj.get_named_property::<String>("body_param_name").ok(),
-            handler_dependencies: None, // TODO: Extract from route
+            handler_dependencies,
             jsonrpc_method: extract_jsonrpc_method(&route_obj),
         };
 
@@ -435,6 +482,17 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                         route_obj.get_named_property::<bool>("is_async"),
                     )
                 {
+                    let path = normalize_route_path(&path);
+                    #[cfg(feature = "di")]
+                    let handler_dependencies = if route_obj.has_named_property("handler_dependencies").unwrap_or(false)
+                    {
+                        Some(Vec::new())
+                    } else {
+                        Some(vec![NO_DI_DEP_KEY.to_string()])
+                    };
+                    #[cfg(not(feature = "di"))]
+                    let handler_dependencies = None;
+
                     result.push(RouteMetadata {
                         method,
                         path,
@@ -446,7 +504,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                         is_async,
                         cors: extract_optional_cors(&route_obj),
                         body_param_name: route_obj.get_named_property::<String>("body_param_name").ok(),
-                        handler_dependencies: None,
+                        handler_dependencies,
                         jsonrpc_method: extract_jsonrpc_method(&route_obj),
                     });
                 }

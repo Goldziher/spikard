@@ -349,6 +349,7 @@ mod tests {
         RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: Value::Object(serde_json::Map::new()),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,

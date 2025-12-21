@@ -96,3 +96,139 @@ pub async fn execute_with_lifecycle_hooks(
             .unwrap()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::lifecycle::{HookResult, request_hook, response_hook};
+    use axum::http::{Request, Response, StatusCode};
+    use http_body_util::BodyExt;
+    use serde_json::json;
+    use std::collections::HashMap;
+
+    struct OkHandler;
+
+    impl Handler for OkHandler {
+        fn call(
+            &self,
+            _request: Request<Body>,
+            _request_data: crate::handler_trait::RequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = crate::handler_trait::HandlerResult> + Send + '_>>
+        {
+            Box::pin(async move {
+                Ok(Response::builder()
+                    .status(StatusCode::OK)
+                    .body(Body::from("ok"))
+                    .unwrap())
+            })
+        }
+    }
+
+    struct ErrHandler;
+
+    impl Handler for ErrHandler {
+        fn call(
+            &self,
+            _request: Request<Body>,
+            _request_data: crate::handler_trait::RequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = crate::handler_trait::HandlerResult> + Send + '_>>
+        {
+            Box::pin(async move { Err((StatusCode::BAD_REQUEST, "bad".to_string())) })
+        }
+    }
+
+    fn empty_request_data() -> crate::handler_trait::RequestData {
+        crate::handler_trait::RequestData {
+            path_params: std::sync::Arc::new(HashMap::new()),
+            query_params: json!({}),
+            validated_params: None,
+            raw_query_params: std::sync::Arc::new(HashMap::new()),
+            body: json!(null),
+            raw_body: None,
+            headers: std::sync::Arc::new(HashMap::new()),
+            cookies: std::sync::Arc::new(HashMap::new()),
+            method: "GET".to_string(),
+            path: "/".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn pre_validation_error_with_failing_on_error_hook_returns_fallback() {
+        let mut hooks = crate::LifecycleHooks::new();
+        hooks.add_pre_validation(request_hook("boom", |_req| async move { Err("boom".to_string()) }));
+        hooks.add_on_error(response_hook("fail-on-error", |_resp| async move {
+            Err("fail".to_string())
+        }));
+
+        let req = Request::builder().uri("/").body(Body::empty()).unwrap();
+        let resp = execute_with_lifecycle_hooks(req, empty_request_data(), Arc::new(OkHandler), Some(Arc::new(hooks)))
+            .await
+            .unwrap();
+
+        assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        assert_eq!(body.as_ref(), b"{\"error\":\"Hook execution failed\"}");
+    }
+
+    #[tokio::test]
+    async fn handler_error_with_failing_on_error_hook_returns_on_error_hook_failed_response() {
+        let mut hooks = crate::LifecycleHooks::new();
+        hooks.add_on_error(response_hook("fail-on-error", |_resp| async move {
+            Err("boom".to_string())
+        }));
+
+        let req = Request::builder().uri("/").body(Body::empty()).unwrap();
+        let resp = execute_with_lifecycle_hooks(req, empty_request_data(), Arc::new(ErrHandler), Some(Arc::new(hooks)))
+            .await
+            .unwrap();
+
+        assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let body_str = std::str::from_utf8(body.as_ref()).unwrap();
+        assert!(body_str.contains("\"error\":\"onError hook failed:"));
+        assert!(body_str.contains("boom"));
+    }
+
+    #[tokio::test]
+    async fn on_response_hook_error_returns_on_response_hook_failed_response() {
+        let mut hooks = crate::LifecycleHooks::new();
+        hooks.add_on_response(response_hook("fail-on-response", |_resp| async move {
+            Err("boom".to_string())
+        }));
+
+        let req = Request::builder().uri("/").body(Body::empty()).unwrap();
+        let resp = execute_with_lifecycle_hooks(req, empty_request_data(), Arc::new(OkHandler), Some(Arc::new(hooks)))
+            .await
+            .unwrap();
+
+        assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let body_str = std::str::from_utf8(body.as_ref()).unwrap();
+        assert!(body_str.contains("\"error\":\"onResponse hook failed:"));
+        assert!(body_str.contains("boom"));
+    }
+
+    #[tokio::test]
+    async fn pre_validation_short_circuit_skips_handler_and_returns_response() {
+        let mut hooks = crate::LifecycleHooks::new();
+        hooks.add_pre_validation(request_hook("short-circuit", |_req| async move {
+            Ok(HookResult::ShortCircuit(
+                Response::builder()
+                    .status(StatusCode::UNAUTHORIZED)
+                    .body(Body::from("nope"))
+                    .unwrap(),
+            ))
+        }));
+
+        let req = Request::builder().uri("/").body(Body::empty()).unwrap();
+        let resp = execute_with_lifecycle_hooks(req, empty_request_data(), Arc::new(ErrHandler), Some(Arc::new(hooks)))
+            .await
+            .unwrap();
+
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        assert_eq!(body.as_ref(), b"nope");
+    }
+}

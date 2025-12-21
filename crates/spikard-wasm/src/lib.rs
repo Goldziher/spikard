@@ -506,8 +506,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         .cloned()
         .unwrap_or_default();
 
-    let mut params = build_params(&path_params, &query.normalized, &lowered_headers);
-    if let Some(parameter_validator) = validators.parameter.clone() {
+    let params = if let Some(parameter_validator) = validators.parameter.clone() {
         let mut query_map = JsonMap::new();
         for (key, value) in &query.normalized {
             query_map.insert(key.clone(), value.clone());
@@ -520,15 +519,15 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
             &lowered_headers,
             &cookies,
         ) {
-            Ok(value) => {
-                params = value_to_param_map(value);
-            }
+            Ok(value) => value_to_param_map(value),
             Err(error) => {
                 let problem = ProblemDetails::from_validation_error(&error);
                 return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
             }
         }
-    }
+    } else {
+        build_params(&path_params, &query.normalized, &lowered_headers)
+    };
 
     let mut body_payload = request_options.body_payload();
     if let Some(max_bytes) = max_body_size {

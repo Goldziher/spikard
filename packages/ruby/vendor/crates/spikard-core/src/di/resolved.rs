@@ -276,13 +276,11 @@ impl ResolvedDependencies {
     /// # });
     /// ```
     pub async fn cleanup(self) {
-        // Take ownership of cleanup tasks
         let tasks = {
             let mut cleanup_tasks = self.cleanup_tasks.lock().unwrap();
             std::mem::take(&mut *cleanup_tasks)
         };
 
-        // Run cleanup tasks in reverse order (LIFO)
         for task in tasks.into_iter().rev() {
             task().await;
         }
@@ -325,7 +323,6 @@ mod tests {
         let mut resolved = ResolvedDependencies::new();
         resolved.insert("number".to_string(), Arc::new(42i32));
 
-        // Wrong type returns None
         let wrong: Option<Arc<String>> = resolved.get("number");
         assert!(wrong.is_none());
     }
@@ -345,7 +342,6 @@ mod tests {
         let any_ref = resolved.get_arc("data");
         assert!(any_ref.is_some());
 
-        // Can downcast manually
         let vec_ref = any_ref.unwrap().downcast::<Vec<i32>>().ok();
         assert!(vec_ref.is_some());
     }
@@ -388,14 +384,13 @@ mod tests {
 
         resolved.cleanup().await;
 
-        // Tasks run in reverse order (LIFO)
         assert_eq!(*order.lock().unwrap(), vec![3, 2, 1]);
     }
 
     #[tokio::test]
     async fn test_cleanup_empty() {
         let resolved = ResolvedDependencies::new();
-        resolved.cleanup().await; // Should not panic
+        resolved.cleanup().await;
     }
 
     #[test]
@@ -403,7 +398,6 @@ mod tests {
         let mut resolved1 = ResolvedDependencies::new();
         resolved1.insert("key".to_string(), Arc::new(42i32));
 
-        // Clone shares the same underlying data
         let resolved2 = resolved1.clone();
         let value: Option<Arc<i32>> = resolved2.get("key");
         assert_eq!(value.map(|v| *v), Some(42));

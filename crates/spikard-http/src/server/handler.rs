@@ -77,17 +77,23 @@ impl Handler for ValidatingHandler {
 
             if let Some(validator) = parameter_validator
                 && !inner.prefers_parameter_extraction()
-                && let Err(errors) = validator.validate_and_extract(
+            {
+                match validator.validate_and_extract(
                     &request_data.query_params,
                     &request_data.raw_query_params,
                     &request_data.path_params,
                     &request_data.headers,
                     &request_data.cookies,
-                )
-            {
-                let problem = ProblemDetails::from_validation_error(&errors);
-                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                return Err((problem.status_code(), body));
+                ) {
+                    Ok(validated) => {
+                        request_data.validated_params = Some(validated);
+                    }
+                    Err(errors) => {
+                        let problem = ProblemDetails::from_validation_error(&errors);
+                        let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                        return Err((problem.status_code(), body));
+                    }
+                }
             }
 
             match AssertUnwindSafe(async { inner.call(req, request_data).await })
@@ -119,6 +125,7 @@ mod tests {
         RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body,
             raw_body: None,
@@ -136,6 +143,7 @@ mod tests {
         RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: Some(bytes::Bytes::from(raw_body)),
@@ -254,6 +262,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: Some(bytes::Bytes::from(br#"{"name":"Alice"}"#.to_vec())),
@@ -754,6 +763,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,
@@ -891,6 +901,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: Some(bytes::Bytes::from(br#"{"id":42}"#.to_vec())),

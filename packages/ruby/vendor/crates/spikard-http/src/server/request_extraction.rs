@@ -1,12 +1,59 @@
 //! Request parsing and data extraction utilities
 
 use crate::handler_trait::RequestData;
-use crate::query_parser::parse_query_string_to_json;
+use crate::query_parser::{parse_query_pairs_to_json, parse_query_string};
 use axum::body::Body;
 use http_body_util::BodyExt;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::OnceLock;
+
+#[derive(Debug, Clone, Copy)]
+pub struct WithoutBodyExtractionOptions {
+    pub include_raw_query_params: bool,
+    pub include_query_params_json: bool,
+    pub include_headers: bool,
+    pub include_cookies: bool,
+}
+
+fn extract_query_params_and_raw(
+    uri: &axum::http::Uri,
+    include_raw_query_params: bool,
+    include_query_params_json: bool,
+) -> (Value, HashMap<String, Vec<String>>) {
+    let query_string = uri.query().unwrap_or("");
+    if query_string.is_empty() {
+        return (Value::Object(serde_json::Map::new()), HashMap::new());
+    }
+
+    match (include_raw_query_params, include_query_params_json) {
+        (false, false) => (Value::Null, HashMap::new()),
+        (false, true) => (
+            crate::query_parser::parse_query_string_to_json(query_string.as_bytes(), true),
+            HashMap::new(),
+        ),
+        (true, false) => {
+            let raw =
+                parse_query_string(query_string.as_bytes(), '&')
+                    .into_iter()
+                    .fold(HashMap::new(), |mut acc, (k, v)| {
+                        acc.entry(k).or_insert_with(Vec::new).push(v);
+                        acc
+                    });
+            (Value::Null, raw)
+        }
+        (true, true) => {
+            let pairs = parse_query_string(query_string.as_bytes(), '&');
+            let json = parse_query_pairs_to_json(&pairs, true);
+            let raw = pairs.into_iter().fold(HashMap::new(), |mut acc, (k, v)| {
+                acc.entry(k).or_insert_with(Vec::new).push(v);
+                acc
+            });
+            (json, raw)
+        }
+    }
+}
 
 /// Extract and parse query parameters from request URI
 pub fn extract_query_params(uri: &axum::http::Uri) -> Value {
@@ -14,7 +61,7 @@ pub fn extract_query_params(uri: &axum::http::Uri) -> Value {
     if query_string.is_empty() {
         Value::Object(serde_json::Map::new())
     } else {
-        parse_query_string_to_json(query_string.as_bytes(), true)
+        crate::query_parser::parse_query_string_to_json(query_string.as_bytes(), true)
     }
 }
 
@@ -25,7 +72,7 @@ pub fn extract_raw_query_params(uri: &axum::http::Uri) -> HashMap<String, Vec<St
     if query_string.is_empty() {
         HashMap::new()
     } else {
-        crate::query_parser::parse_query_string(query_string.as_bytes(), '&')
+        parse_query_string(query_string.as_bytes(), '&')
             .into_iter()
             .fold(HashMap::new(), |mut acc, (k, v)| {
                 acc.entry(k).or_insert_with(Vec::new).push(v);
@@ -36,10 +83,11 @@ pub fn extract_raw_query_params(uri: &axum::http::Uri) -> HashMap<String, Vec<St
 
 /// Extract headers from request
 pub fn extract_headers(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
-    let mut map = HashMap::new();
+    let mut map = HashMap::with_capacity(headers.len());
     for (name, value) in headers.iter() {
         if let Ok(val_str) = value.to_str() {
-            map.insert(name.as_str().to_lowercase(), val_str.to_string());
+            // `HeaderName::as_str()` is already normalized to lowercase.
+            map.insert(name.as_str().to_string(), val_str.to_string());
         }
     }
     map
@@ -58,6 +106,16 @@ pub fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, Strin
     cookies
 }
 
+fn empty_string_map() -> Arc<HashMap<String, String>> {
+    static EMPTY: OnceLock<Arc<HashMap<String, String>>> = OnceLock::new();
+    Arc::clone(EMPTY.get_or_init(|| Arc::new(HashMap::new())))
+}
+
+fn empty_raw_query_map() -> Arc<HashMap<String, Vec<String>>> {
+    static EMPTY: OnceLock<Arc<HashMap<String, Vec<String>>>> = OnceLock::new();
+    Arc::clone(EMPTY.get_or_init(|| Arc::new(HashMap::new())))
+}
+
 /// Create RequestData from request parts (for requests without body)
 ///
 /// Wraps HashMaps in Arc to enable cheap cloning without duplicating data.
@@ -66,13 +124,29 @@ pub fn create_request_data_without_body(
     method: &axum::http::Method,
     headers: &axum::http::HeaderMap,
     path_params: HashMap<String, String>,
+    options: WithoutBodyExtractionOptions,
 ) -> RequestData {
+    let (query_params, raw_query_params) =
+        extract_query_params_and_raw(uri, options.include_raw_query_params, options.include_query_params_json);
     RequestData {
         path_params: Arc::new(path_params),
-        query_params: extract_query_params(uri),
-        raw_query_params: Arc::new(extract_raw_query_params(uri)),
-        headers: Arc::new(extract_headers(headers)),
-        cookies: Arc::new(extract_cookies(headers)),
+        query_params,
+        raw_query_params: if raw_query_params.is_empty() {
+            empty_raw_query_map()
+        } else {
+            Arc::new(raw_query_params)
+        },
+        validated_params: None,
+        headers: if options.include_headers {
+            Arc::new(extract_headers(headers))
+        } else {
+            empty_string_map()
+        },
+        cookies: if options.include_cookies {
+            Arc::new(extract_cookies(headers))
+        } else {
+            empty_string_map()
+        },
         body: Value::Null,
         raw_body: None,
         method: method.as_str().to_string(),
@@ -91,24 +165,47 @@ pub async fn create_request_data_with_body(
     parts: &axum::http::request::Parts,
     path_params: HashMap<String, String>,
     body: Body,
+    include_raw_query_params: bool,
+    include_query_params_json: bool,
+    include_headers: bool,
+    include_cookies: bool,
 ) -> Result<RequestData, (axum::http::StatusCode, String)> {
-    let body_bytes = body
-        .collect()
-        .await
-        .map_err(|e| {
-            (
-                axum::http::StatusCode::BAD_REQUEST,
-                format!("Failed to read body: {}", e),
-            )
-        })?
-        .to_bytes();
+    let body_bytes = if let Some(pre_read) = parts.extensions.get::<crate::middleware::PreReadBody>() {
+        pre_read.0.clone()
+    } else {
+        body.collect()
+            .await
+            .map_err(|e| {
+                (
+                    axum::http::StatusCode::BAD_REQUEST,
+                    format!("Failed to read body: {}", e),
+                )
+            })?
+            .to_bytes()
+    };
+
+    let (query_params, raw_query_params) =
+        extract_query_params_and_raw(&parts.uri, include_raw_query_params, include_query_params_json);
 
     Ok(RequestData {
         path_params: Arc::new(path_params),
-        query_params: extract_query_params(&parts.uri),
-        raw_query_params: Arc::new(extract_raw_query_params(&parts.uri)),
-        headers: Arc::new(extract_headers(&parts.headers)),
-        cookies: Arc::new(extract_cookies(&parts.headers)),
+        query_params,
+        raw_query_params: if raw_query_params.is_empty() {
+            empty_raw_query_map()
+        } else {
+            Arc::new(raw_query_params)
+        },
+        validated_params: None,
+        headers: if include_headers {
+            Arc::new(extract_headers(&parts.headers))
+        } else {
+            empty_string_map()
+        },
+        cookies: if include_cookies {
+            Arc::new(extract_cookies(&parts.headers))
+        } else {
+            empty_string_map()
+        },
         body: Value::Null,
         raw_body: if body_bytes.is_empty() { None } else { Some(body_bytes) },
         method: parts.method.as_str().to_string(),
@@ -122,11 +219,29 @@ pub async fn create_request_data_with_body(
 mod tests {
     use super::*;
     use axum::http::{HeaderMap, HeaderValue, Method, Uri};
+    use futures_util::stream;
     use serde_json::json;
 
-    // ============================================================================
-    // Tests for extract_query_params
-    // ============================================================================
+    const OPTIONS_ALL: WithoutBodyExtractionOptions = WithoutBodyExtractionOptions {
+        include_raw_query_params: true,
+        include_query_params_json: true,
+        include_headers: true,
+        include_cookies: true,
+    };
+
+    const OPTIONS_SKIP_HEADERS: WithoutBodyExtractionOptions = WithoutBodyExtractionOptions {
+        include_raw_query_params: true,
+        include_query_params_json: true,
+        include_headers: false,
+        include_cookies: true,
+    };
+
+    const OPTIONS_SKIP_COOKIES: WithoutBodyExtractionOptions = WithoutBodyExtractionOptions {
+        include_raw_query_params: true,
+        include_query_params_json: true,
+        include_headers: true,
+        include_cookies: false,
+    };
 
     #[test]
     fn test_extract_query_params_empty() {
@@ -191,10 +306,6 @@ mod tests {
         assert_eq!(result, json!({"key": ""}));
     }
 
-    // ============================================================================
-    // Tests for extract_raw_query_params
-    // ============================================================================
-
     #[test]
     fn test_extract_raw_query_params_empty() {
         let uri: Uri = "/path".parse().unwrap();
@@ -231,10 +342,6 @@ mod tests {
         let result = extract_raw_query_params(&uri);
         assert_eq!(result.get("email"), Some(&vec!["test@example.com".to_string()]));
     }
-
-    // ============================================================================
-    // Tests for extract_headers
-    // ============================================================================
 
     #[test]
     fn test_extract_headers_empty() {
@@ -287,10 +394,6 @@ mod tests {
         assert_eq!(result.get("x-request-id"), Some(&"req-12345".to_string()));
     }
 
-    // ============================================================================
-    // Tests for extract_cookies
-    // ============================================================================
-
     #[test]
     fn test_extract_cookies_no_cookie_header() {
         let headers = HeaderMap::new();
@@ -331,7 +434,7 @@ mod tests {
         );
 
         let result = extract_cookies(&headers);
-        assert!(result.len() >= 1); // Parser is lenient
+        assert!(result.len() >= 1);
     }
 
     #[test]
@@ -343,10 +446,6 @@ mod tests {
         assert_eq!(result.get("empty"), Some(&String::new()));
     }
 
-    // ============================================================================
-    // Tests for create_request_data_without_body
-    // ============================================================================
-
     #[test]
     fn test_create_request_data_without_body_minimal() {
         let uri: Uri = "/test".parse().unwrap();
@@ -354,7 +453,7 @@ mod tests {
         let headers = HeaderMap::new();
         let path_params = HashMap::new();
 
-        let result = create_request_data_without_body(&uri, &method, &headers, path_params);
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
         assert_eq!(result.method, "GET");
         assert_eq!(result.path, "/test");
@@ -375,7 +474,7 @@ mod tests {
         let mut path_params = HashMap::new();
         path_params.insert("user_id".to_string(), "42".to_string());
 
-        let result = create_request_data_without_body(&uri, &method, &headers, path_params);
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
         assert_eq!(result.path_params.get("user_id"), Some(&"42".to_string()));
     }
@@ -387,7 +486,7 @@ mod tests {
         let headers = HeaderMap::new();
         let path_params = HashMap::new();
 
-        let result = create_request_data_without_body(&uri, &method, &headers, path_params);
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
         assert_eq!(result.query_params, json!({"q": "rust", "limit": 10}));
         assert_eq!(result.raw_query_params.get("q"), Some(&vec!["rust".to_string()]));
@@ -403,7 +502,7 @@ mod tests {
         headers.insert("authorization", HeaderValue::from_static("Bearer token"));
         let path_params = HashMap::new();
 
-        let result = create_request_data_without_body(&uri, &method, &headers, path_params);
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
         assert_eq!(
             result.headers.get("content-type"),
@@ -423,10 +522,36 @@ mod tests {
         );
         let path_params = HashMap::new();
 
-        let result = create_request_data_without_body(&uri, &method, &headers, path_params);
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
         assert_eq!(result.cookies.get("session"), Some(&"xyz".to_string()));
         assert_eq!(result.cookies.get("theme"), Some(&"dark".to_string()));
+    }
+
+    #[test]
+    fn test_create_request_data_without_body_skip_headers() {
+        let uri: Uri = "/test".parse().unwrap();
+        let method = Method::GET;
+        let mut headers = HeaderMap::new();
+        headers.insert("authorization", HeaderValue::from_static("Bearer token"));
+        let path_params = HashMap::new();
+
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_SKIP_HEADERS);
+
+        assert!(result.headers.is_empty());
+    }
+
+    #[test]
+    fn test_create_request_data_without_body_skip_cookies() {
+        let uri: Uri = "/test".parse().unwrap();
+        let method = Method::GET;
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::COOKIE, HeaderValue::from_static("session=xyz"));
+        let path_params = HashMap::new();
+
+        let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_SKIP_COOKIES);
+
+        assert!(result.cookies.is_empty());
     }
 
     #[test]
@@ -436,14 +561,10 @@ mod tests {
         let path_params = HashMap::new();
 
         for method in &[Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH] {
-            let result = create_request_data_without_body(&uri, method, &headers, path_params.clone());
+            let result = create_request_data_without_body(&uri, method, &headers, path_params.clone(), OPTIONS_ALL);
             assert_eq!(result.method, method.as_str());
         }
     }
-
-    // ============================================================================
-    // Tests for create_request_data_with_body (async)
-    // ============================================================================
 
     #[tokio::test]
     async fn test_create_request_data_with_body_empty() {
@@ -457,7 +578,7 @@ mod tests {
         let body = Body::empty();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts.0, path_params, body)
+        let result = create_request_data_with_body(&parts.0, path_params, body, true, true, true, true)
             .await
             .unwrap();
 
@@ -479,12 +600,12 @@ mod tests {
         let (parts, _) = request.into_parts();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts, path_params, request_body)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
         assert_eq!(result.method, "POST");
-        assert_eq!(result.body, Value::Null); // Body not parsed yet
+        assert_eq!(result.body, Value::Null);
         assert!(result.raw_body.is_some());
         assert_eq!(result.raw_body.as_ref().unwrap().as_ref(), br#"{"key":"value"}"#);
     }
@@ -501,7 +622,7 @@ mod tests {
         let (parts, _) = request.into_parts();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts, path_params, request_body)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -522,7 +643,7 @@ mod tests {
         let (parts, _) = request.into_parts();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts, path_params, request_body)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -546,7 +667,7 @@ mod tests {
         let (parts, _) = request.into_parts();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts, path_params, request_body)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -571,7 +692,7 @@ mod tests {
         let (parts, _) = request.into_parts();
         let path_params = HashMap::new();
 
-        let result = create_request_data_with_body(&parts, path_params, request_body)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -594,7 +715,7 @@ mod tests {
         let mut path_params = HashMap::new();
         path_params.insert("user_id".to_string(), "42".to_string());
 
-        let result = create_request_data_with_body(&parts, path_params, request_body)
+        let result = create_request_data_with_body(&parts, path_params, request_body, true, true, true, true)
             .await
             .unwrap();
 
@@ -616,15 +737,34 @@ mod tests {
         let mut path_params = HashMap::new();
         path_params.insert("id".to_string(), "1".to_string());
 
-        let request_data = create_request_data_without_body(&uri, &method, &headers, path_params.clone());
+        let request_data = create_request_data_without_body(&uri, &method, &headers, path_params.clone(), OPTIONS_ALL);
 
-        // Clone the request data - this should be cheap because Arc is used
         let cloned = request_data.clone();
 
-        // Verify Arc pointers are the same
         assert!(Arc::ptr_eq(&request_data.path_params, &cloned.path_params));
         assert!(Arc::ptr_eq(&request_data.headers, &cloned.headers));
         assert!(Arc::ptr_eq(&request_data.cookies, &cloned.cookies));
         assert!(Arc::ptr_eq(&request_data.raw_query_params, &cloned.raw_query_params));
+    }
+
+    #[tokio::test]
+    async fn create_request_data_with_body_returns_bad_request_when_body_stream_errors() {
+        let request = axum::http::Request::builder()
+            .method(Method::POST)
+            .uri("/path")
+            .body(Body::empty())
+            .unwrap();
+        let (parts, _) = request.into_parts();
+
+        let stream = stream::once(async move {
+            Err::<bytes::Bytes, std::io::Error>(std::io::Error::new(std::io::ErrorKind::Other, "boom"))
+        });
+        let body = Body::from_stream(stream);
+
+        let err = create_request_data_with_body(&parts, HashMap::new(), body, true, true, true, true)
+            .await
+            .unwrap_err();
+        assert_eq!(err.0, axum::http::StatusCode::BAD_REQUEST);
+        assert!(err.1.contains("Failed to read body:"));
     }
 }

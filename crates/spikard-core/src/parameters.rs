@@ -103,6 +103,11 @@ impl ParameterValidator {
             .any(|def| def.source == ParameterSource::Cookie)
     }
 
+    /// Whether the validator has any parameter definitions.
+    pub fn has_params(&self) -> bool {
+        !self.inner.parameter_defs.is_empty()
+    }
+
     /// Determine whether a parameter schema needs full JSON Schema validation.
     ///
     /// The hot path in `validate_and_extract()` already enforces:

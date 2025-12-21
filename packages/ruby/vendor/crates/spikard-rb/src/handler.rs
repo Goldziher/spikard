@@ -9,12 +9,12 @@
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Request, StatusCode};
 use magnus::prelude::*;
+use magnus::value::LazyId;
 use magnus::value::{InnerValue, Opaque};
 use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
-use serde_json::{Map as JsonMap, Value as JsonValue};
+use serde_json::Value as JsonValue;
 use spikard_bindings_shared::ErrorResponseBuilder;
 use spikard_core::problem::ProblemDetails;
-use spikard_http::ParameterValidator;
 use spikard_http::SchemaValidator;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use std::collections::HashMap;
@@ -25,6 +25,17 @@ use std::sync::Arc;
 use crate::conversion::{
     json_to_ruby, json_to_ruby_with_uploads, map_to_ruby_hash, multimap_to_ruby_hash, ruby_value_to_json,
 };
+
+static KEY_METHOD: LazyId = LazyId::new("method");
+static KEY_PATH: LazyId = LazyId::new("path");
+static KEY_PATH_PARAMS: LazyId = LazyId::new("path_params");
+static KEY_QUERY: LazyId = LazyId::new("query");
+static KEY_RAW_QUERY: LazyId = LazyId::new("raw_query");
+static KEY_HEADERS: LazyId = LazyId::new("headers");
+static KEY_COOKIES: LazyId = LazyId::new("cookies");
+static KEY_BODY: LazyId = LazyId::new("body");
+static KEY_RAW_BODY: LazyId = LazyId::new("raw_body");
+static KEY_PARAMS: LazyId = LazyId::new("params");
 
 /// Response payload with status, headers, and body data.
 pub struct HandlerResponsePayload {
@@ -50,16 +61,12 @@ pub enum RubyHandlerResult {
 impl StreamingResponsePayload {
     /// Convert streaming response into a `HandlerResponse`.
     pub fn into_response(self) -> Result<HandlerResponse, Error> {
-        // Get Ruby VM reference. In FFI, Ruby must be available during this callback.
-        // If Ruby becomes unavailable, this is a fatal error condition.
-        let ruby = match Ruby::get() {
-            Ok(r) => r,
-            Err(_) => {
-                // Ruby VM is unavailable. This should never happen during active FFI.
-                // We panic because continuing without a Ruby VM is unsafe.
-                panic!("Ruby VM became unavailable during streaming response construction");
-            }
-        };
+        let ruby = Ruby::get().map_err(|_| {
+            Error::new(
+                magnus::exception::runtime_error(),
+                "Ruby VM became unavailable during streaming response construction",
+            )
+        })?;
 
         let status = StatusCode::from_u16(self.status).map_err(|err| {
             Error::new(
@@ -132,10 +139,10 @@ pub struct RubyHandlerInner {
     pub handler_name: String,
     pub method: String,
     pub path: String,
+    method_value: Opaque<Value>,
+    path_value: Opaque<Value>,
     pub json_module: Opaque<Value>,
-    pub request_validator: Option<Arc<SchemaValidator>>,
     pub response_validator: Option<Arc<SchemaValidator>>,
-    pub parameter_validator: Option<ParameterValidator>,
     pub upload_file_class: Option<Opaque<Value>>,
 }
 
@@ -148,17 +155,33 @@ pub struct RubyHandler {
 impl RubyHandler {
     /// Create a new RubyHandler from a route and handler Proc.
     pub fn new(route: &spikard_http::Route, handler_value: Value, json_module: Value) -> Result<Self, Error> {
-        let upload_file_class = lookup_upload_file_class()?;
+        let upload_file_class = if route.file_params.is_some() {
+            lookup_upload_file_class()?
+        } else {
+            None
+        };
+        let method = route.method.as_str().to_string();
+        let path = route.path.clone();
+
+        let Ok(ruby) = Ruby::get() else {
+            return Err(Error::new(
+                magnus::exception::runtime_error(),
+                "Ruby VM unavailable while creating handler",
+            ));
+        };
+        let method_value = Opaque::from(ruby.str_new(&method).as_value());
+        let path_value = Opaque::from(ruby.str_new(&path).as_value());
+
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
                 handler_name: route.handler_name.clone(),
-                method: route.method.as_str().to_string(),
-                path: route.path.clone(),
+                method,
+                path,
+                method_value,
+                path_value,
                 json_module: Opaque::from(json_module),
-                request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
-                parameter_validator: route.parameter_validator.clone(),
                 upload_file_class,
             }),
         })
@@ -176,17 +199,30 @@ impl RubyHandler {
         json_module: Value,
         route: &spikard_http::Route,
     ) -> Result<Self, Error> {
-        let upload_file_class = lookup_upload_file_class()?;
+        let upload_file_class = if route.file_params.is_some() {
+            lookup_upload_file_class()?
+        } else {
+            None
+        };
+        let Ok(ruby) = Ruby::get() else {
+            return Err(Error::new(
+                magnus::exception::runtime_error(),
+                "Ruby VM unavailable while creating handler",
+            ));
+        };
+        let method_value = Opaque::from(ruby.str_new(&method).as_value());
+        let path_value = Opaque::from(ruby.str_new(&path).as_value());
+
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
                 handler_name,
                 method,
                 path,
+                method_value,
+                path_value,
                 json_module: Opaque::from(json_module),
-                request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
-                parameter_validator: route.parameter_validator.clone(),
                 upload_file_class,
             }),
         })
@@ -198,13 +234,14 @@ impl RubyHandler {
         if let Ok(ruby) = Ruby::get() {
             let proc_val = self.inner.handler_proc.get_inner_with(&ruby);
             marker.mark(proc_val);
+            marker.mark(self.inner.method_value.get_inner_with(&ruby));
+            marker.mark(self.inner.path_value.get_inner_with(&ruby));
         }
     }
 
     /// Handle a request synchronously.
     pub fn handle(&self, request_data: RequestData) -> HandlerResult {
-        let cloned = request_data.clone();
-        let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(cloned)));
+        let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(request_data)));
         match result {
             Ok(res) => res,
             Err(_) => Err(ErrorResponseBuilder::structured_error(
@@ -216,30 +253,7 @@ impl RubyHandler {
     }
 
     fn handle_inner(&self, request_data: RequestData) -> HandlerResult {
-        if let Some(validator) = &self.inner.request_validator
-            && let Err(errors) = validator.validate(&request_data.body)
-        {
-            let problem = ProblemDetails::from_validation_error(&errors);
-            return Err(ErrorResponseBuilder::problem_details_response(&problem));
-        }
-
-        let validated_params = if let Some(validator) = &self.inner.parameter_validator {
-            match validator.validate_and_extract(
-                &request_data.query_params,
-                request_data.raw_query_params.as_ref(),
-                request_data.path_params.as_ref(),
-                request_data.headers.as_ref(),
-                request_data.cookies.as_ref(),
-            ) {
-                Ok(value) => Some(value),
-                Err(errors) => {
-                    let problem = ProblemDetails::from_validation_error(&errors);
-                    return Err(ErrorResponseBuilder::problem_details_response(&problem));
-                }
-            }
-        } else {
-            None
-        };
+        let validated_params = request_data.validated_params.clone();
 
         let ruby = Ruby::get().map_err(|_| {
             ErrorResponseBuilder::structured_error(
@@ -422,69 +436,70 @@ fn build_ruby_request(
     request_data: &RequestData,
     validated_params: Option<&JsonValue>,
 ) -> Result<Value, Error> {
-    let hash = ruby.hash_new();
+    let hash = ruby.hash_new_capa(9);
 
-    hash.aset(ruby.intern("method"), ruby.str_new(&handler.method))?;
-    hash.aset(ruby.intern("path"), ruby.str_new(&handler.path))?;
+    hash.aset(*KEY_METHOD, handler.method_value.get_inner_with(ruby))?;
+    hash.aset(*KEY_PATH, handler.path_value.get_inner_with(ruby))?;
 
     let path_params = map_to_ruby_hash(ruby, request_data.path_params.as_ref())?;
-    hash.aset(ruby.intern("path_params"), path_params)?;
+    hash.aset(*KEY_PATH_PARAMS, path_params)?;
 
     let query_value = json_to_ruby(ruby, &request_data.query_params)?;
-    hash.aset(ruby.intern("query"), query_value)?;
+    hash.aset(*KEY_QUERY, query_value)?;
 
     let raw_query = multimap_to_ruby_hash(ruby, request_data.raw_query_params.as_ref())?;
-    hash.aset(ruby.intern("raw_query"), raw_query)?;
+    hash.aset(*KEY_RAW_QUERY, raw_query)?;
 
     let headers = map_to_ruby_hash(ruby, request_data.headers.as_ref())?;
-    hash.aset(ruby.intern("headers"), headers)?;
+    hash.aset(*KEY_HEADERS, headers)?;
 
     let cookies = map_to_ruby_hash(ruby, request_data.cookies.as_ref())?;
-    hash.aset(ruby.intern("cookies"), cookies)?;
+    hash.aset(*KEY_COOKIES, cookies)?;
 
     let upload_class_value = handler.upload_file_class.as_ref().map(|cls| cls.get_inner_with(ruby));
     let body_value = json_to_ruby_with_uploads(ruby, &request_data.body, upload_class_value.as_ref())?;
-    hash.aset(ruby.intern("body"), body_value)?;
+    hash.aset(*KEY_BODY, body_value)?;
     if let Some(raw) = &request_data.raw_body {
         let raw_str = ruby.str_from_slice(raw);
-        hash.aset(ruby.intern("raw_body"), raw_str)?;
+        hash.aset(*KEY_RAW_BODY, raw_str)?;
     } else {
-        hash.aset(ruby.intern("raw_body"), ruby.qnil())?;
+        hash.aset(*KEY_RAW_BODY, ruby.qnil())?;
     }
 
     let params_value = if let Some(validated) = validated_params {
         json_to_ruby(ruby, validated)?
     } else {
-        build_default_params(ruby, request_data)?
+        build_default_params_from_converted(ruby, path_params, query_value, headers, cookies)?
     };
-    hash.aset(ruby.intern("params"), params_value)?;
+    hash.aset(*KEY_PARAMS, params_value)?;
 
     Ok(hash.as_value())
 }
 
-/// Build default params from request data path/query/headers/cookies.
-fn build_default_params(ruby: &Ruby, request_data: &RequestData) -> Result<Value, Error> {
-    let mut map = JsonMap::new();
+/// Build default params from already converted Ruby values, avoiding double conversion.
+fn build_default_params_from_converted(
+    ruby: &Ruby,
+    path_params: Value,
+    query: Value,
+    headers: Value,
+    cookies: Value,
+) -> Result<Value, Error> {
+    let params = ruby.hash_new();
 
-    for (key, value) in request_data.path_params.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
+    if let Some(hash) = RHash::from_value(path_params) {
+        let _: Value = params.funcall("merge!", (hash,))?;
+    }
+    if let Some(hash) = RHash::from_value(query) {
+        let _: Value = params.funcall("merge!", (hash,))?;
+    }
+    if let Some(hash) = RHash::from_value(headers) {
+        let _: Value = params.funcall("merge!", (hash,))?;
+    }
+    if let Some(hash) = RHash::from_value(cookies) {
+        let _: Value = params.funcall("merge!", (hash,))?;
     }
 
-    if let JsonValue::Object(obj) = &request_data.query_params {
-        for (key, value) in obj {
-            map.insert(key.clone(), value.clone());
-        }
-    }
-
-    for (key, value) in request_data.headers.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
-    }
-
-    for (key, value) in request_data.cookies.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
-    }
-
-    json_to_ruby(ruby, &JsonValue::Object(map))
+    Ok(params.as_value())
 }
 
 /// Interpret a Ruby handler response into our response types.
@@ -542,11 +557,6 @@ fn interpret_handler_response(
         let body = if content_value.is_nil() {
             None
         } else if let Ok(str_value) = RString::try_convert(content_value) {
-            // SAFETY: Magnus RString::as_slice() yields a valid byte slice for the
-            // lifetime of the RString value. We immediately call .to_vec() which copies
-            // the bytes into owned memory, so the result does not retain any references
-            // to the underlying RString. This is safe because the copy happens before
-            // the RString reference is released.
             let slice = unsafe { str_value.as_slice() };
             raw_body = Some(slice.to_vec());
             None
@@ -567,10 +577,6 @@ fn interpret_handler_response(
     }
 
     if let Ok(str_value) = RString::try_convert(value) {
-        // SAFETY: Magnus RString::as_slice() returns a valid byte slice that remains
-        // valid for the lifetime of the RString. We call .to_vec() to copy the bytes
-        // into owned storage, ensuring the returned HandlerResponsePayload does not
-        // hold any references back to the RString. This copy-then-own pattern is safe.
         let slice = unsafe { str_value.as_slice() };
         return Ok(RubyHandlerResult::Payload(HandlerResponsePayload {
             status: 200,

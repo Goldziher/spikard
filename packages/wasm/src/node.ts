@@ -46,6 +46,9 @@ export type {
 	JsonValue,
 	MaybePromise,
 	StructuredHandlerResponse,
+	WebSocketHandler,
+	WebSocketHandlerLike,
+	WebSocketServerSocket,
 } from "./types";
 
 function withStaticManifest(app: SpikardApp): SpikardApp {

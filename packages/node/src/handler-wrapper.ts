@@ -27,6 +27,11 @@ function markNative(handler: NativeHandlerFunction): NativeHandlerFunction {
 	return handler;
 }
 
+function markRawBody(handler: NativeHandlerFunction, prefersRaw: boolean): NativeHandlerFunction {
+	(handler as { __spikard_raw_body?: boolean }).__spikard_raw_body = prefersRaw;
+	return handler;
+}
+
 export function wrapHandler(handler: HandlerFunction): NativeHandlerFunction {
 	const nativeHandler: NativeHandlerFunction = async (requestJson: string) => {
 		const data = JSON.parse(requestJson) as NativeRequestData;
@@ -35,7 +40,7 @@ export function wrapHandler(handler: HandlerFunction): NativeHandlerFunction {
 		return serializeHandlerResult(result);
 	};
 
-	return markNative(nativeHandler);
+	return markNative(markRawBody(nativeHandler, true));
 }
 
 export function wrapBodyHandler<TBody = unknown>(
@@ -49,5 +54,5 @@ export function wrapBodyHandler<TBody = unknown>(
 		return serializeHandlerResult(result);
 	};
 
-	return markNative(nativeHandler);
+	return markNative(markRawBody(nativeHandler, true));
 }

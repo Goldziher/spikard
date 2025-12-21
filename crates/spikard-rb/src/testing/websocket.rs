@@ -3,19 +3,151 @@
 use magnus::prelude::*;
 use magnus::{Error, Ruby, Value, method};
 use serde_json::Value as JsonValue;
-use spikard_http::testing::{WebSocketConnection as RustWebSocketConnection, WebSocketMessage as RustWebSocketMessage};
 use std::cell::RefCell;
+use std::net::{TcpStream, ToSocketAddrs};
+use std::time::Duration;
+use tungstenite::stream::MaybeTlsStream;
+use tungstenite::{Message, WebSocket};
+use url::Url;
+
+#[derive(Debug)]
+pub(crate) enum WebSocketIoError {
+    Timeout,
+    Closed,
+    Other(String),
+}
+
+#[derive(Debug)]
+pub(crate) struct WebSocketConnection {
+    stream: WebSocket<MaybeTlsStream<TcpStream>>,
+}
+
+impl WebSocketConnection {
+    pub(crate) fn connect(url: Url, timeout: Duration) -> Result<Self, WebSocketIoError> {
+        if url.scheme() == "wss" {
+            return Err(WebSocketIoError::Other(
+                "wss is not supported for Ruby test sockets".to_string(),
+            ));
+        }
+
+        let host = url
+            .host_str()
+            .ok_or_else(|| WebSocketIoError::Other("Missing WebSocket host".to_string()))?;
+        let port = url
+            .port_or_known_default()
+            .ok_or_else(|| WebSocketIoError::Other("Missing WebSocket port".to_string()))?;
+        let addr = (host, port)
+            .to_socket_addrs()
+            .map_err(|err| WebSocketIoError::Other(err.to_string()))?
+            .next()
+            .ok_or_else(|| WebSocketIoError::Other("Unable to resolve WebSocket host".to_string()))?;
+        let tcp_stream = TcpStream::connect_timeout(&addr, timeout).map_err(map_io_error)?;
+        tcp_stream
+            .set_read_timeout(Some(timeout))
+            .map_err(|err| WebSocketIoError::Other(err.to_string()))?;
+        tcp_stream
+            .set_write_timeout(Some(timeout))
+            .map_err(|err| WebSocketIoError::Other(err.to_string()))?;
+
+        let request = url.as_str();
+        let (stream, _) = tungstenite::client::client(request, MaybeTlsStream::Plain(tcp_stream))
+            .map_err(|err| WebSocketIoError::Other(err.to_string()))?;
+        Ok(Self { stream })
+    }
+
+    pub(crate) fn send_text(&mut self, text: String) -> Result<(), WebSocketIoError> {
+        self.stream
+            .write_message(Message::Text(text))
+            .map_err(map_tungstenite_error)
+    }
+
+    pub(crate) fn send_json(&mut self, json_value: &JsonValue) -> Result<(), WebSocketIoError> {
+        let text = serde_json::to_string(json_value).map_err(|err| WebSocketIoError::Other(err.to_string()))?;
+        self.send_text(text)
+    }
+
+    pub(crate) fn receive_message(&mut self) -> Result<Message, WebSocketIoError> {
+        match self.stream.read_message() {
+            Ok(message) => Ok(message),
+            Err(err) => Err(map_tungstenite_error(err)),
+        }
+    }
+
+    pub(crate) fn receive_text(&mut self) -> Result<String, WebSocketIoError> {
+        let message = self.receive_message()?;
+        message_to_text(message)
+    }
+
+    pub(crate) fn receive_json(&mut self) -> Result<JsonValue, WebSocketIoError> {
+        let text = self.receive_text()?;
+        serde_json::from_str(&text).map_err(|err| WebSocketIoError::Other(err.to_string()))
+    }
+
+    pub(crate) fn receive_bytes(&mut self) -> Result<bytes::Bytes, WebSocketIoError> {
+        let message = self.receive_message()?;
+        message_to_bytes(message)
+    }
+
+    pub(crate) fn close(mut self) -> Result<(), WebSocketIoError> {
+        self.stream.close(None).map_err(map_tungstenite_error)
+    }
+}
+
+fn map_tungstenite_error(err: tungstenite::Error) -> WebSocketIoError {
+    match err {
+        tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed => WebSocketIoError::Closed,
+        tungstenite::Error::Io(io_err) => match io_err.kind() {
+            std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock => WebSocketIoError::Timeout,
+            _ => WebSocketIoError::Other(io_err.to_string()),
+        },
+        other => WebSocketIoError::Other(other.to_string()),
+    }
+}
+
+fn map_io_error(err: std::io::Error) -> WebSocketIoError {
+    match err.kind() {
+        std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock => WebSocketIoError::Timeout,
+        _ => WebSocketIoError::Other(err.to_string()),
+    }
+}
+
+fn message_to_text(message: Message) -> Result<String, WebSocketIoError> {
+    match message {
+        Message::Text(text) => Ok(text),
+        Message::Binary(bytes) => String::from_utf8(bytes).map_err(|err| WebSocketIoError::Other(err.to_string())),
+        Message::Close(frame) => Ok(frame.map(|f| f.reason.to_string()).unwrap_or_default()),
+        Message::Ping(_) | Message::Pong(_) => Ok(String::new()),
+        Message::Frame(_) => Err(WebSocketIoError::Other(
+            "Unexpected frame message while reading text".to_string(),
+        )),
+    }
+}
+
+fn message_to_bytes(message: Message) -> Result<bytes::Bytes, WebSocketIoError> {
+    match message {
+        Message::Text(text) => Ok(bytes::Bytes::from(text)),
+        Message::Binary(bytes) => Ok(bytes::Bytes::from(bytes)),
+        Message::Close(frame) => Ok(bytes::Bytes::from(
+            frame.map(|f| f.reason.to_string()).unwrap_or_default(),
+        )),
+        Message::Ping(data) => Ok(bytes::Bytes::from(data)),
+        Message::Pong(data) => Ok(bytes::Bytes::from(data)),
+        Message::Frame(_) => Err(WebSocketIoError::Other(
+            "Unexpected frame message while reading bytes".to_string(),
+        )),
+    }
+}
 
 /// Ruby wrapper for WebSocket test client
 #[derive(Default)]
 #[magnus::wrap(class = "Spikard::Native::WebSocketTestConnection", free_immediately)]
 pub struct WebSocketTestConnection {
-    inner: RefCell<Option<RustWebSocketConnection>>,
+    inner: RefCell<Option<WebSocketConnection>>,
 }
 
 impl WebSocketTestConnection {
     /// Create a new WebSocket test connection (public for lib.rs)
-    pub(crate) fn new(inner: RustWebSocketConnection) -> Self {
+    pub(crate) fn new(inner: WebSocketConnection) -> Self {
         Self {
             inner: RefCell::new(Some(inner)),
         }
@@ -28,10 +160,27 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(magnus::exception::runtime_error(), "WebSocket closed"))?;
 
-        let runtime = crate::server::global_runtime_or_err()?;
-        runtime.block_on(async {
-            ws.send_text(text).await;
-        });
+        let timeout_duration = websocket_timeout();
+        let result = crate::call_without_gvl!(
+            block_on_send_text,
+            args: (timeout_duration, Duration, ws, &mut WebSocketConnection, text, String),
+            return_type: Result<(), WebSocketIoError>
+        );
+        match result {
+            Ok(()) => Ok(()),
+            Err(WebSocketIoError::Timeout) => Err(Error::new(
+                magnus::exception::runtime_error(),
+                format!("WebSocket send timed out after {}ms", timeout_duration.as_millis()),
+            )),
+            Err(WebSocketIoError::Closed) => Err(Error::new(
+                magnus::exception::runtime_error(),
+                "WebSocket connection closed".to_string(),
+            )),
+            Err(WebSocketIoError::Other(message)) => Err(Error::new(
+                magnus::exception::runtime_error(),
+                format!("WebSocket send failed: {}", message),
+            )),
+        }?;
 
         Ok(())
     }
@@ -44,10 +193,32 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "WebSocket closed"))?;
 
-        let runtime = crate::server::global_runtime(ruby)?;
-        runtime.block_on(async {
-            ws.send_json(&json_value).await;
-        });
+        let timeout_duration = websocket_timeout();
+        let json_value_ref = &json_value;
+        let result = crate::call_without_gvl!(
+            block_on_send_json,
+            args: (
+                timeout_duration, Duration,
+                ws, &mut WebSocketConnection,
+                json_value_ref, &JsonValue
+            ),
+            return_type: Result<(), WebSocketIoError>
+        );
+        match result {
+            Ok(()) => Ok(()),
+            Err(WebSocketIoError::Timeout) => Err(Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket send timed out after {}ms", timeout_duration.as_millis()),
+            )),
+            Err(WebSocketIoError::Closed) => Err(Error::new(
+                ruby.exception_runtime_error(),
+                "WebSocket connection closed".to_string(),
+            )),
+            Err(WebSocketIoError::Other(message)) => Err(Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket send failed: {}", message),
+            )),
+        }?;
 
         Ok(())
     }
@@ -59,8 +230,29 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(magnus::exception::runtime_error(), "WebSocket closed"))?;
 
-        let runtime = crate::server::global_runtime_or_err()?;
-        let text = runtime.block_on(async { ws.receive_text().await });
+        let timeout_duration = websocket_timeout();
+        let text = crate::call_without_gvl!(
+            block_on_receive_text,
+            args: (
+                timeout_duration, Duration,
+                ws, &mut WebSocketConnection
+            ),
+            return_type: Result<String, WebSocketIoError>
+        )
+        .map_err(|err| match err {
+            WebSocketIoError::Timeout => Error::new(
+                magnus::exception::runtime_error(),
+                format!("WebSocket receive timed out after {}ms", timeout_duration.as_millis()),
+            ),
+            WebSocketIoError::Closed => Error::new(
+                magnus::exception::runtime_error(),
+                "WebSocket connection closed".to_string(),
+            ),
+            WebSocketIoError::Other(message) => Error::new(
+                magnus::exception::runtime_error(),
+                format!("WebSocket receive failed: {}", message),
+            ),
+        })?;
 
         Ok(text)
     }
@@ -72,8 +264,29 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "WebSocket closed"))?;
 
-        let runtime = crate::server::global_runtime(ruby)?;
-        let json_value: JsonValue = runtime.block_on(async { ws.receive_json().await });
+        let timeout_duration = websocket_timeout();
+        let json_value = crate::call_without_gvl!(
+            block_on_receive_json,
+            args: (
+                timeout_duration, Duration,
+                ws, &mut WebSocketConnection
+            ),
+            return_type: Result<JsonValue, WebSocketIoError>
+        )
+        .map_err(|err| match err {
+            WebSocketIoError::Timeout => Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket receive timed out after {}ms", timeout_duration.as_millis()),
+            ),
+            WebSocketIoError::Closed => Error::new(
+                ruby.exception_runtime_error(),
+                "WebSocket connection closed".to_string(),
+            ),
+            WebSocketIoError::Other(message) => Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket receive failed: {}", message),
+            ),
+        })?;
 
         json_to_ruby(ruby, &json_value)
     }
@@ -85,8 +298,29 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "WebSocket closed"))?;
 
-        let runtime = crate::server::global_runtime(ruby)?;
-        let bytes = runtime.block_on(async { ws.receive_bytes().await });
+        let timeout_duration = websocket_timeout();
+        let result = crate::call_without_gvl!(
+            block_on_receive_bytes,
+            args: (
+                timeout_duration, Duration,
+                ws, &mut WebSocketConnection
+            ),
+            return_type: Result<bytes::Bytes, WebSocketIoError>
+        );
+        let bytes = result.map_err(|err| match err {
+            WebSocketIoError::Timeout => Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket receive timed out after {}ms", timeout_duration.as_millis()),
+            ),
+            WebSocketIoError::Closed => Error::new(
+                ruby.exception_runtime_error(),
+                "WebSocket connection closed".to_string(),
+            ),
+            WebSocketIoError::Other(message) => Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket receive failed: {}", message),
+            ),
+        })?;
 
         Ok(ruby.str_from_slice(&bytes).as_value())
     }
@@ -98,8 +332,29 @@ impl WebSocketTestConnection {
             .as_mut()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "WebSocket closed"))?;
 
-        let runtime = crate::server::global_runtime(ruby)?;
-        let msg = runtime.block_on(async { ws.receive_message().await });
+        let timeout_duration = websocket_timeout();
+        let result = crate::call_without_gvl!(
+            block_on_receive_message,
+            args: (
+                timeout_duration, Duration,
+                ws, &mut WebSocketConnection
+            ),
+            return_type: Result<WebSocketMessageData, WebSocketIoError>
+        );
+        let msg = result.map_err(|err| match err {
+            WebSocketIoError::Timeout => Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket receive timed out after {}ms", timeout_duration.as_millis()),
+            ),
+            WebSocketIoError::Closed => Error::new(
+                ruby.exception_runtime_error(),
+                "WebSocket connection closed".to_string(),
+            ),
+            WebSocketIoError::Other(message) => Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket receive failed: {}", message),
+            ),
+        })?;
 
         let ws_msg = WebSocketMessage::new(msg);
         Ok(ruby.obj_wrap(ws_msg).as_value())
@@ -107,46 +362,172 @@ impl WebSocketTestConnection {
 
     /// Close the WebSocket connection
     fn close(&self) -> Result<(), Error> {
-        self.inner.borrow_mut().take();
-        Ok(())
+        let mut inner = self.inner.borrow_mut();
+        let ws = inner
+            .take()
+            .ok_or_else(|| Error::new(magnus::exception::runtime_error(), "WebSocket closed"))?;
+        let result = crate::call_without_gvl!(
+            block_on_close,
+            args: (ws, WebSocketConnection),
+            return_type: Result<(), WebSocketIoError>
+        );
+        result.map_err(|err| match err {
+            WebSocketIoError::Timeout => Error::new(
+                magnus::exception::runtime_error(),
+                "WebSocket close timed out".to_string(),
+            ),
+            WebSocketIoError::Closed => Error::new(
+                magnus::exception::runtime_error(),
+                "WebSocket connection closed".to_string(),
+            ),
+            WebSocketIoError::Other(message) => Error::new(
+                magnus::exception::runtime_error(),
+                format!("WebSocket close failed: {}", message),
+            ),
+        })
     }
 }
 
+fn block_on_send_text(
+    timeout_duration: Duration,
+    ws: &mut WebSocketConnection,
+    text: String,
+) -> Result<(), WebSocketIoError> {
+    set_stream_timeouts(ws, timeout_duration)?;
+    ws.send_text(text)
+}
+
+fn block_on_send_json(
+    timeout_duration: Duration,
+    ws: &mut WebSocketConnection,
+    json_value: &JsonValue,
+) -> Result<(), WebSocketIoError> {
+    set_stream_timeouts(ws, timeout_duration)?;
+    ws.send_json(json_value)
+}
+
+fn block_on_receive_bytes(
+    timeout_duration: Duration,
+    ws: &mut WebSocketConnection,
+) -> Result<bytes::Bytes, WebSocketIoError> {
+    set_stream_timeouts(ws, timeout_duration)?;
+    ws.receive_bytes()
+}
+
+fn block_on_receive_text(timeout_duration: Duration, ws: &mut WebSocketConnection) -> Result<String, WebSocketIoError> {
+    set_stream_timeouts(ws, timeout_duration)?;
+    ws.receive_text()
+}
+
+fn block_on_receive_json(
+    timeout_duration: Duration,
+    ws: &mut WebSocketConnection,
+) -> Result<JsonValue, WebSocketIoError> {
+    set_stream_timeouts(ws, timeout_duration)?;
+    ws.receive_json()
+}
+
+fn block_on_receive_message(
+    timeout_duration: Duration,
+    ws: &mut WebSocketConnection,
+) -> Result<WebSocketMessageData, WebSocketIoError> {
+    set_stream_timeouts(ws, timeout_duration)?;
+    ws.receive_message().and_then(WebSocketMessageData::from_tungstenite)
+}
+
+fn block_on_close(ws: WebSocketConnection) -> Result<(), WebSocketIoError> {
+    ws.close()
+}
+
+fn set_stream_timeouts(ws: &mut WebSocketConnection, timeout: Duration) -> Result<(), WebSocketIoError> {
+    if let MaybeTlsStream::Plain(stream) = ws.stream.get_mut() {
+        stream
+            .set_read_timeout(Some(timeout))
+            .map_err(|e| WebSocketIoError::Other(e.to_string()))?;
+        stream
+            .set_write_timeout(Some(timeout))
+            .map_err(|e| WebSocketIoError::Other(e.to_string()))?;
+    }
+    Ok(())
+}
+
+fn websocket_timeout() -> Duration {
+    const DEFAULT_TIMEOUT_MS: u64 = 30_000;
+    let timeout_ms = std::env::var("SPIKARD_RB_WS_TIMEOUT_MS")
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .unwrap_or(DEFAULT_TIMEOUT_MS);
+    Duration::from_millis(timeout_ms)
+}
+
 /// Ruby wrapper for WebSocket messages
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+pub enum WebSocketMessageData {
+    Text(String),
+    Binary(Vec<u8>),
+    Close(Option<String>),
+    Ping(Vec<u8>),
+    Pong(Vec<u8>),
+}
+
+impl WebSocketMessageData {
+    fn from_tungstenite(message: Message) -> Result<Self, WebSocketIoError> {
+        match message {
+            Message::Text(text) => Ok(Self::Text(text)),
+            Message::Binary(bytes) => Ok(Self::Binary(bytes)),
+            Message::Close(frame) => Ok(Self::Close(frame.map(|f| f.reason.to_string()))),
+            Message::Ping(bytes) => Ok(Self::Ping(bytes)),
+            Message::Pong(bytes) => Ok(Self::Pong(bytes)),
+            Message::Frame(_) => Err(WebSocketIoError::Other(
+                "Unexpected frame message while reading WebSocket".to_string(),
+            )),
+        }
+    }
+}
+
 #[magnus::wrap(class = "Spikard::Native::WebSocketMessage", free_immediately)]
 pub struct WebSocketMessage {
-    inner: RustWebSocketMessage,
+    inner: WebSocketMessageData,
 }
 
 impl WebSocketMessage {
-    pub fn new(inner: RustWebSocketMessage) -> Self {
+    pub fn new(inner: WebSocketMessageData) -> Self {
         Self { inner }
     }
 
     /// Get message as text if it's a text message
     fn as_text(&self) -> Result<Option<String>, Error> {
-        Ok(self.inner.as_text().map(|s| s.to_string()))
+        match &self.inner {
+            WebSocketMessageData::Text(text) => Ok(Some(text.clone())),
+            _ => Ok(None),
+        }
     }
 
     /// Get message as JSON if it's a text message containing JSON
     fn as_json(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        match this.inner.as_json() {
-            Ok(value) => json_to_ruby(ruby, &value),
-            Err(_) => Ok(ruby.qnil().as_value()),
+        match &this.inner {
+            WebSocketMessageData::Text(text) => match serde_json::from_str::<JsonValue>(text) {
+                Ok(value) => json_to_ruby(ruby, &value),
+                Err(_) => Ok(ruby.qnil().as_value()),
+            },
+            _ => Ok(ruby.qnil().as_value()),
         }
     }
 
     /// Get message as binary if it's a binary message
     fn as_binary(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        match this.inner.as_binary() {
-            Some(bytes) => Ok(ruby.str_from_slice(bytes).as_value()),
-            None => Ok(ruby.qnil().as_value()),
+        match &this.inner {
+            WebSocketMessageData::Binary(bytes) => Ok(ruby.str_from_slice(bytes).as_value()),
+            WebSocketMessageData::Ping(bytes) => Ok(ruby.str_from_slice(bytes).as_value()),
+            WebSocketMessageData::Pong(bytes) => Ok(ruby.str_from_slice(bytes).as_value()),
+            _ => Ok(ruby.qnil().as_value()),
         }
     }
 
     /// Check if this is a close message
     fn is_close(&self) -> bool {
-        self.inner.is_close()
+        matches!(self.inner, WebSocketMessageData::Close(_))
     }
 }
 

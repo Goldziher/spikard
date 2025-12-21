@@ -9,7 +9,41 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use spikard_core::di::{Dependency, ResolvedDependencies};
 use spikard_core::request_data::RequestData;
 use std::any::Any;
+use std::collections::HashSet;
 use std::sync::Arc;
+
+/// Sentinel dependency key used to explicitly disable DI for routes without dependencies.
+pub const NO_DI_DEP_KEY: &str = "__spikard_no_di__";
+
+fn order_dependency_keys(dependencies: &Object, dep_keys: &[String]) -> Vec<String> {
+    let key_set: HashSet<String> = dep_keys.iter().cloned().collect();
+    let mut ordered: Vec<String> = Vec::new();
+    let mut seen: HashSet<String> = HashSet::new();
+
+    for key in dep_keys {
+        let dep_obj = dependencies.get::<Object>(key).ok().flatten();
+        let depends_on: Vec<String> = dep_obj
+            .as_ref()
+            .and_then(|obj| obj.get("dependsOn").ok().flatten())
+            .unwrap_or_default();
+
+        for dep in depends_on {
+            if key_set.contains(&dep) && !seen.contains(&dep) {
+                ordered.push(dep.clone());
+                seen.insert(dep);
+            }
+        }
+    }
+
+    for key in dep_keys {
+        if !seen.contains(key) {
+            ordered.push(key.clone());
+            seen.insert(key.clone());
+        }
+    }
+
+    ordered
+}
 
 /// Node.js value dependency
 ///
@@ -174,9 +208,26 @@ impl Dependency for NodeFactoryDependency {
                     .ok_or_else(|| spikard_core::di::DependencyError::ResolutionFailed {
                         message: format!("AsyncGenerator missing 'value' field for {}", key),
                     })?;
+                let cleanup_id = obj
+                    .get("cleanup_id")
+                    .and_then(|v| v.as_str())
+                    .ok_or_else(|| spikard_core::di::DependencyError::ResolutionFailed {
+                        message: format!("AsyncGenerator missing 'cleanup_id' field for {}", key),
+                    })?
+                    .to_string();
 
                 let resolved_mut = resolved_clone;
-                resolved_mut.add_cleanup_task(Box::new(move || Box::pin(async move {})));
+                let cleanup_factory = factory_fn.clone();
+                let cleanup_payload = serde_json::json!({ "__cleanup_id__": cleanup_id }).to_string();
+                resolved_mut.add_cleanup_task(Box::new(move || {
+                    let cleanup_factory = cleanup_factory.clone();
+                    let cleanup_payload = cleanup_payload.clone();
+                    Box::pin(async move {
+                        if let Ok(promise) = cleanup_factory.call_async(cleanup_payload).await {
+                            let _ = promise.await;
+                        }
+                    })
+                }));
 
                 return Ok(Arc::new(value_str) as Arc<dyn Any + Send + Sync>);
             }
@@ -236,7 +287,9 @@ pub fn extract_dependency_container(
 
     let mut container = spikard_core::di::DependencyContainer::new();
 
-    for key in &dep_keys {
+    let ordered_keys = order_dependency_keys(&dependencies, &dep_keys);
+
+    for key in &ordered_keys {
         let dep_obj: Object = dependencies
             .get(key)?
             .ok_or_else(|| Error::from_reason(format!("Dependency {} not found", key)))?;
@@ -288,6 +341,11 @@ pub fn extract_dependency_container(
         }
     }
 
+    let noop = NodeValueDependency::new(NO_DI_DEP_KEY.to_string(), "null".to_string());
+    container
+        .register(NO_DI_DEP_KEY.to_string(), Arc::new(noop))
+        .map_err(|e| Error::from_reason(format!("Failed to register noop dependency: {}", e)))?;
+
     Ok(Some(Arc::new(container)))
 }
 
@@ -307,6 +365,9 @@ pub fn resolved_to_js_object<'a>(
     let parse: Function<String, Unknown> = json_obj.get_named_property("parse")?;
 
     for key in keys {
+        if key == NO_DI_DEP_KEY {
+            continue;
+        }
         if let Some(value_json) = resolved.get::<String>(key) {
             let js_value = parse.call(value_json.to_string())?;
             obj.set(key.as_str(), js_value)?;

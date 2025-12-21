@@ -25,7 +25,7 @@ use spikard_http::testing::{
     MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
 };
 use spikard_http::{HandlerResult, RequestData, ResponseBodySize, Server};
-use spikard_http::{ParameterValidator, Route, RouteMetadata, SchemaValidator};
+use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -147,7 +147,6 @@ struct JsHandler {
     path: String,
     request_validator: Option<Arc<SchemaValidator>>,
     response_validator: Option<Arc<SchemaValidator>>,
-    parameter_validator: Option<ParameterValidator>,
 }
 
 impl JsHandler {
@@ -163,7 +162,6 @@ impl JsHandler {
             path: route.path.clone(),
             request_validator: route.request_validator.clone(),
             response_validator: route.response_validator.clone(),
-            parameter_validator: route.parameter_validator.clone(),
         })
     }
 
@@ -176,26 +174,7 @@ impl JsHandler {
             return Err((problem.status_code(), error_json));
         }
 
-        let validated_params = if let Some(validator) = &self.parameter_validator {
-            match validator.validate_and_extract(
-                &request_data.query_params,
-                &request_data.raw_query_params,
-                &request_data.path_params,
-                &request_data.headers,
-                &request_data.cookies,
-            ) {
-                Ok(params) => Some(params),
-                Err(errors) => {
-                    let problem = ProblemDetails::from_validation_error(&errors);
-                    let error_json = problem_to_json(&problem);
-                    return Err((problem.status_code(), error_json));
-                }
-            }
-        } else {
-            None
-        };
-
-        let payload = build_js_payload(self, &request_data, validated_params.clone());
+        let payload = build_js_payload(self, &request_data, request_data.validated_params.clone());
 
         let js_result = self.call_js(payload).await.map_err(|e| {
             (
@@ -604,8 +583,12 @@ impl TestClient {
             }
         }
 
+        let content_type = headers_map
+            .get(header::CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok());
+
         if let Some(body_value) = body {
-            match determine_body_payload(&body_value) {
+            match determine_body_payload(&body_value, content_type) {
                 BodyPayload::Json(json_data) => {
                     let body_vec = serde_json::to_vec(&json_data)
                         .map_err(|e| Error::from_reason(format!("Failed to serialize JSON body: {}", e)))?;
@@ -636,6 +619,9 @@ impl TestClient {
                     request = request.bytes(Bytes::from(body_bytes));
                     request = request.content_type(&content_type);
                 }
+                BodyPayload::Bytes(body_bytes) => {
+                    request = request.bytes(Bytes::from(body_bytes));
+                }
             }
         }
 
@@ -649,24 +635,68 @@ enum BodyPayload {
     Json(Value),
     Form(Value),
     Multipart(Value),
+    Bytes(Vec<u8>),
 }
 
-fn determine_body_payload(value: &Value) -> BodyPayload {
-    if !value.is_object() {
-        return BodyPayload::Json(value.clone());
+fn determine_body_payload(value: &Value, content_type: Option<&str>) -> BodyPayload {
+    if let Some(bytes) = extract_bytes(value) {
+        if let Some(payload) = payload_from_bytes(&bytes, content_type) {
+            return payload;
+        }
+        return BodyPayload::Bytes(bytes);
     }
 
-    if let Some(obj) = value.as_object() {
-        if let Some(form) = obj.get("__spikard_form__") {
-            return BodyPayload::Form(form.clone());
-        }
-
-        if let Some(multipart) = obj.get("__spikard_multipart__") {
-            return BodyPayload::Multipart(multipart.clone());
-        }
+    if let Some(payload) = payload_from_object(value, content_type) {
+        return payload;
     }
 
     BodyPayload::Json(value.clone())
+}
+
+fn payload_from_bytes(bytes: &[u8], content_type: Option<&str>) -> Option<BodyPayload> {
+    let decoded = std::str::from_utf8(bytes).ok()?;
+    let parsed: Value = serde_json::from_str(decoded).ok()?;
+    payload_from_object(&parsed, content_type)
+}
+
+fn payload_from_object(value: &Value, content_type: Option<&str>) -> Option<BodyPayload> {
+    let obj = value.as_object()?;
+    if let Some(form) = obj.get("__spikard_form__") {
+        if content_type.is_some_and(is_form_content_type) {
+            return Some(BodyPayload::Form(form.clone()));
+        }
+        return Some(BodyPayload::Json(value.clone()));
+    }
+
+    if let Some(multipart) = obj.get("__spikard_multipart__") {
+        if content_type.is_some_and(is_multipart_content_type) {
+            return Some(BodyPayload::Multipart(multipart.clone()));
+        }
+        return Some(BodyPayload::Json(value.clone()));
+    }
+
+    None
+}
+
+fn is_form_content_type(value: &str) -> bool {
+    value.trim().to_ascii_lowercase().starts_with("application/x-www-form-urlencoded")
+}
+
+fn is_multipart_content_type(value: &str) -> bool {
+    value.trim().to_ascii_lowercase().starts_with("multipart/form-data")
+}
+
+fn extract_bytes(value: &Value) -> Option<Vec<u8>> {
+    let items = value.as_array()?;
+    let mut bytes = Vec::with_capacity(items.len());
+    for item in items {
+        let number = item.as_u64()?;
+        if number > u8::MAX as u64 {
+            return None;
+        }
+        bytes.push(number as u8);
+    }
+    Some(bytes)
 }
 
 fn encode_multipart_body(value: &Value) -> std::result::Result<(Vec<u8>, String), String> {

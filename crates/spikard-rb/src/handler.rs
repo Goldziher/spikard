@@ -15,7 +15,6 @@ use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
 use serde_json::Value as JsonValue;
 use spikard_bindings_shared::ErrorResponseBuilder;
 use spikard_core::problem::ProblemDetails;
-use spikard_http::ParameterValidator;
 use spikard_http::SchemaValidator;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use std::collections::HashMap;
@@ -143,9 +142,7 @@ pub struct RubyHandlerInner {
     method_value: Opaque<Value>,
     path_value: Opaque<Value>,
     pub json_module: Opaque<Value>,
-    pub request_validator: Option<Arc<SchemaValidator>>,
     pub response_validator: Option<Arc<SchemaValidator>>,
-    pub parameter_validator: Option<ParameterValidator>,
     pub upload_file_class: Option<Opaque<Value>>,
 }
 
@@ -184,9 +181,7 @@ impl RubyHandler {
                 method_value,
                 path_value,
                 json_module: Opaque::from(json_module),
-                request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
-                parameter_validator: route.parameter_validator.clone(),
                 upload_file_class,
             }),
         })
@@ -227,9 +222,7 @@ impl RubyHandler {
                 method_value,
                 path_value,
                 json_module: Opaque::from(json_module),
-                request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
-                parameter_validator: route.parameter_validator.clone(),
                 upload_file_class,
             }),
         })
@@ -260,30 +253,7 @@ impl RubyHandler {
     }
 
     fn handle_inner(&self, request_data: RequestData) -> HandlerResult {
-        if let Some(validator) = &self.inner.request_validator
-            && let Err(errors) = validator.validate(&request_data.body)
-        {
-            let problem = ProblemDetails::from_validation_error(&errors);
-            return Err(ErrorResponseBuilder::problem_details_response(&problem));
-        }
-
-        let validated_params = if let Some(validator) = &self.inner.parameter_validator {
-            match validator.validate_and_extract(
-                &request_data.query_params,
-                request_data.raw_query_params.as_ref(),
-                request_data.path_params.as_ref(),
-                request_data.headers.as_ref(),
-                request_data.cookies.as_ref(),
-            ) {
-                Ok(value) => Some(value),
-                Err(errors) => {
-                    let problem = ProblemDetails::from_validation_error(&errors);
-                    return Err(ErrorResponseBuilder::problem_details_response(&problem));
-                }
-            }
-        } else {
-            None
-        };
+        let validated_params = request_data.validated_params.clone();
 
         let ruby = Ruby::get().map_err(|_| {
             ErrorResponseBuilder::structured_error(

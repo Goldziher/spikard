@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'timeout'
 
 module Spikard
   # Testing helpers that wrap the native Ruby extension.
@@ -8,25 +9,37 @@ module Spikard
     module_function
 
     def create_test_client(app, config: nil)
-      unless defined?(Spikard::Native::TestClient)
-        raise LoadError, 'Spikard native test client is not available. Build the native extension before running tests.'
+      trace('create_test_client:start')
+      ensure_native_test_client!
+      config = resolve_test_config(app, config)
+      native = build_native_test_client(app, config)
+      trace('create_test_client:done')
+      TestClient.new(native)
+    end
+
+    def ensure_native_test_client!
+      return if defined?(Spikard::Native::TestClient)
+
+      raise LoadError, 'Spikard native test client is not available. Build the native extension before running tests.'
+    end
+
+    def resolve_test_config(app, config)
+      return config if config
+
+      if app.instance_variable_defined?(:@__spikard_test_config)
+        return app.instance_variable_get(:@__spikard_test_config)
       end
 
-      # Allow generated apps to stash a test config
-      if config.nil? && app.instance_variable_defined?(:@__spikard_test_config)
-        config = app.instance_variable_get(:@__spikard_test_config)
-      end
+      Spikard::ServerConfig.new
+    end
 
-      # Use default config if none provided
-      config ||= Spikard::ServerConfig.new
-
+    def build_native_test_client(app, config)
       routes_json = app.normalized_routes_json
       handlers = app.handler_map.transform_keys(&:to_sym)
       ws_handlers = app.websocket_handlers || {}
       sse_producers = app.sse_producers || {}
       dependencies = app.dependencies || {}
-      native = Spikard::Native::TestClient.new(routes_json, handlers, config, ws_handlers, sse_producers, dependencies)
-      TestClient.new(native)
+      Spikard::Native::TestClient.new(routes_json, handlers, config, ws_handlers, sse_producers, dependencies)
     end
 
     # High level wrapper around the native test client.
@@ -50,7 +63,9 @@ module Spikard
       end
 
       def websocket(path)
+        Testing.trace("websocket:start #{path}")
         native_ws = @native.websocket(path)
+        Testing.trace("websocket:connected #{path}")
         WebSocketTestConnection.new(native_ws)
       end
 
@@ -77,22 +92,26 @@ module Spikard
       end
 
       def send_text(text)
+        Testing.trace('websocket:send_text')
         @native_ws.send_text(JSON.generate(text))
       end
 
       def send_json(obj)
+        Testing.trace('websocket:send_json')
         @native_ws.send_json(obj)
       end
 
       def receive_text
-        raw = @native_ws.receive_text
+        Testing.trace('websocket:receive_text')
+        raw = with_timeout { @native_ws.receive_text }
         JSON.parse(raw)
       rescue JSON::ParserError
         raw
       end
 
       def receive_json
-        @native_ws.receive_json
+        Testing.trace('websocket:receive_json')
+        with_timeout { @native_ws.receive_json }
       end
 
       def receive_bytes
@@ -105,7 +124,17 @@ module Spikard
       end
 
       def close
+        Testing.trace('websocket:close')
         @native_ws.close
+      end
+
+      private
+
+      def with_timeout(&)
+        timeout_ms = ENV.fetch('SPIKARD_RB_TEST_TIMEOUT_MS', nil)
+        return yield unless timeout_ms
+
+        Timeout.timeout(timeout_ms.to_f / 1000.0, &)
       end
     end
 
@@ -216,6 +245,12 @@ module Spikard
       def as_json
         JSON.parse(@data)
       end
+    end
+
+    def trace(message)
+      return unless ENV['SPIKARD_RB_TEST_TRACE'] == '1'
+
+      warn("[spikard-rb-test] #{message}")
     end
   end
 end

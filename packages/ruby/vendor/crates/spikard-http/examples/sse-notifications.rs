@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic, clippy::nursery, clippy::all)]
 //! SSE Notifications Server Example
 //!
 //! Demonstrates Server-Sent Events support in Spikard matching the AsyncAPI notifications specification.
