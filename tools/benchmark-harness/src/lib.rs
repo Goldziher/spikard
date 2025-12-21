@@ -6,6 +6,7 @@
 pub mod analysis;
 pub mod compare;
 pub mod comparison;
+pub mod consolidate;
 pub mod error;
 pub mod fixture;
 pub mod framework;
@@ -26,6 +27,7 @@ pub use comparison::{
     ComparisonReport, FrameworkComparison, RegressionWarning, RelativeMetrics, compare_frameworks, detect_regressions,
     generate_json_report, generate_markdown_report,
 };
+pub use consolidate::{ConsolidatedProfileReport, consolidate_profile_dir, consolidate_profile_paths};
 pub use error::{Error, Result};
 pub use fixture::{Fixture, FixtureManager};
 pub use framework::{FrameworkConfig, detect_framework, get_framework, list_frameworks};
