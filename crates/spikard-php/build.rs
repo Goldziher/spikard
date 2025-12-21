@@ -76,7 +76,8 @@ fn main() {
         }
     }
 
-    if let Ok(output) = Command::new(&php_config).arg("--version").output()
+    if env::var("SPIKARD_PHP_BUILD_NOTICE").is_ok()
+        && let Ok(output) = Command::new(&php_config).arg("--version").output()
         && output.status.success()
     {
         let version = String::from_utf8_lossy(&output.stdout);
@@ -85,4 +86,5 @@ fn main() {
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-env-changed=PHP_CONFIG");
+    println!("cargo:rerun-if-env-changed=SPIKARD_PHP_BUILD_NOTICE");
 }
