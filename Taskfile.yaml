@@ -5,6 +5,8 @@ vars:
   RBENV_BIN:
     sh: command -v rbenv || true
   RBENV_VERSION: "3.4.7"
+  RUBY_GEM_HOME: "{{.TASKFILE_DIR}}/packages/ruby/.gems"
+  RUBY_BUNDLE_PATH: "{{.TASKFILE_DIR}}/packages/ruby/vendor/bundle"
   RBENV_RUBY:
     sh: |
       if command -v rbenv >/dev/null 2>&1; then
@@ -12,6 +14,7 @@ vars:
       else
         command -v ruby
       fi
+  RUBY_ENV_PREFIX: "GEM_HOME={{.RUBY_GEM_HOME}} GEM_PATH={{.RUBY_GEM_HOME}} BUNDLE_PATH={{.RUBY_BUNDLE_PATH}}"
   RUBY_EXEC_PREFIX:
     sh: |
       if command -v rbenv >/dev/null 2>&1; then
@@ -142,14 +145,14 @@ tasks:
     desc: "Install Ruby dependencies"
     dir: packages/ruby
     cmds:
-      - "{{.RUBY_EXEC_PREFIX}} gem install bundler -v {{.BUNDLER_VERSION}} --no-document --force"
-      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ check || {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ install --jobs 4 --retry 3"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} gem install bundler -v {{.BUNDLER_VERSION}} --no-document --force"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ check || {{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ install --jobs 4 --retry 3"
 
   ruby:update:
     desc: "Update Ruby dependencies"
     dir: packages/ruby
     cmds:
-      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ update --all"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ update --all"
 
   ruby:build:
     desc: "Build Ruby native extension"
@@ -157,7 +160,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rake ext:build"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rake ext:build"
 
   ruby:test:
     desc: "Run Ruby specs"
@@ -165,7 +168,7 @@ tasks:
       - ruby:build
     dir: packages/ruby
     cmds:
-      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rspec"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rspec"
 
   pre-commit:install:
     desc: "Install pre-commit hooks via Prek"
@@ -339,7 +342,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all"
       - task: ruby:typecheck
 
   ruby:lint:check:
@@ -348,7 +351,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop"
       - task: ruby:typecheck
 
   ruby:typecheck:
@@ -357,7 +360,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec ruby -S steep check"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec ruby -S steep check"
 
   ruby:format:
     desc: "Format Ruby code with Rubocop"
@@ -365,7 +368,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all"
 
   ruby:format:check:
     desc: "Check Ruby formatting without modifications"
@@ -373,7 +376,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop"
 
   node:format:
     desc: "Format TypeScript code with biome"
@@ -409,12 +412,12 @@ tasks:
   php:install:
     desc: "Install PHP dependencies via Composer"
     cmds:
-      - composer install --no-interaction --no-progress
+      - COMPOSER_DISABLE_FUND=1 composer -d packages/php install --no-interaction --no-progress
 
   php:update:
     desc: "Update PHP dependencies"
     cmds:
-      - composer update --no-interaction --no-progress
+      - COMPOSER_DISABLE_FUND=1 composer -d packages/php update --no-interaction --no-progress
 
   php:test:
     desc: "Run PHP test suite (pure PHP; extension compiled separately)"
@@ -429,28 +432,28 @@ tasks:
     deps:
       - php:install
     cmds:
-      - composer run lint:fix
+      - composer -d packages/php run lint:fix
 
   php:lint:check:
     desc: "Run PHP static analysis WITHOUT auto-fix (check-only)"
     deps:
       - php:install
     cmds:
-      - composer run lint
+      - composer -d packages/php run lint
 
   php:format:
     desc: "Format PHP code (with modifications)"
     deps:
       - php:install
     cmds:
-      - composer run format
+      - composer -d packages/php run format
 
   php:format:check:
     desc: "Check PHP formatting without modifications"
     deps:
       - php:install
     cmds:
-      - composer run format:check
+      - composer -d packages/php run format:check
 
   php:build:
     desc: "Build PHP native extension"
@@ -731,9 +734,9 @@ tasks:
     desc: "Run Ruby e2e tests (fixture-driven integration tests)"
     dir: e2e/ruby
     cmds:
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ check || BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ install --jobs 4 --retry 3
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rake -C ../../packages/ruby ext:build
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rspec
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ check || BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ install --jobs 4 --retry 3
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rake -C ../../packages/ruby ext:build
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rspec
 
   test:e2e:php:
     desc: "Run PHP e2e tests (fixture-driven integration tests)"
@@ -955,7 +958,7 @@ tasks:
     deps:
       - ruby:install
     cmds:
-      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop tools/benchmark-harness/apps/spikard-ruby/ || true"
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop tools/benchmark-harness/apps/spikard-ruby/ || true"
 
   bench:lint:php:
     desc: "Lint generated PHP benchmark code"
