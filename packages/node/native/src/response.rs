@@ -62,7 +62,13 @@ impl TestResponse {
     /// Parse response body as JSON
     #[napi]
     pub fn json(&self) -> napi::Result<serde_json::Value> {
-        serde_json::from_slice(&self.body).map_err(|e| Error::from_reason(format!("Failed to parse JSON: {}", e)))
+        if self.body.is_empty() {
+            return Ok(serde_json::Value::Null);
+        }
+        serde_json::from_slice(&self.body).or_else(|_| {
+            let text = String::from_utf8_lossy(&self.body).to_string();
+            Ok(serde_json::Value::String(text))
+        })
     }
 
     /// Get raw response body bytes
@@ -211,19 +217,24 @@ pub enum HandlerReturnValue {
 #[allow(unsafe_op_in_unsafe_fn)]
 impl FromNapiValue for HandlerReturnValue {
     unsafe fn from_napi_value(env: napi::sys::napi_env, value: napi::sys::napi_value) -> Result<Self> {
-        if let Ok(handle_id) =
-            Object::from_napi_value(env, value).and_then(|object| object.get_named_property::<i64>(STREAM_HANDLE_PROP))
-        {
-            let mut registry = STREAM_HANDLE_REGISTRY
-                .lock()
-                .map_err(|_| Error::from_reason("Streaming handle registry is poisoned"))?;
-            if let Some(handle) = registry.remove(&handle_id) {
-                return Ok(HandlerReturnValue::Streaming(handle));
-            } else {
-                return Err(Error::from_reason(format!(
-                    "Streaming handle {} not found (already consumed)",
-                    handle_id
-                )));
+        if let Ok(object) = Object::from_napi_value(env, value) {
+            if let Ok(handle_value) = object.get_named_property::<Unknown>(STREAM_HANDLE_PROP) {
+                let handle_type = handle_value.get_type()?;
+                if !matches!(handle_type, ValueType::Undefined | ValueType::Null) {
+                    if let Some(handle_id) = extract_stream_handle_id(handle_value)? {
+                        let mut registry = STREAM_HANDLE_REGISTRY
+                            .lock()
+                            .map_err(|_| Error::from_reason("Streaming handle registry is poisoned"))?;
+                        if let Some(handle) = registry.remove(&handle_id) {
+                            return Ok(HandlerReturnValue::Streaming(handle));
+                        } else {
+                            return Err(Error::from_reason(format!(
+                                "Streaming handle {} not found (already consumed)",
+                                handle_id
+                            )));
+                        }
+                    }
+                }
             }
         }
 
@@ -287,4 +298,25 @@ fn extract_chunk_bytes(value: Unknown) -> Result<Vec<u8>> {
     Err(Error::from_reason(
         "StreamingResponse chunks must be strings or Buffer instances",
     ))
+}
+
+fn extract_stream_handle_id(handle_value: Unknown) -> Result<Option<i64>> {
+    match handle_value.get_type()? {
+        ValueType::Number => {
+            let handle_id = handle_value.coerce_to_number()?.get_int64()?;
+            Ok(Some(handle_id))
+        }
+        ValueType::Object => {
+            let raw = handle_value.value();
+            let handle_obj = unsafe { Object::from_napi_value(raw.env, raw.value)? };
+            if let Ok(handle_value) = handle_obj.get_named_property::<Unknown>("handle") {
+                if let ValueType::Number = handle_value.get_type()? {
+                    let handle_id = handle_value.coerce_to_number()?.get_int64()?;
+                    return Ok(Some(handle_id));
+                }
+            }
+            Ok(None)
+        }
+        _ => Ok(None),
+    }
 }

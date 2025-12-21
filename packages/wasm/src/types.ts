@@ -7,7 +7,7 @@ export type JsonValue = JsonPrimitive | JsonValue[] | { [Key in string]: JsonVal
 
 export type JsonRecord = Record<string, JsonValue>;
 
-export type BinaryLike = ArrayBuffer | ArrayBufferView | Uint8Array;
+export type BinaryLike = ArrayBuffer | ArrayBufferView | Uint8Array | Blob;
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -42,3 +42,20 @@ export type HandlerFunction<TReturn extends HandlerResult = HandlerResult> = (
 	payload: HandlerPayload,
 	context?: HandlerContext,
 ) => MaybePromise<TReturn>;
+
+export interface WebSocketServerSocket {
+	sendText(message: string): MaybePromise<void>;
+	sendJson(payload: JsonValue): MaybePromise<void>;
+	sendBytes?(payload: BinaryLike): MaybePromise<void>;
+	close(code?: number, reason?: string): MaybePromise<void>;
+	broadcast?(payload: JsonValue | string): MaybePromise<void>;
+	isClosed(): boolean;
+}
+
+export interface WebSocketHandler {
+	onOpen?: (socket: WebSocketServerSocket) => MaybePromise<void>;
+	onMessage?: (socket: WebSocketServerSocket, data: JsonValue | string | BinaryLike) => MaybePromise<void>;
+	onClose?: (socket: WebSocketServerSocket, code?: number, reason?: string) => MaybePromise<void>;
+}
+
+export type WebSocketHandlerLike = WebSocketHandler | HandlerFunction;

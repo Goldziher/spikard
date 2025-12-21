@@ -32,19 +32,39 @@ namespace Spikard\Native {
         public function __construct(array $routes) {}
         /** @param array<string, mixed> $options */
         public function request(string $method, string $path, array $options = []): object {}
-        public function websocket(string $path, ?string $sendText = null): WebSocket {}
-        public function sse(string $path): SseStream {}
+        public function websocket(string $path, ?string $sendText = null): \Spikard\Testing\WebSocketTestConnection {}
+        public function sse(string $path): \Spikard\Testing\SseStream {}
+        public function close(): void {}
     }
+}
 
-    class WebSocket
+namespace Spikard\Testing {
+    class WebSocketTestConnection
     {
-        public function recv_text(): ?string {}
-        public function send_text(string $message): bool {}
+        public function sendText(string $message): void {}
+        public function sendJson(string $payload): void {}
+        public function receiveText(): string {}
+        public function receiveJson(): array {}
+        /** @return array<int, int> */
+        public function receiveBytes(): array {}
+        public function close(): void {}
+        public function isClosed(): bool {}
     }
 
     class SseStream
     {
-        /** @return array<int, string> */
+        /** @return array<int, SseEvent> */
         public function events(): array {}
+        public function eventsAsJson(): array {}
+        public function body(): string {}
+        public function count(): int {}
+    }
+
+    class SseEvent
+    {
+        public function getData(): string {}
+        public function asJson(): array {}
+        public function getEventType(): ?string {}
+        public function getId(): ?string {}
     }
 }

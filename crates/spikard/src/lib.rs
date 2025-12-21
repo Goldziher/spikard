@@ -747,6 +747,7 @@ mod tests {
             headers: std::sync::Arc::new(headers),
             cookies: std::sync::Arc::new(cookies),
             query_params: Value::Object(Default::default()),
+            validated_params: None,
             raw_query_params: std::sync::Arc::new(HashMap::new()),
             path_params: std::sync::Arc::new(path_params),
             body: Value::Null,

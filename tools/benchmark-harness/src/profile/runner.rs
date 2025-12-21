@@ -134,6 +134,9 @@ impl ProfileRunner {
 
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
         let suite_node_profiler = self.config.profiler.as_deref() == Some("node") && framework_info.language == "node";
+        let suite_python_profiler =
+            self.config.profiler.as_deref() == Some("python") && framework_info.language == "python";
+        let suite_ruby_profiler = self.config.profiler.as_deref() == Some("ruby") && framework_info.language == "ruby";
         let suite_wasm_profiler =
             matches!(self.config.profiler.as_deref(), Some("wasm") | Some("perf")) && framework_info.language == "wasm";
 
@@ -153,6 +156,9 @@ impl ProfileRunner {
                 "SPIKARD_PHP_PROFILE_OUTPUT".to_string(),
                 output_path.display().to_string(),
             ));
+        }
+        if suite_python_profiler || suite_ruby_profiler {
+            server_env.push(("SPIKARD_PROFILE_ENABLED".to_string(), "1".to_string()));
         }
         if let Some(ref output_path) = wasm_metrics_output {
             server_env.push((
@@ -183,10 +189,7 @@ impl ProfileRunner {
         }
 
         let node_start_cmd_override = node_cpu_profile_dir.as_ref().map(|dir| {
-            let tsx_cli = self
-                .config
-                .app_dir
-                .join("../node_modules/tsx/dist/cli.mjs");
+            let tsx_cli = self.config.app_dir.join("../node_modules/tsx/dist/cli.mjs");
             format!(
                 "node --cpu-prof --cpu-prof-dir {} {} server.ts {{port}}",
                 dir.display(),

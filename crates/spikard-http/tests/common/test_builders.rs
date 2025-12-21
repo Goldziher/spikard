@@ -288,6 +288,7 @@ impl RequestBuilder {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: build_query_json(&self.query_params),
+            validated_params: None,
             raw_query_params: Arc::new(self.query_params),
             body: self.body,
             raw_body: None,
@@ -414,6 +415,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: json!(null),
             raw_body: None,
@@ -439,6 +441,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: json!(null),
             raw_body: None,
@@ -466,6 +469,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: json!(null),
             raw_body: None,
@@ -490,6 +494,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: json!(null),
             raw_body: None,

@@ -5,11 +5,15 @@ import type { Request } from "./request";
 import { isStreamingResponse } from "./streaming";
 import type {
 	AbortSignalLike,
+	BinaryLike,
 	HandlerBody,
 	HandlerContext,
 	HandlerPayload,
 	JsonValue,
 	StructuredHandlerResponse,
+	WebSocketHandler,
+	WebSocketHandlerLike,
+	WebSocketServerSocket,
 } from "./types";
 import { gunzipSync } from "fflate";
 
@@ -241,7 +245,8 @@ export class TestResponse {
 
 export class TestClient {
 	private readonly routes: SpikardApp["routes"];
-	public readonly websocketHandlers: SpikardApp["handlers"];
+	private readonly websocketRoutes: SpikardApp["websocketRoutes"];
+	public readonly websocketHandlers: Record<string, WebSocketHandlerLike>;
 	private readonly nativeClientPromise: Promise<NativeClient>;
 
 	constructor(app: SpikardApp) {
@@ -249,10 +254,12 @@ export class TestClient {
 			throw new Error("Invalid Spikard app: missing routes");
 		}
 		this.routes = app.routes;
-		this.websocketHandlers = app.handlers ?? {};
+		this.websocketRoutes = app.websocketRoutes ?? [];
+		const httpHandlers = app.handlers ?? {};
+		this.websocketHandlers = app.websocketHandlers ?? httpHandlers;
 		const routesJson = JSON.stringify(app.routes);
 		const lifecycleHooks = normalizeLifecycleHooks(app.lifecycleHooks);
-		const wrappedHandlers = wrapHandlers(this.websocketHandlers);
+		const wrappedHandlers = wrapHandlers(httpHandlers);
 		const dependencies = (app as SpikardApp & { dependencies?: Record<string, unknown> }).dependencies ?? null;
 		const nativeLifecycleHooks = createNativeLifecycleHooks(lifecycleHooks);
 
@@ -314,7 +321,7 @@ export class TestClient {
 
 	async websocketConnect(path: string): Promise<WebSocketTestConnection> {
 		await this.nativeClientPromise;
-		const route = this.findRoute("GET", path);
+		const route = this.findWebSocketRoute(path);
 		if (!route) {
 			throw new Error(`WebSocket route not found for ${path}`);
 		}
@@ -322,7 +329,7 @@ export class TestClient {
 		if (!handler) {
 			throw new Error(`Handler ${route.metadata.handler_name} not registered`);
 		}
-		return new WebSocketTestConnection(handler);
+		return WebSocketTestConnection.connect(handler);
 	}
 
 	private responseFromNative(snapshot: NativeSnapshot) {
@@ -444,6 +451,18 @@ export class TestClient {
 			}
 		}
 		return undefined;
+	}
+
+	private findWebSocketRoute(
+		targetPath: string,
+	): { metadata: SpikardApp["routes"][number]; params: Record<string, string> } | undefined {
+		for (const metadata of this.websocketRoutes ?? []) {
+			const params = matchPath(metadata.path, targetPath);
+			if (params) {
+				return { metadata, params };
+			}
+		}
+		return this.findRoute("GET", targetPath);
 	}
 }
 
@@ -660,43 +679,227 @@ async function buildStaticManifest(configs: StaticFilesConfig[]): Promise<Static
 	return [];
 }
 
-export class WebSocketTestConnection {
-	private readonly pending: JsonValue[] = [];
+type WebSocketQueuedMessage =
+	| { kind: "json"; payload: JsonValue }
+	| { kind: "text"; payload: string }
+	| { kind: "binary"; payload: Uint8Array };
 
-	constructor(private readonly handler: HandlerFunction) {}
+class WebSocketServerSocketImpl implements WebSocketServerSocket {
+	private closed = false;
+
+	constructor(
+		private readonly enqueue: (message: WebSocketQueuedMessage) => void,
+		private readonly onClose: (code?: number, reason?: string) => Promise<void>,
+	) {}
+
+	async sendText(message: string): Promise<void> {
+		this.ensureOpen();
+		this.enqueue({ kind: "text", payload: message });
+	}
 
 	async sendJson(payload: JsonValue): Promise<void> {
-		const result = await this.handler(payload);
-		if (isStreamingResponse(result)) {
-			throw new Error("WebSocket handlers cannot return streaming responses");
+		this.ensureOpen();
+		this.enqueue({ kind: "json", payload });
+	}
+
+	async sendBytes(payload: BinaryLike): Promise<void> {
+		this.ensureOpen();
+		this.enqueue({ kind: "binary", payload: toUint8Array(payload) });
+	}
+
+	async close(code?: number, reason?: string): Promise<void> {
+		if (this.closed) {
+			return;
 		}
-		const parsed = typeof result === "string" ? (JSON.parse(result) as JsonValue) : (result as JsonValue);
-		this.pending.push(parsed);
+		this.closed = true;
+		await this.onClose(code, reason);
+	}
+
+	async broadcast(payload: JsonValue | string): Promise<void> {
+		if (typeof payload === "string") {
+			await this.sendText(payload);
+			return;
+		}
+		await this.sendJson(payload);
+	}
+
+	isClosed(): boolean {
+		return this.closed;
+	}
+
+	private ensureOpen(): void {
+		if (this.closed) {
+			throw new Error("WebSocket connection is closed");
+		}
+	}
+}
+
+export class WebSocketTestConnection {
+	private readonly pending: WebSocketQueuedMessage[] = [];
+	private readonly socket: WebSocketServerSocketImpl;
+	private closed = false;
+
+	private constructor(private readonly handler: WebSocketHandlerLike) {
+		this.socket = new WebSocketServerSocketImpl(
+			(message) => {
+				this.pending.push(message);
+			},
+			async (code, reason) => {
+				this.closed = true;
+				if (isWebSocketHandler(this.handler) && this.handler.onClose) {
+					await this.handler.onClose(this.socket, code, reason);
+				}
+			},
+		);
+	}
+
+	static async connect(handler: WebSocketHandlerLike): Promise<WebSocketTestConnection> {
+		const connection = new WebSocketTestConnection(handler);
+		if (isWebSocketHandler(handler) && handler.onOpen) {
+			await handler.onOpen(connection.socket);
+		}
+		return connection;
+	}
+
+	async sendJson(payload: JsonValue): Promise<void> {
+		this.ensureOpen();
+		await this.dispatchMessage(payload);
+	}
+
+	async sendText(payload: string): Promise<void> {
+		this.ensureOpen();
+		await this.dispatchMessage(payload);
+	}
+
+	async sendBytes(payload: BinaryLike): Promise<void> {
+		this.ensureOpen();
+		await this.dispatchMessage(payload);
 	}
 
 	async receiveJson(): Promise<JsonValue> {
+		const message = this.shiftMessage();
+		if (message.kind === "json") {
+			return message.payload;
+		}
+		if (message.kind === "binary") {
+			const text = textDecoder.decode(message.payload);
+			const parsed = safeParseJson(text);
+			if (parsed === null) {
+				throw new Error("WebSocket binary message is not valid JSON");
+			}
+			return parsed;
+		}
+		const parsed = safeParseJson(message.payload);
+		if (parsed === null) {
+			throw new Error("WebSocket text message is not valid JSON");
+		}
+		return parsed;
+	}
+
+	async receiveText(): Promise<string> {
+		const message = this.shiftMessage();
+		if (message.kind === "text") {
+			return message.payload;
+		}
+		if (message.kind === "binary") {
+			return textDecoder.decode(message.payload);
+		}
+		return JSON.stringify(message.payload);
+	}
+
+	async receiveBytes(): Promise<Uint8Array> {
+		const message = this.shiftMessage();
+		if (message.kind === "binary") {
+			return message.payload;
+		}
+		if (message.kind === "text") {
+			return textEncoder.encode(message.payload);
+		}
+		return textEncoder.encode(JSON.stringify(message.payload));
+	}
+
+	async close(code?: number, reason?: string): Promise<void> {
+		if (this.closed) {
+			return;
+		}
+		this.closed = true;
+		this.pending.length = 0;
+		await this.socket.close(code, reason);
+	}
+
+	private async dispatchMessage(payload: JsonValue | string | BinaryLike): Promise<void> {
+		const result = await (isWebSocketHandler(this.handler)
+			? this.handler.onMessage?.(this.socket, payload)
+			: this.handler(payload as HandlerPayload));
+		if (result === undefined) {
+			return;
+		}
+		if (isStreamingResponse(result)) {
+			throw new Error("WebSocket handlers cannot return streaming responses");
+		}
+		const message = normalizeWebSocketResult(result);
+		if (message) {
+			this.pending.push(message);
+		}
+	}
+
+	private shiftMessage(): WebSocketQueuedMessage {
 		if (this.pending.length === 0) {
 			throw new Error("No WebSocket messages available");
 		}
 		const message = this.pending.shift();
-		if (message === undefined) {
+		if (!message) {
 			throw new Error("No WebSocket messages available");
 		}
 		return message;
 	}
 
-	async sendText(payload: string): Promise<void> {
-		await this.sendJson(payload);
+	private ensureOpen(): void {
+		if (this.closed) {
+			throw new Error("WebSocket connection is closed");
+		}
 	}
+}
 
-	async receiveText(): Promise<string> {
-		const result = await this.receiveJson();
-		return typeof result === "string" ? result : JSON.stringify(result);
+function isWebSocketHandler(handler: WebSocketHandlerLike): handler is WebSocketHandler {
+	if (typeof handler !== "object" || handler === null) {
+		return false;
 	}
+	const candidate = handler as WebSocketHandler;
+	return (
+		typeof candidate.onMessage === "function" ||
+		typeof candidate.onOpen === "function" ||
+		typeof candidate.onClose === "function"
+	);
+}
 
-	async close(): Promise<void> {
-		this.pending.length = 0;
+function normalizeWebSocketResult(result: unknown): WebSocketQueuedMessage | null {
+	if (result === null || result === undefined) {
+		return null;
 	}
+	if (typeof result === "string") {
+		const parsed = safeParseJson(result);
+		if (parsed === null) {
+			return { kind: "text", payload: result };
+		}
+		return { kind: "json", payload: parsed };
+	}
+	if (isBinaryLike(result)) {
+		return { kind: "binary", payload: toUint8Array(result) };
+	}
+	return { kind: "json", payload: result as JsonValue };
+}
+
+function safeParseJson(text: string): JsonValue | null {
+	try {
+		return JSON.parse(text) as JsonValue;
+	} catch {
+		return null;
+	}
+}
+
+function isBinaryLike(value: unknown): value is BinaryLike {
+	return value instanceof ArrayBuffer || ArrayBuffer.isView(value);
 }
 
 function normalizeRecord(record: HeaderInput): HeaderMap {

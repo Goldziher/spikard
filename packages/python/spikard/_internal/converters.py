@@ -85,6 +85,21 @@ def clear_decoders() -> None:
     _HANDLER_METADATA_CACHE.clear()
 
 
+def supports_msgspec_decoder(target_type: type) -> bool:
+    """Return True when msgspec decoding is safe for the given type."""
+    if BaseModel is not None and isinstance(target_type, type) and issubclass(target_type, BaseModel):
+        return False
+
+    if isinstance(target_type, type) and hasattr(target_type, "_fields"):
+        return False
+
+    if _is_upload_file_type(target_type):
+        return False
+
+    file_fields = _get_upload_file_fields(target_type)
+    return not (file_fields and any(file_fields.values()))
+
+
 def _is_typed_dict(type_: type) -> bool:
     """Check if a type is a TypedDict.
 
@@ -154,6 +169,9 @@ def _default_dec_hook(type_: type, obj: Any) -> Any:
     Note: msgspec natively handles dataclass, NamedTuple, and msgspec.Struct,
     so those types won't reach this hook.
     """
+    if type_ is UploadFile and isinstance(obj, dict):
+        return _convert_file_json_to_upload_file(obj)
+
     for decoder in _CUSTOM_DECODERS:
         with suppress(NotImplementedError):
             return decoder(type_, obj)
@@ -263,6 +281,47 @@ def _process_upload_file_fields(value: Any, file_fields: dict[str, bool]) -> Any
             ]
         elif isinstance(field_value, dict) and "filename" in field_value:
             result[field_name] = _convert_file_json_to_upload_file(field_value)
+
+    return result
+
+
+def _coerce_file_dicts_for_scalar_fields(value: dict[str, Any], target_type: type) -> dict[str, Any]:
+    """Coerce file metadata dicts into string/bytes for scalar-typed fields."""
+    try:
+        type_hints = get_type_hints(target_type)
+    except (AttributeError, NameError, TypeError):
+        return value
+
+    result = value.copy()
+    for field_name, field_type in type_hints.items():
+        if field_name not in result:
+            continue
+
+        field_value = result[field_name]
+        if not isinstance(field_value, dict) or "content" not in field_value:
+            continue
+
+        origin = get_origin(field_type)
+        args = get_args(field_type)
+        wants_str = field_type is str or (origin in (Union, types.UnionType) and str in args)
+        wants_bytes = field_type is bytes or (origin in (Union, types.UnionType) and bytes in args)
+
+        if not (wants_str or wants_bytes):
+            continue
+
+        content = field_value.get("content", "")
+        content_encoding = field_value.get("content_encoding", "text")
+
+        if wants_bytes:
+            if isinstance(content, str):
+                content = base64.b64decode(content) if content_encoding == "base64" else content.encode("utf-8")
+            elif not isinstance(content, bytes):
+                content = str(content).encode("utf-8")
+            result[field_name] = content
+        elif isinstance(content, bytes):
+            result[field_name] = content.decode("utf-8", errors="replace")
+        else:
+            result[field_name] = str(content)
 
     return result
 
@@ -405,7 +464,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                     decoder = _get_or_create_decoder(target_type)
                     converted[key] = decoder.decode(value)
                     continue
-                except (TypeError, ValueError, msgspec.DecodeError):
+                except (TypeError, ValueError, msgspec.DecodeError, msgspec.ValidationError):
                     if strict:
                         raise
                     converted[key] = value
@@ -486,11 +545,12 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                         decoder = _get_or_create_decoder(target_type)
                         converted[key] = decoder.decode(value)
                     elif isinstance(value, dict):
+                        value = _coerce_file_dicts_for_scalar_fields(value, target_type)
                         converted[key] = target_type(**value)
                     else:
                         converted[key] = value
                     continue
-            except (TypeError, ValueError, msgspec.DecodeError) as err:
+            except (TypeError, ValueError, msgspec.DecodeError, msgspec.ValidationError) as err:
                 if strict:
                     raise ValueError(
                         f"Failed to convert parameter '{key}' to msgspec.Struct {target_type}: {err}"

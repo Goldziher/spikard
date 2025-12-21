@@ -117,6 +117,7 @@ def handler(body: Payload):
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: json!(null),
             raw_body: Some(bytes::Bytes::from_static(br#"{"name":"x"}"#)),
@@ -197,6 +198,7 @@ def sync_handler(path_params, query_params, body, headers, cookies):
     let request_data = RequestData {
         path_params: HashMap::new().into(),
         query_params: serde_json::Value::Null,
+        validated_params: None,
         raw_query_params: HashMap::new().into(),
         body: json!({"test": "data"}),
         raw_body: None,
@@ -249,6 +251,7 @@ async def async_handler(path_params, query_params, body, headers, cookies):
     let request_data = RequestData {
         path_params: path_params.into(),
         query_params: serde_json::Value::Null,
+        validated_params: None,
         raw_query_params: HashMap::new().into(),
         body: serde_json::Value::Null,
         raw_body: None,
@@ -294,6 +297,7 @@ def handler(path_params, query_params, body, headers, cookies):
     let request_data = RequestData {
         path_params: HashMap::new().into(),
         query_params: serde_json::Value::Null,
+        validated_params: None,
         raw_query_params: HashMap::new().into(),
         body: json!({"ignored": true}),
         raw_body: None,
@@ -340,6 +344,7 @@ def error_handler(path_params, query_params, body, headers, cookies):
     let request_data = RequestData {
         path_params: HashMap::new().into(),
         query_params: serde_json::Value::Null,
+        validated_params: None,
         raw_query_params: HashMap::new().into(),
         body: serde_json::Value::Null,
         raw_body: None,
@@ -392,6 +397,7 @@ def echo_handler(path_params, query_params, body, headers, cookies):
     let request_data = RequestData {
         path_params: HashMap::new().into(),
         query_params: serde_json::Value::Null,
+        validated_params: None,
         raw_query_params: HashMap::new().into(),
         body: serde_json::Value::Null,
         raw_body: None,

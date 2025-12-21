@@ -90,7 +90,6 @@ mod tests {
             .status(StatusCode::CREATED)
             .build();
 
-        // Last status should win
         assert_eq!(status, StatusCode::CREATED);
     }
 
@@ -112,7 +111,7 @@ mod tests {
         let (_, _, body) = ResponseBuilder::new().body(first_body).body(second_body).build();
 
         let parsed: serde_json::Value = serde_json::from_str(&body).unwrap();
-        assert!(!parsed.get("first").is_some());
+        assert!(parsed.get("first").is_none());
         assert_eq!(parsed["second"], "value");
     }
 
@@ -273,19 +272,16 @@ mod tests {
 
     #[test]
     fn test_response_builder_invalid_header_name() {
-        // Invalid header names should be silently ignored
         let (_, headers, _) = ResponseBuilder::new()
             .header("Invalid\nHeader", "value")
             .header("Valid-Header", "value")
             .build();
 
-        // Only valid header should be present
         assert_eq!(headers.len(), 1);
     }
 
     #[test]
     fn test_response_builder_invalid_header_value() {
-        // Invalid header values should be silently ignored
         let (_, headers, _) = ResponseBuilder::new().header("Valid-Header", "valid-value").build();
 
         assert_eq!(headers.len(), 1);

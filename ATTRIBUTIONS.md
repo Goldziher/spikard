@@ -60,3 +60,24 @@ The vendored code has been modified for Spikard's specific use cases:
 4. **Integrated with Rust validation** - Modified to work with Rust-based JSON Schema validation
 
 The original Litestar code was excellent reference material for handling the complexity of Python's type annotation system, including support for `Annotated`, Pydantic Field constraints, and various type wrappers.
+
+## Lucchetto
+
+Portions of the Ruby GVL helper macros are adapted from the [Lucchetto](https://github.com/Maaarcocr/lucchetto) project, specifically the `without_gvl` proc macro and GVL call helper patterns.
+
+The following files contain vendored or adapted Lucchetto code:
+- `crates/spikard-rb-macros/src/lib.rs`
+- `packages/ruby/vendor/crates/spikard-rb-macros/src/lib.rs`
+- `crates/spikard-rb/src/gvl.rs`
+- `packages/ruby/vendor/crates/spikard-rb/src/gvl.rs`
+
+**Original Source**: https://github.com/Maaarcocr/lucchetto
+**License**: MIT License
+
+### Modifications
+
+The vendored code has been modified for Spikard's use cases:
+
+1. **Adjusted macro pathing** - Updated macro expansions to target Spikard's internal helper macro.
+2. **Receiver support** - Extended the proc macro to handle methods with `self` receivers.
+3. **Safety adjustments** - Reworked result handling to avoid unwraps and added explicit GVL helpers.

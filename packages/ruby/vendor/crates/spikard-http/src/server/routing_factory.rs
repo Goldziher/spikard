@@ -75,14 +75,35 @@ impl MethodRouterFactory {
         has_path_params: bool,
         handler: Arc<dyn Handler>,
         hooks: Option<Arc<crate::LifecycleHooks>>,
+        include_raw_query_params: bool,
     ) -> Result<MethodRouter, String> {
         let http_method = HttpMethod::from_str(method)
             .ok_or_else(|| format!("[spikard-router] unsupported HTTP method: {}", method))?;
 
+        let include_query_params_json = !handler.prefers_parameter_extraction();
+        let include_headers = handler.wants_headers();
+        let include_cookies = handler.wants_cookies();
+
         Ok(if has_path_params {
-            Self::create_with_path_params(http_method, handler, hooks)
+            Self::create_with_path_params(
+                http_method,
+                handler,
+                hooks,
+                include_raw_query_params,
+                include_query_params_json,
+                include_headers,
+                include_cookies,
+            )
         } else {
-            Self::create_without_path_params(http_method, handler, hooks)
+            Self::create_without_path_params(
+                http_method,
+                handler,
+                hooks,
+                include_raw_query_params,
+                include_query_params_json,
+                include_headers,
+                include_cookies,
+            )
         })
     }
 
@@ -91,9 +112,19 @@ impl MethodRouterFactory {
         method: HttpMethod,
         handler: Arc<dyn Handler>,
         hooks: Option<Arc<crate::LifecycleHooks>>,
+        include_raw_query_params: bool,
+        include_query_params_json: bool,
+        include_headers: bool,
+        include_cookies: bool,
     ) -> MethodRouter {
         let handler_clone = handler.clone();
         let hooks_clone = hooks.clone();
+        let without_body_options = request_extraction::WithoutBodyExtractionOptions {
+            include_raw_query_params,
+            include_query_params_json,
+            include_headers,
+            include_cookies,
+        };
 
         if method.expects_body() {
             match method {
@@ -107,7 +138,15 @@ impl MethodRouterFactory {
                             async move {
                                 let (parts, body) = req.into_parts();
                                 let request_data =
-                                    request_extraction::create_request_data_with_body(&parts, path_params.0, body)
+                                    request_extraction::create_request_data_with_body(
+                                        &parts,
+                                        path_params.0,
+                                        body,
+                                        include_raw_query_params,
+                                        include_query_params_json,
+                                        include_headers,
+                                        include_cookies,
+                                    )
                                         .await?;
                                 let mut req = Request::from_parts(
                                     parts,
@@ -130,7 +169,15 @@ impl MethodRouterFactory {
                             async move {
                                 let (parts, body) = req.into_parts();
                                 let request_data =
-                                    request_extraction::create_request_data_with_body(&parts, path_params.0, body)
+                                    request_extraction::create_request_data_with_body(
+                                        &parts,
+                                        path_params.0,
+                                        body,
+                                        include_raw_query_params,
+                                        include_query_params_json,
+                                        include_headers,
+                                        include_cookies,
+                                    )
                                         .await?;
                                 let mut req = Request::from_parts(
                                     parts,
@@ -153,7 +200,15 @@ impl MethodRouterFactory {
                             async move {
                                 let (parts, body) = req.into_parts();
                                 let request_data =
-                                    request_extraction::create_request_data_with_body(&parts, path_params.0, body)
+                                    request_extraction::create_request_data_with_body(
+                                        &parts,
+                                        path_params.0,
+                                        body,
+                                        include_raw_query_params,
+                                        include_query_params_json,
+                                        include_headers,
+                                        include_cookies,
+                                    )
                                         .await?;
                                 let mut req = Request::from_parts(
                                     parts,
@@ -183,6 +238,7 @@ impl MethodRouterFactory {
                                     req.method(),
                                     req.headers(),
                                     path_params.0,
+                                    without_body_options,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -205,6 +261,7 @@ impl MethodRouterFactory {
                                     req.method(),
                                     req.headers(),
                                     path_params.0,
+                                    without_body_options,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -227,6 +284,7 @@ impl MethodRouterFactory {
                                     req.method(),
                                     req.headers(),
                                     path_params.0,
+                                    without_body_options,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -249,6 +307,7 @@ impl MethodRouterFactory {
                                     req.method(),
                                     req.headers(),
                                     path_params.0,
+                                    without_body_options,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -271,6 +330,7 @@ impl MethodRouterFactory {
                                     req.method(),
                                     req.headers(),
                                     path_params.0,
+                                    without_body_options,
                                 );
                                 let mut req = req;
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -290,9 +350,19 @@ impl MethodRouterFactory {
         method: HttpMethod,
         handler: Arc<dyn Handler>,
         hooks: Option<Arc<crate::LifecycleHooks>>,
+        include_raw_query_params: bool,
+        include_query_params_json: bool,
+        include_headers: bool,
+        include_cookies: bool,
     ) -> MethodRouter {
         let handler_clone = handler.clone();
         let hooks_clone = hooks.clone();
+        let without_body_options = request_extraction::WithoutBodyExtractionOptions {
+            include_raw_query_params,
+            include_query_params_json,
+            include_headers,
+            include_cookies,
+        };
 
         if method.expects_body() {
             match method {
@@ -304,8 +374,17 @@ impl MethodRouterFactory {
                         let hooks = hooks_clone.clone();
                         async move {
                             let (parts, body) = req.into_parts();
-                            let request_data =
-                                request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
+                                let request_data =
+                                    request_extraction::create_request_data_with_body(
+                                        &parts,
+                                        HashMap::new(),
+                                        body,
+                                        include_raw_query_params,
+                                        include_query_params_json,
+                                        include_headers,
+                                        include_cookies,
+                                    )
+                                        .await?;
                             let mut req = Request::from_parts(
                                 parts,
                                 Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
@@ -325,7 +404,16 @@ impl MethodRouterFactory {
                         async move {
                             let (parts, body) = req.into_parts();
                             let request_data =
-                                request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
+                                request_extraction::create_request_data_with_body(
+                                    &parts,
+                                    HashMap::new(),
+                                    body,
+                                    include_raw_query_params,
+                                    include_query_params_json,
+                                    include_headers,
+                                    include_cookies,
+                                )
+                                .await?;
                             let mut req = Request::from_parts(
                                 parts,
                                 Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
@@ -345,7 +433,16 @@ impl MethodRouterFactory {
                         async move {
                             let (parts, body) = req.into_parts();
                             let request_data =
-                                request_extraction::create_request_data_with_body(&parts, HashMap::new(), body).await?;
+                                request_extraction::create_request_data_with_body(
+                                    &parts,
+                                    HashMap::new(),
+                                    body,
+                                    include_raw_query_params,
+                                    include_query_params_json,
+                                    include_headers,
+                                    include_cookies,
+                                )
+                                .await?;
                             let mut req = Request::from_parts(
                                 parts,
                                 Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
@@ -372,6 +469,7 @@ impl MethodRouterFactory {
                                 req.method(),
                                 req.headers(),
                                 HashMap::new(),
+                                without_body_options,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -392,6 +490,7 @@ impl MethodRouterFactory {
                                 req.method(),
                                 req.headers(),
                                 HashMap::new(),
+                                without_body_options,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -412,6 +511,7 @@ impl MethodRouterFactory {
                                 req.method(),
                                 req.headers(),
                                 HashMap::new(),
+                                without_body_options,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -432,6 +532,7 @@ impl MethodRouterFactory {
                                 req.method(),
                                 req.headers(),
                                 HashMap::new(),
+                                without_body_options,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));
@@ -452,6 +553,7 @@ impl MethodRouterFactory {
                                 req.method(),
                                 req.headers(),
                                 HashMap::new(),
+                                without_body_options,
                             );
                             let mut req = req;
                             req.extensions_mut().insert(Arc::new(request_data.clone()));

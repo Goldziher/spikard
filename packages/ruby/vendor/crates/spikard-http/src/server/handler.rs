@@ -30,6 +30,14 @@ impl ValidatingHandler {
 }
 
 impl Handler for ValidatingHandler {
+    fn prefers_raw_json_body(&self) -> bool {
+        self.inner.prefers_raw_json_body()
+    }
+
+    fn prefers_parameter_extraction(&self) -> bool {
+        self.inner.prefers_parameter_extraction()
+    }
+
     fn call(
         &self,
         req: axum::http::Request<Body>,
@@ -40,6 +48,19 @@ impl Handler for ValidatingHandler {
         let parameter_validator = self.parameter_validator.clone();
 
         Box::pin(async move {
+            let is_json_body = request_data.body.is_null()
+                && request_data.raw_body.is_some()
+                && request_data
+                    .headers
+                    .get("content-type")
+                    .is_some_and(|ct| crate::middleware::validation::is_json_like_str(ct));
+
+            if is_json_body && request_validator.is_none() && !inner.prefers_raw_json_body() {
+                let raw_bytes = request_data.raw_body.as_ref().unwrap();
+                request_data.body = serde_json::from_slice::<Value>(raw_bytes)
+                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?;
+            }
+
             if let Some(validator) = request_validator {
                 if request_data.body.is_null() && request_data.raw_body.is_some() {
                     let raw_bytes = request_data.raw_body.as_ref().unwrap();
@@ -55,17 +76,24 @@ impl Handler for ValidatingHandler {
             }
 
             if let Some(validator) = parameter_validator
-                && let Err(errors) = validator.validate_and_extract(
+                && !inner.prefers_parameter_extraction()
+            {
+                match validator.validate_and_extract(
                     &request_data.query_params,
                     &request_data.raw_query_params,
                     &request_data.path_params,
                     &request_data.headers,
                     &request_data.cookies,
-                )
-            {
-                let problem = ProblemDetails::from_validation_error(&errors);
-                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                return Err((problem.status_code(), body));
+                ) {
+                    Ok(validated) => {
+                        request_data.validated_params = Some(validated);
+                    }
+                    Err(errors) => {
+                        let problem = ProblemDetails::from_validation_error(&errors);
+                        let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                        return Err((problem.status_code(), body));
+                    }
+                }
             }
 
             match AssertUnwindSafe(async { inner.call(req, request_data).await })
@@ -97,6 +125,7 @@ mod tests {
         RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body,
             raw_body: None,
@@ -114,6 +143,7 @@ mod tests {
         RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: Some(bytes::Bytes::from(raw_body)),
@@ -164,7 +194,6 @@ mod tests {
     /// Test 1: Handler with no validators passes through to inner handler
     #[tokio::test]
     async fn test_no_validation_passes_through() {
-        // Create a Route with no validators
         let route = spikard_core::Route {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
@@ -178,6 +207,7 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -196,6 +226,63 @@ mod tests {
         assert!(result.is_ok(), "Handler should succeed without validators");
         let response = result.unwrap();
         assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    /// Test 1b: JSON body is parsed even without request schema validation.
+    #[tokio::test]
+    async fn test_json_body_parsed_without_request_validator() {
+        let route = spikard_core::Route {
+            method: spikard_core::http::Method::Post,
+            path: "/test".to_string(),
+            handler_name: "test_handler".to_string(),
+            request_validator: None,
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: vec![],
+            jsonrpc_method: None,
+        };
+
+        let inner = Arc::new(SuccessEchoHandler);
+        let validator_handler = ValidatingHandler::new(inner, &route);
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("/test")
+            .header("content-type", "application/json")
+            .body(Body::empty())
+            .unwrap();
+
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+        let request_data = RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: json!({}),
+            validated_params: None,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Value::Null,
+            raw_body: Some(bytes::Bytes::from(br#"{"name":"Alice"}"#.to_vec())),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/test".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        let response = validator_handler
+            .call(request, request_data)
+            .await
+            .expect("handler should succeed");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("read body");
+        let echoed: Value = serde_json::from_slice(&body).expect("json");
+        assert_eq!(echoed["name"], "Alice");
     }
 
     /// Test 2: Request body validation - Valid input passes
@@ -225,6 +312,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -271,6 +359,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -282,7 +371,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Missing required "name" field
         let request_data = create_request_data(json!({"age": 30}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -295,7 +383,6 @@ mod tests {
             "Should return 422 for validation error"
         );
 
-        // Verify ProblemDetails JSON structure
         let problem: serde_json::Value = serde_json::from_str(&body).expect("Should parse as JSON");
         assert_eq!(problem["type"], "https://spikard.dev/errors/validation-error");
         assert_eq!(problem["title"], "Request Validation Failed");
@@ -332,6 +419,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -343,7 +431,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Invalid JSON bytes
         let request_data = create_request_data_with_raw_body(b"{invalid json}".to_vec());
 
         let result = validator_handler.call(request, request_data).await;
@@ -373,6 +460,7 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -386,14 +474,12 @@ mod tests {
 
         let request_data = create_request_data(json!({}));
 
-        // This should NOT panic; instead, it should catch the panic and return error
         let result = validator_handler.call(request, request_data).await;
 
         assert!(result.is_err(), "Panicking handler should return error");
         let (status, body) = result.unwrap_err();
         assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR, "Panic should return 500");
 
-        // Verify panic error structure
         let error: serde_json::Value = serde_json::from_str(&body).expect("Should parse as JSON");
         assert_eq!(error["code"], "panic");
         assert_eq!(error["error"], "Unexpected panic in handler");
@@ -425,6 +511,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -436,7 +523,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Create request data with raw body but null parsed body
         let raw_body_json = br#"{"name":"Bob"}"#;
         let request_data = create_request_data_with_raw_body(raw_body_json.to_vec());
 
@@ -475,6 +561,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -486,7 +573,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Missing name and email, age is negative
         let request_data = create_request_data(json!({"age": -5}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -530,6 +616,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -541,7 +628,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // age is string instead of integer
         let request_data = create_request_data(json!({"age": "thirty"}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -581,6 +667,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -617,6 +704,7 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -632,7 +720,6 @@ mod tests {
 
         let result = validator_handler.call(request, request_data).await;
 
-        // With empty parameter validator, should still execute handler
         assert!(result.is_ok());
     }
 
@@ -661,6 +748,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -672,10 +760,10 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Create request_data with null body and no raw_body
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,
@@ -689,7 +777,6 @@ mod tests {
 
         let result = validator_handler.call(request, request_data).await;
 
-        // With null body and no raw_body, validator should reject
         assert!(result.is_err(), "Null body with no raw_body should fail");
     }
 
@@ -709,6 +796,7 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -728,7 +816,6 @@ mod tests {
         let (status, body) = result.unwrap_err();
         assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
 
-        // Verify the panic error has correct fields
         let error: serde_json::Value = serde_json::from_str(&body).expect("Should parse as JSON");
         assert!(error.get("error").is_some(), "Should have 'error' field");
         assert!(error.get("code").is_some(), "Should have 'code' field");
@@ -751,6 +838,7 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -798,6 +886,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -809,10 +898,10 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Create request with null body and raw JSON bytes
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: Some(bytes::Bytes::from(br#"{"id":42}"#.to_vec())),
@@ -857,6 +946,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -896,6 +986,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -932,6 +1023,7 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -950,7 +1042,6 @@ mod tests {
         let result = validator_handler.call(request, request_data).await;
 
         assert!(result.is_ok());
-        // Arc pointer should be identical (same underlying allocation)
         assert_eq!(Arc::as_ptr(&inner), original_arc_ptr);
     }
 
@@ -970,6 +1061,7 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -988,8 +1080,6 @@ mod tests {
         assert!(result.is_err());
         let (_status, body) = result.unwrap_err();
 
-        // Should either be the serialized panic error or the fallback
-        // Both are valid JSON containing panic information
         assert!(
             body.contains("panic") || body.contains("Unexpected"),
             "Body should contain panic-related information"
@@ -1022,6 +1112,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1040,7 +1131,6 @@ mod tests {
         assert!(result.is_err());
         let (_status, body) = result.unwrap_err();
 
-        // Body must be valid JSON
         let parsed: serde_json::Value = serde_json::from_str(&body).expect("Validation error body must be valid JSON");
         assert!(parsed.is_object(), "Validation error body should be a JSON object");
     }
@@ -1061,6 +1151,7 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1097,6 +1188,7 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1127,7 +1219,6 @@ mod tests {
 
         let result = validator_handler.call(request, request_data).await;
 
-        // Should execute successfully with all request data sources populated
         assert!(result.is_ok());
     }
 
@@ -1147,6 +1238,7 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1193,6 +1285,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1204,7 +1297,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Valid JSON but price exceeds maximum
         let request_data = create_request_data(json!({"price": 2000.0}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -1236,6 +1328,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1247,7 +1340,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Empty bytes array should fail JSON parsing
         let request_data = create_request_data_with_raw_body(vec![]);
 
         let result = validator_handler.call(request, request_data).await;
@@ -1276,6 +1368,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1332,6 +1425,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1343,7 +1437,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Missing required name in nested user object
         let request_data = create_request_data(json!({"user": {"age": 30}}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -1385,6 +1478,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1396,7 +1490,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Valid array of strings
         let request_data = create_request_data(json!({"items": ["a", "b", "c"]}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -1433,6 +1526,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1444,7 +1538,6 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        // Array with non-string items
         let request_data = create_request_data(json!({"tags": ["tag1", 42, "tag3"]}));
 
         let result = validator_handler.call(request, request_data).await;
@@ -1470,16 +1563,16 @@ mod tests {
             expects_json_body: false,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
         let validator_handler = Arc::new(ValidatingHandler::new(inner, &route));
 
-        let mut handles = vec![];
+        let mut join_handles = vec![];
 
-        // Spawn multiple concurrent requests
         for i in 0..5 {
-            let handler = validator_handler.clone();
+            let shared_handler = validator_handler.clone();
             let handle = tokio::spawn(async move {
                 let request = Request::builder()
                     .method("POST")
@@ -1489,17 +1582,17 @@ mod tests {
 
                 let request_data = create_request_data(json!({"id": i}));
 
-                let result = handler.call(request, request_data).await;
+                let result = shared_handler.call(request, request_data).await;
                 assert!(result.is_err(), "Each concurrent panic should be caught");
 
                 let (status, _body) = result.unwrap_err();
                 assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
             });
 
-            handles.push(handle);
+            join_handles.push(handle);
         }
 
-        for handle in handles {
+        for handle in join_handles {
             handle.await.expect("Concurrent test should complete");
         }
     }
@@ -1530,6 +1623,7 @@ mod tests {
             expects_json_body: true,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
+            jsonrpc_method: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1548,7 +1642,6 @@ mod tests {
         assert!(result.is_err());
         let (status, body) = result.unwrap_err();
 
-        // ProblemDetails::from_validation_error should produce status_code()
         assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
 
         let problem: serde_json::Value = serde_json::from_str(&body).expect("Should parse as JSON");

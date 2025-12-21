@@ -18,10 +18,8 @@ pub fn build_dependency_container(ruby: &Ruby, dependencies: Value) -> Result<De
     let deps_hash = RHash::try_convert(dependencies)?;
 
     deps_hash.foreach(|key: String, value: Value| -> Result<ForEach, Error> {
-        // Check if this is a factory (has a 'type' field set to :factory)
         if let Ok(dep_hash) = RHash::try_convert(value) {
             let dep_type: Option<String> = get_kw(ruby, dep_hash, "type").and_then(|v| {
-                // Handle both symbol and string types
                 if let Ok(sym) = magnus::Symbol::try_convert(v) {
                     Some(sym.name().ok()?.to_string())
                 } else {
@@ -31,7 +29,6 @@ pub fn build_dependency_container(ruby: &Ruby, dependencies: Value) -> Result<De
 
             match dep_type.as_deref() {
                 Some("factory") => {
-                    // Factory dependency
                     let factory = get_kw(ruby, dep_hash, "factory")
                         .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "Factory missing 'factory' key"))?;
 
@@ -58,7 +55,6 @@ pub fn build_dependency_container(ruby: &Ruby, dependencies: Value) -> Result<De
                     })?;
                 }
                 Some("value") => {
-                    // Value dependency
                     let value_data = get_kw(ruby, dep_hash, "value").ok_or_else(|| {
                         Error::new(ruby.exception_runtime_error(), "Value dependency missing 'value' key")
                     })?;
@@ -80,7 +76,6 @@ pub fn build_dependency_container(ruby: &Ruby, dependencies: Value) -> Result<De
                 }
             }
         } else {
-            // Treat as raw value
             let value_dep = crate::di::RubyValueDependency::new(key.clone(), value);
             container.register(key.clone(), Arc::new(value_dep)).map_err(|e| {
                 Error::new(

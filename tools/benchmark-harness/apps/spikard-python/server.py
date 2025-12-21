@@ -6,25 +6,31 @@ against the pure Rust baseline.
 Uses msgspec.Struct for proper validation following ADR 0003.
 """
 
+from __future__ import annotations
+
 import atexit
 import os
-import sys
 import signal
+import sys
 import threading
 from functools import wraps
 from pathlib import Path as PathLib
 from typing import Callable, Coroutine, ParamSpec, TypeVar
 
 import msgspec
-from pyinstrument import Profiler
-from pyinstrument.renderers.speedscope import SpeedscopeRenderer
 
 from spikard import Path, Query, Spikard, get, post
 from spikard.config import ServerConfig
 
+_profile_dir_env = os.environ.get("SPIKARD_PYTHON_PROFILE_DIR") or None
+_pyinstrument_output = os.environ.get("SPIKARD_PYINSTRUMENT_OUTPUT") or None
+_profile_enabled = os.environ.get("SPIKARD_PROFILE_ENABLED") == "1" or bool(
+    _profile_dir_env or _pyinstrument_output
+)
+
 profiling_module = PathLib(__file__).parent.parent.parent / "profiling" / "python_metrics.py"
 _profiling_collector: object | None = None
-if profiling_module.exists():
+if _profile_enabled and profiling_module.exists():
     sys.path.insert(0, str(profiling_module.parent))
     try:
         import python_metrics
@@ -33,7 +39,14 @@ if profiling_module.exists():
     except ImportError:
         print("⚠ Failed to import profiling module", file=sys.stderr)
 
-_profile_dir: str | None = os.environ.get("SPIKARD_PYTHON_PROFILE_DIR") or None
+if _profile_enabled:
+    from pyinstrument import Profiler
+    from pyinstrument.renderers.speedscope import SpeedscopeRenderer
+else:
+    Profiler = object  # type: ignore[assignment]
+    SpeedscopeRenderer = object  # type: ignore[assignment]
+
+_profile_dir: str | None = _profile_dir_env if _profile_enabled else None
 _profiled_endpoints: set[str] = set()
 _profile_lock = threading.Lock()
 _profile_state: dict[str, tuple[int, int, Profiler]] = {}
@@ -43,7 +56,6 @@ app = Spikard()
 
 JsonScalar = str | int | float | bool | None
 
-_pyinstrument_output: str | None = os.environ.get("SPIKARD_PYINSTRUMENT_OUTPUT") or None
 _pyinstrument_profiler: Profiler | None = None
 _pyinstrument_dumped = False
 
@@ -97,7 +109,7 @@ def _stop_pyinstrument() -> bool:
     return True
 
 
-if _pyinstrument_output:
+if _profile_enabled and _pyinstrument_output:
     _pyinstrument_profiler = Profiler(async_mode="enabled")
     _pyinstrument_profiler.start()
     atexit.register(_dump_profile)

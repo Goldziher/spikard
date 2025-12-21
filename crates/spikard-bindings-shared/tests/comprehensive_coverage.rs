@@ -344,6 +344,7 @@ async fn test_di_traits_comprehensive() {
     let request_data = CoreRequestData {
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
         body: json!({}),
         raw_body: None,

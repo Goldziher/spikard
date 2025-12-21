@@ -23,10 +23,12 @@ mod background;
 mod config;
 mod conversion;
 mod di;
+mod gvl;
 mod handler;
 mod integration;
 mod lifecycle;
 mod metadata;
+mod request;
 mod runtime;
 mod server;
 mod sse;
@@ -44,13 +46,13 @@ use magnus::value::{InnerValue, Opaque};
 use magnus::{
     Error, Module, RArray, RHash, RString, Ruby, TryConvert, Value, function, gc::Marker, method, r_hash::ForEach,
 };
-use once_cell::sync::Lazy;
-use serde_json::{Map as JsonMap, Value as JsonValue};
+use serde_json::Value as JsonValue;
+use spikard_http::ProblemDetails;
 use spikard_http::testing::{
-    MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
+    MultipartFilePart, ResponseSnapshot, SnapshotError, build_multipart_body, encode_urlencoded_body,
+    snapshot_response,
 };
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
-use spikard_http::{ParameterValidator, ProblemDetails};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -58,20 +60,15 @@ use std::io;
 use std::mem;
 use std::pin::Pin;
 use std::sync::Arc;
-use tokio::runtime::{Builder, Runtime};
+use std::time::Duration;
+use url::Url;
 
 use crate::config::extract_server_config;
-use crate::conversion::{extract_files, map_to_ruby_hash, multimap_to_ruby_hash, problem_to_json};
+use crate::conversion::{extract_files, problem_to_json};
 use crate::integration::build_dependency_container;
-use crate::metadata::{build_route_metadata, json_to_ruby, ruby_value_to_json};
+use crate::metadata::{build_route_metadata, ruby_value_to_json};
+use crate::request::NativeRequest;
 use crate::runtime::{normalize_route_metadata, run_server};
-
-static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("Failed to initialise global Tokio runtime")
-});
 
 #[derive(Default)]
 #[magnus::wrap(class = "Spikard::Native::TestClient", free_immediately, mark)]
@@ -111,12 +108,8 @@ struct RubyHandler {
 struct RubyHandlerInner {
     handler_proc: Opaque<Value>,
     handler_name: String,
-    method: String,
-    path: String,
     json_module: Opaque<Value>,
-    request_validator: Option<Arc<SchemaValidator>>,
     response_validator: Option<Arc<SchemaValidator>>,
-    parameter_validator: Option<ParameterValidator>,
     #[cfg(feature = "di")]
     handler_dependencies: Vec<String>,
 }
@@ -171,16 +164,12 @@ struct NativeDependencyRegistry {
 
 impl StreamingResponsePayload {
     fn into_response(self) -> Result<HandlerResponse, Error> {
-        // Get Ruby VM reference. In FFI, Ruby must be available during this callback.
-        // If Ruby becomes unavailable, this is a fatal error condition.
-        let ruby = match Ruby::get() {
-            Ok(r) => r,
-            Err(_) => {
-                // Ruby VM is unavailable. This should never happen during active FFI.
-                // We panic because continuing without a Ruby VM is unsafe.
-                panic!("Ruby VM became unavailable during streaming response construction");
-            }
-        };
+        let ruby = Ruby::get().map_err(|_| {
+            Error::new(
+                magnus::exception::runtime_error(),
+                "Ruby VM became unavailable during streaming response construction",
+            )
+        })?;
 
         let status = StatusCode::from_u16(self.status).map_err(|err| {
             Error::new(
@@ -501,7 +490,6 @@ impl NativeTestClient {
 
         let mut server_config = extract_server_config(ruby, config_value)?;
 
-        // Extract and register dependencies
         #[cfg(feature = "di")]
         {
             if let Ok(registry) = <&NativeDependencyRegistry>::try_convert(dependencies) {
@@ -601,7 +589,8 @@ impl NativeTestClient {
             );
         }
 
-        let http_server = GLOBAL_RUNTIME
+        let runtime = crate::server::global_runtime(ruby)?;
+        let http_server = runtime
             .block_on(async { TestServer::new(router.clone()) })
             .map_err(|err| {
                 Error::new(
@@ -614,7 +603,7 @@ impl NativeTestClient {
             transport: Some(Transport::HttpRandomPort),
             ..Default::default()
         };
-        let transport_server = GLOBAL_RUNTIME
+        let transport_server = runtime
             .block_on(async { TestServer::new_with_config(router, ws_config) })
             .map_err(|err| {
                 Error::new(
@@ -647,7 +636,8 @@ impl NativeTestClient {
 
         let request_config = parse_request_config(ruby, options)?;
 
-        let response = GLOBAL_RUNTIME
+        let runtime = crate::server::global_runtime(ruby)?;
+        let response = runtime
             .block_on(execute_request(
                 inner.http_server.clone(),
                 http_method,
@@ -679,13 +669,28 @@ impl NativeTestClient {
 
         drop(inner_borrow);
 
-        let handle =
-            GLOBAL_RUNTIME.spawn(async move { spikard_http::testing::connect_websocket(&server, &path).await });
-
-        let ws = GLOBAL_RUNTIME.block_on(async {
-            handle
-                .await
-                .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("WebSocket task failed: {}", e)))
+        let timeout_duration = websocket_timeout();
+        let ws = crate::call_without_gvl!(
+            block_on_websocket_connect,
+            args: (
+                server, Arc<TestServer>,
+                path, String,
+                timeout_duration, Duration
+            ),
+            return_type: Result<crate::testing::websocket::WebSocketConnection, WebSocketConnectError>
+        )
+        .map_err(|err| match err {
+            WebSocketConnectError::Timeout => Error::new(
+                ruby.exception_runtime_error(),
+                format!(
+                    "WebSocket connect timed out after {}ms",
+                    timeout_duration.as_millis()
+                ),
+            ),
+            WebSocketConnectError::Other(message) => Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket connect failed: {}", message),
+            ),
         })?;
 
         let ws_conn = testing::websocket::WebSocketTestConnection::new(ws);
@@ -698,15 +703,73 @@ impl NativeTestClient {
             .as_ref()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
 
-        let response = GLOBAL_RUNTIME
-            .block_on(async {
-                let axum_response = inner.transport_server.get(&path).await;
-                snapshot_response(axum_response).await
-            })
-            .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", e)))?;
+        let runtime = crate::server::global_runtime(ruby)?;
+        let request_config = RequestConfig {
+            query: None,
+            headers: HashMap::new(),
+            cookies: HashMap::new(),
+            body: None,
+        };
+        let response = runtime
+            .block_on(execute_request(
+                inner.http_server.clone(),
+                Method::GET,
+                path.clone(),
+                request_config,
+            ))
+            .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", err.0)))?;
 
-        testing::sse::sse_stream_from_response(ruby, &response)
+        let body = response.body_text.unwrap_or_default().into_bytes();
+        let snapshot = ResponseSnapshot {
+            status: response.status,
+            headers: response.headers,
+            body,
+        };
+
+        testing::sse::sse_stream_from_response(ruby, &snapshot)
     }
+}
+
+fn websocket_timeout() -> Duration {
+    const DEFAULT_TIMEOUT_MS: u64 = 30_000;
+    let timeout_ms = std::env::var("SPIKARD_RB_WS_TIMEOUT_MS")
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .unwrap_or(DEFAULT_TIMEOUT_MS);
+    Duration::from_millis(timeout_ms)
+}
+
+#[derive(Debug)]
+enum WebSocketConnectError {
+    Timeout,
+    Other(String),
+}
+
+fn block_on_websocket_connect(
+    server: Arc<TestServer>,
+    path: String,
+    timeout_duration: Duration,
+) -> Result<crate::testing::websocket::WebSocketConnection, WebSocketConnectError> {
+    let url = server
+        .server_url(&path)
+        .map_err(|err| WebSocketConnectError::Other(err.to_string()))?;
+    let ws_url = to_ws_url(url)?;
+
+    match crate::testing::websocket::WebSocketConnection::connect(ws_url, timeout_duration) {
+        Ok(ws) => Ok(ws),
+        Err(crate::testing::websocket::WebSocketIoError::Timeout) => Err(WebSocketConnectError::Timeout),
+        Err(err) => Err(WebSocketConnectError::Other(format!("{:?}", err))),
+    }
+}
+
+fn to_ws_url(mut url: Url) -> Result<Url, WebSocketConnectError> {
+    let scheme = match url.scheme() {
+        "https" => "wss",
+        _ => "ws",
+    };
+    url.set_scheme(scheme)
+        .map_err(|_| WebSocketConnectError::Other("Failed to set WebSocket scheme".to_string()))?;
+    Ok(url)
 }
 
 impl RubyHandler {
@@ -715,12 +778,8 @@ impl RubyHandler {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
                 handler_name: route.handler_name.clone(),
-                method: route.method.as_str().to_string(),
-                path: route.path.clone(),
                 json_module: Opaque::from(json_module),
-                request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
-                parameter_validator: route.parameter_validator.clone(),
                 #[cfg(feature = "di")]
                 handler_dependencies: route.handler_dependencies.clone(),
             }),
@@ -734,8 +793,6 @@ impl RubyHandler {
         _ruby: &Ruby,
         handler_value: Value,
         handler_name: String,
-        method: String,
-        path: String,
         json_module: Value,
         route: &Route,
     ) -> Result<Self, Error> {
@@ -743,12 +800,8 @@ impl RubyHandler {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
                 handler_name,
-                method,
-                path,
                 json_module: Opaque::from(json_module),
-                request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
-                parameter_validator: route.parameter_validator.clone(),
                 #[cfg(feature = "di")]
                 handler_dependencies: route.handler_dependencies.clone(),
             }),
@@ -765,31 +818,7 @@ impl RubyHandler {
     }
 
     fn handle(&self, request_data: RequestData) -> HandlerResult {
-        if let Some(validator) = &self.inner.request_validator
-            && let Err(errors) = validator.validate(&request_data.body)
-        {
-            let problem = ProblemDetails::from_validation_error(&errors);
-            let error_json = problem_to_json(&problem);
-            return Err((problem.status_code(), error_json));
-        }
-
-        let validated_params = if let Some(validator) = &self.inner.parameter_validator {
-            match validator.validate_and_extract(
-                &request_data.query_params,
-                request_data.raw_query_params.as_ref(),
-                request_data.path_params.as_ref(),
-                request_data.headers.as_ref(),
-                request_data.cookies.as_ref(),
-            ) {
-                Ok(value) => Some(value),
-                Err(errors) => {
-                    let problem = ProblemDetails::from_validation_error(&errors);
-                    return Err((problem.status_code(), problem_to_json(&problem)));
-                }
-            }
-        } else {
-            None
-        };
+        let validated_params = request_data.validated_params.clone();
 
         let ruby = Ruby::get().map_err(|_| {
             (
@@ -798,25 +827,21 @@ impl RubyHandler {
             )
         })?;
 
-        let request_value = build_ruby_request(&ruby, &self.inner, &request_data, validated_params.as_ref())
+        #[cfg(feature = "di")]
+        let dependencies = request_data.dependencies.clone();
+
+        let request_value = build_ruby_request(&ruby, request_data, validated_params)
             .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
 
         let handler_proc = self.inner.handler_proc.get_inner_with(&ruby);
 
-        // Extract resolved dependencies (if any) and convert to Ruby keyword arguments
         #[cfg(feature = "di")]
         let handler_result = {
-            if let Some(deps) = &request_data.dependencies {
-                // Build keyword arguments hash from dependencies
-                // ONLY include dependencies that the handler actually declared
+            if let Some(deps) = &dependencies {
                 let kwargs_hash = ruby.hash_new();
 
-                // Check if all required handler dependencies are present
-                // If any are missing, return error BEFORE calling handler
                 for key in &self.inner.handler_dependencies {
                     if !deps.contains(key) {
-                        // Handler requires a dependency that was not resolved
-                        // This should have been caught by DI system, but safety check here
                         return Err((
                             StatusCode::INTERNAL_SERVER_ERROR,
                             format!(
@@ -827,17 +852,11 @@ impl RubyHandler {
                     }
                 }
 
-                // Filter dependencies: only pass those declared by the handler
                 for key in &self.inner.handler_dependencies {
                     if let Some(value) = deps.get_arc(key) {
-                        // Check what type of dependency this is and extract Ruby value
                         let ruby_val = if let Some(wrapper) = value.downcast_ref::<crate::di::RubyValueWrapper>() {
-                            // It's a Ruby value wrapper (singleton with preserved mutations)
-                            // Get the raw Ruby value directly to preserve object identity
                             wrapper.get_value(&ruby)
                         } else if let Some(json) = value.downcast_ref::<serde_json::Value>() {
-                            // It's already JSON (non-singleton or value dependency)
-                            // Convert JSON to Ruby value
                             match crate::di::json_to_ruby(&ruby, json) {
                                 Ok(val) => val,
                                 Err(e) => {
@@ -857,7 +876,6 @@ impl RubyHandler {
                             ));
                         };
 
-                        // Add to kwargs hash
                         let key_sym = ruby.to_symbol(key);
                         if let Err(e) = kwargs_hash.aset(key_sym, ruby_val) {
                             return Err((
@@ -867,13 +885,6 @@ impl RubyHandler {
                         }
                     }
                 }
-
-                // Call handler with request and dependencies as keyword arguments
-                // Ruby 3.x requires keyword arguments to be passed differently than Ruby 2.x
-                // We'll create a Ruby lambda that calls the handler with ** splat operator
-                //
-                // Equivalent Ruby code:
-                //   lambda { |req, kwargs| handler_proc.call(req, **kwargs) }.call(request, kwargs_hash)
 
                 let wrapper_code = ruby
                     .eval::<Value>(
@@ -892,7 +903,6 @@ impl RubyHandler {
 
                 wrapper_code.funcall("call", (handler_proc, request_value, kwargs_hash))
             } else {
-                // No dependencies, call with just request
                 handler_proc.funcall("call", (request_value,))
             }
         };
@@ -1216,65 +1226,12 @@ fn parse_request_config(ruby: &Ruby, options: Value) -> Result<RequestConfig, Er
 
 fn build_ruby_request(
     ruby: &Ruby,
-    handler: &RubyHandlerInner,
-    request_data: &RequestData,
-    validated_params: Option<&JsonValue>,
+    request_data: RequestData,
+    validated_params: Option<JsonValue>,
 ) -> Result<Value, Error> {
-    let hash = ruby.hash_new();
+    let native_request = NativeRequest::from_request_data(request_data, validated_params);
 
-    hash.aset(ruby.intern("method"), ruby.str_new(&handler.method))?;
-    hash.aset(ruby.intern("path"), ruby.str_new(&handler.path))?;
-
-    let path_params = map_to_ruby_hash(ruby, request_data.path_params.as_ref())?;
-    hash.aset(ruby.intern("path_params"), path_params)?;
-
-    let query_value = json_to_ruby(ruby, &request_data.query_params)?;
-    hash.aset(ruby.intern("query"), query_value)?;
-
-    let raw_query = multimap_to_ruby_hash(ruby, request_data.raw_query_params.as_ref())?;
-    hash.aset(ruby.intern("raw_query"), raw_query)?;
-
-    let headers = map_to_ruby_hash(ruby, request_data.headers.as_ref())?;
-    hash.aset(ruby.intern("headers"), headers)?;
-
-    let cookies = map_to_ruby_hash(ruby, request_data.cookies.as_ref())?;
-    hash.aset(ruby.intern("cookies"), cookies)?;
-
-    let body_value = json_to_ruby(ruby, &request_data.body)?;
-    hash.aset(ruby.intern("body"), body_value)?;
-
-    let params_value = if let Some(validated) = validated_params {
-        json_to_ruby(ruby, validated)?
-    } else {
-        build_default_params(ruby, request_data)?
-    };
-    hash.aset(ruby.intern("params"), params_value)?;
-
-    Ok(hash.as_value())
-}
-
-fn build_default_params(ruby: &Ruby, request_data: &RequestData) -> Result<Value, Error> {
-    let mut map = JsonMap::new();
-
-    for (key, value) in request_data.path_params.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
-    }
-
-    if let JsonValue::Object(obj) = &request_data.query_params {
-        for (key, value) in obj {
-            map.insert(key.clone(), value.clone());
-        }
-    }
-
-    for (key, value) in request_data.headers.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
-    }
-
-    for (key, value) in request_data.cookies.as_ref() {
-        map.insert(key.clone(), JsonValue::String(value.clone()));
-    }
-
-    json_to_ruby(ruby, &JsonValue::Object(map))
+    Ok(ruby.obj_wrap(native_request).as_value())
 }
 
 fn interpret_handler_response(
@@ -1282,7 +1239,6 @@ fn interpret_handler_response(
     handler: &RubyHandlerInner,
     value: Value,
 ) -> Result<RubyHandlerResult, Error> {
-    // Prefer native-built responses to avoid Ruby-side normalization overhead
     let native_method = ruby.intern("to_native_response");
     if value.respond_to(native_method, false)? {
         let native_value: Value = value.funcall("to_native_response", ())?;
@@ -1518,7 +1474,6 @@ fn build_response(ruby: &Ruby, content: Value, status_code: i64, headers: Value)
         (Some(json_value), None)
     };
 
-    // Build the Axum response
     let status = StatusCode::from_u16(status_u16).map_err(|err| {
         Error::new(
             ruby.exception_arg_error(),
@@ -1584,7 +1539,6 @@ fn build_streaming_response(ruby: &Ruby, stream: Value, status_code: i64, header
         hash.to_hash_map::<String, String>()?
     };
 
-    // Verify the stream responds to #next
     let next_method = ruby.intern("next");
     if !stream.respond_to(next_method, false)? {
         return Err(Error::new(ruby.exception_arg_error(), "stream must respond to #next"));
@@ -1613,7 +1567,7 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     native.define_singleton_method("run_server", function!(run_server, 7))?;
     native.define_singleton_method("normalize_route_metadata", function!(normalize_route_metadata, 1))?;
     native.define_singleton_method("background_run", function!(background::background_run, 1))?;
-    native.define_singleton_method("build_route_metadata", function!(build_route_metadata, 11))?;
+    native.define_singleton_method("build_route_metadata", function!(build_route_metadata, 12))?;
     native.define_singleton_method("build_response", function!(build_response, 3))?;
     native.define_singleton_method("build_streaming_response", function!(build_streaming_response, 3))?;
 
@@ -1628,6 +1582,20 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     let built_response_class = native.define_class("BuiltResponse", ruby.class_object())?;
     built_response_class.define_method("status_code", method!(NativeBuiltResponse::status_code, 0))?;
     built_response_class.define_method("headers", method!(NativeBuiltResponse::headers, 0))?;
+
+    let request_class = native.define_class("Request", ruby.class_object())?;
+    request_class.define_method("method", method!(NativeRequest::method, 0))?;
+    request_class.define_method("path", method!(NativeRequest::path, 0))?;
+    request_class.define_method("path_params", method!(NativeRequest::path_params, 0))?;
+    request_class.define_method("query", method!(NativeRequest::query, 0))?;
+    request_class.define_method("raw_query", method!(NativeRequest::raw_query, 0))?;
+    request_class.define_method("headers", method!(NativeRequest::headers, 0))?;
+    request_class.define_method("cookies", method!(NativeRequest::cookies, 0))?;
+    request_class.define_method("body", method!(NativeRequest::body, 0))?;
+    request_class.define_method("raw_body", method!(NativeRequest::raw_body, 0))?;
+    request_class.define_method("params", method!(NativeRequest::params, 0))?;
+    request_class.define_method("to_h", method!(NativeRequest::to_h, 0))?;
+    request_class.define_method("[]", method!(NativeRequest::index, 1))?;
 
     let lifecycle_registry_class = native.define_class("LifecycleRegistry", ruby.class_object())?;
     lifecycle_registry_class.define_alloc_func::<NativeLifecycleRegistry>();
@@ -1653,29 +1621,23 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     testing::websocket::init(ruby, &spikard_module)?;
     testing::sse::init(ruby, &spikard_module)?;
 
-    // Touch GC mark hooks so the compiler keeps them and silence unused warnings.
     let _ = NativeBuiltResponse::mark as fn(&NativeBuiltResponse, &Marker);
     let _ = NativeLifecycleRegistry::mark as fn(&NativeLifecycleRegistry, &Marker);
     let _ = NativeDependencyRegistry::mark as fn(&NativeDependencyRegistry, &Marker);
+    let _ = NativeRequest::mark as fn(&NativeRequest, &Marker);
     let _ = RubyHandler::mark as fn(&RubyHandler, &Marker);
     let _ = mark as fn(&NativeTestClient, &Marker);
 
     Ok(())
 }
 
-// ============================================================================
-// Unit Tests for Magnus FFI Layer
-// ============================================================================
-
 #[cfg(test)]
 mod tests {
-    use super::*;
     use serde_json::json;
 
     /// Test that NativeBuiltResponse can extract parts safely
     #[test]
     fn test_native_built_response_status_extraction() {
-        // Test that StatusCode::from_u16 works for valid codes
         use axum::http::StatusCode;
 
         let valid_codes = vec![200u16, 201, 204, 301, 400, 404, 500, 503];
@@ -1690,8 +1652,6 @@ mod tests {
     fn test_native_built_response_invalid_status() {
         use axum::http::StatusCode;
 
-        // StatusCode validates up to 599 (3-digit codes). Higher values are invalid.
-        // Testing edge cases at the boundary
         assert!(StatusCode::from_u16(599).is_ok(), "599 should be valid");
     }
 
@@ -1700,7 +1660,6 @@ mod tests {
     fn test_header_construction() {
         use axum::http::{HeaderName, HeaderValue};
 
-        // Valid header names and values
         let valid_headers = vec![
             ("X-Custom-Header", "value"),
             ("Content-Type", "application/json"),
@@ -1722,14 +1681,12 @@ mod tests {
     fn test_invalid_header_construction() {
         use axum::http::{HeaderName, HeaderValue};
 
-        // Invalid header names (contain invalid bytes)
         let invalid_name = "X\nInvalid";
         assert!(
             HeaderName::from_bytes(invalid_name.as_bytes()).is_err(),
             "Header with newline should be invalid"
         );
 
-        // Invalid header value (null bytes)
         let invalid_value = "value\x00invalid";
         assert!(
             HeaderValue::from_str(invalid_value).is_err(),
@@ -1751,15 +1708,14 @@ mod tests {
         let serialized = serde_json::to_vec(&json_obj);
         assert!(serialized.is_ok(), "JSON should serialize");
 
-        let bytes = serialized.unwrap();
+        let bytes = serialized.expect("JSON should serialize");
         assert!(!bytes.is_empty(), "Serialized JSON should not be empty");
     }
 
     /// Test global runtime initialization
     #[test]
     fn test_global_runtime_initialization() {
-        // Verify that GLOBAL_RUNTIME can be accessed without panicking
-        let _ = &*GLOBAL_RUNTIME;
+        assert!(crate::server::global_runtime_raw().is_ok());
     }
 
     /// Test path normalization logic for routes
@@ -1775,7 +1731,6 @@ mod tests {
         ];
 
         for path in paths {
-            // Just verify we can work with these paths
             assert!(!path.is_empty());
             assert!(path.starts_with('/'));
         }
@@ -1813,7 +1768,6 @@ mod tests {
     /// Test multipart file handling structure
     #[test]
     fn test_multipart_file_part_structure() {
-        // Verify the concept of multipart files
         let file_data = spikard_http::testing::MultipartFilePart {
             field_name: "file".to_string(),
             filename: "test.txt".to_string(),
@@ -1832,7 +1786,6 @@ mod tests {
     fn test_response_header_concepts() {
         use axum::http::HeaderName;
 
-        // HTTP header names are case-insensitive
         let names = vec!["content-type", "Content-Type", "CONTENT-TYPE"];
 
         for name in names {

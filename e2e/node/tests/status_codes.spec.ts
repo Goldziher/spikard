@@ -289,7 +289,6 @@ describe("status_codes", () => {
 		const client = new TestClient(app);
 
 		const response = await client.get("/status-test/200");
-
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");

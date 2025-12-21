@@ -171,6 +171,7 @@ fn axum_request_to_php_sync(req: &Request<Body>) -> PhpRequest {
         HashMap::new(),
         raw_query,
         HashMap::new(),
+        None,
     )
 }
 

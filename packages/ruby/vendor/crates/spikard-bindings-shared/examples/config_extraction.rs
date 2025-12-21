@@ -49,7 +49,6 @@ impl ConfigSource for PyDictWrapper {
     }
 
     fn get_nested(&self, _key: &str) -> Option<Box<dyn ConfigSource + '_>> {
-        // In a real binding, this would return a nested wrapper for nested objects
         None
     }
 
@@ -61,7 +60,6 @@ impl ConfigSource for PyDictWrapper {
 fn main() {
     println!("=== ConfigExtractor Example ===\n");
 
-    // Example 1: Extract compression config
     println!("1. Extracting compression configuration:");
     let mut compression_config = PyDictWrapper::new();
     compression_config.insert("gzip", "true");
@@ -79,7 +77,6 @@ fn main() {
         Err(e) => println!("   Error: {}\n", e),
     }
 
-    // Example 2: Extract JWT auth config
     println!("2. Extracting JWT authentication configuration:");
     let mut jwt_config = PyDictWrapper::new();
     jwt_config.insert("secret", "my-secret-key");
@@ -95,7 +92,6 @@ fn main() {
         Err(e) => println!("   Error: {}\n", e),
     }
 
-    // Example 3: Extract API Key auth config
     println!("3. Extracting API Key authentication configuration:");
     let mut api_key_config = PyDictWrapper::new();
     api_key_config.insert("keys", "key1,key2,key3");
@@ -109,7 +105,6 @@ fn main() {
         Err(e) => println!("   Error: {}\n", e),
     }
 
-    // Example 4: Extract rate limit config (with required fields)
     println!("4. Extracting rate limit configuration:");
     let mut rate_limit_config = PyDictWrapper::new();
     rate_limit_config.insert("per_second", "100");
@@ -125,10 +120,8 @@ fn main() {
         Err(e) => println!("   Error: {}\n", e),
     }
 
-    // Example 5: Extract rate limit with missing required field
     println!("5. Testing error handling (missing 'burst' field):");
     let rate_limit_config = PyDictWrapper::new();
-    // Only setting per_second, burst is required
 
     match ConfigExtractor::extract_rate_limit_config(&rate_limit_config) {
         Ok(_config) => println!("   Success (unexpected!)"),

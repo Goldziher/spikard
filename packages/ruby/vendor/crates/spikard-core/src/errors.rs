@@ -37,3 +37,33 @@ where
 {
     catch_unwind(f).map_err(|_| StructuredError::simple("panic", "Unexpected panic in Rust code"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn structured_error_constructors_populate_fields() {
+        let details = json!({"field": "name"});
+        let err = StructuredError::new("invalid", "bad input", details.clone());
+        assert_eq!(err.code, "invalid");
+        assert_eq!(err.error, "bad input");
+        assert_eq!(err.details, details);
+
+        let simple = StructuredError::simple("missing", "not found");
+        assert_eq!(simple.code, "missing");
+        assert_eq!(simple.error, "not found");
+        assert!(simple.details.is_object());
+    }
+
+    #[test]
+    fn shield_panic_returns_ok_or_structured_error() {
+        let ok = shield_panic(|| 42);
+        assert_eq!(ok.unwrap(), 42);
+
+        let err = shield_panic(|| panic!("boom")).unwrap_err();
+        assert_eq!(err.code, "panic");
+        assert!(err.error.contains("Unexpected panic"));
+    }
+}

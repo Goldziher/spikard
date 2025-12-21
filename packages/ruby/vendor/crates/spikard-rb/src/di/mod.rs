@@ -43,7 +43,7 @@ impl Dependency for RubyValueDependency {
     }
 
     fn depends_on(&self) -> Vec<String> {
-        Vec::new() // Value dependencies have no dependencies
+        Vec::new()
     }
 
     fn resolve(
@@ -54,12 +54,10 @@ impl Dependency for RubyValueDependency {
     ) -> Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, DependencyError>> + Send + '_>>
     {
         Box::pin(async move {
-            // Get the Ruby value
             let ruby = Ruby::get().map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
 
             let value = self.value.get_inner_with(&ruby);
 
-            // Convert to JSON and back to make it Send + Sync
             let json_value = ruby_value_to_json(&ruby, value)
                 .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
 
@@ -68,7 +66,7 @@ impl Dependency for RubyValueDependency {
     }
 
     fn singleton(&self) -> bool {
-        true // Value dependencies are always singletons
+        true
     }
 
     fn cacheable(&self) -> bool {
@@ -115,30 +113,23 @@ impl Dependency for RubyFactoryDependency {
         resolved: &ResolvedDependencies,
     ) -> Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, DependencyError>> + Send + '_>>
     {
-        // Clone data needed in async block
         let factory = self.factory;
         let depends_on = self.depends_on.clone();
         let key = self.key.clone();
         let is_singleton = self.singleton;
         let resolved_clone = resolved.clone();
 
-        // Extract resolved dependencies now (before async)
-        // Need to handle both JsonValue and RubyValueWrapper types
         let resolved_deps: Vec<(String, JsonValue)> = depends_on
             .iter()
             .filter_map(|dep_key| {
-                // Try JsonValue first
                 if let Some(json_value) = resolved.get::<JsonValue>(dep_key) {
                     return Some((dep_key.clone(), (*json_value).clone()));
                 }
-                // Try RubyValueWrapper (for singletons)
-                if let Some(wrapper) = resolved.get::<RubyValueWrapper>(dep_key) {
-                    // Convert wrapper to JSON synchronously
-                    if let Ok(ruby) = Ruby::get()
-                        && let Ok(json) = wrapper.to_json(&ruby)
-                    {
-                        return Some((dep_key.clone(), json));
-                    }
+                if let Some(wrapper) = resolved.get::<RubyValueWrapper>(dep_key)
+                    && let Ok(ruby) = Ruby::get()
+                    && let Ok(json) = wrapper.to_json(&ruby)
+                {
+                    return Some((dep_key.clone(), json));
                 }
                 None
             })
@@ -147,15 +138,9 @@ impl Dependency for RubyFactoryDependency {
         Box::pin(async move {
             let ruby = Ruby::get().map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
 
-            // Build positional arguments array from resolved dependencies
-            // Dependencies must be passed in the order specified by depends_on
-            // Important: preserve the order from depends_on, not from resolved_deps iteration
             let args: Result<Vec<Value>, DependencyError> = depends_on
                 .iter()
-                .filter_map(|dep_key| {
-                    // Find this dependency in resolved_deps
-                    resolved_deps.iter().find(|(k, _)| k == dep_key).map(|(_, v)| v)
-                })
+                .filter_map(|dep_key| resolved_deps.iter().find(|(k, _)| k == dep_key).map(|(_, v)| v))
                 .map(|dep_value| {
                     json_to_ruby(&ruby, dep_value).map_err(|e| DependencyError::ResolutionFailed {
                         message: format!("Failed to convert dependency value: {}", e),
@@ -164,10 +149,8 @@ impl Dependency for RubyFactoryDependency {
                 .collect();
             let args = args?;
 
-            // Call the factory Proc with positional arguments
             let factory_value = factory.get_inner_with(&ruby);
 
-            // Check if factory responds to call
             if !factory_value
                 .respond_to("call", false)
                 .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?
@@ -177,10 +160,7 @@ impl Dependency for RubyFactoryDependency {
                 });
             }
 
-            // Call factory with positional arguments
-            // Use a Ruby helper to call with splatted arguments
             let result: Value = if !args.is_empty() {
-                // Create a Ruby array of arguments
                 let args_array = ruby.ary_new();
                 for arg in &args {
                     args_array.push(*arg).map_err(|e| DependencyError::ResolutionFailed {
@@ -188,8 +168,6 @@ impl Dependency for RubyFactoryDependency {
                     })?;
                 }
 
-                // Use Ruby's send with * to splat arguments
-                // Equivalent to: factory_value.call(*args_array)
                 let splat_lambda = ruby
                     .eval::<Value>("lambda { |proc, args| proc.call(*args) }")
                     .map_err(|e| DependencyError::ResolutionFailed {
@@ -204,7 +182,6 @@ impl Dependency for RubyFactoryDependency {
                 message: format!("Failed to call factory for '{}': {}", key, e),
             })?;
 
-            // Check if result is an array with cleanup callback (Ruby pattern: [resource, cleanup_proc])
             let (value_to_convert, cleanup_callback) = if result.is_kind_of(ruby.class_array()) {
                 let array = magnus::RArray::from_value(result).ok_or_else(|| DependencyError::ResolutionFailed {
                     message: format!("Failed to convert result to array for '{}'", key),
@@ -212,50 +189,40 @@ impl Dependency for RubyFactoryDependency {
 
                 let len = array.len();
                 if len == 2 {
-                    // Extract the resource (first element)
                     let resource: Value = array.entry(0).map_err(|e| DependencyError::ResolutionFailed {
                         message: format!("Failed to extract resource from array for '{}': {}", key, e),
                     })?;
 
-                    // Extract cleanup callback (second element)
                     let cleanup: Value = array.entry(1).map_err(|e| DependencyError::ResolutionFailed {
                         message: format!("Failed to extract cleanup callback for '{}': {}", key, e),
                     })?;
 
                     (resource, Some(cleanup))
                 } else {
-                    // Not a cleanup pattern, use the array as-is
                     (result, None)
                 }
             } else {
-                // Not an array, use the value as-is
                 (result, None)
             };
 
-            // Register cleanup callback if present
             if let Some(cleanup_proc) = cleanup_callback {
                 let cleanup_opaque = Opaque::from(cleanup_proc);
 
                 resolved_clone.add_cleanup_task(Box::new(move || {
                     Box::pin(async move {
-                        // Get Ruby runtime and call cleanup proc
                         if let Ok(ruby) = Ruby::get() {
                             let proc = cleanup_opaque.get_inner_with(&ruby);
-                            // Call the cleanup proc - ignore errors during cleanup
                             let _ = proc.funcall::<_, _, Value>("call", ());
                         }
                     })
                 }));
             }
 
-            // For singleton dependencies, store Ruby value wrapper to preserve mutations
-            // For non-singleton, convert to JSON immediately (no need to preserve mutations)
             if is_singleton {
                 let wrapper = RubyValueWrapper::new(value_to_convert);
                 return Ok(Arc::new(wrapper) as Arc<dyn Any + Send + Sync>);
             }
 
-            // Convert result to JSON for non-singleton dependencies
             let json_value = ruby_value_to_json(&ruby, value_to_convert)
                 .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
 
@@ -309,8 +276,6 @@ impl RubyValueWrapper {
     }
 }
 
-// Safety: Opaque<Value> is designed to be Send + Sync by magnus
-// It holds a stable pointer that's safe to share across threads
 unsafe impl Send for RubyValueWrapper {}
 unsafe impl Sync for RubyValueWrapper {}
 
@@ -378,7 +343,6 @@ pub fn extract_di_options(ruby: &Ruby, options: Value) -> Result<(Vec<String>, b
 
     let hash = RHash::try_convert(options)?;
 
-    // Extract depends_on
     let depends_on = if let Some(deps_value) = get_kw(ruby, hash, "depends_on") {
         if deps_value.is_nil() {
             Vec::new()
@@ -389,14 +353,12 @@ pub fn extract_di_options(ruby: &Ruby, options: Value) -> Result<(Vec<String>, b
         Vec::new()
     };
 
-    // Extract singleton (default false)
     let singleton = if let Some(singleton_value) = get_kw(ruby, hash, "singleton") {
         bool::try_convert(singleton_value).unwrap_or(false)
     } else {
         false
     };
 
-    // Extract cacheable (default true)
     let cacheable = if let Some(cacheable_value) = get_kw(ruby, hash, "cacheable") {
         bool::try_convert(cacheable_value).unwrap_or(true)
     } else {

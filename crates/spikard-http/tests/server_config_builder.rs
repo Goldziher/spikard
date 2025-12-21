@@ -247,6 +247,7 @@ mod common_handler_tests {
         RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: serde_json::Value::Null,
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: json!({"test": "data"}),
             raw_body: None,

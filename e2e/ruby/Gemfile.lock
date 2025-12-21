@@ -1,7 +1,7 @@
 PATH
   remote: ../../packages/ruby
   specs:
-    spikard (0.2.5)
+    spikard (0.4.0)
       websocket-client-simple (~> 0.8)
 
 GEM

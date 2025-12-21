@@ -26,6 +26,8 @@ use std::pin::Pin;
 pub struct RequestData {
     pub path_params: std::sync::Arc<HashMap<String, String>>,
     pub query_params: Value,
+    /// Validated parameters produced by ParameterValidator (query/path/header/cookie combined).
+    pub validated_params: Option<Value>,
     pub raw_query_params: std::sync::Arc<HashMap<String, Vec<String>>>,
     pub body: Value,
     pub raw_body: Option<bytes::Bytes>,
@@ -45,13 +47,14 @@ impl Serialize for RequestData {
     {
         use serde::ser::SerializeStruct;
         #[cfg(feature = "di")]
-        let field_count = 10;
+        let field_count = 11;
         #[cfg(not(feature = "di"))]
-        let field_count = 9;
+        let field_count = 10;
 
         let mut state = serializer.serialize_struct("RequestData", field_count)?;
         state.serialize_field("path_params", &*self.path_params)?;
         state.serialize_field("query_params", &self.query_params)?;
+        state.serialize_field("validated_params", &self.validated_params)?;
         state.serialize_field("raw_query_params", &*self.raw_query_params)?;
         state.serialize_field("body", &self.body)?;
         state.serialize_field("raw_body", &self.raw_body.as_ref().map(|b| b.as_ref()))?;
@@ -80,6 +83,7 @@ impl<'de> Deserialize<'de> for RequestData {
             PathParams,
             QueryParams,
             RawQueryParams,
+            ValidatedParams,
             Body,
             RawBody,
             Headers,
@@ -106,6 +110,7 @@ impl<'de> Deserialize<'de> for RequestData {
                 let mut path_params = None;
                 let mut query_params = None;
                 let mut raw_query_params = None;
+                let mut validated_params = None;
                 let mut body = None;
                 let mut raw_body = None;
                 let mut headers = None;
@@ -123,6 +128,9 @@ impl<'de> Deserialize<'de> for RequestData {
                         }
                         Field::RawQueryParams => {
                             raw_query_params = Some(std::sync::Arc::new(map.next_value()?));
+                        }
+                        Field::ValidatedParams => {
+                            validated_params = Some(map.next_value()?);
                         }
                         Field::Body => {
                             body = Some(map.next_value()?);
@@ -155,6 +163,7 @@ impl<'de> Deserialize<'de> for RequestData {
                     query_params: query_params.ok_or_else(|| serde::de::Error::missing_field("query_params"))?,
                     raw_query_params: raw_query_params
                         .ok_or_else(|| serde::de::Error::missing_field("raw_query_params"))?,
+                    validated_params,
                     body: body.ok_or_else(|| serde::de::Error::missing_field("body"))?,
                     raw_body,
                     headers: headers.ok_or_else(|| serde::de::Error::missing_field("headers"))?,
@@ -171,6 +180,7 @@ impl<'de> Deserialize<'de> for RequestData {
         const FIELDS: &[&str] = &[
             "path_params",
             "query_params",
+            "validated_params",
             "raw_query_params",
             "body",
             "raw_body",
@@ -185,6 +195,7 @@ impl<'de> Deserialize<'de> for RequestData {
         const FIELDS: &[&str] = &[
             "path_params",
             "query_params",
+            "validated_params",
             "raw_query_params",
             "body",
             "raw_body",
@@ -230,7 +241,8 @@ pub trait Handler: Send + Sync {
     ///
     /// When `true`, the server will skip `ParameterValidator::validate_and_extract` in `ValidatingHandler`.
     /// This is useful for language bindings which need to transform validated parameters into
-    /// language-specific values (e.g., Python kwargs) without duplicating work.
+    /// language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
+    /// the server stores validated output in `RequestData::validated_params`.
     fn prefers_parameter_extraction(&self) -> bool {
         false
     }
@@ -266,6 +278,7 @@ mod tests {
         RequestData {
             path_params: std::sync::Arc::new(HashMap::new()),
             query_params: Value::Object(serde_json::Map::new()),
+            validated_params: None,
             raw_query_params: std::sync::Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,
@@ -492,6 +505,7 @@ mod tests {
         let data = RequestData {
             path_params: std::sync::Arc::new(path_params),
             query_params: serde_json::json!({"page": 1}),
+            validated_params: None,
             raw_query_params: std::sync::Arc::new(raw_query_params),
             body,
             raw_body: Some(raw_body),
@@ -621,6 +635,7 @@ mod tests {
                 map
             }),
             query_params: serde_json::json!({"limit": 50, "offset": 10}),
+            validated_params: None,
             raw_query_params: std::sync::Arc::new({
                 let mut map = HashMap::new();
                 map.insert("sort".to_string(), vec!["name".to_string(), "date".to_string()]);
@@ -682,6 +697,7 @@ mod tests {
         let data = RequestData {
             path_params: std::sync::Arc::new(HashMap::new()),
             query_params: Value::Object(serde_json::Map::new()),
+            validated_params: None,
             raw_query_params: std::sync::Arc::new(HashMap::new()),
             body: Value::Object(serde_json::Map::new()),
             raw_body: None,

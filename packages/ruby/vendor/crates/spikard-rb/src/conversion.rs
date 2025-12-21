@@ -8,7 +8,7 @@
 
 use bytes::Bytes;
 use magnus::prelude::*;
-use magnus::{Error, RArray, RHash, RString, Ruby, TryConvert, Value};
+use magnus::{Error, RArray, RHash, RString, Ruby, Symbol, TryConvert, Value};
 use serde_json::Value as JsonValue;
 use spikard_core::problem::ProblemDetails;
 use spikard_http::testing::MultipartFilePart;
@@ -18,13 +18,23 @@ use crate::testing::client::{RequestBody, RequestConfig, TestResponseData};
 
 /// Convert a Ruby value to JSON.
 ///
-/// Uses Ruby's JSON.generate method to serialize the Ruby object
-/// and then parses the result.
+/// Fast-path converts common Ruby types directly in Rust to avoid
+/// `JSON.generate` + `serde_json::from_str` overhead.
+///
+/// Falls back to Ruby JSON for unsupported types to preserve behavior.
 pub fn ruby_value_to_json(ruby: &Ruby, json_module: Value, value: Value) -> Result<JsonValue, Error> {
     if value.is_nil() {
         return Ok(JsonValue::Null);
     }
 
+    if let Some(converted) = ruby_value_to_json_fast(ruby, json_module, value, 0)? {
+        return Ok(converted);
+    }
+
+    ruby_value_to_json_fallback(ruby, json_module, value)
+}
+
+fn ruby_value_to_json_fallback(ruby: &Ruby, json_module: Value, value: Value) -> Result<JsonValue, Error> {
     let json_string: String = json_module.funcall("generate", (value,))?;
     serde_json::from_str(&json_string).map_err(|err| {
         Error::new(
@@ -32,6 +42,95 @@ pub fn ruby_value_to_json(ruby: &Ruby, json_module: Value, value: Value) -> Resu
             format!("Failed to convert Ruby value to JSON: {err}"),
         )
     })
+}
+
+fn ruby_value_to_json_fast(
+    ruby: &Ruby,
+    json_module: Value,
+    value: Value,
+    depth: usize,
+) -> Result<Option<JsonValue>, Error> {
+    // Cycle detection is non-trivial without tracking Ruby object IDs; a shallow
+    // recursion guard avoids worst-case behavior and defers to Ruby JSON.
+    if depth > 64 {
+        return Ok(None);
+    }
+
+    if value.is_nil() {
+        return Ok(Some(JsonValue::Null));
+    }
+
+    if value.is_kind_of(ruby.class_true_class()) {
+        return Ok(Some(JsonValue::Bool(true)));
+    }
+
+    if value.is_kind_of(ruby.class_false_class()) {
+        return Ok(Some(JsonValue::Bool(false)));
+    }
+
+    if let Ok(text) = RString::try_convert(value) {
+        let slice = unsafe { text.as_slice() };
+        return Ok(Some(JsonValue::String(String::from_utf8_lossy(slice).to_string())));
+    }
+
+    if value.is_kind_of(ruby.class_float()) {
+        let n = f64::try_convert(value)?;
+        let number = serde_json::Number::from_f64(n).ok_or_else(|| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                "Failed to convert Ruby Float to JSON number",
+            )
+        })?;
+        return Ok(Some(JsonValue::Number(number)));
+    }
+
+    if value.is_kind_of(ruby.class_integer()) {
+        if let Ok(n) = i64::try_convert(value) {
+            return Ok(Some(JsonValue::from(n)));
+        }
+        if let Ok(n) = u64::try_convert(value) {
+            return Ok(Some(JsonValue::from(n)));
+        }
+    }
+
+    if let Some(array) = RArray::from_value(value) {
+        let mut out = Vec::with_capacity(array.len());
+        for idx in 0..array.len() {
+            let item: Value = array.entry(idx as isize)?;
+            let json_item = match ruby_value_to_json_fast(ruby, json_module, item, depth + 1)? {
+                Some(v) => v,
+                None => ruby_value_to_json_fallback(ruby, json_module, item)?,
+            };
+            out.push(json_item);
+        }
+        return Ok(Some(JsonValue::Array(out)));
+    }
+
+    if let Some(hash) = RHash::from_value(value) {
+        let mut map = serde_json::Map::with_capacity(hash.len());
+        hash.foreach(|key: Value, val: Value| {
+            let key_str = if let Ok(key_text) = RString::try_convert(key) {
+                let slice = unsafe { key_text.as_slice() };
+                String::from_utf8_lossy(slice).to_string()
+            } else if let Ok(sym) = Symbol::try_convert(key) {
+                sym.name()?.into_owned()
+            } else {
+                let key_as_str: String = key.funcall("to_s", ())?;
+                key_as_str
+            };
+
+            let json_val = match ruby_value_to_json_fast(ruby, json_module, val, depth + 1)? {
+                Some(v) => v,
+                None => ruby_value_to_json_fallback(ruby, json_module, val)?,
+            };
+
+            map.insert(key_str, json_val);
+            Ok(magnus::r_hash::ForEach::Continue)
+        })?;
+        return Ok(Some(JsonValue::Object(map)));
+    }
+
+    Ok(None)
 }
 
 /// Convert JSON to a Ruby value.
@@ -75,7 +174,7 @@ pub fn json_to_ruby_with_uploads(
         }
         JsonValue::String(str_val) => Ok(ruby.str_new(str_val).as_value()),
         JsonValue::Array(items) => {
-            let array = ruby.ary_new();
+            let array = ruby.ary_new_capa(items.len());
             for item in items {
                 array.push(json_to_ruby_with_uploads(ruby, item, upload_file_class)?)?;
             }
@@ -88,7 +187,7 @@ pub fn json_to_ruby_with_uploads(
                 return Ok(upload);
             }
 
-            let hash = ruby.hash_new();
+            let hash = ruby.hash_new_capa(map.len());
             for (key, item) in map {
                 hash.aset(
                     ruby.str_new(key),
@@ -102,7 +201,7 @@ pub fn json_to_ruby_with_uploads(
 
 /// Convert a HashMap to a Ruby Hash.
 pub fn map_to_ruby_hash(ruby: &Ruby, map: &HashMap<String, String>) -> Result<Value, Error> {
-    let hash = ruby.hash_new();
+    let hash = ruby.hash_new_capa(map.len());
     for (key, value) in map {
         hash.aset(ruby.str_new(key), ruby.str_new(value))?;
     }
@@ -111,9 +210,9 @@ pub fn map_to_ruby_hash(ruby: &Ruby, map: &HashMap<String, String>) -> Result<Va
 
 /// Convert a HashMap of Vecs to a Ruby Hash with array values.
 pub fn multimap_to_ruby_hash(ruby: &Ruby, map: &HashMap<String, Vec<String>>) -> Result<Value, Error> {
-    let hash = ruby.hash_new();
+    let hash = ruby.hash_new_capa(map.len());
     for (key, values) in map {
-        let array = ruby.ary_new();
+        let array = ruby.ary_new_capa(values.len());
         for value in values {
             array.push(ruby.str_new(value))?;
         }
@@ -166,10 +265,6 @@ fn try_build_upload_file(
 /// Accepts either String or Array of bytes.
 pub fn ruby_value_to_bytes(value: Value) -> Result<Bytes, std::io::Error> {
     if let Ok(str_value) = RString::try_convert(value) {
-        // SAFETY: Magnus guarantees RString::as_slice() returns valid UTF-8 (or binary)
-        // bytes for the lifetime of the RString. The slice is only used within this
-        // function scope to copy into a Bytes buffer, and does not outlive the RString
-        // reference. The copy_from_slice operation is safe for the borrowed data.
         let slice = unsafe { str_value.as_slice() };
         return Ok(Bytes::copy_from_slice(slice));
     }

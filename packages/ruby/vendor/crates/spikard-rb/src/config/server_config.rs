@@ -254,7 +254,9 @@ pub fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard
         graceful_shutdown,
         shutdown_timeout,
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
+        enable_http_trace: false,
         openapi,
+        jsonrpc: None,
         lifecycle_hooks: None,
         di_container: None,
     })

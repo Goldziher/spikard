@@ -6,6 +6,8 @@
 use magnus::{RHash, Value, prelude::*, value::Opaque};
 use serde_json::Value as JsonValue;
 use spikard_http::WebSocketHandler;
+use std::sync::mpsc;
+use tokio::sync::oneshot;
 use tracing::{debug, error};
 
 /// Ruby implementation of WebSocketHandler
@@ -13,27 +15,68 @@ pub struct RubyWebSocketHandler {
     /// Handler name for debugging
     name: String,
     /// Ruby proc/callable for handle_message (Opaque for Send safety)
+    #[allow(dead_code)]
     handle_message_proc: Opaque<Value>,
     /// Ruby proc/callable for on_connect (Opaque for Send safety)
     on_connect_proc: Option<Opaque<Value>>,
     /// Ruby proc/callable for on_disconnect (Opaque for Send safety)
     on_disconnect_proc: Option<Opaque<Value>>,
+    /// Work queue for executing Ruby callbacks on a Ruby thread
+    work_tx: mpsc::Sender<WebSocketWorkItem>,
+}
+
+enum WebSocketWorkItem {
+    HandleMessage {
+        message: JsonValue,
+        reply: oneshot::Sender<Result<Option<JsonValue>, String>>,
+    },
+    OnConnect {
+        reply: oneshot::Sender<Result<(), String>>,
+    },
+    OnDisconnect {
+        reply: oneshot::Sender<Result<(), String>>,
+    },
+    Shutdown,
 }
 
 impl RubyWebSocketHandler {
     /// Create a new Ruby WebSocket handler
     #[allow(dead_code)]
     pub fn new(
+        ruby: &magnus::Ruby,
         name: String,
         handle_message_proc: Value,
         on_connect_proc: Option<Value>,
         on_disconnect_proc: Option<Value>,
     ) -> Self {
+        let handle_message_proc = Opaque::from(handle_message_proc);
+        let on_connect_proc = on_connect_proc.map(Opaque::from);
+        let on_disconnect_proc = on_disconnect_proc.map(Opaque::from);
+        let (work_tx, work_rx) = mpsc::channel();
+        let handler_name = name.clone();
+
+        let handle_message_proc_for_thread = handle_message_proc;
+        let on_connect_proc_for_thread = on_connect_proc;
+        let on_disconnect_proc_for_thread = on_disconnect_proc;
+
+        ruby.thread_create_from_fn(move |ruby| {
+            websocket_worker_loop(
+                ruby,
+                &handler_name,
+                handle_message_proc_for_thread,
+                on_connect_proc_for_thread,
+                on_disconnect_proc_for_thread,
+                work_rx,
+            );
+            ruby.qnil()
+        });
+
         Self {
             name,
-            handle_message_proc: handle_message_proc.into(),
-            on_connect_proc: on_connect_proc.map(|v| v.into()),
-            on_disconnect_proc: on_disconnect_proc.map(|v| v.into()),
+            handle_message_proc,
+            on_connect_proc,
+            on_disconnect_proc,
+            work_tx,
         }
     }
 
@@ -100,22 +143,28 @@ impl WebSocketHandler for RubyWebSocketHandler {
     async fn handle_message(&self, message: JsonValue) -> Option<JsonValue> {
         debug!("Ruby WebSocket handler '{}': handle_message", self.name);
 
-        match magnus::Ruby::get()
-            .map_err(|e| format!("Failed to get Ruby: {}", e))
-            .and_then(|ruby| {
-                let message_ruby = Self::json_to_ruby(&ruby, &message)?;
+        let (reply_tx, reply_rx) = oneshot::channel();
+        if self
+            .work_tx
+            .send(WebSocketWorkItem::HandleMessage {
+                message,
+                reply: reply_tx,
+            })
+            .is_err()
+        {
+            error!("Ruby WebSocket handler '{}' worker thread closed", self.name);
+            return None;
+        }
 
-                let proc_value = ruby.get_inner(self.handle_message_proc);
-                let result: Value = proc_value
-                    .funcall("call", (message_ruby,))
-                    .map_err(|e| format!("Handler '{}' call failed: {}", self.name, e))?;
+        let result = match reply_rx.await {
+            Ok(result) => result,
+            Err(_) => {
+                error!("Ruby WebSocket handler '{}' response channel closed", self.name);
+                return None;
+            }
+        };
 
-                if result.is_nil() {
-                    Ok(None)
-                } else {
-                    Self::ruby_to_json(&ruby, result).map(Some)
-                }
-            }) {
+        match result {
             Ok(value) => value,
             Err(e) => {
                 error!("Ruby error in handle_message: {}", e);
@@ -127,17 +176,26 @@ impl WebSocketHandler for RubyWebSocketHandler {
     async fn on_connect(&self) {
         debug!("Ruby WebSocket handler '{}': on_connect", self.name);
 
-        if let Some(on_connect_proc) = self.on_connect_proc {
-            if let Err(e) = magnus::Ruby::get()
-                .map_err(|e| format!("Failed to get Ruby: {}", e))
-                .and_then(|ruby| {
-                    let proc_value = ruby.get_inner(on_connect_proc);
-                    proc_value
-                        .funcall::<_, _, Value>("call", ())
-                        .map_err(|e| format!("on_connect '{}' call failed: {}", self.name, e))?;
-                    Ok(())
-                })
+        if self.on_connect_proc.is_some() {
+            let (reply_tx, reply_rx) = oneshot::channel();
+            if self
+                .work_tx
+                .send(WebSocketWorkItem::OnConnect { reply: reply_tx })
+                .is_err()
             {
+                error!("Ruby WebSocket handler '{}' worker thread closed", self.name);
+                return;
+            }
+
+            let result = match reply_rx.await {
+                Ok(result) => result,
+                Err(_) => {
+                    error!("Ruby WebSocket handler '{}' on_connect channel closed", self.name);
+                    return;
+                }
+            };
+
+            if let Err(e) = result {
                 error!("on_connect error: {}", e);
             }
 
@@ -148,23 +206,108 @@ impl WebSocketHandler for RubyWebSocketHandler {
     async fn on_disconnect(&self) {
         debug!("Ruby WebSocket handler '{}': on_disconnect", self.name);
 
-        if let Some(on_disconnect_proc) = self.on_disconnect_proc {
-            if let Err(e) = magnus::Ruby::get()
-                .map_err(|e| format!("Failed to get Ruby: {}", e))
-                .and_then(|ruby| {
-                    let proc_value = ruby.get_inner(on_disconnect_proc);
-                    proc_value
-                        .funcall::<_, _, Value>("call", ())
-                        .map_err(|e| format!("on_disconnect '{}' call failed: {}", self.name, e))?;
-                    Ok(())
-                })
+        if self.on_disconnect_proc.is_some() {
+            let (reply_tx, reply_rx) = oneshot::channel();
+            if self
+                .work_tx
+                .send(WebSocketWorkItem::OnDisconnect { reply: reply_tx })
+                .is_err()
             {
+                error!("Ruby WebSocket handler '{}' worker thread closed", self.name);
+                return;
+            }
+
+            let result = match reply_rx.await {
+                Ok(result) => result,
+                Err(_) => {
+                    error!("Ruby WebSocket handler '{}' on_disconnect channel closed", self.name);
+                    return;
+                }
+            };
+
+            if let Err(e) = result {
                 error!("on_disconnect error: {}", e);
             }
 
             debug!("Ruby WebSocket handler '{}': on_disconnect completed", self.name);
         }
     }
+}
+
+impl Drop for RubyWebSocketHandler {
+    fn drop(&mut self) {
+        let _ = self.work_tx.send(WebSocketWorkItem::Shutdown);
+    }
+}
+
+fn websocket_worker_loop(
+    ruby: &magnus::Ruby,
+    handler_name: &str,
+    handle_message_proc: Opaque<Value>,
+    on_connect_proc: Option<Opaque<Value>>,
+    on_disconnect_proc: Option<Opaque<Value>>,
+    work_rx: mpsc::Receiver<WebSocketWorkItem>,
+) {
+    let work_rx_ref = &work_rx;
+    loop {
+        let work = crate::call_without_gvl!(
+            recv_work_item,
+            args: (work_rx_ref, &mpsc::Receiver<WebSocketWorkItem>),
+            return_type: Option<WebSocketWorkItem>
+        );
+        let Some(work) = work else {
+            break;
+        };
+
+        match work {
+            WebSocketWorkItem::HandleMessage { message, reply } => {
+                let result = (|| {
+                    let message_ruby = RubyWebSocketHandler::json_to_ruby(ruby, &message)?;
+                    let proc_value = ruby.get_inner(handle_message_proc);
+                    let result: Value = proc_value
+                        .funcall("call", (message_ruby,))
+                        .map_err(|e| format!("Handler '{}' call failed: {}", handler_name, e))?;
+                    if result.is_nil() {
+                        Ok(None)
+                    } else {
+                        RubyWebSocketHandler::ruby_to_json(ruby, result).map(Some)
+                    }
+                })();
+                let _ = reply.send(result);
+            }
+            WebSocketWorkItem::OnConnect { reply } => {
+                let result = on_connect_proc
+                    .map(|proc| {
+                        let proc_value = ruby.get_inner(proc);
+                        proc_value
+                            .funcall::<_, _, Value>("call", ())
+                            .map_err(|e| format!("on_connect '{}' call failed: {}", handler_name, e))?;
+                        Ok(())
+                    })
+                    .unwrap_or(Ok(()));
+                let _ = reply.send(result);
+            }
+            WebSocketWorkItem::OnDisconnect { reply } => {
+                let result = on_disconnect_proc
+                    .map(|proc| {
+                        let proc_value = ruby.get_inner(proc);
+                        proc_value
+                            .funcall::<_, _, Value>("call", ())
+                            .map_err(|e| format!("on_disconnect '{}' call failed: {}", handler_name, e))?;
+                        Ok(())
+                    })
+                    .unwrap_or(Ok(()));
+                let _ = reply.send(result);
+            }
+            WebSocketWorkItem::Shutdown => {
+                break;
+            }
+        }
+    }
+}
+
+fn recv_work_item(receiver: &mpsc::Receiver<WebSocketWorkItem>) -> Option<WebSocketWorkItem> {
+    receiver.recv().ok()
 }
 
 unsafe impl Send for RubyWebSocketHandler {}
@@ -218,6 +361,7 @@ pub fn create_websocket_state(
         });
 
     let ruby_handler = RubyWebSocketHandler::new(
+        ruby,
         "WebSocketHandler".to_string(),
         handle_message_proc,
         on_connect_proc,

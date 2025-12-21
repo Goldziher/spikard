@@ -618,10 +618,10 @@ async fn main() -> Result<()> {
             let report = consolidate_profile_dir(&input, &pattern)?;
             let json = serde_json::to_string_pretty(&report)?;
 
-            if let Some(parent) = output.parent() {
-                if !parent.as_os_str().is_empty() {
-                    std::fs::create_dir_all(parent)?;
-                }
+            if let Some(parent) = output.parent()
+                && !parent.as_os_str().is_empty()
+            {
+                std::fs::create_dir_all(parent)?;
             }
 
             std::fs::write(&output, json.as_bytes())?;

@@ -238,29 +238,22 @@ pub fn parse_cors_config(ruby: &Ruby, value: Value) -> Result<Option<spikard_htt
     }
 
     let hash = RHash::try_convert(value)?;
+    let lookup = |key: &str| -> Option<Value> { hash.get(ruby.to_symbol(key)).or_else(|| hash.get(ruby.str_new(key))) };
 
-    let allowed_origins = hash
-        .get(ruby.to_symbol("allowed_origins"))
+    let allowed_origins = lookup("allowed_origins")
         .and_then(|v| Vec::<String>::try_convert(v).ok())
         .unwrap_or_default();
-    let allowed_methods = hash
-        .get(ruby.to_symbol("allowed_methods"))
+    let allowed_methods = lookup("allowed_methods")
         .and_then(|v| Vec::<String>::try_convert(v).ok())
         .unwrap_or_default();
-    let allowed_headers = hash
-        .get(ruby.to_symbol("allowed_headers"))
+    let allowed_headers = lookup("allowed_headers")
         .and_then(|v| Vec::<String>::try_convert(v).ok())
         .unwrap_or_default();
-    let expose_headers = hash
-        .get(ruby.to_symbol("expose_headers"))
-        .and_then(|v| Vec::<String>::try_convert(v).ok());
-    let max_age = hash
-        .get(ruby.to_symbol("max_age"))
+    let expose_headers = lookup("expose_headers").and_then(|v| Vec::<String>::try_convert(v).ok());
+    let max_age = lookup("max_age")
         .and_then(|v| i64::try_convert(v).ok())
         .map(|v| v as u32);
-    let allow_credentials = hash
-        .get(ruby.to_symbol("allow_credentials"))
-        .and_then(|v| bool::try_convert(v).ok());
+    let allow_credentials = lookup("allow_credentials").and_then(|v| bool::try_convert(v).ok());
 
     Ok(Some(spikard_http::CorsConfig {
         allowed_origins,
@@ -353,18 +346,28 @@ pub fn ruby_value_to_json(ruby: &Ruby, _json_module: Value, value: Value) -> Res
         return Ok(JsonValue::Null);
     }
 
-    if let Ok(boolean) = bool::try_convert(value) {
-        return Ok(JsonValue::Bool(boolean));
+    if value.is_kind_of(ruby.class_true_class()) {
+        return Ok(JsonValue::Bool(true));
     }
 
-    if let Ok(int_val) = i64::try_convert(value) {
-        return Ok(JsonValue::Number(int_val.into()));
+    if value.is_kind_of(ruby.class_false_class()) {
+        return Ok(JsonValue::Bool(false));
     }
 
-    if let Ok(float_val) = f64::try_convert(value)
-        && let Some(num) = serde_json::Number::from_f64(float_val)
-    {
-        return Ok(JsonValue::Number(num));
+    if value.is_kind_of(ruby.class_float()) {
+        let float_val = f64::try_convert(value)?;
+        if let Some(num) = serde_json::Number::from_f64(float_val) {
+            return Ok(JsonValue::Number(num));
+        }
+    }
+
+    if value.is_kind_of(ruby.class_integer()) {
+        if let Ok(int_val) = i64::try_convert(value) {
+            return Ok(JsonValue::Number(int_val.into()));
+        }
+        if let Ok(int_val) = u64::try_convert(value) {
+            return Ok(JsonValue::Number(int_val.into()));
+        }
     }
 
     if let Ok(str_val) = RString::try_convert(value) {

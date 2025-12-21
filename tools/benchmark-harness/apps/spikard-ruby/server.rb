@@ -10,9 +10,13 @@ require 'spikard_rb'
 require 'spikard'
 require 'json'
 
-GC::Profiler.enable
+PROFILE_ENABLED = ENV.fetch('SPIKARD_PROFILE_ENABLED', '0') == '1'
+
+GC::Profiler.enable if PROFILE_ENABLED
 
 def write_benchmark_metrics
+  return unless PROFILE_ENABLED
+
   metrics = {
     gc_count: GC.count,
     gc_time_ms: (GC::Profiler.total_time.to_f * 1000.0),

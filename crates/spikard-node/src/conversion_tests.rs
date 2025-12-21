@@ -31,6 +31,7 @@ fn test_handler_input_basic_conversion() {
         method: "POST".to_string(),
         path_params: Arc::new(HashMap::new()),
         query_params: json!({"limit": 10}),
+        validated_params: None,
         headers: Arc::new(headers),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
@@ -47,6 +48,7 @@ fn test_handler_input_basic_conversion() {
     assert_eq!(input.headers.get("content-type").unwrap(), "application/json");
     assert_eq!(input.headers.get("authorization").unwrap(), "Bearer token123");
     assert_eq!(input.query_params["limit"], 10);
+    assert!(input.validated_params.is_none());
     assert_eq!(input.body["name"], "Alice");
 }
 
@@ -62,6 +64,7 @@ fn test_handler_input_path_params_conversion() {
         method: "GET".to_string(),
         path_params: Arc::new(path_params),
         query_params: json!({}),
+        validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
@@ -90,6 +93,7 @@ fn test_handler_input_cookies_conversion() {
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(cookies),
         raw_query_params: Arc::new(HashMap::new()),
@@ -127,6 +131,7 @@ fn test_handler_input_complex_body_conversion() {
         method: "POST".to_string(),
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
@@ -162,6 +167,7 @@ fn test_handler_input_query_params_conversion() {
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
         query_params,
+        validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
@@ -285,6 +291,7 @@ fn test_header_case_preservation() {
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         headers: Arc::new(headers.clone()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
@@ -316,6 +323,7 @@ fn test_header_special_characters() {
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         headers: Arc::new(headers),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
@@ -342,6 +350,7 @@ fn test_cookie_special_characters() {
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(cookies),
         raw_query_params: Arc::new(HashMap::new()),
@@ -405,6 +414,7 @@ fn test_handler_input_empty_collections() {
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
@@ -454,6 +464,7 @@ fn test_handler_input_large_array_body() {
         method: "POST".to_string(),
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
@@ -482,6 +493,7 @@ fn test_handler_input_deeply_nested_body() {
         method: "POST".to_string(),
         path_params: Arc::new(HashMap::new()),
         query_params: json!({}),
+        validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),

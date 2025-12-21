@@ -31,4 +31,21 @@ final class TestClient
         unset($method, $path, $options);
         throw new RuntimeException('Spikard PHP extension is not loaded.');
     }
+
+    public function websocket(string $path, ?string $sendText = null): object
+    {
+        unset($path, $sendText);
+        throw new RuntimeException('Spikard PHP extension is not loaded.');
+    }
+
+    public function sse(string $path): object
+    {
+        unset($path);
+        throw new RuntimeException('Spikard PHP extension is not loaded.');
+    }
+
+    public function close(): void
+    {
+        throw new RuntimeException('Spikard PHP extension is not loaded.');
+    }
 }

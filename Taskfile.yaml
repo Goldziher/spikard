@@ -2,10 +2,23 @@ version: "3"
 
 vars:
   BUNDLER_VERSION: "4.0.0"
-  RBENV_BIN: "/opt/homebrew/bin/rbenv"
+  RBENV_BIN:
+    sh: command -v rbenv || true
   RBENV_VERSION: "3.4.7"
   RBENV_RUBY:
-    sh: RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} which ruby
+    sh: |
+      if command -v rbenv >/dev/null 2>&1; then
+        RBENV_VERSION={{.RBENV_VERSION}} $(command -v rbenv) which ruby
+      else
+        command -v ruby
+      fi
+  RUBY_EXEC_PREFIX:
+    sh: |
+      if command -v rbenv >/dev/null 2>&1; then
+        echo "RBENV_VERSION={{.RBENV_VERSION}} $(command -v rbenv) exec"
+      else
+        echo ""
+      fi
 
 env:
   DOCKER_BUILDKIT: 1
@@ -129,13 +142,14 @@ tasks:
     desc: "Install Ruby dependencies"
     dir: packages/ruby
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ check || RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ install --jobs 4 --retry 3
+      - "{{.RUBY_EXEC_PREFIX}} gem install bundler -v {{.BUNDLER_VERSION}} --no-document --force"
+      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ check || {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ install --jobs 4 --retry 3"
 
   ruby:update:
     desc: "Update Ruby dependencies"
     dir: packages/ruby
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ update --all
+      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ update --all"
 
   ruby:build:
     desc: "Build Ruby native extension"
@@ -143,7 +157,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rake ext:build
+      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rake ext:build"
 
   ruby:test:
     desc: "Run Ruby specs"
@@ -151,7 +165,7 @@ tasks:
       - ruby:build
     dir: packages/ruby
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rspec
+      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rspec"
 
   pre-commit:install:
     desc: "Install pre-commit hooks via Prek"
@@ -229,6 +243,14 @@ tasks:
 
   rust:test:
     desc: "Run Rust workspace tests"
+    vars:
+      PYO3_PYTHON:
+        sh: uv run which python
+      PYTHONHOME:
+        sh: uv run python -c "import sys; print(sys.base_prefix)"
+    env:
+      PYO3_PYTHON: "{{.PYO3_PYTHON}}"
+      PYTHONHOME: "{{.PYTHONHOME}}"
     cmds:
       - cargo test --workspace --release
 
@@ -317,7 +339,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all
+      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all"
       - task: ruby:typecheck
 
   ruby:lint:check:
@@ -326,7 +348,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop
+      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop"
       - task: ruby:typecheck
 
   ruby:typecheck:
@@ -335,7 +357,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec steep check
+      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec ruby -S steep check"
 
   ruby:format:
     desc: "Format Ruby code with Rubocop"
@@ -343,7 +365,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all
+      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all"
 
   ruby:format:check:
     desc: "Check Ruby formatting without modifications"
@@ -351,7 +373,7 @@ tasks:
       - ruby:install
     dir: packages/ruby
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop
+      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop"
 
   node:format:
     desc: "Format TypeScript code with biome"
@@ -709,9 +731,9 @@ tasks:
     desc: "Run Ruby e2e tests (fixture-driven integration tests)"
     dir: e2e/ruby
     cmds:
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ check || BUNDLE_GEMFILE=../../packages/ruby/Gemfile RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ install --jobs 4 --retry 3
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rake -C ../../packages/ruby ext:build
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rspec
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ check || BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ install --jobs 4 --retry 3
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rake -C ../../packages/ruby ext:build
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rspec
 
   test:e2e:php:
     desc: "Run PHP e2e tests (fixture-driven integration tests)"
@@ -933,7 +955,7 @@ tasks:
     deps:
       - ruby:install
     cmds:
-      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop tools/benchmark-harness/apps/spikard-ruby/ || true
+      - "{{.RUBY_EXEC_PREFIX}} bundle _{{.BUNDLER_VERSION}}_ exec rubocop tools/benchmark-harness/apps/spikard-ruby/ || true"
 
   bench:lint:php:
     desc: "Lint generated PHP benchmark code"

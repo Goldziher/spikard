@@ -7,6 +7,7 @@
 #![allow(dead_code)]
 
 use axum::http::Method;
+use axum::Router;
 use axum_test::{TestServer, TestServerConfig, Transport};
 use bytes::Bytes;
 use cookie::Cookie;
@@ -14,16 +15,22 @@ use magnus::prelude::*;
 use magnus::{Error, RHash, Ruby, Value, gc::Marker};
 use serde_json::Value as JsonValue;
 use spikard_http::testing::{
-    MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
+    MultipartFilePart,
+    ResponseSnapshot,
+    SnapshotError,
+    build_multipart_body,
+    encode_urlencoded_body,
+    snapshot_response,
 };
 use spikard_http::{Route, RouteMetadata};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
+use url::Url;
 
 use crate::conversion::{parse_request_config, response_to_ruby};
 use crate::handler::RubyHandler;
-use crate::server::GLOBAL_RUNTIME;
 
 /// Request configuration built from Ruby options hash.
 pub struct RequestConfig {
@@ -54,6 +61,12 @@ pub struct TestResponseData {
 /// Error wrapper for native request failures.
 #[derive(Debug)]
 pub struct NativeRequestError(pub String);
+
+#[derive(Debug)]
+enum WebSocketConnectError {
+    Timeout,
+    Other(String),
+}
 
 /// Inner client state containing the test servers and handlers.
 pub struct ClientInner {
@@ -95,6 +108,7 @@ impl NativeTestClient {
         ws_handlers: Value,
         sse_producers: Value,
     ) -> Result<(), Error> {
+        trace_step("initialize:start");
         let metadata: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
             .map_err(|err| Error::new(ruby.exception_arg_error(), format!("Invalid routes JSON: {err}")))?;
 
@@ -128,6 +142,7 @@ impl NativeTestClient {
             route_metadata_vec.push(meta);
         }
 
+        trace_step("initialize:build_router");
         let mut router = spikard_http::server::build_router_with_handlers_and_config(
             prepared_routes,
             server_config,
@@ -137,6 +152,7 @@ impl NativeTestClient {
 
         let mut ws_endpoints = Vec::new();
         if !ws_handlers.is_nil() {
+            trace_step("initialize:ws_handlers");
             let ws_hash = RHash::from_value(ws_handlers)
                 .ok_or_else(|| Error::new(ruby.exception_arg_error(), "WebSocket handlers must be a Hash"))?;
 
@@ -160,6 +176,7 @@ impl NativeTestClient {
 
         let mut sse_endpoints = Vec::new();
         if !sse_producers.is_nil() {
+            trace_step("initialize:sse_producers");
             let sse_hash = RHash::from_value(sse_producers)
                 .ok_or_else(|| Error::new(ruby.exception_arg_error(), "SSE producers must be a Hash"))?;
 
@@ -196,28 +213,19 @@ impl NativeTestClient {
             );
         }
 
-        let http_server = GLOBAL_RUNTIME
-            .block_on(async { TestServer::new(router.clone()) })
-            .map_err(|err| {
-                Error::new(
-                    ruby.exception_runtime_error(),
-                    format!("Failed to initialise test server: {err}"),
-                )
-            })?;
+        trace_step("initialize:test_server_http");
+        let timeout_duration = test_server_timeout();
+        let http_server = init_test_server(router.clone(), timeout_duration, "test server", ruby)?;
 
+        trace_step("initialize:test_server_ws");
         let ws_config = TestServerConfig {
             transport: Some(Transport::HttpRandomPort),
             ..Default::default()
         };
-        let transport_server = GLOBAL_RUNTIME
-            .block_on(async { TestServer::new_with_config(router, ws_config) })
-            .map_err(|err| {
-                Error::new(
-                    ruby.exception_runtime_error(),
-                    format!("Failed to initialise WebSocket transport server: {err}"),
-                )
-            })?;
+        let transport_server =
+            init_test_server_with_config(router, ws_config, timeout_duration, "WebSocket transport server", ruby)?;
 
+        trace_step("initialize:done");
         *this.inner.borrow_mut() = Some(ClientInner {
             http_server: Arc::new(http_server),
             transport_server: Arc::new(transport_server),
@@ -251,13 +259,21 @@ impl NativeTestClient {
 
         let request_config = parse_request_config(ruby, options)?;
 
-        let response = GLOBAL_RUNTIME
-            .block_on(execute_request(
-                inner.http_server.clone(),
-                http_method,
-                path.clone(),
-                request_config,
-            ))
+        let runtime = crate::server::global_runtime(ruby)?;
+        let server = inner.http_server.clone();
+        let path_value = path.clone();
+        let request_config_value = request_config;
+        let response = crate::call_without_gvl!(
+            block_on_request,
+            args: (
+                runtime, &tokio::runtime::Runtime,
+                server, Arc<TestServer>,
+                http_method, Method,
+                path_value, String,
+                request_config_value, RequestConfig
+            ),
+            return_type: Result<TestResponseData, NativeRequestError>
+        )
             .map_err(|err| {
                 Error::new(
                     ruby.exception_runtime_error(),
@@ -285,13 +301,28 @@ impl NativeTestClient {
 
         drop(inner_borrow);
 
-        let handle =
-            GLOBAL_RUNTIME.spawn(async move { spikard_http::testing::connect_websocket(&server, &path).await });
-
-        let ws = GLOBAL_RUNTIME.block_on(async {
-            handle
-                .await
-                .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("WebSocket task failed: {}", e)))
+        let timeout_duration = websocket_timeout();
+        let ws = crate::call_without_gvl!(
+            block_on_websocket_connect,
+            args: (
+                server, Arc<TestServer>,
+                path, String,
+                timeout_duration, Duration
+            ),
+            return_type: Result<crate::testing::websocket::WebSocketConnection, WebSocketConnectError>
+        )
+        .map_err(|err| match err {
+            WebSocketConnectError::Timeout => Error::new(
+                ruby.exception_runtime_error(),
+                format!(
+                    "WebSocket connect timed out after {}ms",
+                    timeout_duration.as_millis()
+                ),
+            ),
+            WebSocketConnectError::Other(message) => Error::new(
+                ruby.exception_runtime_error(),
+                format!("WebSocket connect failed: {}", message),
+            ),
         })?;
 
         let ws_conn = crate::testing::websocket::WebSocketTestConnection::new(ws);
@@ -305,14 +336,41 @@ impl NativeTestClient {
             .as_ref()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
 
-        let response = GLOBAL_RUNTIME
-            .block_on(async {
-                let axum_response = inner.transport_server.get(&path).await;
-                snapshot_response(axum_response).await
-            })
-            .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", e)))?;
+        let runtime = crate::server::global_runtime(ruby)?;
+        let server = inner.http_server.clone();
+        let http_method = Method::GET;
+        let request_config = RequestConfig {
+            query: None,
+            headers: HashMap::new(),
+            cookies: HashMap::new(),
+            body: None,
+        };
+        let response = crate::call_without_gvl!(
+            block_on_request,
+            args: (
+                runtime, &tokio::runtime::Runtime,
+                server, Arc<TestServer>,
+                http_method, Method,
+                path, String,
+                request_config, RequestConfig
+            ),
+            return_type: Result<TestResponseData, NativeRequestError>
+        )
+        .map_err(|err| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                format!("SSE request failed: {}", err.0),
+            )
+        })?;
 
-        crate::testing::sse::sse_stream_from_response(ruby, &response)
+        let body = response.body_text.unwrap_or_default().into_bytes();
+        let snapshot = ResponseSnapshot {
+            status: response.status,
+            headers: response.headers,
+            body,
+        };
+
+        crate::testing::sse::sse_stream_from_response(ruby, &snapshot)
     }
 
     /// GC mark hook so Ruby keeps handler closures alive.
@@ -325,6 +383,95 @@ impl NativeTestClient {
             }
         }
     }
+}
+
+fn websocket_timeout() -> Duration {
+    const DEFAULT_TIMEOUT_MS: u64 = 30_000;
+    let timeout_ms = std::env::var("SPIKARD_RB_WS_TIMEOUT_MS")
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .unwrap_or(DEFAULT_TIMEOUT_MS);
+    Duration::from_millis(timeout_ms)
+}
+
+fn block_on_request(
+    runtime: &tokio::runtime::Runtime,
+    server: Arc<TestServer>,
+    method: Method,
+    path: String,
+    config: RequestConfig,
+) -> Result<TestResponseData, NativeRequestError> {
+    runtime.block_on(execute_request(server, method, path, config))
+}
+
+fn block_on_websocket_connect(
+    server: Arc<TestServer>,
+    path: String,
+    timeout_duration: Duration,
+) -> Result<crate::testing::websocket::WebSocketConnection, WebSocketConnectError> {
+    let url = server
+        .server_url(&path)
+        .map_err(|err| WebSocketConnectError::Other(err.to_string()))?;
+    let ws_url = to_ws_url(url)?;
+
+    match crate::testing::websocket::WebSocketConnection::connect(ws_url, timeout_duration) {
+        Ok(ws) => Ok(ws),
+        Err(crate::testing::websocket::WebSocketIoError::Timeout) => Err(WebSocketConnectError::Timeout),
+        Err(err) => Err(WebSocketConnectError::Other(format!("{:?}", err))),
+    }
+}
+
+fn to_ws_url(mut url: Url) -> Result<Url, WebSocketConnectError> {
+    let scheme = match url.scheme() {
+        "https" => "wss",
+        _ => "ws",
+    };
+    url.set_scheme(scheme)
+        .map_err(|_| WebSocketConnectError::Other("Failed to set WebSocket scheme".to_string()))?;
+    Ok(url)
+}
+
+fn test_server_timeout() -> Duration {
+    const DEFAULT_TIMEOUT_MS: u64 = 30_000;
+    let timeout_ms = std::env::var("SPIKARD_RB_TESTSERVER_TIMEOUT_MS")
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .unwrap_or(DEFAULT_TIMEOUT_MS);
+    Duration::from_millis(timeout_ms)
+}
+
+fn trace_step(message: &str) {
+    if std::env::var("SPIKARD_RB_TEST_TRACE").ok().as_deref() == Some("1") {
+        eprintln!("[spikard-rb-test] {}", message);
+    }
+}
+
+fn init_test_server(router: Router, _timeout: Duration, label: &str, ruby: &Ruby) -> Result<TestServer, Error> {
+    let runtime = crate::server::global_runtime(ruby)?;
+    let _guard = runtime.enter();
+    TestServer::new(router).map_err(|err| {
+        Error::new(
+            ruby.exception_runtime_error(),
+            format!("Failed to initialise {label}: {err}"),
+        )
+    })
+}
+
+fn init_test_server_with_config(
+    router: Router,
+    config: TestServerConfig,
+    _timeout: Duration,
+    label: &str,
+    ruby: &Ruby,
+) -> Result<TestServer, Error> {
+    let runtime = crate::server::global_runtime(ruby)?;
+    let _guard = runtime.enter();
+    TestServer::new_with_config(router, config).map_err(|err| {
+        Error::new(
+            ruby.exception_runtime_error(),
+            format!("Failed to initialise {label}: {err}"),
+        )
+    })
 }
 
 /// Execute an HTTP request against a test server.

@@ -8,6 +8,7 @@ fn make_request_data() -> RequestData {
     RequestData {
         path_params: Arc::new(HashMap::from([("id".to_string(), "42".to_string())])),
         query_params: json!({"page": 3, "filter": "active"}),
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::from([
             ("page".to_string(), vec!["3".to_string()]),
             ("filter".to_string(), vec!["active".to_string()]),

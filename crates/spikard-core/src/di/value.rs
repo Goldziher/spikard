@@ -42,6 +42,7 @@ use std::sync::Arc;
 /// let request_data = RequestData {
 ///     path_params: Arc::new(HashMap::new()),
 ///     query_params: serde_json::Value::Null,
+///     validated_params: None,
 ///     raw_query_params: Arc::new(HashMap::new()),
 ///     body: serde_json::Value::Null,
 ///     raw_body: None,
@@ -146,6 +147,7 @@ mod tests {
         RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: serde_json::Value::Null,
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: serde_json::Value::Null,
             raw_body: None,

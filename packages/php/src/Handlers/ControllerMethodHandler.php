@@ -104,6 +104,9 @@ final class ControllerMethodHandler implements HandlerInterface
                 }
 
                 if ($defaultValue instanceof Query) {
+                    if ($request->validatedParams !== null && \array_key_exists($name, $request->validatedParams)) {
+                        return $request->validatedParams[$name];
+                    }
                     $value = $request->queryParams[$name] ?? null;
                     if ($value === null) {
                         return $defaultValue->getDefault();
@@ -112,14 +115,23 @@ final class ControllerMethodHandler implements HandlerInterface
                 }
 
                 if ($defaultValue instanceof Path) {
+                    if ($request->validatedParams !== null && \array_key_exists($name, $request->validatedParams)) {
+                        return $request->validatedParams[$name];
+                    }
                     return $request->pathParams[$name] ?? $defaultValue->getDefault();
                 }
 
                 if ($defaultValue instanceof Header) {
+                    if ($request->validatedParams !== null && \array_key_exists($name, $request->validatedParams)) {
+                        return $request->validatedParams[$name];
+                    }
                     return $request->headers[$name] ?? $defaultValue->getDefault();
                 }
 
                 if ($defaultValue instanceof Cookie) {
+                    if ($request->validatedParams !== null && \array_key_exists($name, $request->validatedParams)) {
+                        return $request->validatedParams[$name];
+                    }
                     return $request->cookies[$name] ?? $defaultValue->getDefault();
                 }
             } catch (\ReflectionException $e) {
@@ -143,6 +155,10 @@ final class ControllerMethodHandler implements HandlerInterface
         // Check if it's a path parameter by name
         if (isset($request->pathParams[$name])) {
             return $request->pathParams[$name];
+        }
+
+        if ($request->validatedParams !== null && \array_key_exists($name, $request->validatedParams)) {
+            return $request->validatedParams[$name];
         }
 
         // Check if it's a query parameter by name

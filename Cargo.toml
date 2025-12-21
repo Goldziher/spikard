@@ -12,6 +12,7 @@ members = [
     "crates/spikard-node",
     "crates/spikard-wasm",
     "crates/spikard-rb",
+    "crates/spikard-rb-macros",
     "tools/test-generator",
     "tools/benchmark-harness",
 ]

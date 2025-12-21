@@ -28,6 +28,7 @@ pub struct PhpRequest {
     pub(crate) raw_query: HashMap<String, Vec<String>>,
     pub(crate) headers: HashMap<String, String>,
     pub(crate) cookies: HashMap<String, String>,
+    pub(crate) validated_params: Option<Value>,
 
     // Cached PHP-side conversions (built on-demand via __get).
     cached_body: RefCell<Option<Zval>>,
@@ -36,6 +37,7 @@ pub struct PhpRequest {
     cached_cookies: RefCell<Option<Zval>>,
     cached_query_params: RefCell<Option<Zval>>,
     cached_path_params: RefCell<Option<Zval>>,
+    cached_validated_params: RefCell<Option<Zval>>,
 }
 
 #[php_impl]
@@ -50,6 +52,7 @@ impl PhpRequest {
         cookies: Option<HashMap<String, String>>,
         queryParams: Option<HashMap<String, Vec<String>>>,
         pathParams: Option<HashMap<String, String>>,
+        validatedParams: Option<&Zval>,
         files: Option<&Zval>,
         dependencies: Option<&Zval>,
     ) -> PhpResult<Self> {
@@ -61,6 +64,7 @@ impl PhpRequest {
             cookies,
             queryParams,
             pathParams,
+            validatedParams,
             files,
             dependencies,
         )
@@ -80,6 +84,7 @@ impl PhpRequest {
         cookies: Option<HashMap<String, String>>,
         queryParams: Option<HashMap<String, Vec<String>>>,
         pathParams: Option<HashMap<String, String>>,
+        validatedParams: Option<&Zval>,
         files: Option<&Zval>,
         dependencies: Option<&Zval>,
     ) -> PhpResult<Self> {
@@ -93,6 +98,10 @@ impl PhpRequest {
             None => Value::Object(serde_json::Map::new()),
             Some(v) => crate::php::zval_to_json(v).map_err(PhpException::default)?,
         };
+        let validated_value = match validatedParams {
+            None => None,
+            Some(v) => Some(crate::php::zval_to_json(v).map_err(PhpException::default)?),
+        };
 
         Ok(Self {
             method,
@@ -104,12 +113,14 @@ impl PhpRequest {
             raw_query: queryParams.unwrap_or_default(),
             headers: headers.unwrap_or_default(),
             cookies: cookies.unwrap_or_default(),
+            validated_params: validated_value,
             cached_body: RefCell::new(None),
             cached_files: RefCell::new(None),
             cached_headers: RefCell::new(None),
             cached_cookies: RefCell::new(None),
             cached_query_params: RefCell::new(None),
             cached_path_params: RefCell::new(None),
+            cached_validated_params: RefCell::new(None),
         })
     }
 
@@ -150,6 +161,7 @@ impl PhpRequest {
             "cookies" => self.get_cached_string_map(&self.cookies, &self.cached_cookies),
             "queryParams" => self.get_cached_multimap(&self.raw_query, &self.cached_query_params),
             "pathParams" => self.get_cached_string_map(&self.path_params, &self.cached_path_params),
+            "validatedParams" => self.get_cached_validated_params(),
             _ => Ok(Zval::new()),
         }
     }
@@ -266,6 +278,20 @@ impl PhpRequest {
         Ok(zv)
     }
 
+    fn get_cached_validated_params(&self) -> PhpResult<Zval> {
+        if let Some(zv) = self.cached_validated_params.borrow().as_ref() {
+            return Ok(zv.shallow_clone());
+        }
+
+        let zv = match self.validated_params.as_ref() {
+            Some(value) => crate::php::json_to_zval(value)?,
+            None => Zval::new(),
+        };
+
+        *self.cached_validated_params.borrow_mut() = Some(zv.shallow_clone());
+        Ok(zv)
+    }
+
     /// Build from RequestData (used by Handler bridge).
     pub fn from_request_data(data: &spikard_http::RequestData) -> Self {
         Self {
@@ -278,12 +304,14 @@ impl PhpRequest {
             raw_query: (*data.raw_query_params).clone(),
             headers: (*data.headers).clone(),
             cookies: (*data.cookies).clone(),
+            validated_params: data.validated_params.clone(),
             cached_body: RefCell::new(None),
             cached_files: RefCell::new(None),
             cached_headers: RefCell::new(None),
             cached_cookies: RefCell::new(None),
             cached_query_params: RefCell::new(None),
             cached_path_params: RefCell::new(None),
+            cached_validated_params: RefCell::new(None),
         }
     }
 
@@ -307,12 +335,14 @@ impl PhpRequest {
             raw_query: Self::unwrap_arc_multimap(data.raw_query_params),
             headers: Self::unwrap_arc_map(data.headers),
             cookies: Self::unwrap_arc_map(data.cookies),
+            validated_params: data.validated_params,
             cached_body: RefCell::new(None),
             cached_files: RefCell::new(None),
             cached_headers: RefCell::new(None),
             cached_cookies: RefCell::new(None),
             cached_query_params: RefCell::new(None),
             cached_path_params: RefCell::new(None),
+            cached_validated_params: RefCell::new(None),
         }
     }
 
@@ -328,6 +358,7 @@ impl PhpRequest {
         cookies: HashMap<String, String>,
         raw_query: HashMap<String, Vec<String>>,
         path_params: HashMap<String, String>,
+        validated_params: Option<Value>,
     ) -> Self {
         Self {
             method,
@@ -339,12 +370,14 @@ impl PhpRequest {
             raw_query,
             headers,
             cookies,
+            validated_params,
             cached_body: RefCell::new(None),
             cached_files: RefCell::new(None),
             cached_headers: RefCell::new(None),
             cached_cookies: RefCell::new(None),
             cached_query_params: RefCell::new(None),
             cached_path_params: RefCell::new(None),
+            cached_validated_params: RefCell::new(None),
         }
     }
 }

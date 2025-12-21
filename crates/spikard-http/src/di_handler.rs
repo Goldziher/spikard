@@ -154,6 +154,7 @@ impl Handler for DependencyInjectingHandler {
             let core_request_data = spikard_core::RequestData {
                 path_params: Arc::clone(&request_data.path_params),
                 query_params: request_data.query_params.clone(),
+                validated_params: request_data.validated_params.clone(),
                 raw_query_params: Arc::clone(&request_data.raw_query_params),
                 body: request_data.body.clone(),
                 raw_body: request_data.raw_body.clone(),
@@ -254,20 +255,19 @@ impl Handler for DependencyInjectingHandler {
 
             drop(_enter);
 
-            request_data.dependencies = Some(Arc::new(resolved));
+            let deps = Arc::new(resolved);
+            request_data.dependencies = Some(Arc::clone(&deps));
 
-            let result = inner.call(request, request_data.clone()).await;
+            let result = inner.call(request, request_data).await;
 
-            if let Some(deps) = request_data.dependencies.take() {
-                if let Ok(deps) = Arc::try_unwrap(deps) {
-                    let cleanup_span = info_span!("cleanup_dependencies");
-                    let _enter = cleanup_span.enter();
+            if let Ok(deps) = Arc::try_unwrap(deps) {
+                let cleanup_span = info_span!("cleanup_dependencies");
+                let _enter = cleanup_span.enter();
 
-                    debug!("Running dependency cleanup tasks");
-                    deps.cleanup().await;
-                } else {
-                    debug!("Skipping cleanup: dependencies still shared");
-                }
+                debug!("Running dependency cleanup tasks");
+                deps.cleanup().await;
+            } else {
+                debug!("Skipping cleanup: dependencies still shared");
             }
 
             result
@@ -347,6 +347,7 @@ mod tests {
         RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: serde_json::Value::Null,
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: serde_json::Value::Null,
             raw_body: None,
@@ -1602,6 +1603,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(path_params.clone()),
             query_params: serde_json::json!({"filter": "active", "sort": "name"}),
+            validated_params: None,
             raw_query_params: Arc::new(raw_query_params.clone()),
             body: serde_json::json!({"name": "John", "email": "john@example.com"}),
             raw_body: Some(bytes::Bytes::from(r#"{"name":"John","email":"john@example.com"}"#)),

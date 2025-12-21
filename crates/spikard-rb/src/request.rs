@@ -103,93 +103,121 @@ impl NativeRequest {
     }
 
     pub(crate) fn method(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.method, ruby) {
+        if let Some(value) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.method, ruby)
+        } {
             return Ok(value);
         }
-        Ok(Self::cache_set(
-            &mut cache.method,
-            ruby.str_new(&this.method).as_value(),
-        ))
+        let value = ruby.str_new(&this.method).as_value();
+        let mut cache = this.cache.borrow_mut();
+        Ok(Self::cache_set(&mut cache.method, value))
     }
 
     pub(crate) fn path(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.path, ruby) {
+        if let Some(value) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.path, ruby)
+        } {
             return Ok(value);
         }
-        Ok(Self::cache_set(&mut cache.path, ruby.str_new(&this.path).as_value()))
+        let value = ruby.str_new(&this.path).as_value();
+        let mut cache = this.cache.borrow_mut();
+        Ok(Self::cache_set(&mut cache.path, value))
     }
 
     pub(crate) fn path_params(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.path_params, ruby) {
-            return Ok(value);
+        if let Some(cached) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.path_params, ruby)
+        } {
+            return Ok(cached);
         }
         let value = map_to_ruby_hash(ruby, this.path_params.as_ref())?;
+        let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.path_params, value))
     }
 
     pub(crate) fn query(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.query, ruby) {
-            return Ok(value);
+        if let Some(cached) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.query, ruby)
+        } {
+            return Ok(cached);
         }
         let value = json_to_ruby(ruby, &this.query_params)?;
+        let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.query, value))
     }
 
     pub(crate) fn raw_query(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.raw_query, ruby) {
-            return Ok(value);
+        if let Some(cached) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.raw_query, ruby)
+        } {
+            return Ok(cached);
         }
         let value = multimap_to_ruby_hash(ruby, this.raw_query_params.as_ref())?;
+        let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.raw_query, value))
     }
 
     pub(crate) fn headers(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.headers, ruby) {
-            return Ok(value);
+        if let Some(cached) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.headers, ruby)
+        } {
+            return Ok(cached);
         }
         let value = map_to_ruby_hash(ruby, this.headers.as_ref())?;
+        let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.headers, value))
     }
 
     pub(crate) fn cookies(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.cookies, ruby) {
-            return Ok(value);
+        if let Some(cached) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.cookies, ruby)
+        } {
+            return Ok(cached);
         }
         let value = map_to_ruby_hash(ruby, this.cookies.as_ref())?;
+        let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.cookies, value))
     }
 
     pub(crate) fn body(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.body, ruby) {
-            return Ok(value);
+        if let Some(cached) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.body, ruby)
+        } {
+            return Ok(cached);
         }
         let value = json_to_ruby(ruby, &this.body)?;
+        let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.body, value))
     }
 
     pub(crate) fn raw_body(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.raw_body, ruby) {
-            return Ok(value);
+        if let Some(cached) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.raw_body, ruby)
+        } {
+            return Ok(cached);
         }
         let value = match &this.raw_body {
             Some(bytes) => ruby.str_from_slice(bytes.as_ref()).as_value(),
             None => ruby.qnil().as_value(),
         };
+        let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.raw_body, value))
     }
 
     pub(crate) fn params(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.params, ruby) {
+        if let Some(value) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.params, ruby)
+        } {
             return Ok(value);
         }
 
@@ -212,12 +240,15 @@ impl NativeRequest {
             params.as_value()
         };
 
+        let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.params, value))
     }
 
     pub(crate) fn to_h(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
-        let mut cache = this.cache.borrow_mut();
-        if let Some(value) = Self::cache_get(&cache.to_h, ruby) {
+        if let Some(value) = {
+            let cache = this.cache.borrow();
+            Self::cache_get(&cache.to_h, ruby)
+        } {
             return Ok(value);
         }
 
@@ -233,6 +264,7 @@ impl NativeRequest {
         hash.aset(ruby.intern("raw_body"), Self::raw_body(ruby, this)?)?;
         hash.aset(ruby.intern("params"), Self::params(ruby, this)?)?;
 
+        let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.to_h, hash.as_value()))
     }
 

@@ -11,6 +11,8 @@ use Spikard\Http\Response;
 
 final class TestClient
 {
+    private ?\Spikard\Native\TestClient $native = null;
+
     private function __construct(private readonly App $app)
     {
     }
@@ -36,8 +38,7 @@ final class TestClient
     public function request(string $method, string $path, array $options = []): Response
     {
         if ($this->useNative()) {
-            $native = new \Spikard\Native\TestClient($this->app->nativeRoutes());
-            return $native->request($method, $path, $options);
+            return $this->nativeClient()->request($method, $path, $options);
         }
 
         /** @var array<string, string> $headers */
@@ -81,9 +82,7 @@ final class TestClient
         if (!$this->useNative()) {
             throw new RuntimeException('WebSocket client requires the native extension.');
         }
-        $native = new \Spikard\Native\TestClient($this->app->nativeRoutes());
-        /** @phpstan-ignore-next-line runtime extension method */
-        return $native->websocket($path, $sendText);
+        return $this->nativeClient()->websocket($path, $sendText);
     }
 
     /**
@@ -94,9 +93,7 @@ final class TestClient
         if (!$this->useNative()) {
             throw new RuntimeException('SSE client requires the native extension.');
         }
-        $native = new \Spikard\Native\TestClient($this->app->nativeRoutes());
-        /** @phpstan-ignore-next-line runtime extension method */
-        return $native->sse($path);
+        return $this->nativeClient()->sse($path);
     }
 
     public function get(string $path): Response
@@ -111,7 +108,20 @@ final class TestClient
 
     public function close(): void
     {
+        if ($this->native !== null) {
+            $this->native->close();
+            $this->native = null;
+        }
         $this->app->close();
+    }
+
+    private function nativeClient(): \Spikard\Native\TestClient
+    {
+        if ($this->native === null) {
+            $this->native = new \Spikard\Native\TestClient($this->app->nativeRoutes());
+        }
+
+        return $this->native;
     }
 
     /**

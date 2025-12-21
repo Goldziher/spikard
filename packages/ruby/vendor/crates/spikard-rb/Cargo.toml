@@ -17,23 +17,28 @@ build = "build.rs"
 name = "spikard_rb_core"
 
 [dependencies]
-magnus = { version = "0.8.2", features = ["rb-sys"] }
+magnus = { version = "0.8.2", features = ["rb-sys", "embed"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 spikard-core = { path = "../spikard-core", features = ["di"] }
 spikard-http = { path = "../spikard-http", features = ["di"] }
 spikard-bindings-shared = { path = "../spikard-bindings-shared" }
+spikard-rb-macros = { path = "../spikard-rb-macros" }
 axum = { version = "0.8", features = ["multipart", "ws"] }
 axum-test = "18"
 bytes = "1.11"
 cookie = "0.18"
 tokio = { version = "1", features = ["full"] }
+tungstenite = "0.24"
 tracing = "0.1"
 serde_qs = "0.15"
 urlencoding = "2.1"
 once_cell = "1.21"
 async-stream = "0.3"
 http = "1.4"
+paste = "1.0.15"
+rb-sys = "0"
+url = "2.5"
 
 [features]
 default = ["di"]

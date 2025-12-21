@@ -74,6 +74,7 @@ async fn test_di_value_injection() {
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
         query_params: serde_json::Value::Null,
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
         body: serde_json::Value::Null,
         raw_body: None,
@@ -115,6 +116,7 @@ async fn test_di_missing_dependency_error() {
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
         query_params: serde_json::Value::Null,
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
         body: serde_json::Value::Null,
         raw_body: None,
@@ -161,6 +163,7 @@ async fn test_di_multiple_value_dependencies() {
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
         query_params: serde_json::Value::Null,
+        validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
         body: serde_json::Value::Null,
         raw_body: None,

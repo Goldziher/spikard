@@ -100,6 +100,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(path_params),
             query_params: json!({"page": 1}),
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: json!({"test": "data"}),
             raw_body: None,
@@ -131,6 +132,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: Value::Null,
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,
@@ -169,6 +171,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: json!({"api_key": "secret123"}),
+            validated_params: None,
             raw_query_params: Arc::new(raw_query_params.clone()),
             body: Value::Null,
             raw_body: None,
@@ -192,6 +195,7 @@ mod tests {
         let request_data_no_param = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: Value::Null,
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,
@@ -229,6 +233,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(path_params),
             query_params: json!({"filter": "active"}),
+            validated_params: None,
             raw_query_params: Arc::new(raw_query_params),
             body: json!({"name": "test"}),
             raw_body: None,
@@ -254,6 +259,7 @@ mod tests {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: Value::Null,
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,

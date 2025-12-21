@@ -28,6 +28,7 @@ async fn test_request_data_serialization() {
         method: "GET".to_string(),
         path_params: Arc::new(path_params),
         query_params,
+        validated_params: None,
         headers: Arc::new(headers),
         cookies: Arc::new(cookies),
         raw_query_params: Arc::new(HashMap::new()),

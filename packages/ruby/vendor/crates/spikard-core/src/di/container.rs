@@ -50,6 +50,7 @@ use tokio::sync::RwLock;
 /// let request_data = RequestData {
 ///     path_params: Arc::new(HashMap::new()),
 ///     query_params: serde_json::Value::Null,
+///     validated_params: None,
 ///     raw_query_params: Arc::new(HashMap::new()),
 ///     body: serde_json::Value::Null,
 ///     raw_body: None,
@@ -128,10 +129,8 @@ impl DependencyContainer {
     /// container.register("config".to_string(), Arc::new(config)).unwrap();
     /// ```
     pub fn register(&mut self, key: String, dep: Arc<dyn Dependency>) -> Result<&mut Self, DependencyError> {
-        // Add to dependency graph (this checks for cycles and duplicates)
         self.dependency_graph.add_dependency(&key, dep.depends_on())?;
 
-        // Store the dependency
         self.dependencies.insert(key, dep);
 
         Ok(self)
@@ -195,6 +194,7 @@ impl DependencyContainer {
     /// let request_data = RequestData {
     ///     path_params: Arc::new(HashMap::new()),
     ///     query_params: serde_json::Value::Null,
+    ///     validated_params: None,
     ///     raw_query_params: Arc::new(HashMap::new()),
     ///     body: serde_json::Value::Null,
     ///     raw_body: None,
@@ -225,31 +225,23 @@ impl DependencyContainer {
             }
         }
 
-        // Calculate resolution batches
         let batches = self.dependency_graph.calculate_batches(deps)?;
 
         let mut resolved = ResolvedDependencies::new();
         let mut request_cache: HashMap<String, Arc<dyn Any + Send + Sync>> = HashMap::new();
 
-        // Process each batch sequentially
         for batch in batches {
-            // Sort keys within batch by registration order for deterministic resolution
-            // This ensures cleanup happens in a predictable reverse order
             // NOTE: We resolve sequentially within each batch to ensure cleanup tasks
-            // are registered in a deterministic order (LIFO on cleanup)
             let mut sorted_keys: Vec<_> = batch.iter().collect();
 
-            // Sort by insertion order (index in IndexMap) instead of alphabetically
             sorted_keys.sort_by_key(|key| self.dependencies.get_index_of(*key).unwrap_or(usize::MAX));
 
             for key in sorted_keys {
-                // Get the dependency
                 let dep = self
                     .dependencies
                     .get(key)
                     .ok_or_else(|| DependencyError::NotFound { key: key.clone() })?;
 
-                // Check singleton cache first
                 if dep.singleton() {
                     let cache = self.singleton_cache.read().await;
                     if let Some(cached) = cache.get(key) {
@@ -258,7 +250,6 @@ impl DependencyContainer {
                     }
                 }
 
-                // Check request cache
                 if dep.cacheable()
                     && let Some(cached) = request_cache.get(key)
                 {
@@ -266,10 +257,8 @@ impl DependencyContainer {
                     continue;
                 }
 
-                // Need to resolve - do it sequentially to preserve cleanup order
                 let result = dep.resolve(req, data, &resolved).await?;
 
-                // Store in appropriate cache
                 if dep.singleton() {
                     let mut cache = self.singleton_cache.write().await;
                     cache.insert(key.clone(), Arc::clone(&result));
@@ -277,7 +266,6 @@ impl DependencyContainer {
                     request_cache.insert(key.clone(), Arc::clone(&result));
                 }
 
-                // Always store in resolved
                 resolved.insert(key.clone(), result);
             }
         }
@@ -396,6 +384,7 @@ mod tests {
         RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: serde_json::Value::Null,
+            validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
             body: serde_json::Value::Null,
             raw_body: None,
@@ -507,11 +496,9 @@ mod tests {
     async fn test_resolve_nested() {
         let mut container = DependencyContainer::new();
 
-        // config (no dependencies)
         let config = ValueDependency::new("config", "production".to_string());
         container.register("config".to_string(), Arc::new(config)).unwrap();
 
-        // database (depends on config)
         let database = FactoryDependency::builder("database")
             .depends_on(vec!["config".to_string()])
             .factory(|_req, _data, resolved| {
@@ -541,10 +528,8 @@ mod tests {
     async fn test_resolve_batched() {
         let mut container = DependencyContainer::new();
 
-        // Track resolution order
         let counter = Arc::new(AtomicU32::new(0));
 
-        // config (no deps)
         let counter1 = Arc::clone(&counter);
         let config = FactoryDependency::builder("config")
             .factory(move |_req, _data, _resolved| {
@@ -557,7 +542,6 @@ mod tests {
             .build();
         container.register("config".to_string(), Arc::new(config)).unwrap();
 
-        // db and cache (both depend on config, can run in parallel)
         let counter2 = Arc::clone(&counter);
         let database = FactoryDependency::builder("database")
             .depends_on(vec!["config".to_string()])
@@ -592,11 +576,9 @@ mod tests {
             .await
             .unwrap();
 
-        // config should be resolved first (order 0)
         let config_order: Arc<u32> = resolved.get("config").unwrap();
         assert_eq!(*config_order, 0);
 
-        // db and cache should be resolved after config (order 1 and 2, in either order)
         let db_order: Arc<u32> = resolved.get("database").unwrap();
         let cache_order: Arc<u32> = resolved.get("cache").unwrap();
         assert!(*db_order >= 1);
@@ -628,7 +610,6 @@ mod tests {
         let request = make_request();
         let request_data = make_request_data();
 
-        // Resolve multiple times
         for _ in 0..3 {
             let resolved = container
                 .resolve_for_handler(&["singleton".to_string()], &request, &request_data)
@@ -636,11 +617,9 @@ mod tests {
                 .unwrap();
 
             let value: Arc<u32> = resolved.get("singleton").unwrap();
-            // Should always be 0 (resolved only once)
             assert_eq!(*value, 0);
         }
 
-        // Counter should only have been incremented once
         assert_eq!(counter.load(Ordering::SeqCst), 1);
     }
 
@@ -669,7 +648,6 @@ mod tests {
         let request = make_request();
         let request_data = make_request_data();
 
-        // First resolve
         let resolved1 = container
             .resolve_for_handler(&["singleton".to_string()], &request, &request_data)
             .await
@@ -677,10 +655,8 @@ mod tests {
         let value1: Arc<u32> = resolved1.get("singleton").unwrap();
         assert_eq!(*value1, 0);
 
-        // Clear cache
         container.clear_singleton_cache().await;
 
-        // Second resolve should re-execute factory
         let resolved2 = container
             .resolve_for_handler(&["singleton".to_string()], &request, &request_data)
             .await

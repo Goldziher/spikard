@@ -60,8 +60,12 @@ fn ruby_value_to_json_fast(
         return Ok(Some(JsonValue::Null));
     }
 
-    if let Ok(b) = bool::try_convert(value) {
-        return Ok(Some(JsonValue::Bool(b)));
+    if value.is_kind_of(ruby.class_true_class()) {
+        return Ok(Some(JsonValue::Bool(true)));
+    }
+
+    if value.is_kind_of(ruby.class_false_class()) {
+        return Ok(Some(JsonValue::Bool(false)));
     }
 
     if let Ok(text) = RString::try_convert(value) {
@@ -69,13 +73,8 @@ fn ruby_value_to_json_fast(
         return Ok(Some(JsonValue::String(String::from_utf8_lossy(slice).to_string())));
     }
 
-    if let Ok(n) = i64::try_convert(value) {
-        return Ok(Some(JsonValue::from(n)));
-    }
-    if let Ok(n) = u64::try_convert(value) {
-        return Ok(Some(JsonValue::from(n)));
-    }
-    if let Ok(n) = f64::try_convert(value) {
+    if value.is_kind_of(ruby.class_float()) {
+        let n = f64::try_convert(value)?;
         let number = serde_json::Number::from_f64(n).ok_or_else(|| {
             Error::new(
                 ruby.exception_runtime_error(),
@@ -83,6 +82,15 @@ fn ruby_value_to_json_fast(
             )
         })?;
         return Ok(Some(JsonValue::Number(number)));
+    }
+
+    if value.is_kind_of(ruby.class_integer()) {
+        if let Ok(n) = i64::try_convert(value) {
+            return Ok(Some(JsonValue::from(n)));
+        }
+        if let Ok(n) = u64::try_convert(value) {
+            return Ok(Some(JsonValue::from(n)));
+        }
     }
 
     if let Some(array) = RArray::from_value(value) {

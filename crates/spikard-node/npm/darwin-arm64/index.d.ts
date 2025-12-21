@@ -84,6 +84,8 @@ export interface HandlerInput {
 	body: unknown;
 	/** Extracted path parameters */
 	pathParams: Record<string, string>;
+	/** Validated parameters (query/path/header/cookie combined) */
+	validatedParams?: Record<string, unknown> | null;
 }
 
 /**

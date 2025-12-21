@@ -112,6 +112,7 @@ fn default_request_data() -> RequestData {
     RequestData {
         path_params: HashMap::new().into(),
         query_params: Value::Null,
+        validated_params: None,
         raw_query_params: HashMap::new().into(),
         body: json!({}),
         raw_body: None,
@@ -174,6 +175,7 @@ async def handler(path_params, query_params, body, headers, cookies):
             let req_data = RequestData {
                 path_params: path_params.into(),
                 query_params: Value::Null,
+                validated_params: None,
                 raw_query_params: HashMap::new().into(),
                 body: json!({}),
                 raw_body: None,
@@ -337,6 +339,7 @@ def handler(path_params, query_params, body, headers, cookies):
             let req_data = RequestData {
                 body: Value::Null,
                 query_params: Value::Null,
+                validated_params: None,
                 ..default_request_data()
             };
 
