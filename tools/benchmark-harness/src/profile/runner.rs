@@ -183,7 +183,10 @@ impl ProfileRunner {
         }
 
         let node_start_cmd_override = node_cpu_profile_dir.as_ref().map(|dir| {
-            let tsx_cli = self.config.app_dir.join("../../../../node_modules/tsx/dist/cli.mjs");
+            let tsx_cli = self
+                .config
+                .app_dir
+                .join("../node_modules/tsx/dist/cli.mjs");
             format!(
                 "node --cpu-prof --cpu-prof-dir {} {} server.ts {{port}}",
                 dir.display(),

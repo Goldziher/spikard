@@ -75,7 +75,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-node",
             vec!["server.ts".to_string()],
             None,
-            "node ../../../../node_modules/tsx/dist/cli.mjs server.ts {port}",
+            "node ../node_modules/tsx/dist/cli.mjs server.ts {port}",
             None,
         ),
         FrameworkConfig::new(
