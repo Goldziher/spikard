@@ -4,6 +4,7 @@ use benchmark_harness::{
     BenchmarkRunner, Fixture, FixtureManager, Result, RunnerConfig, StreamingBenchmarkRunner, StreamingFixture,
     StreamingRunnerConfig,
     compare::{CompareConfig, CompareRunner},
+    consolidate::consolidate_profile_dir,
     framework::detect_framework,
     profile::{ProfileRunner, ProfileRunnerConfig},
 };
@@ -215,6 +216,25 @@ enum Commands {
         /// Number of warmup requests per framework
         #[arg(short, long, default_value = "100")]
         warmup: usize,
+    },
+
+    /// Consolidate multiple profile results into a single aggregated report
+    Consolidate {
+        /// Root directory to scan for profile results
+        #[arg(short, long, default_value = ".")]
+        input: PathBuf,
+
+        /// Glob pattern to find profile results
+        #[arg(long, default_value = "**/profile.json")]
+        pattern: String,
+
+        /// Output file for consolidated JSON
+        #[arg(short, long, default_value = "./benchmark-results/consolidated-profile.json")]
+        output: PathBuf,
+
+        /// Also print consolidated JSON to stdout
+        #[arg(long)]
+        stdout: bool,
     },
 }
 
@@ -585,6 +605,34 @@ async fn main() -> Result<()> {
             println!("📄 Reports saved:");
             println!("   JSON: {}", json_path.display());
             println!("   Markdown: {}", md_path.display());
+
+            Ok(())
+        }
+
+        Commands::Consolidate {
+            input,
+            pattern,
+            output,
+            stdout,
+        } => {
+            let report = consolidate_profile_dir(&input, &pattern)?;
+            let json = serde_json::to_string_pretty(&report)?;
+
+            if let Some(parent) = output.parent() {
+                if !parent.as_os_str().is_empty() {
+                    std::fs::create_dir_all(parent)?;
+                }
+            }
+
+            std::fs::write(&output, json.as_bytes())?;
+            println!("✓ Consolidated report written to: {}", output.display());
+            println!("  Inputs: {}", report.metadata.input_count);
+            println!("  Frameworks: {}", report.frameworks.len());
+
+            if stdout {
+                println!();
+                println!("{}", json);
+            }
 
             Ok(())
         }

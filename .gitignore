@@ -98,3 +98,4 @@ tarpaulin-report*
 perf.data*
 *.folded
 *.stacks
+/profiling-data/

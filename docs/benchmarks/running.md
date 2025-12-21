@@ -204,6 +204,19 @@ Example:
   --significance 0.05 \
   --report results/python-frameworks.md \
   --output results/python-comparison
+
+### Consolidate Mode
+
+Aggregate multiple profile results into a single consolidated report:
+
+```bash
+./target/release/benchmark-harness consolidate \
+  --input results \
+  --pattern "**/profile.json" \
+  --output results/consolidated-profile.json
+```
+
+This generates aggregated stats across runs (mean/median/stddev/CI) per framework and per workload.
 ```
 
 ## Workload Suites

@@ -18,23 +18,23 @@ on:
       - 'tools/benchmark-harness/**'
       - 'testing_data/**'
       - '.github/workflows/ci-benchmarks.yaml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'crates/spikard/**'
-      - 'crates/spikard-http/**'
-      - 'crates/spikard-py/**'
-      - 'crates/spikard-node/**'
-      - 'crates/spikard-rb/**'
-      - 'crates/spikard-php/**'
-      - 'crates/spikard-wasm/**'
-      - 'packages/python/**'
-      - 'packages/node/**'
-      - 'packages/ruby/**'
-      - 'packages/php/**'
-      - 'tools/benchmark-harness/**'
-      - 'testing_data/**'
-      - '.github/workflows/ci-benchmarks.yaml'
+#   pull_request:
+#     branches: [main]
+#     paths:
+#       - 'crates/spikard/**'
+#       - 'crates/spikard-http/**'
+#       - 'crates/spikard-py/**'
+#       - 'crates/spikard-node/**'
+#       - 'crates/spikard-rb/**'
+#       - 'crates/spikard-php/**'
+#       - 'crates/spikard-wasm/**'
+#       - 'packages/python/**'
+#       - 'packages/node/**'
+#       - 'packages/ruby/**'
+#       - 'packages/php/**'
+#       - 'tools/benchmark-harness/**'
+#       - 'testing_data/**'
+#       - '.github/workflows/ci-benchmarks.yaml'
 
 concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

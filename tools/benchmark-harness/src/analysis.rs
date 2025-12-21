@@ -194,7 +194,7 @@ pub fn aggregate_runs(runs: &[BenchmarkResult]) -> Result<AggregatedResult> {
 }
 
 /// Calculate statistics for a set of values
-fn calculate_stats(values: &[f64]) -> MetricStats {
+pub fn calculate_stats(values: &[f64]) -> MetricStats {
     let mean = mean(values);
     let median = median(values);
     let stddev = stddev(values);
