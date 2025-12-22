@@ -38,6 +38,10 @@ pub struct RouteInfo {
 #[derive(Debug, Clone)]
 pub struct PreReadBody(pub bytes::Bytes);
 
+/// Request extension carrying a pre-parsed JSON body.
+#[derive(Debug, Clone)]
+pub struct PreParsedJson(pub serde_json::Value);
+
 /// Middleware to validate Content-Type headers and related requirements
 ///
 /// This middleware performs comprehensive request body validation and transformation:
@@ -106,14 +110,11 @@ pub async fn validate_content_type_middleware(
             validation::validate_json_content_type(headers)?;
         }
 
-        validation::validate_content_type_headers(headers, 0)?;
+        let content_kind = validation::validate_content_type_headers_and_classify(headers, 0)?;
 
-        let out_bytes: bytes::Bytes = if let Some(content_type) = headers.get(axum::http::header::CONTENT_TYPE) {
-            // `validate_content_type_headers()` already enforced basic Content-Type validity for us.
-            let is_multipart = validation::is_multipart_form_data(content_type);
-            let is_form_urlencoded = validation::is_form_urlencoded(content_type);
-
-            if is_multipart {
+        let mut parsed_json: Option<serde_json::Value> = None;
+        let out_bytes: bytes::Bytes = match content_kind {
+            Some(validation::ContentTypeKind::Multipart) => {
                 let body_bytes = match to_bytes(body, usize::MAX).await {
                     Ok(bytes) => bytes,
                     Err(_) => {
@@ -124,7 +125,9 @@ pub async fn validate_content_type_middleware(
                     }
                 };
 
-                validation::validate_content_length(headers, body_bytes.len())?;
+                if headers.get(axum::http::header::CONTENT_LENGTH).is_some() {
+                    validation::validate_content_length(headers, body_bytes.len())?;
+                }
 
                 let mut parse_request = HttpRequest::new(Body::from(body_bytes));
                 *parse_request.headers_mut() = parts.headers.clone();
@@ -159,6 +162,7 @@ pub async fn validate_content_type_middleware(
                     }
                 };
 
+                parsed_json = Some(json_body);
                 parts.headers.insert(
                     axum::http::header::CONTENT_TYPE,
                     axum::http::HeaderValue::from_static("application/json"),
@@ -167,7 +171,8 @@ pub async fn validate_content_type_middleware(
                     parts.headers.insert(axum::http::header::CONTENT_LENGTH, value);
                 }
                 bytes::Bytes::from(json_bytes)
-            } else if is_form_urlencoded {
+            }
+            Some(validation::ContentTypeKind::FormUrlencoded) => {
                 let body_bytes = match to_bytes(body, usize::MAX).await {
                     Ok(bytes) => bytes,
                     Err(_) => {
@@ -178,7 +183,9 @@ pub async fn validate_content_type_middleware(
                     }
                 };
 
-                validation::validate_content_length(headers, body_bytes.len())?;
+                if headers.get(axum::http::header::CONTENT_LENGTH).is_some() {
+                    validation::validate_content_length(headers, body_bytes.len())?;
+                }
 
                 parts.headers.insert(
                     axum::http::header::CONTENT_TYPE,
@@ -212,12 +219,14 @@ pub async fn validate_content_type_middleware(
                     };
 
                     let json_bytes = bytes::Bytes::from(json_bytes);
+                    parsed_json = Some(json_body);
                     URLENCODED_JSON_CACHE.with(|cache| {
                         cache.borrow_mut().put(body_bytes.clone(), json_bytes.clone());
                     });
                     json_bytes
                 }
-            } else {
+            }
+            Some(validation::ContentTypeKind::Json) | Some(validation::ContentTypeKind::Other) => {
                 let body_bytes = match to_bytes(body, usize::MAX).await {
                     Ok(bytes) => bytes,
                     Err(_) => {
@@ -228,37 +237,48 @@ pub async fn validate_content_type_middleware(
                     }
                 };
 
-                validation::validate_content_length(headers, body_bytes.len())?;
+                if headers.get(axum::http::header::CONTENT_LENGTH).is_some() {
+                    validation::validate_content_length(headers, body_bytes.len())?;
+                }
 
-                let should_validate_json = route_info.expects_json_body && validation::is_json_like(content_type);
-                if should_validate_json
-                    && !body_bytes.is_empty()
-                    && serde_json::from_slice::<serde_json::Value>(&body_bytes).is_err()
-                {
-                    let error_body = json!({
-                        "detail": "Invalid request format"
-                    });
-                    return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                let should_validate_json = route_info.expects_json_body
+                    && matches!(content_kind, Some(validation::ContentTypeKind::Json));
+                if should_validate_json && !body_bytes.is_empty() {
+                    match serde_json::from_slice::<serde_json::Value>(&body_bytes) {
+                        Ok(value) => parsed_json = Some(value),
+                        Err(_) => {
+                            let error_body = json!({
+                                "detail": "Invalid request format"
+                            });
+                            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                        }
+                    }
                 }
 
                 body_bytes
             }
-        } else {
-            let body_bytes = match to_bytes(body, usize::MAX).await {
-                Ok(bytes) => bytes,
-                Err(_) => {
-                    let error_body = json!({
-                        "error": "Failed to read request body"
-                    });
-                    return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-                }
-            };
+            None => {
+                let body_bytes = match to_bytes(body, usize::MAX).await {
+                    Ok(bytes) => bytes,
+                    Err(_) => {
+                        let error_body = json!({
+                            "error": "Failed to read request body"
+                        });
+                        return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    }
+                };
 
-            validation::validate_content_length(headers, body_bytes.len())?;
-            body_bytes
+                if headers.get(axum::http::header::CONTENT_LENGTH).is_some() {
+                    validation::validate_content_length(headers, body_bytes.len())?;
+                }
+                body_bytes
+            }
         };
 
         parts.extensions.insert(PreReadBody(out_bytes));
+        if let Some(parsed) = parsed_json {
+            parts.extensions.insert(PreParsedJson(parsed));
+        }
 
         let request = HttpRequest::from_parts(parts, Body::empty());
         Ok(next.run(request).await)

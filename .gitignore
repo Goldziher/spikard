@@ -51,6 +51,7 @@ AGENTS.md
 artifacts/
 inferno_api
 benchmark-results/
+tools/benchmark-harness/results/
 build/
 Cargo.lock
 CLAUDE.md

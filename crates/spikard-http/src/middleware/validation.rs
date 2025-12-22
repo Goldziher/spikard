@@ -118,6 +118,15 @@ pub fn is_form_urlencoded(content_type: &HeaderValue) -> bool {
     is_form_urlencoded_token(token)
 }
 
+/// Classify Content-Type header values after validation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ContentTypeKind {
+    Json,
+    Multipart,
+    FormUrlencoded,
+    Other,
+}
+
 fn multipart_has_boundary(content_type: &HeaderValue) -> bool {
     ascii_contains_ignore_case(content_type.as_bytes(), b"boundary=")
 }
@@ -225,60 +234,82 @@ fn parse_ascii_usize(bytes: &[u8]) -> Option<usize> {
 /// Validate Content-Type header and related requirements
 #[allow(clippy::result_large_err)]
 pub fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: usize) -> Result<(), Response> {
-    if let Some(content_type) = headers.get(axum::http::header::CONTENT_TYPE) {
-        if !content_type.as_bytes().is_ascii() && content_type.to_str().is_err() {
-            // Keep legacy behavior: invalid bytes should fail fast.
-            let error_body = json!({
-                "error": "Invalid Content-Type header"
-            });
-            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-        }
+    validate_content_type_headers_and_classify(headers, _declared_body_size).map(|_| ())
+}
 
-        let token = token_before_semicolon(content_type.as_bytes());
-        if !is_valid_content_type_token(token) {
-            let error_body = json!({
-                "error": "Invalid Content-Type header"
-            });
-            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-        }
+/// Validate Content-Type and return its classification (if present).
+#[allow(clippy::result_large_err)]
+pub fn validate_content_type_headers_and_classify(
+    headers: &HeaderMap,
+    _declared_body_size: usize,
+) -> Result<Option<ContentTypeKind>, Response> {
+    let Some(content_type) = headers.get(axum::http::header::CONTENT_TYPE) else {
+        return Ok(None);
+    };
 
-        let is_json = is_json_like_token(token);
-        let is_multipart = is_multipart_form_data_token(token);
-
-        if is_multipart && !multipart_has_boundary(content_type) {
-            let error_body = json!({
-                "error": "multipart/form-data requires 'boundary' parameter"
-            });
-            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-        }
-
-        if is_json
-            && let Some(charset) = json_charset_value(content_type)
-            && !charset.eq_ignore_ascii_case(b"utf-8")
-            && !charset.eq_ignore_ascii_case(b"utf8")
-        {
-            let charset_str = String::from_utf8_lossy(charset);
-            let problem = ProblemDetails::new(
-                "https://spikard.dev/errors/unsupported-charset",
-                "Unsupported Charset",
-                StatusCode::UNSUPPORTED_MEDIA_TYPE,
-            )
-            .with_detail(format!(
-                "Unsupported charset '{}' for JSON. Only UTF-8 is supported.",
-                charset_str
-            ));
-
-            let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-            return Err((
-                StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
-                body,
-            )
-                .into_response());
-        }
+    if !content_type.as_bytes().is_ascii() && content_type.to_str().is_err() {
+        // Keep legacy behavior: invalid bytes should fail fast.
+        let error_body = json!({
+            "error": "Invalid Content-Type header"
+        });
+        return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
     }
 
-    Ok(())
+    let token = token_before_semicolon(content_type.as_bytes());
+    if !is_valid_content_type_token(token) {
+        let error_body = json!({
+            "error": "Invalid Content-Type header"
+        });
+        return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+    }
+
+    let is_json = is_json_like_token(token);
+    let is_multipart = is_multipart_form_data_token(token);
+    let is_form = is_form_urlencoded_token(token);
+
+    if is_multipart && !multipart_has_boundary(content_type) {
+        let error_body = json!({
+            "error": "multipart/form-data requires 'boundary' parameter"
+        });
+        return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+    }
+
+    if is_json
+        && let Some(charset) = json_charset_value(content_type)
+        && !charset.eq_ignore_ascii_case(b"utf-8")
+        && !charset.eq_ignore_ascii_case(b"utf8")
+    {
+        let charset_str = String::from_utf8_lossy(charset);
+        let problem = ProblemDetails::new(
+            "https://spikard.dev/errors/unsupported-charset",
+            "Unsupported Charset",
+            StatusCode::UNSUPPORTED_MEDIA_TYPE,
+        )
+        .with_detail(format!(
+            "Unsupported charset '{}' for JSON. Only UTF-8 is supported.",
+            charset_str
+        ));
+
+        let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+        return Err((
+            StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
+            body,
+        )
+            .into_response());
+    }
+
+    let kind = if is_json {
+        ContentTypeKind::Json
+    } else if is_multipart {
+        ContentTypeKind::Multipart
+    } else if is_form {
+        ContentTypeKind::FormUrlencoded
+    } else {
+        ContentTypeKind::Other
+    };
+
+    Ok(Some(kind))
 }
 
 #[cfg(test)]

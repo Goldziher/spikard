@@ -15,9 +15,11 @@ from typing import Any
 from spikard import Body, Path, Query, Spikard, get, post
 from spikard.config import ServerConfig
 
+_profile_enabled = os.environ.get("SPIKARD_PROFILE_ENABLED") == "1"
+
 profiling_module = PathLib(__file__).parent.parent.parent / "profiling" / "python_metrics.py"
 _profiling_collector = None
-if profiling_module.exists():
+if _profile_enabled and profiling_module.exists():
     sys.path.insert(0, str(profiling_module.parent))
     try:
         import python_metrics
@@ -35,12 +37,14 @@ def health() -> dict[str, Any]:
     return {"status": "ok"}
 
 
-@get("/__benchmark__/flush-profile")
-def flush_profile() -> dict[str, Any]:
-    if _profiling_collector is not None:
-        _profiling_collector.finalize()
-        return {"ok": True}
-    return {"ok": False}
+if _profile_enabled:
+
+    @get("/__benchmark__/flush-profile")
+    def flush_profile() -> dict[str, Any]:
+        if _profiling_collector is not None:
+            _profiling_collector.finalize()
+            return {"ok": True}
+        return {"ok": False}
 
 
 @post("/json/small")

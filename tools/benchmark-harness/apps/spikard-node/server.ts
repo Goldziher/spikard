@@ -58,6 +58,9 @@ type NodeMetricsSnapshot = {
 	gc_time_ms: number | null;
 };
 
+const profilingEnabled =
+	process.env.SPIKARD_PROFILE_ENABLED === "1" || Boolean(process.env.SPIKARD_NODE_METRICS_FILE);
+
 function resolveNodeMetricsPath(): string {
 	const envPath = process.env.SPIKARD_NODE_METRICS_FILE;
 	return envPath && envPath.length > 0 ? envPath : `/tmp/node-metrics-${process.pid}.json`;
@@ -109,7 +112,9 @@ function startMetricsCollector(): void {
 	});
 }
 
-startMetricsCollector();
+if (profilingEnabled) {
+	startMetricsCollector();
+}
 
 function registerRoute(method: string, path: string, handler: HandlerFunction, requestSchema?: unknown): void {
 	const metadata: RouteMetadata = {

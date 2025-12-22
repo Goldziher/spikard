@@ -525,7 +525,9 @@ impl RequestContext {
 
     /// Deserialize the JSON request body into the provided type.
     pub fn json<T: DeserializeOwned>(&self) -> std::result::Result<T, AppError> {
-        if let Some(raw_bytes) = &self.data.raw_body {
+        if !self.data.body.is_null() {
+            serde_json::from_value(self.data.body.clone()).map_err(|err| AppError::Decode(err.to_string()))
+        } else if let Some(raw_bytes) = &self.data.raw_body {
             serde_json::from_slice(raw_bytes).map_err(|err| AppError::Decode(err.to_string()))
         } else {
             serde_json::from_value(self.data.body.clone()).map_err(|err| AppError::Decode(err.to_string()))

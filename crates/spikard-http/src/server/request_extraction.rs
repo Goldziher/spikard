@@ -93,6 +93,19 @@ pub fn extract_headers(headers: &axum::http::HeaderMap) -> HashMap<String, Strin
     map
 }
 
+fn extract_content_type_header(headers: &axum::http::HeaderMap) -> Arc<HashMap<String, String>> {
+    let Some(value) = headers
+        .get(axum::http::header::CONTENT_TYPE)
+        .and_then(|h| h.to_str().ok())
+    else {
+        return empty_string_map();
+    };
+
+    let mut map = HashMap::with_capacity(1);
+    map.insert("content-type".to_string(), value.to_string());
+    Arc::new(map)
+}
+
 /// Extract cookies from request headers
 pub fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
     let mut cookies = HashMap::new();
@@ -187,6 +200,12 @@ pub async fn create_request_data_with_body(
     let (query_params, raw_query_params) =
         extract_query_params_and_raw(&parts.uri, include_raw_query_params, include_query_params_json);
 
+    let body_value = parts
+        .extensions
+        .get::<crate::middleware::PreParsedJson>()
+        .map(|parsed| parsed.0.clone())
+        .unwrap_or(Value::Null);
+
     Ok(RequestData {
         path_params: Arc::new(path_params),
         query_params,
@@ -199,14 +218,14 @@ pub async fn create_request_data_with_body(
         headers: if include_headers {
             Arc::new(extract_headers(&parts.headers))
         } else {
-            empty_string_map()
+            extract_content_type_header(&parts.headers)
         },
         cookies: if include_cookies {
             Arc::new(extract_cookies(&parts.headers))
         } else {
             empty_string_map()
         },
-        body: Value::Null,
+        body: body_value,
         raw_body: if body_bytes.is_empty() { None } else { Some(body_bytes) },
         method: parts.method.as_str().to_string(),
         path: parts.uri.path().to_string(),

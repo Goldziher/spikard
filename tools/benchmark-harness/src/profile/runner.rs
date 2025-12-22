@@ -134,9 +134,6 @@ impl ProfileRunner {
 
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
         let suite_node_profiler = self.config.profiler.as_deref() == Some("node") && framework_info.language == "node";
-        let suite_python_profiler =
-            self.config.profiler.as_deref() == Some("python") && framework_info.language == "python";
-        let suite_ruby_profiler = self.config.profiler.as_deref() == Some("ruby") && framework_info.language == "ruby";
         let suite_wasm_profiler =
             matches!(self.config.profiler.as_deref(), Some("wasm") | Some("perf")) && framework_info.language == "wasm";
 
@@ -157,7 +154,7 @@ impl ProfileRunner {
                 output_path.display().to_string(),
             ));
         }
-        if suite_python_profiler || suite_ruby_profiler {
+        if self.config.profiler.is_some() {
             server_env.push(("SPIKARD_PROFILE_ENABLED".to_string(), "1".to_string()));
         }
         if let Some(ref output_path) = wasm_metrics_output {
