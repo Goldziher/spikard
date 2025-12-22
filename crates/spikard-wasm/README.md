@@ -528,12 +528,32 @@ post("/users", { bodySchema: UserSchema })(async function createUser(req) {
 
 ## Performance
 
+### Benchmark Results
+
+Latest comparative run (2025-12-20, commit `25e4fdf`, Linux x86_64, AMD EPYC 7763 2c/4t, 50 concurrency, 10s, oha). Full artifacts: `snapshots/benchmarks/20397054933`.
+
+| Binding | Avg RPS (all workloads) | Avg latency (ms) |
+| --- | --- | --- |
+| spikard-rust | 55,755 | 1.00 |
+| spikard-node | 24,283 | 2.22 |
+| spikard-php | 20,176 | 2.66 |
+| spikard-python | 11,902 | 4.41 |
+| **spikard-wasm** | **10,658** | **5.70** |
+| spikard-ruby | 8,271 | 6.50 |
+
+WASM bindings deliver solid edge runtime performance—ideal for serverless platforms (Cloudflare Workers, Vercel Edge, Deno Deploy) where startup time and memory efficiency matter more than absolute throughput. Trade-offs vs Node.js bindings:
+- **Advantages:** Portable across all runtimes, smaller bundle size, cold start friendly
+- **Trade-offs:** ~2.3x lower RPS on traditional servers vs native napi-rs bindings
+
+### Runtime Characteristics
+
 WASM bindings provide:
-- **WebAssembly compilation** for near-native performance
+- **WebAssembly compilation** for near-native performance in edge runtimes
 - **Zero-copy data structures** where supported by runtime
 - **Shared memory optimization** for large payloads
 - **Streaming support** for efficient data transfer
 - **Tree-shakable ESM** for minimal bundle sizes
+- **Multi-runtime support:** Cloudflare Workers, Deno Deploy, Vercel Edge, browsers, Node.js
 
 ### Bundle Size Optimization
 

@@ -6,12 +6,8 @@
 [![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
 [![npm downloads](https://img.shields.io/npm/dm/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
 [![Node](https://img.shields.io/node/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
-[![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
-[![Crates.io](https://img.shields.io/crates/v/spikard.svg)](https://crates.io/crates/spikard)
-[![RubyGems](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
-[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 High-performance HTTP framework for Node.js powered by a Rust core (Axum + Tower-HTTP). Type-safe routing, validation, middleware, and testing via **napi-rs** FFI bindings with zero-copy JSON conversion.
 

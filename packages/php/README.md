@@ -4,12 +4,8 @@
 [![Packagist Version](https://img.shields.io/packagist/v/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
 [![Packagist Downloads](https://img.shields.io/packagist/dt/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
 [![PHP Version](https://img.shields.io/badge/php-%3E%3D%208.2-blue.svg)](https://www.php.net/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
-[![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
-[![npm](https://img.shields.io/npm/v/spikard.svg)](https://www.npmjs.com/package/spikard)
-[![Crates.io](https://img.shields.io/crates/v/spikard.svg)](https://crates.io/crates/spikard)
-[![RubyGems](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 High-performance PHP web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with modern PHP 8.2+ patterns backed by Axum and Tower-HTTP via ext-php-rs. Part of the multi-language Spikard ecosystem.
 

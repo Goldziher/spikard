@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **CI environment**: Corrected PYO3_PYTHON environment variable to use venv Python interpreter (.venv/bin/python on Unix, .venv\Scripts\python.exe on Windows) instead of system Python, ensuring consistent dependency resolution during workspace tests and coverage generation
+- **Node.js benchmark startup**: Fixed Node.js profiling framework to use pnpm start command instead of direct tsx CLI invocation; improved tsx CLI resolution to properly locate tsx binary from workspace root, preventing startup failures during CPU profiling
+
 ## [0.5.0] - 2025-12-22
 
 ### Added
