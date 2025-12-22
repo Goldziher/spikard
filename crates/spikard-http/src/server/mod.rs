@@ -7,7 +7,7 @@ pub mod handler;
 pub mod lifecycle_execution;
 pub mod request_extraction;
 
-use crate::handler_trait::Handler;
+use crate::handler_trait::{Handler, HandlerResult, RequestData};
 use crate::{CorsConfig, Router, ServerConfig};
 use axum::Router as AxumRouter;
 use axum::body::Body;
@@ -49,6 +49,20 @@ fn method_expects_body(method: &crate::Method) -> bool {
     matches!(method, crate::Method::Post | crate::Method::Put | crate::Method::Patch)
 }
 
+#[inline]
+async fn call_with_optional_hooks(
+    req: axum::http::Request<Body>,
+    request_data: RequestData,
+    handler: Arc<dyn Handler>,
+    hooks: Option<Arc<crate::LifecycleHooks>>,
+) -> HandlerResult {
+    if hooks.as_ref().is_some_and(|h| !h.is_empty()) {
+        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
+    } else {
+        handler.call(req, request_data).await
+    }
+}
+
 /// Creates a method router for the given HTTP method.
 /// Handles both path parameters and non-path variants.
 fn create_method_router(
@@ -88,7 +102,7 @@ fn create_method_router(
                         )
                         .await?;
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
-                        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
                 ),
@@ -106,7 +120,7 @@ fn create_method_router(
                         )
                         .await?;
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
-                        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
                 ),
@@ -124,7 +138,7 @@ fn create_method_router(
                         )
                         .await?;
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
-                        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                             .await
                     },
                 ),
@@ -151,7 +165,7 @@ fn create_method_router(
                     )
                     .await?;
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
                 crate::Method::Put => axum::routing::put(move |req: axum::extract::Request| async move {
@@ -167,7 +181,7 @@ fn create_method_router(
                     )
                     .await?;
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
                 crate::Method::Patch => axum::routing::patch(move |req: axum::extract::Request| async move {
@@ -183,7 +197,7 @@ fn create_method_router(
                     )
                     .await?;
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
                 crate::Method::Get
@@ -206,7 +220,7 @@ fn create_method_router(
                         path_params.0,
                         without_body_options,
                     );
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 },
             ),
@@ -219,7 +233,7 @@ fn create_method_router(
                         path_params.0,
                         without_body_options,
                     );
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 },
             ),
@@ -232,7 +246,7 @@ fn create_method_router(
                         path_params.0,
                         without_body_options,
                     );
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 },
             ),
@@ -245,7 +259,7 @@ fn create_method_router(
                         path_params.0,
                         without_body_options,
                     );
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 },
             ),
@@ -258,7 +272,7 @@ fn create_method_router(
                         path_params.0,
                         without_body_options,
                     );
-                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 },
             ),
@@ -276,7 +290,7 @@ fn create_method_router(
                     HashMap::new(),
                     without_body_options,
                 );
-                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
+                call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
             crate::Method::Delete => axum::routing::delete(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
@@ -286,7 +300,7 @@ fn create_method_router(
                     HashMap::new(),
                     without_body_options,
                 );
-                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
+                call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
             crate::Method::Head => axum::routing::head(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
@@ -296,7 +310,7 @@ fn create_method_router(
                     HashMap::new(),
                     without_body_options,
                 );
-                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
+                call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
             crate::Method::Trace => axum::routing::trace(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
@@ -306,7 +320,7 @@ fn create_method_router(
                     HashMap::new(),
                     without_body_options,
                 );
-                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
+                call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
             crate::Method::Options => axum::routing::options(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
@@ -316,7 +330,7 @@ fn create_method_router(
                     HashMap::new(),
                     without_body_options,
                 );
-                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone).await
+                call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await
             }),
             crate::Method::Post | crate::Method::Put | crate::Method::Patch => MethodRouter::new(),
         }

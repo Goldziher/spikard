@@ -30,9 +30,11 @@ rescue StandardError
   nil
 end
 
-Signal.trap('TERM') { write_benchmark_metrics; exit(0) }
-Signal.trap('INT') { write_benchmark_metrics; exit(0) }
-at_exit { write_benchmark_metrics }
+if PROFILE_ENABLED
+  Signal.trap('TERM') { write_benchmark_metrics; exit(0) }
+  Signal.trap('INT') { write_benchmark_metrics; exit(0) }
+  at_exit { write_benchmark_metrics }
+end
 
 app = Spikard::App.new
 

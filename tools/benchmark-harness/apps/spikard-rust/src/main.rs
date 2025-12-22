@@ -422,10 +422,12 @@ async fn main() {
     let mut app = App::new().config(config);
 
     app.route(get("/health"), health).unwrap();
-    app.route(get("/__benchmark__/profile/start"), benchmark_profile_start)
-        .unwrap();
-    app.route(get("/__benchmark__/profile/stop"), benchmark_profile_stop)
-        .unwrap();
+    if std::env::var("SPIKARD_PROFILE_ENABLED").ok().as_deref() == Some("1") {
+        app.route(get("/__benchmark__/profile/start"), benchmark_profile_start)
+            .unwrap();
+        app.route(get("/__benchmark__/profile/stop"), benchmark_profile_stop)
+            .unwrap();
+    }
 
     app.route(post("/json/small"), post_json_small).unwrap();
     app.route(post("/json/medium"), post_json_medium).unwrap();

@@ -37,6 +37,8 @@ function getMetricsOutputPath(): string | null {
 	}
 }
 
+const metricsEnabled = getMetricsOutputPath() !== null;
+
 function writeMetricsIfConfigured(): void {
 	const outputPath = getMetricsOutputPath();
 	if (!outputPath) {
@@ -58,15 +60,17 @@ function writeMetricsIfConfigured(): void {
 	}
 }
 
-addEventListener("unload", () => {
-	writeMetricsIfConfigured();
-});
+if (metricsEnabled) {
+	addEventListener("unload", () => {
+		writeMetricsIfConfigured();
+	});
 
-try {
-	Deno.addSignalListener("SIGTERM", () => writeMetricsIfConfigured());
-	Deno.addSignalListener("SIGINT", () => writeMetricsIfConfigured());
-} catch {
-	// Signal listeners may be unsupported on some platforms.
+	try {
+		Deno.addSignalListener("SIGTERM", () => writeMetricsIfConfigured());
+		Deno.addSignalListener("SIGINT", () => writeMetricsIfConfigured());
+	} catch {
+		// Signal listeners may be unsupported on some platforms.
+	}
 }
 
 interface Route {

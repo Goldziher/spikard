@@ -125,27 +125,27 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@get("/__benchmark__/flush-profile")
-def flush_profile() -> dict[str, bool]:
-    _stop_pyinstrument()
-    if _profiling_collector is not None:
-        finalize = getattr(_profiling_collector, "finalize", None)
-        if callable(finalize):
-            finalize()
-        return {"ok": True}
-    return {"ok": False}
+if _profile_enabled:
 
-
-@get("/__benchmark__/profile/start")
-async def start_profile(output: str | None = Query(default=None)) -> dict[str, bool]:
-    if output is None:
+    @get("/__benchmark__/flush-profile")
+    def flush_profile() -> dict[str, bool]:
+        _stop_pyinstrument()
+        if _profiling_collector is not None:
+            finalize = getattr(_profiling_collector, "finalize", None)
+            if callable(finalize):
+                finalize()
+            return {"ok": True}
         return {"ok": False}
-    return {"ok": _start_pyinstrument(output)}
 
+    @get("/__benchmark__/profile/start")
+    async def start_profile(output: str | None = Query(default=None)) -> dict[str, bool]:
+        if output is None:
+            return {"ok": False}
+        return {"ok": _start_pyinstrument(output)}
 
-@get("/__benchmark__/profile/stop")
-async def stop_profile() -> dict[str, bool]:
-    return {"ok": _stop_pyinstrument()}
+    @get("/__benchmark__/profile/stop")
+    async def stop_profile() -> dict[str, bool]:
+        return {"ok": _stop_pyinstrument()}
 
 
 P = ParamSpec("P")
