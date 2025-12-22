@@ -11,7 +11,12 @@ RBENV_VERSION="${RBENV_VERSION:-}"
 RBENV_BIN="${RBENV_BIN:-/opt/homebrew/bin/rbenv}"
 BUNDLER_VERSION="${BUNDLER_VERSION:-2.7.2}"
 
-if [[ -z "$RBENV_VERSION" ]]; then
+USE_RBENV=0
+if command -v "$RBENV_BIN" >/dev/null 2>&1; then
+	USE_RBENV=1
+fi
+
+if [[ "$USE_RBENV" -eq 1 && -z "$RBENV_VERSION" ]]; then
 	echo "Error: RBENV_VERSION environment variable not set"
 	exit 1
 fi
@@ -26,6 +31,10 @@ for app in hanami-api-dto hanami-api-raw roda-dto roda-raw spikard-ruby; do
 		rm -f Gemfile.lock
 	fi
 
-	RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle "_${BUNDLER_VERSION}_" update --all
+	if [[ "$USE_RBENV" -eq 1 ]]; then
+		RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle "_${BUNDLER_VERSION}_" update --all
+	else
+		bundle "_${BUNDLER_VERSION}_" update --all
+	fi
 	cd - >/dev/null
 done
