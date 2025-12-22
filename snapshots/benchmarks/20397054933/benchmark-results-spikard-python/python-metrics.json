@@ -1,0 +1,11 @@
+{
+  "gc_collections": 26,
+  "gc_collections_gen0": 24,
+  "gc_collections_gen1": 2,
+  "gc_collections_gen2": 0,
+  "gc_time_ms": 0.0,
+  "handler_time_ms": null,
+  "serialization_time_ms": null,
+  "ffi_overhead_ms": 0.0,
+  "sample_count": 0
+}

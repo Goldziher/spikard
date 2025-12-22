@@ -527,6 +527,25 @@ Node.js bindings use:
 - Dedicated Tokio runtime (doesn't block Node event loop)
 - Direct type conversion without JSON serialization overhead
 
+### CI Benchmarks (2025-12-20)
+
+Run: `snapshots/benchmarks/20397054933` (commit `25e4fdf`, oha, 50 concurrency, 10s, Linux x86_64).
+
+| Metric | Value |
+| --- | --- |
+| Avg RPS (all workloads) | 24,283 |
+| Avg latency (ms) | 2.22 |
+
+Category breakdown:
+
+| Category | Avg RPS | Avg latency (ms) |
+| --- | --- | --- |
+| path-params | 30,903 | 1.63 |
+| query-params | 23,100 | 2.29 |
+| json-bodies | 21,979 | 2.30 |
+| forms | 19,350 | 2.83 |
+| multipart | 18,584 | 2.82 |
+
 ## Examples
 
 The [examples directory](../../examples/) contains comprehensive demonstrations:

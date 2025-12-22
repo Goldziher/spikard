@@ -843,6 +843,25 @@ All middleware (compression, rate limiting, JWT, CORS) runs in Rust. PHP only ha
 
 ### Benchmarks
 
+CI Benchmarks (2025-12-20):
+
+Run: `snapshots/benchmarks/20397054933` (commit `25e4fdf`, oha, 50 concurrency, 10s, Linux x86_64).
+
+| Metric | Value |
+| --- | --- |
+| Avg RPS (all workloads) | 20,176 |
+| Avg latency (ms) | 2.66 |
+
+Category breakdown:
+
+| Category | Avg RPS | Avg latency (ms) |
+| --- | --- | --- |
+| path-params | 24,733 | 2.03 |
+| query-params | 22,174 | 2.28 |
+| json-bodies | 18,815 | 2.66 |
+| forms | 18,152 | 2.76 |
+| multipart | 12,232 | 4.24 |
+
 Typical request overhead:
 - Pure Rust core: < 1ms (routing + middleware)
 - PHP handler invocation: 0.2-0.5ms (via ext-php-rs FFI)

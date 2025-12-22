@@ -547,6 +547,25 @@ Comprehensive comparison across 18 real-world workloads on Apple M4 Pro (100 con
 
 **Spikard is 2.8x faster than FastAPI** with statistically significant improvements (p < 0.05).
 
+### CI Benchmarks (2025-12-20)
+
+Run: `snapshots/benchmarks/20397054933` (commit `25e4fdf`, oha, 50 concurrency, 10s, Linux x86_64).
+
+| Metric | Value |
+| --- | --- |
+| Avg RPS (all workloads) | 11,902 |
+| Avg latency (ms) | 4.41 |
+
+Category breakdown:
+
+| Category | Avg RPS | Avg latency (ms) |
+| --- | --- | --- |
+| forms | 15,173 | 3.29 |
+| path-params | 12,993 | 3.86 |
+| json-bodies | 11,975 | 4.18 |
+| query-params | 11,300 | 4.46 |
+| multipart | 8,041 | 6.49 |
+
 ### Why Spikard is Faster
 
 **Rust-Powered Core:**

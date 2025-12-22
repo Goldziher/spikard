@@ -5,11 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0] - 2025-12-21
+## [0.5.0] - 2025-12-22
 
 ### Added
 - **Benchmark consolidation**: consolidated benchmark profile output with snapshot artifacts for repeatable analysis
 - **Profiling coverage**: flamegraph + pyinstrument speedscope generation across all Spikard bindings
+- **Benchmark reporting**: comparative CI benchmark summaries in README files with binding-specific breakdowns
 - **Runtime test clients**: native WebSocket/SSE test clients for PHP and Ruby; WASM runtime WebSocket support with test coverage
 - **Benchmark suites**: expanded FastAPI/Robyn coverage in benchmark CI and fixture-driven baselines
 
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Benchmark harness**: repaired TS/Node/WASM baseline startup, multipart boundaries, Express/DTO command, and correct PID targeting for perf
 - **FFI safety**: removed unwraps/panics across bindings and tightened error boundary handling
 - **E2E stability**: corrected scoped package references, WASM header parsing, and Ruby gem dependency setup
+- **PHP e2e generator**: added missing __invoke on generated handlers and normalized newline expectations in string fixtures
 
 ## [0.4.0] - 2025-12-10
 

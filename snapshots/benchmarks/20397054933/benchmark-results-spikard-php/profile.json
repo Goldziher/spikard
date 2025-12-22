@@ -1,0 +1,925 @@
+{
+  "metadata": {
+    "timestamp": "2025-12-20T16:54:37.888594669+00:00",
+    "git_commit": "25e4fdf13ab4a8fa7728bb0c565fb5e42d39244e",
+    "git_branch": "HEAD",
+    "git_dirty": false,
+    "host": {
+      "os": "linux",
+      "arch": "x86_64",
+      "cpu_model": "AMD EPYC 7763 64-Core Processor",
+      "cpu_cores": 2,
+      "cpu_threads": 4,
+      "memory_gb": 15.620681762695312,
+      "hostname": "runnervmh13bl"
+    }
+  },
+  "framework": {
+    "name": "spikard-php",
+    "version": "0.1.0",
+    "language": "php",
+    "runtime": "unknown",
+    "app_dir": "tools/benchmark-harness/apps/spikard-php",
+    "variant": null
+  },
+  "configuration": {
+    "duration_secs": 10,
+    "concurrency": 50,
+    "warmup_secs": 2,
+    "load_tool": "oha"
+  },
+  "suites": [
+    {
+      "name": "all",
+      "description": "All workloads",
+      "workloads": [
+        {
+          "name": "json-small",
+          "description": "Small JSON payload (~86 bytes)",
+          "category": "json-bodies",
+          "payload_size_bytes": 86,
+          "endpoint": {
+            "method": "POST",
+            "path": "/json/small"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 18849.613384475742,
+              "bytes_per_sec": 1319122.981222417,
+              "total_requests": 188519,
+              "successful_requests": 188519,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.649686789770263,
+              "median_ms": 2.299077,
+              "p90_ms": 5.1926380000000005,
+              "p95_ms": 5.3559030000000005,
+              "p99_ms": 6.283533,
+              "p999_ms": 6.9482729999999995,
+              "min_ms": 0.5251560000000001,
+              "max_ms": 8.779927,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.72356131952256,
+                "peak_percent": 57.894737243652344,
+                "p95_percent": 57.142860412597656
+              },
+              "memory": {
+                "avg_mb": 65.51953125,
+                "peak_mb": 65.58203125,
+                "p95_mb": 65.58203125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/json-small.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "json-medium",
+          "description": "Medium JSON payload (~1.5 KB)",
+          "category": "json-bodies",
+          "payload_size_bytes": 1536,
+          "endpoint": {
+            "method": "POST",
+            "path": "/json/medium"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 19019.810270926304,
+              "bytes_per_sec": 1882466.312830109,
+              "total_requests": 190235,
+              "successful_requests": 190235,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.6258026116045126,
+              "median_ms": 2.2633419999999997,
+              "p90_ms": 5.088605,
+              "p95_ms": 5.307332,
+              "p99_ms": 6.366668,
+              "p999_ms": 6.635968,
+              "min_ms": 0.356462,
+              "max_ms": 10.039776999999999,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.354515239046734,
+                "peak_percent": 58.536582946777344,
+                "p95_percent": 55.69620132446289
+              },
+              "memory": {
+                "avg_mb": 65.58203125,
+                "peak_mb": 65.58203125,
+                "p95_mb": 65.58203125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/json-medium.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "json-large",
+          "description": "Large JSON payload (~15 KB)",
+          "category": "json-bodies",
+          "payload_size_bytes": 15360,
+          "endpoint": {
+            "method": "POST",
+            "path": "/json/large"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 18331.074559219363,
+              "bytes_per_sec": 2785563.4874254433,
+              "total_requests": 183348,
+              "successful_requests": 183348,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.7244178539809383,
+              "median_ms": 2.38119,
+              "p90_ms": 5.3647290000000005,
+              "p95_ms": 5.541337,
+              "p99_ms": 6.296408,
+              "p999_ms": 7.144242,
+              "min_ms": 1.0976270000000001,
+              "max_ms": 8.993094,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.705876817560345,
+                "peak_percent": 57.894737243652344,
+                "p95_percent": 53.333335876464844
+              },
+              "memory": {
+                "avg_mb": 65.58203125,
+                "peak_mb": 65.58203125,
+                "p95_mb": 65.58203125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/json-large.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "json-very-large",
+          "description": "Very large JSON payload (~150 KB)",
+          "category": "json-bodies",
+          "payload_size_bytes": 153600,
+          "endpoint": {
+            "method": "POST",
+            "path": "/json/very-large"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 19058.230384360544,
+              "bytes_per_sec": 3448634.864297596,
+              "total_requests": 190617,
+              "successful_requests": 190617,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.620620756647272,
+              "median_ms": 2.329804,
+              "p90_ms": 5.134479,
+              "p95_ms": 5.444605,
+              "p99_ms": 6.143932,
+              "p999_ms": 6.803876000000001,
+              "min_ms": 0.670203,
+              "max_ms": 6.929992,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.686562771794435,
+                "peak_percent": 57.894737243652344,
+                "p95_percent": 56.41025924682617
+              },
+              "memory": {
+                "avg_mb": 65.58203125,
+                "peak_mb": 65.58203125,
+                "p95_mb": 65.58203125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/json-very-large.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "path-simple",
+          "description": "Single path parameter",
+          "category": "path-params",
+          "payload_size_bytes": null,
+          "endpoint": {
+            "method": "GET",
+            "path": "/path/simple/test123"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 24899.176509335444,
+              "bytes_per_sec": 398308.4383898883,
+              "total_requests": 249037,
+              "successful_requests": 249037,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.005429108804463,
+              "median_ms": 1.665742,
+              "p90_ms": 2.514148,
+              "p95_ms": 2.640051,
+              "p99_ms": 2.9619590000000002,
+              "p999_ms": 3.067536,
+              "min_ms": 0.444214,
+              "max_ms": 6.131092000000001,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.227521504832765,
+                "peak_percent": 57.142860412597656,
+                "p95_percent": 55.69620132446289
+              },
+              "memory": {
+                "avg_mb": 65.58203125,
+                "peak_mb": 65.58203125,
+                "p95_mb": 65.58203125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/path-simple.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "path-multiple",
+          "description": "Multiple path parameters",
+          "category": "path-params",
+          "payload_size_bytes": null,
+          "endpoint": {
+            "method": "GET",
+            "path": "/path/multiple/user456/post789"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 24388.15963924825,
+              "bytes_per_sec": 48766.52110262976,
+              "total_requests": 243927,
+              "successful_requests": 243927,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.047350466126513,
+              "median_ms": 1.676634,
+              "p90_ms": 2.6395619999999997,
+              "p95_ms": 2.7361120000000003,
+              "p99_ms": 2.925184,
+              "p999_ms": 3.028734,
+              "min_ms": 0.402528,
+              "max_ms": 6.566922,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.86184505391561,
+                "peak_percent": 57.894737243652344,
+                "p95_percent": 56.41025924682617
+              },
+              "memory": {
+                "avg_mb": 65.58203125,
+                "peak_mb": 65.58203125,
+                "p95_mb": 65.58203125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/path-multiple.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "path-deep",
+          "description": "Deep path hierarchy (5 levels)",
+          "category": "path-params",
+          "payload_size_bytes": null,
+          "endpoint": {
+            "method": "GET",
+            "path": "/path/deep/acme/engineering/backend/api/item123"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 22129.895103191386,
+              "bytes_per_sec": 353998.33395793656,
+              "total_requests": 221333,
+              "successful_requests": 221333,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.256522802533407,
+              "median_ms": 2.4873790000000002,
+              "p90_ms": 2.716343,
+              "p95_ms": 2.807964,
+              "p99_ms": 3.17752,
+              "p999_ms": 3.441871,
+              "min_ms": 1.1639510000000002,
+              "max_ms": 6.127237,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 46.86614688078216,
+                "peak_percent": 62.33766174316406,
+                "p95_percent": 57.142860412597656
+              },
+              "memory": {
+                "avg_mb": 65.58203125,
+                "peak_mb": 65.58203125,
+                "p95_mb": 65.58203125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/path-deep.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "path-int",
+          "description": "Integer path parameter",
+          "category": "path-params",
+          "payload_size_bytes": null,
+          "endpoint": {
+            "method": "GET",
+            "path": "/path/int/42"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 24548.884551149134,
+              "bytes_per_sec": 269982.7435365169,
+              "total_requests": 245548,
+              "successful_requests": 245548,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.0340644307431925,
+              "median_ms": 1.683887,
+              "p90_ms": 2.583818,
+              "p95_ms": 2.820488,
+              "p99_ms": 2.9819780000000002,
+              "p999_ms": 3.330254,
+              "min_ms": 0.434758,
+              "max_ms": 6.055845,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 44.92923238623857,
+                "peak_percent": 57.142860412597656,
+                "p95_percent": 55.69620132446289
+              },
+              "memory": {
+                "avg_mb": 65.58203125,
+                "peak_mb": 65.58203125,
+                "p95_mb": 65.58203125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/path-int.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "path-uuid",
+          "description": "UUID path parameter",
+          "category": "path-params",
+          "payload_size_bytes": null,
+          "endpoint": {
+            "method": "GET",
+            "path": "/path/uuid/550e8400-e29b-41d4-a716-446655440000"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 26289.02148622207,
+              "bytes_per_sec": 52568.24452985955,
+              "total_requests": 262932,
+              "successful_requests": 262932,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 1.8993363626099988,
+              "median_ms": 1.569886,
+              "p90_ms": 2.515412,
+              "p95_ms": 2.7911759999999997,
+              "p99_ms": 2.9025309999999998,
+              "p999_ms": 3.183322,
+              "min_ms": 0.45668899999999996,
+              "max_ms": 6.738939,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 46.260784870964,
+                "peak_percent": 57.142860412597656,
+                "p95_percent": 57.142860412597656
+              },
+              "memory": {
+                "avg_mb": 65.58203125,
+                "peak_mb": 65.58203125,
+                "p95_mb": 65.58203125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/path-uuid.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "path-date",
+          "description": "Date path parameter",
+          "category": "path-params",
+          "payload_size_bytes": null,
+          "endpoint": {
+            "method": "GET",
+            "path": "/path/date/2024-01-15"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 26140.69934484399,
+              "bytes_per_sec": 52271.4001051556,
+              "total_requests": 261444,
+              "successful_requests": 261444,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 1.910110818806056,
+              "median_ms": 1.595572,
+              "p90_ms": 2.4547060000000003,
+              "p95_ms": 2.603328,
+              "p99_ms": 2.860872,
+              "p999_ms": 3.094067,
+              "min_ms": 0.327989,
+              "max_ms": 6.071891,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.85901574130155,
+                "peak_percent": 58.666664123535156,
+                "p95_percent": 57.142860412597656
+              },
+              "memory": {
+                "avg_mb": 65.58203125,
+                "peak_mb": 65.58203125,
+                "p95_mb": 65.58203125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/path-date.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "query-few",
+          "description": "Few query parameters (3)",
+          "category": "query-params",
+          "payload_size_bytes": null,
+          "endpoint": {
+            "method": "GET",
+            "path": "/query/few?q=search&page=1&limit=20"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 25009.905926258612,
+              "bytes_per_sec": 50009.81428858764,
+              "total_requests": 250160,
+              "successful_requests": 250160,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 1.9966464022670283,
+              "median_ms": 1.650856,
+              "p90_ms": 2.556526,
+              "p95_ms": 2.635795,
+              "p99_ms": 2.926006,
+              "p999_ms": 3.011674,
+              "min_ms": 0.361952,
+              "max_ms": 6.299778,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 44.70956786350179,
+                "peak_percent": 57.894737243652344,
+                "p95_percent": 55.69620132446289
+              },
+              "memory": {
+                "avg_mb": 65.70600605010986,
+                "peak_mb": 65.70703125,
+                "p95_mb": 65.70703125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/query-few.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "query-medium",
+          "description": "Medium query parameters (8)",
+          "category": "query-params",
+          "payload_size_bytes": null,
+          "endpoint": {
+            "method": "GET",
+            "path": "/query/medium?category=electronics&tags=phone,smart&min_price=100&max_price=1000&sort=price&order=asc&page=1&limit=20"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 22325.5809623396,
+              "bytes_per_sec": 44641.16439613724,
+              "total_requests": 223311,
+              "successful_requests": 223311,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.236856746579124,
+              "median_ms": 2.489542,
+              "p90_ms": 2.699642,
+              "p95_ms": 2.836726,
+              "p99_ms": 3.174243,
+              "p999_ms": 3.4098800000000002,
+              "min_ms": 0.5207970000000001,
+              "max_ms": 6.237299,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.81586633586004,
+                "peak_percent": 57.894737243652344,
+                "p95_percent": 56.41025924682617
+              },
+              "memory": {
+                "avg_mb": 65.70703125,
+                "peak_mb": 65.70703125,
+                "p95_mb": 65.70703125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/query-medium.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "query-many",
+          "description": "Many query parameters (15+)",
+          "category": "query-params",
+          "payload_size_bytes": null,
+          "endpoint": {
+            "method": "GET",
+            "path": "/query/many?q=search&page=1&limit=20&sort=date&order=desc&filter=active&category=tech&subcategory=mobile&brand=test&min_price=0&max_price=999&rating=4&verified=true&in_stock=true&shipping=fast&color=blue"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 19185.487740867306,
+              "bytes_per_sec": 38360.97757259634,
+              "total_requests": 191895,
+              "successful_requests": 191895,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.6033226467617148,
+              "median_ms": 2.928467,
+              "p90_ms": 3.1204940000000003,
+              "p95_ms": 3.4206179999999997,
+              "p99_ms": 3.909556,
+              "p999_ms": 3.996681,
+              "min_ms": 0.686235,
+              "max_ms": 6.377848,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.987909218952915,
+                "peak_percent": 57.894737243652344,
+                "p95_percent": 57.142860412597656
+              },
+              "memory": {
+                "avg_mb": 65.70703125,
+                "peak_mb": 65.70703125,
+                "p95_mb": 65.70703125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/query-many.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "urlencoded-simple",
+          "description": "Simple URL-encoded form (4 fields)",
+          "category": "forms",
+          "payload_size_bytes": 60,
+          "endpoint": {
+            "method": "POST",
+            "path": "/urlencoded/simple"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 19233.72543145071,
+              "bytes_per_sec": 1384468.3091834078,
+              "total_requests": 192379,
+              "successful_requests": 192379,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.5966248311799056,
+              "median_ms": 2.228888,
+              "p90_ms": 5.0361340000000006,
+              "p95_ms": 5.1825209999999995,
+              "p99_ms": 5.541422,
+              "p999_ms": 6.332853,
+              "min_ms": 1.176074,
+              "max_ms": 6.640948,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 46.13804415025229,
+                "peak_percent": 57.894737243652344,
+                "p95_percent": 56.41025924682617
+              },
+              "memory": {
+                "avg_mb": 65.70703125,
+                "peak_mb": 65.70703125,
+                "p95_mb": 65.70703125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/urlencoded-simple.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "urlencoded-complex",
+          "description": "Complex URL-encoded form (18 fields)",
+          "category": "forms",
+          "payload_size_bytes": 300,
+          "endpoint": {
+            "method": "POST",
+            "path": "/urlencoded/complex"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 17070.35010730273,
+              "bytes_per_sec": 6604329.541374842,
+              "total_requests": 170735,
+              "successful_requests": 170735,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 2.9258877200121884,
+              "median_ms": 2.5762530000000003,
+              "p90_ms": 5.552620999999999,
+              "p95_ms": 6.023191,
+              "p99_ms": 6.725345,
+              "p999_ms": 7.504502,
+              "min_ms": 1.473927,
+              "max_ms": 7.679837,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.65379847731197,
+                "peak_percent": 57.894737243652344,
+                "p95_percent": 55.69620132446289
+              },
+              "memory": {
+                "avg_mb": 65.70703125,
+                "peak_mb": 65.70703125,
+                "p95_mb": 65.70703125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/urlencoded-complex.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "multipart-small",
+          "description": "Small multipart file upload (~1 KB)",
+          "category": "multipart",
+          "payload_size_bytes": 1024,
+          "endpoint": {
+            "method": "POST",
+            "path": "/multipart/small"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 15238.32588255222,
+              "bytes_per_sec": 594099.7410748894,
+              "total_requests": 152408,
+              "successful_requests": 152408,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 3.2783059923600466,
+              "median_ms": 2.845352,
+              "p90_ms": 6.449733,
+              "p95_ms": 6.591678999999999,
+              "p99_ms": 7.752021,
+              "p999_ms": 8.062728,
+              "min_ms": 1.608136,
+              "max_ms": 8.389163,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.94594651760656,
+                "peak_percent": 57.894737243652344,
+                "p95_percent": 56.41025924682617
+              },
+              "memory": {
+                "avg_mb": 65.70703125,
+                "peak_mb": 65.70703125,
+                "p95_mb": 65.70703125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/multipart-small.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "multipart-medium",
+          "description": "Medium multipart file upload (~10 KB)",
+          "category": "multipart",
+          "payload_size_bytes": 10240,
+          "endpoint": {
+            "method": "POST",
+            "path": "/multipart/medium"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 12001.261440172671,
+              "bytes_per_sec": 479850.4849096392,
+              "total_requests": 120029,
+              "successful_requests": 120029,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 4.163153459447042,
+              "median_ms": 2.937704,
+              "p90_ms": 6.662298,
+              "p95_ms": 8.247522,
+              "p99_ms": 10.518647000000001,
+              "p999_ms": 11.360699,
+              "min_ms": 2.759904,
+              "max_ms": 11.856069999999999,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 44.668588395375515,
+                "peak_percent": 57.142860412597656,
+                "p95_percent": 55.69620132446289
+              },
+              "memory": {
+                "avg_mb": 66.20293235778809,
+                "peak_mb": 66.20703125,
+                "p95_mb": 66.20703125
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/multipart-medium.perf.svg"
+            }
+          }
+        },
+        {
+          "name": "multipart-large",
+          "description": "Large multipart file upload (~100 KB)",
+          "category": "multipart",
+          "payload_size_bytes": 102400,
+          "endpoint": {
+            "method": "POST",
+            "path": "/multipart/large"
+          },
+          "results": {
+            "throughput": {
+              "requests_per_sec": 9456.49763753183,
+              "bytes_per_sec": 387511.42920056486,
+              "total_requests": 94577,
+              "successful_requests": 94577,
+              "failed_requests": 0,
+              "success_rate": 1.0
+            },
+            "latency": {
+              "mean_ms": 5.284600779703099,
+              "median_ms": 4.469466,
+              "p90_ms": 10.123833000000001,
+              "p95_ms": 10.383486000000001,
+              "p99_ms": 11.710089,
+              "p999_ms": 12.483193,
+              "min_ms": 3.211441,
+              "max_ms": 12.644565,
+              "stddev_ms": 0.0
+            },
+            "resources": {
+              "cpu": {
+                "avg_percent": 45.266315721303656,
+                "peak_percent": 57.142860412597656,
+                "p95_percent": 55.0
+              },
+              "memory": {
+                "avg_mb": 72.41793632507324,
+                "peak_mb": 73.83203125,
+                "p95_mb": 72.87890625
+              }
+            },
+            "profiling": {
+              "language": "php",
+              "flamegraph_path": "/home/runner/work/spikard/spikard/results/spikard-php/profiles/spikard-php/multipart-large.perf.svg"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_workloads": 18,
+    "total_requests": 3632434,
+    "overall_success_rate": 1.0,
+    "avg_requests_per_sec": 20176.427797858214,
+    "total_duration_secs": 180,
+    "category_breakdown": [
+      {
+        "category": "path-params",
+        "workload_count": 6,
+        "avg_requests_per_sec": 24732.63943899838,
+        "avg_latency_ms": 2.0254689982706053
+      },
+      {
+        "category": "forms",
+        "workload_count": 2,
+        "avg_requests_per_sec": 18152.037769376722,
+        "avg_latency_ms": 2.761256275596047
+      },
+      {
+        "category": "multipart",
+        "workload_count": 3,
+        "avg_requests_per_sec": 12232.028320085572,
+        "avg_latency_ms": 4.242020077170062
+      },
+      {
+        "category": "json-bodies",
+        "workload_count": 4,
+        "avg_requests_per_sec": 18814.682149745488,
+        "avg_latency_ms": 2.6551320030007464
+      },
+      {
+        "category": "query-params",
+        "workload_count": 3,
+        "avg_requests_per_sec": 22173.65820982184,
+        "avg_latency_ms": 2.278941931869289
+      }
+    ]
+  },
+  "comparison": null
+}

@@ -617,6 +617,25 @@ Ruby bindings use:
 - Idiomatic Ruby blocks and procs
 - GC-safe handler storage
 
+### CI Benchmarks (2025-12-20)
+
+Run: `snapshots/benchmarks/20397054933` (commit `25e4fdf`, oha, 50 concurrency, 10s, Linux x86_64).
+
+| Metric | Value |
+| --- | --- |
+| Avg RPS (all workloads) | 8,271 |
+| Avg latency (ms) | 6.50 |
+
+Category breakdown:
+
+| Category | Avg RPS | Avg latency (ms) |
+| --- | --- | --- |
+| path-params | 9,591 | 5.22 |
+| json-bodies | 8,648 | 5.78 |
+| forms | 7,989 | 6.27 |
+| query-params | 7,984 | 6.33 |
+| multipart | 5,604 | 10.36 |
+
 ## Examples
 
 The [examples directory](../../examples/) contains comprehensive demonstrations:
