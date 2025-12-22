@@ -64,7 +64,6 @@ jobs:
       release_crates: ${{ steps.meta.outputs.release_crates }}
       release_wasm: ${{ steps.meta.outputs.release_wasm }}
       release_homebrew: ${{ steps.meta.outputs.release_homebrew }}
-      force_republish: ${{ steps.meta.outputs.force_republish }}
     steps:
       - uses: actions/checkout@v6
         with:
