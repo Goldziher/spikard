@@ -1261,9 +1261,11 @@ final class GeneratedTest extends TestCase
 line3', 'unicode_escapes' => '\\u0048\\u0065\\u006c\\u006c\\u006f', 'whitespace' => '   ']]);
 
         $this->assertSame(200, $response->statusCode);
-        $this->assertEquals(['backslashes' => 'C:\\\\Users\\\\Path', 'empty_string' => '', 'quotes' => 'He said "hello" and \'goodbye\'', 'special_chars' => '!@#$%^&*()_+-=[]{}|;\':",./<>?', 'tabs_newlines' => 'line1
-	line2
-line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
+        $expected = ['backslashes' => 'C:\\\\Users\\\\Path', 'empty_string' => '', 'quotes' => 'He said "hello" and \'goodbye\'', 'special_chars' => '!@#$%^&*()_+-=[]{}|;\':",./<>?', 'tabs_newlines' => "line1\n\tline2\r\nline3", 'unicode_escapes' => 'Hello', 'whitespace' => '   '];
+        $expected['tabs_newlines'] = \str_replace("\r\n", "\n", $expected['tabs_newlines']);
+        $actual = $response->body;
+        $actual['tabs_newlines'] = \str_replace("\r\n", "\n", $actual['tabs_newlines']);
+        $this->assertEquals($expected, $actual);
     }
 
     public function test_edge_cases_unicode_and_emoji_handling(): void

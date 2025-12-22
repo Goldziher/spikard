@@ -112,6 +112,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'The provided API key is not valid', 'status' => 401, 'title' => 'Invalid API key', 'type' => 'https://spikard.dev/errors/unauthorized'], 401, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"X-API-Key":{"required":true,"type":"string"}}}', true));
         return $app;
@@ -127,6 +130,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Expected \'X-API-Key\' header or \'api_key\' query parameter with valid API key', 'status' => 401, 'title' => 'Missing API key', 'type' => 'https://spikard.dev/errors/unauthorized'], 401, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{}', true));
@@ -144,6 +150,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['data' => 'sensitive information', 'message' => 'Access granted'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"X-API-Key":{"description":"API key for authentication","required":true,"type":"string"}}}', true));
         return $app;
@@ -159,6 +168,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['data' => 'sensitive information', 'message' => 'Access granted'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data?api_key=sk_test_123456', $handler, null, null, null);
@@ -176,6 +188,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['data' => 'sensitive information', 'message' => 'Access granted'], 200, ['X-API-Key-Deprecated' => 'true']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"X-API-Key":{"description":"API key for authentication","required":true,"type":"string"}}}', true));
         return $app;
@@ -191,6 +206,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['data' => 'sensitive information', 'message' => 'Access granted'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"X-API-Token":{"description":"API token for authentication","required":true,"type":"string"}}}', true));
@@ -208,6 +226,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Authorization header must use Bearer scheme: \'Bearer <token>\'', 'status' => 401, 'title' => 'Invalid Authorization header format', 'type' => 'https://spikard.dev/errors/unauthorized'], 401, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/protected', $handler, null, null, json_decode('{"headers":{"Authorization":{"description":"JWT token in Bearer format","required":true,"type":"string"}}}', true));
         return $app;
@@ -223,6 +244,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Token has expired', 'status' => 401, 'title' => 'JWT validation failed', 'type' => 'https://spikard.dev/errors/unauthorized'], 401, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/protected/user', $handler, null, null, json_decode('{"headers":{"Authorization":{"required":true,"type":"string"}}}', true));
@@ -240,6 +264,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Token audience is invalid', 'status' => 401, 'title' => 'JWT validation failed', 'type' => 'https://spikard.dev/errors/unauthorized'], 401, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/protected/user', $handler, null, null, json_decode('{"headers":{"Authorization":{"required":true,"type":"string"}}}', true));
         return $app;
@@ -255,6 +282,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Token signature is invalid', 'status' => 401, 'title' => 'JWT validation failed', 'type' => 'https://spikard.dev/errors/unauthorized'], 401, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/protected/user', $handler, null, null, json_decode('{"headers":{"Authorization":{"required":true,"type":"string"}}}', true));
@@ -272,6 +302,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Expected \'Authorization: Bearer <token>\'', 'status' => 401, 'title' => 'Missing or invalid Authorization header', 'type' => 'https://spikard.dev/errors/unauthorized'], 401, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/protected/user', $handler, null, null, json_decode('{}', true));
         return $app;
@@ -287,6 +320,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Access granted', 'user_id' => 'user123'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/protected/user', $handler, null, null, json_decode('{"headers":{"Authorization":{"description":"JWT token in Bearer format","required":true,"type":"string"}}}', true));
@@ -304,6 +340,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Token issuer is invalid, expected \'https://auth.example.com\'', 'status' => 401, 'title' => 'JWT validation failed', 'type' => 'https://spikard.dev/errors/unauthorized'], 401, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/protected', $handler, null, null, json_decode('{"headers":{"Authorization":{"description":"JWT token in Bearer format","required":true,"type":"string"}}}', true));
         return $app;
@@ -319,6 +358,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Malformed JWT token: expected 3 parts separated by dots, found 2', 'status' => 401, 'title' => 'Malformed JWT token', 'type' => 'https://spikard.dev/errors/unauthorized'], 401, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/protected', $handler, null, null, json_decode('{"headers":{"Authorization":{"description":"JWT token in Bearer format","required":true,"type":"string"}}}', true));
@@ -336,6 +378,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Required claims \'role\' and \'permissions\' missing from JWT', 'status' => 403, 'title' => 'Forbidden', 'type' => 'https://spikard.dev/errors/forbidden'], 403, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/admin', $handler, null, null, json_decode('{"headers":{"Authorization":{"description":"JWT token in Bearer format","required":true,"type":"string"}}}', true));
         return $app;
@@ -352,6 +397,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'JWT not valid yet, not before claim is in the future', 'status' => 401, 'title' => 'JWT validation failed', 'type' => 'https://spikard.dev/errors/unauthorized'], 401, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/protected', $handler, null, null, json_decode('{"headers":{"Authorization":{"description":"JWT token in Bearer format","required":true,"type":"string"}}}', true));
         return $app;
@@ -367,6 +415,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Access granted', 'user_id' => 'user123'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/protected', $handler, null, null, json_decode('{"headers":{"Authorization":{"description":"JWT token in Bearer format","required":true,"type":"string"}}}', true));
@@ -385,6 +436,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['auth_method' => 'jwt', 'message' => 'Access granted', 'user_id' => 'user123'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"Authorization":{"description":"JWT token in Bearer format","required":false,"type":"string"},"X-API-Key":{"description":"API key for authentication","required":false,"type":"string"}}}', true));
         return $app;
@@ -398,6 +452,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(null, 202, ['content-type' => 'application/json']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/background/events', $handler, json_decode('{"additionalProperties":false,"properties":{"event":{"type":"string"}},"required":["event"],"type":"object"}', true), null, null);
         return $app;
@@ -410,6 +467,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 202, ['content-type' => 'application/json']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/background/events', $handler, json_decode('{"additionalProperties":false,"properties":{"event":{"type":"string"}},"required":["event"],"type":"object"}', true), null, null);
@@ -427,6 +487,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(null, 413, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/body-limit/over', $handler, json_decode('{"additionalProperties":false,"properties":{"note":{"type":"string"}},"required":["note"],"type":"object"}', true), null, null);
         return $app;
@@ -442,6 +505,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['accepted' => true, 'note' => 'small'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/body-limit/under', $handler, json_decode('{"additionalProperties":false,"properties":{"note":{"type":"string"}},"required":["note"],"type":"object"}', true), null, null);
@@ -459,6 +525,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Compressed payload', 'payload' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'], 200, ['content-encoding' => 'gzip', 'vary' => 'Accept-Encoding']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/compression/gzip', $handler, null, null, null);
         return $app;
@@ -475,6 +544,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Small payload', 'payload' => 'tiny'], 200, ['content-encoding' => '<<absent>>']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/compression/skip', $handler, null, null, null);
         return $app;
@@ -487,6 +559,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Unsupported charset \'utf-16\' for JSON. Only UTF-8 is supported.', 'status' => 415, 'title' => 'Unsupported Charset', 'type' => 'https://spikard.dev/errors/unsupported-charset'], 415, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"properties":{"value":{"type":"string"}},"type":"object"}', true), null, null);
@@ -501,6 +576,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['name' => 'test'], 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"properties":{"name":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
         return $app;
@@ -513,6 +591,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['error' => 'multipart/form-data requires \'boundary\' parameter'], 400, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, null, null, json_decode('{"files":{"document":{"required":true}}}', true));
@@ -527,6 +608,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Unsupported media type', 'status' => 415, 'title' => 'Unsupported Media Type', 'type' => 'https://spikard.dev/errors/unsupported-media-type'], 415, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"}', true), null, null);
         return $app;
@@ -539,6 +623,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['data' => 'value'], 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/api/v1/resource', $handler, json_decode('{"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"}', true), null, null);
@@ -553,6 +640,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['value' => 'test'], 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"properties":{"value":{"type":"string"}},"type":"object"}', true), null, null);
         return $app;
@@ -565,6 +655,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['name' => 'test'], 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"properties":{"name":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
@@ -579,6 +672,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['error' => 'Content-Length header does not match actual body size'], 400, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"properties":{"value":{"type":"string"}},"type":"object"}', true), null, json_decode('{"headers":{"Content-Length":{"optional":true,"type":"string"}}}', true));
         return $app;
@@ -592,6 +688,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Unsupported media type'], 415, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"type":"string"}', true), null, null);
         return $app;
@@ -604,6 +703,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response('binary_data_placeholder', 200, ['content-disposition' => 'attachment; filename=file.bin', 'content-type' => 'application/octet-stream']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/download/file.bin', $handler, null, null, null);
@@ -620,6 +722,9 @@ final class AppFactory
 1,Item A,10.0
 2,Item B,20.0', 200, ['content-type' => 'text/csv; charset=utf-8', 'content-disposition' => 'attachment; filename=data.csv']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/export/data.csv', $handler, null, null, null);
         return $app;
@@ -632,6 +737,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['id' => 1, 'name' => 'Item'], 200, ['content-type' => 'application/json']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/accept-test/1', $handler, null, null, json_decode('{"path":{"id":{"type":"string"}}}', true));
@@ -646,6 +754,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response('<html><body><h1>Hello</h1></body></html>', 200, ['content-type' => 'text/html; charset=utf-8']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/html', $handler, null, null, null);
         return $app;
@@ -658,6 +769,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response('jpeg_binary_data', 200, ['content-type' => 'image/jpeg']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/images/photo.jpg', $handler, null, null, null);
@@ -672,6 +786,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['name' => 'Item', 'price' => 42.0], 200, ['content-type' => 'application/json']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/json', $handler, null, null, null);
         return $app;
@@ -684,6 +801,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['emoji' => '☕', 'name' => 'Café'], 200, ['content-type' => 'application/json; charset=utf-8']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/unicode', $handler, null, null, null);
@@ -698,6 +818,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response('pdf_binary_data', 200, ['content-disposition' => 'attachment; filename=document.pdf', 'content-type' => 'application/pdf']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/download/document.pdf', $handler, null, null, null);
         return $app;
@@ -710,6 +833,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response('png_binary_data', 200, ['content-type' => 'image/png']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/images/logo.png', $handler, null, null, null);
@@ -724,6 +850,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response('Hello, World!', 200, ['content-type' => 'text/plain; charset=utf-8']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/text', $handler, null, null, null);
         return $app;
@@ -736,6 +865,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response('<?xml version="1.0"?><item><name>Item</name><price>42.0</price></item>', 200, ['content-type' => 'application/xml']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/xml', $handler, null, null, null);
@@ -750,6 +882,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(null, 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/secure', $handler, null, null, json_decode('{"cookies":{"session_id":{"required":true,"samesite":"Strict","type":"string"}}}', true));
         return $app;
@@ -762,6 +897,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/data', $handler, null, null, json_decode('{"cookies":{"tracking":{"required":true,"samesite":"Lax","type":"string"}}}', true));
@@ -776,6 +914,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(null, 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/secure', $handler, null, null, json_decode('{"cookies":{"auth_token":{"required":true,"secure":true,"type":"string"}}}', true));
         return $app;
@@ -788,6 +929,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/secure', $handler, null, null, json_decode('{"cookies":{"session":{"httponly":true,"required":true,"type":"string"}}}', true));
@@ -802,6 +946,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => null, 'loc' => ['cookie', 'key'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me/auth', $handler, null, null, json_decode('{"cookies":{"key":{"required":true,"type":"string"}}}', true));
         return $app;
@@ -814,6 +961,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['username' => 'secret'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me', $handler, null, null, json_decode('{"cookies":{"key":{"optional":true,"type":"string"}}}', true));
@@ -828,6 +978,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[A-Z0-9]{8}$'], 'input' => 'invalid-format', 'loc' => ['cookie', 'tracking_id'], 'msg' => 'String should match pattern \'^[A-Z0-9]{8}$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/cookies/pattern', $handler, null, null, json_decode('{"cookies":{"tracking_id":{"pattern":"^[A-Z0-9]{8}$","type":"string"}}}', true));
         return $app;
@@ -840,6 +993,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['tracking_id' => 'ABC12345'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/cookies/pattern', $handler, null, null, json_decode('{"cookies":{"tracking_id":{"optional":true,"type":"string"}}}', true));
@@ -854,6 +1010,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['max_length' => 20], 'input' => 'this_cookie_value_is_way_too_long', 'loc' => ['cookie', 'session_id'], 'msg' => 'String should have at most 20 characters', 'type' => 'string_too_long']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/cookies/validated', $handler, null, null, json_decode('{"cookies":{"session_id":{"maxLength":20,"type":"string"}}}', true));
         return $app;
@@ -866,6 +1025,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['token' => 'abc'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/cookies/min-length', $handler, null, null, json_decode('{"cookies":{"token":{"optional":true,"type":"string"}}}', true));
@@ -880,6 +1042,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => '', 'loc' => ['cookie', 'tracking_id'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"cookies":{"tracking_id":{"minLength":3,"type":"string"}}}', true));
         return $app;
@@ -892,6 +1057,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['fatebook_tracker' => 'tracker456', 'googall_tracker' => 'ga789', 'session_id' => 'session123'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"cookies":{"fatebook_tracker":{"optional":true,"type":"string"},"googall_tracker":{"optional":true,"type":"string"},"session_id":{"optional":true,"type":"string"}}}', true));
@@ -906,6 +1074,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['msg' => 'Create an account first'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me', $handler, null, null, json_decode('{"cookies":{"key":{"optional":true,"type":"string"}}}', true));
         return $app;
@@ -918,6 +1089,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['ads_id' => null], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"cookies":{"ads_id":{"optional":true,"type":"string"}}}', true));
@@ -932,6 +1106,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['ads_id' => 'abc123'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"cookies":{"ads_id":{"optional":true,"type":"string"}}}', true));
         return $app;
@@ -944,6 +1121,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => '', 'loc' => ['cookie', 'session_id'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/cookies', $handler, null, null, json_decode('{"cookies":{"fatebook_tracker":{"optional":true,"type":"string"},"session_id":{"type":"string"}}}', true));
@@ -958,6 +1138,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Cookie deleted'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/cookies/delete', $handler, null, null, json_decode('{"cookies":{"session":{"optional":true,"type":"string"}}}', true));
         return $app;
@@ -970,6 +1153,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Multiple cookies set'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/cookies/multiple', $handler, json_decode('{"additionalProperties":false,"properties":{"session":{"type":"string"},"user":{"type":"string"}},"required":["user","session"],"type":"object"}', true), null, null);
@@ -984,6 +1170,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Session cookie set'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/cookies/session', $handler, json_decode('{"additionalProperties":false,"properties":{"value":{"type":"string"}},"required":["value"],"type":"object"}', true), null, null);
         return $app;
@@ -996,6 +1185,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Cookie set with SameSite=Lax'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/cookies/samesite-lax', $handler, json_decode('{"additionalProperties":false,"properties":{"value":{"type":"string"}},"required":["value"],"type":"object"}', true), null, null);
@@ -1010,6 +1202,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Cookie set with SameSite=None'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/cookies/samesite-none', $handler, json_decode('{"additionalProperties":false,"properties":{"value":{"type":"string"}},"required":["value"],"type":"object"}', true), null, null);
         return $app;
@@ -1022,6 +1217,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Cookie set with SameSite=Strict'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/cookies/samesite-strict', $handler, json_decode('{"additionalProperties":false,"properties":{"value":{"type":"string"}},"required":["value"],"type":"object"}', true), null, null);
@@ -1036,6 +1234,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Cookie set'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/cookie/set', $handler, null, null, null);
         return $app;
@@ -1048,6 +1249,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Cookie set with domain'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/cookies/set-with-domain', $handler, json_decode('{"additionalProperties":false,"properties":{"value":{"type":"string"}},"required":["value"],"type":"object"}', true), null, null);
@@ -1062,6 +1266,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Cookie set with path'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/cookies/set-with-path', $handler, json_decode('{"additionalProperties":false,"properties":{"value":{"type":"string"}},"required":["value"],"type":"object"}', true), null, null);
         return $app;
@@ -1074,6 +1281,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Come to the dark side, we have cookies'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/cookie/', $handler, null, null, null);
@@ -1088,6 +1298,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(null, 403, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/data', $handler, null, null, json_decode('{"headers":{"Access-Control-Request-Headers":{"optional":true,"type":"string"},"Access-Control-Request-Method":{"optional":true,"type":"string"},"Origin":{"optional":true,"type":"string"}}}', true));
         return $app;
@@ -1100,6 +1313,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 403, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/data', $handler, null, null, json_decode('{"headers":{"Access-Control-Request-Headers":{"optional":true,"type":"string"},"Access-Control-Request-Method":{"optional":true,"type":"string"},"Origin":{"optional":true,"type":"string"}}}', true));
@@ -1114,6 +1330,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(null, 204, ['Access-Control-Allow-Methods' => 'POST', 'Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Headers' => 'Content-Type']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/data', $handler, null, null, json_decode('{"headers":{"Access-Control-Request-Headers":{"optional":true,"type":"string"},"Access-Control-Request-Method":{"optional":true,"type":"string"},"Origin":{"optional":true,"type":"string"}}}', true));
         return $app;
@@ -1126,6 +1345,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 200, ['Access-Control-Allow-Origin' => 'https://example.com', 'X-Total-Count' => '42', 'Access-Control-Expose-Headers' => 'X-Total-Count, X-Request-Id', 'X-Request-Id' => 'abc123']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"Origin":{"optional":true,"type":"string"}}}', true));
@@ -1140,6 +1362,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['error' => 'Origin \'null\' is not allowed'], 403, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"Origin":{"optional":true,"type":"string"}}}', true));
         return $app;
@@ -1152,6 +1377,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 204, ['Access-Control-Allow-Private-Network' => 'true', 'Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://public.example.com', 'Access-Control-Allow-Methods' => 'GET, POST']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/local-resource', $handler, null, null, null);
@@ -1166,6 +1394,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['data' => 'cacheable resource'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Cache-Control' => 'public, max-age=3600']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/cached-resource', $handler, null, null, null);
         return $app;
@@ -1178,6 +1409,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['data' => 'resource data'], 200, ['Access-Control-Allow-Origin' => 'https://admin.example.com', 'Vary' => 'Origin']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, null);
@@ -1192,6 +1426,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(null, 200, ['Vary' => 'Origin']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, null);
         return $app;
@@ -1204,6 +1441,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 204, ['Vary' => 'Origin', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Max-Age' => '3600']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/resource/456', $handler, null, null, null);
@@ -1218,6 +1458,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(null, 204, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Max-Age' => '3600']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/resource/123', $handler, null, null, null);
         return $app;
@@ -1230,6 +1473,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 200, ['Access-Control-Max-Age' => '600', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/items/', $handler, null, null, null);
@@ -1244,6 +1490,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['data' => 'resource data'], 200, ['Access-Control-Allow-Origin' => 'https://subdomain.example.com', 'Vary' => 'Origin']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, null);
         return $app;
@@ -1256,6 +1505,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'CORS request from origin \'https://malicious-site.com\' not allowed'], 403, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"headers":{"Origin":{"optional":true,"type":"string"}}}', true));
@@ -1270,6 +1522,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Success'], 200, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/api/form', $handler, null, null, null);
         return $app;
@@ -1282,6 +1537,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['data' => 'public'], 200, ['Access-Control-Allow-Origin' => '*']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/public/data', $handler, null, null, null);
@@ -1296,6 +1554,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['username' => 'john'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Credentials' => 'true']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/user/profile', $handler, null, null, null);
         return $app;
@@ -1308,6 +1569,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['items' => []], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://example.com']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, null);
@@ -1322,6 +1586,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['max_size' => 10, 'pool_status' => 'connected'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/db-status', $handler, null, null, null);
         return $app;
@@ -1334,6 +1601,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Circular dependency detected', 'errors' => [['cycle' => ['service_a', 'service_b', 'service_a'], 'msg' => 'Circular dependency detected in dependency graph', 'type' => 'circular_dependency']], 'status' => 500, 'title' => 'Dependency Resolution Failed', 'type' => 'https://spikard.dev/errors/dependency-error'], 500, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/circular', $handler, null, null, null);
@@ -1348,6 +1618,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['authenticated' => true, 'logged' => true], 200, ['X-Auth-Mode' => 'strict', 'X-Log-Level' => 'debug']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/hook-di-test', $handler, null, null, null);
         return $app;
@@ -1360,6 +1633,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['timestamp' => '<<present>>'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/timestamp', $handler, null, null, null);
@@ -1374,6 +1650,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Required dependency not found', 'errors' => [['dependency_key' => 'non_existent_service', 'msg' => 'Dependency \'non_existent_service\' is not registered', 'type' => 'missing_dependency']], 'status' => 500, 'title' => 'Dependency Resolution Failed', 'type' => 'https://spikard.dev/errors/dependency-error'], 500, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/missing-dep', $handler, null, null, null);
         return $app;
@@ -1386,6 +1665,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['app_name' => 'MyApp', 'context_id' => '<<uuid>>', 'pool_id' => '<<uuid>>'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/mixed-caching', $handler, null, null, null);
@@ -1400,6 +1682,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['session_active' => true], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/multi-cleanup-test', $handler, null, null, null);
         return $app;
@@ -1412,6 +1697,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['auth_enabled' => true, 'has_cache' => true, 'has_db' => true], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/auth-status', $handler, null, null, null);
@@ -1426,6 +1714,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['db_name' => 'PostgreSQL', 'log_level' => 'info'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/node-destructure', $handler, null, null, null);
         return $app;
@@ -1438,6 +1729,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['first_id' => '<<uuid>>', 'second_id' => '<<same_as:first_id>>'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/request-id', $handler, null, null, null);
@@ -1452,6 +1746,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['cache_status' => 'ready', 'db_status' => 'connected'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/python-name-inject', $handler, null, null, null);
         return $app;
@@ -1464,6 +1761,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['cache_type' => 'Redis', 'pool_type' => 'PostgreSQL'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/python-type-inject', $handler, null, null, null);
@@ -1478,6 +1778,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['session_id' => '<<uuid>>', 'status' => 'completed'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/cleanup-test', $handler, null, null, null);
         return $app;
@@ -1490,6 +1793,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['mode' => 'test', 'strict' => false], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/override-test', $handler, null, null, null);
@@ -1504,6 +1810,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['adapter' => 'postgresql', 'user_id' => 42], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/ruby-kwargs', $handler, null, null, null);
         return $app;
@@ -1516,6 +1825,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['count' => 1, 'counter_id' => '<<uuid>>'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/app-counter', $handler, null, null, null);
@@ -1530,6 +1842,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Dependency type mismatch', 'errors' => [['actual_type' => 'string', 'dependency_key' => 'config', 'expected_type' => 'object', 'msg' => 'Dependency \'config\' type mismatch: expected object, got string', 'type' => 'type_mismatch']], 'status' => 500, 'title' => 'Dependency Resolution Failed', 'type' => 'https://spikard.dev/errors/dependency-error'], 500, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/type-mismatch', $handler, null, null, null);
         return $app;
@@ -1542,6 +1857,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['app_name' => 'SpikardApp', 'max_connections' => 100, 'version' => '1.0.0'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/config', $handler, null, null, null);
@@ -1556,6 +1874,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['term' => 'café'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/search', $handler, null, null, json_decode('{"query":{"term":{"type":"string"}}}', true));
         return $app;
@@ -1568,6 +1889,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['term' => 'hi there'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/search?term=hi%20there', $handler, null, null, json_decode('{"query":{"term":{"type":"string"}}}', true));
@@ -1582,6 +1906,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['filter' => ''], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items?filter=', $handler, null, null, json_decode('{"query":{"filter":{"type":"string"}}}', true));
         return $app;
@@ -1594,6 +1921,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['id' => 9007199254740991], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"id":{"type":"integer"}}}', true));
@@ -1608,6 +1938,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['value' => 3.141592653589793], 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/calculate', $handler, json_decode('{"properties":{"value":{"type":"number"}},"required":["value"],"type":"object"}', true), null, null);
         return $app;
@@ -1620,6 +1953,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['offset' => 0], 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"properties":{"offset":{"type":"number"}},"required":["offset"],"type":"object"}', true), null, null);
@@ -1634,6 +1970,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_length' => 10001, 'max_length' => 10000], 'loc' => ['body', 'content'], 'msg' => 'String length must not exceed 10000', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/text', $handler, json_decode('{"properties":{"content":{"maxLength":10000,"type":"string"}},"required":["content"],"type":"object"}', true), null, null);
         return $app;
@@ -1646,6 +1985,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['name' => 'café'], 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"name":{"minLength":1,"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
@@ -1660,6 +2002,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['text' => 'Hello 👋 World 🌍'], 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/messages', $handler, json_decode('{"properties":{"text":{"maxLength":100,"minLength":1,"type":"string"}},"required":["text"],"type":"object"}', true), null, null);
         return $app;
@@ -1672,6 +2017,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['value' => 'file\\u0000.txt'], 'loc' => ['body', 'filename'], 'msg' => 'String contains null byte character', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/files', $handler, json_decode('{"properties":{"filename":{"pattern":"^[^\\\\x00]+$","type":"string"}},"required":["filename"],"type":"object"}', true), null, null);
@@ -1686,6 +2034,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['value' => 123000], 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/calculate', $handler, json_decode('{"properties":{"value":{"minimum":0,"type":"number"}},"required":["value"],"type":"object"}', true), null, null);
         return $app;
@@ -1698,6 +2049,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['value' => 123], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/data', $handler, null, null, json_decode('{"query":{"value":{"annotation":"int","type":"integer"}}}', true));
@@ -1712,6 +2066,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['error' => 'Request body exceeds maximum nesting depth of 32'], 400, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"type":"object"}', true), null, null);
         return $app;
@@ -1724,6 +2081,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['items' => ['first', 'third', 'sixth']], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items', $handler, json_decode('{"properties":{"items":{"items":{"type":"string"},"type":"array"}},"required":["items"],"type":"object"}', true), null, null);
@@ -1738,6 +2098,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['max_depth' => 10, 'message' => 'Processed deeply nested structure', 'value_found' => 'deep'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/nested/', $handler, json_decode('{"additionalProperties":false,"properties":{"level1":{"additionalProperties":false,"properties":{"level2":{"additionalProperties":false,"properties":{"level3":{"additionalProperties":false,"properties":{"level4":{"additionalProperties":false,"properties":{"level5":{"additionalProperties":false,"properties":{"level6":{"additionalProperties":false,"properties":{"level7":{"additionalProperties":false,"properties":{"level8":{"additionalProperties":false,"properties":{"level9":{"additionalProperties":false,"properties":{"level10":{"additionalProperties":false,"properties":{"depth":{"type":"integer"},"value":{"type":"string"}},"required":["value","depth"],"type":"object"}},"required":["level10"],"type":"object"}},"required":["level9"],"type":"object"}},"required":["level8"],"type":"object"}},"required":["level7"],"type":"object"}},"required":["level6"],"type":"object"}},"required":["level5"],"type":"object"}},"required":["level4"],"type":"object"}},"required":["level3"],"type":"object"}},"required":["level2"],"type":"object"}},"required":["level1"],"type":"object"}', true), null, null);
         return $app;
@@ -1750,6 +2113,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['empty_array_length' => 0, 'empty_object_keys' => 0, 'empty_string_length' => 0, 'explicit_null_is_null' => true, 'false_is_false' => true, 'zero_is_falsy' => true], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/nulls/', $handler, json_decode('{"additionalProperties":false,"properties":{"empty_array":{"items":{},"type":"array"},"empty_object":{"additionalProperties":false,"properties":{},"type":"object"},"empty_string":{"type":"string"},"explicit_null":{"type":"null"},"false_boolean":{"type":"boolean"},"zero_number":{"type":"integer"}},"required":["explicit_null","empty_string","empty_array","empty_object","zero_number","false_boolean"],"type":"object"}', true), null, null);
@@ -1764,6 +2130,9 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response(['precise_value' => 3.141592653589793, 'sum' => 0.30000000000000004, 'very_large' => 1.7976931348623157e308, 'very_small' => 1e-10], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/calculations/', $handler, json_decode('{"additionalProperties":false,"properties":{"expected_sum":{"type":"number"},"precise_value":{"type":"number"},"value1":{"type":"number"},"value2":{"type":"number"},"very_large":{"type":"number"},"very_small":{"type":"number"}},"required":["value1","value2","expected_sum","precise_value","very_small","very_large"],"type":"object"}', true), null, null);
         return $app;
@@ -1776,6 +2145,9 @@ final class AppFactory
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['large_int' => 9223372036854775807, 'max_safe_int' => 9007199254740991, 'negative_large' => -9223372036854775808], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/numbers/', $handler, json_decode('{"additionalProperties":false,"properties":{"large_int":{"type":"integer"},"max_safe_int":{"type":"integer"},"negative_large":{"type":"integer"}},"required":["max_safe_int","large_int","negative_large"],"type":"object"}', true), null, null);
@@ -1792,6 +2164,9 @@ final class AppFactory
 	line2
 line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/strings/', $handler, json_decode('{"additionalProperties":false,"properties":{"backslashes":{"type":"string"},"empty_string":{"type":"string"},"quotes":{"type":"string"},"special_chars":{"type":"string"},"tabs_newlines":{"type":"string"},"unicode_escapes":{"type":"string"},"whitespace":{"type":"string"}},"required":["empty_string","whitespace","tabs_newlines","quotes","backslashes","unicode_escapes","special_chars"],"type":"object"}', true), null, null);
         return $app;
@@ -1804,6 +2179,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['description' => 'Best café in München 🇩🇪', 'emoji_reactions' => '👍❤️😂🎉', 'id' => 1, 'name' => 'Coffee Shop ☕', 'tags' => ['食べ物', '音楽', '💰']], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"description":{"type":"string"},"emoji_reactions":{"type":"string"},"name":{"type":"string"},"tags":{"items":{"type":"string"},"type":"array"}},"required":["name","description","tags","emoji_reactions"],"type":"object"}', true), null, null);
@@ -1818,6 +2196,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/protected', $handler, null, null, json_decode('{"headers":{"Authorization":{"pattern":"^Bearer [A-Za-z0-9-._~+/]+=*$","required":true,"type":"string"}}}', true));
         return $app;
@@ -1830,6 +2211,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^Bearer [A-Za-z0-9-._~+/]+=*$', 'value' => 'Bearer invalid token with spaces'], 'loc' => ['headers', 'authorization'], 'msg' => 'Invalid Bearer token format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/protected', $handler, null, null, json_decode('{"headers":{"Authorization":{"pattern":"^Bearer [A-Za-z0-9-._~+/]+=*$","required":true,"type":"string"}}}', true));
@@ -1844,6 +2228,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^Bearer [A-Za-z0-9-._~+/]+=*$', 'value' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'], 'loc' => ['headers', 'authorization'], 'msg' => 'Invalid Bearer token format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/protected', $handler, null, null, json_decode('{"headers":{"Authorization":{"pattern":"^Bearer [A-Za-z0-9-._~+/]+=*$","required":true,"type":"string"}}}', true));
         return $app;
@@ -1856,6 +2243,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"X-API-Key":{"pattern":"^[a-f0-9]{32}$","required":true,"type":"string"}}}', true));
@@ -1870,6 +2260,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[a-f0-9]{32}$', 'value' => 'invalid-key'], 'loc' => ['headers', 'x-api-key'], 'msg' => 'Invalid API key format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"X-API-Key":{"pattern":"^[a-f0-9]{32}$","required":true,"type":"string"}}}', true));
         return $app;
@@ -1882,6 +2275,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['accept' => 'application/json'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/accept', $handler, null, null, json_decode('{"headers":{"Accept":{"annotation":"str","type":"string"}}}', true));
@@ -1896,6 +2292,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['accept_encoding' => 'gzip, deflate, br'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/accept-encoding', $handler, null, null, json_decode('{"headers":{"Accept-Encoding":{"annotation":"str","type":"string"}}}', true));
         return $app;
@@ -1908,6 +2307,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['accept_language' => 'en-US,en;q=0.9'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/accept-language', $handler, null, null, json_decode('{"headers":{"Accept-Language":{"annotation":"str","type":"string"}}}', true));
@@ -1922,6 +2324,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => null, 'loc' => ['headers', 'authorization'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me', $handler, null, null, json_decode('{"headers":{"Authorization":{"annotation":"str","required":true,"type":"string"}}}', true));
         return $app;
@@ -1934,6 +2339,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['credentials' => 'foobar', 'scheme' => 'Digest'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me', $handler, null, null, json_decode('{"headers":{"Authorization":{"annotation":"str","type":"string"}}}', true));
@@ -1948,6 +2356,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'Other invalidauthorization', 'loc' => ['headers', 'authorization'], 'msg' => 'String should match pattern \'^Digest .+\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me', $handler, null, null, json_decode('{"headers":{"Authorization":{"annotation":"str","pattern":"^Digest .+","required":true,"type":"string"}}}', true));
         return $app;
@@ -1960,6 +2371,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['password' => 'password', 'username' => 'username'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/basic-auth', $handler, null, null, json_decode('{"headers":{"Authorization":{"annotation":"str","type":"string"}}}', true));
@@ -1974,6 +2388,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => null, 'loc' => ['headers', 'authorization'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/bearer-auth', $handler, null, null, json_decode('{"headers":{"Authorization":{"annotation":"str","pattern":"^Bearer .+","required":true,"type":"string"}}}', true));
         return $app;
@@ -1986,6 +2403,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['token' => 'valid_token_123'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/bearer-auth', $handler, null, null, json_decode('{"headers":{"Authorization":{"annotation":"str","type":"string"}}}', true));
@@ -2000,6 +2420,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['content_type' => 'application/json'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/content-type', $handler, null, null, json_decode('{"headers":{"Content-Type":{"annotation":"str","type":"string"}}}', true));
         return $app;
@@ -2012,6 +2435,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['content_type_lower' => 'application/json', 'content_type_mixed' => 'application/json', 'content_type_upper' => 'application/json'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/echo', $handler, json_decode('{"additionalProperties":false,"properties":{"test":{"type":"string"}},"required":["test"],"type":"object"}', true), null, null);
@@ -2026,6 +2452,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[0-9]{3,}$'], 'input' => 'invalid-format', 'loc' => ['headers', 'x-request-id'], 'msg' => 'String should match pattern \'^[0-9]{3,}$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/pattern', $handler, null, null, json_decode('{"headers":{"X-Request-Id":{"annotation":"str","pattern":"^[0-9]{3,}$","type":"string"}}}', true));
         return $app;
@@ -2038,6 +2467,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['x_request_id' => '12345'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/pattern', $handler, null, null, json_decode('{"headers":{"X-Request-Id":{"annotation":"str","pattern":"^[0-9]{3,}$","type":"string"}}}', true));
@@ -2052,6 +2484,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['max_length' => 20], 'input' => 'this_is_way_too_long_for_validation', 'loc' => ['headers', 'x-session-id'], 'msg' => 'String should have at most 20 characters', 'type' => 'string_too_long']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/max-length', $handler, null, null, json_decode('{"headers":{"X-Session-Id":{"annotation":"str","maxLength":20,"type":"string"}}}', true));
         return $app;
@@ -2064,6 +2499,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['min_length' => 3], 'input' => 'ab', 'loc' => ['headers', 'x-token'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/validated', $handler, null, null, json_decode('{"headers":{"X-Token":{"annotation":"str","minLength":3,"type":"string"}}}', true));
@@ -2078,6 +2516,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['x_token' => 'secret123'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/underscore', $handler, null, null, json_decode('{"headers":{"X-Token":{"annotation":"str","type":"string"}}}', true));
         return $app;
@@ -2090,6 +2531,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['host' => 'example.com:8080'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/host', $handler, null, null, json_decode('{"headers":{"Host":{"annotation":"str","type":"string"}}}', true));
@@ -2104,6 +2548,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['x_client_version' => '1.2.3', 'x_request_id' => 'req-12345', 'x_trace_id' => 'trace-abc'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/multiple', $handler, null, null, json_decode('{"headers":{"X-Client-Version":{"annotation":"str","type":"string"},"X-Request-Id":{"annotation":"str","type":"string"},"X-Trace-Id":{"annotation":"str","type":"string"}}}', true));
         return $app;
@@ -2116,6 +2563,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['X-Token values' => ['foo', 'bar']], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"headers":{"x-token":{"annotation":"str","type":"string"}}}', true));
@@ -2130,6 +2580,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['strange_header' => null], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"headers":{"strange-header":{"annotation":"str","default":null,"optional":true,"type":"string"}}}', true));
         return $app;
@@ -2142,6 +2595,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['origin' => 'https://example.com'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/origin', $handler, null, null, json_decode('{"headers":{"Origin":{"annotation":"str","type":"string"}}}', true));
@@ -2156,6 +2612,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['referer' => 'https://example.com/page'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/headers/referer', $handler, null, null, json_decode('{"headers":{"Referer":{"annotation":"str","type":"string"}}}', true));
         return $app;
@@ -2168,6 +2627,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['User-Agent' => 'Mozilla/5.0 Custom Browser'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"headers":{"User-Agent":{"annotation":"str","type":"string"}}}', true));
@@ -2182,6 +2644,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['User-Agent' => 'testclient'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"headers":{"User-Agent":{"annotation":"str","default":"testclient","optional":true,"type":"string"}}}', true));
         return $app;
@@ -2194,6 +2659,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['msg' => 'Hello World'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me', $handler, null, null, json_decode('{"headers":{"key":{"annotation":"str","optional":true,"type":"string"}}}', true));
@@ -2208,6 +2676,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['msg' => 'Hello secret'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me', $handler, null, null, json_decode('{"headers":{"key":{"annotation":"str","optional":true,"type":"string"}}}', true));
         return $app;
@@ -2220,6 +2691,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => null, 'loc' => ['headers', 'x-api-key'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me', $handler, null, null, json_decode('{"headers":{"X-API-Key":{"annotation":"str","required":true,"type":"string"}}}', true));
@@ -2234,6 +2708,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['username' => 'secret'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me', $handler, null, null, json_decode('{"headers":{"key":{"annotation":"str","required":true,"type":"string"}}}', true));
         return $app;
@@ -2246,6 +2723,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response([], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('DELETE', '/items/1', $handler, null, null, json_decode('{"path":{"id":{"type":"string"}}}', true));
@@ -2260,6 +2740,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response([], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('DELETE', '/items/999', $handler, null, null, json_decode('{"path":{"id":{"type":"string"}}}', true));
         return $app;
@@ -2272,6 +2755,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['id' => 1, 'message' => 'Item deleted successfully', 'name' => 'Deleted Item'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('DELETE', '/items/1', $handler, null, null, json_decode('{"path":{"id":{"type":"string"}}}', true));
@@ -2286,6 +2772,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 200, ['Content-Length' => '85', 'Content-Type' => 'application/json']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('HEAD', '/items/1', $handler, null, null, json_decode('{"path":{"id":{"type":"string"}}}', true));
         return $app;
@@ -2298,6 +2787,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 200, ['Access-Control-Max-Age' => '86400', 'Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Origin' => 'https://example.com']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/items/', $handler, null, null, null);
@@ -2312,6 +2804,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['id' => 1, 'in_stock' => true, 'name' => 'Existing Item', 'price' => 79.99], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('PATCH', '/items/1', $handler, json_decode('{"properties":{"price":{"type":"number"}},"required":["price"],"type":"object"}', true), null, json_decode('{"path":{"id":{"type":"string"}}}', true));
         return $app;
@@ -2324,6 +2819,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['id' => 1, 'in_stock' => false, 'name' => 'Updated Name', 'price' => 89.99], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('PATCH', '/items/1', $handler, json_decode('{"properties":{"in_stock":{"type":"boolean"},"name":{"type":"string"},"price":{"type":"number"}},"required":["in_stock","name","price"],"type":"object"}', true), null, json_decode('{"path":{"id":{"type":"string"}}}', true));
@@ -2338,6 +2836,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['description' => 'Completely replaced', 'id' => 1, 'in_stock' => true, 'name' => 'Updated Item', 'price' => 99.99], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('PUT', '/items/1', $handler, json_decode('{"properties":{"description":{"type":"string"},"id":{"type":"integer"},"in_stock":{"type":"boolean"},"name":{"type":"string"},"price":{"type":"number"}},"required":["description","id","in_stock","name","price"],"type":"object"}', true), null, json_decode('{"path":{"id":{"type":"string"}}}', true));
         return $app;
@@ -2350,6 +2851,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['id' => 999, 'name' => 'New Item', 'price' => 49.99], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('PUT', '/items/999', $handler, json_decode('{"properties":{"id":{"type":"integer"},"name":{"type":"string"},"price":{"type":"number"}},"required":["id","name","price"],"type":"object"}', true), null, json_decode('{"path":{"id":{"type":"string"}}}', true));
@@ -2364,6 +2868,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['id' => 1, 'name' => 'Fixed Name', 'price' => 50.0], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('PUT', '/items/1', $handler, json_decode('{"properties":{"id":{"type":"integer"},"name":{"type":"string"},"price":{"type":"number"}},"required":["id","name","price"],"type":"object"}', true), null, json_decode('{"path":{"id":{"type":"string"}}}', true));
         return $app;
@@ -2376,6 +2883,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => '1', 'loc' => ['body', 'price'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('PUT', '/items/1', $handler, json_decode('{"properties":{"id":{"type":"integer"},"name":{"type":"string"},"price":{"type":"string"}},"required":["price"],"type":"object"}', true), null, json_decode('{"path":{"id":{"type":"string"}}}', true));
@@ -2390,6 +2900,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '2 validation errors in request', 'errors' => [['input' => 'X', 'loc' => ['body', 'name'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short'], ['input' => -10, 'loc' => ['body', 'price'], 'msg' => 'Input should be greater than 0', 'type' => 'greater_than']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('PUT', '/items/1', $handler, json_decode('{"$schema":"https://json-schema.org/draft/2020-12/schema","properties":{"id":{"type":"integer"},"name":{"minLength":3,"type":"string"},"price":{"exclusiveMinimum":0,"type":"number"}},"required":["id","name","price"],"type":"object"}', true), null, json_decode('{"path":{"id":{"type":"string"}}}', true));
         return $app;
@@ -2402,6 +2915,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"profile":{"properties":{"email":{"format":"email","type":"string"},"name":{"minLength":1,"type":"string"}},"required":["name","email"],"type":"object"}},"required":["profile"],"type":"object"}', true), null, null);
@@ -2416,6 +2932,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['required' => true], 'loc' => ['body', 'profile', 'email'], 'msg' => 'Field required', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"profile":{"properties":{"email":{"format":"email","type":"string"},"name":{"minLength":1,"type":"string"}},"required":["name","email"],"type":"object"}},"required":["profile"],"type":"object"}', true), null, null);
         return $app;
@@ -2428,6 +2947,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"description":{"type":["string","null"]},"name":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
@@ -2442,6 +2964,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/products', $handler, json_decode('{"definitions":{"Product":{"properties":{"name":{"type":"string"},"price":{"minimum":0,"type":"number"}},"required":["name","price"],"type":"object"}},"properties":{"product":{"$ref":"#/definitions/Product"}},"required":["product"],"type":"object"}', true), null, null);
         return $app;
@@ -2454,6 +2979,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items', $handler, json_decode('{"allOf":[{"properties":{"name":{"type":"string"}},"required":["name"],"type":"object"},{"properties":{"price":{"minimum":0,"type":"number"}},"required":["price"],"type":"object"}]}', true), null, null);
@@ -2468,6 +2996,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['additional_properties' => false, 'unexpected_field' => 'extra_field'], 'loc' => ['body', 'extra_field'], 'msg' => 'Additional properties are not allowed', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"additionalProperties":false,"properties":{"email":{"type":"string"},"name":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
         return $app;
@@ -2480,6 +3011,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/payment', $handler, json_decode('{"oneOf":[{"properties":{"credit_card":{"pattern":"^[0-9]{16}$","type":"string"}},"required":["credit_card"],"type":"object"},{"properties":{"paypal_email":{"format":"email","type":"string"}},"required":["paypal_email"],"type":"object"}]}', true), null, null);
@@ -2494,6 +3028,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['matched_schemas' => 2], 'loc' => ['body'], 'msg' => 'Must match exactly one schema (oneOf), but matched 2', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/payment', $handler, json_decode('{"oneOf":[{"properties":{"credit_card":{"pattern":"^[0-9]{16}$","type":"string"}},"required":["credit_card"],"type":"object"},{"properties":{"paypal_email":{"format":"email","type":"string"}},"required":["paypal_email"],"type":"object"}]}', true), null, null);
         return $app;
@@ -2506,6 +3043,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['matched_schemas' => 0], 'loc' => ['body'], 'msg' => 'Must match exactly one schema (oneOf), but matched 0', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/payment', $handler, json_decode('{"oneOf":[{"properties":{"credit_card":{"pattern":"^[0-9]{16}$","type":"string"}},"required":["credit_card"],"type":"object"},{"properties":{"paypal_email":{"format":"email","type":"string"}},"required":["paypal_email"],"type":"object"}]}', true), null, null);
@@ -2520,6 +3060,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/contact', $handler, json_decode('{"anyOf":[{"required":["email"]},{"required":["phone"]}],"properties":{"name":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
         return $app;
@@ -2532,6 +3075,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/contact', $handler, json_decode('{"anyOf":[{"required":["email"]},{"required":["phone"]}],"properties":{"email":{"format":"email","type":"string"},"name":{"type":"string"},"phone":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
@@ -2546,6 +3092,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['matched_schemas' => 0], 'loc' => ['body'], 'msg' => 'Must match at least one schema (anyOf), but matched 0', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/contact', $handler, json_decode('{"anyOf":[{"required":["email"]},{"required":["phone"]}],"properties":{"email":{"format":"email","type":"string"},"name":{"type":"string"},"phone":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
         return $app;
@@ -2558,6 +3107,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"username":{"not":{"enum":["admin","root","system"]},"type":"string"}},"required":["username"],"type":"object"}', true), null, null);
@@ -2572,6 +3124,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['prohibited_value' => 'admin'], 'loc' => ['body', 'username'], 'msg' => 'Must not match the schema', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"username":{"not":{"enum":["admin","root","system"]},"type":"string"}},"required":["username"],"type":"object"}', true), null, null);
         return $app;
@@ -2584,6 +3139,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/api/v1/data', $handler, json_decode('{"properties":{"data":{"type":"string"},"version":{"const":"1.0","type":"string"}},"required":["version","data"],"type":"object"}', true), null, null);
@@ -2598,6 +3156,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['const' => '1.0', 'value' => '2.0'], 'loc' => ['body', 'version'], 'msg' => 'Value must be exactly \'1.0\'', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/api/v1/data', $handler, json_decode('{"properties":{"data":{"type":"string"},"version":{"const":"1.0","type":"string"}},"required":["version","data"],"type":"object"}', true), null, null);
         return $app;
@@ -2610,6 +3171,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/config', $handler, json_decode('{"minProperties":2,"type":"object"}', true), null, null);
@@ -2624,6 +3188,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_properties' => 1, 'min_properties' => 2], 'loc' => ['body'], 'msg' => 'Object must have at least 2 properties', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/config', $handler, json_decode('{"minProperties":2,"type":"object"}', true), null, null);
         return $app;
@@ -2636,6 +3203,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_properties' => 4, 'max_properties' => 3], 'loc' => ['body'], 'msg' => 'Object must have at most 3 properties', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/config', $handler, json_decode('{"maxProperties":3,"type":"object"}', true), null, null);
@@ -2650,6 +3220,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/billing', $handler, json_decode('{"dependencies":{"credit_card":["billing_address"]},"properties":{"billing_address":{"type":"string"},"credit_card":{"type":"string"},"name":{"type":"string"}},"type":"object"}', true), null, null);
         return $app;
@@ -2662,6 +3235,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['dependency' => 'credit_card', 'required_fields' => ['billing_address']], 'loc' => ['body'], 'msg' => 'When \'credit_card\' is present, \'billing_address\' is required', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/billing', $handler, json_decode('{"dependencies":{"credit_card":["billing_address"]},"properties":{"billing_address":{"type":"string"},"credit_card":{"type":"string"},"name":{"type":"string"}},"type":"object"}', true), null, null);
@@ -2676,6 +3252,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"properties":{"user":{"properties":{"profile":{"properties":{"contact":{"properties":{"address":{"properties":{"street":{"type":"string"}},"required":["street"],"type":"object"}},"required":["address"],"type":"object"}},"required":["contact"],"type":"object"}},"required":["profile"],"type":"object"}},"required":["user"],"type":"object"}', true), null, null);
         return $app;
@@ -2688,6 +3267,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['images' => [['name' => 'Front', 'url' => 'https://example.com/img1.jpg'], ['name' => 'Back', 'url' => 'https://example.com/img2.jpg']], 'name' => 'Product Bundle', 'tags' => ['electronics', 'gadget']], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/list', $handler, json_decode('{"additionalProperties":false,"properties":{"images":{"items":{"additionalProperties":false,"properties":{"name":{"type":"string"},"url":{"type":"string"}},"required":["url","name"],"type":"object"},"type":"array"},"name":{"type":"string"},"tags":{"items":{"type":"string"},"type":"array"}},"required":["name","tags","images"],"type":"object"}', true), null, null);
@@ -2702,6 +3284,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['name' => 'Product', 'ratings' => [4.5, 4.8, 5.0, 4.2], 'tags' => ['electronics', 'gadget', 'new']], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"ratings":{"items":{"type":"number"},"type":"array"},"tags":{"items":{"type":"string"},"type":"array"}},"required":["name","tags","ratings"],"type":"object"}', true), null, null);
         return $app;
@@ -2714,6 +3299,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['item' => ['name' => 'Item', 'price' => 42.0], 'limit' => 10], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/?limit=10', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price"],"type":"object"}', true), null, json_decode('{"query":{"limit":{"type":"integer"}}}', true));
@@ -2728,6 +3316,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['in_stock' => true, 'name' => 'Item', 'price' => 42.0], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"in_stock":{"type":"boolean"},"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price","in_stock"],"type":"object"}', true), null, null);
         return $app;
@@ -2740,6 +3331,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['event_date' => '2024-03-15', 'name' => 'Conference'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/events/', $handler, json_decode('{"additionalProperties":false,"properties":{"event_date":{"type":"string"},"name":{"type":"string"}},"required":["name","event_date"],"type":"object"}', true), null, null);
@@ -2754,6 +3348,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['created_at' => '2024-03-15T10:30:00Z', 'name' => 'Meeting'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/events/', $handler, json_decode('{"additionalProperties":false,"properties":{"created_at":{"format":"date-time","type":"string"},"name":{"type":"string"}},"required":["name","created_at"],"type":"object"}', true), null, null);
         return $app;
@@ -2766,6 +3363,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['name' => 'Product', 'price' => 100.0, 'seller' => ['address' => ['city' => 'Springfield', 'country' => ['code' => 'US', 'name' => 'USA'], 'street' => '123 Main St'], 'name' => 'John Doe']], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/nested', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"},"seller":{"additionalProperties":false,"properties":{"address":{"additionalProperties":false,"properties":{"city":{"type":"string"},"country":{"additionalProperties":false,"properties":{"code":{"type":"string"},"name":{"type":"string"}},"required":["name","code"],"type":"object"},"street":{"type":"string"}},"required":["street","city","country"],"type":"object"},"name":{"type":"string"}},"required":["name","address"],"type":"object"}},"required":["name","price","seller"],"type":"object"}', true), null, null);
@@ -2780,6 +3380,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['description' => null, 'name' => null, 'price' => null, 'tax' => null], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/optional-all', $handler, json_decode('{"additionalProperties":false,"properties":{},"type":"object"}', true), null, null);
         return $app;
@@ -2792,6 +3395,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['min_length' => 1], 'input' => [], 'loc' => ['body', 'tags'], 'msg' => 'List should have at least 1 item after validation', 'type' => 'too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/list-validated', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"tags":{"items":{},"minItems":1,"type":"array"}},"required":["name","tags"],"type":"object"}', true), null, null);
@@ -2806,6 +3412,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['expected' => '\'electronics\', \'clothing\' or \'books\''], 'input' => 'furniture', 'loc' => ['body', 'category'], 'msg' => 'Input should be \'electronics\', \'clothing\' or \'books\'', 'type' => 'enum']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"category":{"enum":["electronics","clothing","books"],"type":"string"},"name":{"type":"string"}},"required":["name","category"],"type":"object"}', true), null, null);
         return $app;
@@ -2818,6 +3427,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['category' => 'electronics', 'name' => 'Item'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"category":{"type":"string"},"name":{"type":"string"}},"required":["name","category"],"type":"object"}', true), null, null);
@@ -2832,6 +3444,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['name' => 'Item', 'price' => 42.0], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"another_extra":{"type":"integer"},"extra_field":{"type":"string"},"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price","extra_field","another_extra"],"type":"object"}', true), null, null);
         return $app;
@@ -2844,6 +3459,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'not a number', 'loc' => ['body', 'price'], 'msg' => 'Input should be a valid number', 'type' => 'float_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"description":{"type":"string"},"name":{"type":"string"},"price":{"type":"number"},"tax":{"type":"number"}},"required":["name","description","price","tax"],"type":"object"}', true), null, null);
@@ -2858,6 +3476,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['image' => ['name' => 'Product Image', 'url' => 'https://example.com/image.jpg'], 'name' => 'Foo', 'price' => 42.0], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/nested', $handler, json_decode('{"additionalProperties":false,"properties":{"image":{"additionalProperties":false,"properties":{"name":{"type":"string"},"url":{"type":"string"}},"required":["url","name"],"type":"object"},"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price","image"],"type":"object"}', true), null, null);
         return $app;
@@ -2870,6 +3491,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['description' => null, 'name' => 'Item', 'price' => 42.0, 'tax' => null], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"description":{"type":"null"},"name":{"type":"string"},"price":{"type":"number"},"tax":{"type":"null"}},"required":["name","price","description","tax"],"type":"object"}', true), null, null);
@@ -2884,6 +3508,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['ge' => 1], 'input' => 0.5, 'loc' => ['body', 'price'], 'msg' => 'Input should be greater than or equal to 1', 'type' => 'greater_than_equal']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/validated', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"minimum":1,"type":"number"}},"required":["name","price"],"type":"object"}', true), null, null);
         return $app;
@@ -2896,6 +3523,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['name' => 'Item', 'price' => 100.0], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/validated', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price"],"type":"object"}', true), null, null);
@@ -2910,6 +3540,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['description' => null, 'name' => 'Foo', 'price' => 35.4, 'tax' => null], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price"],"type":"object"}', true), null, null);
         return $app;
@@ -2922,6 +3555,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['description' => 'Original description', 'name' => 'Original Item', 'price' => 45.0], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('PATCH', '/items/1', $handler, json_decode('{"properties":{"price":{"type":"number"}},"required":["price"],"type":"object"}', true), null, json_decode('{"path":{"id":{"type":"string"}}}', true));
@@ -2936,6 +3572,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => '', 'loc' => ['body', 'name'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"description":{"type":"string"},"name":{"type":"string"},"price":{"type":"number"}},"required":["description","price","name"],"type":"object"}', true), null, null);
         return $app;
@@ -2948,6 +3587,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['description' => 'A very nice Item', 'name' => 'Foo', 'price' => 35.4, 'tax' => 3.2], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"description":{"type":"string"},"name":{"type":"string"},"price":{"type":"number"},"tax":{"type":"number"}},"required":["name","description","price","tax"],"type":"object"}', true), null, null);
@@ -2962,6 +3604,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['max_length' => 50], 'input' => 'This is a very long name that exceeds the maximum length', 'loc' => ['body', 'name'], 'msg' => 'String should have at most 50 characters', 'type' => 'string_too_long']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/validated', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"maxLength":50,"type":"string"},"price":{"type":"number"}},"required":["name","price"],"type":"object"}', true), null, null);
         return $app;
@@ -2974,6 +3619,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['min_length' => 3], 'input' => 'ab', 'loc' => ['body', 'name'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/validated', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"minLength":3,"type":"string"},"price":{"type":"number"}},"required":["name","price"],"type":"object"}', true), null, null);
@@ -2988,6 +3636,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[A-Z]{3}[0-9]{4}$'], 'input' => 'ABC-123', 'loc' => ['body', 'sku'], 'msg' => 'String should match pattern \'^[A-Z]{3}[0-9]{4}$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/validated', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"sku":{"pattern":"^[A-Z]{3}[0-9]{4}$","type":"string"}},"required":["name","sku"],"type":"object"}', true), null, null);
         return $app;
@@ -3000,6 +3651,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['name' => 'Item', 'sku' => 'ABC1234'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/validated', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"sku":{"type":"string"}},"required":["name","sku"],"type":"object"}', true), null, null);
@@ -3014,6 +3668,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'not-a-valid-uuid', 'loc' => ['body', 'item_id'], 'msg' => 'Input should be a valid UUID', 'type' => 'uuid_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"item_id":{"format":"uuid","type":"string"},"name":{"type":"string"}},"required":["name","item_id"],"type":"object"}', true), null, null);
         return $app;
@@ -3026,6 +3683,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 'c892496f-b1fd-4b91-bdb8-b46f92df1716', 'name' => 'Item'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"item_id":{"format":"uuid","type":"string"},"name":{"type":"string"}},"required":["name","item_id"],"type":"object"}', true), null, null);
@@ -3040,6 +3700,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['execution_order' => ['first_hook', 'second_hook', 'third_hook'], 'message' => 'Hooks executed in order'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/test-hook-order', $handler, null, null, null);
         return $app;
@@ -3052,6 +3715,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123'], 200, ['X-Content-Type-Options' => 'nosniff', 'X-Response-Time' => '.*ms', 'X-Request-ID' => '.*', 'X-Frame-Options' => 'DENY']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/api/full-lifecycle', $handler, json_decode('{"properties":{"action":{"type":"string"},"user_id":{"type":"string"}},"required":["user_id","action"],"type":"object"}', true), null, null);
@@ -3066,6 +3732,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['error' => 'Internal Server Error', 'error_id' => '.*', 'message' => 'An unexpected error occurred'], 500, ['Content-Type' => 'application/json']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/test-error', $handler, null, null, null);
         return $app;
@@ -3078,6 +3747,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['has_request_id' => true, 'message' => 'onRequest hooks executed', 'request_logged' => true], 200, ['X-Request-ID' => '.*']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/test-on-request', $handler, null, null, null);
@@ -3092,6 +3764,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Response with timing info'], 200, ['X-Response-Time' => '.*ms']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/test-timing', $handler, null, null, null);
         return $app;
@@ -3104,6 +3779,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Response with security headers'], 200, ['Strict-Transport-Security' => 'max-age=31536000; includeSubDomains', 'X-XSS-Protection' => '1; mode=block', 'X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'DENY']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/test-security-headers', $handler, null, null, null);
@@ -3118,6 +3796,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['error' => 'Unauthorized', 'message' => 'Invalid or expired authentication token'], 401, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/protected-resource-fail', $handler, null, null, null);
         return $app;
@@ -3130,6 +3811,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['authenticated' => true, 'message' => 'Access granted', 'user_id' => 'user-123'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/protected-resource', $handler, null, null, null);
@@ -3144,6 +3828,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Admin access granted', 'role' => 'admin', 'user_id' => 'admin-456'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/admin-only', $handler, null, null, null);
         return $app;
@@ -3156,6 +3843,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['error' => 'Forbidden', 'message' => 'Admin role required for this endpoint'], 403, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/admin-only-forbidden', $handler, null, null, null);
@@ -3170,6 +3860,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['error' => 'Rate limit exceeded', 'message' => 'Too many requests, please try again later'], 429, ['Retry-After' => '60']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/api/test-rate-limit-exceeded', $handler, json_decode('{"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"}', true), null, null);
         return $app;
@@ -3182,6 +3875,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Request accepted', 'rate_limit_checked' => true], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/api/test-rate-limit', $handler, json_decode('{"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"}', true), null, null);
@@ -3196,6 +3892,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, null, null, json_decode('{"files":{"image":{"content_type":["image/png"],"required":true,"validate_magic_numbers":true}}}', true));
         return $app;
@@ -3208,6 +3907,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, null, null, json_decode('{"files":{"image":{"content_type":["image/jpeg"],"required":true,"validate_magic_numbers":true}}}', true));
@@ -3222,6 +3924,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['declared_mime' => 'image/jpeg', 'detected_type' => 'image/png', 'magic_bytes' => '89504e470d0a1a0a'], 'loc' => ['files', 'image'], 'msg' => 'File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, null, null, json_decode('{"files":{"image":{"content_type":["image/jpeg"],"required":true,"validate_magic_numbers":true}}}', true));
         return $app;
@@ -3234,6 +3939,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['declared_mime' => 'image/png', 'detected_type' => 'image/jpeg', 'magic_bytes' => 'ffd8ffe0'], 'loc' => ['files', 'image'], 'msg' => 'File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, null, null, json_decode('{"files":{"image":{"content_type":["image/png"],"required":true,"validate_magic_numbers":true}}}', true));
@@ -3248,6 +3956,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, null, null, json_decode('{"files":{"document":{"content_type":["application/pdf"],"required":true,"validate_magic_numbers":true}}}', true));
         return $app;
@@ -3260,6 +3971,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['buffer_size' => 0], 'loc' => ['files', 'file'], 'msg' => 'File buffer is empty', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, null, null, json_decode('{"files":{"file":{"required":true,"validate_magic_numbers":true}}}', true));
@@ -3274,6 +3988,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/files/images-only', $handler, json_decode('{"additionalProperties":false,"properties":{"file":{"format":"binary","type":"string"}},"type":"object"}', true), null, json_decode('{"files":{"file":{"content_type":["image/jpeg","image/png","image/gif"],"required":true}}}', true));
         return $app;
@@ -3286,6 +4003,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['filename' => 'empty.txt', 'size' => 0], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/files/upload', $handler, json_decode('{"additionalProperties":false,"properties":{"file":{"format":"binary","type":"string"}},"required":["file"],"type":"object"}', true), null, null);
@@ -3300,6 +4020,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['filenames' => ['file1.txt', 'file2.txt'], 'total_size' => 35], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/files/list', $handler, json_decode('{"additionalProperties":false,"properties":{"files":{"items":{"format":"binary","type":"string"},"type":"array"}},"required":["files"],"type":"object"}', true), null, null);
         return $app;
@@ -3312,6 +4035,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'File too large. Maximum size is 1MB'], 413, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/files/validated', $handler, json_decode('{"additionalProperties":false,"properties":{"file":{"format":"binary","type":"string"}},"type":"object"}', true), null, null);
@@ -3326,6 +4052,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['test2' => ['content' => '<file2 content>', 'content_type' => 'text/plain', 'filename' => 'test2.txt', 'headers' => [['content-disposition', 'form-data; name="test2"; filename="test2.txt"'], ['content-type', 'text/plain'], ['x-custom', 'f2']], 'size' => 15]], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/', $handler, json_decode('{"additionalProperties":false,"properties":{"test2":{"format":"binary","type":"string"}},"required":["test2"],"type":"object"}', true), null, null);
         return $app;
@@ -3338,6 +4067,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['test1' => '<file1 content>'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/', $handler, json_decode('{"additionalProperties":false,"properties":{"test1":{"format":"binary","type":"string"}},"required":["test1"],"type":"object"}', true), null, null);
@@ -3352,6 +4084,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['some' => 'data'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/', $handler, json_decode('{"additionalProperties":false,"properties":{"some":{"type":"string"}},"type":"object"}', true), null, null);
         return $app;
@@ -3364,6 +4099,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['content_type' => 'image/jpeg', 'filename' => 'photo.jpg', 'size' => 22], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/files/image', $handler, json_decode('{"additionalProperties":false,"properties":{"image":{"format":"binary","type":"string"}},"required":["image"],"type":"object"}', true), null, null);
@@ -3378,6 +4116,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['active' => 'true', 'age' => '25', 'file' => ['content' => 'file data here', 'content_type' => 'text/plain', 'filename' => 'upload.txt', 'size' => 14], 'username' => 'testuser'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/', $handler, json_decode('{"additionalProperties":false,"properties":{"active":{"type":"string"},"age":{"type":"string"},"file":{"format":"binary","type":"string"},"username":{"type":"string"}},"required":["file"],"type":"object"}', true), null, null);
         return $app;
@@ -3390,6 +4131,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['test1' => ['content' => '<file1 content>', 'content_type' => 'text/plain', 'filename' => 'test1.txt', 'size' => 15], 'test2' => ['content' => '<file2 content>', 'content_type' => 'text/plain', 'filename' => 'test2.txt', 'size' => 15]], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/', $handler, json_decode('{"additionalProperties":false,"properties":{"test1":{"format":"binary","type":"string"},"test2":{"format":"binary","type":"string"}},"required":["test1","test2"],"type":"object"}', true), null, null);
@@ -3404,6 +4148,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['files' => [['content' => 'first file', 'content_type' => 'text/plain', 'filename' => 'file1.txt', 'size' => 10], ['content' => 'second file', 'content_type' => 'text/plain', 'filename' => 'file2.txt', 'size' => 11]], 'tags' => ['python', 'rust', 'web']], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/', $handler, json_decode('{"additionalProperties":false,"properties":{"files":{"items":{"format":"binary","type":"string"},"type":"array"},"tags":{"items":{"type":"string"},"type":"array"}},"required":["files"],"type":"object"}', true), null, null);
         return $app;
@@ -3416,6 +4163,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['file' => null], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/files/optional', $handler, json_decode('{"additionalProperties":false,"properties":{},"type":"object"}', true), null, null);
@@ -3430,6 +4180,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['content_type' => 'text/plain', 'filename' => 'optional.txt', 'size' => 21], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/files/optional', $handler, json_decode('{"additionalProperties":false,"properties":{"file":{"format":"binary","type":"string"}},"required":["file"],"type":"object"}', true), null, null);
         return $app;
@@ -3442,6 +4195,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['content_type' => 'application/pdf', 'filename' => 'report.pdf', 'size' => 16], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/files/document', $handler, json_decode('{"additionalProperties":false,"properties":{"document":{"format":"binary","type":"string"}},"required":["document"],"type":"object"}', true), null, null);
@@ -3456,6 +4212,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'required', 'loc' => ['body', 'file'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/files/required', $handler, json_decode('{"additionalProperties":false,"properties":{"file":{"format":"binary","type":"string"}},"required":["file"],"type":"object"}', true), null, null);
         return $app;
@@ -3468,6 +4227,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['test' => ['content' => '<file content>', 'content_type' => 'text/plain', 'filename' => 'test.txt', 'size' => 14]], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/', $handler, json_decode('{"additionalProperties":false,"properties":{"test":{"format":"binary","type":"string"}},"required":["test"],"type":"object"}', true), null, null);
@@ -3482,6 +4244,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['id' => 'e8b5a51d-11c8-3310-a6ab-367563f20686'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/e8b5a51d-11c8-3310-a6ab-367563f20686', $handler, null, null, json_decode('{"path":{"id":{"format":"uuid","type":"string","uuidVersion":"3"}}}', true));
         return $app;
@@ -3494,6 +4259,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['id' => '630eb68f-e0fa-5ecc-887a-7c7a62614681'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/630eb68f-e0fa-5ecc-887a-7c7a62614681', $handler, null, null, json_decode('{"path":{"id":{"format":"uuid","type":"string","uuidVersion":"5"}}}', true));
@@ -3508,6 +4276,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['date' => '2025-10-30'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/events/2025-10-30', $handler, null, null, json_decode('{"path":{"date":{"format":"date","type":"string"}}}', true));
         return $app;
@@ -3520,6 +4291,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['format' => 'date', 'value' => '2025-13-45'], 'loc' => ['path', 'date'], 'msg' => 'Invalid date format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/events/2025-13-45', $handler, null, null, json_decode('{"path":{"date":{"format":"date","required":true,"type":"string"}}}', true));
@@ -3534,6 +4308,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['timestamp' => '2025-10-30T14:30:00Z'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/bookings/2025-10-30T14:30:00Z', $handler, null, null, json_decode('{"path":{"timestamp":{"format":"date-time","type":"string"}}}', true));
         return $app;
@@ -3546,6 +4323,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['duration' => 'P1DT2H30M'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/delays/P1DT2H30M', $handler, null, null, json_decode('{"path":{"duration":{"format":"duration","type":"string"}}}', true));
@@ -3560,6 +4340,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['amount' => '19.99'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/prices/19.99', $handler, null, null, json_decode('{"path":{"amount":{"format":"decimal","type":"string"}}}', true));
         return $app;
@@ -3572,6 +4355,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['username' => 'alice'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/alice', $handler, null, null, json_decode('{"path":{"username":{"minLength":3,"type":"string"}}}', true));
@@ -3586,6 +4372,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_length' => 2, 'min_length' => 3], 'loc' => ['path', 'username'], 'msg' => 'String length must be at least 3', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/ab', $handler, null, null, json_decode('{"path":{"username":{"minLength":3,"required":true,"type":"string"}}}', true));
         return $app;
@@ -3598,6 +4387,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_length' => 42, 'max_length' => 20], 'loc' => ['path', 'username'], 'msg' => 'String length must not exceed 20', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/this_username_is_way_too_long_to_be_valid', $handler, null, null, json_decode('{"path":{"username":{"maxLength":20,"required":true,"type":"string"}}}', true));
@@ -3612,6 +4404,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['owner' => 'spikard-labs', 'repo' => 'spikard-http'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/repos/spikard-labs/spikard-http', $handler, null, null, json_decode('{"path":{"owner":{"pattern":"^[a-zA-Z0-9-]+$","type":"string"},"repo":{"pattern":"^[a-zA-Z0-9-_]+$","type":"string"}}}', true));
         return $app;
@@ -3624,6 +4419,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[a-zA-Z0-9-]+$', 'value' => 'invalid@owner'], 'loc' => ['path', 'owner'], 'msg' => 'String does not match pattern', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/repos/invalid@owner', $handler, null, null, json_decode('{"path":{"owner":{"pattern":"^[a-zA-Z0-9-]+$","required":true,"type":"string"}}}', true));
@@ -3638,6 +4436,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['value' => -100], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/offset/-100', $handler, null, null, json_decode('{"path":{"value":{"type":"integer"}}}', true));
         return $app;
@@ -3650,6 +4451,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['item_id' => true], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/bool/True', $handler, null, null, json_decode('{"path":{"item_id":{"type":"boolean"}}}', true));
@@ -3664,6 +4468,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['item_id' => true], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/bool/1', $handler, null, null, json_decode('{"path":{"item_id":{"type":"boolean"}}}', true));
         return $app;
@@ -3676,6 +4483,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['date_param' => '2023-07-15'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/date/2023-07-15', $handler, null, null, json_decode('{"path":{"date_param":{"format":"date","type":"string"}}}', true));
@@ -3690,6 +4500,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['expected' => '\'alexnet\', \'resnet\' or \'lenet\''], 'input' => 'foo', 'loc' => ['path', 'model_name'], 'msg' => 'Input should be \'alexnet\', \'resnet\' or \'lenet\'', 'type' => 'enum']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/models/foo', $handler, null, null, json_decode('{"path":{"model_name":{"enum":["alexnet","resnet","lenet"],"type":"string"}}}', true));
         return $app;
@@ -3702,6 +4515,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['model_name' => 'alexnet'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/models/alexnet', $handler, null, null, json_decode('{"path":{"model_name":{"enum":["alexnet","lenet","resnet"],"type":"string"}}}', true));
@@ -3716,6 +4532,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 42.5], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/float/42.5', $handler, null, null, json_decode('{"path":{"item_id":{"type":"number"}}}', true));
         return $app;
@@ -3728,6 +4547,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'foobar', 'loc' => ['path', 'item_id'], 'msg' => 'Input should be a valid integer, unable to parse string as an integer', 'type' => 'int_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/int/foobar', $handler, null, null, json_decode('{"path":{"item_id":{"type":"integer"}}}', true));
@@ -3742,6 +4564,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 42], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/int/42', $handler, null, null, json_decode('{"path":{"item_id":{"type":"integer"}}}', true));
         return $app;
@@ -3754,6 +4579,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 2], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/param-lt-gt/2', $handler, null, null, json_decode('{"path":{"item_id":{"exclusiveMaximum":3,"exclusiveMinimum":1,"type":"integer"}}}', true));
@@ -3768,6 +4596,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 3], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/param-ge/3', $handler, null, null, json_decode('{"path":{"item_id":{"minimum":3,"type":"integer"}}}', true));
         return $app;
@@ -3780,6 +4611,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['gt' => 3], 'input' => 2, 'loc' => ['path', 'item_id'], 'msg' => 'Input should be greater than 3', 'type' => 'greater_than']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/param-gt/2', $handler, null, null, json_decode('{"path":{"item_id":{"exclusiveMinimum":3,"type":"integer"}}}', true));
@@ -3794,6 +4628,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 42], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/param-gt/42', $handler, null, null, json_decode('{"path":{"item_id":{"exclusiveMinimum":3,"type":"integer"}}}', true));
         return $app;
@@ -3806,6 +4643,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 3], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/param-le/3', $handler, null, null, json_decode('{"path":{"item_id":{"maximum":3,"type":"integer"}}}', true));
@@ -3820,6 +4660,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 2], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/param-lt/2', $handler, null, null, json_decode('{"path":{"item_id":{"exclusiveMaximum":3,"type":"integer"}}}', true));
         return $app;
@@ -3832,6 +4675,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['order_id' => 'c892496f-b1fd-4b91-bdb8-b46f92df1716', 'service_id' => 1, 'user_id' => 'abc', 'version' => 1.0], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716', $handler, null, null, json_decode('{"path":{"order_id":{"format":"uuid","type":"string"},"service_id":{"type":"integer"},"user_id":{"type":"string"},"version":{"type":"number"}}}', true));
@@ -3846,6 +4692,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'not-a-uuid', 'loc' => ['path', 'id'], 'msg' => 'Input should be a valid UUID', 'type' => 'uuid_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/type-syntax/items/not-a-uuid', $handler, null, null, null);
         return $app;
@@ -3858,6 +4707,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['count' => '50'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/type-syntax/items-count/50', $handler, null, null, json_decode('{"path":{"count":{"maximum":100,"minimum":1,"type":"integer"}}}', true));
@@ -3872,6 +4724,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['id' => '550e8400-e29b-41d4-a716-446655440000'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/type-syntax/items/550e8400-e29b-41d4-a716-446655440000', $handler, null, null, null);
         return $app;
@@ -3884,6 +4739,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['user_id' => '42'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/type-syntax/users/42', $handler, null, null, null);
@@ -3898,6 +4756,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['file_path' => 'home/johndoe/myfile.txt'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/files/home/johndoe/myfile.txt', $handler, null, null, json_decode('{"path":{"file_path":{"type":"string"}}}', true));
         return $app;
@@ -3910,6 +4771,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 'foobar'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/str/foobar', $handler, null, null, json_decode('{"path":{"item_id":{"type":"string"}}}', true));
@@ -3924,6 +4788,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['max_length' => 3], 'input' => 'foobar', 'loc' => ['path', 'item_id'], 'msg' => 'String should have at most 3 characters', 'type' => 'string_too_long']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/param-maxlength/foobar', $handler, null, null, json_decode('{"path":{"item_id":{"maxLength":3,"type":"string"}}}', true));
         return $app;
@@ -3936,6 +4803,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['min_length' => 3], 'input' => 'fo', 'loc' => ['path', 'item_id'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/path/param-minlength/fo', $handler, null, null, json_decode('{"path":{"item_id":{"minLength":3,"type":"string"}}}', true));
@@ -3950,6 +4820,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 'ec38df32-ceda-4cfa-9b4a-1aeb94ad551a'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a', $handler, null, null, json_decode('{"path":{"item_id":{"format":"uuid","type":"string"}}}', true));
         return $app;
@@ -3962,6 +4835,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['offset' => -10], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/negative', $handler, null, null, json_decode('{"query":{"offset":{"annotation":"int","type":"integer"}}}', true));
@@ -3976,6 +4852,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['threshold' => 0.0015], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/stats', $handler, null, null, json_decode('{"query":{"threshold":{"annotation":"float","type":"number"}}}', true));
         return $app;
@@ -3988,6 +4867,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['term' => 'foo'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/search', $handler, null, null, json_decode('{"query":{"term":{"minLength":3,"type":"string"}}}', true));
@@ -4002,6 +4884,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_length' => 2, 'min_length' => 3], 'loc' => ['query', 'term'], 'msg' => 'String length must be at least 3', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/search', $handler, null, null, json_decode('{"query":{"term":{"minLength":3,"required":true,"type":"string"}}}', true));
         return $app;
@@ -4014,6 +4899,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_length' => 21, 'max_length' => 10], 'loc' => ['query', 'term'], 'msg' => 'String length must not exceed 10', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/search', $handler, null, null, json_decode('{"query":{"term":{"maxLength":10,"required":true,"type":"string"}}}', true));
@@ -4028,6 +4916,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['email' => 'user@example.com'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/subscribe', $handler, null, null, json_decode('{"query":{"email":{"pattern":"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}$","type":"string"}}}', true));
         return $app;
@@ -4040,6 +4931,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', 'value' => 'invalid-email'], 'loc' => ['query', 'email'], 'msg' => 'String does not match pattern', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/subscribe', $handler, null, null, json_decode('{"query":{"email":{"pattern":"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}$","required":true,"type":"string"}}}', true));
@@ -4054,6 +4948,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['limit' => 5], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"limit":{"exclusiveMinimum":0,"type":"integer"}}}', true));
         return $app;
@@ -4066,6 +4963,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['exclusive_minimum' => 0, 'value' => 0], 'loc' => ['query', 'limit'], 'msg' => 'Value must be greater than 0', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"limit":{"exclusiveMinimum":0,"required":true,"type":"integer"}}}', true));
@@ -4080,6 +4980,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['offset' => 0], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"offset":{"minimum":0,"type":"integer"}}}', true));
         return $app;
@@ -4092,6 +4995,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['limit' => 100], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"limit":{"maximum":100,"type":"integer"}}}', true));
@@ -4106,6 +5012,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['maximum' => 100, 'value' => 101], 'loc' => ['query', 'limit'], 'msg' => 'Value must not exceed 100', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"limit":{"maximum":100,"required":true,"type":"integer"}}}', true));
         return $app;
@@ -4118,6 +5027,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['ids' => [1, 2, 3]], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"ids":{"items":{"type":"integer"},"minItems":2,"type":"array"}}}', true));
@@ -4132,6 +5044,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_items' => 1, 'min_items' => 2], 'loc' => ['query', 'ids'], 'msg' => 'Array must contain at least 2 items', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"ids":{"items":{"type":"integer"},"minItems":2,"required":true,"type":"array"}}}', true));
         return $app;
@@ -4144,6 +5059,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_items' => 6, 'max_items' => 5], 'loc' => ['query', 'tags'], 'msg' => 'Array must not contain more than 5 items', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"tags":{"items":{"type":"string"},"maxItems":5,"required":true,"type":"array"}}}', true));
@@ -4158,6 +5076,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['active' => false], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"active":{"type":"boolean"}}}', true));
         return $app;
@@ -4170,6 +5091,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['email' => 'user@example.com'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/subscribe', $handler, null, null, json_decode('{"query":{"email":{"format":"email","type":"string"}}}', true));
@@ -4184,6 +5108,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['format' => 'email', 'value' => 'not-an-email'], 'loc' => ['query', 'email'], 'msg' => 'Invalid email format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/subscribe', $handler, null, null, json_decode('{"query":{"email":{"format":"email","required":true,"type":"string"}}}', true));
         return $app;
@@ -4196,6 +5123,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['ip' => '192.168.1.1'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/network', $handler, null, null, json_decode('{"query":{"ip":{"format":"ipv4","type":"string"}}}', true));
@@ -4210,6 +5140,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['format' => 'ipv4', 'value' => '999.999.999.999'], 'loc' => ['query', 'ip'], 'msg' => 'Invalid IPv4 address format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/network', $handler, null, null, json_decode('{"query":{"ip":{"format":"ipv4","required":true,"type":"string"}}}', true));
         return $app;
@@ -4222,6 +5155,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['ip' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/network/ipv6', $handler, null, null, json_decode('{"query":{"ip":{"format":"ipv6","type":"string"}}}', true));
@@ -4236,6 +5172,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['url' => 'https://example.com/path?query=value'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/redirect', $handler, null, null, json_decode('{"query":{"url":{"format":"uri","type":"string"}}}', true));
         return $app;
@@ -4248,6 +5187,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['format' => 'uri', 'value' => 'not a uri'], 'loc' => ['query', 'url'], 'msg' => 'Invalid URI format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/redirect', $handler, null, null, json_decode('{"query":{"url":{"format":"uri","required":true,"type":"string"}}}', true));
@@ -4262,6 +5204,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['host' => 'api.example.com'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/dns', $handler, null, null, json_decode('{"query":{"host":{"format":"hostname","type":"string"}}}', true));
         return $app;
@@ -4274,6 +5219,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['quantity' => 15], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"quantity":{"multipleOf":5,"type":"integer"}}}', true));
@@ -4288,6 +5236,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['multiple_of' => 5, 'value' => 17], 'loc' => ['query', 'quantity'], 'msg' => 'Value must be a multiple of 5', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"quantity":{"multipleOf":5,"required":true,"type":"integer"}}}', true));
         return $app;
@@ -4300,6 +5251,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['ids' => [1, 2, 3, 4]], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"ids":{"items":{"type":"integer"},"type":"array","uniqueItems":true}}}', true));
@@ -4314,6 +5268,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['duplicate_index' => 2, 'duplicate_value' => 2, 'unique_items' => true], 'loc' => ['query', 'ids'], 'msg' => 'Array items must be unique', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items', $handler, null, null, json_decode('{"query":{"ids":{"items":{"type":"integer"},"required":true,"type":"array","uniqueItems":true}}}', true));
         return $app;
@@ -4326,6 +5283,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['tags' => ['python', 'rust', 'typescript']], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items?tags=python|rust|typescript', $handler, null, null, json_decode('{"query":{"tags":{"items":{"type":"string"},"separator":"|","type":"array"}}}', true));
@@ -4340,6 +5300,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['colors' => ['red', 'green', 'blue']], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items?colors=red;green;blue', $handler, null, null, json_decode('{"query":{"colors":{"items":{"type":"string"},"separator":";","type":"array"}}}', true));
         return $app;
@@ -4352,6 +5315,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['keywords' => ['rust', 'web', 'framework']], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/search?keywords=rust%20web%20framework', $handler, null, null, json_decode('{"query":{"keywords":{"items":{"type":"string"},"separator":" ","type":"array"}}}', true));
@@ -4366,6 +5332,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response([], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/list-default', $handler, null, null, json_decode('{"query":{"tags":{"annotation":"list[str]","default":[],"items":{"type":"string"},"optional":true,"type":"array"}}}', true));
         return $app;
@@ -4378,6 +5347,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['apple'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/list-default', $handler, null, null, json_decode('{"query":{"tags":{"annotation":"list[str]","default":[],"items":{"type":"string"},"optional":true,"type":"array"}}}', true));
@@ -4392,6 +5364,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['flag' => true], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/bool', $handler, null, null, json_decode('{"query":{"flag":{"annotation":"bool","type":"boolean"}}}', true));
         return $app;
@@ -4404,6 +5379,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['flag' => true], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/bool', $handler, null, null, json_decode('{"query":{"flag":{"annotation":"bool","type":"boolean"}}}', true));
@@ -4418,6 +5396,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['event_date' => '2024-01-15'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/date', $handler, null, null, json_decode('{"query":{"event_date":{"annotation":"str","format":"date","type":"string"}}}', true));
         return $app;
@@ -4430,6 +5411,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['timestamp' => '2024-01-15T10:30:00Z'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/datetime', $handler, null, null, json_decode('{"query":{"timestamp":{"annotation":"str","format":"date-time","type":"string"}}}', true));
@@ -4444,6 +5428,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['expected' => '\'alexnet\', \'resnet\' or \'lenet\''], 'input' => 'vgg16', 'loc' => ['query', 'model'], 'msg' => 'Input should be \'alexnet\', \'resnet\' or \'lenet\'', 'type' => 'enum']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/enum', $handler, null, null, json_decode('{"query":{"model":{"annotation":"str","enum":["alexnet","resnet","lenet"],"type":"string"}}}', true));
         return $app;
@@ -4456,6 +5443,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['model' => 'alexnet'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/enum', $handler, null, null, json_decode('{"query":{"model":{"annotation":"str","enum":["alexnet","resnet","lenet"],"type":"string"}}}', true));
@@ -4470,6 +5460,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['price' => 0.01], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/float-ge', $handler, null, null, json_decode('{"query":{"price":{"annotation":"float","minimum":0.01,"type":"number"}}}', true));
         return $app;
@@ -4482,6 +5475,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['value' => 10], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int-ge', $handler, null, null, json_decode('{"query":{"value":{"annotation":"int","minimum":10,"type":"integer"}}}', true));
@@ -4496,6 +5492,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['value' => 1], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int-gt', $handler, null, null, json_decode('{"query":{"value":{"annotation":"int","exclusiveMinimum":0,"type":"integer"}}}', true));
         return $app;
@@ -4508,6 +5507,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['value' => 100], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int-le', $handler, null, null, json_decode('{"query":{"value":{"annotation":"int","maximum":100,"type":"integer"}}}', true));
@@ -4522,6 +5524,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['value' => 49], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int-lt', $handler, null, null, json_decode('{"query":{"value":{"annotation":"int","exclusiveMaximum":50,"type":"integer"}}}', true));
         return $app;
@@ -4534,6 +5539,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response('foo bar 10', 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int/default', $handler, null, null, json_decode('{"query":{"query":{"annotation":"int","default":10,"optional":true,"type":"integer"}}}', true));
@@ -4548,6 +5556,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response('foo bar 50', 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int/default', $handler, null, null, json_decode('{"query":{"query":{"annotation":"int","default":10,"optional":true,"type":"integer"}}}', true));
         return $app;
@@ -4560,6 +5571,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response([1, 2], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/list', $handler, null, null, json_decode('{"query":{"device_ids":{"annotation":"list[int]","items":{"type":"integer"},"type":"array"}}}', true));
@@ -4574,6 +5588,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['q' => ['foo', 'bar']], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"query":{"q":{"annotation":"list[str]","items":{"type":"string"},"optional":true,"type":"array"}}}', true));
         return $app;
@@ -4586,6 +5603,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => null, 'loc' => ['query', 'device_ids'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/list', $handler, null, null, json_decode('{"query":{"device_ids":{"annotation":"list[int]","items":{"type":"integer"},"type":"array"}}}', true));
@@ -4600,6 +5620,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response([], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/list-default', $handler, null, null, json_decode('{"query":{"tags":{"annotation":"list[str]","default":[],"items":{"type":"string"},"optional":true,"type":"array"}}}', true));
         return $app;
@@ -4612,6 +5635,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['active' => true, 'age' => 30, 'name' => 'john', 'score' => 95.5], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/multi-type', $handler, null, null, json_decode('{"query":{"active":{"annotation":"bool","type":"boolean"},"age":{"annotation":"int","type":"integer"},"name":{"annotation":"str","type":"string"},"score":{"annotation":"float","type":"number"}}}', true));
@@ -4626,6 +5652,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response('foo bar None', 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int/optional', $handler, null, null, json_decode('{"query":{"query":{"annotation":"int","optional":true,"type":"integer"}}}', true));
         return $app;
@@ -4638,6 +5667,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['limit' => 10], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/optional-default', $handler, null, null, json_decode('{"query":{"limit":{"annotation":"int","default":10,"optional":true,"type":"integer"}}}', true));
@@ -4652,6 +5684,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response('foo bar None', 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/optional', $handler, null, null, json_decode('{"query":{"query":{"annotation":"str","optional":true,"type":"string"}}}', true));
         return $app;
@@ -4664,6 +5699,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response('foo bar baz', 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/optional', $handler, null, null, json_decode('{"query":{"query":{"annotation":"str","optional":true,"type":"string"}}}', true));
@@ -4678,6 +5716,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['name' => 'hello world'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/basic', $handler, null, null, json_decode('{"query":{"name":{"annotation":"str","type":"string"}}}', true));
         return $app;
@@ -4690,6 +5731,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['name' => 'test&value=123'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/basic', $handler, null, null, json_decode('{"query":{"name":{"annotation":"str","type":"string"}}}', true));
@@ -4704,6 +5748,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['email' => 'x@test.com', 'special' => '&@A.ac'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/test', $handler, null, null, json_decode('{"query":{"email":{"annotation":"str","type":"string"},"special":{"annotation":"str","type":"string"}}}', true));
         return $app;
@@ -4716,6 +5763,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 42.5, 'loc' => ['query', 'query'], 'msg' => 'Input should be a valid integer, unable to parse string as an integer', 'type' => 'int_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int', $handler, null, null, json_decode('{"query":{"query":{"annotation":"int","type":"integer"}}}', true));
@@ -4730,6 +5780,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'baz', 'loc' => ['query', 'query'], 'msg' => 'Input should be a valid integer, unable to parse string as an integer', 'type' => 'int_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int', $handler, null, null, json_decode('{"query":{"query":{"annotation":"int","type":"integer"}}}', true));
         return $app;
@@ -4742,6 +5795,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => null, 'loc' => ['query', 'query'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int', $handler, null, null, json_decode('{"query":{"query":{"annotation":"int","type":"integer"}}}', true));
@@ -4756,6 +5812,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response('foo bar 42', 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/int', $handler, null, null, json_decode('{"query":{"query":{"annotation":"int","type":"integer"}}}', true));
         return $app;
@@ -4768,6 +5827,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => null, 'loc' => ['query', 'query'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query', $handler, null, null, json_decode('{"query":{"query":{"annotation":"str","type":"string"}}}', true));
@@ -4782,6 +5844,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response('foo bar baz', 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query', $handler, null, null, json_decode('{"query":{"query":{"annotation":"str","type":"string"}}}', true));
         return $app;
@@ -4794,6 +5859,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['max_length' => 10], 'input' => 'this_is_way_too_long', 'loc' => ['query', 'name'], 'msg' => 'String should have at most 10 characters', 'type' => 'string_too_long']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/str-max-length', $handler, null, null, json_decode('{"query":{"name":{"annotation":"str","maxLength":10,"type":"string"}}}', true));
@@ -4808,6 +5876,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['min_length' => 3], 'input' => 'ab', 'loc' => ['query', 'name'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/str-min-length', $handler, null, null, json_decode('{"query":{"name":{"annotation":"str","minLength":3,"type":"string"}}}', true));
         return $app;
@@ -4820,6 +5891,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[0-9]{3,}$'], 'input' => 'abc123', 'loc' => ['query', 'code'], 'msg' => 'String should match pattern \'^[0-9]{3,}$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/pattern', $handler, null, null, json_decode('{"query":{"code":{"annotation":"str","pattern":"^[0-9]{3,}$","type":"string"}}}', true));
@@ -4834,6 +5908,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^fixedquery$'], 'input' => 'nonregexquery', 'loc' => ['query', 'item_query'], 'msg' => 'String should match pattern \'^fixedquery$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"query":{"item_query":{"annotation":"str","pattern":"^fixedquery$","type":"string"}}}', true));
         return $app;
@@ -4846,6 +5923,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['item_query' => 'fixedquery'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"query":{"item_query":{"annotation":"str","pattern":"^fixedquery$","type":"string"}}}', true));
@@ -4860,6 +5940,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'not-a-uuid', 'loc' => ['query', 'item_id'], 'msg' => 'Input should be a valid UUID', 'type' => 'uuid_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/uuid', $handler, null, null, json_decode('{"query":{"item_id":{"annotation":"str","format":"uuid","type":"string"}}}', true));
         return $app;
@@ -4872,6 +5955,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['item_id' => 'c892496f-b1fd-4b91-bdb8-b46f92df1716'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/query/uuid', $handler, null, null, json_decode('{"query":{"item_id":{"annotation":"str","format":"uuid","type":"string"}}}', true));
@@ -4889,6 +5975,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['request' => 'under-limit', 'status' => 'ok'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/rate-limit/basic', $handler, null, null, null);
         return $app;
@@ -4905,6 +5994,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 429, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/rate-limit/exceeded', $handler, null, null, null);
         return $app;
@@ -4917,6 +6009,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['echo' => 'trace-123', 'status' => 'preserved'], 200, ['x-request-id' => 'trace-123']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/request-id/preserved', $handler, null, null, null);
@@ -4934,6 +6029,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['status' => 'generated'], 200, ['x-request-id' => '<<uuid>>']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/request-id/generated', $handler, null, null, null);
         return $app;
@@ -4949,6 +6047,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['status' => 'no-request-id'], 200, ['x-request-id' => '<<absent>>']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/request-id/disabled', $handler, null, null, null);
@@ -4966,6 +6067,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['duration' => 'fast', 'status' => 'ok'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/timeouts/fast', $handler, null, null, null);
         return $app;
@@ -4982,6 +6086,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 408, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/timeouts/slow', $handler, null, null, null);
         return $app;
@@ -4994,6 +6101,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response('Hello from static storage', 200, ['cache-control' => 'public, max-age=60', 'content-type' => 'text/plain']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/public/hello.txt', $handler, null, null, null);
@@ -5008,6 +6118,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response('<!doctype html><h1>Welcome</h1>', 200, ['content-type' => 'text/html']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/app/', $handler, null, null, null);
         return $app;
@@ -5020,6 +6133,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['error' => 'Payload Too Large', 'message' => 'Request body size exceeds maximum allowed size of 1024 bytes'], 413, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, json_decode('{"properties":{"data":{"type":"string"}},"type":"object"}', true), null, null);
@@ -5034,6 +6150,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['id' => 1, 'name' => 'Item 1'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/status-test/200', $handler, null, null, json_decode('{"path":{"code":{"type":"string"}}}', true));
         return $app;
@@ -5046,6 +6165,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['id' => 1, 'name' => 'New Item'], 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
@@ -5060,6 +6182,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['message' => 'Task accepted for processing', 'task_id' => 'abc123'], 202, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/tasks/', $handler, json_decode('{"additionalProperties":false,"properties":{"task":{"type":"string"}},"required":["task"],"type":"object"}', true), null, null);
         return $app;
@@ -5072,6 +6197,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 204, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('DELETE', '/status-test/204', $handler, null, null, json_decode('{"path":{"code":{"type":"string"}}}', true));
@@ -5086,6 +6214,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response('binary_data_1024_bytes', 206, ['Content-Range' => 'bytes 0-1023/5000', 'Content-Type' => 'application/pdf', 'Accept-Ranges' => 'bytes', 'Content-Length' => '1024']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/files/document.pdf', $handler, null, null, null);
         return $app;
@@ -5098,6 +6229,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response([], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/data?skip_template_expansion=true', $handler, null, null, null);
@@ -5112,6 +6246,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['error' => 'Request Header Fields Too Large', 'message' => 'Request headers exceed maximum allowed size of 8192 bytes'], 431, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/data', $handler, null, null, json_decode('{"headers":{"X-Large-Header":{"optional":true,"type":"string"}}}', true));
         return $app;
@@ -5124,6 +6261,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 405, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('TRACE', '/data', $handler, null, null, null);
@@ -5138,6 +6278,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['error' => 'Service Unavailable', 'message' => 'The service is temporarily unavailable. Please try again later.'], 503, ['Retry-After' => '60']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/data', $handler, null, null, null);
         return $app;
@@ -5150,6 +6293,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 301, ['location' => '/new-path']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/old-path', $handler, null, null, null);
@@ -5164,6 +6310,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(null, 302, ['location' => '/target-path']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/temp-redirect', $handler, null, null, null);
         return $app;
@@ -5176,6 +6325,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(null, 304, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/status-test/304', $handler, null, null, json_decode('{"headers":{"If-None-Match":{"optional":true,"type":"string"}},"path":{"code":{"type":"string"}}}', true));
@@ -5190,6 +6342,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response([], 307, ['location' => '/target-post']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/redirect-post', $handler, json_decode('{"additionalProperties":false,"properties":{},"type":"object"}', true), null, null);
         return $app;
@@ -5202,6 +6357,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Invalid request format'], 400, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"type":"string"}', true), null, null);
@@ -5216,6 +6374,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Not authenticated'], 401, ['www-authenticate' => 'Bearer']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/users/me', $handler, null, null, null);
         return $app;
@@ -5228,6 +6389,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Not enough permissions'], 403, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/admin/users', $handler, null, null, null);
@@ -5242,6 +6406,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Item not found'], 404, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/status-test/404', $handler, null, null, json_decode('{"path":{"code":{"type":"string"}}}', true));
         return $app;
@@ -5254,6 +6421,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Request timeout'], 408, ['Connection' => 'close']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/slow-endpoint', $handler, json_decode('{"additionalProperties":false,"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"}', true), null, null);
@@ -5268,6 +6438,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => '', 'loc' => ['body', 'name'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"string"}},"required":["price","name"],"type":"object"}', true), null, null);
         return $app;
@@ -5280,6 +6453,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Rate limit exceeded. Try again in 60 seconds.'], 429, ['Retry-After' => '60', 'X-RateLimit-Limit' => '100', 'X-RateLimit-Reset' => '1609459200', 'X-RateLimit-Remaining' => '0']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/resource', $handler, null, null, null);
@@ -5294,6 +6470,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Internal server error', 'status' => 500, 'title' => 'Internal Server Error', 'type' => 'https://spikard.dev/errors/internal-server-error'], 500, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/error', $handler, null, null, null);
         return $app;
@@ -5306,6 +6485,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Service temporarily unavailable'], 503, ['retry-after' => '120']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/health', $handler, null, null, null);
@@ -5320,6 +6502,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response('LOG:\\u0000\\u0001\\u0002\\u0003|TAIL|\\u0007\\n', 200, ['content-type' => 'application/octet-stream']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/stream/logfile', $handler, null, null, null);
         return $app;
@@ -5332,6 +6517,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response('id,name,value\\n1,Alice,42\\n2,Bob,7\\n', 200, ['content-type' => 'text/csv']);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/stream/csv-report', $handler, null, null, null);
@@ -5346,6 +6534,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response('{"index":0,"payload":"alpha"}\\n{"index":1,"payload":"beta"}\\n{"index":2,"payload":"gamma"}\\n', 200, ['content-type' => 'application/x-ndjson']);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/stream/json-lines', $handler, null, null, null);
         return $app;
@@ -5358,6 +6549,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['tags' => ['python', 'rust', 'typescript']], 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/register', $handler, json_decode('{"properties":{"tags":{"items":{"type":"string"},"minItems":1,"type":"array"}},"required":["tags"],"type":"object"}', true), null, null);
@@ -5372,6 +6566,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['user' => ['age' => 30, 'email' => 'john@example.com', 'name' => 'John Doe']], 201, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/profile', $handler, json_decode('{"properties":{"user":{"properties":{"age":{"minimum":0,"type":"integer"},"email":{"format":"email","type":"string"},"name":{"minLength":1,"type":"string"}},"required":["name","email"],"type":"object"}},"required":["user"],"type":"object"}', true), null, null);
         return $app;
@@ -5384,6 +6581,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['contact.email' => 'john@example.com', 'user-name' => 'JohnDoe'], 201, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"properties":{"contact.email":{"format":"email","type":"string"},"user-name":{"type":"string"}},"type":"object"}', true), null, null);
@@ -5398,6 +6598,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_length' => 2, 'min_length' => 3, 'value' => 'ab'], 'loc' => ['body', 'username'], 'msg' => 'String length must be at least 3', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"username":{"minLength":3,"type":"string"}},"required":["username"],"type":"object"}', true), null, null);
         return $app;
@@ -5410,6 +6613,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^ACC-[0-9]{6}$', 'value' => 'INVALID123'], 'loc' => ['body', 'account_id'], 'msg' => 'String does not match pattern \'^ACC-[0-9]{6}$\'', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/accounts', $handler, json_decode('{"properties":{"account_id":{"pattern":"^ACC-[0-9]{6}$","type":"string"}},"required":["account_id"],"type":"object"}', true), null, null);
@@ -5424,6 +6630,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_value' => 0, 'minimum' => 1], 'loc' => ['body', 'quantity'], 'msg' => 'Value must be at least 1', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/products', $handler, json_decode('{"properties":{"quantity":{"minimum":1,"type":"integer"}},"required":["quantity"],"type":"object"}', true), null, null);
         return $app;
@@ -5436,6 +6645,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_items' => 1, 'min_items' => 2], 'loc' => ['body', 'tags'], 'msg' => 'Array must contain at least 2 items', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/tags', $handler, json_decode('{"properties":{"tags":{"items":{"type":"string"},"minItems":2,"type":"array"}},"required":["tags"],"type":"object"}', true), null, null);
@@ -5450,6 +6662,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['format' => 'email', 'value' => 'not-an-email'], 'loc' => ['body', 'email'], 'msg' => 'Invalid email format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/subscribe', $handler, json_decode('{"properties":{"email":{"format":"email","type":"string"}},"required":["email"],"type":"object"}', true), null, null);
         return $app;
@@ -5462,6 +6677,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['value' => 'not-a-number'], 'loc' => ['body', 'price'], 'msg' => 'Value is not a valid integer', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/products', $handler, json_decode('{"properties":{"price":{"type":"integer"}},"required":["price"],"type":"object"}', true), null, null);
@@ -5476,6 +6694,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['property' => 'unknown_field'], 'loc' => ['body', 'unknown_field'], 'msg' => 'Additional properties are not allowed', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/settings', $handler, json_decode('{"additionalProperties":false,"properties":{"theme":{"enum":["light","dark"],"type":"string"}},"required":["theme"],"type":"object"}', true), null, null);
         return $app;
@@ -5488,6 +6709,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['subscribe' => true, 'username' => 'johndoe'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/form/', $handler, json_decode('{"properties":{"subscribe":{"type":"boolean"},"username":{"type":"string"}},"required":["username"],"type":"object"}', true), null, null);
@@ -5502,6 +6726,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['description' => '', 'username' => 'johndoe'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/form/', $handler, json_decode('{"properties":{"description":{"type":"string"},"username":{"type":"string"}},"required":["username"],"type":"object"}', true), null, null);
         return $app;
@@ -5514,6 +6741,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['tags' => ['python', 'fastapi', 'web']], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/form/tags', $handler, json_decode('{"properties":{"tags":{"items":{"type":"string"},"type":"array"}},"required":["tags"],"type":"object"}', true), null, null);
@@ -5528,6 +6758,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['age' => 30, 'username' => 'johndoe'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/form/', $handler, json_decode('{"properties":{"age":{"type":"integer"},"username":{"type":"string"}},"required":["username"],"type":"object"}', true), null, null);
         return $app;
@@ -5540,6 +6773,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['access_token' => 'johndoe', 'token_type' => 'bearer'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/token', $handler, json_decode('{"properties":{"grant_type":{"type":"string"},"password":{"type":"string"},"scope":{"type":"string"},"username":{"type":"string"}},"required":["username","password","grant_type"],"type":"object"}', true), null, null);
@@ -5554,6 +6790,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['email' => null, 'username' => 'johndoe'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/register/', $handler, json_decode('{"properties":{"email":{"format":"email","type":["string","null"]},"password":{"type":"string"},"username":{"type":"string"}},"required":["username","password"],"type":"object"}', true), null, null);
         return $app;
@@ -5566,6 +6805,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[a-z0-9_]+$'], 'input' => 'john doe', 'loc' => ['body', 'username'], 'msg' => 'String should match pattern \'^[a-z0-9_]+$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/form/validated', $handler, json_decode('{"properties":{"username":{"pattern":"^[a-z0-9_]+$","type":"string"}},"required":["username"],"type":"object"}', true), null, null);
@@ -5580,6 +6822,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => '', 'loc' => ['body', 'username'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/login/', $handler, json_decode('{"properties":{"password":{"type":"string"},"username":{"type":"string"}},"required":["username","password"],"type":"object"}', true), null, null);
         return $app;
@@ -5592,6 +6837,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['username' => 'johndoe'], 200, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/login/', $handler, json_decode('{"properties":{"password":{"type":"string"},"username":{"type":"string"}},"required":["username","password"],"type":"object"}', true), null, null);
@@ -5606,6 +6854,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['description' => 'Test & Development', 'name' => 'John Doe'], 200, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/form/', $handler, json_decode('{"properties":{"description":{"type":"string"},"name":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
         return $app;
@@ -5618,6 +6869,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['max_length' => 20], 'input' => 'this_is_a_very_long_username_that_exceeds_limit', 'loc' => ['body', 'username'], 'msg' => 'String should have at most 20 characters', 'type' => 'string_too_long']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/form/validated', $handler, json_decode('{"properties":{"username":{"maxLength":20,"type":"string"}},"required":["username"],"type":"object"}', true), null, null);
@@ -5632,6 +6886,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['min_length' => 3], 'input' => 'ab', 'loc' => ['body', 'username'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/form/validated', $handler, json_decode('{"properties":{"username":{"minLength":3,"type":"string"}},"required":["username"],"type":"object"}', true), null, null);
         return $app;
@@ -5644,6 +6901,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '3 validation errors in request', 'errors' => [['ctx' => ['ge' => 18], 'input' => 15, 'loc' => ['body', 'age'], 'msg' => 'Input should be greater than or equal to 18', 'type' => 'greater_than_equal'], ['ctx' => ['pattern' => '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'], 'input' => 'invalid-email', 'loc' => ['body', 'email'], 'msg' => 'String should match pattern \'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\'', 'type' => 'string_pattern_mismatch'], ['ctx' => ['min_length' => 3], 'input' => 'ab', 'loc' => ['body', 'name'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"age":{"minimum":18,"type":"integer"},"email":{"format":"email","type":"string"},"name":{"minLength":3,"type":"string"}},"required":["name","email","age"],"type":"object"}', true), null, null);
@@ -5658,6 +6918,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'], 'input' => 'invalid', 'loc' => ['body', 'profile', 'contact', 'email'], 'msg' => 'String should match pattern \'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/profiles', $handler, json_decode('{"properties":{"profile":{"properties":{"contact":{"properties":{"email":{"format":"email","type":"string"}},"required":["email"],"type":"object"}},"required":["contact"],"type":"object"}},"required":["profile"],"type":"object"}', true), null, null);
         return $app;
@@ -5670,6 +6933,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 123, 'loc' => ['body', 'tags', '2'], 'msg' => 'Input should be a valid unknown', 'type' => 'type_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"items":{"type":"string"},"type":"array"}},"required":["name","price","tags"],"type":"object"}', true), null, null);
@@ -5684,6 +6950,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => ['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8', 'tag9', 'tag10', 'tag11'], 'loc' => ['body', 'tags'], 'msg' => '["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11"] has more than 10 items', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"items":{"type":"string"},"maxItems":10,"type":"array"}},"required":["name","price","tags"],"type":"object"}', true), null, null);
         return $app;
@@ -5696,6 +6965,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => [], 'loc' => ['body', 'tags'], 'msg' => '[] has less than 1 item', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"items":{},"minItems":1,"type":"array"}},"required":["name","price","tags"],"type":"object"}', true), null, null);
@@ -5710,6 +6982,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'not_a_float', 'loc' => ['body', 'price'], 'msg' => 'Input should be a valid number, unable to parse string as a number', 'type' => 'float_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price"],"type":"object"}', true), null, null);
         return $app;
@@ -5722,6 +6997,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => null, 'loc' => ['headers', 'x-token'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/?q=test', $handler, null, null, json_decode('{"headers":{"x-token":{"required":true,"type":"string"}},"query":{"q":{"type":"string"}}}', true));
@@ -5736,6 +7014,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'not-a-uuid', 'loc' => ['path', 'item_id'], 'msg' => 'Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `n` at 0', 'type' => 'uuid_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/not-a-uuid', $handler, null, null, json_decode('{"path":{"item_id":{"format":"uuid","type":"string"}}}', true));
         return $app;
@@ -5748,6 +7029,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'maybe', 'loc' => ['query', 'is_active'], 'msg' => 'Input should be a valid boolean, unable to interpret input', 'type' => 'bool_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/?q=test&is_active=maybe', $handler, null, null, json_decode('{"query":{"is_active":{"type":"boolean"},"q":{"type":"string"}}}', true));
@@ -5762,6 +7046,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'not-a-datetime', 'loc' => ['body', 'created_at'], 'msg' => 'Input should be a valid datetime', 'type' => 'datetime_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"created_at":{"format":"date-time","type":"string"},"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price","created_at"],"type":"object"}', true), null, null);
         return $app;
@@ -5774,6 +7061,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['expected' => '\'alexnet\', \'resnet\' or \'lenet\''], 'input' => 'invalid_model', 'loc' => ['path', 'model_name'], 'msg' => 'Input should be \'alexnet\', \'resnet\' or \'lenet\'', 'type' => 'enum']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/models/invalid_model', $handler, null, null, json_decode('{"path":{"model_name":{"enum":["alexnet","resnet","lenet"],"type":"string"}}}', true));
@@ -5788,6 +7078,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => 'Invalid request format'], 400, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"type":"string"}', true), null, null);
         return $app;
@@ -5800,6 +7093,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => ['name' => 'Item'], 'loc' => ['body', 'price'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"string"}},"required":["name","price"],"type":"object"}', true), null, null);
@@ -5814,6 +7110,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => null, 'loc' => ['query', 'q'], 'msg' => 'Field required', 'type' => 'missing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, json_decode('{"query":{"q":{"required":true,"type":"string"}}}', true));
         return $app;
@@ -5826,6 +7125,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '3 validation errors in request', 'errors' => [['ctx' => ['min_length' => 3], 'input' => 'X', 'loc' => ['body', 'name'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short'], ['ctx' => ['gt' => 0], 'input' => -10, 'loc' => ['body', 'price'], 'msg' => 'Input should be greater than 0', 'type' => 'greater_than'], ['input' => 'not_a_number', 'loc' => ['body', 'quantity'], 'msg' => 'Input should be a valid integer, unable to parse string as an integer', 'type' => 'int_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"minLength":3,"type":"string"},"price":{"exclusiveMinimum":0,"type":"integer"},"quantity":{"type":"integer"}},"required":["name","price","quantity"],"type":"object"}', true), null, null);
@@ -5840,6 +7142,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '3 validation errors in request', 'errors' => [['ctx' => ['min_length' => 3], 'input' => 'SF', 'loc' => ['body', 'seller', 'address', 'city'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short'], ['ctx' => ['min_length' => 5], 'input' => '123', 'loc' => ['body', 'seller', 'address', 'zip_code'], 'msg' => 'String should have at least 5 characters', 'type' => 'string_too_short'], ['ctx' => ['min_length' => 3], 'input' => 'Jo', 'loc' => ['body', 'seller', 'name'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('POST', '/items/', $handler, json_decode('{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"},"seller":{"additionalProperties":false,"properties":{"address":{"additionalProperties":false,"properties":{"city":{"minLength":3,"type":"string"},"zip_code":{"minLength":5,"type":"string"}},"required":["city","zip_code"],"type":"object"},"name":{"minLength":3,"type":"string"}},"required":["name","address"],"type":"object"}},"required":["name","price","seller"],"type":"object"}', true), null, null);
         return $app;
@@ -5852,6 +7157,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['gt' => 0], 'input' => '0', 'loc' => ['query', 'price'], 'msg' => 'Input should be greater than 0', 'type' => 'greater_than']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/?q=test&price=0', $handler, null, null, json_decode('{"query":{"price":{"exclusiveMinimum":0,"type":"number"},"q":{"type":"string"}}}', true));
@@ -5866,6 +7174,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['le' => 100], 'input' => '101', 'loc' => ['query', 'limit'], 'msg' => 'Input should be less than or equal to 100', 'type' => 'less_than_equal']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/?q=test&limit=101', $handler, null, null, json_decode('{"query":{"limit":{"maximum":100,"type":"integer"},"q":{"type":"string"}}}', true));
         return $app;
@@ -5878,6 +7189,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['input' => 'not_a_number', 'loc' => ['query', 'skip'], 'msg' => 'Input should be a valid integer, unable to parse string as an integer', 'type' => 'int_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/?q=test&skip=not_a_number', $handler, null, null, json_decode('{"query":{"q":{"type":"string"},"skip":{"type":"integer"}}}', true));
@@ -5892,6 +7206,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['max_length' => 50], 'input' => 'this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter', 'loc' => ['query', 'q'], 'msg' => 'String should have at most 50 characters', 'type' => 'string_too_long']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter', $handler, null, null, json_decode('{"query":{"q":{"maxLength":50,"type":"string"}}}', true));
         return $app;
@@ -5905,6 +7222,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['min_length' => 3], 'input' => 'ab', 'loc' => ['query', 'q'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
             }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
+            }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/?q=ab', $handler, null, null, json_decode('{"query":{"q":{"minLength":3,"type":"string"}}}', true));
         return $app;
@@ -5917,6 +7237,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
                 return new Response(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[a-zA-Z0-9_-]+$'], 'input' => 'invalid!', 'loc' => ['query', 'q'], 'msg' => 'String should match pattern \'^[a-zA-Z0-9_-]+$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], 422, []);
+            }
+            public function __invoke(Request $request): Response {
+                return $this->handle($request);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/?q=invalid!', $handler, null, null, json_decode('{"query":{"q":{"pattern":"^[a-zA-Z0-9_-]+$","type":"string"}}}', true));
