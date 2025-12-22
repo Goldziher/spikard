@@ -86,6 +86,21 @@ All language bindings share the same core features through the Rust runtime:
 
 All features are implemented once in Rust and exposed through thin, idiomatic bindings for each language.
 
+## Benchmarks (CI)
+
+Latest comparative run (2025-12-20, commit `25e4fdf`, Linux x86_64, AMD EPYC 7763 2c/4t, 50 concurrency, 10s, oha). Full artifacts: `snapshots/benchmarks/20397054933`.
+
+| Binding | Avg RPS (all workloads) | Avg latency (ms) |
+| --- | --- | --- |
+| spikard-rust | 55,755 | 1.00 |
+| spikard-node | 24,283 | 2.22 |
+| spikard-php | 20,176 | 2.66 |
+| spikard-python | 11,902 | 4.41 |
+| spikard-wasm | 10,658 | 5.70 |
+| spikard-ruby | 8,271 | 6.50 |
+
+These numbers are CI snapshots meant for relative comparison; workload mix covers JSON, query/path params, forms, and multipart.
+
 ## Design Principles
 
 **Correctness First**

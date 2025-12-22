@@ -431,6 +431,25 @@ get("/users/:id", async (req, { id }) => {
 // 404 -> { error: "User 123 not found", status: 404 }
 ```
 
+## CI Benchmarks (2025-12-20)
+
+Run: `snapshots/benchmarks/20397054933` (commit `25e4fdf`, oha, 50 concurrency, 10s, Linux x86_64).
+
+| Metric | Value |
+| --- | --- |
+| Avg RPS (all workloads) | 10,658 |
+| Avg latency (ms) | 5.70 |
+
+Category breakdown:
+
+| Category | Avg RPS | Avg latency (ms) |
+| --- | --- | --- |
+| path-params | 15,841 | 3.19 |
+| multipart | 10,838 | 5.24 |
+| query-params | 8,082 | 6.88 |
+| json-bodies | 6,890 | 7.37 |
+| forms | 6,241 | 8.80 |
+
 ## Performance Tips
 
 1. **Lazy load routes**: Only define routes you need to minimize WASM size

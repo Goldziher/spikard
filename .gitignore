@@ -100,3 +100,6 @@ perf.data*
 *.folded
 *.stacks
 /profiling-data/
+
+# AI Rules generated files
+.claude/agents/
