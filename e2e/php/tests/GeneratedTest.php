@@ -184,7 +184,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_auth_multiple_authentication_schemes_jwt_precedence_18();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/data', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg', 'X-API-Key' => 'sk_test_123456']]);
+        $response = $client->request('GET', '/api/data', ['headers' => ['X-API-Key' => 'sk_test_123456', 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['auth_method' => 'jwt', 'message' => 'Access granted', 'user_id' => 'user123'], $response->body);
@@ -324,7 +324,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_content_types_20_content_length_mismatch_8();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/data', ['headers' => ['Content-Length' => '100', 'Content-Type' => 'application/json'], 'body' => ['value' => 'short']]);
+        $response = $client->request('POST', '/data', ['headers' => ['Content-Type' => 'application/json', 'Content-Length' => '100'], 'body' => ['value' => 'short']]);
 
         $this->assertSame(400, $response->statusCode);
         $this->assertEquals(['error' => 'Content-Length header does not match actual body size'], $response->body);
@@ -716,7 +716,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_06_cors_preflight_method_not_allowed_1();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'DELETE', 'Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'DELETE', 'Access-Control-Request-Headers' => 'Content-Type', 'Origin' => 'https://example.com']]);
 
         $this->assertSame(403, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -726,7 +726,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_07_cors_preflight_header_not_allowed_2();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'X-Custom-Header', 'Access-Control-Request-Method' => 'POST']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Headers' => 'X-Custom-Header', 'Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST']]);
 
         $this->assertSame(403, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -736,7 +736,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_08_cors_max_age_3();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Headers' => 'Content-Type', 'Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -766,7 +766,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_private_network_access_6();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ['Access-Control-Request-Private-Network' => 'true', 'Access-Control-Request-Method' => 'GET', 'Origin' => 'https://public.example.com']]);
+        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ['Origin' => 'https://public.example.com', 'Access-Control-Request-Method' => 'GET', 'Access-Control-Request-Private-Network' => 'true']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -816,7 +816,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_for_put_method_11();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ['Access-Control-Request-Method' => 'PUT', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Origin' => 'https://app.example.com']]);
+        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ['Origin' => 'https://app.example.com', 'Access-Control-Request-Method' => 'PUT', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -826,7 +826,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_request_12();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header']]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Origin' => 'https://example.com']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -856,7 +856,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_safelisted_headers_without_preflight_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/form', ['headers' => ['Origin' => 'https://app.example.com', 'Accept-Language' => 'en-US', 'Accept' => 'application/json', 'Content-Type' => 'text/plain']]);
+        $response = $client->request('POST', '/api/form', ['headers' => ['Content-Type' => 'text/plain', 'Origin' => 'https://app.example.com', 'Accept-Language' => 'en-US', 'Accept' => 'application/json']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['message' => 'Success'], $response->body);
@@ -876,7 +876,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_with_credentials_17();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/user/profile', ['headers' => ['Cookie' => 'session=abc123', 'Origin' => 'https://app.example.com']]);
+        $response = $client->request('GET', '/api/user/profile', ['headers' => ['Origin' => 'https://app.example.com', 'Cookie' => 'session=abc123']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['username' => 'john'], $response->body);
@@ -1500,7 +1500,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
     {
         $app = AppFactory::create_headers_multiple_custom_headers_23();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/headers/multiple', ['headers' => ['X-Client-Version' => '1.2.3', 'X-Trace-Id' => 'trace-abc', 'X-Request-Id' => 'req-12345']]);
+        $response = $client->request('GET', '/headers/multiple', ['headers' => ['X-Trace-Id' => 'trace-abc', 'X-Client-Version' => '1.2.3', 'X-Request-Id' => 'req-12345']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['x_client_version' => '1.2.3', 'x_request_id' => 'req-12345', 'x_trace_id' => 'trace-abc'], $response->body);
@@ -1650,7 +1650,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
     {
         $app = AppFactory::create_http_methods_options_cors_preflight_request_5();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type']]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type', 'Access-Control-Request-Method' => 'POST']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -4435,7 +4435,8 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         $app = AppFactory::create_sse_notifications_1();
         $client = TestClient::create($app);
         $stream = $client->connectSse('/notifications');
-        $this->assertEquals([['level' => 'critical', 'message' => 'Database connection pool exhausted', 'source' => 'database-service', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'system_alert']], $stream->events());
+        $this->assertEquals([['level' => 'critical', 'message' => 'Database connection pool exhausted', 'source' => 'database-service', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'system_alert']], $stream->eventsAsJson());
+        $client->close();
     }
 
     public function test_sse_notifications_2(): void
@@ -4446,7 +4447,8 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         $app = AppFactory::create_sse_notifications_2();
         $client = TestClient::create($app);
         $stream = $client->connectSse('/notifications');
-        $this->assertEquals([[['message' => 'example_message', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'example_type'], ['message' => 'example_message', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'example_type']]], $stream->events());
+        $this->assertEquals([[['message' => 'example_message', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'example_type'], ['message' => 'example_message', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'example_type']]], $stream->eventsAsJson());
+        $client->close();
     }
 
     public function test_sse_notifications_3(): void
@@ -4457,7 +4459,8 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         $app = AppFactory::create_sse_notifications_3();
         $client = TestClient::create($app);
         $stream = $client->connectSse('/notifications');
-        $this->assertEquals([['body' => 'You have received a new direct message', 'priority' => 'high', 'timestamp' => '2024-01-15T10:30:00Z', 'title' => 'New message from John', 'type' => 'user_notification', 'userId' => 'user_12345']], $stream->events());
+        $this->assertEquals([['body' => 'You have received a new direct message', 'priority' => 'high', 'timestamp' => '2024-01-15T10:30:00Z', 'title' => 'New message from John', 'type' => 'user_notification', 'userId' => 'user_12345']], $stream->eventsAsJson());
+        $client->close();
     }
 
     public function test_sse_notifications_4(): void
@@ -4468,7 +4471,8 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         $app = AppFactory::create_sse_notifications_4();
         $client = TestClient::create($app);
         $stream = $client->connectSse('/notifications');
-        $this->assertEquals([['message' => 'All systems operational', 'metadata' => ['region' => 'us-east-1', 'uptime' => 99.99], 'service' => 'payment-gateway', 'status' => 'operational', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'status_update']], $stream->events());
+        $this->assertEquals([['message' => 'All systems operational', 'metadata' => ['region' => 'us-east-1', 'uptime' => 99.99], 'service' => 'payment-gateway', 'status' => 'operational', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'status_update']], $stream->eventsAsJson());
+        $client->close();
     }
 
     public function test_websocket_systemalert_1(): void
@@ -4478,9 +4482,12 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         }
         $app = AppFactory::create_websocket_systemalert_1();
         $client = TestClient::create($app);
-        $ws = $client->connectWebSocket('systemAlert', '{"level":"example_level","message":"example_message","source":"example_source","timestamp":"2024-01-15T10:30:00Z","type":"system_alert"}');
-        $received = $ws->recv_text();
-        $this->assertNotNull($received);
+        $ws = $client->connectWebSocket('systemAlert');
+        $ws->sendJson('{"level":"example_level","message":"example_message","source":"example_source","timestamp":"2024-01-15T10:30:00Z","type":"system_alert"}');
+        $this->assertFalse($ws->isClosed());
+        $ws->close();
+        $this->assertTrue($ws->isClosed());
+        $client->close();
     }
 
     public function test_websocket_chat_2(): void
@@ -4490,9 +4497,12 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         }
         $app = AppFactory::create_websocket_chat_2();
         $client = TestClient::create($app);
-        $ws = $client->connectWebSocket('/chat', '{"text":"Hello, everyone!","timestamp":"2024-01-15T10:30:00Z","type":"message","user":"alice"}');
-        $received = $ws->recv_text();
-        $this->assertNotNull($received);
+        $ws = $client->connectWebSocket('/chat');
+        $ws->sendJson('{"text":"Hello, everyone!","timestamp":"2024-01-15T10:30:00Z","type":"message","user":"alice"}');
+        $this->assertFalse($ws->isClosed());
+        $ws->close();
+        $this->assertTrue($ws->isClosed());
+        $client->close();
     }
 
     public function test_websocket_chatack_3(): void
@@ -4502,9 +4512,12 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         }
         $app = AppFactory::create_websocket_chatack_3();
         $client = TestClient::create($app);
-        $ws = $client->connectWebSocket('chatAck', '{"messageId":"ack-123","status":"delivered","timestamp":"2024-01-15T10:31:00Z","type":"chatAck"}');
-        $received = $ws->recv_text();
-        $this->assertNotNull($received);
+        $ws = $client->connectWebSocket('chatAck');
+        $ws->sendJson('{"messageId":"ack-123","status":"delivered","timestamp":"2024-01-15T10:31:00Z","type":"chatAck"}');
+        $this->assertFalse($ws->isClosed());
+        $ws->close();
+        $this->assertTrue($ws->isClosed());
+        $client->close();
     }
 
     public function test_websocket_chat_4(): void
@@ -4514,9 +4527,12 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         }
         $app = AppFactory::create_websocket_chat_4();
         $client = TestClient::create($app);
-        $ws = $client->connectWebSocket('/chat', '{"timestamp":"2024-01-15T10:35:00Z","type":"userLeft","user":"charlie"}');
-        $received = $ws->recv_text();
-        $this->assertNotNull($received);
+        $ws = $client->connectWebSocket('/chat');
+        $ws->sendJson('{"timestamp":"2024-01-15T10:35:00Z","type":"userLeft","user":"charlie"}');
+        $this->assertFalse($ws->isClosed());
+        $ws->close();
+        $this->assertTrue($ws->isClosed());
+        $client->close();
     }
 
     public function test_websocket_chat_5(): void
@@ -4526,9 +4542,12 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         }
         $app = AppFactory::create_websocket_chat_5();
         $client = TestClient::create($app);
-        $ws = $client->connectWebSocket('/chat', '{"timestamp":"2024-01-15T10:29:55Z","type":"userJoined","user":"bob"}');
-        $received = $ws->recv_text();
-        $this->assertNotNull($received);
+        $ws = $client->connectWebSocket('/chat');
+        $ws->sendJson('{"timestamp":"2024-01-15T10:29:55Z","type":"userJoined","user":"bob"}');
+        $this->assertFalse($ws->isClosed());
+        $ws->close();
+        $this->assertTrue($ws->isClosed());
+        $client->close();
     }
 
     public function test_websocket_usernotification_6(): void
@@ -4538,9 +4557,12 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         }
         $app = AppFactory::create_websocket_usernotification_6();
         $client = TestClient::create($app);
-        $ws = $client->connectWebSocket('userNotification', '{"body":"example_body","priority":"example_priority","timestamp":"2024-01-15T10:30:00Z","title":"example_title","type":"user_notification","userId":"example_userId"}');
-        $received = $ws->recv_text();
-        $this->assertNotNull($received);
+        $ws = $client->connectWebSocket('userNotification');
+        $ws->sendJson('{"body":"example_body","priority":"example_priority","timestamp":"2024-01-15T10:30:00Z","title":"example_title","type":"user_notification","userId":"example_userId"}');
+        $this->assertFalse($ws->isClosed());
+        $ws->close();
+        $this->assertTrue($ws->isClosed());
+        $client->close();
     }
 
     public function test_websocket_statusupdate_7(): void
@@ -4550,9 +4572,12 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
         }
         $app = AppFactory::create_websocket_statusupdate_7();
         $client = TestClient::create($app);
-        $ws = $client->connectWebSocket('statusUpdate', '{"message":"example_message","metadata":{},"service":"example_service","status":"example_status","timestamp":"2024-01-15T10:30:00Z","type":"status_update"}');
-        $received = $ws->recv_text();
-        $this->assertNotNull($received);
+        $ws = $client->connectWebSocket('statusUpdate');
+        $ws->sendJson('{"message":"example_message","metadata":{},"service":"example_service","status":"example_status","timestamp":"2024-01-15T10:30:00Z","type":"status_update"}');
+        $this->assertFalse($ws->isClosed());
+        $ws->close();
+        $this->assertTrue($ws->isClosed());
+        $client->close();
     }
 
 }
