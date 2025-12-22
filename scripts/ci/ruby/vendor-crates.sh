@@ -24,7 +24,7 @@ if [ -z "${WORKSPACE_VERSION:-}" ]; then
 fi
 
 # Copy internal crates
-for crate in spikard-core spikard-http spikard-bindings-shared spikard-rb; do
+for crate in spikard-core spikard-http spikard-bindings-shared spikard-rb spikard-rb-macros; do
 	echo "  Copying $crate..."
 	rm -rf "${VENDOR_DIR:?}/$crate"
 	cp -r "crates/$crate" "$VENDOR_DIR/"
