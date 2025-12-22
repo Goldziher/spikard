@@ -6,11 +6,13 @@ input_tag="${INPUT_TAG:-}"
 input_dry_run="${INPUT_DRY_RUN:-}"
 input_ref="${INPUT_REF:-}"
 input_targets="${INPUT_TARGETS:-}"
+input_force_republish="${INPUT_FORCE_REPUBLISH:-}"
 release_tag="${RELEASE_TAG_NAME:-}"
 dispatch_tag="${DISPATCH_TAG:-}"
 dispatch_dry_run="${DISPATCH_DRY_RUN:-}"
 dispatch_ref="${DISPATCH_REF:-}"
 dispatch_targets="${DISPATCH_TARGETS:-}"
+dispatch_force_republish="${DISPATCH_FORCE_REPUBLISH:-}"
 ref_name="${GITHUB_REF_NAME:-}"
 
 case "${event}" in
@@ -19,24 +21,28 @@ workflow_dispatch)
 	dry_run_input="${input_dry_run:-false}"
 	ref_input="${input_ref}"
 	targets_input="${input_targets}"
+	force_republish_input="${input_force_republish:-false}"
 	;;
 release)
 	tag="${release_tag}"
 	dry_run_input="false"
 	ref_input="refs/tags/${tag}"
 	targets_input=""
+	force_republish_input="false"
 	;;
 repository_dispatch)
 	tag="${dispatch_tag}"
 	dry_run_input="${dispatch_dry_run}"
 	ref_input="${dispatch_ref}"
 	targets_input="${dispatch_targets}"
+	force_republish_input="${dispatch_force_republish:-false}"
 	;;
 *)
 	tag="${ref_name}"
 	dry_run_input="false"
 	ref_input=""
 	targets_input=""
+	force_republish_input="false"
 	if [[ "${tag}" == *-pre* || "${tag}" == *-rc* ]]; then
 		dry_run_input="true"
 	fi
@@ -197,6 +203,7 @@ cat <<JSON >release-metadata.json
   "target_sha": "${target_sha}",
   "matrix_ref": "${matrix_ref}",
   "dry_run": ${dry_run:-false},
+  "force_republish": ${force_republish_input:-false},
   "is_tag": ${is_tag},
   "release_targets": "${release_targets_summary}",
   "release_any": ${release_any},
@@ -223,6 +230,7 @@ append_output "tag" "${tag}"
 append_output "version" "${version}"
 append_output "ref" "${ref}"
 append_output "dry_run" "${dry_run:-false}"
+append_output "force_republish" "${force_republish_input:-false}"
 append_output "checkout_ref" "${checkout_ref}"
 append_output "target_sha" "${target_sha}"
 append_output "matrix_ref" "${matrix_ref}"
