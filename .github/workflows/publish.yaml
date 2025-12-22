@@ -74,6 +74,10 @@ jobs:
         env:
           GH_EVENT_NAME: ${{ github.event_name }}
           RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+          INPUT_REF: ${{ inputs.ref }}
+          INPUT_TARGETS: ${{ inputs.targets }}
           INPUT_FORCE_REPUBLISH: ${{ inputs.force_republish }}
           DISPATCH_TAG: ${{ github.event.client_payload.tag }}
           DISPATCH_DRY_RUN: ${{ github.event.client_payload.dry_run }}
