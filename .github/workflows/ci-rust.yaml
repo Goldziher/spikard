@@ -49,13 +49,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Python for PyO3
-        uses: actions/setup-python@v6
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
         with:
           python-version: "3.14"
-
-      - name: Install Python dependencies for PyO3 tests
-        run: python -m pip install --disable-pip-version-check --no-python-version-warning msgspec
+          cache-prefix: test-rust-workspace-py3.14
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -91,13 +89,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Python for PyO3
-        uses: actions/setup-python@v6
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
         with:
           python-version: "3.14"
-
-      - name: Install Python dependencies for PyO3 tests
-        run: python -m pip install --disable-pip-version-check --no-python-version-warning msgspec
+          cache-prefix: test-rust-cross-${{ matrix.os }}-py3.14
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -139,13 +135,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Python for PyO3
-        uses: actions/setup-python@v6
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
         with:
           python-version: "3.14"
-
-      - name: Install Python dependencies for PyO3 tests
-        run: python -m pip install --disable-pip-version-check --no-python-version-warning msgspec
+          cache-prefix: coverage-rust-py3.14
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust

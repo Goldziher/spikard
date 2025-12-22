@@ -24,9 +24,7 @@ from spikard.config import ServerConfig
 
 _profile_dir_env = os.environ.get("SPIKARD_PYTHON_PROFILE_DIR") or None
 _pyinstrument_output = os.environ.get("SPIKARD_PYINSTRUMENT_OUTPUT") or None
-_profile_enabled = os.environ.get("SPIKARD_PROFILE_ENABLED") == "1" or bool(
-    _profile_dir_env or _pyinstrument_output
-)
+_profile_enabled = os.environ.get("SPIKARD_PROFILE_ENABLED") == "1" or bool(_profile_dir_env or _pyinstrument_output)
 
 profiling_module = PathLib(__file__).parent.parent.parent / "profiling" / "python_metrics.py"
 _profiling_collector: object | None = None
