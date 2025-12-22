@@ -57,7 +57,7 @@ impl WebSocketConnection {
 
     pub(crate) fn send_text(&mut self, text: String) -> Result<(), WebSocketIoError> {
         self.stream
-            .write_message(Message::Text(text))
+            .write_message(Message::Text(text.into()))
             .map_err(map_tungstenite_error)
     }
 
@@ -113,8 +113,10 @@ fn map_io_error(err: std::io::Error) -> WebSocketIoError {
 
 fn message_to_text(message: Message) -> Result<String, WebSocketIoError> {
     match message {
-        Message::Text(text) => Ok(text),
-        Message::Binary(bytes) => String::from_utf8(bytes).map_err(|err| WebSocketIoError::Other(err.to_string())),
+        Message::Text(text) => Ok(text.to_string()),
+        Message::Binary(bytes) => {
+            String::from_utf8(bytes.to_vec()).map_err(|err| WebSocketIoError::Other(err.to_string()))
+        }
         Message::Close(frame) => Ok(frame.map(|f| f.reason.to_string()).unwrap_or_default()),
         Message::Ping(_) | Message::Pong(_) => Ok(String::new()),
         Message::Frame(_) => Err(WebSocketIoError::Other(
@@ -125,13 +127,13 @@ fn message_to_text(message: Message) -> Result<String, WebSocketIoError> {
 
 fn message_to_bytes(message: Message) -> Result<bytes::Bytes, WebSocketIoError> {
     match message {
-        Message::Text(text) => Ok(bytes::Bytes::from(text)),
-        Message::Binary(bytes) => Ok(bytes::Bytes::from(bytes)),
+        Message::Text(text) => Ok(bytes::Bytes::from(text.to_string())),
+        Message::Binary(bytes) => Ok(bytes),
         Message::Close(frame) => Ok(bytes::Bytes::from(
             frame.map(|f| f.reason.to_string()).unwrap_or_default(),
         )),
-        Message::Ping(data) => Ok(bytes::Bytes::from(data)),
-        Message::Pong(data) => Ok(bytes::Bytes::from(data)),
+        Message::Ping(data) => Ok(data),
+        Message::Pong(data) => Ok(data),
         Message::Frame(_) => Err(WebSocketIoError::Other(
             "Unexpected frame message while reading bytes".to_string(),
         )),
@@ -474,11 +476,11 @@ pub enum WebSocketMessageData {
 impl WebSocketMessageData {
     fn from_tungstenite(message: Message) -> Result<Self, WebSocketIoError> {
         match message {
-            Message::Text(text) => Ok(Self::Text(text)),
-            Message::Binary(bytes) => Ok(Self::Binary(bytes)),
+            Message::Text(text) => Ok(Self::Text(text.to_string())),
+            Message::Binary(bytes) => Ok(Self::Binary(bytes.to_vec())),
             Message::Close(frame) => Ok(Self::Close(frame.map(|f| f.reason.to_string()))),
-            Message::Ping(bytes) => Ok(Self::Ping(bytes)),
-            Message::Pong(bytes) => Ok(Self::Pong(bytes)),
+            Message::Ping(bytes) => Ok(Self::Ping(bytes.to_vec())),
+            Message::Pong(bytes) => Ok(Self::Pong(bytes.to_vec())),
             Message::Frame(_) => Err(WebSocketIoError::Other(
                 "Unexpected frame message while reading WebSocket".to_string(),
             )),

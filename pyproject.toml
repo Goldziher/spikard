@@ -1,7 +1,7 @@
 [dependency-groups]
 dev = [
   "annotated-types>=0.7.0",
-  "fastapi>=0.125.0",
+  "fastapi>=0.127.0",
   "httpx-sse>=0.4.3",
   "jsonschema>=4.23.0",
   "maturin>=1.10.2",
@@ -18,7 +18,7 @@ dev = [
   "pytest-timeout>=2.4.0",
   "ruff>=0.14.10",
   "uv-bump",
-  "uvicorn>=0.38.0",
+  "uvicorn>=0.40.0",
   "websockets>=15.0.1",
 ]
 docs = [

@@ -241,8 +241,8 @@ pub async fn validate_content_type_middleware(
                     validation::validate_content_length(headers, body_bytes.len())?;
                 }
 
-                let should_validate_json = route_info.expects_json_body
-                    && matches!(content_kind, Some(validation::ContentTypeKind::Json));
+                let should_validate_json =
+                    route_info.expects_json_body && matches!(content_kind, Some(validation::ContentTypeKind::Json));
                 if should_validate_json && !body_bytes.is_empty() {
                     match serde_json::from_slice::<serde_json::Value>(&body_bytes) {
                         Ok(value) => parsed_json = Some(value),
