@@ -1,16 +1,15 @@
 site_name: Spikard
-site_description: A polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript, Ruby, and Rust
+site_description: A polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript, Ruby, PHP, and WebAssembly
 site_url: https://spikard.dev
 site_author: Spikard Contributors
 repo_name: Goldziher/spikard
 repo_url: https://github.com/Goldziher/spikard
 edit_uri: edit/main/docs/
-copyright: |
-  Copyright &copy; 2023-2025 Spikard Contributors<br>
-  <a href="#__consent">Change cookie settings</a>
+copyright: Copyright &copy; 2023-2025 Spikard Contributors
 
 theme:
   name: material
+  custom_dir: docs/overrides
   logo: assets/logo.svg
   favicon: assets/favicon.ico
   palette:
@@ -32,9 +31,14 @@ theme:
     text: Inter
     code: JetBrains Mono
   features:
+    # Code Features
     - content.code.copy
     - content.code.annotate
     - content.tabs.link
+    - content.action.edit
+    - content.action.view
+
+    # Navigation Features
     - navigation.instant
     - navigation.instant.progress
     - navigation.path
@@ -46,28 +50,33 @@ theme:
     - navigation.tracking
     - navigation.top
     - navigation.footer
+
+    # Search Features
     - search.highlight
     - search.share
     - search.suggest
+
+    # TOC Features
     - toc.follow
     - toc.integrate
+
+    # Announcements
     - announce.dismiss
-    - content.action.edit
-    - content.action.view
   icon:
     repo: fontawesome/brands/github
+    search: material/magnify
   language: en
 
 markdown_extensions:
+  # Basic Extensions
   - admonition
   - attr_list
   - def_list
   - footnotes
   - md_in_html
-  - pymdownx.details
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+
+  # PyMdown Extensions - Code Display
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -75,26 +84,46 @@ markdown_extensions:
       linenums: false
       use_pygments: true
   - pymdownx.inlinehilite
-  - pymdownx.keys
-  - pymdownx.mark
-  - pymdownx.smartsymbols
-  - pymdownx.snippets:
-      base_path: ["docs", "."]
-      check_paths: true
+
+  # Superfences (Custom Fence Blocks)
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+
+  # Tabbed Content
   - pymdownx.tabbed:
       alternate_style: true
       combine_header_slug: true
       slugify: !!python/object/apply:pymdownx.slugs.slugify
         kwds:
           case: lower
+
+  # Task Lists
   - pymdownx.tasklist:
       custom_checkbox: true
-  - tables
+
+  # Special Formatting
+  - pymdownx.details
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+
+  # Emoji Support
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      options:
+        custom_icons:
+          - docs/overrides/.icons
+
+  # Code Snippets
+  - pymdownx.snippets:
+      base_path: ["docs", "."]
+      check_paths: true
+
+  # Table of Contents
   - toc:
       permalink: true
       toc_depth: 3
@@ -139,6 +168,12 @@ extra:
     - icon: fontawesome/brands/rust
       link: https://crates.io/crates/spikard
       name: View on crates.io
+    - icon: fontawesome/solid/gem
+      link: https://rubygems.org/gems/spikard
+      name: View on RubyGems
+    - icon: fontawesome/brands/php
+      link: https://packagist.org/packages/goldziher/spikard
+      name: View on Packagist
     - icon: fontawesome/brands/discord
       link: https://discord.gg/pXxagNK2zN
       name: Chat on Discord
@@ -160,10 +195,13 @@ extra_css:
   - css/extra.css
 
 nav:
+  # Landing & Getting Started
   - Home: index.md
   - Getting Started:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
+
+  # Core Concepts & Features
   - Features: features.md
   - Concepts:
       - Architecture: concepts/architecture.md
@@ -172,6 +210,8 @@ nav:
       - Middleware & Extensions: concepts/middleware.md
       - Streaming & Async IO: concepts/streaming.md
       - Python Binding Architecture: python/architecture.md
+
+  # User Guides
   - Guides:
       - Routing Basics: guides/routing.md
       - Requests & Responses: guides/requests.md
@@ -180,13 +220,20 @@ nav:
       - Validation Flows: guides/validation.md
       - Dependency Injection: guides/dependency-injection.md
       - Deployment: guides/deployment.md
+
+  # Command Line
   - CLI: cli/usage.md
+
+  # Language Bindings
   - Bindings:
       - Python: bindings/python.md
-      - TypeScript / Node: bindings/typescript.md
+      - TypeScript & Node: bindings/typescript.md
       - Ruby: bindings/ruby.md
+      - PHP: bindings/php.md
       - Rust: bindings/rust.md
-      - WASM / Edge: bindings/wasm.md
+      - WASM & Edge: bindings/wasm.md
+
+  # Practical Patterns
   - Playbooks:
       - Auth & Guards: playbooks/auth.md
       - Logging & Tracing: playbooks/logging.md
@@ -194,14 +241,19 @@ nav:
       - Streaming & Real-Time: playbooks/streaming.md
       - Error Handling: playbooks/errors.md
       - Background Tasks: playbooks/background.md
+
+  # API Documentation
   - API Reference:
       - Python: reference/api-python.md
       - TypeScript: reference/api-typescript.md
       - Ruby: reference/api-ruby.md
+      - PHP: reference/api-php.md
       - Rust: reference/api-rust.md
       - Configuration: reference/configuration.md
       - Types: reference/types.md
       - Errors: reference/errors.md
+
+  # Architecture Decisions
   - Architecture Decisions:
       - ADR Overview: adr/README.md
       - ADR 0001 - Architecture and Principles: adr/0001-architecture-and-principles.md
@@ -213,11 +265,15 @@ nav:
       - ADR 0007 - Observability and OTEL: adr/0007-observability-and-otel.md
       - ADR 0008 - Dependency Injection System: adr/0008-dependency-injection.md
       - ADR 0009 - Panic Shielding: adr/0009-panic-shielding.md
+
+  # Performance Analysis
   - Benchmarks:
       - Overview: benchmarks/index.md
       - Methodology: benchmarks/methodology.md
       - Frameworks: benchmarks/frameworks.md
       - Running Benchmarks: benchmarks/running.md
       - Harness Design: benchmarks/harness-design.md
+
+  # Community
   - Contributing: contributing.md
   - Changelog: changelog.md
