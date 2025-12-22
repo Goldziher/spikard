@@ -22,6 +22,11 @@ on:
         description: "Comma-separated list of release targets (all, python, node, ruby, php, cli, crates, wasm, homebrew)"
         required: false
         type: string
+      force_republish:
+        description: "Force re-publish even if artifacts already exist"
+        required: false
+        type: boolean
+        default: false
   repository_dispatch:
     types: [publish-release]
 
@@ -44,6 +49,7 @@ jobs:
       version: ${{ steps.meta.outputs.version }}
       ref: ${{ steps.meta.outputs.ref }}
       dry_run: ${{ steps.meta.outputs.dry_run }}
+      force_republish: ${{ steps.meta.outputs.force_republish }}
       checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
       target_sha: ${{ steps.meta.outputs.target_sha }}
       matrix_ref: ${{ steps.meta.outputs.matrix_ref }}
@@ -58,6 +64,7 @@ jobs:
       release_crates: ${{ steps.meta.outputs.release_crates }}
       release_wasm: ${{ steps.meta.outputs.release_wasm }}
       release_homebrew: ${{ steps.meta.outputs.release_homebrew }}
+      force_republish: ${{ steps.meta.outputs.force_republish }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -68,10 +75,12 @@ jobs:
         env:
           GH_EVENT_NAME: ${{ github.event_name }}
           RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
+          INPUT_FORCE_REPUBLISH: ${{ inputs.force_republish }}
           DISPATCH_TAG: ${{ github.event.client_payload.tag }}
           DISPATCH_DRY_RUN: ${{ github.event.client_payload.dry_run }}
           DISPATCH_REF: ${{ github.event.client_payload.ref }}
           DISPATCH_TARGETS: ${{ github.event.client_payload.targets }}
+          DISPATCH_FORCE_REPUBLISH: ${{ github.event.client_payload.force_republish }}
         run: bash scripts/publish/prepare-metadata.sh
 
       - name: Upload release metadata
@@ -80,6 +89,114 @@ jobs:
           name: release-metadata
           path: release-metadata.json
           retention-days: 14
+
+  check-pypi:
+    name: Check if Python package exists on PyPI
+    needs: prepare
+    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_python == 'true' && needs.prepare.outputs.force_republish != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Check PyPI for existing version
+        id: check
+        run: bash scripts/publish/check_pypi.sh "${{ needs.prepare.outputs.version }}"
+
+  check-npm-node:
+    name: Check if Node package exists on npm
+    needs: prepare
+    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_node == 'true' && needs.prepare.outputs.force_republish != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Check npm for existing version
+        id: check
+        run: bash scripts/publish/check_npm.sh "@spikard/node" "${{ needs.prepare.outputs.version }}"
+
+  check-npm-wasm:
+    name: Check if WASM package exists on npm
+    needs: prepare
+    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_wasm == 'true' && needs.prepare.outputs.force_republish != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Check npm for existing version
+        id: check
+        run: bash scripts/publish/check_npm.sh "@spikard/wasm" "${{ needs.prepare.outputs.version }}"
+
+  check-rubygems:
+    name: Check if Ruby gem exists on RubyGems
+    needs: prepare
+    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_ruby == 'true' && needs.prepare.outputs.force_republish != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Check RubyGems for existing version
+        id: check
+        run: bash scripts/publish/check_rubygems.sh "${{ needs.prepare.outputs.version }}"
+
+  rubygems-already-published:
+    name: RubyGems already published summary
+    needs: [prepare, check-rubygems]
+    if: >-
+      ${{
+        needs.prepare.outputs.is_tag == 'true' &&
+        needs.prepare.outputs.release_ruby == 'true' &&
+        needs.prepare.outputs.force_republish != 'true' &&
+        needs.check-rubygems.outputs.exists == 'true'
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Write summary
+        run: bash scripts/publish/ruby/already-published-summary.sh "${{ needs.prepare.outputs.version }}"
 
   python-wheels:
     name: Build Python wheels (${{ matrix.label }})
@@ -818,8 +935,15 @@ jobs:
 
   publish-pypi:
     name: Publish Python packages to PyPI
-    needs: [prepare, python-wheels, python-sdist]
-    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_python == 'true' }}
+    needs: [prepare, python-wheels, python-sdist, check-pypi]
+    if: >-
+      ${{
+        needs.prepare.result == 'success' &&
+        needs.prepare.outputs.tag &&
+        needs.prepare.outputs.is_tag == 'true' &&
+        needs.prepare.outputs.release_python == 'true' &&
+        (needs.prepare.outputs.force_republish == 'true' || needs.check-pypi.outputs.exists != 'true')
+      }}
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
@@ -854,8 +978,15 @@ jobs:
 
   publish-rubygems:
     name: Publish Ruby gems
-    needs: [prepare, ruby-gem]
-    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_ruby == 'true' }}
+    needs: [prepare, ruby-gem, check-rubygems]
+    if: >-
+      ${{
+        needs.prepare.result == 'success' &&
+        needs.prepare.outputs.tag &&
+        needs.prepare.outputs.is_tag == 'true' &&
+        needs.prepare.outputs.release_ruby == 'true' &&
+        (needs.prepare.outputs.force_republish == 'true' || needs.check-rubygems.outputs.exists != 'true')
+      }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -895,8 +1026,15 @@ jobs:
 
   publish-node:
     name: Publish Node packages
-    needs: [prepare, node-bindings]
-    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_node == 'true' }}
+    needs: [prepare, node-bindings, check-npm-node]
+    if: >-
+      ${{
+        needs.prepare.result == 'success' &&
+        needs.prepare.outputs.tag &&
+        needs.prepare.outputs.is_tag == 'true' &&
+        needs.prepare.outputs.release_node == 'true' &&
+        (needs.prepare.outputs.force_republish == 'true' || needs.check-npm-node.outputs.exists != 'true')
+      }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -969,8 +1107,15 @@ jobs:
 
   publish-wasm:
     name: Publish WASM to npm
-    needs: [prepare, wasm-package]
-    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_wasm == 'true' }}
+    needs: [prepare, wasm-package, check-npm-wasm]
+    if: >-
+      ${{
+        needs.prepare.result == 'success' &&
+        needs.prepare.outputs.tag &&
+        needs.prepare.outputs.is_tag == 'true' &&
+        needs.prepare.outputs.release_wasm == 'true' &&
+        (needs.prepare.outputs.force_republish == 'true' || needs.check-npm-wasm.outputs.exists != 'true')
+      }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
