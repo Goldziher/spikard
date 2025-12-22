@@ -74,7 +74,7 @@ jobs:
       - name: Run workspace tests (excluding extension-module feature)
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
-          PYO3_PYTHON: python
+          PYO3_PYTHON: .venv/bin/python
         shell: bash
         run: bash scripts/ci/rust/run-workspace-tests.sh
 
@@ -115,7 +115,7 @@ jobs:
         if: runner.os != 'Windows'
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
-          PYO3_PYTHON: python
+          PYO3_PYTHON: .venv/bin/python
         shell: bash
         run: bash scripts/ci/rust/run-workspace-tests.sh
 
@@ -123,7 +123,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
-          PYO3_PYTHON: python
+          PYO3_PYTHON: .venv\\Scripts\\python.exe
         shell: pwsh
         run: scripts/ci/rust/run-workspace-tests-windows.ps1 -ExcludeRuby
 
@@ -163,7 +163,7 @@ jobs:
       - name: Generate Rust coverage report
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
-          PYO3_PYTHON: python
+          PYO3_PYTHON: .venv/bin/python
         run: >
           cargo tarpaulin
           -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared

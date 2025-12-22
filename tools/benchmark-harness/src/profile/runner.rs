@@ -12,8 +12,21 @@ use crate::{
     },
     server::{ServerConfig, ServerHandle, start_server},
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use sysinfo::{Pid, System};
+
+fn find_workspace_root(app_dir: &Path) -> Option<PathBuf> {
+    app_dir
+        .ancestors()
+        .find(|dir| dir.join("pnpm-workspace.yaml").exists())
+        .map(|dir| dir.to_path_buf())
+}
+
+fn find_tsx_cli(app_dir: &Path) -> Option<PathBuf> {
+    let workspace_root = find_workspace_root(app_dir)?;
+    let tsx_cli = workspace_root.join("node_modules/tsx/dist/cli.mjs");
+    tsx_cli.exists().then_some(tsx_cli)
+}
 fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) -> Option<u32> {
     let mut system = System::new();
     system.refresh_all();
@@ -185,14 +198,22 @@ impl ProfileRunner {
             let _ = std::fs::remove_file(self.config.app_dir.join("v8.log"));
         }
 
-        let node_start_cmd_override = node_cpu_profile_dir.as_ref().map(|dir| {
-            let tsx_cli = self.config.app_dir.join("../node_modules/tsx/dist/cli.mjs");
-            format!(
-                "node --cpu-prof --cpu-prof-dir {} {} server.ts {{port}}",
-                dir.display(),
-                tsx_cli.display()
-            )
-        });
+        let node_start_cmd_override = match node_cpu_profile_dir.as_ref() {
+            Some(dir) => {
+                let tsx_cli = find_tsx_cli(&self.config.app_dir).ok_or_else(|| {
+                    Error::InvalidInput(format!(
+                        "Unable to locate tsx CLI for Node profiling from {}",
+                        self.config.app_dir.display()
+                    ))
+                })?;
+                Some(format!(
+                    "node --cpu-prof --cpu-prof-dir {} {} server.ts {{port}}",
+                    dir.display(),
+                    tsx_cli.display()
+                ))
+            }
+            None => None,
+        };
 
         let server_config = ServerConfig {
             framework: Some(self.config.framework.clone()),
