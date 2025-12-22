@@ -343,7 +343,7 @@ fn generate_handler_class_php(fixture: &Fixture) -> String {
     };
 
     format!(
-        "        $handler = new class implements HandlerInterface {{\n            public function matches(Request $request): bool {{ return true; }}\n            public function handle(Request $request): Response {{\n                return new Response({}, {}, {});\n            }}\n        }};",
+        "        $handler = new class implements HandlerInterface {{\n            public function matches(Request $request): bool {{ return true; }}\n            public function handle(Request $request): Response {{\n                return new Response({}, {}, {});\n            }}\n            public function __invoke(Request $request): Response {{\n                return $this->handle($request);\n            }}\n        }};",
         body_literal, expected_status, headers_literal
     )
 }
