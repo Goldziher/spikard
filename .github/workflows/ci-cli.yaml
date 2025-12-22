@@ -12,17 +12,17 @@ on:
       - ".cargo/config.toml"
       - ".github/workflows/ci-cli.yaml"
       - ".github/actions/setup-rust/**"
-#   pull_request:
-#     branches: [main]
-#     paths:
-#       - "crates/spikard-cli/**"
-#       - "crates/spikard/**/*.rs"
-#       - "crates/spikard-http/**/*.rs"
-#       - "Cargo.toml"
-#       - "Cargo.lock"
-#       - ".cargo/config.toml"
-#       - ".github/workflows/ci-cli.yaml"
-#       - ".github/actions/setup-rust/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/spikard-cli/**"
+      - "crates/spikard/**/*.rs"
+      - "crates/spikard-http/**/*.rs"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".cargo/config.toml"
+      - ".github/workflows/ci-cli.yaml"
+      - ".github/actions/setup-rust/**"
 
 concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

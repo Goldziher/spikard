@@ -15,20 +15,20 @@ on:
       - ".github/actions/setup-llvm-clang/**"
       - ".github/actions/setup-openssl/**"
       - ".github/actions/setup-rust/**"
-#   pull_request:
-#     branches: [main]
-#     paths:
-#       - "crates/spikard-php/**"
-#       - "packages/php/**"
-#       - "composer.lock"
-#       - "crates/spikard/**/*.rs"
-#       - "crates/spikard-http/**/*.rs"
-#       - "testing_data/**"
-#       - ".cargo/config.toml"
-#       - ".github/workflows/ci-php.yaml"
-#       - ".github/actions/setup-llvm-clang/**"
-#       - ".github/actions/setup-openssl/**"
-#       - ".github/actions/setup-rust/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/spikard-php/**"
+      - "packages/php/**"
+      - "composer.lock"
+      - "crates/spikard/**/*.rs"
+      - "crates/spikard-http/**/*.rs"
+      - "testing_data/**"
+      - ".cargo/config.toml"
+      - ".github/workflows/ci-php.yaml"
+      - ".github/actions/setup-llvm-clang/**"
+      - ".github/actions/setup-openssl/**"
+      - ".github/actions/setup-rust/**"
 
 concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

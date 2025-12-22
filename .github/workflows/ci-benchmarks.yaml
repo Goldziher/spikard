@@ -18,23 +18,23 @@ on:
       - 'tools/benchmark-harness/**'
       - 'testing_data/**'
       - '.github/workflows/ci-benchmarks.yaml'
-#   pull_request:
-#     branches: [main]
-#     paths:
-#       - 'crates/spikard/**'
-#       - 'crates/spikard-http/**'
-#       - 'crates/spikard-py/**'
-#       - 'crates/spikard-node/**'
-#       - 'crates/spikard-rb/**'
-#       - 'crates/spikard-php/**'
-#       - 'crates/spikard-wasm/**'
-#       - 'packages/python/**'
-#       - 'packages/node/**'
-#       - 'packages/ruby/**'
-#       - 'packages/php/**'
-#       - 'tools/benchmark-harness/**'
-#       - 'testing_data/**'
-#       - '.github/workflows/ci-benchmarks.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'crates/spikard/**'
+      - 'crates/spikard-http/**'
+      - 'crates/spikard-py/**'
+      - 'crates/spikard-node/**'
+      - 'crates/spikard-rb/**'
+      - 'crates/spikard-php/**'
+      - 'crates/spikard-wasm/**'
+      - 'packages/python/**'
+      - 'packages/node/**'
+      - 'packages/ruby/**'
+      - 'packages/php/**'
+      - 'tools/benchmark-harness/**'
+      - 'testing_data/**'
+      - '.github/workflows/ci-benchmarks.yaml'
 
 concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -45,7 +45,7 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
   CARGO_PROFILE_DEV_DEBUG: 0
-  BENCH_SUITE: all
+  BENCH_SUITE: ${{ github.event_name == 'pull_request' && 'json-bodies' || 'all' }}
   BENCH_DURATION: ${{ github.event_name == 'pull_request' && '10' || '30' }}
   BENCH_CONCURRENCY: ${{ github.event_name == 'pull_request' && '50' || '100' }}
   BENCH_WARMUP: ${{ github.event_name == 'pull_request' && '2' || '10' }}
@@ -80,17 +80,13 @@ jobs:
       - name: Install py-spy profiler
         run: cargo install py-spy --locked
 
-      - name: Install rbspy profiler
-        run: cargo install rbspy --locked
-
       - name: Package benchmark tools
         run: |
           mkdir -p artifacts/bin
           cp target/release/benchmark-harness artifacts/bin/benchmark-harness
           cp ~/.cargo/bin/oha artifacts/bin/oha
           cp ~/.cargo/bin/py-spy artifacts/bin/py-spy
-          cp ~/.cargo/bin/rbspy artifacts/bin/rbspy
-          chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha artifacts/bin/py-spy artifacts/bin/rbspy
+          chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha artifacts/bin/py-spy
 
       - name: Upload benchmark tools artifact
         uses: actions/upload-artifact@v6
@@ -115,7 +111,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -126,22 +122,9 @@ jobs:
       - name: Build spikard-rust benchmark app
         working-directory: tools/benchmark-harness/apps/spikard-rust
         run: cargo build --release
-        env:
-          CARGO_PROFILE_RELEASE_DEBUG: "1"
-          CARGO_PROFILE_RELEASE_LTO: "off"
-          CARGO_PROFILE_RELEASE_STRIP: "none"
-          RUSTFLAGS: "-C force-frame-pointers=yes"
 
       - name: Create results directory
         run: mkdir -p results/spikard-rust
-
-      - name: Install perf
-        run: |
-          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
-
-      - name: Allow perf profiling
-        run: |
-          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
 
       - name: Run benchmarks
         run: |
@@ -152,7 +135,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --profiler perf \
+            --profiler rust \
             --output results/spikard-rust/profile.json
 
       - name: Upload benchmark results
@@ -178,7 +161,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -189,20 +172,11 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           cache-prefix: bench-python
 
       - name: Build spikard-python binding
         uses: ./.github/actions/build-python-binding
-        with:
-          python-version: "3.13"
-          cache-prefix: bench-python
-          rust-cache-key-prefix: bench-python-binding
-        env:
-          CARGO_PROFILE_RELEASE_DEBUG: "1"
-          CARGO_PROFILE_RELEASE_LTO: "off"
-          CARGO_PROFILE_RELEASE_STRIP: "none"
-          RUSTFLAGS: "-C force-frame-pointers=yes"
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-python
@@ -211,13 +185,9 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/spikard-python
 
-      - name: Install perf
+      - name: Allow py-spy ptrace
         run: |
-          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
-
-      - name: Allow perf profiling
-        run: |
-          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
+          sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for py-spy" >&2; true; }
 
       - name: Run benchmarks
         run: |
@@ -228,7 +198,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --profiler perf \
+            --profiler python \
             --output results/spikard-python/profile.json
         env:
           SPIKARD_METRICS_FILE: ${{ github.workspace }}/results/spikard-python/python-metrics.json
@@ -257,7 +227,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
@@ -272,6 +242,10 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/robyn-raw
 
+      - name: Allow py-spy ptrace
+        run: |
+          sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for py-spy" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -281,6 +255,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler python \
             --output results/robyn-raw/profile.json
 
       - name: Upload benchmark results
@@ -306,7 +281,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
@@ -321,6 +296,10 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/robyn-dto
 
+      - name: Allow py-spy ptrace
+        run: |
+          sudo sysctl -w kernel.yama.ptrace_scope=0 || { echo "WARNING: unable to relax ptrace_scope for py-spy" >&2; true; }
+
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -330,6 +309,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
+            --profiler python \
             --output results/robyn-dto/profile.json
 
       - name: Upload benchmark results
@@ -338,202 +318,6 @@ jobs:
         with:
           name: benchmark-results-robyn-dto
           path: results/robyn-dto/
-          retention-days: 30
-
-  bench-fastapi-raw:
-    name: Benchmark fastapi-raw
-    runs-on: ubuntu-latest
-    needs: build-harness
-    timeout-minutes: 75
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Download benchmark tools
-        uses: actions/download-artifact@v7
-        with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
-
-      - name: Setup Python
-        uses: ./.github/actions/setup-python-env
-        with:
-          python-version: "3.13"
-          cache-prefix: bench-fastapi-raw
-
-      - name: Install benchmark app dependencies
-        working-directory: tools/benchmark-harness/apps/fastapi-uvicorn-raw
-        run: uv run pip install -e .
-
-      - name: Create results directory
-        run: mkdir -p results/fastapi-raw
-
-      - name: Run benchmarks
-        run: |
-          benchmark-harness profile \
-            --framework fastapi-raw \
-            --app-dir tools/benchmark-harness/apps/fastapi-uvicorn-raw \
-            --suite "$BENCH_SUITE" \
-            --duration "$BENCH_DURATION" \
-            --concurrency "$BENCH_CONCURRENCY" \
-            --warmup "$BENCH_WARMUP" \
-            --output results/fastapi-raw/profile.json
-
-      - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: benchmark-results-fastapi-raw
-          path: results/fastapi-raw/
-          retention-days: 30
-
-  bench-fastapi-uvicorn-dto:
-    name: Benchmark fastapi-uvicorn-dto
-    runs-on: ubuntu-latest
-    needs: build-harness
-    timeout-minutes: 75
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Download benchmark tools
-        uses: actions/download-artifact@v7
-        with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
-
-      - name: Setup Python
-        uses: ./.github/actions/setup-python-env
-        with:
-          python-version: "3.13"
-          cache-prefix: bench-fastapi-uvicorn-dto
-
-      - name: Install benchmark app dependencies
-        working-directory: tools/benchmark-harness/apps/fastapi-uvicorn-dto
-        run: uv run pip install -e .
-
-      - name: Create results directory
-        run: mkdir -p results/fastapi-uvicorn-dto
-
-      - name: Run benchmarks
-        run: |
-          benchmark-harness profile \
-            --framework fastapi-uvicorn-dto \
-            --app-dir tools/benchmark-harness/apps/fastapi-uvicorn-dto \
-            --suite "$BENCH_SUITE" \
-            --duration "$BENCH_DURATION" \
-            --concurrency "$BENCH_CONCURRENCY" \
-            --warmup "$BENCH_WARMUP" \
-            --output results/fastapi-uvicorn-dto/profile.json
-
-      - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: benchmark-results-fastapi-uvicorn-dto
-          path: results/fastapi-uvicorn-dto/
-          retention-days: 30
-
-  bench-fastapi-granian-raw:
-    name: Benchmark fastapi-granian-raw
-    runs-on: ubuntu-latest
-    needs: build-harness
-    timeout-minutes: 75
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Download benchmark tools
-        uses: actions/download-artifact@v7
-        with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
-
-      - name: Setup Python
-        uses: ./.github/actions/setup-python-env
-        with:
-          python-version: "3.13"
-          cache-prefix: bench-fastapi-granian-raw
-
-      - name: Install benchmark app dependencies
-        working-directory: tools/benchmark-harness/apps/fastapi-granian-raw
-        run: uv run pip install -e .
-
-      - name: Create results directory
-        run: mkdir -p results/fastapi-granian-raw
-
-      - name: Run benchmarks
-        run: |
-          benchmark-harness profile \
-            --framework fastapi-granian-raw \
-            --app-dir tools/benchmark-harness/apps/fastapi-granian-raw \
-            --suite "$BENCH_SUITE" \
-            --duration "$BENCH_DURATION" \
-            --concurrency "$BENCH_CONCURRENCY" \
-            --warmup "$BENCH_WARMUP" \
-            --output results/fastapi-granian-raw/profile.json
-
-      - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: benchmark-results-fastapi-granian-raw
-          path: results/fastapi-granian-raw/
-          retention-days: 30
-
-  bench-fastapi-granian-dto:
-    name: Benchmark fastapi-granian-dto
-    runs-on: ubuntu-latest
-    needs: build-harness
-    timeout-minutes: 75
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Download benchmark tools
-        uses: actions/download-artifact@v7
-        with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
-
-      - name: Setup Python
-        uses: ./.github/actions/setup-python-env
-        with:
-          python-version: "3.13"
-          cache-prefix: bench-fastapi-granian-dto
-
-      - name: Install benchmark app dependencies
-        working-directory: tools/benchmark-harness/apps/fastapi-granian-dto
-        run: uv run pip install -e .
-
-      - name: Create results directory
-        run: mkdir -p results/fastapi-granian-dto
-
-      - name: Run benchmarks
-        run: |
-          benchmark-harness profile \
-            --framework fastapi-granian-dto \
-            --app-dir tools/benchmark-harness/apps/fastapi-granian-dto \
-            --suite "$BENCH_SUITE" \
-            --duration "$BENCH_DURATION" \
-            --concurrency "$BENCH_CONCURRENCY" \
-            --warmup "$BENCH_WARMUP" \
-            --output results/fastapi-granian-dto/profile.json
-
-      - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: benchmark-results-fastapi-granian-dto
-          path: results/fastapi-granian-dto/
           retention-days: 30
 
   bench-spikard-node:
@@ -551,7 +335,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -567,25 +351,12 @@ jobs:
       - name: Build spikard-node binding
         working-directory: packages/node
         run: pnpm build
-        env:
-          CARGO_PROFILE_RELEASE_DEBUG: "1"
-          CARGO_PROFILE_RELEASE_LTO: "off"
-          CARGO_PROFILE_RELEASE_STRIP: "none"
-          RUSTFLAGS: "-C force-frame-pointers=yes"
 
       - name: Rebuild workspace after native build
         run: pnpm install --frozen-lockfile
 
       - name: Create results directory
         run: mkdir -p results/spikard-node
-
-      - name: Install perf
-        run: |
-          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
-
-      - name: Allow perf profiling
-        run: |
-          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
 
       - name: Run benchmarks
         run: |
@@ -596,7 +367,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --profiler perf \
+            --profiler node \
             --output results/spikard-node/profile.json
         env:
           SPIKARD_NODE_METRICS_FILE: ${{ github.workspace }}/results/spikard-node/node-metrics.json
@@ -607,68 +378,6 @@ jobs:
         with:
           name: benchmark-results-spikard-node
           path: results/spikard-node/
-          retention-days: 30
-
-  bench-typescript-frameworks:
-    name: Benchmark TypeScript (${{ matrix.framework }})
-    runs-on: ubuntu-latest
-    needs: build-harness
-    timeout-minutes: 75
-    strategy:
-      fail-fast: false
-      matrix:
-        framework:
-          - express-raw
-          - express-dto
-          - fastify-raw
-          - fastify-dto
-          - hono-raw
-          - hono-dto
-          - elysia-dto
-          - morojs-dto
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Download benchmark tools
-        uses: actions/download-artifact@v7
-        with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
-
-      - name: Setup Node Workspace
-        uses: ./.github/actions/setup-node-workspace
-        with:
-          node-version: "24"
-
-      - name: Setup Bun (for Elysia)
-        if: matrix.framework == 'elysia-dto'
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.2.22"
-
-      - name: Create results directory
-        run: mkdir -p results/${{ matrix.framework }}
-
-      - name: Run benchmarks
-        run: |
-          benchmark-harness profile \
-            --framework "${{ matrix.framework }}" \
-            --app-dir "tools/benchmark-harness/apps/${{ matrix.framework }}" \
-            --suite "$BENCH_SUITE" \
-            --duration "$BENCH_DURATION" \
-            --concurrency "$BENCH_CONCURRENCY" \
-            --warmup "$BENCH_WARMUP" \
-            --output "results/${{ matrix.framework }}/profile.json"
-
-      - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: benchmark-results-${{ matrix.framework }}
-          path: results/${{ matrix.framework }}/
           retention-days: 30
 
   bench-spikard-ruby:
@@ -686,7 +395,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -703,11 +412,6 @@ jobs:
 
       - name: Build spikard-ruby binding
         uses: ./.github/actions/build-ruby-binding
-        env:
-          CARGO_PROFILE_RELEASE_DEBUG: "1"
-          CARGO_PROFILE_RELEASE_LTO: "off"
-          CARGO_PROFILE_RELEASE_STRIP: "none"
-          RUSTFLAGS: "-C force-frame-pointers=yes"
 
       - name: Install benchmark app dependencies
         working-directory: tools/benchmark-harness/apps/spikard-ruby
@@ -715,14 +419,6 @@ jobs:
 
       - name: Create results directory
         run: mkdir -p results/spikard-ruby
-
-      - name: Install perf
-        run: |
-          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
-
-      - name: Allow perf profiling
-        run: |
-          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
 
       - name: Run benchmarks
         run: |
@@ -733,7 +429,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --profiler perf \
+            --profiler ruby \
             --output results/spikard-ruby/profile.json
         env:
           SPIKARD_RUBY_METRICS_FILE: ${{ github.workspace }}/results/spikard-ruby/ruby-metrics.json
@@ -761,7 +457,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -786,20 +482,11 @@ jobs:
       - name: Verify PHP profiler extension
         run: php -m | grep -i excimer
 
-      - name: Verify PHP build tooling
-        run: |
-          command -v php-config
-          command -v phpize
-          php-config --includes
-          php-config --extension-dir
+      - name: Install PHP development headers
+        run: bash scripts/ci/php/install-dev-headers-linux.sh
 
       - name: Build spikard-php extension
         run: cargo build --release -p spikard-php --features extension-module
-        env:
-          CARGO_PROFILE_RELEASE_DEBUG: "1"
-          CARGO_PROFILE_RELEASE_LTO: "off"
-          CARGO_PROFILE_RELEASE_STRIP: "none"
-          RUSTFLAGS: "-C force-frame-pointers=yes"
 
       - name: Enable PHP extension
         run: |
@@ -824,14 +511,6 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/spikard-php
 
-      - name: Install perf
-        run: |
-          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
-
-      - name: Allow perf profiling
-        run: |
-          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
-
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -841,8 +520,10 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --profiler perf \
+            --profiler php \
             --output results/spikard-php/profile.json
+        env:
+          SPIKARD_PHP_PROFILE_OUTPUT: ${{ github.workspace }}/results/spikard-php/php.speedscope.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
@@ -867,7 +548,7 @@ jobs:
           path: ~/.cargo/bin
 
       - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy ~/.cargo/bin/rbspy
+        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -899,14 +580,6 @@ jobs:
       - name: Create results directory
         run: mkdir -p results/spikard-wasm
 
-      - name: Install perf
-        run: |
-          command -v perf >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-generic; }
-
-      - name: Allow perf profiling
-        run: |
-          sudo sysctl -w kernel.perf_event_paranoid=1 || { echo "WARNING: unable to relax perf_event_paranoid" >&2; true; }
-
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
@@ -916,7 +589,7 @@ jobs:
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
-            --profiler perf \
+            --profiler wasm \
             --output results/spikard-wasm/profile.json
         env:
           SPIKARD_WASM_METRICS_FILE: ${{ github.workspace }}/results/spikard-wasm/wasm-metrics.json

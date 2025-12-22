@@ -16,21 +16,21 @@ on:
       - '.github/workflows/ci-wasm.yaml'
       - '.github/actions/setup-node-workspace/**'
       - '.github/actions/setup-rust/**'
-#   pull_request:
-#     branches: [main]
-#     paths:
-#       - 'crates/spikard-wasm/**'
-#       - 'packages/wasm/**'
-#       - 'e2e/deno/**'
-#       - 'e2e/cloudflare/**'
-#       - 'pnpm-lock.yaml'
-#       - 'crates/spikard/**/*.rs'
-#       - 'crates/spikard-http/**/*.rs'
-#       - 'testing_data/**'
-#       - '.cargo/config.toml'
-#       - '.github/workflows/ci-wasm.yaml'
-#       - '.github/actions/setup-node-workspace/**'
-#       - '.github/actions/setup-rust/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'crates/spikard-wasm/**'
+      - 'packages/wasm/**'
+      - 'e2e/deno/**'
+      - 'e2e/cloudflare/**'
+      - 'pnpm-lock.yaml'
+      - 'crates/spikard/**/*.rs'
+      - 'crates/spikard-http/**/*.rs'
+      - 'testing_data/**'
+      - '.cargo/config.toml'
+      - '.github/workflows/ci-wasm.yaml'
+      - '.github/actions/setup-node-workspace/**'
+      - '.github/actions/setup-rust/**'
 
 concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
