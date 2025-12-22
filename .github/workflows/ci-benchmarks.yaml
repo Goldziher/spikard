@@ -1,40 +1,26 @@
 name: CI - Benchmarks
 
 on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Benchmark suite to run
+        required: false
+        default: all
+      duration:
+        description: Duration per workload (seconds)
+        required: false
+        default: "30"
+      concurrency:
+        description: Concurrent clients
+        required: false
+        default: "100"
+      warmup:
+        description: Warmup time (seconds)
+        required: false
+        default: "10"
   push:
-    branches: [main]
-    paths:
-      - 'crates/spikard/**'
-      - 'crates/spikard-http/**'
-      - 'crates/spikard-py/**'
-      - 'crates/spikard-node/**'
-      - 'crates/spikard-rb/**'
-      - 'crates/spikard-php/**'
-      - 'crates/spikard-wasm/**'
-      - 'packages/python/**'
-      - 'packages/node/**'
-      - 'packages/ruby/**'
-      - 'packages/php/**'
-      - 'tools/benchmark-harness/**'
-      - 'testing_data/**'
-      - '.github/workflows/ci-benchmarks.yaml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'crates/spikard/**'
-      - 'crates/spikard-http/**'
-      - 'crates/spikard-py/**'
-      - 'crates/spikard-node/**'
-      - 'crates/spikard-rb/**'
-      - 'crates/spikard-php/**'
-      - 'crates/spikard-wasm/**'
-      - 'packages/python/**'
-      - 'packages/node/**'
-      - 'packages/ruby/**'
-      - 'packages/php/**'
-      - 'tools/benchmark-harness/**'
-      - 'testing_data/**'
-      - '.github/workflows/ci-benchmarks.yaml'
+    branches: [benchmarks, profiling]
 
 concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -45,10 +31,10 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
   CARGO_PROFILE_DEV_DEBUG: 0
-  BENCH_SUITE: ${{ github.event_name == 'pull_request' && 'json-bodies' || 'all' }}
-  BENCH_DURATION: ${{ github.event_name == 'pull_request' && '10' || '30' }}
-  BENCH_CONCURRENCY: ${{ github.event_name == 'pull_request' && '50' || '100' }}
-  BENCH_WARMUP: ${{ github.event_name == 'pull_request' && '2' || '10' }}
+  BENCH_SUITE: ${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'all' }}
+  BENCH_DURATION: ${{ github.event_name == 'workflow_dispatch' && inputs.duration || '30' }}
+  BENCH_CONCURRENCY: ${{ github.event_name == 'workflow_dispatch' && inputs.concurrency || '100' }}
+  BENCH_WARMUP: ${{ github.event_name == 'workflow_dispatch' && inputs.warmup || '10' }}
 
 defaults:
   run:
