@@ -15,20 +15,20 @@ on:
       - '.github/workflows/ci-python.yaml'
       - '.github/actions/setup-python-env/**'
       - '.github/actions/setup-rust/**'
-#   pull_request:
-#     branches: [main]
-#     paths:
-#       - 'crates/spikard-py/**'
-#       - 'packages/python/**'
-#       - 'pyproject.toml'
-#       - 'uv.lock'
-#       - 'crates/spikard/**/*.rs'
-#       - 'crates/spikard-http/**/*.rs'
-#       - 'testing_data/**'
-#       - '.cargo/config.toml'
-#       - '.github/workflows/ci-python.yaml'
-#       - '.github/actions/setup-python-env/**'
-#       - '.github/actions/setup-rust/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'crates/spikard-py/**'
+      - 'packages/python/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'crates/spikard/**/*.rs'
+      - 'crates/spikard-http/**/*.rs'
+      - 'testing_data/**'
+      - '.cargo/config.toml'
+      - '.github/workflows/ci-python.yaml'
+      - '.github/actions/setup-python-env/**'
+      - '.github/actions/setup-rust/**'
 
 concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
