@@ -51,6 +51,304 @@ type HandlerFunction = (input: HandlerInput) => Promise<HandlerOutput>;
 const routes: RouteMetadata[] = [];
 const handlers: Record<string, HandlerFunction> = {};
 
+const SmallPayloadSchema = {
+	type: "object",
+	required: ["name", "description", "price", "tax"],
+	properties: {
+		name: { type: "string" },
+		description: { type: "string" },
+		price: { type: "number" },
+		tax: { type: "number" },
+	},
+	additionalProperties: false,
+} as const;
+
+const MediumPayloadSchema = {
+	type: "object",
+	required: ["name", "price", "image"],
+	properties: {
+		name: { type: "string" },
+		price: { type: "number" },
+		image: {
+			type: "object",
+			required: ["url", "name"],
+			properties: {
+				url: { type: "string" },
+				name: { type: "string" },
+			},
+			additionalProperties: false,
+		},
+	},
+	additionalProperties: false,
+} as const;
+
+const LargePayloadSchema = {
+	type: "object",
+	required: ["name", "price", "seller"],
+	properties: {
+		name: { type: "string" },
+		price: { type: "number" },
+		seller: {
+			type: "object",
+			required: ["name", "address"],
+			properties: {
+				name: { type: "string" },
+				address: {
+					type: "object",
+					required: ["street", "city", "country"],
+					properties: {
+						street: { type: "string" },
+						city: { type: "string" },
+						country: {
+							type: "object",
+							required: ["name", "code"],
+							properties: {
+								name: { type: "string" },
+								code: { type: "string" },
+							},
+							additionalProperties: false,
+						},
+					},
+					additionalProperties: false,
+				},
+			},
+			additionalProperties: false,
+		},
+	},
+	additionalProperties: false,
+} as const;
+
+const VeryLargePayloadSchema = {
+	type: "object",
+	required: ["name", "tags", "images"],
+	properties: {
+		name: { type: "string" },
+		tags: {
+			type: "array",
+			items: { type: "string" },
+		},
+		images: {
+			type: "array",
+			items: {
+				type: "object",
+				required: ["url", "name"],
+				properties: {
+					url: { type: "string" },
+					name: { type: "string" },
+				},
+				additionalProperties: false,
+			},
+		},
+	},
+	additionalProperties: false,
+} as const;
+
+const UrlencodedSimpleSchema = {
+	type: "object",
+	required: ["name", "email", "age", "subscribe"],
+	properties: {
+		name: { type: "string" },
+		email: { type: "string", format: "email" },
+		age: { type: "integer" },
+		subscribe: { type: "boolean" },
+	},
+	additionalProperties: false,
+} as const;
+
+const UrlencodedComplexSchema = {
+	type: "object",
+	required: [
+		"username",
+		"password",
+		"email",
+		"first_name",
+		"last_name",
+		"age",
+		"country",
+		"state",
+		"city",
+		"zip",
+		"phone",
+		"company",
+		"job_title",
+		"subscribe",
+		"newsletter",
+		"terms_accepted",
+		"privacy_accepted",
+		"marketing_consent",
+		"two_factor_enabled",
+	],
+	properties: {
+		username: { type: "string" },
+		password: { type: "string" },
+		email: { type: "string", format: "email" },
+		first_name: { type: "string" },
+		last_name: { type: "string" },
+		age: { type: "integer" },
+		country: { type: "string" },
+		state: { type: "string" },
+		city: { type: "string" },
+		zip: { type: "string" },
+		phone: { type: "string" },
+		company: { type: "string" },
+		job_title: { type: "string" },
+		subscribe: { type: "boolean" },
+		newsletter: { type: "boolean" },
+		terms_accepted: { type: "boolean" },
+		privacy_accepted: { type: "boolean" },
+		marketing_consent: { type: "boolean" },
+		two_factor_enabled: { type: "boolean" },
+	},
+	additionalProperties: false,
+} as const;
+
+const MultipartFileSchema = {
+	type: "object",
+	required: ["filename", "size", "content", "content_type"],
+	properties: {
+		filename: { type: "string" },
+		size: { type: "integer" },
+		content: { type: "string" },
+		content_type: { type: "string" },
+	},
+	additionalProperties: false,
+} as const;
+
+const MultipartSchema = {
+	type: "object",
+	required: ["file"],
+	properties: {
+		file: {
+			oneOf: [
+				MultipartFileSchema,
+				{
+					type: "array",
+					items: MultipartFileSchema,
+				},
+			],
+		},
+	},
+	additionalProperties: false,
+} as const;
+
+const PathSimpleParamSchema = {
+	type: "object",
+	properties: {
+		id: { type: "string", source: "path" },
+	},
+	required: ["id"],
+} as const;
+
+const PathMultipleParamSchema = {
+	type: "object",
+	properties: {
+		user_id: { type: "string", source: "path" },
+		post_id: { type: "string", source: "path" },
+	},
+	required: ["user_id", "post_id"],
+} as const;
+
+const PathDeepParamSchema = {
+	type: "object",
+	properties: {
+		org: { type: "string", source: "path" },
+		team: { type: "string", source: "path" },
+		project: { type: "string", source: "path" },
+		resource: { type: "string", source: "path" },
+		id: { type: "string", source: "path" },
+	},
+	required: ["org", "team", "project", "resource", "id"],
+} as const;
+
+const PathIntParamSchema = {
+	type: "object",
+	properties: {
+		id: { type: "integer", source: "path" },
+	},
+	required: ["id"],
+} as const;
+
+const PathUuidParamSchema = {
+	type: "object",
+	properties: {
+		uuid: { type: "string", format: "uuid", source: "path" },
+	},
+	required: ["uuid"],
+} as const;
+
+const PathDateParamSchema = {
+	type: "object",
+	properties: {
+		date: { type: "string", format: "date", source: "path" },
+	},
+	required: ["date"],
+} as const;
+
+const QueryFewParamSchema = {
+	type: "object",
+	properties: {
+		q: { type: "string", source: "query" },
+		page: { type: "integer", source: "query" },
+		limit: { type: "integer", source: "query" },
+	},
+	required: ["q", "page", "limit"],
+} as const;
+
+const QueryMediumParamSchema = {
+	type: "object",
+	properties: {
+		category: { type: "string", source: "query" },
+		tags: { type: "string", source: "query" },
+		min_price: { type: "number", source: "query" },
+		max_price: { type: "number", source: "query" },
+		sort: { type: "string", source: "query" },
+		order: { type: "string", source: "query" },
+		page: { type: "integer", source: "query" },
+		limit: { type: "integer", source: "query" },
+	},
+	required: ["category", "tags", "min_price", "max_price", "sort", "order", "page", "limit"],
+} as const;
+
+const QueryManyParamSchema = {
+	type: "object",
+	properties: {
+		q: { type: "string", source: "query" },
+		page: { type: "integer", source: "query" },
+		limit: { type: "integer", source: "query" },
+		sort: { type: "string", source: "query" },
+		order: { type: "string", source: "query" },
+		filter: { type: "string", source: "query" },
+		category: { type: "string", source: "query" },
+		subcategory: { type: "string", source: "query" },
+		brand: { type: "string", source: "query" },
+		min_price: { type: "number", source: "query" },
+		max_price: { type: "number", source: "query" },
+		rating: { type: "integer", source: "query" },
+		verified: { type: "boolean", source: "query" },
+		in_stock: { type: "boolean", source: "query" },
+		shipping: { type: "string", source: "query" },
+		color: { type: "string", source: "query" },
+	},
+	required: [
+		"q",
+		"page",
+		"limit",
+		"sort",
+		"order",
+		"filter",
+		"category",
+		"subcategory",
+		"brand",
+		"min_price",
+		"max_price",
+		"rating",
+		"verified",
+		"in_stock",
+		"shipping",
+		"color",
+	],
+} as const;
+
 type NodeMetricsSnapshot = {
 	v8_heap_used_mb: number;
 	v8_heap_total_mb: number;
@@ -116,13 +414,20 @@ if (profilingEnabled) {
 	startMetricsCollector();
 }
 
-function registerRoute(method: string, path: string, handler: HandlerFunction, requestSchema?: unknown): void {
+function registerRoute(
+	method: string,
+	path: string,
+	handler: HandlerFunction,
+	requestSchema?: unknown,
+	parameterSchema?: unknown,
+): void {
 	const metadata: RouteMetadata = {
 		method: method.toUpperCase(),
 		path,
 		handler_name: handler.name,
 		is_async: true,
 		request_schema: requestSchema,
+		parameter_schema: parameterSchema,
 	};
 	routes.push(metadata);
 	handlers[handler.name] = async (input: HandlerInput) => {
@@ -143,12 +448,12 @@ function registerRoute(method: string, path: string, handler: HandlerFunction, r
 	};
 }
 
-function get(path: string, handler: HandlerFunction): void {
-	registerRoute("GET", path, handler);
+function get(path: string, handler: HandlerFunction, parameterSchema?: unknown): void {
+	registerRoute("GET", path, handler, undefined, parameterSchema);
 }
 
-function post(path: string, handler: HandlerFunction, requestSchema?: unknown): void {
-	registerRoute("POST", path, handler, requestSchema);
+function post(path: string, handler: HandlerFunction, requestSchema?: unknown, parameterSchema?: unknown): void {
+	registerRoute("POST", path, handler, requestSchema, parameterSchema);
 }
 
 function ok(body: unknown): HandlerOutput {
@@ -244,28 +549,28 @@ async function get_root(_request: HandlerInput): Promise<HandlerOutput> {
 	return ok({ status: "ok" });
 }
 
-post("/json/small", post_json_small);
-post("/json/medium", post_json_medium);
-post("/json/large", post_json_large);
-post("/json/very-large", post_json_very_large);
+post("/json/small", post_json_small, SmallPayloadSchema);
+post("/json/medium", post_json_medium, MediumPayloadSchema);
+post("/json/large", post_json_large, LargePayloadSchema);
+post("/json/very-large", post_json_very_large, VeryLargePayloadSchema);
 
-post("/multipart/small", post_multipart_small);
-post("/multipart/medium", post_multipart_medium);
-post("/multipart/large", post_multipart_large);
+post("/multipart/small", post_multipart_small, MultipartSchema);
+post("/multipart/medium", post_multipart_medium, MultipartSchema);
+post("/multipart/large", post_multipart_large, MultipartSchema);
 
-post("/urlencoded/simple", post_urlencoded_simple);
-post("/urlencoded/complex", post_urlencoded_complex);
+post("/urlencoded/simple", post_urlencoded_simple, UrlencodedSimpleSchema);
+post("/urlencoded/complex", post_urlencoded_complex, UrlencodedComplexSchema);
 
-get("/path/simple/{id}", get_path_simple);
-get("/path/multiple/{user_id}/{post_id}", get_path_multiple);
-get("/path/deep/{org}/{team}/{project}/{resource}/{id}", get_path_deep);
-get("/path/int/{id}", get_path_int);
-get("/path/uuid/{uuid}", get_path_uuid);
-get("/path/date/{date}", get_path_date);
+get("/path/simple/{id}", get_path_simple, PathSimpleParamSchema);
+get("/path/multiple/{user_id}/{post_id}", get_path_multiple, PathMultipleParamSchema);
+get("/path/deep/{org}/{team}/{project}/{resource}/{id}", get_path_deep, PathDeepParamSchema);
+get("/path/int/{id}", get_path_int, PathIntParamSchema);
+get("/path/uuid/{uuid}", get_path_uuid, PathUuidParamSchema);
+get("/path/date/{date}", get_path_date, PathDateParamSchema);
 
-get("/query/few", get_query_few);
-get("/query/medium", get_query_medium);
-get("/query/many", get_query_many);
+get("/query/few", get_query_few, QueryFewParamSchema);
+get("/query/medium", get_query_medium, QueryMediumParamSchema);
+get("/query/many", get_query_many, QueryManyParamSchema);
 
 get("/health", get_health);
 get("/", get_root);

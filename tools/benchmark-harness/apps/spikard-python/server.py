@@ -274,6 +274,39 @@ class VeryLargePayload(msgspec.Struct):
     images: list[Image]
 
 
+class UrlencodedSimple(msgspec.Struct):
+    """URL-encoded simple form (4 fields)."""
+
+    name: str
+    email: str
+    age: int
+    subscribe: bool
+
+
+class UrlencodedComplex(msgspec.Struct):
+    """URL-encoded complex form (18 fields)."""
+
+    username: str
+    password: str
+    email: str
+    first_name: str
+    last_name: str
+    age: int
+    country: str
+    state: str
+    city: str
+    zip: str
+    phone: str
+    company: str
+    job_title: str
+    subscribe: bool
+    newsletter: bool
+    terms_accepted: bool
+    privacy_accepted: bool
+    marketing_consent: bool
+    two_factor_enabled: bool
+
+
 class MultipartMetrics(msgspec.Struct):
     files_received: int
     total_bytes: int
@@ -352,14 +385,14 @@ async def post_multipart_large(body: MultipartBody) -> MultipartMetrics:
 
 @post("/urlencoded/simple")
 @profile_once("urlencoded-simple")
-async def post_urlencoded_simple(body: str) -> str:
+async def post_urlencoded_simple(body: UrlencodedSimple) -> UrlencodedSimple:
     """Simple URL-encoded form (3-5 fields)."""
     return body
 
 
 @post("/urlencoded/complex")
 @profile_once("urlencoded-complex")
-async def post_urlencoded_complex(body: str) -> str:
+async def post_urlencoded_complex(body: UrlencodedComplex) -> UrlencodedComplex:
     """Complex URL-encoded form (10-20 fields)."""
     return body
 

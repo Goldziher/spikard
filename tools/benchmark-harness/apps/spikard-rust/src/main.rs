@@ -81,6 +81,332 @@ struct VeryLargePayload {
     images: Vec<Image>,
 }
 
+fn small_payload_schema() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "required": ["name", "description", "price", "tax"],
+        "properties": {
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "price": { "type": "number" },
+            "tax": { "type": "number" }
+        },
+        "additionalProperties": false
+    })
+}
+
+fn medium_payload_schema() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "required": ["name", "price", "image"],
+        "properties": {
+            "name": { "type": "string" },
+            "price": { "type": "number" },
+            "image": {
+                "type": "object",
+                "required": ["url", "name"],
+                "properties": {
+                    "url": { "type": "string" },
+                    "name": { "type": "string" }
+                },
+                "additionalProperties": false
+            }
+        },
+        "additionalProperties": false
+    })
+}
+
+fn large_payload_schema() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "required": ["name", "price", "seller"],
+        "properties": {
+            "name": { "type": "string" },
+            "price": { "type": "number" },
+            "seller": {
+                "type": "object",
+                "required": ["name", "address"],
+                "properties": {
+                    "name": { "type": "string" },
+                    "address": {
+                        "type": "object",
+                        "required": ["street", "city", "country"],
+                        "properties": {
+                            "street": { "type": "string" },
+                            "city": { "type": "string" },
+                            "country": {
+                                "type": "object",
+                                "required": ["name", "code"],
+                                "properties": {
+                                    "name": { "type": "string" },
+                                    "code": { "type": "string" }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "additionalProperties": false
+            }
+        },
+        "additionalProperties": false
+    })
+}
+
+fn very_large_payload_schema() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "required": ["name", "tags", "images"],
+        "properties": {
+            "name": { "type": "string" },
+            "tags": {
+                "type": "array",
+                "items": { "type": "string" }
+            },
+            "images": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["url", "name"],
+                    "properties": {
+                        "url": { "type": "string" },
+                        "name": { "type": "string" }
+                    },
+                    "additionalProperties": false
+                }
+            }
+        },
+        "additionalProperties": false
+    })
+}
+
+fn urlencoded_simple_schema() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "required": ["name", "email", "age", "subscribe"],
+        "properties": {
+            "name": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "age": { "type": "integer" },
+            "subscribe": { "type": "boolean" }
+        },
+        "additionalProperties": false
+    })
+}
+
+fn urlencoded_complex_schema() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "required": [
+            "username",
+            "password",
+            "email",
+            "first_name",
+            "last_name",
+            "age",
+            "country",
+            "state",
+            "city",
+            "zip",
+            "phone",
+            "company",
+            "job_title",
+            "subscribe",
+            "newsletter",
+            "terms_accepted",
+            "privacy_accepted",
+            "marketing_consent",
+            "two_factor_enabled"
+        ],
+        "properties": {
+            "username": { "type": "string" },
+            "password": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "first_name": { "type": "string" },
+            "last_name": { "type": "string" },
+            "age": { "type": "integer" },
+            "country": { "type": "string" },
+            "state": { "type": "string" },
+            "city": { "type": "string" },
+            "zip": { "type": "string" },
+            "phone": { "type": "string" },
+            "company": { "type": "string" },
+            "job_title": { "type": "string" },
+            "subscribe": { "type": "boolean" },
+            "newsletter": { "type": "boolean" },
+            "terms_accepted": { "type": "boolean" },
+            "privacy_accepted": { "type": "boolean" },
+            "marketing_consent": { "type": "boolean" },
+            "two_factor_enabled": { "type": "boolean" }
+        },
+        "additionalProperties": false
+    })
+}
+
+fn multipart_schema() -> Value {
+    let file_schema = serde_json::json!({
+        "type": "object",
+        "required": ["filename", "size", "content", "content_type"],
+        "properties": {
+            "filename": { "type": "string" },
+            "size": { "type": "integer" },
+            "content": { "type": "string" },
+            "content_type": { "type": "string" }
+        },
+        "additionalProperties": false
+    });
+
+    serde_json::json!({
+        "type": "object",
+        "required": ["file"],
+        "properties": {
+            "file": {
+                "oneOf": [
+                    file_schema,
+                    { "type": "array", "items": file_schema }
+                ]
+            }
+        },
+        "additionalProperties": false
+    })
+}
+
+fn path_simple_params() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "id": { "type": "string", "source": "path" }
+        },
+        "required": ["id"]
+    })
+}
+
+fn path_multiple_params() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "user_id": { "type": "string", "source": "path" },
+            "post_id": { "type": "string", "source": "path" }
+        },
+        "required": ["user_id", "post_id"]
+    })
+}
+
+fn path_deep_params() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "org": { "type": "string", "source": "path" },
+            "team": { "type": "string", "source": "path" },
+            "project": { "type": "string", "source": "path" },
+            "resource": { "type": "string", "source": "path" },
+            "id": { "type": "string", "source": "path" }
+        },
+        "required": ["org", "team", "project", "resource", "id"]
+    })
+}
+
+fn path_int_params() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "id": { "type": "integer", "source": "path" }
+        },
+        "required": ["id"]
+    })
+}
+
+fn path_uuid_params() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "uuid": { "type": "string", "format": "uuid", "source": "path" }
+        },
+        "required": ["uuid"]
+    })
+}
+
+fn path_date_params() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "date": { "type": "string", "format": "date", "source": "path" }
+        },
+        "required": ["date"]
+    })
+}
+
+fn query_few_params() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "q": { "type": "string", "source": "query" },
+            "page": { "type": "integer", "source": "query" },
+            "limit": { "type": "integer", "source": "query" }
+        },
+        "required": ["q", "page", "limit"]
+    })
+}
+
+fn query_medium_params() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "category": { "type": "string", "source": "query" },
+            "tags": { "type": "string", "source": "query" },
+            "min_price": { "type": "number", "source": "query" },
+            "max_price": { "type": "number", "source": "query" },
+            "sort": { "type": "string", "source": "query" },
+            "order": { "type": "string", "source": "query" },
+            "page": { "type": "integer", "source": "query" },
+            "limit": { "type": "integer", "source": "query" }
+        },
+        "required": ["category", "tags", "min_price", "max_price", "sort", "order", "page", "limit"]
+    })
+}
+
+fn query_many_params() -> Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "q": { "type": "string", "source": "query" },
+            "page": { "type": "integer", "source": "query" },
+            "limit": { "type": "integer", "source": "query" },
+            "sort": { "type": "string", "source": "query" },
+            "order": { "type": "string", "source": "query" },
+            "filter": { "type": "string", "source": "query" },
+            "category": { "type": "string", "source": "query" },
+            "subcategory": { "type": "string", "source": "query" },
+            "brand": { "type": "string", "source": "query" },
+            "min_price": { "type": "number", "source": "query" },
+            "max_price": { "type": "number", "source": "query" },
+            "rating": { "type": "integer", "source": "query" },
+            "verified": { "type": "boolean", "source": "query" },
+            "in_stock": { "type": "boolean", "source": "query" },
+            "shipping": { "type": "string", "source": "query" },
+            "color": { "type": "string", "source": "query" }
+        },
+        "required": [
+            "q",
+            "page",
+            "limit",
+            "sort",
+            "order",
+            "filter",
+            "category",
+            "subcategory",
+            "brand",
+            "min_price",
+            "max_price",
+            "rating",
+            "verified",
+            "in_stock",
+            "shipping",
+            "color"
+        ]
+    })
+}
 async fn post_json_small(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: SmallPayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -429,30 +755,61 @@ async fn main() {
             .unwrap();
     }
 
-    app.route(post("/json/small"), post_json_small).unwrap();
-    app.route(post("/json/medium"), post_json_medium).unwrap();
-    app.route(post("/json/large"), post_json_large).unwrap();
-    app.route(post("/json/very-large"), post_json_very_large).unwrap();
-
-    app.route(post("/multipart/small"), post_multipart_small).unwrap();
-    app.route(post("/multipart/medium"), post_multipart_medium).unwrap();
-    app.route(post("/multipart/large"), post_multipart_large).unwrap();
-
-    app.route(post("/urlencoded/simple"), post_urlencoded_simple).unwrap();
-    app.route(post("/urlencoded/complex"), post_urlencoded_complex).unwrap();
-
-    app.route(get("/path/simple/{id}"), get_path_simple).unwrap();
-    app.route(get("/path/multiple/{user_id}/{post_id}"), get_path_multiple)
+    app.route(post("/json/small").request_schema_json(small_payload_schema()), post_json_small)
         .unwrap();
-    app.route(get("/path/deep/{org}/{team}/{project}/{resource}/{id}"), get_path_deep)
+    app.route(post("/json/medium").request_schema_json(medium_payload_schema()), post_json_medium)
         .unwrap();
-    app.route(get("/path/int/{id}"), get_path_int).unwrap();
-    app.route(get("/path/uuid/{uuid}"), get_path_uuid).unwrap();
-    app.route(get("/path/date/{date}"), get_path_date).unwrap();
+    app.route(post("/json/large").request_schema_json(large_payload_schema()), post_json_large)
+        .unwrap();
+    app.route(
+        post("/json/very-large").request_schema_json(very_large_payload_schema()),
+        post_json_very_large,
+    )
+    .unwrap();
 
-    app.route(get("/query/few"), get_query_few).unwrap();
-    app.route(get("/query/medium"), get_query_medium).unwrap();
-    app.route(get("/query/many"), get_query_many).unwrap();
+    app.route(post("/multipart/small").request_schema_json(multipart_schema()), post_multipart_small)
+        .unwrap();
+    app.route(post("/multipart/medium").request_schema_json(multipart_schema()), post_multipart_medium)
+        .unwrap();
+    app.route(post("/multipart/large").request_schema_json(multipart_schema()), post_multipart_large)
+        .unwrap();
+
+    app.route(
+        post("/urlencoded/simple").request_schema_json(urlencoded_simple_schema()),
+        post_urlencoded_simple,
+    )
+    .unwrap();
+    app.route(
+        post("/urlencoded/complex").request_schema_json(urlencoded_complex_schema()),
+        post_urlencoded_complex,
+    )
+    .unwrap();
+
+    app.route(get("/path/simple/{id}").params_schema_json(path_simple_params()), get_path_simple)
+        .unwrap();
+    app.route(
+        get("/path/multiple/{user_id}/{post_id}").params_schema_json(path_multiple_params()),
+        get_path_multiple,
+    )
+    .unwrap();
+    app.route(
+        get("/path/deep/{org}/{team}/{project}/{resource}/{id}").params_schema_json(path_deep_params()),
+        get_path_deep,
+    )
+    .unwrap();
+    app.route(get("/path/int/{id}").params_schema_json(path_int_params()), get_path_int)
+        .unwrap();
+    app.route(get("/path/uuid/{uuid}").params_schema_json(path_uuid_params()), get_path_uuid)
+        .unwrap();
+    app.route(get("/path/date/{date}").params_schema_json(path_date_params()), get_path_date)
+        .unwrap();
+
+    app.route(get("/query/few").params_schema_json(query_few_params()), get_query_few)
+        .unwrap();
+    app.route(get("/query/medium").params_schema_json(query_medium_params()), get_query_medium)
+        .unwrap();
+    app.route(get("/query/many").params_schema_json(query_many_params()), get_query_many)
+        .unwrap();
 
     eprintln!("Spikard Rust benchmark server listening on 0.0.0.0:{}", args.port);
 

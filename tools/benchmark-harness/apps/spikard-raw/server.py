@@ -31,6 +31,180 @@ if _profile_enabled and profiling_module.exists():
 
 app = Spikard()
 
+SMALL_PAYLOAD_SCHEMA = {
+    "type": "object",
+    "required": ["name", "description", "price", "tax"],
+    "properties": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "price": {"type": "number"},
+        "tax": {"type": "number"},
+    },
+    "additionalProperties": False,
+}
+
+MEDIUM_PAYLOAD_SCHEMA = {
+    "type": "object",
+    "required": ["name", "price", "image"],
+    "properties": {
+        "name": {"type": "string"},
+        "price": {"type": "number"},
+        "image": {
+            "type": "object",
+            "required": ["url", "name"],
+            "properties": {
+                "url": {"type": "string"},
+                "name": {"type": "string"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    "additionalProperties": False,
+}
+
+LARGE_PAYLOAD_SCHEMA = {
+    "type": "object",
+    "required": ["name", "price", "seller"],
+    "properties": {
+        "name": {"type": "string"},
+        "price": {"type": "number"},
+        "seller": {
+            "type": "object",
+            "required": ["name", "address"],
+            "properties": {
+                "name": {"type": "string"},
+                "address": {
+                    "type": "object",
+                    "required": ["street", "city", "country"],
+                    "properties": {
+                        "street": {"type": "string"},
+                        "city": {"type": "string"},
+                        "country": {
+                            "type": "object",
+                            "required": ["name", "code"],
+                            "properties": {
+                                "name": {"type": "string"},
+                                "code": {"type": "string"},
+                            },
+                            "additionalProperties": False,
+                        },
+                    },
+                    "additionalProperties": False,
+                },
+            },
+            "additionalProperties": False,
+        },
+    },
+    "additionalProperties": False,
+}
+
+VERY_LARGE_PAYLOAD_SCHEMA = {
+    "type": "object",
+    "required": ["name", "tags", "images"],
+    "properties": {
+        "name": {"type": "string"},
+        "tags": {"type": "array", "items": {"type": "string"}},
+        "images": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["url", "name"],
+                "properties": {
+                    "url": {"type": "string"},
+                    "name": {"type": "string"},
+                },
+                "additionalProperties": False,
+            },
+        },
+    },
+    "additionalProperties": False,
+}
+
+URLENCODED_SIMPLE_SCHEMA = {
+    "type": "object",
+    "required": ["name", "email", "age", "subscribe"],
+    "properties": {
+        "name": {"type": "string"},
+        "email": {"type": "string", "format": "email"},
+        "age": {"type": "integer"},
+        "subscribe": {"type": "boolean"},
+    },
+    "additionalProperties": False,
+}
+
+URLENCODED_COMPLEX_SCHEMA = {
+    "type": "object",
+    "required": [
+        "username",
+        "password",
+        "email",
+        "first_name",
+        "last_name",
+        "age",
+        "country",
+        "state",
+        "city",
+        "zip",
+        "phone",
+        "company",
+        "job_title",
+        "subscribe",
+        "newsletter",
+        "terms_accepted",
+        "privacy_accepted",
+        "marketing_consent",
+        "two_factor_enabled",
+    ],
+    "properties": {
+        "username": {"type": "string"},
+        "password": {"type": "string"},
+        "email": {"type": "string", "format": "email"},
+        "first_name": {"type": "string"},
+        "last_name": {"type": "string"},
+        "age": {"type": "integer"},
+        "country": {"type": "string"},
+        "state": {"type": "string"},
+        "city": {"type": "string"},
+        "zip": {"type": "string"},
+        "phone": {"type": "string"},
+        "company": {"type": "string"},
+        "job_title": {"type": "string"},
+        "subscribe": {"type": "boolean"},
+        "newsletter": {"type": "boolean"},
+        "terms_accepted": {"type": "boolean"},
+        "privacy_accepted": {"type": "boolean"},
+        "marketing_consent": {"type": "boolean"},
+        "two_factor_enabled": {"type": "boolean"},
+    },
+    "additionalProperties": False,
+}
+
+MULTIPART_FILE_SCHEMA = {
+    "type": "object",
+    "required": ["filename", "size", "content", "content_type"],
+    "properties": {
+        "filename": {"type": "string"},
+        "size": {"type": "integer"},
+        "content": {"type": "string"},
+        "content_type": {"type": "string"},
+    },
+    "additionalProperties": False,
+}
+
+MULTIPART_SCHEMA = {
+    "type": "object",
+    "required": ["file"],
+    "properties": {
+        "file": {
+            "oneOf": [
+                MULTIPART_FILE_SCHEMA,
+                {"type": "array", "items": MULTIPART_FILE_SCHEMA},
+            ]
+        }
+    },
+    "additionalProperties": False,
+}
+
 
 @get("/health")
 def health() -> dict[str, Any]:
@@ -47,55 +221,55 @@ if _profile_enabled:
         return {"ok": False}
 
 
-@post("/json/small")
+@post("/json/small", body_schema=SMALL_PAYLOAD_SCHEMA)
 async def post_json_small(body: dict[str, Any]) -> dict[str, Any]:
     """Small JSON payload (~100-500 bytes)."""
     return body
 
 
-@post("/json/medium")
+@post("/json/medium", body_schema=MEDIUM_PAYLOAD_SCHEMA)
 async def post_json_medium(body: dict[str, Any]) -> dict[str, Any]:
     """Medium JSON payload (~1-10KB)."""
     return body
 
 
-@post("/json/large")
+@post("/json/large", body_schema=LARGE_PAYLOAD_SCHEMA)
 async def post_json_large(body: dict[str, Any]) -> dict[str, Any]:
     """Large JSON payload (~10-100KB)."""
     return body
 
 
-@post("/json/very-large")
+@post("/json/very-large", body_schema=VERY_LARGE_PAYLOAD_SCHEMA)
 async def post_json_very_large(body: dict[str, Any]) -> dict[str, Any]:
     """Very large JSON payload (~100KB-1MB)."""
     return body
 
 
-@post("/multipart/small")
+@post("/multipart/small", body_schema=MULTIPART_SCHEMA)
 async def post_multipart_small(body: dict[str, Any]) -> dict[str, Any]:
     """Small multipart form (~1KB)."""
     return {"files_received": 1, "total_bytes": 1024}
 
 
-@post("/multipart/medium")
+@post("/multipart/medium", body_schema=MULTIPART_SCHEMA)
 async def post_multipart_medium(body: dict[str, Any]) -> dict[str, Any]:
     """Medium multipart form (~10KB)."""
     return {"files_received": 2, "total_bytes": 10240}
 
 
-@post("/multipart/large")
+@post("/multipart/large", body_schema=MULTIPART_SCHEMA)
 async def post_multipart_large(body: dict[str, Any]) -> dict[str, Any]:
     """Large multipart form (~100KB)."""
     return {"files_received": 5, "total_bytes": 102400}
 
 
-@post("/urlencoded/simple")
+@post("/urlencoded/simple", body_schema=URLENCODED_SIMPLE_SCHEMA)
 async def post_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
     """Simple URL-encoded form (3-5 fields)."""
     return body
 
 
-@post("/urlencoded/complex")
+@post("/urlencoded/complex", body_schema=URLENCODED_COMPLEX_SCHEMA)
 async def post_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
     """Complex URL-encoded form (10-20 fields)."""
     return body

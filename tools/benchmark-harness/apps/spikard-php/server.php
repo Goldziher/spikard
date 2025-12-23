@@ -184,6 +184,302 @@ function fixedHandler(array $data): HandlerInterface
 }
 
 // ============================================================================
+// Schema Definitions
+// ============================================================================
+
+$smallPayloadSchema = [
+    'type' => 'object',
+    'required' => ['name', 'description', 'price', 'tax'],
+    'properties' => [
+        'name' => ['type' => 'string'],
+        'description' => ['type' => 'string'],
+        'price' => ['type' => 'number'],
+        'tax' => ['type' => 'number'],
+    ],
+    'additionalProperties' => false,
+];
+
+$mediumPayloadSchema = [
+    'type' => 'object',
+    'required' => ['name', 'price', 'image'],
+    'properties' => [
+        'name' => ['type' => 'string'],
+        'price' => ['type' => 'number'],
+        'image' => [
+            'type' => 'object',
+            'required' => ['url', 'name'],
+            'properties' => [
+                'url' => ['type' => 'string'],
+                'name' => ['type' => 'string'],
+            ],
+            'additionalProperties' => false,
+        ],
+    ],
+    'additionalProperties' => false,
+];
+
+$largePayloadSchema = [
+    'type' => 'object',
+    'required' => ['name', 'price', 'seller'],
+    'properties' => [
+        'name' => ['type' => 'string'],
+        'price' => ['type' => 'number'],
+        'seller' => [
+            'type' => 'object',
+            'required' => ['name', 'address'],
+            'properties' => [
+                'name' => ['type' => 'string'],
+                'address' => [
+                    'type' => 'object',
+                    'required' => ['street', 'city', 'country'],
+                    'properties' => [
+                        'street' => ['type' => 'string'],
+                        'city' => ['type' => 'string'],
+                        'country' => [
+                            'type' => 'object',
+                            'required' => ['name', 'code'],
+                            'properties' => [
+                                'name' => ['type' => 'string'],
+                                'code' => ['type' => 'string'],
+                            ],
+                            'additionalProperties' => false,
+                        ],
+                    ],
+                    'additionalProperties' => false,
+                ],
+            ],
+            'additionalProperties' => false,
+        ],
+    ],
+    'additionalProperties' => false,
+];
+
+$veryLargePayloadSchema = [
+    'type' => 'object',
+    'required' => ['name', 'tags', 'images'],
+    'properties' => [
+        'name' => ['type' => 'string'],
+        'tags' => ['type' => 'array', 'items' => ['type' => 'string']],
+        'images' => [
+            'type' => 'array',
+            'items' => [
+                'type' => 'object',
+                'required' => ['url', 'name'],
+                'properties' => [
+                    'url' => ['type' => 'string'],
+                    'name' => ['type' => 'string'],
+                ],
+                'additionalProperties' => false,
+            ],
+        ],
+    ],
+    'additionalProperties' => false,
+];
+
+$urlencodedSimpleSchema = [
+    'type' => 'object',
+    'required' => ['name', 'email', 'age', 'subscribe'],
+    'properties' => [
+        'name' => ['type' => 'string'],
+        'email' => ['type' => 'string', 'format' => 'email'],
+        'age' => ['type' => 'integer'],
+        'subscribe' => ['type' => 'boolean'],
+    ],
+    'additionalProperties' => false,
+];
+
+$urlencodedComplexSchema = [
+    'type' => 'object',
+    'required' => [
+        'username',
+        'password',
+        'email',
+        'first_name',
+        'last_name',
+        'age',
+        'country',
+        'state',
+        'city',
+        'zip',
+        'phone',
+        'company',
+        'job_title',
+        'subscribe',
+        'newsletter',
+        'terms_accepted',
+        'privacy_accepted',
+        'marketing_consent',
+        'two_factor_enabled',
+    ],
+    'properties' => [
+        'username' => ['type' => 'string'],
+        'password' => ['type' => 'string'],
+        'email' => ['type' => 'string', 'format' => 'email'],
+        'first_name' => ['type' => 'string'],
+        'last_name' => ['type' => 'string'],
+        'age' => ['type' => 'integer'],
+        'country' => ['type' => 'string'],
+        'state' => ['type' => 'string'],
+        'city' => ['type' => 'string'],
+        'zip' => ['type' => 'string'],
+        'phone' => ['type' => 'string'],
+        'company' => ['type' => 'string'],
+        'job_title' => ['type' => 'string'],
+        'subscribe' => ['type' => 'boolean'],
+        'newsletter' => ['type' => 'boolean'],
+        'terms_accepted' => ['type' => 'boolean'],
+        'privacy_accepted' => ['type' => 'boolean'],
+        'marketing_consent' => ['type' => 'boolean'],
+        'two_factor_enabled' => ['type' => 'boolean'],
+    ],
+    'additionalProperties' => false,
+];
+
+$multipartFileSchema = [
+    'type' => 'object',
+    'required' => ['filename', 'size', 'content', 'content_type'],
+    'properties' => [
+        'filename' => ['type' => 'string'],
+        'size' => ['type' => 'integer'],
+        'content' => ['type' => 'string'],
+        'content_type' => ['type' => 'string'],
+    ],
+    'additionalProperties' => false,
+];
+
+$multipartSchema = [
+    'type' => 'object',
+    'required' => ['file'],
+    'properties' => [
+        'file' => [
+            'oneOf' => [
+                $multipartFileSchema,
+                ['type' => 'array', 'items' => $multipartFileSchema],
+            ],
+        ],
+    ],
+    'additionalProperties' => false,
+];
+
+$pathSimpleParams = [
+    'type' => 'object',
+    'properties' => [
+        'id' => ['type' => 'string', 'source' => 'path'],
+    ],
+    'required' => ['id'],
+];
+
+$pathMultipleParams = [
+    'type' => 'object',
+    'properties' => [
+        'user_id' => ['type' => 'string', 'source' => 'path'],
+        'post_id' => ['type' => 'string', 'source' => 'path'],
+    ],
+    'required' => ['user_id', 'post_id'],
+];
+
+$pathDeepParams = [
+    'type' => 'object',
+    'properties' => [
+        'org' => ['type' => 'string', 'source' => 'path'],
+        'team' => ['type' => 'string', 'source' => 'path'],
+        'project' => ['type' => 'string', 'source' => 'path'],
+        'resource' => ['type' => 'string', 'source' => 'path'],
+        'id' => ['type' => 'string', 'source' => 'path'],
+    ],
+    'required' => ['org', 'team', 'project', 'resource', 'id'],
+];
+
+$pathIntParams = [
+    'type' => 'object',
+    'properties' => [
+        'id' => ['type' => 'integer', 'source' => 'path'],
+    ],
+    'required' => ['id'],
+];
+
+$pathUuidParams = [
+    'type' => 'object',
+    'properties' => [
+        'uuid' => ['type' => 'string', 'format' => 'uuid', 'source' => 'path'],
+    ],
+    'required' => ['uuid'],
+];
+
+$pathDateParams = [
+    'type' => 'object',
+    'properties' => [
+        'date' => ['type' => 'string', 'format' => 'date', 'source' => 'path'],
+    ],
+    'required' => ['date'],
+];
+
+$queryFewParams = [
+    'type' => 'object',
+    'properties' => [
+        'q' => ['type' => 'string', 'source' => 'query'],
+        'page' => ['type' => 'integer', 'source' => 'query'],
+        'limit' => ['type' => 'integer', 'source' => 'query'],
+    ],
+    'required' => ['q', 'page', 'limit'],
+];
+
+$queryMediumParams = [
+    'type' => 'object',
+    'properties' => [
+        'category' => ['type' => 'string', 'source' => 'query'],
+        'tags' => ['type' => 'string', 'source' => 'query'],
+        'min_price' => ['type' => 'number', 'source' => 'query'],
+        'max_price' => ['type' => 'number', 'source' => 'query'],
+        'sort' => ['type' => 'string', 'source' => 'query'],
+        'order' => ['type' => 'string', 'source' => 'query'],
+        'page' => ['type' => 'integer', 'source' => 'query'],
+        'limit' => ['type' => 'integer', 'source' => 'query'],
+    ],
+    'required' => ['category', 'tags', 'min_price', 'max_price', 'sort', 'order', 'page', 'limit'],
+];
+
+$queryManyParams = [
+    'type' => 'object',
+    'properties' => [
+        'q' => ['type' => 'string', 'source' => 'query'],
+        'page' => ['type' => 'integer', 'source' => 'query'],
+        'limit' => ['type' => 'integer', 'source' => 'query'],
+        'sort' => ['type' => 'string', 'source' => 'query'],
+        'order' => ['type' => 'string', 'source' => 'query'],
+        'filter' => ['type' => 'string', 'source' => 'query'],
+        'category' => ['type' => 'string', 'source' => 'query'],
+        'subcategory' => ['type' => 'string', 'source' => 'query'],
+        'brand' => ['type' => 'string', 'source' => 'query'],
+        'min_price' => ['type' => 'number', 'source' => 'query'],
+        'max_price' => ['type' => 'number', 'source' => 'query'],
+        'rating' => ['type' => 'integer', 'source' => 'query'],
+        'verified' => ['type' => 'boolean', 'source' => 'query'],
+        'in_stock' => ['type' => 'boolean', 'source' => 'query'],
+        'shipping' => ['type' => 'string', 'source' => 'query'],
+        'color' => ['type' => 'string', 'source' => 'query'],
+    ],
+    'required' => [
+        'q',
+        'page',
+        'limit',
+        'sort',
+        'order',
+        'filter',
+        'category',
+        'subcategory',
+        'brand',
+        'min_price',
+        'max_price',
+        'rating',
+        'verified',
+        'in_stock',
+        'shipping',
+        'color',
+    ],
+];
+
+// ============================================================================
 // Health Check
 // ============================================================================
 
@@ -195,44 +491,79 @@ $app = $app->addRoute('GET', '/', fixedHandler(['status' => 'ok']));
 // ============================================================================
 
 // JSON bodies
-$app = $app->addRoute('POST', '/json/small', echoHandler());
-$app = $app->addRoute('POST', '/json/medium', echoHandler());
-$app = $app->addRoute('POST', '/json/large', echoHandler());
-$app = $app->addRoute('POST', '/json/very-large', echoHandler());
+$app = $app->addRouteWithSchemas('POST', '/json/small', echoHandler(), $smallPayloadSchema, null, null);
+$app = $app->addRouteWithSchemas('POST', '/json/medium', echoHandler(), $mediumPayloadSchema, null, null);
+$app = $app->addRouteWithSchemas('POST', '/json/large', echoHandler(), $largePayloadSchema, null, null);
+$app = $app->addRouteWithSchemas('POST', '/json/very-large', echoHandler(), $veryLargePayloadSchema, null, null);
 
 // Multipart (body ignored; benchmark harness uses synthetic payloads)
-$app = $app->addRoute('POST', '/multipart/small', fixedHandler(['files_received' => 1, 'total_bytes' => 1024]));
-$app = $app->addRoute('POST', '/multipart/medium', fixedHandler(['files_received' => 2, 'total_bytes' => 10240]));
-$app = $app->addRoute('POST', '/multipart/large', fixedHandler(['files_received' => 5, 'total_bytes' => 102400]));
+$app = $app->addRouteWithSchemas(
+    'POST',
+    '/multipart/small',
+    fixedHandler(['files_received' => 1, 'total_bytes' => 1024]),
+    $multipartSchema,
+    null,
+    null
+);
+$app = $app->addRouteWithSchemas(
+    'POST',
+    '/multipart/medium',
+    fixedHandler(['files_received' => 2, 'total_bytes' => 10240]),
+    $multipartSchema,
+    null,
+    null
+);
+$app = $app->addRouteWithSchemas(
+    'POST',
+    '/multipart/large',
+    fixedHandler(['files_received' => 5, 'total_bytes' => 102400]),
+    $multipartSchema,
+    null,
+    null
+);
 
 // Forms (x-www-form-urlencoded)
-$app = $app->addRoute('POST', '/urlencoded/simple', echoHandler());
-$app = $app->addRoute('POST', '/urlencoded/complex', echoHandler());
+$app = $app->addRouteWithSchemas('POST', '/urlencoded/simple', echoHandler(), $urlencodedSimpleSchema, null, null);
+$app = $app->addRouteWithSchemas('POST', '/urlencoded/complex', echoHandler(), $urlencodedComplexSchema, null, null);
 
 // Path params
-$app = $app->addRoute('GET', '/path/simple/{id}', new PathParamHandler());
-$app = $app->addRoute('GET', '/path/multiple/{user_id}/{post_id}', new PathParamHandler());
-$app = $app->addRoute('GET', '/path/deep/{org}/{team}/{project}/{resource}/{id}', new PathParamHandler());
-$app = $app->addRoute('GET', '/path/int/{id}', new PathParamHandler());
-$app = $app->addRoute('GET', '/path/uuid/{uuid}', new PathParamHandler());
-$app = $app->addRoute('GET', '/path/date/{date}', new PathParamHandler());
+$app = $app->addRouteWithSchemas('GET', '/path/simple/{id}', new PathParamHandler(), null, null, $pathSimpleParams);
+$app = $app->addRouteWithSchemas(
+    'GET',
+    '/path/multiple/{user_id}/{post_id}',
+    new PathParamHandler(),
+    null,
+    null,
+    $pathMultipleParams
+);
+$app = $app->addRouteWithSchemas(
+    'GET',
+    '/path/deep/{org}/{team}/{project}/{resource}/{id}',
+    new PathParamHandler(),
+    null,
+    null,
+    $pathDeepParams
+);
+$app = $app->addRouteWithSchemas('GET', '/path/int/{id}', new PathParamHandler(), null, null, $pathIntParams);
+$app = $app->addRouteWithSchemas('GET', '/path/uuid/{uuid}', new PathParamHandler(), null, null, $pathUuidParams);
+$app = $app->addRouteWithSchemas('GET', '/path/date/{date}', new PathParamHandler(), null, null, $pathDateParams);
 
 // Query params (return the parsed query params)
-$app = $app->addRoute('GET', '/query/few', new class implements HandlerInterface {
+$app = $app->addRouteWithSchemas('GET', '/query/few', new class implements HandlerInterface {
     public function matches(Request $request): bool { return true; }
     public function handle(Request $request): Response { return new Response($request->queryParams, 200, []); }
     public function __invoke(Request $request): Response { return $this->handle($request); }
-});
-$app = $app->addRoute('GET', '/query/medium', new class implements HandlerInterface {
+}, null, null, $queryFewParams);
+$app = $app->addRouteWithSchemas('GET', '/query/medium', new class implements HandlerInterface {
     public function matches(Request $request): bool { return true; }
     public function handle(Request $request): Response { return new Response($request->queryParams, 200, []); }
     public function __invoke(Request $request): Response { return $this->handle($request); }
-});
-$app = $app->addRoute('GET', '/query/many', new class implements HandlerInterface {
+}, null, null, $queryMediumParams);
+$app = $app->addRouteWithSchemas('GET', '/query/many', new class implements HandlerInterface {
     public function matches(Request $request): bool { return true; }
     public function handle(Request $request): Response { return new Response($request->queryParams, 200, []); }
     public function __invoke(Request $request): Response { return $this->handle($request); }
-});
+}, null, null, $queryManyParams);
 
 // ============================================================================
 // JSON Body Workloads - Small Payloads (~100-500 bytes)
