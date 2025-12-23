@@ -1,0 +1,305 @@
+{
+  "health": {
+    "type": "object",
+    "required": ["status"],
+    "properties": {
+      "status": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "root": {
+    "type": "object",
+    "required": ["status"],
+    "properties": {
+      "status": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "json/small": {
+    "type": "object",
+    "required": ["name", "description", "price", "tax"],
+    "properties": {
+      "name": { "type": "string" },
+      "description": { "type": "string" },
+      "price": { "type": "number" },
+      "tax": { "type": "number" }
+    },
+    "additionalProperties": false
+  },
+  "json/medium": {
+    "type": "object",
+    "required": ["name", "price", "image"],
+    "properties": {
+      "name": { "type": "string" },
+      "price": { "type": "number" },
+      "image": {
+        "type": "object",
+        "required": ["url", "name"],
+        "properties": {
+          "url": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  },
+  "json/large": {
+    "type": "object",
+    "required": ["name", "price", "seller"],
+    "properties": {
+      "name": { "type": "string" },
+      "price": { "type": "number" },
+      "seller": {
+        "type": "object",
+        "required": ["name", "address"],
+        "properties": {
+          "name": { "type": "string" },
+          "address": {
+            "type": "object",
+            "required": ["street", "city", "country"],
+            "properties": {
+              "street": { "type": "string" },
+              "city": { "type": "string" },
+              "country": {
+                "type": "object",
+                "required": ["name", "code"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "code": { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  },
+  "json/very-large": {
+    "type": "object",
+    "required": ["name", "tags", "images"],
+    "properties": {
+      "name": { "type": "string" },
+      "tags": { "type": "array", "items": { "type": "string" } },
+      "images": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["url", "name"],
+          "properties": {
+            "url": { "type": "string" },
+            "name": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "multipart/small": {
+    "type": "object",
+    "required": ["files_received", "total_bytes"],
+    "properties": {
+      "files_received": { "type": "integer" },
+      "total_bytes": { "type": "integer" }
+    },
+    "additionalProperties": false
+  },
+  "multipart/medium": {
+    "type": "object",
+    "required": ["files_received", "total_bytes"],
+    "properties": {
+      "files_received": { "type": "integer" },
+      "total_bytes": { "type": "integer" }
+    },
+    "additionalProperties": false
+  },
+  "multipart/large": {
+    "type": "object",
+    "required": ["files_received", "total_bytes"],
+    "properties": {
+      "files_received": { "type": "integer" },
+      "total_bytes": { "type": "integer" }
+    },
+    "additionalProperties": false
+  },
+  "urlencoded/simple": {
+    "type": "object",
+    "required": ["name", "email", "age", "subscribe"],
+    "properties": {
+      "name": { "type": "string" },
+      "email": { "type": "string", "format": "email" },
+      "age": { "type": "integer" },
+      "subscribe": { "type": "boolean" }
+    },
+    "additionalProperties": false
+  },
+  "urlencoded/complex": {
+    "type": "object",
+    "required": [
+      "username",
+      "password",
+      "email",
+      "first_name",
+      "last_name",
+      "age",
+      "country",
+      "state",
+      "city",
+      "zip",
+      "phone",
+      "company",
+      "job_title",
+      "subscribe",
+      "newsletter",
+      "terms_accepted",
+      "privacy_accepted",
+      "marketing_consent",
+      "two_factor_enabled"
+    ],
+    "properties": {
+      "username": { "type": "string" },
+      "password": { "type": "string" },
+      "email": { "type": "string", "format": "email" },
+      "first_name": { "type": "string" },
+      "last_name": { "type": "string" },
+      "age": { "type": "integer" },
+      "country": { "type": "string" },
+      "state": { "type": "string" },
+      "city": { "type": "string" },
+      "zip": { "type": "string" },
+      "phone": { "type": "string" },
+      "company": { "type": "string" },
+      "job_title": { "type": "string" },
+      "subscribe": { "type": "boolean" },
+      "newsletter": { "type": "boolean" },
+      "terms_accepted": { "type": "boolean" },
+      "privacy_accepted": { "type": "boolean" },
+      "marketing_consent": { "type": "boolean" },
+      "two_factor_enabled": { "type": "boolean" }
+    },
+    "additionalProperties": false
+  },
+  "path/simple": {
+    "type": "object",
+    "required": ["id"],
+    "properties": {
+      "id": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "path/multiple": {
+    "type": "object",
+    "required": ["user_id", "post_id"],
+    "properties": {
+      "user_id": { "type": "string" },
+      "post_id": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "path/deep": {
+    "type": "object",
+    "required": ["org", "team", "project", "resource", "id"],
+    "properties": {
+      "org": { "type": "string" },
+      "team": { "type": "string" },
+      "project": { "type": "string" },
+      "resource": { "type": "string" },
+      "id": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "path/int": {
+    "type": "object",
+    "required": ["id"],
+    "properties": {
+      "id": { "type": "integer" }
+    },
+    "additionalProperties": false
+  },
+  "path/uuid": {
+    "type": "object",
+    "required": ["uuid"],
+    "properties": {
+      "uuid": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "path/date": {
+    "type": "object",
+    "required": ["date"],
+    "properties": {
+      "date": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "query/few": {
+    "type": "object",
+    "required": ["q", "page", "limit"],
+    "properties": {
+      "q": { "type": "string" },
+      "page": { "type": "integer" },
+      "limit": { "type": "integer" }
+    },
+    "additionalProperties": false
+  },
+  "query/medium": {
+    "type": "object",
+    "required": ["category", "tags", "min_price", "max_price", "sort", "order", "page", "limit"],
+    "properties": {
+      "category": { "type": "string" },
+      "tags": { "type": "string" },
+      "min_price": { "type": "number" },
+      "max_price": { "type": "number" },
+      "sort": { "type": "string" },
+      "order": { "type": "string" },
+      "page": { "type": "integer" },
+      "limit": { "type": "integer" }
+    },
+    "additionalProperties": false
+  },
+  "query/many": {
+    "type": "object",
+    "required": [
+      "q",
+      "page",
+      "limit",
+      "sort",
+      "order",
+      "filter",
+      "category",
+      "subcategory",
+      "brand",
+      "min_price",
+      "max_price",
+      "rating",
+      "verified",
+      "in_stock",
+      "shipping",
+      "color"
+    ],
+    "properties": {
+      "q": { "type": "string" },
+      "page": { "type": "integer" },
+      "limit": { "type": "integer" },
+      "sort": { "type": "string" },
+      "order": { "type": "string" },
+      "filter": { "type": "string" },
+      "category": { "type": "string" },
+      "subcategory": { "type": "string" },
+      "brand": { "type": "string" },
+      "min_price": { "type": "number" },
+      "max_price": { "type": "number" },
+      "rating": { "type": "integer" },
+      "verified": { "type": "boolean" },
+      "in_stock": { "type": "boolean" },
+      "shipping": { "type": "string" },
+      "color": { "type": "string" }
+    },
+    "additionalProperties": false
+  }
+}

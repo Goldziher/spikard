@@ -51,6 +51,7 @@ class Spikard:
         handler: Callable[..., Any] | None = None,
         *,
         body_schema: dict[str, Any] | None = None,
+        response_schema: dict[str, Any] | None = None,
         parameter_schema: dict[str, Any] | None = None,
         file_params: dict[str, Any] | None = None,
         jsonrpc_method: JsonRpcMethodInfo | None = None,
@@ -62,6 +63,7 @@ class Spikard:
             path: URL path pattern
             handler: Optional handler to register immediately instead of using decorator style
             body_schema: Optional explicit body schema (takes precedence over type hint extraction)
+            response_schema: Optional explicit response schema (takes precedence over type hint extraction)
             parameter_schema: Optional explicit parameter schema (takes precedence over type hint extraction)
             file_params: Optional file parameter schema for multipart file validation
             jsonrpc_method: Optional JsonRpcMethodInfo for exposing as JSON-RPC method
@@ -72,13 +74,20 @@ class Spikard:
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:  # noqa: C901, PLR0915, PLR0912
             methods_without_body = {"GET", "DELETE", "HEAD", "OPTIONS"}
+            response_schema_override = response_schema
             if method.upper() in methods_without_body:
                 request_schema = None
-                _, response_schema = extract_schemas(func)
+                _, inferred_response_schema = extract_schemas(func)
             else:
-                request_schema, response_schema = extract_schemas(func)
+                request_schema, inferred_response_schema = extract_schemas(func)
                 if body_schema is not None:
                     request_schema = body_schema
+
+            response_schema_value: dict[str, Any] | None
+            if response_schema_override is not None:
+                response_schema_value = response_schema_override
+            else:
+                response_schema_value = inferred_response_schema
 
             extracted_parameter_schema = extract_parameter_schema(func, path)
 
@@ -156,7 +165,7 @@ class Spikard:
                 handler=wrapped_func,
                 handler_name=func.__name__,
                 request_schema=request_schema,
-                response_schema=response_schema,
+                response_schema=response_schema_value,
                 parameter_schema=extracted_parameter_schema,
                 file_params=file_params,
                 is_async=inspect.iscoroutinefunction(func),

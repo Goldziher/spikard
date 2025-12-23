@@ -1,0 +1,128 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "caec4e805a14e5000744bd724c760ac5",
+    "packages": [
+        {
+            "name": "spikard/spikard",
+            "version": "0.4.0",
+            "dist": {
+                "type": "path",
+                "url": "../../../../packages/php",
+                "reference": "9aae66336c7f96240091d1d5215d29b560399745"
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.91",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan": "^1.12",
+                "phpunit/phpunit": "^11.3",
+                "symfony/console": "^7.4",
+                "symfony/event-dispatcher": "^7.4",
+                "symfony/filesystem": "^7.4",
+                "symfony/finder": "^7.4",
+                "symfony/options-resolver": "^7.4",
+                "symfony/process": "^7.4",
+                "symfony/stopwatch": "^7.4",
+                "symfony/string": "^7.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Spikard\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Spikard\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "phpstan": [
+                    "PHPRC=$(pwd)/packages/php/phpstan.ini PHPSTAN_MEMORY_LIMIT=1G PHP_MEMORY_LIMIT=1G php -d detect_unicode=0 -d memory_limit=1G vendor/bin/phpstan analyse src tests --configuration=phpstan.neon --memory-limit=1G --no-progress"
+                ],
+                "csfixer": [
+                    "php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php src tests"
+                ],
+                "format": [
+                    "@csfixer"
+                ],
+                "format:check": [
+                    "php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php --dry-run src tests"
+                ],
+                "test": [
+                    "php -d detect_unicode=0 vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "lint": [
+                    "@phpstan"
+                ],
+                "lint:fix": [
+                    "@csfixer",
+                    "@phpstan"
+                ],
+                "generate-dto": [
+                    "@php bin/generate-dto.php"
+                ],
+                "post-install-cmd": [
+                    "@php bin/install-extension.php"
+                ],
+                "post-update-cmd": [
+                    "@php bin/install-extension.php"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Na'aman Hirschfeld",
+                    "email": "nhirschfeld@gmail.com",
+                    "role": "creator"
+                }
+            ],
+            "description": "High-performance PHP web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with ext-php-rs bindings, async handlers, dependency injection, and lifecycle hooks.",
+            "homepage": "https://github.com/Goldziher/spikard",
+            "keywords": [
+                "async",
+                "axum",
+                "ext-php-rs",
+                "ffi",
+                "framework",
+                "http",
+                "performance",
+                "php8",
+                "rest-api",
+                "rust",
+                "sse",
+                "tokio",
+                "tower-http",
+                "web-framework",
+                "websocket"
+            ],
+            "support": {
+                "issues": "https://github.com/Goldziher/spikard/issues",
+                "source": "https://github.com/Goldziher/spikard",
+                "docs": "https://github.com/Goldziher/spikard/tree/main/packages/php"
+            },
+            "transport-options": {
+                "relative": true
+            }
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {},
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {
+        "php": ">=8.2"
+    },
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
+}

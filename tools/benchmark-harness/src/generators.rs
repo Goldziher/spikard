@@ -2,92 +2,103 @@
 //! Generates realistic test payloads for benchmarking across different payload sizes and
 //! structures.
 
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 /// Generate a small JSON payload (~100-500 bytes)
 pub fn generate_json_small() -> Value {
     json!({
-        "id": 12345,
-        "name": "test_item",
-        "active": true,
-        "count": 42,
-        "tags": ["tag1", "tag2", "tag3"]
+        "name": "benchmark_item_small",
+        "description": "Small payload for benchmarking with enough entropy to avoid trivial compression.",
+        "price": 19.99,
+        "tax": 1.52
     })
 }
 
 /// Generate a medium JSON payload (~1-10KB)
 pub fn generate_json_medium() -> Value {
-    let mut metadata = Map::new();
-    for i in 0..10 {
-        metadata.insert(format!("key_{}", i), json!(format!("value_{}", i)));
-    }
-
-    let items: Vec<Value> = (0..5).map(|_| generate_json_small()).collect();
-
+    let image_name = "benchmark_image_".repeat(40);
+    let image_url = format!("https://cdn.example.com/{}", "image-path/".repeat(30));
     json!({
-        "id": 67890,
-        "metadata": metadata,
-        "items": items,
-        "description": "A".repeat(500),
-        "nested": {
-            "field1": "value1",
-            "field2": 123,
-            "field3": true
+        "name": "benchmark_item_medium",
+        "price": 129.99,
+        "image": {
+            "url": image_url,
+            "name": image_name
         }
     })
 }
 
 /// Generate a large JSON payload (~10-100KB)
 pub fn generate_json_large() -> Value {
-    let items: Vec<Value> = (0..200).map(|_| generate_json_small()).collect();
-    let padding = "X".repeat(12_000);
-
     json!({
-        "data": items,
-        "total": 100,
-        "page": 1,
-        "metadata": {
-            "timestamp": "2024-01-01T00:00:00Z",
-            "version": "1.0.0"
-        },
-        "payload": padding
+        "name": "benchmark_item_large_".repeat(40),
+        "price": 1249.50,
+        "seller": {
+            "name": "benchmark_seller_".repeat(60),
+            "address": {
+                "street": "123 Benchmark Avenue ".repeat(400),
+                "city": "Performance City ".repeat(120),
+                "country": {
+                    "name": "Benchmark Republic ".repeat(80),
+                    "code": "BR"
+                }
+            }
+        }
     })
 }
 
 /// Generate a very large JSON payload (~100KB-1MB)
 pub fn generate_json_very_large() -> Value {
-    let items: Vec<Value> = (0..2000).map(|_| generate_json_small()).collect();
-    let padding = "Y".repeat(50_000);
+    let tags: Vec<Value> = (0..500).map(|idx| json!(format!("tag_{idx:04}"))).collect();
+    let images: Vec<Value> = (0..800)
+        .map(|idx| {
+            json!({
+                "url": format!("https://images.example.com/{}/{}", "path".repeat(10), idx),
+                "name": format!("benchmark_image_{}{}", idx, "_x".repeat(20))
+            })
+        })
+        .collect();
 
     json!({
-        "data": items,
-        "total": 1000,
-        "page": 1,
-        "metadata": {
-            "timestamp": "2024-01-01T00:00:00Z",
-            "version": "1.0.0",
-            "description": "Very large dataset for performance testing".repeat(10)
-        },
-        "payload": padding
+        "name": "benchmark_item_very_large_".repeat(80),
+        "tags": tags,
+        "images": images
     })
 }
 
 /// Generate a simple URL-encoded form (3-5 fields)
 pub fn generate_urlencoded_simple() -> HashMap<String, String> {
     let mut form = HashMap::new();
-    form.insert("username".to_string(), "testuser".to_string());
-    form.insert("email".to_string(), "test@example.com".to_string());
+    form.insert("name".to_string(), "Test User".to_string());
+    form.insert("email".to_string(), "test.user@example.com".to_string());
     form.insert("age".to_string(), "30".to_string());
+    form.insert("subscribe".to_string(), "true".to_string());
     form
 }
 
 /// Generate a complex URL-encoded form (10-20 fields)
 pub fn generate_urlencoded_complex() -> HashMap<String, String> {
     let mut form = HashMap::new();
-    for i in 0..15 {
-        form.insert(format!("field_{}", i), format!("value_{}", i));
-    }
+    form.insert("username".to_string(), "benchmark_user".to_string());
+    form.insert("password".to_string(), "s3cureP@ssw0rd".to_string());
+    form.insert("email".to_string(), "benchmark.user@example.com".to_string());
+    form.insert("first_name".to_string(), "Benchmark".to_string());
+    form.insert("last_name".to_string(), "User".to_string());
+    form.insert("age".to_string(), "42".to_string());
+    form.insert("country".to_string(), "USA".to_string());
+    form.insert("state".to_string(), "CA".to_string());
+    form.insert("city".to_string(), "Performance City".to_string());
+    form.insert("zip".to_string(), "94105".to_string());
+    form.insert("phone".to_string(), "+14155550199".to_string());
+    form.insert("company".to_string(), "Benchmark Labs".to_string());
+    form.insert("job_title".to_string(), "Performance Engineer".to_string());
+    form.insert("subscribe".to_string(), "true".to_string());
+    form.insert("newsletter".to_string(), "false".to_string());
+    form.insert("terms_accepted".to_string(), "true".to_string());
+    form.insert("privacy_accepted".to_string(), "true".to_string());
+    form.insert("marketing_consent".to_string(), "false".to_string());
+    form.insert("two_factor_enabled".to_string(), "true".to_string());
     form
 }
 
@@ -144,13 +155,13 @@ mod tests {
     #[test]
     fn test_generate_urlencoded_simple() {
         let form = generate_urlencoded_simple();
-        assert_eq!(form.len(), 3);
+        assert_eq!(form.len(), 4);
     }
 
     #[test]
     fn test_generate_urlencoded_complex() {
         let form = generate_urlencoded_complex();
-        assert_eq!(form.len(), 15);
+        assert_eq!(form.len(), 19);
     }
 
     #[test]

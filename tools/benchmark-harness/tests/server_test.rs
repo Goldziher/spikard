@@ -167,7 +167,7 @@ async fn test_start_server_process_spawn_failure() {
 #[test]
 fn test_server_config_creation() {
     let config = ServerConfig {
-        framework: Some("spikard-python".to_string()),
+        framework: Some("spikard-python-validation".to_string()),
         port: 8000,
         app_dir: PathBuf::from("/tmp/app"),
         variant: None,
@@ -175,7 +175,7 @@ fn test_server_config_creation() {
         start_cmd_override: None,
     };
 
-    assert_eq!(config.framework, Some("spikard-python".to_string()));
+    assert_eq!(config.framework, Some("spikard-python-validation".to_string()));
     assert_eq!(config.port, 8000);
     assert_eq!(config.app_dir, PathBuf::from("/tmp/app"));
 }

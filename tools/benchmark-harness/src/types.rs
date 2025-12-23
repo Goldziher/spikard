@@ -7,7 +7,7 @@ use std::time::Duration;
 /// Complete benchmark result for a workload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkResult {
-    /// Framework name (e.g., "spikard-python", "fastapi")
+    /// Framework name (e.g., "spikard-python-validation", "fastapi")
     pub framework: String,
 
     /// Workload name (e.g., "simple", "comprehensive")
