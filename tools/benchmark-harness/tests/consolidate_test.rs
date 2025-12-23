@@ -120,8 +120,8 @@ fn consolidates_profile_results() {
     fs::create_dir_all(path_one.parent().unwrap()).expect("mkdir");
     fs::create_dir_all(path_two.parent().unwrap()).expect("mkdir");
 
-    let run_one = sample_profile("spikard-node", 100.0, 2.0);
-    let run_two = sample_profile("spikard-node", 200.0, 4.0);
+    let run_one = sample_profile("spikard-node-validation", 100.0, 2.0);
+    let run_two = sample_profile("spikard-node-validation", 200.0, 4.0);
     fs::write(&path_one, serde_json::to_string_pretty(&run_one).unwrap()).expect("write");
     fs::write(&path_two, serde_json::to_string_pretty(&run_two).unwrap()).expect("write");
 
@@ -129,7 +129,7 @@ fn consolidates_profile_results() {
     assert_eq!(report.frameworks.len(), 1);
 
     let framework = &report.frameworks[0];
-    assert_eq!(framework.name, "spikard-node");
+    assert_eq!(framework.name, "spikard-node-validation");
     assert_eq!(framework.run_count, 2);
     assert!((framework.avg_requests_per_sec.mean - 150.0).abs() < 0.001);
 

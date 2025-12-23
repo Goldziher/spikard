@@ -1,0 +1,8 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": true,
+		"lib": ["deno.ns", "deno.unstable", "esnext", "dom", "dom.iterable"]
+	}
+}

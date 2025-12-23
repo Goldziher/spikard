@@ -10,11 +10,18 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-def get(path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def get(
+    path: str,
+    *,
+    response_schema: dict[str, Any] | None = None,
+    parameter_schema: dict[str, Any] | None = None,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone GET route decorator.
 
     Args:
         path: URL path pattern
+        response_schema: Optional JSON Schema for response validation.
+        parameter_schema: Optional JSON Schema for path/query/header/cookie validation.
 
     Returns:
         Decorator function
@@ -31,18 +38,32 @@ def get(path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app.register_route("GET", path, body_schema=None)(func)
+        return app.register_route(
+            "GET",
+            path,
+            body_schema=None,
+            response_schema=response_schema,
+            parameter_schema=parameter_schema,
+        )(func)
 
     return decorator
 
 
-def post(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def post(
+    path: str,
+    *,
+    body_schema: dict[str, Any] | None = None,
+    response_schema: dict[str, Any] | None = None,
+    parameter_schema: dict[str, Any] | None = None,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone POST route decorator.
 
     Args:
         path: URL path pattern
         body_schema: Optional JSON Schema for request body validation.
                      Per RFC 9110, bodies are semantically expected but not syntactically required.
+        response_schema: Optional JSON Schema for response validation.
+        parameter_schema: Optional JSON Schema for path/query/header/cookie validation.
 
     Returns:
         Decorator function
@@ -54,18 +75,32 @@ def post(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[[C
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app.register_route("POST", path, body_schema=body_schema)(func)
+        return app.register_route(
+            "POST",
+            path,
+            body_schema=body_schema,
+            response_schema=response_schema,
+            parameter_schema=parameter_schema,
+        )(func)
 
     return decorator
 
 
-def put(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def put(
+    path: str,
+    *,
+    body_schema: dict[str, Any] | None = None,
+    response_schema: dict[str, Any] | None = None,
+    parameter_schema: dict[str, Any] | None = None,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone PUT route decorator.
 
     Args:
         path: URL path pattern
         body_schema: Optional JSON Schema for request body validation.
                      Per RFC 9110, bodies are semantically expected but not syntactically required.
+        response_schema: Optional JSON Schema for response validation.
+        parameter_schema: Optional JSON Schema for path/query/header/cookie validation.
 
     Returns:
         Decorator function
@@ -77,13 +112,23 @@ def put(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[[Ca
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app.register_route("PUT", path, body_schema=body_schema)(func)
+        return app.register_route(
+            "PUT",
+            path,
+            body_schema=body_schema,
+            response_schema=response_schema,
+            parameter_schema=parameter_schema,
+        )(func)
 
     return decorator
 
 
 def patch(
-    path: str, *, body_schema: dict[str, Any] | None = None
+    path: str,
+    *,
+    body_schema: dict[str, Any] | None = None,
+    response_schema: dict[str, Any] | None = None,
+    parameter_schema: dict[str, Any] | None = None,
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone PATCH route decorator.
 
@@ -91,6 +136,8 @@ def patch(
         path: URL path pattern
         body_schema: Optional JSON Schema for request body validation.
                      Per RFC 5789, bodies are strongly implied but not syntactically required.
+        response_schema: Optional JSON Schema for response validation.
+        parameter_schema: Optional JSON Schema for path/query/header/cookie validation.
 
     Returns:
         Decorator function
@@ -102,13 +149,23 @@ def patch(
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app.register_route("PATCH", path, body_schema=body_schema)(func)
+        return app.register_route(
+            "PATCH",
+            path,
+            body_schema=body_schema,
+            response_schema=response_schema,
+            parameter_schema=parameter_schema,
+        )(func)
 
     return decorator
 
 
 def delete(
-    path: str, *, body_schema: dict[str, Any] | None = None
+    path: str,
+    *,
+    body_schema: dict[str, Any] | None = None,
+    response_schema: dict[str, Any] | None = None,
+    parameter_schema: dict[str, Any] | None = None,
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone DELETE route decorator.
 
@@ -116,6 +173,8 @@ def delete(
         path: URL path pattern
         body_schema: Optional JSON Schema for request body validation.
                      Per RFC 9110, bodies are allowed but optional for DELETE.
+        response_schema: Optional JSON Schema for response validation.
+        parameter_schema: Optional JSON Schema for path/query/header/cookie validation.
 
     Returns:
         Decorator function
@@ -127,7 +186,13 @@ def delete(
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app.register_route("DELETE", path, body_schema=body_schema)(func)
+        return app.register_route(
+            "DELETE",
+            path,
+            body_schema=body_schema,
+            response_schema=response_schema,
+            parameter_schema=parameter_schema,
+        )(func)
 
     return decorator
 
@@ -201,6 +266,8 @@ def route(
     *,
     methods: str | list[str] | tuple[str, ...] | None = None,
     body_schema: dict[str, Any] | None = None,
+    response_schema: dict[str, Any] | None = None,
+    parameter_schema: dict[str, Any] | None = None,
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone route decorator with explicit HTTP method(s).
 
@@ -210,6 +277,8 @@ def route(
                     or a sequence like ["GET", "HEAD"] or ("POST", "PUT")
         methods: Alias for http_method (for FastAPI/OpenAPI compatibility)
         body_schema: JSON Schema for request body validation (required for POST/PUT/PATCH)
+        response_schema: Optional JSON Schema for response validation.
+        parameter_schema: Optional JSON Schema for parameter validation.
 
     Returns:
         Decorator function
@@ -247,7 +316,13 @@ def route(
 
         for method in method_list:
             method_upper = cast("HttpMethod", method.upper())
-            app.register_route(method_upper, path, body_schema=body_schema)(func)
+            app.register_route(
+                method_upper,
+                path,
+                body_schema=body_schema,
+                response_schema=response_schema,
+                parameter_schema=parameter_schema,
+            )(func)
 
         return func
 

@@ -4,7 +4,7 @@
 set -e
 
 WORKSPACE_ROOT="/Users/naamanhirschfeld/workspace/spikard"
-SPIKARD_RUST_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/spikard-rust/target/release/spikard-rust-bench"
+SPIKARD_RUST_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/spikard-rust-validation/target/release/spikard-rust-bench"
 PYTHON_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/spikard-python-workloads/server.py"
 
 # JSON payload for testing
@@ -13,22 +13,22 @@ JSON_SMALL='{"id":12345,"name":"test_item","active":true,"count":42,"tags":["tag
 echo "=== Workload Benchmark Test ==="
 echo ""
 
-# Test Spikard-Rust server
-echo "Starting Spikard-Rust server on port 8100..."
+# Test Spikard-Rust (validation) server
+echo "Starting Spikard-Rust (validation) server on port 8100..."
 $SPIKARD_RUST_SERVER 8100 >/tmp/spikard-rust-server.log 2>&1 &
 SPIKARD_RUST_PID=$!
 sleep 2
 
-echo "Testing Spikard-Rust server health..."
+echo "Testing Spikard-Rust (validation) server health..."
 if curl -sf http://localhost:8100/health >/dev/null; then
-	echo "✓ Spikard-Rust server healthy"
+	echo "✓ Spikard-Rust (validation) server healthy"
 else
-	echo "✗ Spikard-Rust server failed to start"
+	echo "✗ Spikard-Rust (validation) server failed to start"
 	kill $SPIKARD_RUST_PID 2>/dev/null || true
 	exit 1
 fi
 
-echo "Running benchmark against Spikard-Rust server..."
+echo "Running benchmark against Spikard-Rust (validation) server..."
 oha -z 10s -c 50 \
 	-m POST \
 	-H "Content-Type: application/json" \
@@ -37,7 +37,7 @@ oha -z 10s -c 50 \
 	http://localhost:8100/json/small \
 	>/tmp/spikard-rust-bench.json
 
-echo "Spikard-Rust results:"
+echo "Spikard-Rust (validation) results:"
 cat /tmp/spikard-rust-bench.json | jq '.summary'
 
 kill $SPIKARD_RUST_PID 2>/dev/null || true
@@ -75,7 +75,7 @@ kill $PYTHON_PID 2>/dev/null || true
 
 echo ""
 echo "=== Comparison ==="
-echo -n "Spikard-Rust RPS: "
+echo -n "Spikard-Rust (validation) RPS: "
 cat /tmp/spikard-rust-bench.json | jq -r '.summary.requestsPerSec'
 echo -n "Python RPS:       "
 cat /tmp/python-bench.json | jq -r '.summary.requestsPerSec'

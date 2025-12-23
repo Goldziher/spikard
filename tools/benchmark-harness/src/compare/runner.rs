@@ -166,7 +166,7 @@ impl CompareRunner {
     ///
     /// # Arguments
     ///
-    /// * `framework` - Framework name (e.g., "spikard-python", "fastapi")
+    /// * `framework` - Framework name (e.g., "spikard-python-validation", "fastapi")
     /// * `index` - Framework index for port allocation
     ///
     /// # Errors

@@ -37,7 +37,7 @@ enum Commands {
 
     /// Run a benchmark
     Run {
-        /// Framework to benchmark (e.g., spikard-python, fastapi).
+        /// Framework to benchmark (e.g., spikard-python-validation, fastapi).
         /// If not specified, framework will be auto-detected from app_dir.
         #[arg(short, long)]
         framework: Option<String>,
@@ -85,7 +85,7 @@ enum Commands {
 
     /// Run a streaming benchmark (WebSocket/SSE)
     Stream {
-        /// Framework to benchmark (e.g., spikard-python).
+        /// Framework to benchmark (e.g., spikard-python-validation).
         /// If not specified, framework will be auto-detected from app_dir.
         #[arg(short, long)]
         framework: Option<String>,
@@ -121,7 +121,7 @@ enum Commands {
 
     /// Profile mode - Deep analysis of a single framework with profiling
     Profile {
-        /// Framework to profile (e.g., spikard-python, spikard-rust).
+        /// Framework to profile (e.g., spikard-python-validation, spikard-rust-validation).
         /// If not specified, framework will be auto-detected from app_dir.
         #[arg(short, long)]
         framework: Option<String>,
@@ -171,21 +171,21 @@ enum Commands {
     ///
     /// Examples:
     ///   # Compare Spikard Python binding against FastAPI and Flask
-    ///   benchmark-harness compare --frameworks spikard-python,fastapi,flask
+    ///   benchmark-harness compare --frameworks spikard-python-validation,fastapi,flask
     ///
     ///   # Compare with custom duration and concurrency
     ///   benchmark-harness compare \
-    ///     --frameworks spikard-python,robyn \
+    ///     --frameworks spikard-python-validation,robyn \
     ///     --duration 60 \
     ///     --concurrency 200 \
     ///     --suite json-bodies
     ///
     ///   # Use custom significance threshold (stricter)
     ///   benchmark-harness compare \
-    ///     --frameworks spikard-python,fastapi \
+    ///     --frameworks spikard-python-validation,fastapi \
     ///     --significance 0.01
     Compare {
-        /// Comma-separated framework names (e.g., "spikard-python,fastapi,robyn")
+        /// Comma-separated framework names (e.g., "spikard-python-validation,fastapi,robyn")
         #[arg(short, long, value_delimiter = ',', required = true)]
         frameworks: Vec<String>,
 
@@ -557,7 +557,7 @@ async fn main() -> Result<()> {
                 eprintln!("   Provided: {} framework(s)", frameworks.len());
                 eprintln!();
                 eprintln!("Example usage:");
-                eprintln!("  benchmark-harness compare --frameworks spikard-python,fastapi,robyn");
+                eprintln!("  benchmark-harness compare --frameworks spikard-python-validation,fastapi,robyn");
                 std::process::exit(1);
             }
 

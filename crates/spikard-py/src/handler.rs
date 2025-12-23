@@ -768,8 +768,8 @@ fn validated_params_to_py_kwargs<'py>(
     #[cfg(feature = "di")]
     inject_di_dependencies(py, &params_dict, request_data, handler_params)?;
 
-    if needs_param_conversion {
-        convert_params(py, params_dict, handler)
+    let result = if needs_param_conversion {
+        convert_params(py, params_dict, handler)?
     } else if let Some(allowed) = handler_params {
         let filtered = PyDict::new(py);
         for name in allowed {
@@ -777,10 +777,13 @@ fn validated_params_to_py_kwargs<'py>(
                 filtered.set_item(name, value)?;
             }
         }
-        Ok(filtered)
+        filtered
     } else {
-        Ok(params_dict)
-    }
+        params_dict
+    };
+
+    strip_internal_keys(&result)?;
+    Ok(result)
 }
 
 /// Convert Python object to ResponseResult
@@ -972,11 +975,23 @@ fn request_data_to_py_kwargs<'py>(
     #[cfg(feature = "di")]
     inject_di_dependencies(py, &kwargs, request_data, handler_params)?;
 
-    if needs_param_conversion || handler_params.is_none() {
-        convert_params(py, kwargs, handler)
+    let result = if needs_param_conversion || handler_params.is_none() {
+        convert_params(py, kwargs, handler)?
     } else {
-        Ok(kwargs)
+        kwargs
+    };
+
+    strip_internal_keys(&result)?;
+    Ok(result)
+}
+
+fn strip_internal_keys<'py>(kwargs: &Bound<'py, PyDict>) -> PyResult<()> {
+    for key in ["_raw_body", "_raw_json"] {
+        if kwargs.contains(key)? {
+            kwargs.del_item(key)?;
+        }
     }
+    Ok(())
 }
 
 // (intentionally no trailing items)

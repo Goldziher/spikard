@@ -339,7 +339,7 @@ mod tests {
     #[test]
     fn test_server_config_with_explicit_framework() {
         let config = ServerConfig {
-            framework: Some("spikard-rust".to_string()),
+            framework: Some("spikard-rust-validation".to_string()),
             port: 8080,
             app_dir: PathBuf::from("."),
             variant: None,
@@ -347,7 +347,7 @@ mod tests {
             start_cmd_override: None,
         };
 
-        assert_eq!(config.framework, Some("spikard-rust".to_string()));
+        assert_eq!(config.framework, Some("spikard-rust-validation".to_string()));
         assert_eq!(config.port, 8080);
     }
 
@@ -368,7 +368,7 @@ mod tests {
 
     #[test]
     fn test_port_substitution_in_command() {
-        let framework = get_framework("spikard-rust").expect("spikard-rust should exist");
+        let framework = get_framework("spikard-rust-validation").expect("spikard-rust should exist");
         let port = 9000u16;
         let start_cmd = framework.start_cmd.replace("{port}", &port.to_string());
 
@@ -378,7 +378,7 @@ mod tests {
 
     #[test]
     fn test_build_command_substitution() {
-        let framework = get_framework("spikard-rust").expect("spikard-rust should exist");
+        let framework = get_framework("spikard-rust-validation").expect("spikard-rust should exist");
         assert!(framework.build_cmd.is_some());
 
         let build_cmd = framework.build_cmd.unwrap();
@@ -392,7 +392,7 @@ mod tests {
     fn test_working_directory_resolution() {
         let app_dir = PathBuf::from("/app");
 
-        let framework = get_framework("spikard-python").expect("spikard-python should exist");
+        let framework = get_framework("spikard-python-validation").expect("spikard-python-validation should exist");
         let working_dir = if let Some(hint) = &framework.working_dir_hint {
             app_dir.join(hint)
         } else {
@@ -400,7 +400,7 @@ mod tests {
         };
         assert_eq!(working_dir, PathBuf::from("/app"));
 
-        let framework = get_framework("spikard-rust").expect("spikard-rust should exist");
+        let framework = get_framework("spikard-rust-validation").expect("spikard-rust should exist");
         if let Some(hint) = &framework.working_dir_hint {
             let working_dir = app_dir.join(hint);
             assert!(!working_dir.to_string_lossy().ends_with("/"));
@@ -426,13 +426,13 @@ mod tests {
     #[test]
     fn test_framework_config_access() {
         let frameworks = vec![
-            "spikard-rust",
-            "spikard-python",
-            "spikard-node",
-            "spikard-ruby",
-            "spikard-wasm",
-            "fastapi-uvicorn-dto",
-            "robyn-dto",
+            "spikard-rust-validation",
+            "spikard-python-validation",
+            "spikard-node-validation",
+            "spikard-ruby-validation",
+            "spikard-wasm-validation",
+            "fastapi-uvicorn-validation",
+            "robyn-validation",
         ];
 
         for name in frameworks {
@@ -455,7 +455,7 @@ mod tests {
 
         let detected = detect_framework(temp_dir.path());
         assert!(detected.is_ok());
-        assert_eq!(detected.unwrap().name, "spikard-rust");
+        assert_eq!(detected.unwrap().name, "spikard-rust-validation");
     }
 
     #[test]
@@ -465,13 +465,13 @@ mod tests {
 
         let detected = detect_framework(temp_dir.path());
         assert!(detected.is_ok());
-        assert_eq!(detected.unwrap().name, "spikard-python");
+        assert_eq!(detected.unwrap().name, "spikard-python-validation");
     }
 
     #[test]
     fn test_server_config_variant_field() {
         let config = ServerConfig {
-            framework: Some("spikard".to_string()),
+            framework: Some("spikard-python-validation".to_string()),
             port: 8080,
             app_dir: PathBuf::from("."),
             variant: Some("async".to_string()),

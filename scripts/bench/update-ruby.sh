@@ -21,7 +21,7 @@ if [[ "$USE_RBENV" -eq 1 && -z "$RBENV_VERSION" ]]; then
 	exit 1
 fi
 
-for app in hanami-api-dto hanami-api-raw roda-dto roda-raw spikard-ruby; do
+for app in hanami-api-validation hanami-api-raw roda-validation roda-raw spikard-ruby-validation spikard-ruby-raw; do
 	echo "Updating $app..."
 	cd "tools/benchmark-harness/apps/$app"
 

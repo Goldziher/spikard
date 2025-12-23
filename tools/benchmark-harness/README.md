@@ -52,7 +52,7 @@ The framework detection system maintains a registry of all supported frameworks 
 **Registry Structure:**
 ```rust
 pub struct FrameworkConfig {
-    pub name: String,              // "spikard-rust", "fastapi"
+    pub name: String,              // "spikard-rust-validation", "fastapi"
     pub detect_files: Vec<String>, // Files to check for detection
     pub build_cmd: Option<String>, // Optional build step
     pub start_cmd: String,         // Command to start server (with {port} placeholder)
@@ -66,12 +66,13 @@ pub struct FrameworkConfig {
 3. Returns most specific match to avoid false positives
 4. Errors if no framework detected or directory doesn't exist
 
-**Supported Frameworks (30 total):**
-- Spikard bindings: `spikard-rust`, `spikard` (Python), `spikard-node`, `spikard-ruby`, `spikard-wasm`
-- Python validated: `fastapi`, `fastapi-granian`, `litestar`, `litestar-granian`, `robyn`
-- Python raw (no validation): `spikard-raw`, `fastapi-raw`, `fastapi-granian-raw`, `litestar-raw`, `litestar-granian-raw`
-- TypeScript: `fastify`, `fastify-raw`, `hono`, `hono-raw`, `express`, `express-raw`, `elysia`, `morojs`
-- Ruby: `hanami-api`, `hanami-api-raw`, `roda`, `roda-raw`
+**Supported Frameworks (37 total):**
+- Spikard validation: `spikard-rust-validation`, `spikard-python-validation`, `spikard-node-validation`, `spikard-ruby-validation`, `spikard-php-validation`, `spikard-wasm-validation`
+- Spikard raw: `spikard-rust-raw`, `spikard-python-raw`, `spikard-node-raw`, `spikard-ruby-raw`, `spikard-php-raw`, `spikard-wasm-raw`
+- Python validated: `fastapi-uvicorn-validation`, `fastapi-granian-validation`, `fastapi-python`, `litestar-uvicorn`, `litestar-granian`, `robyn-validation`
+- Python raw (no validation): `fastapi-raw`, `fastapi-granian-raw`, `litestar-raw`, `litestar-granian-raw`
+- TypeScript: `fastify-validation`, `fastify-raw`, `hono-validation`, `hono-raw`, `express-validation`, `express-raw`, `elysia-validation`, `morojs-validation`
+- Ruby: `hanami-api-validation`, `hanami-api-raw`, `roda-validation`, `roda-raw`
 - PHP: `trongate`, `phalcon`
 - Baseline: `axum-baseline`
 
@@ -79,7 +80,7 @@ pub struct FrameworkConfig {
 ```rust
 use benchmark_harness::framework::detect_framework;
 
-let config = detect_framework(Path::new("apps/spikard-python"))?;
+let config = detect_framework(Path::new("apps/spikard-python-validation"))?;
 println!("Detected: {}", config.name);
 println!("Start command: {}", config.start_cmd);
 ```
@@ -632,22 +633,22 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 ```bash
 benchmark-harness profile \
-  --framework spikard-python \
-  --app-dir apps/spikard-python \
+  --framework spikard-python-validation \
+  --app-dir apps/spikard-python-validation \
   --suite all \
   --duration 30 \
   --concurrency 100 \
   --warmup 10 \
   --profiler python \
   --variant async \
-  --output results/spikard-python-profile.json
+  --output results/spikard-python-validation-profile.json
 
 # With baseline comparison
 benchmark-harness profile \
-  --framework spikard-python \
-  --app-dir apps/spikard-python \
+  --framework spikard-python-validation \
+  --app-dir apps/spikard-python-validation \
   --suite json-bodies \
-  --baseline results/spikard-rust-baseline.json \
+  --baseline results/spikard-rust-validation-baseline.json \
   --output results/python-vs-rust.json
 ```
 
@@ -663,7 +664,7 @@ benchmark-harness profile \
 
 ```bash
 benchmark-harness compare \
-  --frameworks spikard-python,fastapi,robyn \
+  --frameworks spikard-python-validation,fastapi,robyn \
   --suite all \
   --duration 30 \
   --concurrency 100 \
@@ -674,7 +675,7 @@ benchmark-harness compare \
 
 # Stricter significance threshold
 benchmark-harness compare \
-  --frameworks spikard-python,fastapi \
+  --frameworks spikard-python-validation,fastapi \
   --suite json-bodies \
   --significance 0.01 \
   --output results/
@@ -690,7 +691,7 @@ benchmark-harness compare \
 ```bash
 # Auto-detect framework
 benchmark-harness run \
-  --app-dir apps/spikard-python \
+  --app-dir apps/spikard-python-validation \
   --workload json-small \
   --duration 30 \
   --concurrency 100 \
@@ -708,8 +709,8 @@ benchmark-harness run \
 
 # Category-based (loads representative fixture)
 benchmark-harness run \
-  --framework spikard-python \
-  --app-dir apps/spikard-python \
+  --framework spikard-python-validation \
+  --app-dir apps/spikard-python-validation \
   --workload query-params \
   --category query-params \
   --fixtures-dir testing_data \
@@ -721,8 +722,8 @@ benchmark-harness run \
 
 ```bash
 benchmark-harness stream \
-  --framework spikard-python \
-  --app-dir apps/spikard-python \
+  --framework spikard-python-validation \
+  --app-dir apps/spikard-python-validation \
   --fixture testing_data/websockets/chat.json \
   --duration 30 \
   --connections 50 \

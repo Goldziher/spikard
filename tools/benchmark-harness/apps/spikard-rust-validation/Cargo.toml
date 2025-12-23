@@ -1,0 +1,19 @@
+[package]
+name = "spikard-rust-bench"
+version = "0.5.0"
+edition = "2024"
+
+[workspace]
+
+[[bin]]
+name = "spikard-rust-bench"
+path = "src/main.rs"
+
+[dependencies]
+spikard = { path = "../../../../crates/spikard" }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+axum = "0.8"
+pprof = { version = "0.14", features = ["flamegraph"] }

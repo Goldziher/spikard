@@ -1,0 +1,32 @@
+# /// script
+# dependencies = [
+#     "msgspec>=0.20.0",
+# ]
+# ///
+
+[project]
+name = "spikard-python-benchmark"
+version = "0.1.0"
+description = "Spikard Python benchmark application"
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+  "cloudpickle>=3.1.2",
+  "granian>=2.6.0",
+  "httpx>=0.28.1",
+  "httpx-sse>=0.4.3",
+  "msgspec>=0.20.0",
+  "pyinstrument>=5.1.1",
+  "spikard",
+  "websockets>=15.0.1",
+]
+
+[tool.uv.sources]
+spikard = { path = "../../../../crates/spikard-py", editable = true }

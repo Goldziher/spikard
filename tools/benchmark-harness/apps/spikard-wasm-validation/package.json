@@ -1,0 +1,21 @@
+{
+	"name": "spikard-wasm-benchmark",
+	"version": "0.1.0",
+	"description": "Spikard WASM benchmark server for workload comparison",
+	"type": "module",
+	"main": "server.ts",
+	"scripts": {
+		"start": "tsx server.ts",
+		"dev": "tsx server.ts 8000"
+	},
+	"dependencies": {
+		"@spikard/wasm": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "^25.0.3",
+		"tsx": "^4.21.0"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	}
+}

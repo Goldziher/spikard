@@ -10,7 +10,7 @@ use std::path::Path;
 /// Configuration for a framework
 #[derive(Debug, Clone)]
 pub struct FrameworkConfig {
-    /// Framework name (e.g., "spikard-rust", "fastapi")
+    /// Framework name (e.g., "spikard-rust-validation", "fastapi")
     pub name: String,
 
     /// Files to look for when detecting this framework
@@ -58,49 +58,91 @@ impl FrameworkConfig {
 fn framework_registry() -> Vec<FrameworkConfig> {
     vec![
         FrameworkConfig::new(
-            "spikard-rust",
+            "spikard-rust-validation",
             vec!["Cargo.toml".to_string(), "src/main.rs".to_string()],
             Some("cargo build --release".to_string()),
             "./target/release/spikard-rust-bench {port}",
             None,
         ),
         FrameworkConfig::new(
-            "spikard-python",
+            "spikard-python-validation",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(
-            "spikard-node",
+            "spikard-node-validation",
             vec!["server.ts".to_string()],
             None,
             "pnpm start -- {port}",
             None,
         ),
         FrameworkConfig::new(
-            "spikard-ruby",
+            "spikard-ruby-validation",
             vec!["server.rb".to_string()],
             None,
             "ruby server.rb {port}",
             None,
         ),
         FrameworkConfig::new(
-            "spikard-php",
+            "spikard-php-validation",
             vec!["server.php".to_string()],
             None,
             "php server.php {port}",
             None,
         ),
         FrameworkConfig::new(
-            "spikard-wasm",
+            "spikard-wasm-validation",
             vec!["server.ts".to_string()],
             None,
             "deno run --allow-net --allow-read server.ts {port}",
             None,
         ),
         FrameworkConfig::new(
-            "fastapi-uvicorn-dto",
+            "spikard-rust-raw",
+            vec!["Cargo.toml".to_string(), "src/main.rs".to_string()],
+            Some("cargo build --release".to_string()),
+            "./target/release/spikard-rust-bench {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-python-raw",
+            vec!["server.py".to_string()],
+            None,
+            "uv run python server.py {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-node-raw",
+            vec!["server.ts".to_string()],
+            None,
+            "pnpm start -- {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-ruby-raw",
+            vec!["server.rb".to_string()],
+            None,
+            "ruby server.rb {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-php-raw",
+            vec!["server.php".to_string()],
+            None,
+            "php server.php {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-wasm-raw",
+            vec!["server.ts".to_string()],
+            None,
+            "deno run --allow-net --allow-read server.ts {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "fastapi-uvicorn-validation",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
@@ -114,21 +156,14 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "fastapi-granian-dto",
+            "fastapi-granian-validation",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(
-            "robyn-dto",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "spikard-raw",
+            "robyn-validation",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
@@ -170,7 +205,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "fastify-dto",
+            "fastify-validation",
             vec!["server.ts".to_string()],
             None,
             "pnpm run start -- {port}",
@@ -184,7 +219,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "hono-dto",
+            "hono-validation",
             vec!["server.ts".to_string()],
             None,
             "pnpm run start -- {port}",
@@ -198,21 +233,21 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "elysia-dto",
+            "elysia-validation",
             vec!["server.ts".to_string()],
             None,
             "bun run server.ts {port}",
             None,
         ),
         FrameworkConfig::new(
-            "morojs-dto",
+            "morojs-validation",
             vec!["server.ts".to_string()],
             None,
             "pnpm run start -- {port}",
             None,
         ),
         FrameworkConfig::new(
-            "kito-dto",
+            "kito-validation",
             vec!["server.ts".to_string()],
             None,
             "pnpm run start -- {port}",
@@ -226,7 +261,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "express-dto",
+            "express-validation",
             vec!["server.ts".to_string()],
             None,
             "pnpm start -- {port}",
@@ -254,7 +289,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "hanami-api-dto",
+            "hanami-api-validation",
             vec!["server.rb".to_string()],
             None,
             "ruby server.rb {port}",
@@ -268,7 +303,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "roda-dto",
+            "roda-validation",
             vec!["server.rb".to_string()],
             None,
             "ruby server.rb {port}",
@@ -342,6 +377,13 @@ pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
         )));
     }
 
+    if matches.len() > 1
+        && let Some(dir_name) = app_dir.file_name().and_then(|name| name.to_str())
+        && let Some(index) = matches.iter().position(|fw| fw.name == dir_name)
+    {
+        return Ok(matches.swap_remove(index));
+    }
+
     matches.sort_by(|a, b| b.detect_files.len().cmp(&a.detect_files.len()));
 
     Ok(matches.into_iter().next().unwrap())
@@ -383,7 +425,7 @@ pub fn list_frameworks() -> Vec<FrameworkConfig> {
 /// ```no_run
 /// use benchmark_harness::framework::get_framework;
 ///
-/// if let Some(config) = get_framework("spikard-rust") {
+/// if let Some(config) = get_framework("spikard-rust-validation") {
 ///     println!("Start command: {}", config.start_cmd);
 /// }
 /// ```
@@ -418,45 +460,50 @@ mod tests {
         let registry = framework_registry();
         let names: Vec<&str> = registry.iter().map(|f| f.name.as_str()).collect();
 
-        assert!(names.contains(&"spikard-rust"));
-        assert!(names.contains(&"spikard-python"));
-        assert!(names.contains(&"spikard-node"));
-        assert!(names.contains(&"spikard-ruby"));
-        assert!(names.contains(&"spikard-php"));
-        assert!(names.contains(&"spikard-wasm"));
+        assert!(names.contains(&"spikard-rust-validation"));
+        assert!(names.contains(&"spikard-python-validation"));
+        assert!(names.contains(&"spikard-node-validation"));
+        assert!(names.contains(&"spikard-ruby-validation"));
+        assert!(names.contains(&"spikard-php-validation"));
+        assert!(names.contains(&"spikard-wasm-validation"));
+        assert!(names.contains(&"spikard-rust-raw"));
+        assert!(names.contains(&"spikard-python-raw"));
+        assert!(names.contains(&"spikard-node-raw"));
+        assert!(names.contains(&"spikard-ruby-raw"));
+        assert!(names.contains(&"spikard-php-raw"));
+        assert!(names.contains(&"spikard-wasm-raw"));
 
-        assert!(names.contains(&"fastapi-uvicorn-dto"));
+        assert!(names.contains(&"fastapi-uvicorn-validation"));
         assert!(names.contains(&"fastapi-python"));
-        assert!(names.contains(&"fastapi-granian-dto"));
+        assert!(names.contains(&"fastapi-granian-validation"));
         assert!(names.contains(&"litestar-uvicorn"));
         assert!(names.contains(&"litestar-granian"));
-        assert!(names.contains(&"robyn-dto"));
+        assert!(names.contains(&"robyn-validation"));
 
-        assert!(names.contains(&"spikard-raw"));
         assert!(names.contains(&"fastapi-raw"));
         assert!(names.contains(&"fastapi-granian-raw"));
         assert!(names.contains(&"litestar-raw"));
         assert!(names.contains(&"litestar-granian-raw"));
         assert!(names.contains(&"robyn-raw"));
 
-        assert!(names.contains(&"fastify-dto"));
+        assert!(names.contains(&"fastify-validation"));
         assert!(names.contains(&"fastify-raw"));
-        assert!(names.contains(&"hono-dto"));
+        assert!(names.contains(&"hono-validation"));
         assert!(names.contains(&"hono-raw"));
-        assert!(names.contains(&"elysia-dto"));
-        assert!(names.contains(&"morojs-dto"));
-        assert!(names.contains(&"express-dto"));
+        assert!(names.contains(&"elysia-validation"));
+        assert!(names.contains(&"morojs-validation"));
+        assert!(names.contains(&"express-validation"));
         assert!(names.contains(&"express-raw"));
 
-        assert!(names.contains(&"hanami-api-dto"));
+        assert!(names.contains(&"hanami-api-validation"));
         assert!(names.contains(&"hanami-api-raw"));
-        assert!(names.contains(&"roda-dto"));
+        assert!(names.contains(&"roda-validation"));
         assert!(names.contains(&"roda-raw"));
 
         assert!(names.contains(&"trongate-raw"));
         assert!(names.contains(&"phalcon-raw"));
 
-        assert_eq!(registry.len(), 32);
+        assert_eq!(registry.len(), 37);
     }
 
     #[test]
@@ -477,7 +524,7 @@ mod tests {
 
         let result = detect_framework(temp_dir.path());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-rust");
+        assert_eq!(result.unwrap().name, "spikard-rust-validation");
     }
 
     #[test]
@@ -489,16 +536,16 @@ mod tests {
 
         let result = detect_framework(temp_dir.path());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-rust");
+        assert_eq!(result.unwrap().name, "spikard-rust-validation");
     }
 
     #[test]
     fn test_get_framework() {
-        let framework = get_framework("spikard-rust");
+        let framework = get_framework("spikard-rust-validation");
         assert!(framework.is_some());
 
         let config = framework.unwrap();
-        assert_eq!(config.name, "spikard-rust");
+        assert_eq!(config.name, "spikard-rust-validation");
         assert!(config.build_cmd.is_some());
         assert!(config.detect_files.contains(&"Cargo.toml".to_string()));
     }
@@ -512,7 +559,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 32);
+        assert_eq!(frameworks.len(), 37);
     }
 
     #[test]
@@ -542,52 +589,62 @@ mod tests {
     #[test]
     fn test_detect_spikard_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        fs::write(temp_dir.path().join("server.py"), "# python server").unwrap();
+        let app_dir = temp_dir.path().join("spikard-python-validation");
+        fs::create_dir_all(&app_dir).unwrap();
+        fs::write(app_dir.join("server.py"), "# python server").unwrap();
 
-        let result = detect_framework(temp_dir.path());
+        let result = detect_framework(&app_dir);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-python");
+        assert_eq!(result.unwrap().name, "spikard-python-validation");
     }
 
     #[test]
     fn test_detect_spikard_node_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        fs::write(temp_dir.path().join("server.ts"), "// typescript server").unwrap();
+        let app_dir = temp_dir.path().join("spikard-node-validation");
+        fs::create_dir_all(&app_dir).unwrap();
+        fs::write(app_dir.join("server.ts"), "// typescript server").unwrap();
 
-        let result = detect_framework(temp_dir.path());
+        let result = detect_framework(&app_dir);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-node");
+        assert_eq!(result.unwrap().name, "spikard-node-validation");
     }
 
     #[test]
     fn test_detect_spikard_ruby_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        fs::write(temp_dir.path().join("server.rb"), "# ruby server").unwrap();
+        let app_dir = temp_dir.path().join("spikard-ruby-validation");
+        fs::create_dir_all(&app_dir).unwrap();
+        fs::write(app_dir.join("server.rb"), "# ruby server").unwrap();
 
-        let result = detect_framework(temp_dir.path());
+        let result = detect_framework(&app_dir);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-ruby");
+        assert_eq!(result.unwrap().name, "spikard-ruby-validation");
     }
 
     #[test]
     fn test_detect_spikard_wasm_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        fs::write(temp_dir.path().join("server.ts"), "// wasm server").unwrap();
+        let app_dir = temp_dir.path().join("spikard-wasm-validation");
+        fs::create_dir_all(&app_dir).unwrap();
+        fs::write(app_dir.join("server.ts"), "// wasm server").unwrap();
 
-        let result = detect_framework(temp_dir.path());
+        let result = detect_framework(&app_dir);
         assert!(result.is_ok());
         let name = result.unwrap().name;
-        assert_eq!(name, "spikard-node");
+        assert_eq!(name, "spikard-wasm-validation");
     }
 
     #[test]
     fn test_detect_fastify_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        fs::write(temp_dir.path().join("server.ts"), "// fastify server").unwrap();
+        let app_dir = temp_dir.path().join("fastify-raw");
+        fs::create_dir_all(&app_dir).unwrap();
+        fs::write(app_dir.join("server.ts"), "// fastify server").unwrap();
 
-        let result = detect_framework(temp_dir.path());
+        let result = detect_framework(&app_dir);
         assert!(result.is_ok());
         let name = result.unwrap().name;
-        assert!(name == "spikard-node" || name == "fastify");
+        assert_eq!(name, "fastify-raw");
     }
 }

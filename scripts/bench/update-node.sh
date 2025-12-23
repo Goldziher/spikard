@@ -6,7 +6,7 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
 
 cd "${REPO_ROOT}"
 
-for app in elysia-dto express-dto express-raw fastify-dto fastify-raw hono-dto hono-raw morojs-dto spikard-node spikard-wasm; do
+for app in elysia-validation express-validation express-raw fastify-validation fastify-raw hono-validation hono-raw morojs-validation spikard-node-validation spikard-node-raw spikard-wasm-validation spikard-wasm-raw; do
 	echo "Updating $app..."
 	cd "tools/benchmark-harness/apps/$app" && pnpm up --latest
 	cd - >/dev/null
