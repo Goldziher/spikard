@@ -391,6 +391,35 @@ importers:
         specifier: ^4.21.0
         version: 4.21.0
 
+  tools/benchmark-harness/apps/kito-dto:
+    dependencies:
+      kitojs:
+        specifier: 1.0.0-alpha.8
+        version: 1.0.0-alpha.8(typescript@5.9.3)
+    devDependencies:
+      '@types/node':
+        specifier: ^25.0.3
+        version: 25.0.3
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  tools/benchmark-harness/apps/kito-raw:
+    dependencies:
+      kitojs:
+        specifier: 1.0.0-alpha.8
+        version: 1.0.0-alpha.8(typescript@5.9.3)
+    devDependencies:
+      '@types/node':
+        specifier: ^25.0.3
+        version: 25.0.3
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+
   tools/benchmark-harness/apps/morojs-dto:
     dependencies:
       '@morojs/moro':
@@ -1192,6 +1221,10 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
+
+  '@kitojs/kito-core@1.0.0-alpha.8':
+    resolution: {integrity: sha512-OWV6DnaMd+kRikdQLZHzIiVYT1usFg/yw9Ey+qeWrll0GwkWpS6TS6mvYbNCqPzeG8Yq70ux3kP2ApiVhO7WoA==}
+    engines: {node: '>= 10'}
 
   '@morojs/moro@1.7.3':
     resolution: {integrity: sha512-INojdX2pjblTj+PYYWCbE1zcBy1gN/vJzz8OQSS/2cbponkd9RlpF839RUlhETvxq6/hKVXh7FdSiDNZ+okOZA==}
@@ -1996,6 +2029,10 @@ packages:
     resolution: {integrity: sha512-cjkyv4OtNCIeqhHrfS81QWXoCBPExR/J62oyEqepVw8WaQeSqpW2uhuLPh1m9eWhDuOo/jUXVTlifvesOWp/4A==}
     engines: {node: '>=0.4.0'}
 
+  acorn-walk@8.3.4:
+    resolution: {integrity: sha512-ueEepnujpqee2o5aIYnvHU6C0A42MNdsIDeqy5BydrkuC5R1ZuUFnm27EeFJGoEHJQgn3uleRvmTXaJgfXbt4g==}
+    engines: {node: '>=0.4.0'}
+
   acorn@8.14.0:
     resolution: {integrity: sha512-cl669nCJTZBsL97OF4kUQm5g5hC2uihk0NxY3WENAC0TYdILVkAyHymAntgxGkl7K+t0cXIrH5siy5S4XkFycA==}
     engines: {node: '>=0.4.0'}
@@ -2512,6 +2549,11 @@ packages:
 
   json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
+
+  kitojs@1.0.0-alpha.8:
+    resolution: {integrity: sha512-ZVQPTFPh/TXpp4DY51V/skt/ZH/Ol2v/DPvWrbVJEjjvfpXDAZ20N5VZhQ1DI+krom85ALTiROQODWVPWXSkiw==}
+    peerDependencies:
+      typescript: ^5.9.2
 
   kleur@4.1.5:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
@@ -3742,6 +3784,8 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@kitojs/kito-core@1.0.0-alpha.8': {}
+
   '@morojs/moro@1.7.3(ws@8.18.3)':
     optionalDependencies:
       ws: 8.18.3
@@ -4339,6 +4383,10 @@ snapshots:
 
   acorn-walk@8.3.2: {}
 
+  acorn-walk@8.3.4:
+    dependencies:
+      acorn: 8.15.0
+
   acorn@8.14.0: {}
 
   acorn@8.15.0: {}
@@ -4881,6 +4929,13 @@ snapshots:
       dequal: 2.0.3
 
   json-schema-traverse@1.0.0: {}
+
+  kitojs@1.0.0-alpha.8(typescript@5.9.3):
+    dependencies:
+      '@kitojs/kito-core': 1.0.0-alpha.8
+      acorn: 8.15.0
+      acorn-walk: 8.3.4
+      typescript: 5.9.3
 
   kleur@4.1.5: {}
 

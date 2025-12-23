@@ -212,6 +212,20 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
+            "kito-dto",
+            vec!["server.ts".to_string()],
+            None,
+            "pnpm run start -- {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "kito-raw",
+            vec!["server.ts".to_string()],
+            None,
+            "pnpm run start -- {port}",
+            None,
+        ),
+        FrameworkConfig::new(
             "express-dto",
             vec!["server.ts".to_string()],
             None,

@@ -78,6 +78,8 @@ interface Route {
 	readonly path: string;
 	readonly handler_name: string;
 	readonly is_async: boolean;
+	readonly request_schema?: unknown;
+	readonly parameter_schema?: unknown;
 }
 
 interface PathParams {
@@ -96,6 +98,301 @@ interface MultipartResponse {
 interface PathResponse {
 	readonly [key: string]: string | number;
 }
+
+const SmallPayloadSchema = {
+	type: "object",
+	required: ["name", "description", "price", "tax"],
+	properties: {
+		name: { type: "string" },
+		description: { type: "string" },
+		price: { type: "number" },
+		tax: { type: "number" },
+	},
+	additionalProperties: false,
+} as const;
+
+const MediumPayloadSchema = {
+	type: "object",
+	required: ["name", "price", "image"],
+	properties: {
+		name: { type: "string" },
+		price: { type: "number" },
+		image: {
+			type: "object",
+			required: ["url", "name"],
+			properties: {
+				url: { type: "string" },
+				name: { type: "string" },
+			},
+			additionalProperties: false,
+		},
+	},
+	additionalProperties: false,
+} as const;
+
+const LargePayloadSchema = {
+	type: "object",
+	required: ["name", "price", "seller"],
+	properties: {
+		name: { type: "string" },
+		price: { type: "number" },
+		seller: {
+			type: "object",
+			required: ["name", "address"],
+			properties: {
+				name: { type: "string" },
+				address: {
+					type: "object",
+					required: ["street", "city", "country"],
+					properties: {
+						street: { type: "string" },
+						city: { type: "string" },
+						country: {
+							type: "object",
+							required: ["name", "code"],
+							properties: {
+								name: { type: "string" },
+								code: { type: "string" },
+							},
+							additionalProperties: false,
+						},
+					},
+					additionalProperties: false,
+				},
+			},
+			additionalProperties: false,
+		},
+	},
+	additionalProperties: false,
+} as const;
+
+const VeryLargePayloadSchema = {
+	type: "object",
+	required: ["name", "tags", "images"],
+	properties: {
+		name: { type: "string" },
+		tags: { type: "array", items: { type: "string" } },
+		images: {
+			type: "array",
+			items: {
+				type: "object",
+				required: ["url", "name"],
+				properties: {
+					url: { type: "string" },
+					name: { type: "string" },
+				},
+				additionalProperties: false,
+			},
+		},
+	},
+	additionalProperties: false,
+} as const;
+
+const UrlencodedSimpleSchema = {
+	type: "object",
+	required: ["name", "email", "age", "subscribe"],
+	properties: {
+		name: { type: "string" },
+		email: { type: "string", format: "email" },
+		age: { type: "integer" },
+		subscribe: { type: "boolean" },
+	},
+	additionalProperties: false,
+} as const;
+
+const UrlencodedComplexSchema = {
+	type: "object",
+	required: [
+		"username",
+		"password",
+		"email",
+		"first_name",
+		"last_name",
+		"age",
+		"country",
+		"state",
+		"city",
+		"zip",
+		"phone",
+		"company",
+		"job_title",
+		"subscribe",
+		"newsletter",
+		"terms_accepted",
+		"privacy_accepted",
+		"marketing_consent",
+		"two_factor_enabled",
+	],
+	properties: {
+		username: { type: "string" },
+		password: { type: "string" },
+		email: { type: "string", format: "email" },
+		first_name: { type: "string" },
+		last_name: { type: "string" },
+		age: { type: "integer" },
+		country: { type: "string" },
+		state: { type: "string" },
+		city: { type: "string" },
+		zip: { type: "string" },
+		phone: { type: "string" },
+		company: { type: "string" },
+		job_title: { type: "string" },
+		subscribe: { type: "boolean" },
+		newsletter: { type: "boolean" },
+		terms_accepted: { type: "boolean" },
+		privacy_accepted: { type: "boolean" },
+		marketing_consent: { type: "boolean" },
+		two_factor_enabled: { type: "boolean" },
+	},
+	additionalProperties: false,
+} as const;
+
+const MultipartFileSchema = {
+	type: "object",
+	required: ["filename", "size", "content", "content_type"],
+	properties: {
+		filename: { type: "string" },
+		size: { type: "integer" },
+		content: { type: "string" },
+		content_type: { type: "string" },
+	},
+	additionalProperties: false,
+} as const;
+
+const MultipartSchema = {
+	type: "object",
+	required: ["file"],
+	properties: {
+		file: {
+			oneOf: [
+				MultipartFileSchema,
+				{
+					type: "array",
+					items: MultipartFileSchema,
+				},
+			],
+		},
+	},
+	additionalProperties: false,
+} as const;
+
+const PathSimpleParamSchema = {
+	type: "object",
+	properties: {
+		id: { type: "string", source: "path" },
+	},
+	required: ["id"],
+} as const;
+
+const PathMultipleParamSchema = {
+	type: "object",
+	properties: {
+		user_id: { type: "string", source: "path" },
+		post_id: { type: "string", source: "path" },
+	},
+	required: ["user_id", "post_id"],
+} as const;
+
+const PathDeepParamSchema = {
+	type: "object",
+	properties: {
+		org: { type: "string", source: "path" },
+		team: { type: "string", source: "path" },
+		project: { type: "string", source: "path" },
+		resource: { type: "string", source: "path" },
+		id: { type: "string", source: "path" },
+	},
+	required: ["org", "team", "project", "resource", "id"],
+} as const;
+
+const PathIntParamSchema = {
+	type: "object",
+	properties: {
+		id: { type: "integer", source: "path" },
+	},
+	required: ["id"],
+} as const;
+
+const PathUuidParamSchema = {
+	type: "object",
+	properties: {
+		uuid: { type: "string", format: "uuid", source: "path" },
+	},
+	required: ["uuid"],
+} as const;
+
+const PathDateParamSchema = {
+	type: "object",
+	properties: {
+		date: { type: "string", format: "date", source: "path" },
+	},
+	required: ["date"],
+} as const;
+
+const QueryFewParamSchema = {
+	type: "object",
+	properties: {
+		q: { type: "string", source: "query" },
+		page: { type: "integer", source: "query" },
+		limit: { type: "integer", source: "query" },
+	},
+	required: ["q", "page", "limit"],
+} as const;
+
+const QueryMediumParamSchema = {
+	type: "object",
+	properties: {
+		category: { type: "string", source: "query" },
+		tags: { type: "string", source: "query" },
+		min_price: { type: "number", source: "query" },
+		max_price: { type: "number", source: "query" },
+		sort: { type: "string", source: "query" },
+		order: { type: "string", source: "query" },
+		page: { type: "integer", source: "query" },
+		limit: { type: "integer", source: "query" },
+	},
+	required: ["category", "tags", "min_price", "max_price", "sort", "order", "page", "limit"],
+} as const;
+
+const QueryManyParamSchema = {
+	type: "object",
+	properties: {
+		q: { type: "string", source: "query" },
+		page: { type: "integer", source: "query" },
+		limit: { type: "integer", source: "query" },
+		sort: { type: "string", source: "query" },
+		order: { type: "string", source: "query" },
+		filter: { type: "string", source: "query" },
+		category: { type: "string", source: "query" },
+		subcategory: { type: "string", source: "query" },
+		brand: { type: "string", source: "query" },
+		min_price: { type: "number", source: "query" },
+		max_price: { type: "number", source: "query" },
+		rating: { type: "integer", source: "query" },
+		verified: { type: "boolean", source: "query" },
+		in_stock: { type: "boolean", source: "query" },
+		shipping: { type: "string", source: "query" },
+		color: { type: "string", source: "query" },
+	},
+	required: [
+		"q",
+		"page",
+		"limit",
+		"sort",
+		"order",
+		"filter",
+		"category",
+		"subcategory",
+		"brand",
+		"min_price",
+		"max_price",
+		"rating",
+		"verified",
+		"in_stock",
+		"shipping",
+		"color",
+	],
+} as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HandlerFunction = (input: any) => Promise<unknown>;
@@ -129,101 +426,111 @@ interface ServerResponse {
 const routes: Route[] = [];
 const handlers: Record<string, HandlerFunction> = {};
 
-function registerRoute(method: string, path: string, handler: HandlerFunction): void {
+function registerRoute(
+	method: string,
+	path: string,
+	handler: HandlerFunction,
+	requestSchema?: unknown,
+	parameterSchema?: unknown,
+): void {
 	routes.push({
 		method: method.toUpperCase(),
 		path,
 		handler_name: handler.name,
 		is_async: true,
+		request_schema: requestSchema,
+		parameter_schema: parameterSchema,
 	});
 	handlers[handler.name] = handler;
 }
 
-function get(path: string): (handler: HandlerFunction) => void {
-	return (handler: HandlerFunction): void => registerRoute("GET", path, handler);
+function get(path: string, parameterSchema?: unknown): (handler: HandlerFunction) => void {
+	return (handler: HandlerFunction): void => registerRoute("GET", path, handler, undefined, parameterSchema);
 }
 
-function post(path: string): (handler: HandlerFunction) => void {
-	return (handler: HandlerFunction): void => registerRoute("POST", path, handler);
+function post(path: string, requestSchema?: unknown): (handler: HandlerFunction) => void {
+	return (handler: HandlerFunction): void => registerRoute("POST", path, handler, requestSchema);
 }
 
-post("/json/small")(async function jsonSmall(body: unknown): Promise<unknown> {
+post("/json/small", SmallPayloadSchema)(async function jsonSmall(body: unknown): Promise<unknown> {
 	return body;
 });
 
-post("/json/medium")(async function jsonMedium(body: unknown): Promise<unknown> {
+post("/json/medium", MediumPayloadSchema)(async function jsonMedium(body: unknown): Promise<unknown> {
 	return body;
 });
 
-post("/json/large")(async function jsonLarge(body: unknown): Promise<unknown> {
+post("/json/large", LargePayloadSchema)(async function jsonLarge(body: unknown): Promise<unknown> {
 	return body;
 });
 
-post("/json/very-large")(async function jsonVeryLarge(body: unknown): Promise<unknown> {
+post("/json/very-large", VeryLargePayloadSchema)(async function jsonVeryLarge(body: unknown): Promise<unknown> {
 	return body;
 });
 
-post("/multipart/small")(async function multipartSmall(_body: unknown): Promise<MultipartResponse> {
+post("/multipart/small", MultipartSchema)(async function multipartSmall(_body: unknown): Promise<MultipartResponse> {
 	return { files_received: 1, total_bytes: 1024 };
 });
 
-post("/multipart/medium")(async function multipartMedium(_body: unknown): Promise<MultipartResponse> {
+post("/multipart/medium", MultipartSchema)(async function multipartMedium(_body: unknown): Promise<MultipartResponse> {
 	return { files_received: 2, total_bytes: 10240 };
 });
 
-post("/multipart/large")(async function multipartLarge(_body: unknown): Promise<MultipartResponse> {
+post("/multipart/large", MultipartSchema)(async function multipartLarge(_body: unknown): Promise<MultipartResponse> {
 	return { files_received: 5, total_bytes: 102400 };
 });
 
-post("/urlencoded/simple")(async function urlencodedSimple(body: unknown): Promise<unknown> {
+post("/urlencoded/simple", UrlencodedSimpleSchema)(async function urlencodedSimple(body: unknown): Promise<unknown> {
 	return body;
 });
 
-post("/urlencoded/complex")(async function urlencodedComplex(body: unknown): Promise<unknown> {
+post("/urlencoded/complex", UrlencodedComplexSchema)(async function urlencodedComplex(body: unknown): Promise<unknown> {
 	return body;
 });
 
-get("/path/simple/{id}")(async function pathSimple(params: PathParams): Promise<PathResponse> {
+get("/path/simple/{id}", PathSimpleParamSchema)(async function pathSimple(params: PathParams): Promise<PathResponse> {
 	return { id: params.id ?? "" };
 });
 
-get("/path/multiple/{user_id}/{post_id}")(async function pathMultiple(params: PathParams): Promise<PathResponse> {
+get("/path/multiple/{user_id}/{post_id}", PathMultipleParamSchema)(async function pathMultiple(
+	params: PathParams,
+): Promise<PathResponse> {
 	return { user_id: params.user_id ?? "", post_id: params.post_id ?? "" };
 });
 
-get("/path/deep/{org}/{team}/{project}/{api}/{item}")(async function pathDeep(
+get("/path/deep/{org}/{team}/{project}/{resource}/{id}", PathDeepParamSchema)(async function pathDeep(
 	params: PathParams,
 ): Promise<PathResponse> {
 	return {
 		org: params.org ?? "",
 		team: params.team ?? "",
 		project: params.project ?? "",
-		api: params.api ?? "",
-		item: params.item ?? "",
+		resource: params.resource ?? "",
+		id: params.id ?? "",
 	};
 });
 
-get("/path/int/{id}")(async function pathInt(params: PathParams): Promise<PathResponse> {
+get("/path/int/{id}", PathIntParamSchema)(async function pathInt(params: PathParams): Promise<PathResponse> {
 	return { id: Number.parseInt(params.id ?? "0", 10) };
 });
 
-get("/path/uuid/{id}")(async function pathUuid(params: PathParams): Promise<PathResponse> {
-	return { id: params.id ?? "" };
+get("/path/uuid/{uuid}", PathUuidParamSchema)(async function pathUuid(params: PathParams): Promise<PathResponse> {
+	return { uuid: params.uuid ?? "" };
 });
 
-get("/path/date/{date}")(async function pathDate(params: PathParams): Promise<PathResponse> {
+get("/path/date/{date}", PathDateParamSchema)(async function pathDate(params: PathParams): Promise<PathResponse> {
 	return { date: params.date ?? "" };
 });
 
-get("/query/few")(async function queryFew(query: unknown): Promise<unknown> {
+get("/query/few", QueryFewParamSchema)(async function queryFew(query: unknown): Promise<unknown> {
 	return query;
 });
 
-get("/query/medium")(async function queryMedium(query: unknown): Promise<unknown> {
+get("/query/medium", QueryMediumParamSchema)(async function queryMedium(query: unknown): Promise<unknown> {
 	return query;
 });
 
-get("/query/many")(async function queryMany(query: unknown): Promise<unknown> {
+get("/query/many", QueryManyParamSchema)(async function queryMany(query: unknown): Promise<unknown> {
 	return query;
 });
 

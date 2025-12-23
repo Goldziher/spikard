@@ -1,0 +1,21 @@
+{
+	"name": "kito-raw-benchmark",
+	"version": "0.1.0",
+	"description": "Kito RAW (no validation) comparison server for benchmarking",
+	"type": "module",
+	"main": "server.ts",
+	"scripts": {
+		"start": "tsx server.ts",
+		"dev": "tsx watch server.ts"
+	},
+	"dependencies": {
+		"kitojs": "1.0.0-alpha.8"
+	},
+	"devDependencies": {
+		"@types/node": "^25.0.3",
+		"tsx": "^4.21.0"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}

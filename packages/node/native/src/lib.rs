@@ -317,13 +317,13 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             method,
             path,
             handler_name,
-            request_schema: None, // TODO: Extract from route
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
+            request_schema: extract_optional_json_property(&route_obj, "request_schema")?,
+            response_schema: extract_optional_json_property(&route_obj, "response_schema")?,
+            parameter_schema: extract_optional_json_property(&route_obj, "parameter_schema")?,
+            file_params: extract_optional_json_property(&route_obj, "file_params")?,
             is_async,
-            cors: None,
-            body_param_name: None,
+            cors: extract_optional_json_property(&route_obj, "cors")?,
+            body_param_name: route_obj.get_named_property::<String>("body_param_name").ok(),
             handler_dependencies: None, // TODO: Extract from route
         };
 
@@ -353,13 +353,13 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                         method,
                         path,
                         handler_name,
-                        request_schema: None,
-                        response_schema: None,
-                        parameter_schema: None,
-                        file_params: None,
+                        request_schema: extract_optional_json_property(&route_obj, "request_schema")?,
+                        response_schema: extract_optional_json_property(&route_obj, "response_schema")?,
+                        parameter_schema: extract_optional_json_property(&route_obj, "parameter_schema")?,
+                        file_params: extract_optional_json_property(&route_obj, "file_params")?,
                         is_async,
-                        cors: None,
-                        body_param_name: None,
+                        cors: extract_optional_json_property(&route_obj, "cors")?,
+                        body_param_name: route_obj.get_named_property::<String>("body_param_name").ok(),
                         handler_dependencies: None,
                     });
                 }
@@ -551,4 +551,25 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     });
 
     Ok(())
+}
+
+fn extract_optional_json_property(route_obj: &Object, name: &str) -> Result<Option<serde_json::Value>> {
+    if !route_obj.has_named_property(name)? {
+        return Ok(None);
+    }
+
+    let value: JsUnknown = route_obj.get_named_property(name)?;
+    match value.get_type()? {
+        ValueType::Undefined | ValueType::Null => Ok(None),
+        _ => js_unknown_to_json(value).map(Some),
+    }
+}
+
+fn js_unknown_to_json(value: JsUnknown) -> Result<serde_json::Value> {
+    let env = value.env();
+    let global = env.get_global()?;
+    let json: Object = global.get_named_property("JSON")?;
+    let stringify: Function<JsUnknown, String> = json.get_named_property("stringify")?;
+    let json_str = stringify.call(value)?;
+    serde_json::from_str(&json_str).map_err(|e| Error::from_reason(format!("Failed to parse JSON: {}", e)))
 }
