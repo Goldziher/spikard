@@ -28,6 +28,10 @@ pub struct FrameworkConfig {
     /// Optional subdirectory hint for where to run the framework from
     /// (e.g., "." for root, "crates/spikard-rust" for workspace crates)
     pub working_dir_hint: Option<String>,
+
+    /// Optional list of workload categories supported by this framework.
+    /// If None, all categories are assumed supported.
+    pub supported_categories: Option<Vec<String>>,
 }
 
 impl FrameworkConfig {
@@ -45,7 +49,20 @@ impl FrameworkConfig {
             build_cmd,
             start_cmd: start_cmd.into(),
             working_dir_hint,
+            supported_categories: None,
         }
+    }
+
+    pub fn with_supported_categories(mut self, categories: Vec<String>) -> Self {
+        self.supported_categories = Some(categories);
+        self
+    }
+
+    pub fn supports_category(&self, category: &str) -> bool {
+        self.supported_categories
+            .as_ref()
+            .map(|categories| categories.iter().any(|item| item == category))
+            .unwrap_or(true)
     }
 
     /// Checks if all detect_files exist in the given directory
@@ -252,7 +269,12 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
             "pnpm run start -- {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec![
+            "json-bodies".to_string(),
+            "path-params".to_string(),
+            "query-params".to_string(),
+        ]),
         FrameworkConfig::new(
             "kito-raw",
             vec!["server.ts".to_string()],
