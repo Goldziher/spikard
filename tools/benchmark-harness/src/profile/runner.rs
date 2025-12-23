@@ -3,6 +3,7 @@
 use crate::{
     error::{Error, Result},
     fixture::Fixture,
+    framework::get_framework,
     load_generator::{self, LoadGeneratorType, LoadTestConfig},
     monitor::ResourceMonitor,
     schema::{
@@ -111,8 +112,29 @@ pub struct ProfileRunner {
 
 impl ProfileRunner {
     pub fn new(config: ProfileRunnerConfig) -> Result<Self> {
-        let suite = WorkloadSuite::by_name(&config.suite_name)
+        let mut suite = WorkloadSuite::by_name(&config.suite_name)
             .ok_or_else(|| Error::InvalidInput(format!("Unknown suite: {}", config.suite_name)))?;
+
+        if let Some(framework) = get_framework(&config.framework) {
+            let original_len = suite.workloads.len();
+            suite
+                .workloads
+                .retain(|workload| framework.supports_category(&workload.category));
+            if suite.workloads.is_empty() {
+                return Err(Error::InvalidInput(format!(
+                    "Framework {} does not support any workloads in suite {}",
+                    config.framework, config.suite_name
+                )));
+            }
+            if suite.workloads.len() != original_len {
+                eprintln!(
+                    "⚠ Skipping unsupported workload categories for {} ({} -> {} workloads)",
+                    config.framework,
+                    original_len,
+                    suite.workloads.len()
+                );
+            }
+        }
 
         Ok(Self { config, suite })
     }
