@@ -189,6 +189,7 @@ runs:
       run: |
         # Build the WASM module using wasm-pack for Deno
         cd $GITHUB_WORKSPACE/crates/spikard-wasm
+        rustup target add wasm32-unknown-unknown
         cargo install wasm-pack || true
         # Build with deno target, which outputs to dist-deno
         wasm-pack build --target deno --out-dir dist-deno --release
