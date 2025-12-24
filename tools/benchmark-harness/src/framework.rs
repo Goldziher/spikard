@@ -164,7 +164,8 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
             "uv run python server.py {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec!["json-bodies".to_string()]),
         FrameworkConfig::new(
             "fastapi-python",
             vec!["server.py".to_string()],
@@ -178,14 +179,16 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
             "uv run python server.py {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec!["json-bodies".to_string()]),
         FrameworkConfig::new(
             "robyn-validation",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec!["json-bodies".to_string()]),
         FrameworkConfig::new(
             "fastapi-raw",
             vec!["server.py".to_string()],
@@ -227,7 +230,8 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
             "pnpm run start -- {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec!["json-bodies".to_string(), "forms".to_string()]),
         FrameworkConfig::new(
             "fastify-raw",
             vec!["server.ts".to_string()],
@@ -241,7 +245,8 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
             "pnpm run start -- {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec!["json-bodies".to_string()]),
         FrameworkConfig::new(
             "hono-raw",
             vec!["server.ts".to_string()],
@@ -255,14 +260,16 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
             "bun run server.ts {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec!["json-bodies".to_string()]),
         FrameworkConfig::new(
             "morojs-validation",
             vec!["server.ts".to_string()],
             None,
             "pnpm run start -- {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec!["json-bodies".to_string()]),
         FrameworkConfig::new(
             "kito-validation",
             vec!["server.ts".to_string()],
@@ -270,11 +277,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "pnpm run start -- {port}",
             None,
         )
-        .with_supported_categories(vec![
-            "json-bodies".to_string(),
-            "path-params".to_string(),
-            "query-params".to_string(),
-        ]),
+        .with_supported_categories(vec!["json-bodies".to_string()]),
         FrameworkConfig::new(
             "kito-raw",
             vec!["server.ts".to_string()],
@@ -288,7 +291,8 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
             "pnpm start -- {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec!["json-bodies".to_string()]),
         FrameworkConfig::new(
             "express-raw",
             vec!["server.ts".to_string()],
@@ -316,7 +320,8 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
             "ruby server.rb {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec!["json-bodies".to_string(), "forms".to_string()]),
         FrameworkConfig::new(
             "hanami-api-raw",
             vec!["server.rb".to_string()],
@@ -330,7 +335,8 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
             "ruby server.rb {port}",
             None,
-        ),
+        )
+        .with_supported_categories(vec!["json-bodies".to_string(), "forms".to_string()]),
         FrameworkConfig::new(
             "roda-raw",
             vec!["server.rb".to_string()],
