@@ -7,7 +7,7 @@
  */
 
 import { dirname } from "node:path";
-import * as wasm from "../../../../crates/spikard-wasm/dist-web/spikard_wasm.js";
+import * as wasm from "./pkg/spikard_wasm.js";
 
 if (typeof (wasm as { default?: unknown }).default === "function") {
 	await (wasm as { default: () => Promise<unknown> }).default();
