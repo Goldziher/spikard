@@ -6,7 +6,7 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
 
 cd "${REPO_ROOT}"
 
-for app in phalcon-raw trongate-raw spikard-php; do
+for app in phalcon-raw trongate-raw spikard-php-raw spikard-php-validation; do
 	echo "Updating $app..."
 	cd "tools/benchmark-harness/apps/$app" && composer update --no-interaction --no-progress
 	cd - >/dev/null

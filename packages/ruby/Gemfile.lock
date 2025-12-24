@@ -56,7 +56,7 @@ GEM
       ffi (~> 1.0)
     rb_sys (0.9.123)
       rake-compiler-dock (= 1.10.0)
-    rbs (3.9.5)
+    rbs (3.10.0)
       logger
     regexp_parser (2.11.3)
     rspec (3.13.2)

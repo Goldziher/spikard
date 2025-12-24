@@ -106,7 +106,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-php-validation",
             vec!["server.php".to_string()],
             None,
-            "php server.php {port}",
+            "./start.sh {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -148,7 +148,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-php-raw",
             vec!["server.php".to_string()],
             None,
-            "php server.php {port}",
+            "./start.sh {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -160,6 +160,14 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
         FrameworkConfig::new(
             "fastapi-uvicorn-validation",
+            vec!["server.py".to_string()],
+            None,
+            "uv run python server.py {port}",
+            None,
+        )
+        .with_supported_categories(vec!["json-bodies".to_string()]),
+        FrameworkConfig::new(
+            "fastapi-uvicorn-raw",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
@@ -355,7 +363,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "phalcon-raw",
             vec!["server.php".to_string(), "composer.json".to_string()],
             Some("composer install --no-dev --optimize-autoloader".to_string()),
-            "php server.php {port}",
+            "php -S 0.0.0.0:{port} server.php",
             None,
         ),
     ]
@@ -502,6 +510,7 @@ mod tests {
         assert!(names.contains(&"spikard-wasm-raw"));
 
         assert!(names.contains(&"fastapi-uvicorn-validation"));
+        assert!(names.contains(&"fastapi-uvicorn-raw"));
         assert!(names.contains(&"fastapi-python"));
         assert!(names.contains(&"fastapi-granian-validation"));
         assert!(names.contains(&"litestar-uvicorn"));

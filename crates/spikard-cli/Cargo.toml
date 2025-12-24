@@ -49,6 +49,6 @@ ruby = []    # TODO: Add Ruby support
 all = ["python", "node", "ruby"]
 
 [dev-dependencies]
-tempfile = "3.23"
+tempfile = "3.24"
 assert_cmd = "2.1"
 predicates = "3.1"

@@ -14,66 +14,81 @@ require 'json'
 # Validation Schemas
 # ============================================================================
 
-# JSON Body Schemas (matching spikard-ruby workload format)
+# JSON Body Schemas (matching benchmark schemas)
 SmallPayloadSchema = Dry::Schema.JSON do
   required(:name).filled(:string)
   required(:description).filled(:string)
   required(:price).filled(:float)
-  optional(:tax).maybe(:float)
+  required(:tax).filled(:float)
 end
 
-AddressSchema = Dry::Schema.JSON do
-  required(:street).filled(:string)
-  required(:city).filled(:string)
-  required(:state).filled(:string)
-  required(:zip_code).filled(:string)
+ImageSchema = Dry::Schema.JSON do
+  required(:url).filled(:string)
+  required(:name).filled(:string)
 end
 
 MediumPayloadSchema = Dry::Schema.JSON do
-  required(:user_id).filled(:integer)
-  required(:username).filled(:string)
-  required(:email).filled(:string)
-  required(:is_active).filled(:bool)
-  required(:address).hash(AddressSchema)
-  required(:tags).array(:string)
-end
-
-ItemSchema = Dry::Schema.JSON do
-  required(:id).filled(:integer)
   required(:name).filled(:string)
   required(:price).filled(:float)
-  required(:in_stock).filled(:bool)
+  required(:image).hash(ImageSchema)
+end
+
+CountrySchema = Dry::Schema.JSON do
+  required(:name).filled(:string)
+  required(:code).filled(:string)
+end
+
+SellerAddressSchema = Dry::Schema.JSON do
+  required(:street).filled(:string)
+  required(:city).filled(:string)
+  required(:country).hash(CountrySchema)
+end
+
+SellerSchema = Dry::Schema.JSON do
+  required(:name).filled(:string)
+  required(:address).hash(SellerAddressSchema)
 end
 
 LargePayloadSchema = Dry::Schema.JSON do
-  required(:order_id).filled(:string)
-  required(:customer_name).filled(:string)
-  required(:items).array(ItemSchema)
-  required(:total).filled(:float)
-  required(:notes).filled(:string)
+  required(:name).filled(:string)
+  required(:price).filled(:float)
+  required(:seller).hash(SellerSchema)
 end
 
 VeryLargePayloadSchema = Dry::Schema.JSON do
-  required(:data).array(:hash)
-  required(:metadata).hash
+  required(:name).filled(:string)
+  required(:tags).array(:str?)
+  required(:images).array(ImageSchema)
 end
 
 # URL-Encoded Form Schemas
 UrlencodedSimpleSchema = Dry::Schema.Params do
   required(:name).filled(:string)
-  optional(:email).maybe(:string)
+  required(:email).filled(:string)
+  required(:age).filled(:integer)
+  required(:subscribe).filled(:bool)
 end
 
 UrlencodedComplexSchema = Dry::Schema.Params do
-  required(:user).hash do
-    required(:name).filled(:string)
-    required(:email).filled(:string)
-    optional(:age).maybe(:integer)
-  end
-  required(:preferences).hash do
-    required(:theme).filled(:string)
-    optional(:notifications).maybe(:bool)
-  end
+  required(:username).filled(:string)
+  required(:password).filled(:string)
+  required(:email).filled(:string)
+  required(:first_name).filled(:string)
+  required(:last_name).filled(:string)
+  required(:age).filled(:integer)
+  required(:country).filled(:string)
+  required(:state).filled(:string)
+  required(:city).filled(:string)
+  required(:zip).filled(:string)
+  required(:phone).filled(:string)
+  required(:company).filled(:string)
+  required(:job_title).filled(:string)
+  required(:subscribe).filled(:bool)
+  required(:newsletter).filled(:bool)
+  required(:terms_accepted).filled(:bool)
+  required(:privacy_accepted).filled(:bool)
+  required(:marketing_consent).filled(:bool)
+  required(:two_factor_enabled).filled(:bool)
 end
 
 # ============================================================================

@@ -253,6 +253,45 @@ function setupRoutes(): SimpleRouter {
     // Health check
     $router->register('GET', '/health', fn($p, $q, $b) => healthHandler($p, $q, $b));
 
+    // Benchmark JSON endpoints
+    $router->register('POST', '/json/small', fn($p, $q, $b) => echoHandler($p, $q, $b));
+    $router->register('POST', '/json/medium', fn($p, $q, $b) => echoHandler($p, $q, $b));
+    $router->register('POST', '/json/large', fn($p, $q, $b) => echoHandler($p, $q, $b));
+    $router->register('POST', '/json/very-large', fn($p, $q, $b) => echoHandler($p, $q, $b));
+
+    // Benchmark multipart endpoints
+    $router->register('POST', '/multipart/small', fn($p, $q, $b) => fileUploadHandler($p, $q, $b));
+    $router->register('POST', '/multipart/medium', fn($p, $q, $b) => fileUploadHandler($p, $q, $b));
+    $router->register('POST', '/multipart/large', fn($p, $q, $b) => fileUploadHandler($p, $q, $b));
+
+    // Benchmark URL-encoded endpoints
+    $router->register('POST', '/urlencoded/simple', fn($p, $q, $b) => echoHandler($p, $q, $b));
+    $router->register('POST', '/urlencoded/complex', fn($p, $q, $b) => echoHandler($p, $q, $b));
+
+    // Benchmark path endpoints
+    $router->register('GET', '/path/simple/test123', fn($p, $q, $b) => jsonResponse(['id' => 'test123'], 200));
+    $router->register('GET', '/path/multiple/user456/post789', fn($p, $q, $b) => jsonResponse([
+        'user_id' => 'user456',
+        'post_id' => 'post789',
+    ], 200));
+    $router->register('GET', '/path/deep/acme/engineering/backend/api/item123', fn($p, $q, $b) => jsonResponse([
+        'org' => 'acme',
+        'team' => 'engineering',
+        'project' => 'backend',
+        'resource' => 'api',
+        'id' => 'item123',
+    ], 200));
+    $router->register('GET', '/path/int/42', fn($p, $q, $b) => jsonResponse(['id' => 42], 200));
+    $router->register('GET', '/path/uuid/550e8400-e29b-41d4-a716-446655440000', fn($p, $q, $b) => jsonResponse([
+        'uuid' => '550e8400-e29b-41d4-a716-446655440000',
+    ], 200));
+    $router->register('GET', '/path/date/2024-01-15', fn($p, $q, $b) => jsonResponse(['date' => '2024-01-15'], 200));
+
+    // Benchmark query endpoints
+    $router->register('GET', '/query/few', fn($p, $q, $b) => jsonResponse($q, 200));
+    $router->register('GET', '/query/medium', fn($p, $q, $b) => jsonResponse($q, 200));
+    $router->register('GET', '/query/many', fn($p, $q, $b) => jsonResponse($q, 200));
+
     // User CRUD
     $router->register('POST', '/users', fn($p, $q, $b) => createUserHandler($p, $q, $b));
     $router->register('GET', '/users/{id}', fn($p, $q, $b) => getUserHandler($p, $q, $b));

@@ -36,7 +36,7 @@ regex = "1.12"
 
 [dev-dependencies]
 insta = "1.45"  # For snapshot testing
-tempfile = "3.23"
+tempfile = "3.24"
 
 [features]
 default = []

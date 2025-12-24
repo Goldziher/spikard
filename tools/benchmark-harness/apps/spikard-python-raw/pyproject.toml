@@ -1,6 +1,6 @@
 # /// script
 # dependencies = [
-#     "msgspec>=0.19",
+#     "msgspec>=0.20.0",
 # ]
 # ///
 
@@ -19,13 +19,13 @@ classifiers = [
 ]
 dependencies = [
   "cloudpickle>=3.1.2",
-  "granian>=2.6",
+  "granian>=2.6.0",
   "httpx>=0.28.1",
   "httpx-sse>=0.4.3",
-  "msgspec>=0.19",
+  "msgspec>=0.20.0",
   "spikard",
   "websockets>=15.0.1",
 ]
 
 [tool.uv.sources]
-spikard = { path = "../../../../crates/spikard-py", editable = true }
+spikard = { path = "../../../../packages/python", editable = true }
