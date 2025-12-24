@@ -10,10 +10,12 @@ on:
         type: choice
         options:
           - all
-          - simple
-          - json
-          - headers
-          - cookies
+          - json-bodies
+          - path-params
+          - query-params
+          - forms
+          - multipart
+          - streaming
       duration:
         description: 'Duration per workload (seconds)'
         required: false
@@ -60,8 +62,8 @@ jobs:
           path: target/release/benchmark-harness
           retention-days: 1
 
-  bench-spikard-rust:
-    name: spikard-rust
+  bench-spikard-rust-validation:
+    name: spikard-rust-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -76,13 +78,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-rust
+          framework: spikard-rust-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-python:
-    name: spikard-python
+  bench-spikard-rust-raw:
+    name: spikard-rust-raw
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -97,13 +99,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-python
+          framework: spikard-rust-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-node:
-    name: spikard-node
+  bench-spikard-python-validation:
+    name: spikard-python-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -118,13 +120,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-node
+          framework: spikard-python-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-ruby:
-    name: spikard-ruby
+  bench-spikard-python-raw:
+    name: spikard-python-raw
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -139,13 +141,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-ruby
+          framework: spikard-python-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-wasm:
-    name: spikard-wasm
+  bench-spikard-node-validation:
+    name: spikard-node-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -160,13 +162,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-wasm
+          framework: spikard-node-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-fastapi-uvicorn-dto:
-    name: fastapi-uvicorn-dto
+  bench-spikard-node-raw:
+    name: spikard-node-raw
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -181,13 +183,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: fastapi-uvicorn-dto
+          framework: spikard-node-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-fastapi-granian-dto:
-    name: fastapi-granian-dto
+  bench-spikard-ruby-validation:
+    name: spikard-ruby-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -202,13 +204,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: fastapi-granian-dto
+          framework: spikard-ruby-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-robyn-dto:
-    name: robyn-dto
+  bench-spikard-ruby-raw:
+    name: spikard-ruby-raw
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -223,13 +225,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: robyn-dto
+          framework: spikard-ruby-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-raw:
-    name: spikard-raw
+  bench-spikard-wasm-validation:
+    name: spikard-wasm-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -244,7 +246,91 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-raw
+          framework: spikard-wasm-validation
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-spikard-wasm-raw:
+    name: spikard-wasm-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: spikard-wasm-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-fastapi-uvicorn-validation:
+    name: fastapi-uvicorn-validation
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: fastapi-uvicorn-validation
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-fastapi-granian-validation:
+    name: fastapi-granian-validation
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: fastapi-granian-validation
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-robyn-validation:
+    name: robyn-validation
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: robyn-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -312,8 +398,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-fastify-dto:
-    name: fastify-dto
+  bench-fastify-validation:
+    name: fastify-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -328,7 +414,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: fastify-dto
+          framework: fastify-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -354,8 +440,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-hono-dto:
-    name: hono-dto
+  bench-hono-validation:
+    name: hono-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -370,13 +456,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: hono-dto
+          framework: hono-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-elysia-dto:
-    name: elysia-dto
+  bench-elysia-validation:
+    name: elysia-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -391,7 +477,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: elysia-dto
+          framework: elysia-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -417,8 +503,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-express-dto:
-    name: express-dto
+  bench-express-validation:
+    name: express-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -433,7 +519,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: express-dto
+          framework: express-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -459,8 +545,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-morojs-dto:
-    name: morojs-dto
+  bench-morojs-validation:
+    name: morojs-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -475,13 +561,13 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: morojs-dto
+          framework: morojs-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-hanami-api-dto:
-    name: hanami-api-dto
+  bench-kito-validation:
+    name: kito-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -496,7 +582,49 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: hanami-api-dto
+          framework: kito-validation
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-kito-raw:
+    name: kito-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: kito-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-hanami-api-validation:
+    name: hanami-api-validation
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: hanami-api-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -522,8 +650,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-roda-dto:
-    name: roda-dto
+  bench-roda-validation:
+    name: roda-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -538,7 +666,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: roda-dto
+          framework: roda-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -585,8 +713,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-php:
-    name: spikard-php
+  bench-spikard-php-validation:
+    name: spikard-php-validation
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -601,7 +729,28 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-php
+          framework: spikard-php-validation
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-spikard-php-raw:
+    name: spikard-php-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: spikard-php-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}

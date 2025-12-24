@@ -82,8 +82,8 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  bench-spikard-rust:
-    name: Benchmark spikard-rust
+  bench-spikard-rust-validation:
+    name: Benchmark spikard-rust-validation
     runs-on: ubuntu-latest
     needs: build-harness
     timeout-minutes: 75
@@ -105,35 +105,35 @@ jobs:
           cache-key-prefix: bench-rust
           use-sccache: 'false'
 
-      - name: Build spikard-rust benchmark app
-        working-directory: tools/benchmark-harness/apps/spikard-rust
+      - name: Build spikard-rust-validation benchmark app
+        working-directory: tools/benchmark-harness/apps/spikard-rust-validation
         run: cargo build --release
 
       - name: Create results directory
-        run: mkdir -p results/spikard-rust
+        run: mkdir -p results/spikard-rust-validation
 
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
-            --framework spikard-rust \
-            --app-dir tools/benchmark-harness/apps/spikard-rust \
+            --framework spikard-rust-validation \
+            --app-dir tools/benchmark-harness/apps/spikard-rust-validation \
             --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --profiler rust \
-            --output results/spikard-rust/profile.json
+            --output results/spikard-rust-validation/profile.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: benchmark-results-spikard-rust
-          path: results/spikard-rust/
+          name: benchmark-results-spikard-rust-validation
+          path: results/spikard-rust-validation/
           retention-days: 30
 
-  bench-spikard-python:
-    name: Benchmark spikard-python
+  bench-spikard-python-validation:
+    name: Benchmark spikard-python-validation
     runs-on: ubuntu-latest
     needs: build-harness
     timeout-minutes: 75
@@ -161,15 +161,15 @@ jobs:
           python-version: "3.14"
           cache-prefix: bench-python
 
-      - name: Build spikard-python binding
+      - name: Build spikard-python-validation binding
         uses: ./.github/actions/build-python-binding
 
       - name: Install benchmark app dependencies
-        working-directory: tools/benchmark-harness/apps/spikard-python
+        working-directory: tools/benchmark-harness/apps/spikard-python-validation
         run: uv run pip install -e .
 
       - name: Create results directory
-        run: mkdir -p results/spikard-python
+        run: mkdir -p results/spikard-python-validation
 
       - name: Allow py-spy ptrace
         run: |
@@ -178,24 +178,24 @@ jobs:
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
-            --framework spikard-python \
-            --app-dir tools/benchmark-harness/apps/spikard-python \
+            --framework spikard-python-validation \
+            --app-dir tools/benchmark-harness/apps/spikard-python-validation \
             --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --profiler python \
-            --output results/spikard-python/profile.json
+            --output results/spikard-python-validation/profile.json
         env:
-          SPIKARD_METRICS_FILE: ${{ github.workspace }}/results/spikard-python/python-metrics.json
+          SPIKARD_METRICS_FILE: ${{ github.workspace }}/results/spikard-python-validation/python-metrics.json
           SPIKARD_METRICS_DEBUG: "1"
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: benchmark-results-spikard-python
-          path: results/spikard-python/
+          name: benchmark-results-spikard-python-validation
+          path: results/spikard-python-validation/
           retention-days: 30
 
   bench-robyn-raw:
@@ -252,8 +252,8 @@ jobs:
           path: results/robyn-raw/
           retention-days: 30
 
-  bench-robyn-dto:
-    name: Benchmark robyn-dto
+  bench-robyn-validation:
+    name: Benchmark robyn-validation
     runs-on: ubuntu-latest
     needs: build-harness
     timeout-minutes: 75
@@ -273,14 +273,14 @@ jobs:
         uses: ./.github/actions/setup-python-env
         with:
           python-version: "3.13"
-          cache-prefix: bench-robyn-dto
+          cache-prefix: bench-robyn-validation
 
       - name: Install benchmark app dependencies
-        working-directory: tools/benchmark-harness/apps/robyn-dto
+        working-directory: tools/benchmark-harness/apps/robyn-validation
         run: uv run pip install -e .
 
       - name: Create results directory
-        run: mkdir -p results/robyn-dto
+        run: mkdir -p results/robyn-validation
 
       - name: Allow py-spy ptrace
         run: |
@@ -289,25 +289,25 @@ jobs:
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
-            --framework robyn-dto \
-            --app-dir tools/benchmark-harness/apps/robyn-dto \
+            --framework robyn-validation \
+            --app-dir tools/benchmark-harness/apps/robyn-validation \
             --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --profiler python \
-            --output results/robyn-dto/profile.json
+            --output results/robyn-validation/profile.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: benchmark-results-robyn-dto
-          path: results/robyn-dto/
+          name: benchmark-results-robyn-validation
+          path: results/robyn-validation/
           retention-days: 30
 
-  bench-spikard-node:
-    name: Benchmark spikard-node
+  bench-spikard-node-validation:
+    name: Benchmark spikard-node-validation
     runs-on: ubuntu-latest
     needs: build-harness
     timeout-minutes: 75
@@ -334,7 +334,7 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Build spikard-node binding
+      - name: Build spikard-node-validation binding
         working-directory: packages/node
         run: pnpm build
 
@@ -342,32 +342,32 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Create results directory
-        run: mkdir -p results/spikard-node
+        run: mkdir -p results/spikard-node-validation
 
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
-            --framework spikard-node \
-            --app-dir tools/benchmark-harness/apps/spikard-node \
+            --framework spikard-node-validation \
+            --app-dir tools/benchmark-harness/apps/spikard-node-validation \
             --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --profiler node \
-            --output results/spikard-node/profile.json
+            --output results/spikard-node-validation/profile.json
         env:
-          SPIKARD_NODE_METRICS_FILE: ${{ github.workspace }}/results/spikard-node/node-metrics.json
+          SPIKARD_NODE_METRICS_FILE: ${{ github.workspace }}/results/spikard-node-validation/node-metrics.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: benchmark-results-spikard-node
-          path: results/spikard-node/
+          name: benchmark-results-spikard-node-validation
+          path: results/spikard-node-validation/
           retention-days: 30
 
-  bench-spikard-ruby:
-    name: Benchmark spikard-ruby
+  bench-spikard-ruby-validation:
+    name: Benchmark spikard-ruby-validation
     runs-on: ubuntu-latest
     needs: build-harness
     timeout-minutes: 75
@@ -396,40 +396,40 @@ jobs:
           bundler: "4.0.0"
           bundler-cache: false
 
-      - name: Build spikard-ruby binding
+      - name: Build spikard-ruby-validation binding
         uses: ./.github/actions/build-ruby-binding
 
       - name: Install benchmark app dependencies
-        working-directory: tools/benchmark-harness/apps/spikard-ruby
+        working-directory: tools/benchmark-harness/apps/spikard-ruby-validation
         run: bundle install
 
       - name: Create results directory
-        run: mkdir -p results/spikard-ruby
+        run: mkdir -p results/spikard-ruby-validation
 
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
-            --framework spikard-ruby \
-            --app-dir tools/benchmark-harness/apps/spikard-ruby \
+            --framework spikard-ruby-validation \
+            --app-dir tools/benchmark-harness/apps/spikard-ruby-validation \
             --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --profiler ruby \
-            --output results/spikard-ruby/profile.json
+            --output results/spikard-ruby-validation/profile.json
         env:
-          SPIKARD_RUBY_METRICS_FILE: ${{ github.workspace }}/results/spikard-ruby/ruby-metrics.json
+          SPIKARD_RUBY_METRICS_FILE: ${{ github.workspace }}/results/spikard-ruby-validation/ruby-metrics.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: benchmark-results-spikard-ruby
-          path: results/spikard-ruby/
+          name: benchmark-results-spikard-ruby-validation
+          path: results/spikard-ruby-validation/
           retention-days: 30
 
-  bench-spikard-php:
-    name: Benchmark spikard-php
+  bench-spikard-php-validation:
+    name: Benchmark spikard-php-validation
     runs-on: ubuntu-latest
     needs: build-harness
     timeout-minutes: 75
@@ -491,36 +491,36 @@ jobs:
         run: composer install
 
       - name: Install benchmark app dependencies
-        working-directory: tools/benchmark-harness/apps/spikard-php
+        working-directory: tools/benchmark-harness/apps/spikard-php-validation
         run: composer install
 
       - name: Create results directory
-        run: mkdir -p results/spikard-php
+        run: mkdir -p results/spikard-php-validation
 
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
-            --framework spikard-php \
-            --app-dir tools/benchmark-harness/apps/spikard-php \
+            --framework spikard-php-validation \
+            --app-dir tools/benchmark-harness/apps/spikard-php-validation \
             --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --profiler php \
-            --output results/spikard-php/profile.json
+            --output results/spikard-php-validation/profile.json
         env:
-          SPIKARD_PHP_PROFILE_OUTPUT: ${{ github.workspace }}/results/spikard-php/php.speedscope.json
+          SPIKARD_PHP_PROFILE_OUTPUT: ${{ github.workspace }}/results/spikard-php-validation/php.speedscope.json
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: benchmark-results-spikard-php
-          path: results/spikard-php/
+          name: benchmark-results-spikard-php-validation
+          path: results/spikard-php-validation/
           retention-days: 30
 
-  bench-spikard-wasm:
-    name: Benchmark spikard-wasm
+  bench-spikard-wasm-validation:
+    name: Benchmark spikard-wasm-validation
     runs-on: ubuntu-latest
     needs: build-harness
     timeout-minutes: 75
@@ -555,36 +555,36 @@ jobs:
       - name: Build spikard-wasm binding
         run: |
           cd "$GITHUB_WORKSPACE/crates/spikard-wasm"
-          PATH="$HOME/.cargo/bin:$PATH" pnpm exec wasm-pack build --target nodejs --out-dir dist-node --release --no-opt
-          PATH="$HOME/.cargo/bin:$PATH" pnpm exec wasm-pack build --target web --out-dir dist-web --release --no-opt
-          cd "$GITHUB_WORKSPACE/packages/wasm"
-          pnpm run build
+          cargo install wasm-pack || true
+          wasm-pack build --target deno --out-dir dist-deno --release
+          mkdir -p "$GITHUB_WORKSPACE/tools/benchmark-harness/apps/spikard-wasm-validation/pkg"
+          cp -r dist-deno/* "$GITHUB_WORKSPACE/tools/benchmark-harness/apps/spikard-wasm-validation/pkg/"
 
       - name: Rebuild workspace after WASM build
         run: pnpm install --frozen-lockfile
 
       - name: Create results directory
-        run: mkdir -p results/spikard-wasm
+        run: mkdir -p results/spikard-wasm-validation
 
       - name: Run benchmarks
         run: |
           benchmark-harness profile \
-            --framework spikard-wasm \
-            --app-dir tools/benchmark-harness/apps/spikard-wasm \
+            --framework spikard-wasm-validation \
+            --app-dir tools/benchmark-harness/apps/spikard-wasm-validation \
             --suite "$BENCH_SUITE" \
             --duration "$BENCH_DURATION" \
             --concurrency "$BENCH_CONCURRENCY" \
             --warmup "$BENCH_WARMUP" \
             --profiler wasm \
-            --output results/spikard-wasm/profile.json
+            --output results/spikard-wasm-validation/profile.json
         env:
-          SPIKARD_WASM_METRICS_FILE: ${{ github.workspace }}/results/spikard-wasm/wasm-metrics.json
-          SPIKARD_WASM_V8_LOG_OUTPUT: ${{ github.workspace }}/results/spikard-wasm/v8.log
+          SPIKARD_WASM_METRICS_FILE: ${{ github.workspace }}/results/spikard-wasm-validation/wasm-metrics.json
+          SPIKARD_WASM_V8_LOG_OUTPUT: ${{ github.workspace }}/results/spikard-wasm-validation/v8.log
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: benchmark-results-spikard-wasm
-          path: results/spikard-wasm/
+          name: benchmark-results-spikard-wasm-validation
+          path: results/spikard-wasm-validation/
           retention-days: 30
