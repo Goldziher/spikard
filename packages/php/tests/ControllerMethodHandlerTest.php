@@ -40,10 +40,10 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handle');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
         $this->assertTrue($handler->matches($request));
 
-        $request2 = new Request('POST', '/other', null);
+        $request2 = make_request('POST', '/other', null);
         $this->assertTrue($handler->matches($request2));
     }
 
@@ -53,7 +53,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handle');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
         $response = $handler->handle($request);
 
         $this->assertInstanceOf(Response::class, $response);
@@ -70,7 +70,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'search');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/search',
             null,
@@ -87,7 +87,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'filter');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/filter',
             null,
@@ -104,7 +104,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'list');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/list',
             null,
@@ -125,7 +125,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getById');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/items/123',
             null,
@@ -142,7 +142,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getByIdDefault');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/items',
             null,
@@ -163,7 +163,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'checkAuth');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/auth',
             null,
@@ -180,7 +180,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'checkAuthDefault');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/auth',
             null,
@@ -201,7 +201,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getSession');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/session',
             null,
@@ -218,7 +218,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getSessionDefault');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/session',
             null,
@@ -240,7 +240,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
         $data = ['name' => 'Test Item', 'price' => 99.99];
-        $request = new Request('POST', '/items', $data);
+        $request = make_request('POST', '/items', $data);
         $response = $handler->handle($request);
 
         $this->assertSame(200, $response->statusCode);
@@ -252,7 +252,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'createDefault');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'POST',
             '/items',
             null
@@ -272,7 +272,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'complexRoute');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'POST',
             '/users/42/profile',
             ['bio' => 'Test'],
@@ -291,7 +291,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'maybeFilter');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/items',
             null,
@@ -312,7 +312,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'customResponse');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/custom', null);
+        $request = make_request('GET', '/custom', null);
         $response = $handler->handle($request);
 
         $this->assertInstanceOf(Response::class, $response);
@@ -325,7 +325,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getArray');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/array', null);
+        $request = make_request('GET', '/array', null);
         $response = $handler->handle($request);
 
         $this->assertSame(200, $response->statusCode);
@@ -339,7 +339,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getString');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/string', null);
+        $request = make_request('GET', '/string', null);
         $response = $handler->handle($request);
 
         $this->assertSame(200, $response->statusCode);
@@ -353,7 +353,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getNull');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/null', null);
+        $request = make_request('GET', '/null', null);
         $response = $handler->handle($request);
 
         $this->assertSame(204, $response->statusCode);
@@ -365,7 +365,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getNumber');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/number', null);
+        $request = make_request('GET', '/number', null);
         $response = $handler->handle($request);
 
         $this->assertSame(200, $response->statusCode);
@@ -379,7 +379,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getObject');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/object', null);
+        $request = make_request('GET', '/object', null);
         $response = $handler->handle($request);
 
         $this->assertSame(200, $response->statusCode);
@@ -400,7 +400,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'needsParam');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/test',
             null,
@@ -418,7 +418,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'needsService');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
         $handler->handle($request);
     }
 
@@ -432,7 +432,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getById');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/items/99',
             null,
@@ -449,7 +449,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'search');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/search',
             null,
@@ -466,7 +466,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'list');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/list',
             null,
@@ -487,7 +487,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getInt');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/items/123',
             null,
@@ -505,7 +505,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getPrice');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/price/123.45',
             null,
@@ -523,7 +523,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getEmpty');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/empty', null);
+        $request = make_request('GET', '/empty', null);
         $response = $handler->handle($request);
 
         $this->assertSame(200, $response->statusCode);
@@ -537,7 +537,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getFalsy');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/falsy', null);
+        $request = make_request('GET', '/falsy', null);
         $response = $handler->handle($request);
 
         $this->assertSame(200, $response->statusCode);
@@ -551,7 +551,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'getBool');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('GET', '/bool', null);
+        $request = make_request('GET', '/bool', null);
         $response = $handler->handle($request);
 
         $this->assertSame(200, $response->statusCode);
@@ -565,7 +565,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'search');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/search',
             null,
@@ -583,7 +583,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'filter');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/filter',
             null,
@@ -606,7 +606,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
         $data = ['name' => 'Test', 'value' => 123];
-        $request = new Request('POST', '/body', $data);
+        $request = make_request('POST', '/body', $data);
         $response = $handler->handle($request);
 
         $this->assertSame(200, $response->statusCode);
@@ -619,7 +619,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handleBodyDefault');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request('POST', '/body', null);
+        $request = make_request('POST', '/body', null);
         $response = $handler->handle($request);
 
         $this->assertSame(200, $response->statusCode);
@@ -632,7 +632,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handleQuery');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/query',
             null,
@@ -650,7 +650,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handleQueryDefault');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/query',
             null,
@@ -668,7 +668,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handlePath');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/path/abc',
             null,
@@ -686,7 +686,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handlePathDefault');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/path',
             null,
@@ -704,11 +704,11 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handleHeader');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/header',
             null,
-            headers: ['x_token' => 'secret123']
+            headers: ['x-token' => 'secret123']
         );
         $response = $handler->handle($request);
 
@@ -722,7 +722,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handleHeaderDefault');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/header',
             null,
@@ -740,7 +740,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handleCookie');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/cookie',
             null,
@@ -758,7 +758,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handleCookieDefault');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/cookie',
             null,
@@ -776,7 +776,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handleQueryMulti');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/query-multi',
             null,
@@ -794,7 +794,7 @@ final class ControllerMethodHandlerTest extends TestCase
         $reflectionMethod = new ReflectionMethod($controller, 'handleQueryNull');
         $handler = new ControllerMethodHandler($controller, $reflectionMethod);
 
-        $request = new Request(
+        $request = make_request(
             'GET',
             '/query-null',
             null,

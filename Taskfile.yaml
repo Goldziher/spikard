@@ -424,8 +424,15 @@ tasks:
     deps:
       - php:install
       - php:build
+    vars:
+      PHP_EXTENSION_PATH:
+        sh: |
+          if [ -f target/release/libspikard_php.dylib ]; then echo target/release/libspikard_php.dylib; \
+          elif [ -f target/release/libspikard_php.so ]; then echo target/release/libspikard_php.so; \
+          elif [ -f target/release/spikard_php.dll ]; then echo target/release/spikard_php.dll; \
+          else echo ""; fi
     cmds:
-      - php vendor/bin/phpunit --configuration packages/php/phpunit.xml --no-coverage
+      - php -d extension={{.PHP_EXTENSION_PATH}} vendor/bin/phpunit --configuration packages/php/phpunit.xml --no-coverage
 
   php:lint:
     desc: "Run PHP static analysis WITH auto-fix (phpstan + php-cs-fixer)"
@@ -743,8 +750,16 @@ tasks:
     dir: e2e/php
     deps:
       - php:install
+      - php:build
+    vars:
+      PHP_EXTENSION_PATH:
+        sh: |
+          if [ -f ../../target/release/libspikard_php.dylib ]; then echo ../../target/release/libspikard_php.dylib; \
+          elif [ -f ../../target/release/libspikard_php.so ]; then echo ../../target/release/libspikard_php.so; \
+          elif [ -f ../../target/release/spikard_php.dll ]; then echo ../../target/release/spikard_php.dll; \
+          else echo ""; fi
     cmds:
-      - ../../packages/php/vendor/bin/phpunit --configuration phpunit.xml
+      - php -d extension={{.PHP_EXTENSION_PATH}} ../../packages/php/vendor/bin/phpunit --configuration phpunit.xml
 
   test:e2e:
     desc: "Run all e2e fixture-driven integration tests"

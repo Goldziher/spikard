@@ -31,9 +31,13 @@ pub fn build_multipart_body(form_fields: &[(String, String)], files: &[Multipart
         body.extend_from_slice(b"\r\n");
         body.extend_from_slice(b"Content-Disposition: form-data; name=\"");
         body.extend_from_slice(file.field_name.as_bytes());
-        body.extend_from_slice(b"\"; filename=\"");
-        body.extend_from_slice(file.filename.as_bytes());
-        body.extend_from_slice(b"\"\r\n");
+        body.extend_from_slice(b"\"");
+        if !file.filename.is_empty() {
+            body.extend_from_slice(b"; filename=\"");
+            body.extend_from_slice(file.filename.as_bytes());
+            body.extend_from_slice(b"\"");
+        }
+        body.extend_from_slice(b"\r\n");
         if let Some(content_type) = &file.content_type {
             body.extend_from_slice(b"Content-Type: ");
             body.extend_from_slice(content_type.as_bytes());

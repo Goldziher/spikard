@@ -13,7 +13,7 @@ final class RequestResponseTest extends TestCase
     // Request tests
     public function testRequestConstruction(): void
     {
-        $request = new Request(
+        $request = make_request(
             method: 'GET',
             path: '/test',
             body: null
@@ -33,72 +33,72 @@ final class RequestResponseTest extends TestCase
     public function testRequestWithHeaders(): void
     {
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer token'];
-        $request = new Request(
+        $request = make_request(
             method: 'POST',
             path: '/api',
             body: ['data' => 'value'],
             headers: $headers
         );
 
-        $this->assertSame($headers, $request->headers);
+        $this->assertEquals($headers, $request->headers);
     }
 
     public function testRequestWithCookies(): void
     {
         $cookies = ['session' => 'abc123', 'user_id' => '42'];
-        $request = new Request(
+        $request = make_request(
             method: 'GET',
             path: '/profile',
             body: null,
             cookies: $cookies
         );
 
-        $this->assertSame($cookies, $request->cookies);
+        $this->assertEquals($cookies, $request->cookies);
     }
 
     public function testRequestWithQueryParams(): void
     {
         $queryParams = ['page' => ['1'], 'limit' => ['10'], 'tags' => ['php', 'rust']];
-        $request = new Request(
+        $request = make_request(
             method: 'GET',
             path: '/items',
             body: null,
             queryParams: $queryParams
         );
 
-        $this->assertSame($queryParams, $request->queryParams);
+        $this->assertEquals($queryParams, $request->queryParams);
     }
 
     public function testRequestWithPathParams(): void
     {
         $pathParams = ['id' => '123', 'category' => 'books'];
-        $request = new Request(
+        $request = make_request(
             method: 'GET',
             path: '/items/123/books',
             body: null,
             pathParams: $pathParams
         );
 
-        $this->assertSame($pathParams, $request->pathParams);
+        $this->assertEquals($pathParams, $request->pathParams);
     }
 
     public function testRequestWithFiles(): void
     {
         $files = ['upload' => ['name' => 'file.txt', 'type' => 'text/plain']];
-        $request = new Request(
+        $request = make_request(
             method: 'POST',
             path: '/upload',
             body: null,
             files: $files
         );
 
-        $this->assertSame($files, $request->files);
+        $this->assertEquals($files, $request->files);
     }
 
     public function testRequestWithJsonBody(): void
     {
         $body = ['user' => ['name' => 'Alice', 'age' => 30]];
-        $request = new Request(
+        $request = make_request(
             method: 'POST',
             path: '/users',
             body: $body
@@ -110,7 +110,7 @@ final class RequestResponseTest extends TestCase
     public function testRequestWithStringBody(): void
     {
         $body = 'plain text content';
-        $request = new Request(
+        $request = make_request(
             method: 'POST',
             path: '/text',
             body: $body
@@ -121,7 +121,7 @@ final class RequestResponseTest extends TestCase
 
     public function testRequestWithAllParameters(): void
     {
-        $request = new Request(
+        $request = make_request(
             method: 'PUT',
             path: '/api/users/123',
             body: ['name' => 'Updated'],

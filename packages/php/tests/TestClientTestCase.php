@@ -24,6 +24,15 @@ use Spikard\Testing\TestClient;
  */
 abstract class TestClientTestCase extends TestCase
 {
+    protected function appWithRoute(string $method, string $path, HandlerInterface $handler): App
+    {
+        return RouteTestHelper::withRoute(new App(), $method, $path, $handler);
+    }
+
+    protected function addRoute(App $app, string $method, string $path, HandlerInterface $handler): App
+    {
+        return RouteTestHelper::withRoute($app, $method, $path, $handler);
+    }
     /**
      * Create a basic handler that always returns 200 OK.
      */

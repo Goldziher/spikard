@@ -2,6 +2,7 @@
 <?php
 
 use Spikard\App;
+use Spikard\Attributes\Get;
 use Spikard\Config\ServerConfig;
 use Spikard\DI\DependencyContainer;
 use Spikard\DI\Provide;
@@ -23,8 +24,15 @@ $container = new DependencyContainer(
 
 $app = $app->withDependencies($container);
 
-$app = $app->addRoute('GET', '/stats', function () {
-    // Note: Full auto-injection pending P1.4
-    return Response::json(['status' => 'ok']);
-});
+final class StatsController
+{
+    #[Get('/stats')]
+    public function stats(): Response
+    {
+        // Note: Full auto-injection pending P1.4
+        return Response::json(['status' => 'ok']);
+    }
+}
+
+$app = $app->registerController(new StatsController());
 ```

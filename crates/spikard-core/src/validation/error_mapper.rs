@@ -387,7 +387,11 @@ impl ErrorMapper {
                 )
             }
             ErrorCondition::TooFewItems { min_items } => {
-                let min = min_items.unwrap_or(1);
+                let min = schema
+                    .pointer(&format!("{}/minItems", schema_prop_path))
+                    .and_then(|v| v.as_u64())
+                    .or_else(|| min_items.map(|v| v as u64))
+                    .unwrap_or(1);
                 let ctx = serde_json::json!({
                     "min_length": min
                 });
@@ -398,12 +402,16 @@ impl ErrorMapper {
                 )
             }
             ErrorCondition::TooManyItems => {
+                let max = schema
+                    .pointer(&format!("{}/maxItems", schema_prop_path))
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(1);
                 let ctx = serde_json::json!({
-                    "max_length": 1
+                    "max_length": max
                 });
                 (
                     "too_long".to_string(),
-                    "List should have at most N items after validation".to_string(),
+                    format!("List should have at most {} items after validation", max),
                     Some(ctx),
                 )
             }

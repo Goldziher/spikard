@@ -12,19 +12,25 @@ The PHP binding exposes the Rust runtime through a thin, PSR-compliant surface w
 
 ### App
 
-Main application class for registering routes and starting the server.
+Main application class for registering attribute-based controllers and starting the server.
 
 ```php
 use Spikard\App;
+use Spikard\Attributes\Get;
 use Spikard\Config\ServerConfig;
+use Spikard\Http\Response;
+
+final class HealthController
+{
+    #[Get('/health')]
+    public function health(): Response
+    {
+        return Response::json(['status' => 'ok']);
+    }
+}
 
 $config = new ServerConfig(port: 8000);
-$app = new App($config);
-
-// Register routes
-$app = $app->addRoute('GET', '/health', function () {
-    return Response::json(['status' => 'ok']);
-});
+$app = (new App($config))->registerController(new HealthController());
 
 // Run server
 $app->run();
@@ -32,7 +38,8 @@ $app->run();
 
 **Methods:**
 
-- `addRoute(string $method, string $path, callable $handler): self` – Register HTTP route
+- `registerController(string|object $controller): self` – Register controller classes with route attributes
+- `withSchemas(array $requestSchemas, array $responseSchemas, array $parameterSchemas): self` – Provide schema registry for SchemaRef attributes
 - `withDependencies(DependencyContainer $container): self` – Set up dependency injection
 - `onRequest(callable $hook): self` – Register pre-request hook
 - `preValidation(callable $hook): self` – Register pre-validation hook
@@ -196,20 +203,31 @@ Errors return structured JSON payloads:
 **Return from handlers:**
 
 ```php
-$app = $app->addRoute('POST', '/users', function (Request $request) {
-    if (!isset($request->body['email'])) {
-        return Response::json(
-            [
-                'error' => 'Missing required field',
-                'code' => 'MISSING_FIELD',
-                'details' => ['field' => 'email']
-            ],
-            400
-        );
-    }
+use Spikard\Attributes\Post;
+use Spikard\Http\Request;
+use Spikard\Http\Response;
 
-    return Response::json(['id' => 1], 201);
-});
+final class UsersController
+{
+    #[Post('/users')]
+    public function create(Request $request): Response
+    {
+        if (!isset($request->body['email'])) {
+            return Response::json(
+                [
+                    'error' => 'Missing required field',
+                    'code' => 'MISSING_FIELD',
+                    'details' => ['field' => 'email']
+                ],
+                400
+            );
+        }
+
+        return Response::json(['id' => 1], 201);
+    }
+}
+
+$app = $app->registerController(UsersController::class);
 ```
 
 ## Lifecycle Hooks
