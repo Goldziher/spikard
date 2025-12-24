@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use RuntimeException;
 use Spikard\App;
+use Spikard\Attributes\Get;
+use Spikard\Attributes\Post;
+use Spikard\Attributes\Route;
 use Spikard\Config\ApiKeyConfig;
 use Spikard\Config\CompressionConfig;
 use Spikard\Config\CorsConfig;
@@ -134,59 +137,71 @@ final class AppTest extends TestCase
         $this->assertSame($deps, $modified->dependencies());
     }
 
-    public function testAppAddRoute(): void
+    public function testAppRegisterControllerAddsRoutes(): void
     {
-        $handler = new AppTestHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = (new App())->registerController(new class () {
+            /**
+             * @return array<string, mixed>
+             */
+            #[Get('/test')]
+            public function test(): array
+            {
+                return ['ok' => true];
+            }
+
+            /**
+             * @return array<string, mixed>
+             */
+            #[Post('/users')]
+            public function create(): array
+            {
+                return ['ok' => true];
+            }
+        });
 
         $routes = $app->routes();
-        $this->assertCount(1, $routes);
+        $this->assertCount(2, $routes);
         $this->assertSame('GET', $routes[0]['method']);
         $this->assertSame('/test', $routes[0]['path']);
-        $this->assertSame($handler, $routes[0]['handler']);
+        $this->assertSame('POST', $routes[1]['method']);
+        $this->assertSame('/users', $routes[1]['path']);
     }
 
-    public function testAppAddRouteIsImmutable(): void
+    public function testAppRegisterControllerIsImmutable(): void
     {
-        $handler = new AppTestHandler();
         $original = new App();
-        $modified = $original->addRoute('GET', '/test', $handler);
+        $modified = $original->registerController(new class () {
+            /**
+             * @return array<string, mixed>
+             */
+            #[Get('/test')]
+            public function test(): array
+            {
+                return ['ok' => true];
+            }
+        });
 
         $this->assertNotSame($original, $modified);
         $this->assertSame([], $original->routes());
         $this->assertCount(1, $modified->routes());
     }
 
-    public function testAppAddMultipleRoutes(): void
+    public function testAppRegisterControllerWithSchemas(): void
     {
-        $handler1 = new AppTestHandler();
-        $handler2 = new AppTestHandler();
+        $app = (new App())->registerController(new class () {
+            private const REQUEST_SCHEMA = ['type' => 'object'];
+            private const RESPONSE_SCHEMA = ['type' => 'object'];
+            private const PARAM_SCHEMA = ['type' => 'object'];
 
-        $app = (new App())
-            ->addRoute('GET', '/users', $handler1)
-            ->addRoute('POST', '/users', $handler2);
-
-        $routes = $app->routes();
-        $this->assertCount(2, $routes);
-        $this->assertSame('GET', $routes[0]['method']);
-        $this->assertSame('POST', $routes[1]['method']);
-    }
-
-    public function testAppAddRouteWithSchemas(): void
-    {
-        $handler = new AppTestHandler();
-        $requestSchema = ['type' => 'object'];
-        $responseSchema = ['type' => 'object'];
-        $paramSchema = ['type' => 'object'];
-
-        $app = (new App())->addRouteWithSchemas(
-            'POST',
-            '/items',
-            $handler,
-            $requestSchema,
-            $responseSchema,
-            $paramSchema
-        );
+            /**
+             * @return array<string, mixed>
+             */
+            #[Route('POST', '/items', requestSchema: self::REQUEST_SCHEMA, responseSchema: self::RESPONSE_SCHEMA, parameterSchema: self::PARAM_SCHEMA)]
+            public function create(): array
+            {
+                return ['ok' => true];
+            }
+        });
 
         $routes = $app->routes();
         $this->assertCount(1, $routes);
@@ -194,7 +209,7 @@ final class AppTest extends TestCase
         $this->assertTrue(isset($route['request_schema']));
         $this->assertTrue(isset($route['response_schema']));
         $this->assertTrue(isset($route['parameter_schema']));
-        $this->assertSame($requestSchema, $route['request_schema']);
+        $this->assertSame(['type' => 'object'], $route['request_schema']);
     }
 
     public function testAppAddWebSocket(): void
@@ -221,21 +236,37 @@ final class AppTest extends TestCase
 
     public function testAppFindHandlerMatching(): void
     {
-        $handler = new AppTestHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = (new App())->registerController(new class () {
+            /**
+             * @return array<string, mixed>
+             */
+            #[Get('/test')]
+            public function test(): array
+            {
+                return ['ok' => true];
+            }
+        });
 
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
         $found = $app->findHandler($request);
 
-        $this->assertSame($handler, $found);
+        $this->assertNotNull($found);
     }
 
     public function testAppFindHandlerNotFound(): void
     {
-        $handler = new AppTestHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = (new App())->registerController(new class () {
+            /**
+             * @return array<string, mixed>
+             */
+            #[Get('/test')]
+            public function test(): array
+            {
+                return ['ok' => true];
+            }
+        });
 
-        $request = new Request('GET', '/other', null);
+        $request = make_request('GET', '/other', null);
         $found = $app->findHandler($request);
 
         $this->assertNull($found);
@@ -243,10 +274,18 @@ final class AppTest extends TestCase
 
     public function testAppFindHandlerDifferentMethod(): void
     {
-        $handler = new AppTestHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = (new App())->registerController(new class () {
+            /**
+             * @return array<string, mixed>
+             */
+            #[Get('/test')]
+            public function test(): array
+            {
+                return ['ok' => true];
+            }
+        });
 
-        $request = new Request('POST', '/test', null);
+        $request = make_request('POST', '/test', null);
         $found = $app->findHandler($request);
 
         $this->assertNull($found);
@@ -254,28 +293,42 @@ final class AppTest extends TestCase
 
     public function testAppFindHandlerStripQueryString(): void
     {
-        $handler = new AppTestHandler();
-        $app = (new App())->addRoute('GET', '/test?page=1', $handler);
+        $app = (new App())->registerController(new class () {
+            /**
+             * @return array<string, mixed>
+             */
+            #[Get('/test?page=1')]
+            public function test(): array
+            {
+                return ['ok' => true];
+            }
+        });
 
         // Should match without query string
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
         $found = $app->findHandler($request);
 
-        $this->assertSame($handler, $found);
+        $this->assertNotNull($found);
     }
 
     public function testAppNativeRoutes(): void
     {
-        $handler = new AppTestHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = (new App())->registerController(new class () {
+            /**
+             * @return array<string, mixed>
+             */
+            #[Get('/test')]
+            public function test(): array
+            {
+                return ['ok' => true];
+            }
+        });
 
         $nativeRoutes = $app->nativeRoutes();
         $this->assertCount(1, $nativeRoutes);
         $this->assertSame('GET', $nativeRoutes[0]['method']);
         $this->assertSame('/test', $nativeRoutes[0]['path']);
-        if (isset($nativeRoutes[0]['handler'])) {
-            $this->assertSame($handler, $nativeRoutes[0]['handler']);
-        }
+        $this->assertArrayHasKey('handler', $nativeRoutes[0]);
     }
 
     public function testAppNativeRoutesIncludesWebSocket(): void
@@ -306,29 +359,33 @@ final class AppTest extends TestCase
         }
     }
 
-    public function testAppSingleRoute(): void
-    {
-        $handler = new AppTestHandler();
-        $app = App::singleRoute('GET', '/hello', $handler);
-
-        $routes = $app->routes();
-        $this->assertCount(1, $routes);
-        $this->assertSame('GET', $routes[0]['method']);
-        $this->assertSame('/hello', $routes[0]['path']);
-    }
-
     public function testAppMethodsCaseInsensitive(): void
     {
-        $handler = new AppTestHandler();
-        $app = (new App())
-            ->addRoute('get', '/test1', $handler)
-            ->addRoute('POST', '/test2', $handler);
+        $app = (new App())->registerController(new class () {
+            /**
+             * @return array<string, mixed>
+             */
+            #[Route('get', '/test1')]
+            public function test1(): array
+            {
+                return ['ok' => true];
+            }
 
-        $request1 = new Request('GET', '/test1', null);
-        $request2 = new Request('post', '/test2', null);
+            /**
+             * @return array<string, mixed>
+             */
+            #[Route('Post', '/test2')]
+            public function test2(): array
+            {
+                return ['ok' => true];
+            }
+        });
 
-        $this->assertSame($handler, $app->findHandler($request1));
-        $this->assertSame($handler, $app->findHandler($request2));
+        $request1 = make_request('GET', '/test1', null);
+        $request2 = make_request('post', '/test2', null);
+
+        $this->assertNotNull($app->findHandler($request1));
+        $this->assertNotNull($app->findHandler($request2));
     }
 
     public function testAppChaining(): void
@@ -336,13 +393,21 @@ final class AppTest extends TestCase
         $config = ServerConfig::builder()->build();
         $hooks = LifecycleHooks::builder()->build();
         $deps = DependencyContainer::builder()->build();
-        $handler = new AppTestHandler();
 
         $app = (new App())
             ->withConfig($config)
             ->withLifecycleHooks($hooks)
             ->withDependencies($deps)
-            ->addRoute('GET', '/test', $handler);
+            ->registerController(new class () {
+                /**
+                 * @return array<string, mixed>
+                 */
+                #[Get('/test')]
+                public function test(): array
+                {
+                    return ['ok' => true];
+                }
+            });
 
         $this->assertSame($config, $app->config());
         $this->assertSame($hooks, $app->lifecycleHooks());
@@ -354,7 +419,16 @@ final class AppTest extends TestCase
     {
         $original = new App();
         $step1 = $original->withConfig(ServerConfig::builder()->build());
-        $step2 = $step1->addRoute('GET', '/test', new AppTestHandler());
+        $step2 = $step1->registerController(new class () {
+            /**
+             * @return array<string, mixed>
+             */
+            #[Get('/test')]
+            public function test(): array
+            {
+                return ['ok' => true];
+            }
+        });
 
         $this->assertNotSame($original, $step1);
         $this->assertNotSame($step1, $step2);

@@ -71,33 +71,41 @@ declare(strict_types=1);
 require_once 'vendor/autoload.php';
 
 use Spikard\App;
+use Spikard\Attributes\Get;
+use Spikard\Attributes\Post;
 use Spikard\Config\ServerConfig;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
+final class UserController
+{
+    #[Get('/users/{id}')]
+    public function get(Request $request): Response
+    {
+        $userId = (int) $request->pathParams['id'];
+        return Response::json([
+            'id' => $userId,
+            'name' => 'Alice',
+            'email' => 'alice@example.com',
+        ]);
+    }
+
+    #[Post('/users')]
+    public function create(Request $request): Response
+    {
+        $data = $request->jsonBody();
+
+        // Automatic validation
+        return Response::json([
+            'id' => 1,
+            'name' => $data['name'],
+            'email' => $data['email'],
+        ], 201);
+    }
+}
+
 $config = new ServerConfig(port: 8000);
-$app = new App($config);
-
-$app = $app->addRoute('GET', '/users/{id}', function (Request $request) {
-    $userId = (int) $request->pathParams['id'];
-    return Response::json([
-        'id' => $userId,
-        'name' => 'Alice',
-        'email' => 'alice@example.com',
-    ]);
-});
-
-$app = $app->addRoute('POST', '/users', function (Request $request) {
-    $data = $request->jsonBody();
-
-    // Automatic validation
-    return Response::json([
-        'id' => 1,
-        'name' => $data['name'],
-        'email' => $data['email'],
-    ], 201);
-});
-
+$app = (new App($config))->registerController(new UserController());
 $app->run();
 ```
 
@@ -151,33 +159,48 @@ $app->run();
 
 ### Route Registration
 
-Routes are registered using `addRoute()` with method, path, and handler:
+Routes are defined with attributes on controller methods and registered via `registerController()`:
 
 ```php
 use Spikard\App;
+use Spikard\Attributes\Delete;
+use Spikard\Attributes\Get;
+use Spikard\Attributes\Post;
+use Spikard\Attributes\Put;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
-$app = new App();
+final class UsersController
+{
+    #[Get('/users')]
+    public function list(Request $request): Response
+    {
+        return Response::json(['users' => []]);
+    }
 
-$app = $app->addRoute('GET', '/users', function (Request $request) {
-    return Response::json(['users' => []]);
-});
+    #[Post('/users')]
+    public function create(Request $request): Response
+    {
+        $user = $request->jsonBody();
+        return Response::json($user, 201);
+    }
 
-$app = $app->addRoute('POST', '/users', function (Request $request) {
-    $user = $request->jsonBody();
-    return Response::json($user, 201);
-});
+    #[Put('/users/{id}')]
+    public function update(Request $request): Response
+    {
+        $userId = $request->pathParams['id'];
+        $data = $request->jsonBody();
+        return Response::json(['id' => $userId, ...$data]);
+    }
 
-$app = $app->addRoute('PUT', '/users/{id}', function (Request $request) {
-    $userId = $request->pathParams['id'];
-    $data = $request->jsonBody();
-    return Response::json(['id' => $userId, ...$data]);
-});
+    #[Delete('/users/{id}')]
+    public function delete(Request $request): Response
+    {
+        return Response::json(['deleted' => true], 200);
+    }
+}
 
-$app = $app->addRoute('DELETE', '/users/{id}', function (Request $request) {
-    return Response::json(['deleted' => true], 200);
-});
+$app = (new App())->registerController(new UsersController());
 ```
 
 **Supported HTTP Methods:**
@@ -193,35 +216,49 @@ $app = $app->addRoute('DELETE', '/users/{id}', function (Request $request) {
 ### Path Parameters
 
 ```php
-$app = $app->addRoute('GET', '/users/{user_id}', function (Request $request) {
-    $userId = (int) $request->pathParams['user_id'];
-    return Response::json(['id' => $userId]);
-});
+use Spikard\Attributes\Get;
 
-$app = $app->addRoute('GET', '/posts/{post_id}/comments/{comment_id}',
-    function (Request $request) {
+final class PathController
+{
+    #[Get('/users/{user_id}')]
+    public function user(Request $request): Response
+    {
+        $userId = (int) $request->pathParams['user_id'];
+        return Response::json(['id' => $userId]);
+    }
+
+    #[Get('/posts/{post_id}/comments/{comment_id}')]
+    public function comment(Request $request): Response
+    {
         return Response::json([
             'post_id' => (int) $request->pathParams['post_id'],
             'comment_id' => (int) $request->pathParams['comment_id'],
         ]);
     }
-);
+}
 ```
 
 ### Query Parameters
 
 ```php
-$app = $app->addRoute('GET', '/search', function (Request $request) {
-    $q = $request->query['q'] ?? '';
-    $limit = (int) ($request->query['limit'] ?? 10);
-    $offset = (int) ($request->query['offset'] ?? 0);
+use Spikard\Attributes\Get;
 
-    return Response::json([
-        'query' => $q,
-        'limit' => $limit,
-        'offset' => $offset,
-    ]);
-});
+final class SearchController
+{
+    #[Get('/search')]
+    public function search(Request $request): Response
+    {
+        $q = $request->query['q'] ?? '';
+        $limit = (int) ($request->query['limit'] ?? 10);
+        $offset = (int) ($request->query['offset'] ?? 0);
+
+        return Response::json([
+            'query' => $q,
+            'limit' => $limit,
+            'offset' => $offset,
+        ]);
+    }
+}
 ```
 
 ### Request Body Validation
@@ -229,49 +266,56 @@ $app = $app->addRoute('GET', '/search', function (Request $request) {
 Spikard validates request bodies against JSON schemas. PHP 8.2+ with strict types provides natural validation:
 
 ```php
-$app = $app->addRoute('POST', '/posts', function (Request $request) {
-    $data = $request->jsonBody();
+use Spikard\Attributes\Post;
 
-    // Validate required fields
-    if (!isset($data['title'], $data['content'])) {
+final class PostsController
+{
+    #[Post('/posts')]
+    public function create(Request $request): Response
+    {
+        $data = $request->jsonBody();
+
+        // Validate required fields
+        if (!isset($data['title'], $data['content'])) {
+            return Response::json([
+                'error' => 'Missing required fields: title, content',
+            ], 400);
+        }
+
         return Response::json([
-            'error' => 'Missing required fields: title, content',
-        ], 400);
+            'id' => 1,
+            'title' => $data['title'],
+            'content' => $data['content'],
+            'tags' => $data['tags'] ?? [],
+        ], 201);
     }
-
-    return Response::json([
-        'id' => 1,
-        'title' => $data['title'],
-        'content' => $data['content'],
-        'tags' => $data['tags'] ?? [],
-    ], 201);
-});
+}
 ```
 
 **JSON Schema validation:**
 
 ```php
-$postSchema = [
-    'type' => 'object',
-    'properties' => [
-        'title' => ['type' => 'string', 'minLength' => 1],
-        'content' => ['type' => 'string'],
-        'tags' => ['type' => 'array', 'items' => ['type' => 'string']],
-    ],
-    'required' => ['title', 'content'],
-];
+use Spikard\Attributes\Route;
 
-$app = $app->addRouteWithSchemas(
-    method: 'POST',
-    path: '/posts',
-    handler: function (Request $request) {
+final class SchemaPostsController
+{
+    private const POST_SCHEMA = [
+        'type' => 'object',
+        'properties' => [
+            'title' => ['type' => 'string', 'minLength' => 1],
+            'content' => ['type' => 'string'],
+            'tags' => ['type' => 'array', 'items' => ['type' => 'string']],
+        ],
+        'required' => ['title', 'content'],
+    ];
+
+    #[Route('POST', '/posts', requestSchema: self::POST_SCHEMA)]
+    public function create(Request $request): Response
+    {
         $post = $request->jsonBody();
         return Response::json($post, 201);
-    },
-    requestSchema: $postSchema,
-    responseSchema: null,
-    parameterSchema: null
-);
+    }
+}
 ```
 
 ### Dependency Injection
@@ -319,35 +363,47 @@ $app = $app->withDependencies($container);
 ### File Uploads
 
 ```php
+use Spikard\Attributes\Post;
 use Spikard\Http\UploadFile;
 
-$app = $app->addRoute('POST', '/upload', function (Request $request) {
-    $data = $request->jsonBody();
-    $file = $data['file']; // UploadFile instance
+final class UploadController
+{
+    #[Post('/upload')]
+    public function upload(Request $request): Response
+    {
+        $data = $request->jsonBody();
+        $file = $data['file']; // UploadFile instance
 
-    return Response::json([
-        'filename' => $file->filename,
-        'size' => $file->size,
-        'content_type' => $file->contentType,
-        'content' => $file->read(),
-    ]);
-});
+        return Response::json([
+            'filename' => $file->filename,
+            'size' => $file->size,
+            'content_type' => $file->contentType,
+            'content' => $file->read(),
+        ]);
+    }
+}
 ```
 
 ### Custom Responses
 
 ```php
+use Spikard\Attributes\Post;
 use Spikard\Http\Response;
 
-$app = $app->addRoute('POST', '/users', function (Request $request) {
-    $user = $request->jsonBody();
+final class CustomResponseController
+{
+    #[Post('/users')]
+    public function create(Request $request): Response
+    {
+        $user = $request->jsonBody();
 
-    return new Response(
-        content: json_encode($user),
-        statusCode: 201,
-        headers: ['X-Custom' => 'value']
-    );
-});
+        return new Response(
+            content: json_encode($user),
+            statusCode: 201,
+            headers: ['X-Custom' => 'value']
+        );
+    }
+}
 
 // Convenience methods
 Response::json(['key' => 'value'], 200);           // JSON response
@@ -359,22 +415,28 @@ Response::empty(204);                               // Empty response
 ### Streaming Responses
 
 ```php
+use Spikard\Attributes\Get;
 use Spikard\Http\StreamingResponse;
 
-$app = $app->addRoute('GET', '/stream', function () {
-    $generator = function (): Generator {
-        for ($i = 0; $i < 10; $i++) {
-            yield "data: {$i}\n";
-            sleep(1);
-        }
-    };
+final class StreamController
+{
+    #[Get('/stream')]
+    public function stream(): StreamingResponse
+    {
+        $generator = function (): Generator {
+            for ($i = 0; $i < 10; $i++) {
+                yield "data: {$i}\n";
+                sleep(1);
+            }
+        };
 
-    return new StreamingResponse(
-        stream: $generator(),
-        statusCode: 200,
-        headers: ['Content-Type' => 'text/plain']
-    );
-});
+        return new StreamingResponse(
+            stream: $generator(),
+            statusCode: 200,
+            headers: ['Content-Type' => 'text/plain']
+        );
+    }
+}
 ```
 
 ## Configuration
@@ -565,13 +627,19 @@ $app = $app->addWebSocket('/ws', new ChatHandler());
 **Alternative: Inline WebSocket handler:**
 
 ```php
-// Using foreach pattern for message iteration
-$app = $app->addRoute('GET', '/chat', function () {
-    foreach ($messages as $message) {
-        $data = json_decode($message, true);
-        yield json_encode(['echo' => $data]);
+use Spikard\Attributes\Get;
+
+final class ChatController
+{
+    #[Get('/chat')]
+    public function chat(): \Generator
+    {
+        foreach ($messages as $message) {
+            $data = json_decode($message, true);
+            yield json_encode(['echo' => $data]);
+        }
     }
-});
+}
 ```
 
 ## Server-Sent Events (SSE)
@@ -624,52 +692,64 @@ $app = $app->addSse('/notifications', new NotificationProducer());
 **Alternative: Inline SSE with StreamingResponse:**
 
 ```php
+use Spikard\Attributes\Get;
 use Spikard\Http\StreamingResponse;
 
-$app = $app->addRoute('GET', '/events', function () {
-    $generator = function (): Generator {
-        for ($i = 0; $i < 10; $i++) {
-            $data = json_encode([
-                'count' => $i,
-                'message' => "Event #{$i}",
-            ]);
+final class EventsController
+{
+    #[Get('/events')]
+    public function events(): StreamingResponse
+    {
+        $generator = function (): Generator {
+            for ($i = 0; $i < 10; $i++) {
+                $data = json_encode([
+                    'count' => $i,
+                    'message' => "Event #{$i}",
+                ]);
 
-            yield "data: {$data}\n\n";
-            sleep(1);
-        }
-    };
+                yield "data: {$data}\n\n";
+                sleep(1);
+            }
+        };
 
-    return StreamingResponse::sse($generator());
-});
+        return StreamingResponse::sse($generator());
+    }
+}
 ```
 
 ## Background Tasks
 
 ```php
+use Spikard\Attributes\Post;
 use Spikard\Background\BackgroundTask;
 
-$app = $app->addRoute('POST', '/users', function (Request $request) {
-    $user = $request->jsonBody();
+final class BackgroundUsersController
+{
+    #[Post('/users')]
+    public function create(Request $request): Response
+    {
+        $user = $request->jsonBody();
 
-    // Schedule background work (doesn't block response)
-    BackgroundTask::run(function () use ($user) {
-        // Send welcome email
-        sleep(2);
-        error_log("Sent email to {$user['email']}");
-    });
+        // Schedule background work (doesn't block response)
+        BackgroundTask::run(function () use ($user) {
+            // Send welcome email
+            sleep(2);
+            error_log(\"Sent email to {$user['email']}\");
+        });
 
-    BackgroundTask::run(function () use ($user) {
-        // Log analytics
-        sleep(1);
-        error_log("Logged user creation: {$user['name']}");
-    });
+        BackgroundTask::run(function () use ($user) {
+            // Log analytics
+            sleep(1);
+            error_log(\"Logged user creation: {$user['name']}\");
+        });
 
-    // Return immediately
-    return Response::json([
-        'user' => $user,
-        'message' => 'User created. Welcome email will be sent shortly.',
-    ], 201);
-});
+        // Return immediately
+        return Response::json([
+            'user' => $user,
+            'message' => 'User created. Welcome email will be sent shortly.',
+        ], 201);
+    }
+}
 ```
 
 ## Testing
@@ -684,9 +764,12 @@ final class ApiTest extends TestCase
 
     protected function setUp(): void
     {
-        $app = new App();
-        $app = $app->addRoute('GET', '/users/{id}', function (Request $request) {
-            return Response::json(['id' => $request->pathParams['id']]);
+        $app = (new App())->registerController(new class () {
+            #[Get('/users/{id}')]
+            public function user(Request $request): Response
+            {
+                return Response::json(['id' => $request->pathParams['id']]);
+            }
         });
 
         $this->client = TestClient::create($app);
@@ -876,37 +959,31 @@ Compare to traditional PHP-FPM:
 
 ## Route Attributes (PHP 8.0+ Syntax)
 
-While Spikard uses programmatic route registration (fluent API), you can build a decorator layer:
+Spikard uses attributes for routing out of the box:
 
 ```php
-use Attribute;
-use ReflectionClass;
-
-#[Attribute(Attribute::TARGET_METHOD)]
-final class Route
-{
-    public function __construct(
-        public readonly string $method,
-        public readonly string $path
-    ) {}
-}
+use Spikard\App;
+use Spikard\Attributes\Get;
+use Spikard\Attributes\Post;
+use Spikard\Http\Request;
+use Spikard\Http\Response;
 
 final class PostController
 {
-    #[Route('GET', '/posts')]
+    #[Get('/posts')]
     public function index(Request $request): Response
     {
         return Response::json(['posts' => []]);
     }
 
-    #[Route('POST', '/posts')]
+    #[Post('/posts')]
     public function create(Request $request): Response
     {
         $data = $request->jsonBody();
         return Response::json($data, 201);
     }
 
-    #[Route('GET', '/posts/{id}')]
+    #[Get('/posts/{id}')]
     public function show(Request $request): Response
     {
         $id = $request->pathParams['id'];
@@ -914,19 +991,7 @@ final class PostController
     }
 }
 
-// Bootstrap from attributes
-$app = new App();
-$controller = new PostController();
-$reflection = new ReflectionClass($controller);
-
-foreach ($reflection->getMethods() as $method) {
-    foreach ($method->getAttributes(Route::class) as $attribute) {
-        $route = $attribute->newInstance();
-        $handler = $method->getClosure($controller);
-        $app = $app->addRoute($route->method, $route->path, $handler);
-    }
-}
-
+$app = (new App())->registerController(new PostController());
 $app->run();
 ```
 

@@ -374,6 +374,9 @@ end
 <?php
 use Spikard\App;
 use Spikard\DI\Provide;
+use Spikard\Attributes\Get;
+use Spikard\Http\Request;
+use Spikard\Http\Response;
 
 $app = new App();
 
@@ -387,11 +390,18 @@ $app->provide('db', new Provide(
     singleton: true
 ));
 
+final class UsersController
+{
+    #[Get('/users')]
+    public function list(Request $req, PDO $db): Response
+    {
+        $stmt = $db->query('SELECT * FROM users');
+        return Response::json($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+}
+
 // Handler with dependency injection
-$app->addRoute('GET', '/users', function (Request $req, PDO $db) {
-    $stmt = $db->query('SELECT * FROM users');
-    return Response::json($stmt->fetchAll(PDO::FETCH_ASSOC));
-});
+$app = $app->registerController(UsersController::class);
 ```
 
 **Design rationale:**

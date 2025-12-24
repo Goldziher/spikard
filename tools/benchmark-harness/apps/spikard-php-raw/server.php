@@ -14,8 +14,10 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Spikard\App;
 use Spikard\Config\ServerConfig;
+use Spikard\Attributes\Get;
+use Spikard\Attributes\Patch;
+use Spikard\Attributes\Post;
 use Spikard\DI\DependencyContainer;
-use Spikard\Handlers\HandlerInterface;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
@@ -98,90 +100,9 @@ if ($profileOutput !== '' && class_exists('ExcimerProfiler')) {
     }
 }
 
-$app = new App();
-
 // ============================================================================
 // Handler Classes (must be named classes for FFI compatibility)
 // ============================================================================
-
-final class EchoHandler implements HandlerInterface
-{
-    public function matches(Request $request): bool
-    {
-        return true;
-    }
-
-    public function handle(Request $request): Response
-    {
-        return new Response($request->body ?? [], 200, []);
-    }
-
-    public function __invoke(Request $request): Response
-    {
-        return $this->handle($request);
-    }
-}
-
-final class FixedDataHandler implements HandlerInterface
-{
-    public function __construct(private readonly array $data)
-    {
-    }
-
-    public function matches(Request $request): bool
-    {
-        return true;
-    }
-
-    public function handle(Request $request): Response
-    {
-        return new Response($this->data, 200, []);
-    }
-
-    public function __invoke(Request $request): Response
-    {
-        return $this->handle($request);
-    }
-}
-
-final class PathParamHandler implements HandlerInterface
-{
-    public function matches(Request $request): bool
-    {
-        return true;
-    }
-
-    public function handle(Request $request): Response
-    {
-        $response = [];
-        if (isset($request->pathParams['id'])) {
-            $response['id'] = $request->pathParams['id'];
-        }
-        if ($request->body !== null) {
-            $response = array_merge($response, $request->body);
-        }
-        return new Response($response, 200, []);
-    }
-
-    public function __invoke(Request $request): Response
-    {
-        return $this->handle($request);
-    }
-}
-
-// ============================================================================
-// Helper functions to create handler instances
-// ============================================================================
-
-function echoHandler(): HandlerInterface
-{
-    return new EchoHandler();
-}
-
-function fixedHandler(array $data): HandlerInterface
-{
-    return new FixedDataHandler($data);
-}
 
 // ============================================================================
 // Schema Definitions
@@ -480,129 +401,394 @@ $queryManyParams = [
 ];
 
 // ============================================================================
-// Health Check
+// Benchmark Controller
 // ============================================================================
 
-$app = $app->addRoute('GET', '/health', fixedHandler(['status' => 'ok']));
-$app = $app->addRoute('GET', '/', fixedHandler(['status' => 'ok']));
+final class BenchmarkController
+{
+    private function echoBody(Request $request): Response
+    {
+        return new Response($request->body ?? [], 200, []);
+    }
 
-// ============================================================================
-// Benchmark Workloads (used by benchmark-harness suites)
-// ============================================================================
+    private function fixedResponse(array $data): Response
+    {
+        return new Response($data, 200, []);
+    }
 
-// JSON bodies
-$app = $app->addRoute('POST', '/json/small', echoHandler());
-$app = $app->addRoute('POST', '/json/medium', echoHandler());
-$app = $app->addRoute('POST', '/json/large', echoHandler());
-$app = $app->addRoute('POST', '/json/very-large', echoHandler());
+    private function pathParams(Request $request): Response
+    {
+        $response = [];
+        if (isset($request->pathParams['id'])) {
+            $response['id'] = $request->pathParams['id'];
+        }
+        if ($request->body !== null) {
+            $response = array_merge($response, $request->body);
+        }
+        return new Response($response, 200, []);
+    }
 
-// Multipart (body ignored; benchmark harness uses synthetic payloads)
-$app = $app->addRoute('POST', '/multipart/small', fixedHandler(['files_received' => 1, 'total_bytes' => 1024]));
-$app = $app->addRoute('POST', '/multipart/medium', fixedHandler(['files_received' => 2, 'total_bytes' => 10240]));
-$app = $app->addRoute('POST', '/multipart/large', fixedHandler(['files_received' => 5, 'total_bytes' => 102400]));
+    private function queryParams(Request $request): Response
+    {
+        return new Response($request->queryParams, 200, []);
+    }
 
-// Forms (x-www-form-urlencoded)
-$app = $app->addRoute('POST', '/urlencoded/simple', echoHandler());
-$app = $app->addRoute('POST', '/urlencoded/complex', echoHandler());
+    #[Get('/health')]
+    public function health(Request $request): Response
+    {
+        return $this->fixedResponse(['status' => 'ok']);
+    }
 
-// Path params
-$app = $app->addRoute('GET', '/path/simple/{id}', new PathParamHandler());
-$app = $app->addRoute('GET', '/path/multiple/{user_id}/{post_id}', new PathParamHandler());
-$app = $app->addRoute('GET', '/path/deep/{org}/{team}/{project}/{resource}/{id}', new PathParamHandler());
-$app = $app->addRoute('GET', '/path/int/{id}', new PathParamHandler());
-$app = $app->addRoute('GET', '/path/uuid/{uuid}', new PathParamHandler());
-$app = $app->addRoute('GET', '/path/date/{date}', new PathParamHandler());
+    #[Get('/')]
+    public function root(Request $request): Response
+    {
+        return $this->fixedResponse(['status' => 'ok']);
+    }
 
-// Query params (return the parsed query params)
-$app = $app->addRoute('GET', '/query/few', new class implements HandlerInterface {
-    public function matches(Request $request): bool { return true; }
-    public function handle(Request $request): Response { return new Response($request->queryParams, 200, []); }
-    public function __invoke(Request $request): Response { return $this->handle($request); }
-});
-$app = $app->addRoute('GET', '/query/medium', new class implements HandlerInterface {
-    public function matches(Request $request): bool { return true; }
-    public function handle(Request $request): Response { return new Response($request->queryParams, 200, []); }
-    public function __invoke(Request $request): Response { return $this->handle($request); }
-});
-$app = $app->addRoute('GET', '/query/many', new class implements HandlerInterface {
-    public function matches(Request $request): bool { return true; }
-    public function handle(Request $request): Response { return new Response($request->queryParams, 200, []); }
-    public function __invoke(Request $request): Response { return $this->handle($request); }
-});
+    #[Post('/json/small')]
+    public function jsonSmall(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
 
-// ============================================================================
-// JSON Body Workloads - Small Payloads (~100-500 bytes)
-// ============================================================================
+    #[Post('/json/medium')]
+    public function jsonMedium(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
 
-$app = $app->addRoute('POST', '/items/', echoHandler());
-$app = $app->addRoute('POST', '/items', echoHandler());
-$app = $app->addRoute('POST', '/users', echoHandler());
-$app = $app->addRoute('POST', '/products', echoHandler());
-$app = $app->addRoute('POST', '/contact', echoHandler());
-$app = $app->addRoute('POST', '/', echoHandler());
+    #[Post('/json/large')]
+    public function jsonLarge(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
 
-// ============================================================================
-// JSON Body Workloads - Nested Objects (Medium ~1-10KB)
-// ============================================================================
+    #[Post('/json/very-large')]
+    public function jsonVeryLarge(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
 
-$app = $app->addRoute('POST', '/items/nested', echoHandler());
-$app = $app->addRoute('POST', '/payment', echoHandler());
-$app = $app->addRoute('POST', '/billing', echoHandler());
+    #[Post('/multipart/small')]
+    public function multipartSmall(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 1, 'total_bytes' => 1024]);
+    }
 
-// ============================================================================
-// JSON Body Workloads - Arrays and Lists (Medium-Large)
-// ============================================================================
+    #[Post('/multipart/medium')]
+    public function multipartMedium(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 2, 'total_bytes' => 10240]);
+    }
 
-$app = $app->addRoute('POST', '/items/list', echoHandler());
-$app = $app->addRoute('POST', '/items/validated', echoHandler());
-$app = $app->addRoute('POST', '/items/optional-all', echoHandler());
-$app = $app->addRoute('POST', '/items/list-validated', echoHandler());
-$app = $app->addRoute('POST', '/events/', echoHandler());
+    #[Post('/multipart/large')]
+    public function multipartLarge(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 5, 'total_bytes' => 102400]);
+    }
 
-// ============================================================================
-// JSON Body Workloads - Large Payloads (~10-100KB)
-// ============================================================================
+    #[Post('/urlencoded/simple')]
+    public function urlencodedSimple(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
 
-$app = $app->addRoute('POST', '/api/v1/data', echoHandler());
-$app = $app->addRoute('POST', '/config', echoHandler());
-$app = $app->addRoute('POST', '/data', echoHandler());
+    #[Post('/urlencoded/complex')]
+    public function urlencodedComplex(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
 
-// ============================================================================
-// Path Parameter Workloads
-// ============================================================================
+    #[Get('/path/simple/{id}')]
+    public function pathSimple(Request $request): Response
+    {
+        return $this->pathParams($request);
+    }
 
-$app = $app->addRoute('PATCH', '/items/{id}', new PathParamHandler());
+    #[Get('/path/multiple/{user_id}/{post_id}')]
+    public function pathMultiple(Request $request): Response
+    {
+        return $this->pathParams($request);
+    }
 
-// ============================================================================
-// Multipart Form Workloads (~1KB - 100KB)
-// ============================================================================
+    #[Get('/path/deep/{org}/{team}/{project}/{resource}/{id}')]
+    public function pathDeep(Request $request): Response
+    {
+        return $this->pathParams($request);
+    }
 
-$app = $app->addRoute('POST', '/files/optional', fixedHandler(['files_received' => 1, 'total_bytes' => 1024]));
-$app = $app->addRoute('POST', '/files/list', fixedHandler(['files_received' => 2, 'total_bytes' => 10240]));
-$app = $app->addRoute('POST', '/files/upload', fixedHandler(['files_received' => 1, 'total_bytes' => 5120]));
-$app = $app->addRoute('POST', '/files/image', fixedHandler(['files_received' => 1, 'total_bytes' => 8192]));
-$app = $app->addRoute('POST', '/files/document', fixedHandler(['files_received' => 1, 'total_bytes' => 15360]));
-$app = $app->addRoute('POST', '/files/validated', fixedHandler(['files_received' => 1, 'total_bytes' => 2048]));
-$app = $app->addRoute('POST', '/files/images-only', fixedHandler(['files_received' => 3, 'total_bytes' => 30720]));
-$app = $app->addRoute('POST', '/files/required', fixedHandler(['files_received' => 1, 'total_bytes' => 4096]));
-$app = $app->addRoute('POST', '/upload', fixedHandler(['files_received' => 1, 'total_bytes' => 10240]));
+    #[Get('/path/int/{id}')]
+    public function pathInt(Request $request): Response
+    {
+        return $this->pathParams($request);
+    }
 
-// ============================================================================
-// URL Encoded Form Workloads (3-20 fields)
-// ============================================================================
+    #[Get('/path/uuid/{uuid}')]
+    public function pathUuid(Request $request): Response
+    {
+        return $this->pathParams($request);
+    }
 
-$app = $app->addRoute('POST', '/login/', echoHandler());
-$app = $app->addRoute('POST', '/register/', echoHandler());
-$app = $app->addRoute('POST', '/form/', echoHandler());
-$app = $app->addRoute('POST', '/form/validated', echoHandler());
-$app = $app->addRoute('POST', '/form/tags', echoHandler());
-$app = $app->addRoute('POST', '/token', echoHandler());
-$app = $app->addRoute('POST', '/register', echoHandler());
-$app = $app->addRoute('POST', '/profile', echoHandler());
-$app = $app->addRoute('POST', '/accounts', echoHandler());
-$app = $app->addRoute('POST', '/tags', echoHandler());
-$app = $app->addRoute('POST', '/subscribe', echoHandler());
-$app = $app->addRoute('POST', '/settings', echoHandler());
+    #[Get('/path/date/{date}')]
+    public function pathDate(Request $request): Response
+    {
+        return $this->pathParams($request);
+    }
+
+    #[Get('/query/few')]
+    public function queryFew(Request $request): Response
+    {
+        return $this->queryParams($request);
+    }
+
+    #[Get('/query/medium')]
+    public function queryMedium(Request $request): Response
+    {
+        return $this->queryParams($request);
+    }
+
+    #[Get('/query/many')]
+    public function queryMany(Request $request): Response
+    {
+        return $this->queryParams($request);
+    }
+
+    #[Post('/items/')]
+    public function itemsTrailing(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/items')]
+    public function items(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/users')]
+    public function users(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/products')]
+    public function products(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/contact')]
+    public function contact(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/')]
+    public function rootPost(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/items/nested')]
+    public function itemsNested(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/payment')]
+    public function payment(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/billing')]
+    public function billing(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/items/list')]
+    public function itemsList(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/items/validated')]
+    public function itemsValidated(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/items/optional-all')]
+    public function itemsOptionalAll(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/items/list-validated')]
+    public function itemsListValidated(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/events/')]
+    public function eventsTrailing(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/api/v1/data')]
+    public function apiData(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/config')]
+    public function config(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/data')]
+    public function data(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Patch('/items/{id}')]
+    public function patchItem(Request $request): Response
+    {
+        return $this->pathParams($request);
+    }
+
+    #[Post('/files/optional')]
+    public function filesOptional(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 1, 'total_bytes' => 1024]);
+    }
+
+    #[Post('/files/list')]
+    public function filesList(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 2, 'total_bytes' => 10240]);
+    }
+
+    #[Post('/files/upload')]
+    public function filesUpload(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 1, 'total_bytes' => 5120]);
+    }
+
+    #[Post('/files/image')]
+    public function filesImage(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 1, 'total_bytes' => 8192]);
+    }
+
+    #[Post('/files/document')]
+    public function filesDocument(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 1, 'total_bytes' => 15360]);
+    }
+
+    #[Post('/files/validated')]
+    public function filesValidated(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 1, 'total_bytes' => 2048]);
+    }
+
+    #[Post('/files/images-only')]
+    public function filesImagesOnly(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 3, 'total_bytes' => 30720]);
+    }
+
+    #[Post('/files/required')]
+    public function filesRequired(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 1, 'total_bytes' => 4096]);
+    }
+
+    #[Post('/upload')]
+    public function upload(Request $request): Response
+    {
+        return $this->fixedResponse(['files_received' => 1, 'total_bytes' => 10240]);
+    }
+
+    #[Post('/login/')]
+    public function loginTrailing(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/register/')]
+    public function registerTrailing(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/form/')]
+    public function formTrailing(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/form/validated')]
+    public function formValidated(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/form/tags')]
+    public function formTags(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/token')]
+    public function token(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/register')]
+    public function register(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/profile')]
+    public function profile(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/accounts')]
+    public function accounts(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/tags')]
+    public function tags(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/subscribe')]
+    public function subscribe(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+
+    #[Post('/settings')]
+    public function settings(Request $request): Response
+    {
+        return $this->echoBody($request);
+    }
+}
+
+$app = (new App())->registerController(new BenchmarkController());
 
 // ============================================================================
 // Server Entry Point

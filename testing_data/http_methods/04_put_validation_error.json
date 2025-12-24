@@ -1,74 +1,90 @@
 {
-	"name": "PUT - Validation error",
-	"description": "Tests PUT with invalid data returns 422",
-	"source": {
-		"framework": "fastapi",
-		"test_file": "tests/test_methods.py",
-		"test_function": "test_put_validation"
-	},
-	"handler": {
-		"route": "/items/{id}",
-		"method": "PUT",
-		"body_schema": {
-			"$schema": "https://json-schema.org/draft/2020-12/schema",
-			"type": "object",
-			"required": ["id", "name", "price"],
-			"properties": {
-				"id": {
-					"type": "integer"
-				},
-				"name": {
-					"type": "string",
-					"minLength": 3
-				},
-				"price": {
-					"type": "number",
-					"exclusiveMinimum": 0
-				}
-			}
-		},
-		"parameters": {
-			"path": {
-				"id": {
-					"type": "string"
-				}
-			}
-		}
-	},
-	"request": {
-		"method": "PUT",
-		"path": "/items/1",
-		"headers": {
-			"Content-Type": "application/json"
-		},
-		"body": {
-			"id": 1,
-			"name": "X",
-			"price": -10
-		}
-	},
-	"expected_response": {
-		"status_code": 422,
-		"body": {
-			"type": "https://spikard.dev/errors/validation-error",
-			"title": "Request Validation Failed",
-			"status": 422,
-			"detail": "2 validation errors in request",
-			"errors": [
-				{
-					"type": "string_too_short",
-					"loc": ["body", "name"],
-					"msg": "String should have at least 3 characters",
-					"input": "X"
-				},
-				{
-					"type": "greater_than",
-					"loc": ["body", "price"],
-					"msg": "Input should be greater than 0",
-					"input": -10
-				}
-			]
-		}
-	},
-	"notes": "PUT validates the entire replacement body"
+  "name": "PUT - Validation error",
+  "description": "Tests PUT with invalid data returns 422",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_methods.py",
+    "test_function": "test_put_validation"
+  },
+  "handler": {
+    "route": "/items/{id}",
+    "method": "PUT",
+    "body_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "price"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 3
+        },
+        "price": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "PUT",
+    "path": "/items/1",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": 1,
+      "name": "X",
+      "price": -10
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "2 validation errors in request",
+      "errors": [
+        {
+          "type": "string_too_short",
+          "loc": [
+            "body",
+            "name"
+          ],
+          "msg": "String should have at least 3 characters",
+          "input": "X",
+          "ctx": {
+            "min_length": 3
+          }
+        },
+        {
+          "type": "greater_than",
+          "loc": [
+            "body",
+            "price"
+          ],
+          "msg": "Input should be greater than 0",
+          "input": -10,
+          "ctx": {
+            "gt": 0
+          }
+        }
+      ]
+    }
+  },
+  "notes": "PUT validates the entire replacement body"
 }

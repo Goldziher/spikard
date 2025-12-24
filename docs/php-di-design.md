@@ -260,6 +260,7 @@ final class Provide
 use Spikard\App;
 use Spikard\DI\DependencyContainer;
 use Spikard\DI\Provide;
+use Spikard\Attributes\Get;
 
 $app = new App();
 
@@ -283,15 +284,22 @@ $container->scoped('request_id', function (): string {
 
 $app->withDependencies($container);
 
+final class UsersController
+{
+    #[Get('/users')]
+    public function list(PDO $db, string $request_id): array
+    {
+        // $db and $request_id automatically injected
+        $stmt = $db->query('SELECT * FROM users');
+        return [
+            'request_id' => $request_id,
+            'users' => $stmt->fetchAll(),
+        ];
+    }
+}
+
 // Handler with dependency injection
-$app->addRoute('GET', '/users', function (PDO $db, string $request_id): array {
-    // $db and $request_id automatically injected
-    $stmt = $db->query('SELECT * FROM users');
-    return [
-        'request_id' => $request_id,
-        'users' => $stmt->fetchAll(),
-    ];
-});
+$app = $app->registerController(UsersController::class);
 
 $app->start();
 ```
@@ -299,6 +307,8 @@ $app->start();
 **Advanced Usage with Type Hints:**
 ```php
 <?php
+use Spikard\Attributes\Post;
+
 interface LoggerInterface {
     public function info(string $message): void;
 }
@@ -320,10 +330,17 @@ $container->factory(LoggerInterface::class, Provide::singleton(
     dependsOn: ['log_path']
 ));
 
+final class EventController
+{
+    #[Post('/events')]
+    public function create(LoggerInterface $logger, array $body): void
+    {
+        $logger->info('Event created: ' . json_encode($body));
+    }
+}
+
 // Handler with interface type hint
-$app->addRoute('POST', '/events', function (LoggerInterface $logger, array $body): void {
-    $logger->info('Event created: ' . json_encode($body));
-});
+$app = $app->registerController(EventController::class);
 ```
 
 ---
@@ -649,8 +666,8 @@ For PHP, the `PhpFactoryDependency::resolve()` method:
 Use PHP reflection to extract parameter types and match against registered dependencies:
 
 ```php
-// In App::addRoute()
-$reflection = new \ReflectionFunction($handler);
+// In ControllerMethodHandler
+$reflection = new \ReflectionMethod($controller, $methodName);
 $handler_dependencies = [];
 
 foreach ($reflection->getParameters() as $param) {
@@ -683,15 +700,22 @@ foreach ($reflection->getParameters() as $param) {
 **Option B: Explicit dependency declaration (ALTERNATIVE)**
 
 ```php
+use Spikard\Attributes\Get;
+
 #[\Attribute]
 class Inject {
     public function __construct(public array $dependencies) {}
 }
 
-#[Inject(['database', 'logger'])]
-$app->addRoute('GET', '/users', function(PDO $database, LoggerInterface $logger) {
-    // ...
-});
+final class UsersController
+{
+    #[Get('/users')]
+    #[Inject(['database', 'logger'])]
+    public function list(PDO $database, LoggerInterface $logger): array
+    {
+        // ...
+    }
+}
 ```
 
 ### Injection Mechanism
@@ -854,8 +878,8 @@ class Request {
    - Add `withDependencies(DependencyContainer $container): self` method
    - Store container in private property
    - Pass container to `start()` method
-   - Extract handler dependencies via reflection
-   - Store in route metadata
+   - Extract handler dependencies via reflection on controller methods
+   - Store in route metadata during controller registration
 
 6. **packages/php/src/Http/Request.php** (create if doesn't exist)
    - Add `private array $dependencies` field
@@ -881,8 +905,8 @@ class Request {
 
 #### Phase 3: Handler Parameter Detection
 
-1. Update `packages/php/src/App.php::addRoute()`
-2. Use `ReflectionFunction` to extract parameter types
+1. Update `packages/php/src/App.php::registerController()`
+2. Use `ReflectionMethod` to extract parameter types
 3. Match against registered dependency keys
 4. Store in route metadata
 5. Test that handler dependencies are detected correctly
@@ -1138,49 +1162,51 @@ public function withDependencies(DependencyContainer $container): self
     return $this;
 }
 
-public function addRoute(string $method, string $path, callable $handler): void
+public function registerController(string $controller): self
 {
-    // Existing parameter extraction...
+    $controllerInstance = new $controller();
 
-    // NEW: Extract handler dependencies via reflection
-    $handler_dependencies = [];
+    foreach ($this->extractControllerRoutes($controllerInstance) as $route) {
+        $handlerDependencies = [];
 
-    if ($this->container !== null) {
-        $reflection = new \ReflectionFunction($handler);
+        if ($this->container !== null) {
+            $reflection = new \ReflectionMethod($controllerInstance, $route['handler']);
 
-        foreach ($reflection->getParameters() as $param) {
-            // Skip standard request parameters
-            if ($param->getName() === 'request' || $param->getName() === 'response') {
-                continue;
-            }
-
-            $paramType = $param->getType();
-            if ($paramType instanceof \ReflectionNamedType) {
-                $typeName = $paramType->getName();
-
-                // Check by parameter name
-                if ($this->container->has($param->getName())) {
-                    $handler_dependencies[] = $param->getName();
+            foreach ($reflection->getParameters() as $param) {
+                // Skip standard request parameters
+                if ($param->getName() === 'request' || $param->getName() === 'response') {
+                    continue;
                 }
-                // Check by type name (class)
-                elseif ($this->container->has($typeName)) {
-                    $handler_dependencies[] = $typeName;
+
+                $paramType = $param->getType();
+                if ($paramType instanceof \ReflectionNamedType) {
+                    $typeName = $paramType->getName();
+
+                    // Check by parameter name
+                    if ($this->container->has($param->getName())) {
+                        $handlerDependencies[] = $param->getName();
+                    }
+                    // Check by type name (class)
+                    elseif ($this->container->has($typeName)) {
+                        $handlerDependencies[] = $typeName;
+                    }
                 }
             }
         }
+
+        $this->registerRoute(
+            $route['method'],
+            $route['path'],
+            $route['handler_callable'],
+            $route['request_schema'],
+            $route['response_schema'],
+            $route['param_schema'],
+            $route['json_rpc'],
+            $handlerDependencies,
+        );
     }
 
-    // Store in route metadata
-    $route = [
-        'method' => $method,
-        'path' => $path,
-        'handler' => $handler,
-        'handler_name' => $this->getHandlerName($handler),
-        'handler_dependencies' => $handler_dependencies,
-        // ... other fields
-    ];
-
-    $this->routes[] = $route;
+    return $this;
 }
 
 public function start(ServerConfig $config): void
@@ -1267,6 +1293,8 @@ fn test_extract_container_factories() {
 
 **Integration Tests (PHP):**
 ```php
+use Spikard\Attributes\Get;
+
 function test_singleton_value_injection(): void
 {
     $app = new App();
@@ -1275,17 +1303,20 @@ function test_singleton_value_injection(): void
     $container->singleton('app_name', 'TestApp');
     $app->withDependencies($container);
 
-    $called = false;
-    $app->addRoute('GET', '/test', function (string $app_name) use (&$called) {
-        $called = true;
-        assert($app_name === 'TestApp');
-        return ['name' => $app_name];
-    });
+    final class AppNameController
+    {
+        #[Get('/test')]
+        public function show(string $app_name): array
+        {
+            return ['name' => $app_name];
+        }
+    }
+
+    $app = $app->registerController(new AppNameController());
 
     $client = $app->testClient();
     $response = $client->get('/test');
 
-    assert($called === true);
     assert($response->json() === ['name' => 'TestApp']);
 }
 
@@ -1304,10 +1335,17 @@ function test_factory_dependency(): void
 
     $app->withDependencies($container);
 
-    $app->addRoute('GET', '/users', function (PDO $database): array {
-        $stmt = $database->query('SELECT 1');
-        return ['result' => $stmt->fetch()];
-    });
+    final class UsersController
+    {
+        #[Get('/users')]
+        public function list(PDO $database): array
+        {
+            $stmt = $database->query('SELECT 1');
+            return ['result' => $stmt->fetch()];
+        }
+    }
+
+    $app = $app->registerController(new UsersController());
 
     $client = $app->testClient();
     $response = $client->get('/users');
@@ -1328,9 +1366,16 @@ function test_scoped_dependency(): void
 
     $app->withDependencies($container);
 
-    $app->addRoute('GET', '/id', function (string $request_id): array {
-        return ['id' => $request_id];
-    });
+    final class RequestIdController
+    {
+        #[Get('/id')]
+        public function show(string $request_id): array
+        {
+            return ['id' => $request_id];
+        }
+    }
+
+    $app = $app->registerController(new RequestIdController());
 
     $client = $app->testClient();
 
@@ -1346,23 +1391,23 @@ function test_scoped_dependency(): void
 
 ## 8. Migration Path
 
-### Backward Compatibility
+### Attribute-Only Routing
 
-**Existing handlers without DI continue to work:**
+Routing is now attribute-only; migrate handlers into controller methods and register them:
+
 ```php
-// Before (still works)
-$app->addRoute('GET', '/hello', function (): array {
-    return ['message' => 'Hello'];
-});
+use Spikard\Attributes\Get;
 
-// After (DI optional)
-$container = new DependencyContainer();
-$container->singleton('greeting', 'Hello');
-$app->withDependencies($container);
+final class HelloController
+{
+    #[Get('/hello')]
+    public function show(): array
+    {
+        return ['message' => 'Hello'];
+    }
+}
 
-$app->addRoute('GET', '/hello', function (string $greeting): array {
-    return ['message' => $greeting];
-});
+$app = $app->registerController(HelloController::class);
 ```
 
 ### Gradual Adoption
@@ -1391,7 +1436,7 @@ This design provides a complete, production-ready DI system for PHP bindings tha
 4. **Supports all dependency types**: Values, factories, scoped, singletons
 5. **Provides clean PHP API**: Intuitive API similar to other DI frameworks
 6. **Ensures type safety**: Reflection-based parameter matching with type hints
-7. **Maintains backward compatibility**: Existing handlers work unchanged
+7. **Aligns with attribute routing**: Controller methods define route metadata
 8. **Delivers good performance**: Efficient caching, minimal overhead
 
 **Key Challenges Addressed:**
@@ -1405,5 +1450,5 @@ This design provides a complete, production-ready DI system for PHP bindings tha
 1. Create `crates/spikard-php/src/php/di.rs` with value and factory implementations
 2. Update `start.rs` to extract and register dependencies
 3. Implement PHP API classes (`Provide`, `DependencyContainer`)
-4. Add handler parameter detection in `App::addRoute()`
+4. Add handler parameter detection in `App::registerController()`
 5. Test thoroughly with integration tests

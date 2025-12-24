@@ -3,6 +3,7 @@
 //! Uses a message queue pattern to execute tasks on the main thread after responses complete.
 //! This avoids PHP threading issues while still providing non-blocking background execution.
 
+use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use once_cell::sync::Lazy;
@@ -105,12 +106,43 @@ pub fn spikard_background_run(callable: &Zval, args: &Zval) -> PhpResult<()> {
         ));
     }
 
+    let is_enabled = BACKGROUND_HANDLE
+        .lock()
+        .ok()
+        .and_then(|guard| guard.as_ref().cloned())
+        .is_some();
+
     let callable_owned = callable.shallow_clone();
     let args_owned = if args.is_null() {
         None
     } else {
         Some(args.shallow_clone())
     };
+
+    if !is_enabled {
+        let args_vec: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> = if let Some(args_zval) = &args_owned {
+            if let Some(arr) = args_zval.array() {
+                arr.values()
+                    .map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn)
+                    .collect()
+            } else {
+                vec![args_zval as &dyn ext_php_rs::convert::IntoZvalDyn]
+            }
+        } else {
+            vec![]
+        };
+
+        let callable = ext_php_rs::types::ZendCallable::new(&callable_owned)?;
+        match callable.try_call(args_vec) {
+            Ok(_) => return Ok(()),
+            Err(ext_php_rs::error::Error::Exception(ex)) => {
+                let zval = ex.into_zval(false)?;
+                ext_php_rs::exception::throw_object(zval)?;
+                return Ok(());
+            }
+            Err(err) => return Err(err.into()),
+        }
+    }
 
     let task = QueuedTask {
         callable: callable_owned,

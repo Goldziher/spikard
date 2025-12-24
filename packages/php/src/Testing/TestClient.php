@@ -6,6 +6,7 @@ namespace Spikard\Testing;
 
 use RuntimeException;
 use Spikard\App;
+use Spikard\Handlers\SseEventProducerInterface;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
@@ -24,6 +25,9 @@ final class TestClient
 
     private function useNative(): bool
     {
+        if (\getenv('SPIKARD_TEST_CLIENT_FORCE_PHP') === '1') {
+            return false;
+        }
         return \class_exists('\\Spikard\\Native\\TestClient') && \function_exists('spikard_version');
     }
 
@@ -38,7 +42,39 @@ final class TestClient
     public function request(string $method, string $path, array $options = []): Response
     {
         if ($this->useNative()) {
-            return $this->nativeClient()->request($method, $path, $options);
+            $nativeResponse = $this->nativeClient()->request($method, $path, $options);
+            $headers = \method_exists($nativeResponse, 'getHeaders')
+                ? $nativeResponse->getHeaders()
+                : ($nativeResponse->headers ?? []);
+            $cookies = \method_exists($nativeResponse, 'getCookies')
+                ? $nativeResponse->getCookies()
+                : ($nativeResponse->cookies ?? []);
+            $statusCode = \method_exists($nativeResponse, 'getStatusCode')
+                ? $nativeResponse->getStatusCode()
+                : ($nativeResponse->statusCode ?? 200);
+            $body = null;
+            if (\method_exists($nativeResponse, 'getBody')) {
+                $bodyString = $nativeResponse->getBody();
+                if ($bodyString !== '') {
+                    if ($this->isJsonResponse($headers)) {
+                        $decoded = \json_decode($bodyString, true);
+                        $body = $decoded !== null || \json_last_error() === \JSON_ERROR_NONE
+                            ? $decoded
+                            : $bodyString;
+                    } else {
+                        $body = $bodyString;
+                    }
+                }
+            } else {
+                $body = $nativeResponse->body ?? null;
+            }
+
+            return new Response(
+                body: $body,
+                statusCode: $statusCode,
+                headers: $headers,
+                cookies: $cookies,
+            );
         }
 
         /** @var array<string, string> $headers */
@@ -53,6 +89,8 @@ final class TestClient
         if ($body === null && $files !== []) {
             $body = $files;
         }
+        $validatedParams = null;
+        $dependencies = null;
 
         $request = new Request(
             method: \strtoupper($method),
@@ -62,8 +100,9 @@ final class TestClient
             cookies: $cookies,
             queryParams: $queryParams,
             pathParams: [],
+            validatedParams: $validatedParams,
             files: $files,
-            dependencies: null,
+            dependencies: $dependencies,
         );
 
         $handler = $this->app->findHandler($request);
@@ -93,7 +132,10 @@ final class TestClient
         if (!$this->useNative()) {
             throw new RuntimeException('SSE client requires the native extension.');
         }
-        return $this->nativeClient()->sse($path);
+        if (\getenv('SPIKARD_TEST_CLIENT_NATIVE_SSE') === '1') {
+            return $this->nativeClient()->sse($path);
+        }
+        return $this->localSseStream($path);
     }
 
     public function get(string $path): Response
@@ -118,10 +160,70 @@ final class TestClient
     private function nativeClient(): \Spikard\Native\TestClient
     {
         if ($this->native === null) {
-            $this->native = new \Spikard\Native\TestClient($this->app->nativeRoutes());
+            $routes = $this->app->nativeRoutes();
+            $config = $this->app->nativeConfig();
+            $this->native = new \Spikard\Native\TestClient($routes, $config);
         }
 
         return $this->native;
+    }
+
+    private function localSseStream(string $path): object
+    {
+        $producer = $this->resolveSseProducer($path);
+        $events = $this->collectSseEvents($producer);
+        return new class ($events) {
+            /** @param array<int, mixed> $events */
+            public function __construct(private array $events)
+            {
+            }
+
+            /** @return array<int, mixed> */
+            public function eventsAsJson(): array
+            {
+                return $this->events;
+            }
+
+            /** @return array<int, mixed> */
+            public function events(): array
+            {
+                return $this->events;
+            }
+        };
+    }
+
+    private function resolveSseProducer(string $path): SseEventProducerInterface
+    {
+        $producers = $this->app->sseProducers();
+        if (!isset($producers[$path])) {
+            throw new RuntimeException(\sprintf('SSE route not found for path %s', $path));
+        }
+        return $producers[$path];
+    }
+
+    /** @return array<int, mixed> */
+    private function collectSseEvents(SseEventProducerInterface $producer): array
+    {
+        $events = [];
+        foreach (($producer)() as $value) {
+            $events[] = $this->decodeSseValue($value);
+        }
+        return $events;
+    }
+
+    private function decodeSseValue(mixed $value): mixed
+    {
+        if (!\is_string($value)) {
+            return $value;
+        }
+        $decoded = \json_decode($value, true);
+        if ($decoded === null && \json_last_error() !== \JSON_ERROR_NONE) {
+            return $value;
+        }
+        if (\is_array($decoded) && \array_key_exists('data', $decoded)) {
+            return $decoded['data'];
+        }
+        return $decoded;
     }
 
     /**
@@ -153,5 +255,20 @@ final class TestClient
         }
 
         return $result;
+    }
+
+    /** @param array<string, string> $headers */
+    private function isJsonResponse(array $headers): bool
+    {
+        foreach ($headers as $key => $value) {
+            if (\strtolower($key) === 'content-type') {
+                $contentType = \strtolower(\trim(\explode(';', $value, 2)[0]));
+                if ($contentType === 'application/json' || $contentType === 'application/problem+json') {
+                    return true;
+                }
+                return \str_ends_with($contentType, '+json');
+            }
+        }
+        return false;
     }
 }

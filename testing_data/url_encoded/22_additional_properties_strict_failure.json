@@ -1,54 +1,72 @@
 {
-	"name": "22_additional_properties_strict_failure",
-	"description": "URL-encoded form with extra fields when additionalProperties is false should fail",
-	"category": "url_encoded",
-	"source": {
-		"framework": "spikard",
-		"inspired_by": "fastify",
-		"test_case": "Strict validation with additionalProperties false"
-	},
-	"handler": {
-		"route": "/settings",
-		"method": "POST",
-		"content_type": "application/x-www-form-urlencoded",
-		"body_schema": {
-			"type": "object",
-			"required": ["theme"],
-			"properties": {
-				"theme": {
-					"type": "string",
-					"enum": ["light", "dark"]
-				}
-			},
-			"additionalProperties": false
-		}
-	},
-	"request": {
-		"method": "POST",
-		"path": "/settings",
-		"headers": {
-			"Content-Type": "application/x-www-form-urlencoded"
-		},
-		"body": "theme=dark&unknown_field=value"
-	},
-	"expected_response": {
-		"status_code": 422,
-		"body": {
-			"type": "https://spikard.dev/errors/validation-error",
-			"title": "Request Validation Failed",
-			"status": 422,
-			"detail": "1 validation error in request",
-			"errors": [
-				{
-					"type": "validation_error",
-					"loc": ["body", "unknown_field"],
-					"msg": "Additional properties are not allowed",
-					"ctx": {
-						"property": "unknown_field"
-					}
-				}
-			]
-		}
-	},
-	"tags": ["url_encoded", "additionalProperties", "validation", "error"]
+  "name": "22_additional_properties_strict_failure",
+  "description": "URL-encoded form with extra fields when additionalProperties is false should fail",
+  "category": "url_encoded",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Strict validation with additionalProperties false"
+  },
+  "handler": {
+    "route": "/settings",
+    "method": "POST",
+    "content_type": "application/x-www-form-urlencoded",
+    "body_schema": {
+      "type": "object",
+      "required": [
+        "theme"
+      ],
+      "properties": {
+        "theme": {
+          "type": "string",
+          "enum": [
+            "light",
+            "dark"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/settings",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": "theme=dark&unknown_field=value"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "unknown_field"
+          ],
+          "msg": "Additional properties are not allowed",
+          "input": {
+            "theme": "dark",
+            "unknown_field": "value"
+          },
+          "ctx": {
+            "additional_properties": false,
+            "unexpected_field": "unknown_field"
+          }
+        }
+      ]
+    }
+  },
+  "tags": [
+    "url_encoded",
+    "additionalProperties",
+    "validation",
+    "error"
+  ]
 }

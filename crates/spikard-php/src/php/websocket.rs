@@ -15,6 +15,20 @@ thread_local! {
     static PHP_WS_HANDLER_REGISTRY: std::cell::RefCell<Vec<PhpWebSocketHandlerCallables>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
+pub fn clear_ws_handler_registry() {
+    PHP_WS_HANDLER_REGISTRY.with(|registry| {
+        registry.borrow_mut().clear();
+    });
+}
+
+pub fn leak_ws_handler_registry() {
+    PHP_WS_HANDLER_REGISTRY.with(|registry| {
+        let mut registry = registry.borrow_mut();
+        let handlers = std::mem::take(&mut *registry);
+        std::mem::forget(handlers);
+    });
+}
+
 /// Storage for the three PHP callables that implement the WebSocket handler interface.
 ///
 /// PHP handlers implement the WebSocketHandlerInterface with three methods:

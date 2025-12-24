@@ -1,64 +1,72 @@
 {
-	"name": "PUT - Missing required field",
-	"description": "Tests PUT with missing required fields returns 422",
-	"source": {
-		"framework": "fastapi",
-		"test_file": "tests/test_methods.py",
-		"test_function": "test_put_missing_field"
-	},
-	"handler": {
-		"route": "/items/{id}",
-		"method": "PUT",
-		"body_schema": {
-			"type": "object",
-			"properties": {
-				"id": {
-					"type": "integer"
-				},
-				"name": {
-					"type": "string"
-				},
-				"price": {
-					"type": "string"
-				}
-			},
-			"required": ["price"]
-		},
-		"parameters": {
-			"path": {
-				"id": {
-					"type": "string"
-				}
-			}
-		}
-	},
-	"request": {
-		"method": "PUT",
-		"path": "/items/1",
-		"headers": {
-			"Content-Type": "application/json"
-		},
-		"body": {
-			"id": 1,
-			"name": "Item Name"
-		}
-	},
-	"expected_response": {
-		"status_code": 422,
-		"body": {
-			"type": "https://spikard.dev/errors/validation-error",
-			"title": "Request Validation Failed",
-			"status": 422,
-			"detail": "1 validation error in request",
-			"errors": [
-				{
-					"type": "missing",
-					"loc": ["body", "price"],
-					"msg": "Field required",
-					"input": "1"
-				}
-			]
-		}
-	},
-	"notes": "PUT requires all fields since it's a complete replacement"
+  "name": "PUT - Missing required field",
+  "description": "Tests PUT with missing required fields returns 422",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_methods.py",
+    "test_function": "test_put_missing_field"
+  },
+  "handler": {
+    "route": "/items/{id}",
+    "method": "PUT",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "price"
+      ]
+    },
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "PUT",
+    "path": "/items/1",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": 1,
+      "name": "Item Name"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "missing",
+          "loc": [
+            "body",
+            "price"
+          ],
+          "msg": "Field required",
+          "input": {
+            "id": 1,
+            "name": "Item Name"
+          }
+        }
+      ]
+    }
+  },
+  "notes": "PUT requires all fields since it's a complete replacement"
 }

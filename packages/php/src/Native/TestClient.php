@@ -16,10 +16,13 @@ use Spikard\Http\Response;
  */
 final class TestClient
 {
-    /** @param array<int, mixed>|null $routes */
-    public function __construct(?array $routes = null)
+    /**
+     * @param array<int, mixed>|null $routes
+     * @param array<string, mixed>|null $config
+     */
+    public function __construct(?array $routes = null, ?array $config = null)
     {
-        unset($routes);
+        unset($routes, $config);
         if (!\function_exists('spikard_version')) {
             throw new RuntimeException('Spikard PHP extension is not loaded.');
         }

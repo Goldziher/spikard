@@ -1,60 +1,69 @@
 {
-	"name": "49_dependencies_validation_failure",
-	"description": "Dependencies constraint - when A present, B is required but missing",
-	"category": "json_bodies",
-	"source": {
-		"framework": "spikard",
-		"inspired_by": "fastify",
-		"test_case": "dependencies constraint validation failure"
-	},
-	"handler": {
-		"route": "/billing",
-		"method": "POST",
-		"body_schema": {
-			"type": "object",
-			"properties": {
-				"name": {
-					"type": "string"
-				},
-				"credit_card": {
-					"type": "string"
-				},
-				"billing_address": {
-					"type": "string"
-				}
-			},
-			"dependencies": {
-				"credit_card": ["billing_address"]
-			}
-		}
-	},
-	"request": {
-		"method": "POST",
-		"path": "/billing",
-		"body": {
-			"name": "John Doe",
-			"credit_card": "1234567812345678"
-		}
-	},
-	"expected_response": {
-		"status_code": 422,
-		"body": {
-			"type": "https://spikard.dev/errors/validation-error",
-			"title": "Request Validation Failed",
-			"status": 422,
-			"detail": "1 validation error in request",
-			"errors": [
-				{
-					"type": "validation_error",
-					"loc": ["body"],
-					"msg": "When 'credit_card' is present, 'billing_address' is required",
-					"ctx": {
-						"dependency": "credit_card",
-						"required_fields": ["billing_address"]
-					}
-				}
-			]
-		}
-	},
-	"tags": ["json_bodies", "dependencies", "validation", "error"]
+  "name": "49_dependencies_validation_failure",
+  "description": "Dependencies constraint - when A present, B is required but missing",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "dependencies constraint validation failure"
+  },
+  "handler": {
+    "route": "/billing",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "credit_card": {
+          "type": "string"
+        },
+        "billing_address": {
+          "type": "string"
+        }
+      },
+      "dependencies": {
+        "credit_card": [
+          "billing_address"
+        ]
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/billing",
+    "body": {
+      "name": "John Doe",
+      "credit_card": "1234567812345678"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body"
+          ],
+          "msg": "\"billing_address\" is a required property",
+          "input": {
+            "name": "John Doe",
+            "credit_card": "1234567812345678"
+          }
+        }
+      ]
+    }
+  },
+  "tags": [
+    "json_bodies",
+    "dependencies",
+    "validation",
+    "error"
+  ]
 }

@@ -193,6 +193,35 @@ impl<H: WebSocketHandler + 'static> WebSocketState<H> {
             response_schema: response_validator,
         })
     }
+
+    /// Invoke the connection hook for testing.
+    pub async fn on_connect(&self) {
+        self.handler.on_connect().await;
+    }
+
+    /// Invoke the disconnect hook for testing.
+    pub async fn on_disconnect(&self) {
+        self.handler.on_disconnect().await;
+    }
+
+    /// Validate and handle an incoming message without a socket transport.
+    pub async fn handle_message_validated(&self, message: Value) -> Result<Option<Value>, String> {
+        if let Some(validator) = &self.message_schema
+            && !validator.is_valid(&message)
+        {
+            return Err("Message validation failed".to_string());
+        }
+
+        let response = self.handler.handle_message(message).await;
+        if let Some(ref value) = response
+            && let Some(validator) = &self.response_schema
+            && !validator.is_valid(value)
+        {
+            return Ok(None);
+        }
+
+        Ok(response)
+    }
 }
 
 /// WebSocket upgrade handler

@@ -179,7 +179,6 @@ pub fn validate_json_content_type(headers: &HeaderMap) -> Result<(), Response> {
                 StatusCode::UNSUPPORTED_MEDIA_TYPE,
             )
             .with_detail("Unsupported media type");
-
             let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
             return Err((
                 StatusCode::UNSUPPORTED_MEDIA_TYPE,
@@ -200,15 +199,10 @@ pub fn validate_content_length(headers: &HeaderMap, actual_size: usize) -> Resul
             return Ok(());
         };
         if declared_length != actual_size {
-            let problem = ProblemDetails::bad_request(format!(
-                "Content-Length header ({}) does not match actual body size ({})",
-                declared_length, actual_size
-            ));
-
-            let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+            let body = json!({"error": "Content-Length header does not match actual body size"}).to_string();
             return Err((
                 StatusCode::BAD_REQUEST,
-                [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
+                [(axum::http::header::CONTENT_TYPE, "application/json")],
                 body,
             )
                 .into_response());

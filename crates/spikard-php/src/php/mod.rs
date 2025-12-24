@@ -9,7 +9,6 @@
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::error::Error as ExtPhpError;
-use ext_php_rs::ffi::zend_hash_str_update;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
@@ -29,7 +28,7 @@ mod websocket;
 
 pub use background::{clear_handle, install_handle, process_pending_tasks};
 pub use di::{PhpFactoryDependency, PhpValueDependency, extract_di_container_from_php};
-pub use handler::PhpHandler;
+pub use handler::{PhpHandler, clear_handler_registry, leak_handler_registry};
 pub use handler::get_runtime;
 pub use hooks::{PhpHookResult, PhpLifecycleHooks};
 pub use request::PhpRequest;
@@ -41,7 +40,7 @@ pub use testing::{
     PhpHttpTestClient, PhpNativeTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse,
     PhpWebSocketTestConnection,
 };
-pub use websocket::{PhpWebSocketHandler, create_websocket_state};
+pub use websocket::{PhpWebSocketHandler, create_websocket_state, clear_ws_handler_registry, leak_ws_handler_registry};
 
 pub(crate) fn map_ext_php_err(e: ExtPhpError) -> PhpException {
     PhpException::default(e.to_string())
@@ -56,19 +55,7 @@ pub(crate) fn php_table_with_capacity(len: usize) -> ZBox<ZendHashTable> {
 }
 
 pub(crate) fn table_insert_str_fast<V: IntoZval>(table: &mut ZendHashTable, key: &str, value: V) -> PhpResult<()> {
-    // SAFETY:
-    // - `zend_hash_str_update` uses (ptr, len) and does not require NUL termination.
-    // - `key` lives for the duration of this call.
-    // - `val` is a valid Zval owned by Rust; the table takes over after update and we release it.
-    let mut val = value.into_zval(false).map_err(map_ext_php_err)?;
-    unsafe { zend_hash_str_update(table, key.as_ptr().cast::<i8>(), key.len(), &raw mut val) };
-    // ext-php-rs internally uses `Zval::release()` (crate-private) to prevent dropping the value
-    // after transferring ownership to Zend. We emulate the same effect by setting the Zval to
-    // `Null` so its Drop impl doesn't free the underlying value.
-    #[allow(clippy::used_underscore_items)]
-    {
-        val.u1.type_info = ext_php_rs::flags::ZvalTypeFlags::Null.bits();
-    }
+    table.insert(key, value).map_err(map_ext_php_err)?;
     Ok(())
 }
 
@@ -108,6 +95,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
         .name("spikard")
         .version(env!("CARGO_PKG_VERSION"))
+        .shutdown_function(spikard_shutdown)
         .function(wrap_function!(spikard_version))
         .function(wrap_function!(spikard_echo_response))
         .function(wrap_function!(spikard_json_response))
@@ -125,6 +113,12 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<PhpWebSocketTestConnection>()
         .class::<PhpSseStream>()
         .class::<PhpSseEvent>()
+}
+
+unsafe extern "C" fn spikard_shutdown(_type: i32, _module_number: i32) -> i32 {
+    leak_handler_registry();
+    leak_ws_handler_registry();
+    ext_php_rs::ffi::ZEND_RESULT_CODE_SUCCESS as i32
 }
 
 /// Return the crate version.
@@ -274,6 +268,22 @@ pub fn zval_to_json(value: &ext_php_rs::types::Zval) -> Result<Value, String> {
         return Ok(Value::String(s.to_string()));
     }
 
+    if let Some(obj) = value.object() {
+        if let Ok(props) = obj.get_properties() {
+            let mut map = serde_json::Map::new();
+            for (key, val) in props.iter() {
+                let key_str = match key {
+                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                };
+                let json_val = zval_to_json(val)?;
+                map.insert(key_str, json_val);
+            }
+            return Ok(Value::Object(map));
+        }
+    }
+
     if let Some(arr) = value.array() {
         let mut map = serde_json::Map::new();
         let mut is_sequential = true;
@@ -302,7 +312,7 @@ pub fn zval_to_json(value: &ext_php_rs::types::Zval) -> Result<Value, String> {
             map.insert(key_str, json_val);
         }
 
-        if is_sequential && !map.is_empty() {
+        if is_sequential {
             let arr: Vec<Value> = map.into_iter().map(|(_, v)| v).collect();
             return Ok(Value::Array(arr));
         }

@@ -2,6 +2,7 @@
 <?php
 
 use Spikard\App;
+use Spikard\Attributes\Post;
 use Spikard\Background\BackgroundTask;
 use Spikard\Config\ServerConfig;
 use Spikard\Http\Request;
@@ -13,13 +14,20 @@ function sendEmail(int $userId): void {
     error_log("send email to {$userId}");
 }
 
-$app = $app->addRoute('POST', '/signup', function (Request $request) {
-    $user = $request->body;
+final class SignupController
+{
+    #[Post('/signup')]
+    public function signup(Request $request): Response
+    {
+        $user = $request->body;
 
-    BackgroundTask::run(function () use ($user) {
-        sendEmail($user['id']);
-    });
+        BackgroundTask::run(function () use ($user) {
+            sendEmail($user['id']);
+        });
 
-    return Response::json($user);
-});
+        return Response::json($user);
+    }
+}
+
+$app = $app->registerController(new SignupController());
 ```

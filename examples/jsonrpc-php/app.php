@@ -20,176 +20,168 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../packages/php/src/Spikard.php';
 
 use Spikard\App;
-use Spikard\Http\JsonRpcMethodInfo;
-use Spikard\Handlers\ClosureHandler;
+use Spikard\Attributes\Get;
+use Spikard\Attributes\JsonRpcMethod;
+use Spikard\Attributes\Post;
+use Spikard\Http\Request;
 
-// Create the application
-$app = new App();
+final class RpcController
+{
+    private function params(Request $request): array
+    {
+        if (!\is_array($request->body)) {
+            return [];
+        }
+        $params = $request->body['params'] ?? [];
+        return \is_array($params) ? $params : [];
+    }
 
-// Define JSON-RPC method metadata for math.add
-$addInfo = new JsonRpcMethodInfo(
-    methodName: 'math.add',
-    description: 'Add two numbers and return the result',
-    paramsSchema: [
-        'type' => 'object',
-        'properties' => [
-            'a' => ['type' => 'number'],
-            'b' => ['type' => 'number'],
-        ],
-        'required' => ['a', 'b'],
-    ],
-    resultSchema: ['type' => 'number'],
-    tags: ['math', 'arithmetic'],
-);
-
-// Register JSON-RPC route for addition
-$app = $app->addJsonRpcRoute(
-    'POST',
-    '/rpc',
-    new ClosureHandler(function ($a, $b) {
-        return $a + $b;
-    }),
-    $addInfo,
-);
-
-// Define JSON-RPC method metadata for math.subtract
-$subtractInfo = new JsonRpcMethodInfo(
-    methodName: 'math.subtract',
-    description: 'Subtract two numbers and return the result',
-    paramsSchema: [
-        'type' => 'object',
-        'properties' => [
-            'a' => ['type' => 'number'],
-            'b' => ['type' => 'number'],
-        ],
-        'required' => ['a', 'b'],
-    ],
-    resultSchema: ['type' => 'number'],
-    tags: ['math', 'arithmetic'],
-);
-
-// Register JSON-RPC route for subtraction
-$app = $app->addJsonRpcRoute(
-    'POST',
-    '/rpc',
-    new ClosureHandler(function ($a, $b) {
-        return $a - $b;
-    }),
-    $subtractInfo,
-);
-
-// Define JSON-RPC method metadata for math.multiply
-$multiplyInfo = new JsonRpcMethodInfo(
-    methodName: 'math.multiply',
-    description: 'Multiply two numbers and return the result',
-    paramsSchema: [
-        'type' => 'object',
-        'properties' => [
-            'a' => ['type' => 'number'],
-            'b' => ['type' => 'number'],
-        ],
-        'required' => ['a', 'b'],
-    ],
-    resultSchema: ['type' => 'number'],
-    tags: ['math', 'arithmetic'],
-);
-
-// Register JSON-RPC route for multiplication
-$app = $app->addJsonRpcRoute(
-    'POST',
-    '/rpc',
-    new ClosureHandler(function ($a, $b) {
-        return $a * $b;
-    }),
-    $multiplyInfo,
-);
-
-// Define JSON-RPC method metadata for user.create
-$createUserInfo = new JsonRpcMethodInfo(
-    methodName: 'user.create',
-    description: 'Create a new user with email and name',
-    paramsSchema: [
-        'type' => 'object',
-        'properties' => [
-            'email' => [
-                'type' => 'string',
-                'format' => 'email',
+    #[Post('/rpc')]
+    #[JsonRpcMethod(
+        methodName: 'math.add',
+        description: 'Add two numbers and return the result',
+        paramsSchema: [
+            'type' => 'object',
+            'properties' => [
+                'a' => ['type' => 'number'],
+                'b' => ['type' => 'number'],
             ],
-            'name' => ['type' => 'string'],
+            'required' => ['a', 'b'],
         ],
-        'required' => ['email', 'name'],
-    ],
-    resultSchema: [
-        'type' => 'object',
-        'properties' => [
-            'id' => ['type' => 'integer'],
-            'email' => ['type' => 'string'],
-            'name' => ['type' => 'string'],
-            'created_at' => ['type' => 'string', 'format' => 'date-time'],
-        ],
-    ],
-    tags: ['users', 'admin'],
-);
+        resultSchema: ['type' => 'number'],
+        tags: ['math', 'arithmetic'],
+    )]
+    public function add(Request $request): int|float
+    {
+        $params = $this->params($request);
+        return ($params['a'] ?? 0) + ($params['b'] ?? 0);
+    }
 
-// Register JSON-RPC route for user creation
-$app = $app->addJsonRpcRoute(
-    'POST',
-    '/rpc',
-    new ClosureHandler(function ($email, $name) {
+    #[Post('/rpc')]
+    #[JsonRpcMethod(
+        methodName: 'math.subtract',
+        description: 'Subtract two numbers and return the result',
+        paramsSchema: [
+            'type' => 'object',
+            'properties' => [
+                'a' => ['type' => 'number'],
+                'b' => ['type' => 'number'],
+            ],
+            'required' => ['a', 'b'],
+        ],
+        resultSchema: ['type' => 'number'],
+        tags: ['math', 'arithmetic'],
+    )]
+    public function subtract(Request $request): int|float
+    {
+        $params = $this->params($request);
+        return ($params['a'] ?? 0) - ($params['b'] ?? 0);
+    }
+
+    #[Post('/rpc')]
+    #[JsonRpcMethod(
+        methodName: 'math.multiply',
+        description: 'Multiply two numbers and return the result',
+        paramsSchema: [
+            'type' => 'object',
+            'properties' => [
+                'a' => ['type' => 'number'],
+                'b' => ['type' => 'number'],
+            ],
+            'required' => ['a', 'b'],
+        ],
+        resultSchema: ['type' => 'number'],
+        tags: ['math', 'arithmetic'],
+    )]
+    public function multiply(Request $request): int|float
+    {
+        $params = $this->params($request);
+        return ($params['a'] ?? 0) * ($params['b'] ?? 0);
+    }
+
+    #[Post('/rpc')]
+    #[JsonRpcMethod(
+        methodName: 'user.create',
+        description: 'Create a new user with email and name',
+        paramsSchema: [
+            'type' => 'object',
+            'properties' => [
+                'email' => [
+                    'type' => 'string',
+                    'format' => 'email',
+                ],
+                'name' => ['type' => 'string'],
+            ],
+            'required' => ['email', 'name'],
+        ],
+        resultSchema: [
+            'type' => 'object',
+            'properties' => [
+                'id' => ['type' => 'integer'],
+                'email' => ['type' => 'string'],
+                'name' => ['type' => 'string'],
+                'created_at' => ['type' => 'string', 'format' => 'date-time'],
+            ],
+        ],
+        tags: ['users', 'admin'],
+    )]
+    public function createUser(Request $request): array
+    {
+        $params = $this->params($request);
         return [
             'id' => random_int(1000, 9999),
-            'email' => $email,
-            'name' => $name,
+            'email' => $params['email'] ?? 'unknown@example.com',
+            'name' => $params['name'] ?? 'Unknown',
             'created_at' => date('c'),
         ];
-    }),
-    $createUserInfo,
-);
+    }
 
-// Define JSON-RPC method metadata for user.getById
-$getUserInfo = new JsonRpcMethodInfo(
-    methodName: 'user.getById',
-    description: 'Get a user by their ID',
-    paramsSchema: [
-        'type' => 'object',
-        'properties' => [
-            'id' => ['type' => 'integer'],
+    #[Post('/rpc')]
+    #[JsonRpcMethod(
+        methodName: 'user.getById',
+        description: 'Get a user by their ID',
+        paramsSchema: [
+            'type' => 'object',
+            'properties' => [
+                'id' => ['type' => 'integer'],
+            ],
+            'required' => ['id'],
         ],
-        'required' => ['id'],
-    ],
-    resultSchema: [
-        'type' => 'object',
-        'properties' => [
-            'id' => ['type' => 'integer'],
-            'email' => ['type' => 'string'],
-            'name' => ['type' => 'string'],
+        resultSchema: [
+            'type' => 'object',
+            'properties' => [
+                'id' => ['type' => 'integer'],
+                'email' => ['type' => 'string'],
+                'name' => ['type' => 'string'],
+            ],
         ],
-    ],
-    tags: ['users'],
-);
-
-// Register JSON-RPC route for getting user by ID
-$app = $app->addJsonRpcRoute(
-    'POST',
-    '/rpc',
-    new ClosureHandler(function ($id) {
+        tags: ['users'],
+    )]
+    public function getUser(Request $request): array
+    {
+        $params = $this->params($request);
+        $id = $params['id'] ?? 0;
         return [
             'id' => $id,
             'email' => "user{$id}@example.com",
             'name' => "User {$id}",
         ];
-    }),
-    $getUserInfo,
-);
+    }
+}
 
-// Health check endpoint (non-JSON-RPC)
-$app = $app->addRoute(
-    'GET',
-    '/health',
-    new ClosureHandler(function () {
+final class HealthController
+{
+    #[Get('/health')]
+    public function health(): array
+    {
         return ['status' => 'healthy'];
-    }),
-);
+    }
+}
+
+// Create the application
+$app = (new App())
+    ->registerController(new RpcController())
+    ->registerController(new HealthController());
 
 // Run the application
 echo "Starting Spikard JSON-RPC server on http://localhost:8000\n";
