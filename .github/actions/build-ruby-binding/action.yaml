@@ -16,11 +16,15 @@ runs:
       with:
         cache-key-prefix: benchmark-ruby-binding
 
+    - name: Vendor Rust crates for Ruby build
+      shell: bash
+      run: ./packages/ruby/scripts/ci/ruby/vendor-crates.sh
+
     - name: Build spikard-ruby
       shell: bash
       working-directory: packages/ruby
       env:
-        RUBY: /opt/hostedtoolcache/Ruby/3.4.*/x64/bin/ruby
+        RUBY: /opt/hostedtoolcache/Ruby/3.2.*/x64/bin/ruby
       run: |
         bundle install
         bundle exec rake compile

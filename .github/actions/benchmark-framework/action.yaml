@@ -72,7 +72,7 @@ runs:
       if: steps.detect.outputs.language == 'python' && !startsWith(inputs.framework, 'spikard-python-')
       uses: ./.github/actions/setup-python-env
       with:
-        python-version: "3.14"
+        python-version: "3.13"
         cache-prefix: benchmark-${{ inputs.framework }}
 
     - name: Install Python benchmark app dependencies
