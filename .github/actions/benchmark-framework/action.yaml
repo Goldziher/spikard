@@ -33,8 +33,8 @@ runs:
       run: |
         if ! command -v oha &> /dev/null; then
           cargo install oha
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         fi
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
     - name: Detect framework language
       id: detect
@@ -81,6 +81,12 @@ runs:
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
       run: uv pip install -e .
 
+    - name: Setup Node environment
+      if: steps.detect.outputs.language == 'node'
+      uses: ./.github/actions/setup-node-workspace
+      with:
+        node-version: '24'
+
     - name: Build Node binding (if needed)
       if: steps.detect.outputs.language == 'node' && startsWith(inputs.framework, 'spikard-node-')
       shell: bash
@@ -88,17 +94,23 @@ runs:
         cd $GITHUB_WORKSPACE/packages/node
         pnpm build:native
 
-    - name: Setup Node environment for non-spikard apps
-      if: steps.detect.outputs.language == 'node' && !startsWith(inputs.framework, 'spikard-node-')
-      uses: ./.github/actions/setup-node-workspace
+    - name: Setup Bun runtime
+      if: steps.detect.outputs.language == 'node' && startsWith(inputs.framework, 'elysia')
+      uses: oven-sh/setup-bun@v2
       with:
-        node-version: '24'
+        bun-version: latest
 
     - name: Install Node benchmark app dependencies
-      if: steps.detect.outputs.language == 'node'
+      if: steps.detect.outputs.language == 'node' && !startsWith(inputs.framework, 'elysia')
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
       run: pnpm install --frozen-lockfile
+
+    - name: Install Bun benchmark app dependencies
+      if: steps.detect.outputs.language == 'node' && startsWith(inputs.framework, 'elysia')
+      shell: bash
+      working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
+      run: bun install
 
     - name: Build Ruby binding (if needed)
       if: steps.detect.outputs.language == 'ruby' && startsWith(inputs.framework, 'spikard-ruby-')
