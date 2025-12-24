@@ -1,4 +1,4 @@
-name: CI - Benchmarks
+name: CI - Profiling
 
 on:
   workflow_dispatch:
