@@ -132,7 +132,7 @@ runs:
         bundler-cache: false
 
     - name: Install Ruby benchmark app dependencies
-      if: steps.detect.outputs.language == 'ruby'
+      if: steps.detect.outputs.language == 'ruby' && !startsWith(inputs.framework, 'spikard-ruby-')
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
       run: bundle install
