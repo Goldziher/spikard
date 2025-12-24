@@ -46,7 +46,7 @@ runs:
         # Patterns: rust (-rust, axum-baseline, spikard-rust-*),
         # php (phalcon-raw, trongate-raw, spikard-php-*),
         # python (fastapi*, robyn*, spikard-python-*),
-        # node (fastify*, hono*, express*, elysia*, morojs*, kito*, spikard-node-*),
+        # node (fastify*, hono*, express*, elysia*, morojs*, kito*, spikard-node-*, spikard-bun-*),
         # ruby (spikard-ruby-*, hanami-api*, roda*), wasm (spikard-wasm-*)
         if [[ "$framework" == *"-rust" ]] || [[ "$framework" == "axum-baseline" ]] || [[ "$framework" == "spikard-rust-"* ]]; then
           echo "language=rust" >> $GITHUB_OUTPUT
@@ -54,7 +54,7 @@ runs:
           echo "language=php" >> $GITHUB_OUTPUT
         elif [[ "$framework" == fastapi* ]] || [[ "$framework" == robyn* ]] || [[ "$framework" == "spikard-python-"* ]]; then
           echo "language=python" >> $GITHUB_OUTPUT
-        elif [[ "$framework" == "spikard-node-"* ]] || [[ "$framework" == fastify* ]] || [[ "$framework" == hono* ]] || [[ "$framework" == express* ]] || [[ "$framework" == elysia* ]] || [[ "$framework" == morojs* ]] || [[ "$framework" == kito* ]]; then
+        elif [[ "$framework" == "spikard-node-"* ]] || [[ "$framework" == "spikard-bun-"* ]] || [[ "$framework" == fastify* ]] || [[ "$framework" == hono* ]] || [[ "$framework" == express* ]] || [[ "$framework" == elysia* ]] || [[ "$framework" == morojs* ]] || [[ "$framework" == kito* ]]; then
           echo "language=node" >> $GITHUB_OUTPUT
         elif [[ "$framework" == "spikard-ruby-"* ]] || [[ "$framework" == hanami-api* ]] || [[ "$framework" == roda* ]]; then
           echo "language=ruby" >> $GITHUB_OUTPUT
@@ -88,20 +88,20 @@ runs:
         node-version: '24'
 
     - name: Build Node binding (if needed)
-      if: steps.detect.outputs.language == 'node' && startsWith(inputs.framework, 'spikard-node-')
+      if: steps.detect.outputs.language == 'node' && (startsWith(inputs.framework, 'spikard-node-') || startsWith(inputs.framework, 'spikard-bun-'))
       shell: bash
       run: |
         cd $GITHUB_WORKSPACE/packages/node
         pnpm build:native
 
     - name: Setup Bun runtime
-      if: steps.detect.outputs.language == 'node' && startsWith(inputs.framework, 'elysia')
+      if: steps.detect.outputs.language == 'node' && (startsWith(inputs.framework, 'elysia') || startsWith(inputs.framework, 'spikard-bun-'))
       uses: oven-sh/setup-bun@v2
       with:
         bun-version: latest
 
     - name: Install Node benchmark app dependencies
-      if: steps.detect.outputs.language == 'node' && !startsWith(inputs.framework, 'elysia')
+      if: steps.detect.outputs.language == 'node' && !startsWith(inputs.framework, 'elysia') && !startsWith(inputs.framework, 'spikard-bun-')
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
       run: pnpm install --frozen-lockfile
