@@ -34,7 +34,7 @@ pub use hooks::{PhpHookResult, PhpLifecycleHooks};
 pub use request::PhpRequest;
 pub use response::PhpResponse;
 pub use server::PhpServer;
-pub use sse::{PhpSseEventProducer, create_sse_state};
+pub use sse::{PhpSseEventProducer, create_sse_state, leak_sse_producer_registry};
 pub use streaming::{StreamingConfig, create_handler_response as create_streaming_response, register_generator};
 pub use testing::{
     PhpHttpTestClient, PhpNativeTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse,
@@ -118,6 +118,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 unsafe extern "C" fn spikard_shutdown(_type: i32, _module_number: i32) -> i32 {
     leak_handler_registry();
     leak_ws_handler_registry();
+    leak_sse_producer_registry();
     ext_php_rs::ffi::ZEND_RESULT_CODE_SUCCESS as i32
 }
 
