@@ -10,7 +10,7 @@
 //! 2. Converts the Generator into an implementation of SseEventProducer
 //! 3. Handles the Generator protocol: valid() → current() → next() iteration
 //! 4. Converts yielded JSON strings to serde_json::Value for SseEvent creation
-//! 5. Runs synchronously via spawn_blocking to avoid blocking Tokio runtime
+//! 5. Runs synchronously on the PHP thread to avoid cross-thread PHP calls
 //!
 //! # PHP Generator Protocol
 //!
@@ -50,6 +50,14 @@ struct ProducerState {
 // NOTE: thread_local because Zval is not Send/Sync (PHP is single-threaded).
 thread_local! {
     static PHP_SSE_PRODUCER_REGISTRY: std::cell::RefCell<Vec<ProducerState>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+pub fn leak_sse_producer_registry() {
+    PHP_SSE_PRODUCER_REGISTRY.with(|registry| {
+        let mut registry = registry.borrow_mut();
+        let producers = std::mem::take(&mut *registry);
+        std::mem::forget(producers);
+    });
 }
 
 impl PhpSseEventProducer {
@@ -151,7 +159,7 @@ impl PhpSseEventProducer {
 
     /// Invoke the PHP generator factory and iterate to next event
     ///
-    /// This is called synchronously from spawn_blocking to avoid GIL issues.
+    /// This is called synchronously on the PHP thread to avoid cross-thread PHP calls.
     /// It retrieves the generator callable from the registry, invokes it,
     /// and iterates through the Generator protocol to get the next event.
     ///
@@ -159,7 +167,7 @@ impl PhpSseEventProducer {
     /// * `Some(SseEvent)` - Successfully retrieved next event
     /// * `None` - Stream ended or error occurred
     fn get_next_event_sync(&self) -> Option<SseEvent> {
-        let (generator, _done) = PHP_SSE_PRODUCER_REGISTRY.with(|registry| {
+        PHP_SSE_PRODUCER_REGISTRY.with(|registry| {
             let mut registry = registry.borrow_mut();
             let state = registry.get_mut(self.producer_index)?;
 
@@ -184,6 +192,11 @@ impl PhpSseEventProducer {
                     }
                 };
 
+                if generator.object().is_none() {
+                    error!("PHP SSE producer did not return a Generator object");
+                    return None;
+                }
+
                 if let Err(e) = generator.try_call_method("rewind", vec![]) {
                     error!("Failed to call rewind() on PHP Generator: {:?}", e);
                     return None;
@@ -192,109 +205,75 @@ impl PhpSseEventProducer {
                 state.generator = Some(generator);
             }
 
-            Some((state.generator.take()?, state.done))
-        })?;
+            let generator = state.generator.as_ref()?;
 
-        let is_valid = match generator.try_call_method("valid", vec![]) {
-            Ok(valid_zval) => valid_zval.bool().unwrap_or(false),
-            Err(e) => {
-                error!("Failed to call valid() on PHP Generator: {:?}", e);
-                PHP_SSE_PRODUCER_REGISTRY.with(|registry| {
-                    let mut registry = registry.borrow_mut();
-                    if let Some(state) = registry.get_mut(self.producer_index) {
-                        state.generator = Some(generator);
-                    }
-                });
+            let is_valid = match generator.try_call_method("valid", vec![]) {
+                Ok(valid_zval) => valid_zval.bool().unwrap_or(false),
+                Err(e) => {
+                    error!("Failed to call valid() on PHP Generator: {:?}", e);
+                    return None;
+                }
+            };
+
+            if !is_valid {
+                debug!("PHP SSE Generator exhausted (valid() returned false)");
+                state.generator = None;
+                state.done = true;
                 return None;
             }
-        };
 
-        if !is_valid {
-            debug!("PHP SSE Generator exhausted (valid() returned false)");
-            PHP_SSE_PRODUCER_REGISTRY.with(|registry| {
-                let mut registry = registry.borrow_mut();
-                if let Some(state) = registry.get_mut(self.producer_index) {
-                    state.generator = None;
-                    state.done = true;
+            let current_value = match generator.try_call_method("current", vec![]) {
+                Ok(val) => val,
+                Err(e) => {
+                    error!("Failed to call current() on PHP Generator: {:?}", e);
+                    return None;
                 }
-            });
-            return None;
-        }
+            };
 
-        let current_value = match generator.try_call_method("current", vec![]) {
-            Ok(val) => val,
-            Err(e) => {
-                error!("Failed to call current() on PHP Generator: {:?}", e);
-                PHP_SSE_PRODUCER_REGISTRY.with(|registry| {
-                    let mut registry = registry.borrow_mut();
-                    if let Some(state) = registry.get_mut(self.producer_index) {
-                        state.generator = Some(generator);
+            if let Err(e) = generator.try_call_method("next", vec![]) {
+                error!("Failed to call next() on PHP Generator: {:?}", e);
+            }
+
+            let is_valid_after = generator
+                .try_call_method("valid", vec![])
+                .ok()
+                .and_then(|val| val.bool())
+                .unwrap_or(false);
+
+            if !is_valid_after {
+                state.generator = None;
+                state.done = true;
+            }
+
+            let json_str = match current_value.string() {
+                Some(s) => s.to_string(),
+                None => {
+                    if let Ok(json_value) = crate::php::zval_to_json(&current_value) {
+                        debug!("PHP SSE producer: using raw JSON event data");
+                        return Some(SseEvent::new(json_value));
                     }
-                });
-                return None;
-            }
-        };
-
-        let json_str = match current_value.string() {
-            Some(s) => s.to_string(),
-            None => {
-                if let Ok(json_value) = crate::php::zval_to_json(&current_value) {
-                    PHP_SSE_PRODUCER_REGISTRY.with(|registry| {
-                        let mut registry = registry.borrow_mut();
-                        if let Some(state) = registry.get_mut(self.producer_index) {
-                            state.generator = Some(generator);
-                        }
-                    });
-                    return Some(SseEvent::new(json_value));
+                    error!("Generator yielded non-string value");
+                    return None;
                 }
-                error!("Generator yielded non-string value");
-                PHP_SSE_PRODUCER_REGISTRY.with(|registry| {
-                    let mut registry = registry.borrow_mut();
-                    if let Some(state) = registry.get_mut(self.producer_index) {
-                        state.generator = Some(generator);
+            };
+
+            match Self::parse_event_json(&json_str) {
+                Ok(event) => {
+                    debug!("PHP SSE producer: parsed event successfully");
+                    Some(event)
+                }
+                Err(e) => {
+                    if let Ok(value) = serde_json::from_str::<Value>(&json_str) {
+                        debug!("PHP SSE producer: using raw JSON event data");
+                        return Some(SseEvent::new(value));
                     }
-                });
-                return None;
-            }
-        };
-
-        if let Err(e) = generator.try_call_method("next", vec![]) {
-            error!("Failed to call next() on PHP Generator: {:?}", e);
-        }
-
-        let is_valid_after = generator
-            .try_call_method("valid", vec![])
-            .ok()
-            .and_then(|val| val.bool())
-            .unwrap_or(false);
-
-        PHP_SSE_PRODUCER_REGISTRY.with(|registry| {
-            let mut registry = registry.borrow_mut();
-            if let Some(state) = registry.get_mut(self.producer_index) {
-                if is_valid_after {
-                    state.generator = Some(generator);
-                } else {
-                    state.generator = None;
-                    state.done = true;
+                    error!("PHP SSE event parse error: {}", e);
+                    None
                 }
             }
-        });
-
-        match Self::parse_event_json(&json_str) {
-            Ok(event) => {
-                debug!("PHP SSE producer: parsed event successfully");
-                Some(event)
-            }
-            Err(e) => {
-                if let Ok(value) = serde_json::from_str::<Value>(&json_str) {
-                    debug!("PHP SSE producer: using raw JSON event data");
-                    return Some(SseEvent::new(value));
-                }
-                error!("PHP SSE event parse error: {}", e);
-                None
-            }
-        }
+        })
     }
+
 }
 
 impl SseEventProducer for PhpSseEventProducer {

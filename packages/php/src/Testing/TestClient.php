@@ -6,7 +6,6 @@ namespace Spikard\Testing;
 
 use RuntimeException;
 use Spikard\App;
-use Spikard\Handlers\SseEventProducerInterface;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
@@ -132,10 +131,7 @@ final class TestClient
         if (!$this->useNative()) {
             throw new RuntimeException('SSE client requires the native extension.');
         }
-        if (\getenv('SPIKARD_TEST_CLIENT_NATIVE_SSE') === '1') {
-            return $this->nativeClient()->sse($path);
-        }
-        return $this->localSseStream($path);
+        return $this->nativeClient()->sse($path);
     }
 
     public function get(string $path): Response
@@ -166,64 +162,6 @@ final class TestClient
         }
 
         return $this->native;
-    }
-
-    private function localSseStream(string $path): object
-    {
-        $producer = $this->resolveSseProducer($path);
-        $events = $this->collectSseEvents($producer);
-        return new class ($events) {
-            /** @param array<int, mixed> $events */
-            public function __construct(private array $events)
-            {
-            }
-
-            /** @return array<int, mixed> */
-            public function eventsAsJson(): array
-            {
-                return $this->events;
-            }
-
-            /** @return array<int, mixed> */
-            public function events(): array
-            {
-                return $this->events;
-            }
-        };
-    }
-
-    private function resolveSseProducer(string $path): SseEventProducerInterface
-    {
-        $producers = $this->app->sseProducers();
-        if (!isset($producers[$path])) {
-            throw new RuntimeException(\sprintf('SSE route not found for path %s', $path));
-        }
-        return $producers[$path];
-    }
-
-    /** @return array<int, mixed> */
-    private function collectSseEvents(SseEventProducerInterface $producer): array
-    {
-        $events = [];
-        foreach (($producer)() as $value) {
-            $events[] = $this->decodeSseValue($value);
-        }
-        return $events;
-    }
-
-    private function decodeSseValue(mixed $value): mixed
-    {
-        if (!\is_string($value)) {
-            return $value;
-        }
-        $decoded = \json_decode($value, true);
-        if ($decoded === null && \json_last_error() !== \JSON_ERROR_NONE) {
-            return $value;
-        }
-        if (\is_array($decoded) && \array_key_exists('data', $decoded)) {
-            return $decoded['data'];
-        }
-        return $decoded;
     }
 
     /**
