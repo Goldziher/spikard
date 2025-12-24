@@ -38,11 +38,33 @@ end
 
 app = Spikard::App.new
 
+def normalize_json(value)
+  case value
+  when Hash
+    value.each_with_object({}) do |(key, val), output|
+      output[key.to_s] = normalize_json(val)
+    end
+  when Array
+    value.map { |item| normalize_json(item) }
+  else
+    value
+  end
+end
+
 def extract_body(payload)
   return {} if payload.nil?
-  return payload unless payload.is_a?(Hash)
 
-  payload.fetch(:body, payload.fetch('body', payload))
+  if payload.is_a?(Hash)
+    body = payload.fetch(:body, payload.fetch('body', payload))
+    return normalize_json(body)
+  end
+
+  if payload.respond_to?(:to_h)
+    body = payload.to_h.fetch(:body, payload.to_h.fetch('body', payload.to_h))
+    return normalize_json(body)
+  end
+
+  normalize_json(payload)
 end
 
 # ============================================================================

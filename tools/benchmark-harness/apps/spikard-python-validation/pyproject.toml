@@ -29,4 +29,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-spikard = { path = "../../../../crates/spikard-py", editable = true }
+spikard = { path = "../../../../packages/python", editable = true }

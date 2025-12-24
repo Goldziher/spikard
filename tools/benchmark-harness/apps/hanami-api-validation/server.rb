@@ -19,66 +19,79 @@ SmallPayloadSchema = Dry::Schema.JSON do
   required(:name).filled(:string)
   required(:description).filled(:string)
   required(:price).filled(:float)
-  optional(:tax).maybe(:float)
+  required(:tax).filled(:float)
 end
 
-# Nested schemas for medium payload
-AddressSchema = Dry::Schema.JSON do
-  required(:street).filled(:string)
-  required(:city).filled(:string)
-  required(:state).filled(:string)
-  required(:zip_code).filled(:string)
+ImageSchema = Dry::Schema.JSON do
+  required(:url).filled(:string)
+  required(:name).filled(:string)
 end
 
 # Medium JSON payload schema (~1KB)
 MediumPayloadSchema = Dry::Schema.JSON do
   required(:name).filled(:string)
-  required(:email).filled(:string)
-  required(:age).filled(:integer)
-  required(:address).hash(AddressSchema)
-  required(:tags).array(:str?)
+  required(:price).filled(:float)
+  required(:image).hash(ImageSchema)
 end
 
-# Item schema for large payload
-ItemSchema = Dry::Schema.JSON do
-  required(:id).filled(:string)
+CountrySchema = Dry::Schema.JSON do
   required(:name).filled(:string)
-  required(:price).filled(:float)
-  required(:quantity).filled(:integer)
+  required(:code).filled(:string)
+end
+
+SellerAddressSchema = Dry::Schema.JSON do
+  required(:street).filled(:string)
+  required(:city).filled(:string)
+  required(:country).hash(CountrySchema)
+end
+
+SellerSchema = Dry::Schema.JSON do
+  required(:name).filled(:string)
+  required(:address).hash(SellerAddressSchema)
 end
 
 # Large JSON payload schema (~10KB)
 LargePayloadSchema = Dry::Schema.JSON do
-  required(:user_id).filled(:string)
   required(:name).filled(:string)
-  required(:email).filled(:string)
-  required(:items).array(ItemSchema)
-  required(:metadata).hash
+  required(:price).filled(:float)
+  required(:seller).hash(SellerSchema)
 end
 
 # Very large JSON payload schema (~100KB)
 VeryLargePayloadSchema = Dry::Schema.JSON do
-  required(:batch_id).filled(:string)
-  required(:records).array(:hash?)
-  required(:summary).hash
+  required(:name).filled(:string)
+  required(:tags).array(:str?)
+  required(:images).array(ImageSchema)
 end
 
 # URL-encoded form schemas
 UrlencodedSimpleSchema = Dry::Schema.Params do
   required(:name).filled(:string)
-  optional(:email).maybe(:string)
+  required(:email).filled(:string)
+  required(:age).filled(:integer)
+  required(:subscribe).filled(:bool)
 end
 
 UrlencodedComplexSchema = Dry::Schema.Params do
-  required(:user).hash do
-    required(:name).filled(:string)
-    required(:email).filled(:string)
-    optional(:age).maybe(:integer)
-  end
-  required(:preferences).hash do
-    required(:theme).filled(:string)
-    optional(:notifications).maybe(:bool)
-  end
+  required(:username).filled(:string)
+  required(:password).filled(:string)
+  required(:email).filled(:string)
+  required(:first_name).filled(:string)
+  required(:last_name).filled(:string)
+  required(:age).filled(:integer)
+  required(:country).filled(:string)
+  required(:state).filled(:string)
+  required(:city).filled(:string)
+  required(:zip).filled(:string)
+  required(:phone).filled(:string)
+  required(:company).filled(:string)
+  required(:job_title).filled(:string)
+  required(:subscribe).filled(:bool)
+  required(:newsletter).filled(:bool)
+  required(:terms_accepted).filled(:bool)
+  required(:privacy_accepted).filled(:bool)
+  required(:marketing_consent).filled(:bool)
+  required(:two_factor_enabled).filled(:bool)
 end
 
 # ============================================================================
