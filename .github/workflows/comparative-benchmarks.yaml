@@ -167,6 +167,27 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
+  bench-spikard-bun-validation:
+    name: spikard-bun-validation
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: spikard-bun-validation
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
   bench-spikard-node-raw:
     name: spikard-node-raw
     needs: build-harness
@@ -184,6 +205,27 @@ jobs:
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-node-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-spikard-bun-raw:
+    name: spikard-bun-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: spikard-bun-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}

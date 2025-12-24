@@ -96,6 +96,13 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
+            "spikard-bun-validation",
+            vec!["server.ts".to_string()],
+            None,
+            "bun run server.ts {port}",
+            None,
+        ),
+        FrameworkConfig::new(
             "spikard-ruby-validation",
             vec!["server.rb".to_string()],
             None,
@@ -135,6 +142,13 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             vec!["server.ts".to_string()],
             None,
             "pnpm start -- {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-bun-raw",
+            vec!["server.ts".to_string()],
+            None,
+            "bun run server.ts {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -499,12 +513,14 @@ mod tests {
         assert!(names.contains(&"spikard-rust-validation"));
         assert!(names.contains(&"spikard-python-validation"));
         assert!(names.contains(&"spikard-node-validation"));
+        assert!(names.contains(&"spikard-bun-validation"));
         assert!(names.contains(&"spikard-ruby-validation"));
         assert!(names.contains(&"spikard-php-validation"));
         assert!(names.contains(&"spikard-wasm-validation"));
         assert!(names.contains(&"spikard-rust-raw"));
         assert!(names.contains(&"spikard-python-raw"));
         assert!(names.contains(&"spikard-node-raw"));
+        assert!(names.contains(&"spikard-bun-raw"));
         assert!(names.contains(&"spikard-ruby-raw"));
         assert!(names.contains(&"spikard-php-raw"));
         assert!(names.contains(&"spikard-wasm-raw"));
@@ -540,7 +556,7 @@ mod tests {
         assert!(names.contains(&"trongate-raw"));
         assert!(names.contains(&"phalcon-raw"));
 
-        assert_eq!(registry.len(), 37);
+        assert_eq!(registry.len(), 39);
     }
 
     #[test]
@@ -596,7 +612,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 37);
+        assert_eq!(frameworks.len(), 39);
     }
 
     #[test]

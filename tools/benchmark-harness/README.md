@@ -66,9 +66,9 @@ pub struct FrameworkConfig {
 3. Returns most specific match to avoid false positives
 4. Errors if no framework detected or directory doesn't exist
 
-**Supported Frameworks (37 total):**
-- Spikard validation: `spikard-rust-validation`, `spikard-python-validation`, `spikard-node-validation`, `spikard-ruby-validation`, `spikard-php-validation`, `spikard-wasm-validation`
-- Spikard raw: `spikard-rust-raw`, `spikard-python-raw`, `spikard-node-raw`, `spikard-ruby-raw`, `spikard-php-raw`, `spikard-wasm-raw`
+**Supported Frameworks (39 total):**
+- Spikard validation: `spikard-rust-validation`, `spikard-python-validation`, `spikard-node-validation`, `spikard-bun-validation`, `spikard-ruby-validation`, `spikard-php-validation`, `spikard-wasm-validation`
+- Spikard raw: `spikard-rust-raw`, `spikard-python-raw`, `spikard-node-raw`, `spikard-bun-raw`, `spikard-ruby-raw`, `spikard-php-raw`, `spikard-wasm-raw`
 - Python validated: `fastapi-uvicorn-validation`, `fastapi-granian-validation`, `fastapi-python`, `litestar-uvicorn`, `litestar-granian`, `robyn-validation`
 - Python raw (no validation): `fastapi-raw`, `fastapi-granian-raw`, `litestar-raw`, `litestar-granian-raw`
 - TypeScript: `fastify-validation`, `fastify-raw`, `hono-validation`, `hono-raw`, `express-validation`, `express-raw`, `elysia-validation`, `morojs-validation`
