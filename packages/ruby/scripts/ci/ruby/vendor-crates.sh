@@ -54,11 +54,11 @@ patch_cargo_toml() {
 	sed -i.bak 's/thiserror\.workspace = true/thiserror = "2.0"/' "$file"
 	sed -i.bak 's/jsonschema\.workspace = true/jsonschema = { version = "0.37", default-features = false }/' "$file"
 	sed -i.bak 's/flate2\.workspace = true/flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }/' "$file"
-	sed -i.bak 's/http\.workspace = true/http = "1.4"/' "$file"
+	sed -i.bak 's/tower-http\.workspace = true/tower-http = { version = "0.6.8", features = ["fs", "trace", "compression-gzip", "compression-br", "compression-deflate", "cors", "request-id", "limit", "timeout"] }/' "$file"
+	sed -i.bak 's/^http\.workspace = true$/http = "1.4"/' "$file"
 	sed -i.bak 's/axum\.workspace = true/axum = { version = "0.8", features = ["multipart", "ws"] }/' "$file"
 	sed -i.bak 's/tokio\.workspace = true/tokio = { version = "1", features = ["full"] }/' "$file"
 	sed -i.bak 's/tower\.workspace = true/tower = "0.5"/' "$file"
-	sed -i.bak 's/tower-http\.workspace = true/tower-http = { version = "0.6.8", features = ["fs", "trace", "compression-gzip", "compression-br", "compression-deflate", "cors", "request-id", "limit", "timeout"] }/' "$file"
 
 	# Internal dependencies use path
 	sed -i.bak 's|spikard-core = { workspace = true\(.*\)}|spikard-core = { path = "../spikard-core"\1}|' "$file"
