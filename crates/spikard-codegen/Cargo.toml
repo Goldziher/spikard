@@ -1,6 +1,6 @@
 [package]
 name = "spikard-codegen"
-version = "0.5.0"
+version = "0.6.0"
 edition.workspace = true
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 description = "Code generation and configuration management for Spikard"
@@ -27,7 +27,7 @@ handlebars = "6.3"
 tera = "1.20"
 
 # JSON Schema
-jsonschema = "0.37"
+jsonschema = "0.38"
 schemars = "1.1"
 
 # Utilities

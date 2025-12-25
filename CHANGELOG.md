@@ -7,13 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-12-25
+
 ### Changed
 - **PHP routing API**: Switched PHP routes to attribute-based definitions, aligning the routing surface with Python and removing the legacy registry format
 
 ### Fixed
-- **CI environment**: Corrected PYO3_PYTHON environment variable to use venv Python interpreter (.venv/bin/python on Unix, .venv\Scripts\python.exe on Windows) instead of system Python, ensuring consistent dependency resolution during workspace tests and coverage generation
+- **CI environment**: Standardized Rust CI to use system Python for PyO3 builds to avoid missing venv paths during workspace tests and coverage generation
 - **Node.js benchmark startup**: Fixed Node.js profiling framework to use pnpm start command instead of direct tsx CLI invocation; improved tsx CLI resolution to properly locate tsx binary from workspace root, preventing startup failures during CPU profiling
 - **PHP SSE stability**: Kept native SSE generators alive across the full stream lifecycle and cleaned up registry teardown to prevent premature exhaustion or shutdown crashes
+- **PHP test runtime**: Added a background task test stub when the extension is missing so PHPUnit runs without native bindings
+- **Ruby async reliability**: Made background task async tests deterministic to avoid timing-related flakes
+- **Cloudflare e2e installs**: Aligned generated Cloudflare workers-types dependency with the lockfile to keep pnpm frozen installs green
 
 ## [0.5.0] - 2025-12-22
 
