@@ -30,7 +30,15 @@ pub struct TestClient {
 impl TestClient {
     /// Create a new test client from an Axum router
     pub fn from_router(router: axum::Router) -> Result<Self, String> {
-        let server = TestServer::new(router).map_err(|e| format!("Failed to create test server: {}", e))?;
+        let server = if tokio::runtime::Handle::try_current().is_ok() {
+            let server = TestServer::builder()
+                .http_transport()
+                .build(router)
+                .map_err(|e| format!("Failed to create test server: {}", e))?;
+            server
+        } else {
+            TestServer::new(router).map_err(|e| format!("Failed to create test server: {}", e))?
+        };
 
         Ok(Self {
             server: Arc::new(server),
@@ -91,6 +99,27 @@ impl TestClient {
             request = request.json(&json_value);
         }
 
+        let response = request.await;
+        snapshot_response(response).await
+    }
+
+    /// Make a request with a raw body payload.
+    pub async fn request_raw(
+        &self,
+        method: Method,
+        path: &str,
+        body: Bytes,
+        query_params: Option<Vec<(String, String)>>,
+        headers: Option<Vec<(String, String)>>,
+    ) -> Result<ResponseSnapshot, SnapshotError> {
+        let full_path = build_full_path(path, query_params.as_deref());
+        let mut request = self.server.method(method, &full_path);
+
+        if let Some(headers_vec) = headers {
+            request = self.add_headers(request, headers_vec)?;
+        }
+
+        request = request.bytes(body);
         let response = request.await;
         snapshot_response(response).await
     }

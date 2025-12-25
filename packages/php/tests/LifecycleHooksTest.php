@@ -129,7 +129,7 @@ final class LifecycleHooksTest extends TestCase
 
         $this->assertIsCallable($hooks->onRequest);
 
-        $request = new Request(
+        $request = make_request(
             method: 'GET',
             path: '/test',
             body: null,
@@ -147,7 +147,7 @@ final class LifecycleHooksTest extends TestCase
             ->onRequest(fn (Request $req): HookResult => HookResult::continue())
             ->build();
 
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
         if ($hooks->onRequest !== null) {
             $result = ($hooks->onRequest)($request);
 
@@ -163,7 +163,7 @@ final class LifecycleHooksTest extends TestCase
             ->onRequest(fn (Request $req): HookResult => HookResult::shortCircuit($response))
             ->build();
 
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
         if ($hooks->onRequest !== null) {
             $result = ($hooks->onRequest)($request);
 
@@ -183,7 +183,7 @@ final class LifecycleHooksTest extends TestCase
             ->build();
 
         $exception = new \RuntimeException('Test error');
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
 
         if ($hooks->onError !== null) {
             $result = ($hooks->onError)($request, $exception);
@@ -203,7 +203,7 @@ final class LifecycleHooksTest extends TestCase
             })
             ->build();
 
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
         $originalResult = HookResult::continue();
 
         if ($hooks->onResponse !== null) {

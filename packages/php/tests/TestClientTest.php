@@ -71,7 +71,7 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestWithAllHttpMethods(string $method, string $expectedMethod): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute($method, '/test', $handler);
+        $app = $this->appWithRoute($method, '/test', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request($method, '/test');
@@ -83,7 +83,7 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestWithCaseInsensitiveMethods(string $method, string $expectedMethod): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute($expectedMethod, '/test', $handler);
+        $app = $this->appWithRoute($expectedMethod, '/test', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request($method, '/test');
@@ -94,12 +94,11 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestWithAllMethodsCombined(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())
-            ->addRoute('GET', '/test', $handler)
-            ->addRoute('POST', '/test', $handler)
-            ->addRoute('PUT', '/test', $handler)
-            ->addRoute('DELETE', '/test', $handler)
-            ->addRoute('PATCH', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
+        $app = $this->addRoute($app, 'POST', '/test', $handler);
+        $app = $this->addRoute($app, 'PUT', '/test', $handler);
+        $app = $this->addRoute($app, 'DELETE', '/test', $handler);
+        $app = $this->addRoute($app, 'PATCH', '/test', $handler);
 
         $client = TestClient::create($app);
 
@@ -116,7 +115,7 @@ final class TestClientTest extends TestClientTestCase
     public function testGetMethodCallsRequest(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('GET', '/items', $handler);
+        $app = $this->appWithRoute('GET', '/items', $handler);
         $client = TestClient::create($app);
 
         $response = $client->get('/items');
@@ -127,7 +126,7 @@ final class TestClientTest extends TestClientTestCase
     public function testPostWithoutBody(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('POST', '/items', $handler);
+        $app = $this->appWithRoute('POST', '/items', $handler);
         $client = TestClient::create($app);
 
         $response = $client->post('/items');
@@ -143,7 +142,7 @@ final class TestClientTest extends TestClientTestCase
                 TestClientTest::assertEquals($bodyData, $request->body);
             }
         );
-        $app = (new App())->addRoute('POST', '/items', $handler);
+        $app = $this->appWithRoute('POST', '/items', $handler);
         $client = TestClient::create($app);
 
         $response = $client->post('/items', $bodyData);
@@ -162,7 +161,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $headers = ['X-Custom' => 'value', 'Authorization' => 'Bearer token'];
@@ -182,7 +181,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $cookies = ['session' => 'abc123', 'user' => '42'];
@@ -202,7 +201,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('POST', '/test', $handler);
+        $app = $this->appWithRoute('POST', '/test', $handler);
         $client = TestClient::create($app);
 
         $body = ['key' => 'value'];
@@ -223,7 +222,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $client->request('GET', '/test?foo=bar&baz=qux');
@@ -242,7 +241,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $client->request('GET', '/test?search=hello%20world&email=test%40example.com');
@@ -261,7 +260,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $client->request('GET', '/test?tags=php&tags=rust&tags=python');
@@ -279,7 +278,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $client->request('GET', '/test?');
@@ -297,7 +296,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $client->request('GET', '/test?key1=&key2=value&key3=');
@@ -317,7 +316,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $client->request('GET', '/test?q=hello%2Bworld&special=%3C%3E');
@@ -331,7 +330,7 @@ final class TestClientTest extends TestClientTestCase
     public function testQueryParamEdgeCases(string $url): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request('GET', $url);
@@ -342,7 +341,7 @@ final class TestClientTest extends TestClientTestCase
     public function testParseQueryParamsWithMultipleAmpersand(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('GET', '/filter', $handler);
+        $app = $this->appWithRoute('GET', '/filter', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request('GET', '/filter?a=1&&b=2&&&c=3');
@@ -353,7 +352,7 @@ final class TestClientTest extends TestClientTestCase
     public function testParseQueryParamsEmptyKey(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request('GET', '/test?=value&valid=yes');
@@ -364,7 +363,7 @@ final class TestClientTest extends TestClientTestCase
     public function testParseQueryParamsWithPlus(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request('GET', '/test?q=hello+world');
@@ -383,7 +382,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/users/123', $handler);
+        $app = $this->appWithRoute('GET', '/users/123', $handler);
         $client = TestClient::create($app);
 
         $client->request('GET', '/users/123?extra=param');
@@ -395,7 +394,7 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestWithSpecialCharactersInPath(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('GET', '/api/v1/users', $handler);
+        $app = $this->appWithRoute('GET', '/api/v1/users', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request('GET', '/api/v1/users?filter[name]=test&sort=-created_at');
@@ -407,7 +406,7 @@ final class TestClientTest extends TestClientTestCase
     {
         $handler = $this->createBasicHandler();
         $path = '/api/v1/resource-123';
-        $app = (new App())->addRoute('GET', $path, $handler);
+        $app = $this->appWithRoute('GET', $path, $handler);
 
         $client = TestClient::create($app);
         $response = $client->request('GET', $path);
@@ -427,7 +426,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('POST', '/upload', $handler);
+        $app = $this->appWithRoute('POST', '/upload', $handler);
         $client = TestClient::create($app);
 
         $files = ['profile' => 'file_data'];
@@ -446,7 +445,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('POST', '/test', $handler);
+        $app = $this->appWithRoute('POST', '/test', $handler);
         $client = TestClient::create($app);
 
         $body = ['explicit' => 'body'];
@@ -466,7 +465,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('POST', '/test', $handler);
+        $app = $this->appWithRoute('POST', '/test', $handler);
         $client = TestClient::create($app);
 
         $files = ['file' => 'data'];
@@ -479,7 +478,7 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestWithFilesAsBody(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('POST', '/file-body', $handler);
+        $app = $this->appWithRoute('POST', '/file-body', $handler);
         $client = TestClient::create($app);
 
         $files = ['file.txt' => 'content'];
@@ -493,7 +492,7 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestPreferExplicitBodyOverFiles(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('POST', '/priority', $handler);
+        $app = $this->appWithRoute('POST', '/priority', $handler);
         $client = TestClient::create($app);
 
         $body = ['explicit' => 'body'];
@@ -513,7 +512,7 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestWithEmptyOptions(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request('GET', '/test', []);
@@ -524,7 +523,7 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestWithNoOptions(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request('GET', '/test');
@@ -541,7 +540,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $client->request('GET', '/test', ['headers' => 'invalid']);
@@ -559,7 +558,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $client->request('GET', '/test', ['cookies' => 'invalid']);
@@ -577,7 +576,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('POST', '/test', $handler);
+        $app = $this->appWithRoute('POST', '/test', $handler);
         $client = TestClient::create($app);
 
         $client->request('POST', '/test', ['files' => 'invalid']);
@@ -589,7 +588,7 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestWithAllOptionsAtOnce(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('POST', '/combined', $handler);
+        $app = $this->appWithRoute('POST', '/combined', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request('POST', '/combined?page=1', [
@@ -606,29 +605,35 @@ final class TestClientTest extends TestClientTestCase
     #[Test]
     public function testConnectWebSocketThrowsWithoutExtension(): void
     {
-        $app = new App();
-        $wsHandler = $this->createDummyWebSocketHandler();
-        $app = $app->addWebSocket('/ws', $wsHandler);
+        [$exitCode, $output] = run_without_extension(
+            '$app = new \\Spikard\\App();'
+            . '$app = $app->addWebSocket(\'/ws\', new class implements \\Spikard\\Handlers\\WebSocketHandlerInterface {'
+            . '    public function onConnect(): void {}'
+            . '    public function onMessage(string $message): void {}'
+            . '    public function onClose(int $code, ?string $reason = null): void {}'
+            . '});'
+            . '$client = \\Spikard\\Testing\\TestClient::create($app);'
+            . '$client->connectWebSocket(\'/ws\');'
+        );
 
-        $client = TestClient::create($app);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('WebSocket');
-        $client->connectWebSocket('/ws');
+        $this->assertNotSame(0, $exitCode);
+        $this->assertStringContainsString('WebSocket client requires the native extension', $output);
     }
 
     #[Test]
     public function testConnectSseThrowsWithoutExtension(): void
     {
-        $app = new App();
-        $sseProducer = $this->createDummySseEventProducer();
-        $app = $app->addSse('/events', $sseProducer);
+        [$exitCode, $output] = run_without_extension(
+            '$app = new \\Spikard\\App();'
+            . '$app = $app->addSse(\'/events\', new class implements \\Spikard\\Handlers\\SseEventProducerInterface {'
+            . '    public function __invoke(): \\Generator { if (false) { yield \'\'; } }'
+            . '});'
+            . '$client = \\Spikard\\Testing\\TestClient::create($app);'
+            . '$client->connectSse(\'/events\');'
+        );
 
-        $client = TestClient::create($app);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('SSE');
-        $client->connectSse('/events');
+        $this->assertNotSame(0, $exitCode);
+        $this->assertStringContainsString('SSE client requires the native extension', $output);
     }
 
     // ======================== Error Handling Tests ========================
@@ -637,7 +642,7 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestThrowsForUnregisteredRoute(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('GET', '/existing', $handler);
+        $app = $this->appWithRoute('GET', '/existing', $handler);
         $client = TestClient::create($app);
 
         $this->expectException(RuntimeException::class);
@@ -649,7 +654,7 @@ final class TestClientTest extends TestClientTestCase
     public function testRequestThrowsForUnregisteredMethod(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $this->expectException(RuntimeException::class);
@@ -689,9 +694,8 @@ final class TestClientTest extends TestClientTestCase
         $handler1 = $this->createBasicHandler();
         $handler2 = $this->createBasicHandler();
 
-        $app = (new App())
-            ->addRoute('GET', '/first', $handler1)
-            ->addRoute('GET', '/second', $handler2);
+        $app = $this->appWithRoute('GET', '/first', $handler1);
+        $app = $this->addRoute($app, 'GET', '/second', $handler2);
 
         $client = TestClient::create($app);
 
@@ -706,9 +710,8 @@ final class TestClientTest extends TestClientTestCase
     public function testMultipleRequests(): void
     {
         $handler = $this->createBasicHandler();
-        $app = (new App())
-            ->addRoute('GET', '/first', $handler)
-            ->addRoute('GET', '/second', $handler);
+        $app = $this->appWithRoute('GET', '/first', $handler);
+        $app = $this->addRoute($app, 'GET', '/second', $handler);
 
         $client = TestClient::create($app);
         $response1 = $client->get('/first');
@@ -728,7 +731,7 @@ final class TestClientTest extends TestClientTestCase
             }
         );
 
-        $app = (new App())->addRoute('GET', '/test', $handler);
+        $app = $this->appWithRoute('GET', '/test', $handler);
         $client = TestClient::create($app);
 
         $response = $client->request('GET', '/test');

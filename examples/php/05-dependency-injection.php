@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Spikard\App;
+use Spikard\Attributes\Get;
 use Spikard\Config\ServerConfig;
 use Spikard\DI\DependencyContainer;
 use Spikard\DI\Provide;
@@ -83,18 +84,25 @@ $container = new DependencyContainer(
 
 $app = (new App($config))->withDependencies($container);
 
+final class UsersController
+{
+    #[Get('/users')]
+    public function list(): Response
+    {
+        // For now, dependencies are prepared in Rust
+        // Future: function(Database $db) with auto-injection
+        return Response::json([
+            'users' => [
+                ['id' => 1, 'name' => 'Alice'],
+                ['id' => 2, 'name' => 'Bob'],
+            ]
+        ]);
+    }
+}
+
 // Note: Currently dependencies are registered but not auto-injected
 // Full parameter injection is planned for P1
-$app = $app->addRoute('GET', '/users', function () {
-    // For now, dependencies are prepared in Rust
-    // Future: function(Database $db) with auto-injection
-    return Response::json([
-        'users' => [
-            ['id' => 1, 'name' => 'Alice'],
-            ['id' => 2, 'name' => 'Bob'],
-        ]
-    ]);
-});
+$app = $app->registerController(new UsersController());
 
 echo "Starting server with dependency injection on http://127.0.0.1:8000\n";
 echo "Dependencies registered: app_name, db_config, database, cache\n";

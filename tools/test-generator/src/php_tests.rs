@@ -33,6 +33,7 @@ require_once __DIR__ . '/../bootstrap.php';
 
     fs::write(output_dir.join("bootstrap.php"), bootstrap_file()?).context("Failed to write bootstrap.php")?;
     fs::write(output_dir.join("phpunit.xml"), phpunit_config()?).context("Failed to write phpunit.xml")?;
+    fs::write(output_dir.join("route_helper.php"), route_helper()).context("Failed to write route_helper.php")?;
 
     Ok(())
 }
@@ -49,7 +50,7 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
                 .and_then(|name| name.to_str())
                 .unwrap_or("fixtures")
                 .to_string();
-            if category == "sse" || category == "websockets" {
+            if category == "sse" || category == "websockets" || category == "jsonrpc" {
                 continue;
             }
             let mut fixtures = load_fixtures_from_dir(&path)
@@ -85,11 +86,16 @@ fn build_test_file(
         let expected_events = if fixture.examples.is_empty() {
             "[]".to_string()
         } else {
-            let items = fixture.examples.iter().map(value_to_php).collect::<Vec<_>>().join(", ");
+            let items = fixture
+                .examples
+                .iter()
+                .map(value_to_php_expected)
+                .collect::<Vec<_>>()
+                .join(", ");
             format!("[{items}]")
         };
         code.push_str(&format!(
-            "    public function {method}(): void\n    {{\n        if (!\\function_exists('spikard_version')) {{\n            $this->markTestSkipped('Native extension required for SSE.');\n        }}\n        $app = AppFactory::{factory}();\n        $client = TestClient::create($app);\n        $stream = $client->connectSse('{path}');\n        $this->assertEquals({expected}, $stream->eventsAsJson());\n        $client->close();\n    }}\n\n",
+            "    public function {method}(): void\n    {{\n        $app = AppFactory::{factory}();\n        $client = TestClient::create($app);\n        $stream = $client->connectSse('{path}');\n        $this->assertEquals({expected}, $stream->eventsAsJson());\n        $client->close();\n    }}\n\n",
             method = method_name,
             factory = factory,
             path = channel,
@@ -108,7 +114,7 @@ fn build_test_file(
             .unwrap_or_else(|| serde_json::json!({}));
         let send_text = php_string_literal(&payload.to_string());
         code.push_str(&format!(
-            "    public function {method}(): void\n    {{\n        if (!\\function_exists('spikard_version')) {{\n            $this->markTestSkipped('Native extension required for WebSocket.');\n        }}\n        $app = AppFactory::{factory}();\n        $client = TestClient::create($app);\n        $ws = $client->connectWebSocket('{path}');\n        $ws->sendJson({send});\n        $this->assertFalse($ws->isClosed());\n        $ws->close();\n        $this->assertTrue($ws->isClosed());\n        $client->close();\n    }}\n\n",
+            "    public function {method}(): void\n    {{\n        $app = AppFactory::{factory}();\n        $client = TestClient::create($app);\n        $ws = $client->connectWebSocket('{path}');\n        $ws->sendJson({send});\n        $this->assertFalse($ws->isClosed());\n        $ws->close();\n        $this->assertTrue($ws->isClosed());\n        $client->close();\n    }}\n\n",
             method = method_name,
             factory = factory,
             path = channel,
@@ -141,10 +147,17 @@ fn build_fixture_test(category: &str, index: usize, fixture: &Fixture) -> String
     };
 
     let mut options = Vec::new();
-    if let Some(headers) = fixture.request.headers.as_ref() {
-        if !headers.is_empty() {
-            options.push(format!("'headers' => {}", string_map_to_php(headers)));
+    let mut headers = fixture.request.headers.clone().unwrap_or_default();
+    if let Some(content_type) = fixture.request.content_type.as_ref() {
+        let has_content_type = headers
+            .keys()
+            .any(|key| key.eq_ignore_ascii_case("content-type"));
+        if !has_content_type {
+            headers.insert("Content-Type".to_string(), content_type.clone());
         }
+    }
+    if !headers.is_empty() {
+        options.push(format!("'headers' => {}", string_map_to_php(&headers)));
     }
     if let Some(cookies) = fixture.request.cookies.as_ref() {
         if !cookies.is_empty() {
@@ -152,8 +165,16 @@ fn build_fixture_test(category: &str, index: usize, fixture: &Fixture) -> String
         }
     }
     if let Some(files) = fixture.request.files.as_ref() {
-        if !files.is_empty() {
-            options.push(format!("'files' => {}", value_to_php(&serde_json::json!(files))));
+        options.push(format!("'files' => {}", value_to_php(&serde_json::json!(files))));
+    }
+    if let Some(form_data) = fixture.request.form_data.as_ref() {
+        let form_value = serde_json::to_value(form_data).unwrap_or(serde_json::Value::Null);
+        options.push(format!("'form_data' => {}", value_to_php(&form_value)));
+    }
+    if let Some(data) = fixture.request.data.as_ref() {
+        if !data.is_empty() {
+            let data_value = serde_json::to_value(data).unwrap_or(serde_json::Value::Null);
+            options.push(format!("'data' => {}", value_to_php(&data_value)));
         }
     }
     if let Some(body) = fixture.request.body.as_ref() {
@@ -171,7 +192,7 @@ fn build_fixture_test(category: &str, index: usize, fixture: &Fixture) -> String
         .expected_response
         .body
         .as_ref()
-        .map(value_to_php)
+        .map(value_to_php_expected)
         .unwrap_or_else(|| "null".to_string());
 
     format!(
@@ -233,6 +254,9 @@ fn value_to_php(value: &serde_json::Value) -> String {
             format!("[{items}]")
         }
         serde_json::Value::Object(map) => {
+            if map.is_empty() {
+                return "(object)[]".to_string();
+            }
             let mut parts = Vec::new();
             for (k, v) in map {
                 parts.push(format!("{} => {}", php_string_literal(k), value_to_php(v)));
@@ -242,9 +266,114 @@ fn value_to_php(value: &serde_json::Value) -> String {
     }
 }
 
+fn value_to_php_expected(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::Object(map) if map.is_empty() => "[]".to_string(),
+        serde_json::Value::Array(arr) => {
+            let items = arr.iter().map(value_to_php_expected).collect::<Vec<_>>().join(", ");
+            format!("[{items}]")
+        }
+        serde_json::Value::Object(map) => {
+            let mut parts = Vec::new();
+            for (k, v) in map {
+                parts.push(format!("{} => {}", php_string_literal(k), value_to_php_expected(v)));
+            }
+            format!("[{}]", parts.join(", "))
+        }
+        other => value_to_php(other),
+    }
+}
+
+fn route_helper() -> String {
+    r#"<?php
+
+declare(strict_types=1);
+
+use Spikard\App;
+use Spikard\Handlers\HandlerInterface;
+use Spikard\Http\JsonRpcMethodInfo;
+
+/**
+ * Register a basic route for E2E fixtures using App internals.
+ */
+function register_route(App $app, string $method, string $path, HandlerInterface $handler): App
+{
+    return register_route_internal($app, $method, $path, $handler, null, null, null, null);
+}
+
+/**
+ * Register a schema-backed route for E2E fixtures using App internals.
+ *
+ * @param array<string, mixed>|null $requestSchema
+ * @param array<string, mixed>|null $responseSchema
+ * @param array<string, mixed>|null $parameterSchema
+ */
+function register_route_with_schemas(
+    App $app,
+    string $method,
+    string $path,
+    HandlerInterface $handler,
+    ?array $requestSchema,
+    ?array $responseSchema,
+    ?array $parameterSchema,
+): App {
+    return register_route_internal($app, $method, $path, $handler, $requestSchema, $responseSchema, $parameterSchema, null);
+}
+
+/**
+ * @param array<string, mixed>|null $requestSchema
+ * @param array<string, mixed>|null $responseSchema
+ * @param array<string, mixed>|null $parameterSchema
+ */
+function register_route_internal(
+    App $app,
+    string $method,
+    string $path,
+    HandlerInterface $handler,
+    ?array $requestSchema,
+    ?array $responseSchema,
+    ?array $parameterSchema,
+    ?JsonRpcMethodInfo $jsonRpcMethod,
+): App {
+    $refMethod = new \ReflectionMethod($app, 'registerRoute');
+    $refMethod->setAccessible(true);
+    /** @var App $result */
+    $result = $refMethod->invoke(
+        $app,
+        $method,
+        $path,
+        $handler,
+        $requestSchema,
+        $responseSchema,
+        $parameterSchema,
+        $jsonRpcMethod,
+    );
+    return $result;
+}
+"#
+    .to_string()
+}
+
 fn php_string_literal(input: &str) -> String {
-    let escaped = input.replace('\\', "\\\\").replace('\'', "\\'");
-    format!("'{}'", escaped)
+    let mut escaped = String::with_capacity(input.len() + 2);
+    escaped.push('"');
+    for ch in input.chars() {
+        match ch {
+            '\\' => escaped.push_str("\\\\"),
+            '"' => escaped.push_str("\\\""),
+            '$' => escaped.push_str("\\$"),
+            '\n' => escaped.push_str("\\n"),
+            '\r' => escaped.push_str("\\r"),
+            '\t' => escaped.push_str("\\t"),
+            '\u{0008}' => escaped.push_str("\\b"),
+            '\u{000C}' => escaped.push_str("\\f"),
+            '\0' => escaped.push_str("\\x00"),
+            _ if ch.is_control() => escaped.push_str(&format!("\\x{:02x}", ch as u32)),
+            _ => escaped.push(ch),
+        }
+    }
+    escaped.push('"');
+    escaped
 }
 
 fn sanitize_identifier(input: &str) -> String {

@@ -21,21 +21,21 @@ final class EdgeCasesTest extends TestCase
     // Empty/Boundary condition tests for Request
     public function testRequestWithEmptyPath(): void
     {
-        $request = new Request(method: 'GET', path: '', body: null);
+        $request = make_request(method: 'GET', path: '', body: null);
         $this->assertSame('', $request->path);
     }
 
     public function testRequestWithVeryLongPath(): void
     {
         $longPath = '/' . \str_repeat('a', 2000);
-        $request = new Request(method: 'GET', path: $longPath, body: null);
+        $request = make_request(method: 'GET', path: $longPath, body: null);
         $this->assertSame($longPath, $request->path);
         $this->assertGreaterThan(2000, \strlen($request->path));
     }
 
     public function testRequestWithEmptyHeaders(): void
     {
-        $request = new Request(method: 'GET', path: '/test', body: null, headers: []);
+        $request = make_request(method: 'GET', path: '/test', body: null, headers: []);
         $this->assertSame([], $request->headers);
     }
 
@@ -43,28 +43,28 @@ final class EdgeCasesTest extends TestCase
     {
         $longValue = \str_repeat('x', 8000);
         $headers = ['X-Custom' => $longValue];
-        $request = new Request(method: 'GET', path: '/test', body: null, headers: $headers);
+        $request = make_request(method: 'GET', path: '/test', body: null, headers: $headers);
         $this->assertSame($longValue, $request->headers['X-Custom']);
     }
 
     public function testRequestWithSpecialCharactersInPath(): void
     {
         $path = '/api/users/test@example.com#fragment?query=1';
-        $request = new Request(method: 'GET', path: $path, body: null);
+        $request = make_request(method: 'GET', path: $path, body: null);
         $this->assertSame($path, $request->path);
     }
 
     public function testRequestWithUnicodeInPath(): void
     {
         $path = '/users/🚀/profile';
-        $request = new Request(method: 'GET', path: $path, body: null);
+        $request = make_request(method: 'GET', path: $path, body: null);
         $this->assertSame($path, $request->path);
     }
 
     public function testRequestWithUnicodeInHeaders(): void
     {
         $headers = ['X-Name' => 'François'];
-        $request = new Request(method: 'GET', path: '/test', body: null, headers: $headers);
+        $request = make_request(method: 'GET', path: '/test', body: null, headers: $headers);
         $this->assertSame('François', $request->headers['X-Name']);
     }
 
@@ -74,13 +74,13 @@ final class EdgeCasesTest extends TestCase
         for ($i = 0; $i < 100; $i++) {
             $queryParams['param_' . $i] = ['value_' . $i];
         }
-        $request = new Request(method: 'GET', path: '/test', body: null, queryParams: $queryParams);
+        $request = make_request(method: 'GET', path: '/test', body: null, queryParams: $queryParams);
         $this->assertCount(100, $request->queryParams);
     }
 
     public function testRequestWithEmptyStringBody(): void
     {
-        $request = new Request(method: 'POST', path: '/test', body: '');
+        $request = make_request(method: 'POST', path: '/test', body: '');
         $this->assertSame('', $request->body);
         $this->assertIsString($request->body);
     }
@@ -95,7 +95,7 @@ final class EdgeCasesTest extends TestCase
                 'description' => \str_repeat('text', 100),
             ];
         }
-        $request = new Request(method: 'POST', path: '/test', body: $largeBody);
+        $request = make_request(method: 'POST', path: '/test', body: $largeBody);
         if (\is_array($request->body)) {
             $this->assertCount(1000, $request->body);
         }
@@ -103,7 +103,7 @@ final class EdgeCasesTest extends TestCase
 
     public function testRequestWithNullValuesInAllParams(): void
     {
-        $request = new Request(
+        $request = make_request(
             method: 'POST',
             path: '/test',
             body: null,
@@ -128,7 +128,7 @@ final class EdgeCasesTest extends TestCase
                 'size' => 1024 * ($i + 1),
             ];
         }
-        $request = new Request(method: 'POST', path: '/upload', body: null, files: $files);
+        $request = make_request(method: 'POST', path: '/upload', body: null, files: $files);
         $this->assertCount(50, $request->files);
     }
 
@@ -457,7 +457,7 @@ final class EdgeCasesTest extends TestCase
             'array' => [1, 2, 3],
             'nested' => ['key' => 'value'],
         ];
-        $request = new Request(method: 'POST', path: '/test', body: $body);
+        $request = make_request(method: 'POST', path: '/test', body: $body);
         $this->assertSame($body, $request->body);
     }
 
@@ -479,7 +479,7 @@ final class EdgeCasesTest extends TestCase
     public function testHeaderKeysCaseSensitive(): void
     {
         $headers = ['content-type' => 'text/plain', 'Content-Type' => 'application/json'];
-        $request = new Request(method: 'GET', path: '/test', body: null, headers: $headers);
+        $request = make_request(method: 'GET', path: '/test', body: null, headers: $headers);
         // PHP array keys are case-sensitive
         $this->assertCount(2, $request->headers);
     }
@@ -487,7 +487,7 @@ final class EdgeCasesTest extends TestCase
     public function testCookieNamesWithSpecialChars(): void
     {
         $cookies = ['_session' => 'value', 'session-id' => 'value2'];
-        $request = new Request(method: 'GET', path: '/test', body: null, cookies: $cookies);
+        $request = make_request(method: 'GET', path: '/test', body: null, cookies: $cookies);
         $this->assertArrayHasKey('_session', $request->cookies);
         $this->assertArrayHasKey('session-id', $request->cookies);
     }

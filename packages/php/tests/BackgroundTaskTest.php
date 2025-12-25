@@ -39,22 +39,10 @@ final class BackgroundTaskTest extends TestCase
         self::$counter = 0;
     }
 
-    /**
-     * Helper to skip tests if Spikard extension is not loaded.
-     *
-     */
-    private function skipIfExtensionNotLoaded(): void
-    {
-        if (!\function_exists('spikard_background_run')) {
-            $this->markTestSkipped('Spikard extension is not loaded');
-        }
-    }
-
     // ======================== Basic Execution Tests ========================
 
     public function testRunAcceptsCallableWithoutArgs(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (): void {
             BackgroundTaskTest::$executed = true;
@@ -65,7 +53,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunAcceptsCallableWithEmptyArgs(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (): void {
             BackgroundTaskTest::$executed = true;
@@ -76,7 +63,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithSimpleCallable(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (): void {
             BackgroundTaskTest::$executed = true;
@@ -89,7 +75,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunAcceptsCallableWithArgs(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (int $value): void {
             BackgroundTaskTest::$executedWithArgs = $value;
@@ -100,7 +85,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithSingleArgument(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (string $value): void {
             BackgroundTaskTest::$executedWithString = $value;
@@ -113,7 +97,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunAcceptsCallableWithMultipleArgs(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (string $name, int $count): void {
             BackgroundTaskTest::$executedWithMultipleName = $name;
@@ -126,7 +109,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithMultipleArguments(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (int $num, string $str, bool $flag): void {
             BackgroundTaskTest::$counter = $num;
@@ -139,7 +121,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithVariedArgumentTypes(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (
             int $int,
@@ -158,7 +139,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithMultipleMixedTypes(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (int $a, string $b, ?bool $c, array $d): void {
             BackgroundTaskTest::$executedWithArgs = $a;
@@ -169,7 +149,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithMixedTypesMultipleArgs(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(
             function (
@@ -191,7 +170,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunAcceptsCallableWithNullInArgs(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (?string $value): void {
             BackgroundTaskTest::$executedWithNull = $value ?? 'null_received';
@@ -202,7 +180,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithNullArgument(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (?string $value): void {
             BackgroundTaskTest::$executedWithNull = $value ?? 'null_received';
@@ -213,7 +190,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithArrayArgument(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         $arrayData = ['id' => 1, 'name' => 'test'];
         BackgroundTask::run(function (array $data): void {
@@ -228,7 +204,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithBooleanArguments(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (bool $flag1, bool $flag2): void {
             BackgroundTaskTest::$executed = $flag1 && !$flag2;
@@ -239,7 +214,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithNumericArguments(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (int $intVal, float $floatVal): void {
             BackgroundTaskTest::$counter = $intVal;
@@ -250,7 +224,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithStringArguments(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (string $str1, string $str2): void {
             BackgroundTaskTest::$executedWithString = $str1 . '_' . $str2;
@@ -261,7 +234,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithComplexArrayArgument(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         $complex = [
             'level1' => [
@@ -285,7 +257,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunAcceptsNamedFunction(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         // Test with a built-in PHP function that's safe to call
         BackgroundTask::run('strlen', ['test']);
@@ -296,7 +267,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithBuiltinFunction(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         // strlen is a built-in function that's safe to call
         BackgroundTask::run('strlen', ['test']);
@@ -307,7 +277,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithCallableString(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         // 'trim' is a built-in function callable as string
         BackgroundTask::run('trim', ['  spaces  ']);
@@ -317,7 +286,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithAnonymousFunction(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         $fn = function (): void {
             BackgroundTaskTest::$executed = true;
@@ -330,7 +298,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithClosure(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         $closure = Closure::bind(function (): void {
             BackgroundTaskTest::$executed = true;
@@ -343,7 +310,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunAcceptsStaticMethod(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run([self::class, 'staticHelper'], []);
 
@@ -352,7 +318,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithStaticMethod(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run([self::class, 'staticHelper']);
 
@@ -361,7 +326,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithStaticMethodAndArgs(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run([self::class, 'staticMethodWithArgs'], ['value']);
 
@@ -372,7 +336,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithLargeArgumentCount(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         $args = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         BackgroundTask::run(
@@ -398,7 +361,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithEmptyStringArgument(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (string $str): void {
             BackgroundTaskTest::$executedWithString = $str;
@@ -409,7 +371,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithZeroArgument(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (int $num): void {
             BackgroundTaskTest::$counter = $num;
@@ -420,7 +381,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithFalseArgument(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (bool $flag): void {
             BackgroundTaskTest::$executed = !$flag;
@@ -433,7 +393,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunExecutesCallable(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(function (): void {
             BackgroundTaskTest::$executed = true;
@@ -444,7 +403,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunCanPassMultipleValues(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         BackgroundTask::run(
             function (int $a, int $b, int $c): void {
@@ -458,7 +416,6 @@ final class BackgroundTaskTest extends TestCase
 
     public function testRunWithCallableThatThrows(): void
     {
-        $this->skipIfExtensionNotLoaded();
 
         // Test that the task runs without throwing at the BackgroundTask::run level
         // Note: Exceptions from background tasks may or may not propagate depending
@@ -475,16 +432,27 @@ final class BackgroundTaskTest extends TestCase
 
     public function testMissingExtensionThrows(): void
     {
-        if (\function_exists('spikard_background_run')) {
-            $this->markTestSkipped('Spikard extension is loaded; cannot test missing extension');
-        }
+        $autoloadPath = \realpath(__DIR__ . '/../vendor/autoload.php');
+        $this->assertNotFalse($autoloadPath);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Spikard PHP extension not loaded');
+        $command = \sprintf(
+            '%s -n -d detect_unicode=0 -r %s',
+            \escapeshellarg(PHP_BINARY),
+            \escapeshellarg(
+                "require '{$autoloadPath}';"
+                . '\\Spikard\\Background\\BackgroundTask::run(function (): void {});'
+            )
+        );
 
-        BackgroundTask::run(function (): void {
-            // This won't execute if extension is missing
-        });
+        $output = [];
+        $exitCode = 0;
+        \exec($command . ' 2>&1', $output, $exitCode);
+
+        $this->assertNotSame(0, $exitCode);
+        $this->assertStringContainsString(
+            'Spikard PHP extension not loaded',
+            \implode("\n", $output)
+        );
     }
 
     // ======================== Static Methods for Testing ========================
