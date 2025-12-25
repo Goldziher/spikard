@@ -107,6 +107,7 @@ RSpec.describe Spikard::Background do
       Timeout.timeout(1) do
         loop do
           break if finished
+
           sleep 0.01
         end
       end

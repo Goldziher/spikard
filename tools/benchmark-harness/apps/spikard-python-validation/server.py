@@ -252,7 +252,11 @@ async def post_json_large(body: dict[str, Any]) -> dict[str, Any]:
     return body
 
 
-@post("/json/very-large", body_schema=request_schema("json/very-large"), response_schema=response_schema("json/very-large"))
+@post(
+    "/json/very-large",
+    body_schema=request_schema("json/very-large"),
+    response_schema=response_schema("json/very-large"),
+)
 @profile_once("json-very-large")
 async def post_json_very_large(body: dict[str, Any]) -> dict[str, Any]:
     """Very large JSON payload (arrays of values and objects)."""
@@ -391,7 +395,9 @@ async def get_query_few(
     return {"q": q, "page": page, "limit": limit}
 
 
-@get("/query/medium", response_schema=response_schema("query/medium"), parameter_schema=parameter_schema("query/medium"))
+@get(
+    "/query/medium", response_schema=response_schema("query/medium"), parameter_schema=parameter_schema("query/medium")
+)
 @profile_once("query-medium")
 async def get_query_medium(
     category: str | None = Query(default=None),

@@ -138,13 +138,9 @@ fn create_method_router(
                             Err((status, body)) => return error_to_response(status, body),
                         };
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
-                        handler_result_to_response(call_with_optional_hooks(
-                            req,
-                            request_data,
-                            handler_clone,
-                            hooks_clone,
+                        handler_result_to_response(
+                            call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                         )
-                        .await)
                     },
                 ),
                 crate::Method::Put => axum::routing::put(
@@ -165,13 +161,9 @@ fn create_method_router(
                             Err((status, body)) => return error_to_response(status, body),
                         };
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
-                        handler_result_to_response(call_with_optional_hooks(
-                            req,
-                            request_data,
-                            handler_clone,
-                            hooks_clone,
+                        handler_result_to_response(
+                            call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                         )
-                        .await)
                     },
                 ),
                 crate::Method::Patch => axum::routing::patch(
@@ -192,13 +184,9 @@ fn create_method_router(
                             Err((status, body)) => return error_to_response(status, body),
                         };
                         let req = axum::extract::Request::from_parts(parts, Body::empty());
-                        handler_result_to_response(call_with_optional_hooks(
-                            req,
-                            request_data,
-                            handler_clone,
-                            hooks_clone,
+                        handler_result_to_response(
+                            call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                         )
-                        .await)
                     },
                 ),
                 crate::Method::Get
@@ -228,13 +216,9 @@ fn create_method_router(
                         Err((status, body)) => return error_to_response(status, body),
                     };
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
-                    handler_result_to_response(call_with_optional_hooks(
-                        req,
-                        request_data,
-                        handler_clone,
-                        hooks_clone,
+                    handler_result_to_response(
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                     )
-                    .await)
                 }),
                 crate::Method::Put => axum::routing::put(move |req: axum::extract::Request| async move {
                     let (parts, body) = req.into_parts();
@@ -253,13 +237,9 @@ fn create_method_router(
                         Err((status, body)) => return error_to_response(status, body),
                     };
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
-                    handler_result_to_response(call_with_optional_hooks(
-                        req,
-                        request_data,
-                        handler_clone,
-                        hooks_clone,
+                    handler_result_to_response(
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                     )
-                    .await)
                 }),
                 crate::Method::Patch => axum::routing::patch(move |req: axum::extract::Request| async move {
                     let (parts, body) = req.into_parts();
@@ -278,13 +258,9 @@ fn create_method_router(
                         Err((status, body)) => return error_to_response(status, body),
                     };
                     let req = axum::extract::Request::from_parts(parts, Body::empty());
-                    handler_result_to_response(call_with_optional_hooks(
-                        req,
-                        request_data,
-                        handler_clone,
-                        hooks_clone,
+                    handler_result_to_response(
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                     )
-                    .await)
                 }),
                 crate::Method::Get
                 | crate::Method::Delete
@@ -306,13 +282,9 @@ fn create_method_router(
                         path_params.0,
                         without_body_options,
                     );
-                    handler_result_to_response(call_with_optional_hooks(
-                        req,
-                        request_data,
-                        handler_clone,
-                        hooks_clone,
+                    handler_result_to_response(
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                     )
-                    .await)
                 },
             ),
             crate::Method::Delete => axum::routing::delete(
@@ -324,13 +296,9 @@ fn create_method_router(
                         path_params.0,
                         without_body_options,
                     );
-                    handler_result_to_response(call_with_optional_hooks(
-                        req,
-                        request_data,
-                        handler_clone,
-                        hooks_clone,
+                    handler_result_to_response(
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                     )
-                    .await)
                 },
             ),
             crate::Method::Head => axum::routing::head(
@@ -342,13 +310,9 @@ fn create_method_router(
                         path_params.0,
                         without_body_options,
                     );
-                    handler_result_to_response(call_with_optional_hooks(
-                        req,
-                        request_data,
-                        handler_clone,
-                        hooks_clone,
+                    handler_result_to_response(
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                     )
-                    .await)
                 },
             ),
             crate::Method::Trace => axum::routing::trace(
@@ -360,13 +324,9 @@ fn create_method_router(
                         path_params.0,
                         without_body_options,
                     );
-                    handler_result_to_response(call_with_optional_hooks(
-                        req,
-                        request_data,
-                        handler_clone,
-                        hooks_clone,
+                    handler_result_to_response(
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                     )
-                    .await)
                 },
             ),
             crate::Method::Options => axum::routing::options(
@@ -378,13 +338,9 @@ fn create_method_router(
                         path_params.0,
                         without_body_options,
                     );
-                    handler_result_to_response(call_with_optional_hooks(
-                        req,
-                        request_data,
-                        handler_clone,
-                        hooks_clone,
+                    handler_result_to_response(
+                        call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                     )
-                    .await)
                 },
             ),
             crate::Method::Post | crate::Method::Put | crate::Method::Patch => MethodRouter::new(),
@@ -401,13 +357,9 @@ fn create_method_router(
                     HashMap::new(),
                     without_body_options,
                 );
-                handler_result_to_response(call_with_optional_hooks(
-                    req,
-                    request_data,
-                    handler_clone,
-                    hooks_clone,
+                handler_result_to_response(
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                 )
-                .await)
             }),
             crate::Method::Delete => axum::routing::delete(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
@@ -417,13 +369,9 @@ fn create_method_router(
                     HashMap::new(),
                     without_body_options,
                 );
-                handler_result_to_response(call_with_optional_hooks(
-                    req,
-                    request_data,
-                    handler_clone,
-                    hooks_clone,
+                handler_result_to_response(
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                 )
-                .await)
             }),
             crate::Method::Head => axum::routing::head(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
@@ -433,13 +381,9 @@ fn create_method_router(
                     HashMap::new(),
                     without_body_options,
                 );
-                handler_result_to_response(call_with_optional_hooks(
-                    req,
-                    request_data,
-                    handler_clone,
-                    hooks_clone,
+                handler_result_to_response(
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                 )
-                .await)
             }),
             crate::Method::Trace => axum::routing::trace(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
@@ -449,13 +393,9 @@ fn create_method_router(
                     HashMap::new(),
                     without_body_options,
                 );
-                handler_result_to_response(call_with_optional_hooks(
-                    req,
-                    request_data,
-                    handler_clone,
-                    hooks_clone,
+                handler_result_to_response(
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                 )
-                .await)
             }),
             crate::Method::Options => axum::routing::options(move |req: axum::extract::Request| async move {
                 let request_data = request_extraction::create_request_data_without_body(
@@ -465,13 +405,9 @@ fn create_method_router(
                     HashMap::new(),
                     without_body_options,
                 );
-                handler_result_to_response(call_with_optional_hooks(
-                    req,
-                    request_data,
-                    handler_clone,
-                    hooks_clone,
+                handler_result_to_response(
+                    call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                 )
-                .await)
             }),
             crate::Method::Post | crate::Method::Put | crate::Method::Patch => MethodRouter::new(),
         }
