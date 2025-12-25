@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Spikard\App;
+use Spikard\Attributes\Get;
 use Spikard\Config\ServerConfig;
 use Spikard\Http\StreamingResponse;
 
@@ -15,39 +16,40 @@ use Spikard\Http\StreamingResponse;
  * The server pushes updates to connected clients every second.
  */
 
-$config = new ServerConfig(port: 8000);
-$app = new App($config);
+final class SseController
+{
+    #[Get('/events')]
+    public function events(): StreamingResponse
+    {
+        $generator = function (): Generator {
+            $count = 0;
 
-// SSE endpoint that streams events to clients
-$app = $app->addRoute('GET', '/events', function () {
-    $generator = function (): Generator {
-        $count = 0;
+            // Send 10 events, one per second
+            while ($count < 10) {
+                $data = json_encode([
+                    'count' => $count,
+                    'timestamp' => time(),
+                    'message' => "Event #{$count}",
+                ]);
 
-        // Send 10 events, one per second
-        while ($count < 10) {
-            $data = json_encode([
-                'count' => $count,
-                'timestamp' => time(),
-                'message' => "Event #{$count}",
-            ]);
+                // SSE format: "data: {json}\n\n"
+                yield "data: {$data}\n\n";
 
-            // SSE format: "data: {json}\n\n"
-            yield "data: {$data}\n\n";
+                $count++;
+                sleep(1); // Wait 1 second between events
+            }
 
-            $count++;
-            sleep(1); // Wait 1 second between events
-        }
+            // Send closing message
+            yield "data: " . json_encode(['message' => 'Stream complete']) . "\n\n";
+        };
 
-        // Send closing message
-        yield "data: " . json_encode(['message' => 'Stream complete']) . "\n\n";
-    };
+        return StreamingResponse::sse($generator());
+    }
 
-    return StreamingResponse::sse($generator());
-});
-
-// Serve a simple HTML client
-$app = $app->addRoute('GET', '/', function () {
-    $html = <<<'HTML'
+    #[Get('/')]
+    public function index(): \Spikard\Http\Response
+    {
+        $html = <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -80,12 +82,16 @@ $app = $app->addRoute('GET', '/', function () {
 </html>
 HTML;
 
-    return new \Spikard\Http\Response(
-        body: $html,
-        statusCode: 200,
-        headers: ['Content-Type' => 'text/html; charset=utf-8']
-    );
-});
+        return new \Spikard\Http\Response(
+            body: $html,
+            statusCode: 200,
+            headers: ['Content-Type' => 'text/html; charset=utf-8']
+        );
+    }
+}
+
+$config = new ServerConfig(port: 8000);
+$app = (new App($config))->registerController(new SseController());
 
 echo "Starting SSE server on http://127.0.0.1:8000\n";
 echo "Open http://127.0.0.1:8000 in your browser to see live updates\n\n";

@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **PHP routing API**: Switched PHP routes to attribute-based definitions, aligning the routing surface with Python and removing the legacy registry format
+
 ### Fixed
 - **CI environment**: Corrected PYO3_PYTHON environment variable to use venv Python interpreter (.venv/bin/python on Unix, .venv\Scripts\python.exe on Windows) instead of system Python, ensuring consistent dependency resolution during workspace tests and coverage generation
 - **Node.js benchmark startup**: Fixed Node.js profiling framework to use pnpm start command instead of direct tsx CLI invocation; improved tsx CLI resolution to properly locate tsx binary from workspace root, preventing startup failures during CPU profiling
+- **PHP SSE stability**: Kept native SSE generators alive across the full stream lifecycle and cleaned up registry teardown to prevent premature exhaustion or shutdown crashes
 
 ## [0.5.0] - 2025-12-22
 

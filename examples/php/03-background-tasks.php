@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Spikard\App;
+use Spikard\Attributes\Post;
 use Spikard\Background\BackgroundTask;
 use Spikard\Config\ServerConfig;
 use Spikard\Http\Request;
@@ -16,9 +17,6 @@ use Spikard\Http\Response;
  * Demonstrates how to offload work to background tasks without blocking
  * the HTTP response. Perfect for sending emails, logging, analytics, etc.
  */
-
-$config = new ServerConfig(port: 8000);
-$app = new App($config);
 
 // Simulated email sending function
 function sendWelcomeEmail(array $user): void {
@@ -33,32 +31,40 @@ function logUserCreation(array $user): void {
     error_log("Logged user creation: {$user['name']}");
 }
 
-$app = $app->addRoute('POST', '/users', function (Request $request) {
-    $data = $request->body;
+final class BackgroundTaskController
+{
+    #[Post('/users')]
+    public function create(Request $request): Response
+    {
+        $data = $request->body;
 
-    // Synchronous work (fast)
-    $user = [
-        'id' => rand(1000, 9999),
-        'name' => $data['name'] ?? 'Anonymous',
-        'email' => $data['email'] ?? 'unknown@example.com',
-        'created_at' => date('Y-m-d H:i:s'),
-    ];
+        // Synchronous work (fast)
+        $user = [
+            'id' => rand(1000, 9999),
+            'name' => $data['name'] ?? 'Anonymous',
+            'email' => $data['email'] ?? 'unknown@example.com',
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
 
-    // Background work (slow) - doesn't block the response
-    BackgroundTask::run(function () use ($user) {
-        sendWelcomeEmail($user);
-    });
+        // Background work (slow) - doesn't block the response
+        BackgroundTask::run(function () use ($user) {
+            sendWelcomeEmail($user);
+        });
 
-    BackgroundTask::run(function () use ($user) {
-        logUserCreation($user);
-    });
+        BackgroundTask::run(function () use ($user) {
+            logUserCreation($user);
+        });
 
-    // Return immediately (user doesn't wait for email/logging)
-    return Response::json([
-        'user' => $user,
-        'message' => 'User created. Welcome email will be sent shortly.',
-    ], 201);
-});
+        // Return immediately (user doesn't wait for email/logging)
+        return Response::json([
+            'user' => $user,
+            'message' => 'User created. Welcome email will be sent shortly.',
+        ], 201);
+    }
+}
+
+$config = new ServerConfig(port: 8000);
+$app = (new App($config))->registerController(new BackgroundTaskController());
 
 echo "Starting server with background tasks on http://127.0.0.1:8000\n";
 echo "POST to /users to see background tasks in action\n";

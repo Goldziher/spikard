@@ -230,7 +230,7 @@ final class AppRegisterControllerTest extends TestCase
         $routes = $app->routes();
         $handler = $routes[0]['handler'];
 
-        $request = new Request('GET', '/items', null);
+        $request = make_request('GET', '/items', null);
         $this->assertTrue($handler->matches($request));
     }
 
@@ -240,7 +240,7 @@ final class AppRegisterControllerTest extends TestCase
         $routes = $app->routes();
         $handler = $routes[0]['handler'];
 
-        $request = new Request('GET', '/items', null);
+        $request = make_request('GET', '/items', null);
         $response = $handler->handle($request);
 
         $this->assertInstanceOf(Response::class, $response);

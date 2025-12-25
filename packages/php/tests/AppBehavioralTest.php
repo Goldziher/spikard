@@ -31,14 +31,13 @@ final class AppBehavioralTest extends TestCase
         $handler2 = new AppBehavioralTestHandler();
         $handler3 = new AppBehavioralTestHandler();
 
-        $app = (new App())
-            ->addRoute('GET', '/users', $handler1)
-            ->addRoute('POST', '/users', $handler2)
-            ->addRoute('GET', '/posts', $handler3);
+        $app = RouteTestHelper::withRoute(new App(), 'GET', '/users', $handler1);
+        $app = RouteTestHelper::withRoute($app, 'POST', '/users', $handler2);
+        $app = RouteTestHelper::withRoute($app, 'GET', '/posts', $handler3);
 
-        $requestGetUsers = new Request('GET', '/users', null);
-        $requestPostUsers = new Request('POST', '/users', null);
-        $requestGetPosts = new Request('GET', '/posts', null);
+        $requestGetUsers = make_request('GET', '/users', null);
+        $requestPostUsers = make_request('POST', '/users', null);
+        $requestGetPosts = make_request('GET', '/posts', null);
 
         $this->assertSame($handler1, $app->findHandler($requestGetUsers));
         $this->assertSame($handler2, $app->findHandler($requestPostUsers));
@@ -51,11 +50,11 @@ final class AppBehavioralTest extends TestCase
     public function testFindHandlerMethodCaseInsensitive(): void
     {
         $handler = new AppBehavioralTestHandler();
-        $app = (new App())->addRoute('get', '/test', $handler);
+        $app = RouteTestHelper::withRoute(new App(), 'get', '/test', $handler);
 
-        $requestUppercase = new Request('GET', '/test', null);
-        $requestMixed = new Request('Get', '/test', null);
-        $requestLowercase = new Request('get', '/test', null);
+        $requestUppercase = make_request('GET', '/test', null);
+        $requestMixed = make_request('Get', '/test', null);
+        $requestLowercase = make_request('get', '/test', null);
 
         $this->assertSame($handler, $app->findHandler($requestUppercase));
         $this->assertSame($handler, $app->findHandler($requestMixed));
@@ -69,10 +68,10 @@ final class AppBehavioralTest extends TestCase
     {
         $handler = new AppBehavioralTestHandler();
         // Register with query string
-        $app = (new App())->addRoute('GET', '/test?param=value', $handler);
+        $app = RouteTestHelper::withRoute(new App(), 'GET', '/test?param=value', $handler);
 
         // Should match request without query string
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
         $this->assertSame($handler, $app->findHandler($request));
     }
 
@@ -84,11 +83,10 @@ final class AppBehavioralTest extends TestCase
         $handlerThatMatches = new SelectiveHandler(true);
         $handlerThatDoesNotMatch = new SelectiveHandler(false);
 
-        $app = (new App())
-            ->addRoute('GET', '/test', $handlerThatDoesNotMatch)
-            ->addRoute('GET', '/test', $handlerThatMatches);
+        $app = RouteTestHelper::withRoute(new App(), 'GET', '/test', $handlerThatDoesNotMatch);
+        $app = RouteTestHelper::withRoute($app, 'GET', '/test', $handlerThatMatches);
 
-        $request = new Request('GET', '/test', null);
+        $request = make_request('GET', '/test', null);
         // Should return the one that matches
         $found = $app->findHandler($request);
         $this->assertSame($handlerThatMatches, $found);
@@ -179,9 +177,8 @@ final class AppBehavioralTest extends TestCase
     public function testRegisterControllerChains(): void
     {
         $manualHandler = new AppBehavioralTestHandler();
-        $app = (new App())
-            ->registerController(SimpleController::class)
-            ->addRoute('POST', '/manual', $manualHandler);
+        $app = (new App())->registerController(SimpleController::class);
+        $app = RouteTestHelper::withRoute($app, 'POST', '/manual', $manualHandler);
 
         $routes = $app->routes();
         $this->assertCount(2, $routes);
@@ -203,12 +200,14 @@ final class AppBehavioralTest extends TestCase
      */
     public function testRunThrowsWithoutExtension(): void
     {
-        $config = ServerConfig::builder()->build();
-        $app = (new App())->addRoute('GET', '/test', new AppBehavioralTestHandler());
+        [$exitCode, $output] = run_without_extension(
+            '$app = new \\Spikard\\App();'
+            . '$config = \\Spikard\\Config\\ServerConfig::builder()->build();'
+            . '$app->run($config);'
+        );
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('not loaded');
-        $app->run($config);
+        $this->assertNotSame(0, $exitCode);
+        $this->assertStringContainsString('extension is not loaded', $output);
     }
 
     /**
@@ -216,15 +215,14 @@ final class AppBehavioralTest extends TestCase
      */
     public function testRunAcceptsConfigParameter(): void
     {
-        $config1 = ServerConfig::builder()->withPort(8000)->build();
-        $config2 = ServerConfig::builder()->withPort(9000)->build();
+        [$exitCode, $output] = run_without_extension(
+            '$config = \\Spikard\\Config\\ServerConfig::builder()->withPort(9000)->build();'
+            . '$app = new \\Spikard\\App();'
+            . '$app->run($config);'
+        );
 
-        $app = (new App($config1))->addRoute('GET', '/test', new AppBehavioralTestHandler());
-
-        // Would normally try to run; we just verify it attempts with config2
-        // (will fail due to no extension, but that proves parameter is used)
-        $this->expectException(RuntimeException::class);
-        $app->run($config2);
+        $this->assertNotSame(0, $exitCode);
+        $this->assertStringContainsString('extension is not loaded', $output);
     }
 
     /**
@@ -232,7 +230,7 @@ final class AppBehavioralTest extends TestCase
      */
     public function testCloseIsIdempotent(): void
     {
-        $app = (new App())->addRoute('GET', '/test', new AppBehavioralTestHandler());
+        $app = RouteTestHelper::withRoute(new App(), 'GET', '/test', new AppBehavioralTestHandler());
         $client = TestClient::create($app);
 
         // Should not throw when called multiple times
@@ -248,7 +246,7 @@ final class AppBehavioralTest extends TestCase
     public function testNativeRoutesIncludesHttpRoutes(): void
     {
         $handler = new AppBehavioralTestHandler();
-        $app = (new App())->addRoute('GET', '/users', $handler);
+        $app = RouteTestHelper::withRoute(new App(), 'GET', '/users', $handler);
 
         $nativeRoutes = $app->nativeRoutes();
         $this->assertCount(1, $nativeRoutes);
@@ -291,8 +289,7 @@ final class AppBehavioralTest extends TestCase
         $wsHandler = new AppBehavioralTestWebSocketHandler();
         $sseProducer = new AppBehavioralTestSseProducer();
 
-        $app = (new App())
-            ->addRoute('GET', '/api', $httpHandler)
+        $app = RouteTestHelper::withRoute(new App(), 'GET', '/api', $httpHandler)
             ->addWebSocket('/ws', $wsHandler)
             ->addSse('/events', $sseProducer);
 
@@ -306,9 +303,8 @@ final class AppBehavioralTest extends TestCase
     public function testNativeRoutesUppercasesHttpMethods(): void
     {
         $handler = new AppBehavioralTestHandler();
-        $app = (new App())
-            ->addRoute('get', '/test1', $handler)
-            ->addRoute('Post', '/test2', $handler);
+        $app = RouteTestHelper::withRoute(new App(), 'get', '/test1', $handler);
+        $app = RouteTestHelper::withRoute($app, 'Post', '/test2', $handler);
 
         $nativeRoutes = $app->nativeRoutes();
         $this->assertSame('GET', $nativeRoutes[0]['method']);
@@ -380,7 +376,7 @@ final class AppBehavioralTest extends TestCase
     }
 
     /**
-     * Test addRouteWithSchemas preserves all schema fields.
+     * Test schema-backed routes preserve all schema fields.
      */
     public function testAddRouteWithSchemasPreservesAllSchemas(): void
     {
@@ -389,7 +385,8 @@ final class AppBehavioralTest extends TestCase
         $responseSchema = ['type' => 'object', 'properties' => ['id' => ['type' => 'number']]];
         $paramSchema = ['type' => 'object'];
 
-        $app = (new App())->addRouteWithSchemas(
+        $app = RouteTestHelper::withRouteWithSchemas(
+            new App(),
             'POST',
             '/items',
             $handler,
@@ -411,12 +408,13 @@ final class AppBehavioralTest extends TestCase
     }
 
     /**
-     * Test addRouteWithSchemas with null schemas.
+     * Test schema-backed routes with null schemas.
      */
     public function testAddRouteWithSchemasAcceptsNullSchemas(): void
     {
         $handler = new AppBehavioralTestHandler();
-        $app = (new App())->addRouteWithSchemas(
+        $app = RouteTestHelper::withRouteWithSchemas(
+            new App(),
             'GET',
             '/items',
             $handler,
@@ -445,8 +443,8 @@ final class AppBehavioralTest extends TestCase
         $handler1 = new AppBehavioralTestHandler();
         $handler2 = new AppBehavioralTestHandler();
 
-        $app1 = (new App())->addRoute('GET', '/test1', $handler1);
-        $app2 = $app1->addRoute('GET', '/test2', $handler2);
+        $app1 = RouteTestHelper::withRoute(new App(), 'GET', '/test1', $handler1);
+        $app2 = RouteTestHelper::withRoute($app1, 'GET', '/test2', $handler2);
 
         // app1 should only have one route
         $this->assertCount(1, $app1->routes());
@@ -455,12 +453,12 @@ final class AppBehavioralTest extends TestCase
     }
 
     /**
-     * Test singleRoute convenience method.
+     * Test single-route helper registration.
      */
     public function testSingleRouteConvenience(): void
     {
         $handler = new AppBehavioralTestHandler();
-        $app = App::singleRoute('DELETE', '/items/42', $handler);
+        $app = RouteTestHelper::withRoute(new App(), 'DELETE', '/items/42', $handler);
 
         $routes = $app->routes();
         $this->assertCount(1, $routes);

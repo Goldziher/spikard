@@ -11,16 +11,21 @@ declare(strict_types=1);
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Spikard\App;
+use Spikard\Attributes\Get;
 use Spikard\Config\ServerConfig;
 use Spikard\Http\Response;
 
+final class HelloController
+{
+    #[Get('/')]
+    public function index(): Response
+    {
+        return Response::text('Hello, World!');
+    }
+}
+
 $config = new ServerConfig(port: 8000);
-$app = new App($config);
-
-$app = $app->addRoute('GET', '/', function () {
-    return Response::text('Hello, World!');
-});
-
+$app = (new App($config))->registerController(new HelloController());
 $app->run();
 ```
 
@@ -50,22 +55,34 @@ $app = new App($config);
 
 ## Routing
 
-Register routes with HTTP methods and handler callables:
+Register routes with controller attributes:
 
 ```php
-$app = $app->addRoute('GET', '/users', function () {
-    return Response::json(['users' => []]);
-});
+use Spikard\Attributes\Get;
+use Spikard\Attributes\Post;
 
-$app = $app->addRoute('POST', '/users', function (Request $request) {
-    $data = $request->body;
-    return Response::json(['id' => 1] + $data, 201);
-});
+final class UsersController
+{
+    #[Get('/users')]
+    public function list(): Response
+    {
+        return Response::json(['users' => []]);
+    }
 
-$app = $app->addRoute('GET', '/users/{id:int}', function (Request $request) {
-    $id = $request->pathParams['id'];
-    return Response::json(['id' => $id, 'name' => 'Alice']);
-});
+    #[Post('/users')]
+    public function create(Request $request): Response
+    {
+        $data = $request->body;
+        return Response::json(['id' => 1] + $data, 201);
+    }
+
+    #[Get('/users/{id:int}')]
+    public function show(Request $request): Response
+    {
+        $id = $request->pathParams['id'];
+        return Response::json(['id' => $id, 'name' => 'Alice']);
+    }
+}
 ```
 
 ## Request & Response
@@ -73,23 +90,29 @@ $app = $app->addRoute('GET', '/users/{id:int}', function (Request $request) {
 Handlers receive `Spikard\Http\Request` objects and return responses:
 
 ```php
+use Spikard\Attributes\Post;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
-$app = $app->addRoute('POST', '/data', function (Request $request) {
-    // Access request data
-    $method = $request->method;
-    $path = $request->path;
-    $headers = $request->headers;
-    $query = $request->query;
-    $pathParams = $request->pathParams;
-    $body = $request->body;  // Array from JSON payload
+final class DataController
+{
+    #[Post('/data')]
+    public function store(Request $request): Response
+    {
+        // Access request data
+        $method = $request->method;
+        $path = $request->path;
+        $headers = $request->headers;
+        $query = $request->query;
+        $pathParams = $request->pathParams;
+        $body = $request->body;  // Array from JSON payload
 
-    // Return responses
-    return Response::text('Plain text');
-    return Response::json(['key' => 'value']);
-    return Response::json(['error' => 'Not found'], 404);
-});
+        // Return responses
+        return Response::text('Plain text');
+        return Response::json(['key' => 'value']);
+        return Response::json(['error' => 'Not found'], 404);
+    }
+}
 ```
 
 ## Validation
@@ -97,29 +120,35 @@ $app = $app->addRoute('POST', '/data', function (Request $request) {
 Validate request bodies manually or use schema validation:
 
 ```php
+use Spikard\Attributes\Post;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
-$app = $app->addRoute('POST', '/users', function (Request $request) {
-    $data = $request->body;
+final class ValidationController
+{
+    #[Post('/users')]
+    public function create(Request $request): Response
+    {
+        $data = $request->body;
 
-    // Manual validation
-    if (!isset($data['name'], $data['email'])) {
-        return Response::json(
-            ['error' => 'Missing required fields: name, email'],
-            400
-        );
+        // Manual validation
+        if (!isset($data['name'], $data['email'])) {
+            return Response::json(
+                ['error' => 'Missing required fields: name, email'],
+                400
+            );
+        }
+
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            return Response::json(
+                ['error' => 'Invalid email format'],
+                400
+            );
+        }
+
+        return Response::json(['id' => 1, 'name' => $data['name']], 201);
     }
-
-    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-        return Response::json(
-            ['error' => 'Invalid email format'],
-            400
-        );
-    }
-
-    return Response::json(['id' => 1, 'name' => $data['name']], 201);
-});
+}
 ```
 
 ## Dependency Injection
@@ -187,24 +216,33 @@ $app = $app->onError(function (array $error): array {
 Handlers should return error responses with appropriate status codes:
 
 ```php
+use Spikard\Http\Request;
 use Spikard\Http\Response;
+use Spikard\Attributes\Get;
 
-$app = $app->addRoute('GET', '/data/{id:int}', function (Request $request) {
-    $id = $request->pathParams['id'];
+final class DataController
+{
+    #[Get('/data/{id:int}')]
+    public function show(Request $request): Response
+    {
+        $id = (int) ($request->pathParams['id'] ?? 0);
 
-    if ($id < 1) {
-        return Response::json(
-            [
-                'error' => 'Invalid ID',
-                'code' => 'INVALID_INPUT',
-                'details' => ['id' => 'must be positive']
-            ],
-            400
-        );
+        if ($id < 1) {
+            return Response::json(
+                [
+                    'error' => 'Invalid ID',
+                    'code' => 'INVALID_INPUT',
+                    'details' => ['id' => 'must be positive']
+                ],
+                400
+            );
+        }
+
+        return Response::json(['id' => $id, 'data' => 'content']);
     }
+}
 
-    return Response::json(['id' => $id, 'data' => 'content']);
-});
+$app = $app->registerController(DataController::class);
 ```
 
 ## Deployment

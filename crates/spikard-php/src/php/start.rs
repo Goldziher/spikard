@@ -66,7 +66,7 @@ impl RegisteredRoutePayload {
 ///
 /// This function manually extracts each field and constructs ServerConfig directly, avoiding
 /// JSON deserialization which fails on non-serializable fields like lifecycle_hooks and di_container.
-fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::ServerConfig, String> {
+pub(crate) fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::ServerConfig, String> {
     use spikard_http::{
         ApiKeyConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig, RateLimitConfig,
         SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,

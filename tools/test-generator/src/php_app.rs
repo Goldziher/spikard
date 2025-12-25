@@ -43,7 +43,7 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
                 .and_then(|name| name.to_str())
                 .unwrap_or("fixtures")
                 .to_string();
-            if category == "sse" || category == "websockets" {
+            if category == "sse" || category == "websockets" || category == "jsonrpc" {
                 continue;
             }
             let mut fixtures = load_fixtures_from_dir(&path)
@@ -65,7 +65,7 @@ fn build_app_factory(
     let mut handler_classes = String::new();
 
     code.push_str(
-        "<?php\n\ndeclare(strict_types=1);\n\nnamespace E2E\\Php;\n\nuse Spikard\\App;\nuse Spikard\\Config\\ServerConfig;\nuse Spikard\\Config\\CompressionConfig;\nuse Spikard\\Config\\RateLimitConfig;\nuse Spikard\\Config\\ApiKeyConfig;\nuse Spikard\\Config\\JwtConfig;\nuse Spikard\\Config\\CorsConfig;\nuse Spikard\\Config\\OpenApiConfig;\nuse Spikard\\Handlers\\HandlerInterface;\nuse Spikard\\Handlers\\SseEventProducerInterface;\nuse Spikard\\Handlers\\WebSocketHandlerInterface;\nuse Spikard\\Http\\Request;\nuse Spikard\\Http\\Response;\n\n/**\n * Generated App factory for PHP e2e tests.\n * Routes are registered with schemas and executed via the native Rust stack.\n */\nfinal class AppFactory\n{\n",
+        "<?php\n\ndeclare(strict_types=1);\n\nnamespace E2E\\Php;\n\nrequire_once __DIR__ . '/../route_helper.php';\n\nuse Spikard\\App;\nuse Spikard\\Config\\ServerConfig;\nuse Spikard\\Config\\CompressionConfig;\nuse Spikard\\Config\\RateLimitConfig;\nuse Spikard\\Config\\ApiKeyConfig;\nuse Spikard\\Config\\JwtConfig;\nuse Spikard\\Config\\CorsConfig;\nuse Spikard\\Config\\OpenApiConfig;\nuse Spikard\\Handlers\\HandlerInterface;\nuse Spikard\\Handlers\\SseEventProducerInterface;\nuse Spikard\\Handlers\\WebSocketHandlerInterface;\nuse Spikard\\Http\\Request;\nuse Spikard\\Http\\Response;\n\n/**\n * Generated App factory for PHP e2e tests.\n * Routes are registered with schemas and executed via the native Rust stack.\n */\nfinal class AppFactory\n{\n",
     );
 
     if fixtures_by_category.is_empty() && sse_fixtures.is_empty() && websocket_fixtures.is_empty() {
@@ -74,8 +74,13 @@ fn build_app_factory(
     }
 
     for (index, fixture) in sse_fixtures.iter().enumerate() {
-        let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
-        let factory_method = format!("create_sse_{}_{}", sanitize_identifier(&fixture.name), index + 1);
+        let channel_name = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        let channel = normalize_path(&channel_name);
+        let factory_method = format!(
+            "create_sse_{}_{}",
+            sanitize_identifier(&channel_name),
+            index + 1
+        );
         let producer_class = format!("SseProducer_{}", index + 1);
 
         code.push_str(&format!(
@@ -98,15 +103,20 @@ fn build_app_factory(
         };
 
         handler_classes.push_str(&format!(
-            "final class {producer_class} implements SseEventProducerInterface\n{{\n    /** @return \\Generator<int, string, mixed, void> */\n    public function __invoke(): \\Generator\n    {{\n        $events = {events};\n        foreach ($events as $event) {{\n            yield 'data: ' . json_encode($event) . \"\\n\\n\";\n        }}\n    }}\n}}\n\n",
+            "final class {producer_class} implements SseEventProducerInterface\n{{\n    /** @return \\Generator<int, string, mixed, void> */\n    public function __invoke(): \\Generator\n    {{\n        $events = {events};\n        foreach ($events as $event) {{\n            yield json_encode(['data' => $event]);\n        }}\n    }}\n}}\n\n",
             producer_class = producer_class,
             events = events_literal
         ));
     }
 
     for (index, fixture) in websocket_fixtures.iter().enumerate() {
-        let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
-        let factory_method = format!("create_websocket_{}_{}", sanitize_identifier(&fixture.name), index + 1);
+        let channel_name = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        let channel = normalize_path(&channel_name);
+        let factory_method = format!(
+            "create_websocket_{}_{}",
+            sanitize_identifier(&channel_name),
+            index + 1
+        );
         let handler_class = format!("WebSocketHandler_{}", index + 1);
 
         code.push_str(&format!(
@@ -129,7 +139,7 @@ fn build_app_factory(
         };
 
         handler_classes.push_str(&format!(
-            "final class {handler_class} implements WebSocketHandlerInterface\n{{\n    private array $messages = {messages};\n    private int $messageIndex = 0;\n\n    public function onConnect(): void\n    {{\n        // Connection established\n    }}\n\n    public function onMessage(string $message): void\n    {{\n        // Handle incoming message\n    }}\n\n    public function onClose(int $code, ?string $reason = null): void\n    {{\n        // Connection closed\n    }}\n\n    public function getNextMessage(): ?array\n    {{\n        if ($this->messageIndex < count($this->messages)) {{\n            return $this->messages[$this->messageIndex++];\n        }}\n        return null;\n    }}\n}}\n\n",
+            "final class {handler_class} implements WebSocketHandlerInterface\n{{\n    private array $messages = [];\n    private int $messageIndex = 0;\n\n    public function __construct()\n    {{\n        $this->messages = {messages};\n    }}\n\n    public function onConnect(): void\n    {{\n        // Connection established\n    }}\n\n    public function onMessage(string $message): void\n    {{\n        // Handle incoming message\n    }}\n\n    public function onClose(int $code, ?string $reason = null): void\n    {{\n        // Connection closed\n    }}\n\n    public function getNextMessage(): ?array\n    {{\n        if ($this->messageIndex < count($this->messages)) {{\n            return $this->messages[$this->messageIndex++];\n        }}\n        return null;\n    }}\n}}\n\n",
             handler_class = handler_class,
             messages = messages_literal
         ));
@@ -177,7 +187,7 @@ fn build_app_factory(
 
             if config_str == "null" {
                 code.push_str(&format!(
-                    "    public static function {factory_method}(): App\n    {{\n        $app = new App();\n{handler}\n        $app = $app->addRouteWithSchemas('{method}', '{path}', $handler, {req}, {resp}, {params});\n        return $app;\n    }}\n\n",
+                    "    public static function {factory_method}(): App\n    {{\n        $app = new App();\n{handler}\n        $app = \\register_route_with_schemas($app, '{method}', '{path}', $handler, {req}, {resp}, {params});\n        return $app;\n    }}\n\n",
                     factory_method = factory_method,
                     method = method,
                     path = path,
@@ -188,7 +198,7 @@ fn build_app_factory(
                 ));
             } else {
                 code.push_str(&format!(
-                    "    public static function {factory_method}(): App\n    {{\n        $config = {config};\n        $app = new App($config);\n{handler}\n        $app = $app->addRouteWithSchemas('{method}', '{path}', $handler, {req}, {resp}, {params});\n        return $app;\n    }}\n\n",
+                    "    public static function {factory_method}(): App\n    {{\n        $config = {config};\n        $app = new App($config);\n{handler}\n        $app = \\register_route_with_schemas($app, '{method}', '{path}', $handler, {req}, {resp}, {params});\n        return $app;\n    }}\n\n",
                     factory_method = factory_method,
                     config = config_str,
                     method = method,
@@ -224,6 +234,9 @@ fn value_to_php(value: &serde_json::Value) -> String {
             format!("[{}]", items)
         }
         serde_json::Value::Object(map) => {
+            if map.is_empty() {
+                return "(object)[]".to_string();
+            }
             let mut parts = Vec::new();
             for (k, v) in map {
                 parts.push(format!("{} => {}", php_string_literal(k), value_to_php(v)));
@@ -291,7 +304,7 @@ fn build_routes_json(
     }
 
     for fixture in sse_fixtures {
-        let path = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        let path = normalize_path(&fixture.channel.clone().unwrap_or_else(|| fixture.name.clone()));
         routes.push(json!({
             "method": "GET",
             "path": path,
@@ -302,7 +315,7 @@ fn build_routes_json(
         }));
     }
     for fixture in websocket_fixtures {
-        let path = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        let path = normalize_path(&fixture.channel.clone().unwrap_or_else(|| fixture.name.clone()));
         routes.push(json!({
             "method": "GET",
             "path": path,
@@ -508,6 +521,14 @@ fn build_openapi_config_php(openapi: &Value) -> String {
 /// Build parameter schema in PHP format
 fn build_parameter_schema_php(params: &Value) -> String {
     php_encode_json_value(params)
+}
+
+fn normalize_path(path: &str) -> String {
+    if path.starts_with('/') {
+        path.to_string()
+    } else {
+        format!("/{path}")
+    }
 }
 
 /// Encode JSON value as PHP code that can be evaluated

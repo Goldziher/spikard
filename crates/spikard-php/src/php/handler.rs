@@ -64,6 +64,20 @@ thread_local! {
     };
 }
 
+pub fn clear_handler_registry() {
+    PHP_HANDLER_REGISTRY.with(|registry| {
+        registry.borrow_mut().clear();
+    });
+}
+
+pub fn leak_handler_registry() {
+    PHP_HANDLER_REGISTRY.with(|registry| {
+        let mut registry = registry.borrow_mut();
+        let handlers = std::mem::take(&mut *registry);
+        std::mem::forget(handlers);
+    });
+}
+
 impl PhpHandler {
     /// Register a PHP callable and return its index for later invocation.
     ///

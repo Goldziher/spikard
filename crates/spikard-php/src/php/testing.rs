@@ -3,20 +3,22 @@
 //! This module implements `NativeTestClient`, a PHP class that provides
 //! HTTP testing capabilities against a Spikard server without network overhead.
 
+use axum::body::Body;
+use axum::http::{HeaderName, HeaderValue, Method, Request as AxumRequest, Uri};
 use axum::routing::get;
+use axum::Router;
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
 use serde_json::Value as JsonValue;
 use spikard_http::server::build_router_with_handlers_and_config;
-use spikard_http::testing::{
-    ResponseSnapshot, SseStream as CoreSseStream, TestClient as CoreTestClient, WebSocketConnection,
-};
-use spikard_http::{Handler, Route, RouteMetadata, ServerConfig};
+use spikard_http::testing::{ResponseSnapshot, SseStream as CoreSseStream, snapshot_http_response};
+use spikard_http::{Handler, Route, RouteMetadata, ServerConfig, WebSocketState};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Arc;
+use tower::util::ServiceExt;
 
 use super::{PhpHandler, PhpRequest, json_to_php_table, zval_to_json};
 
@@ -105,9 +107,10 @@ impl PhpTestResponse {
 }
 
 struct NativeClientInner {
-    client: Arc<CoreTestClient>,
+    router: Arc<Router>,
     #[allow(dead_code)]
     handlers: Vec<Zval>,
+    websocket_states: HashMap<String, WebSocketState<super::PhpWebSocketHandler>>,
 }
 
 struct ParsedRoute {
@@ -127,14 +130,21 @@ pub struct PhpNativeTestClient {
 #[php_impl]
 impl PhpNativeTestClient {
     #[php(constructor)]
-    pub fn __construct(routes: &Zval) -> PhpResult<Self> {
+    pub fn __construct(routes: &Zval, config: Option<&Zval>) -> PhpResult<Self> {
         let parsed_routes = parse_native_routes(routes)?;
+        let server_config = if let Some(config_zval) = config {
+            super::start::extract_server_config_from_php(config_zval)
+                .map_err(|e| PhpException::default(format!("Invalid server config: {}", e)))?
+        } else {
+            ServerConfig::default()
+        };
 
         let mut handler_refs = Vec::new();
         let mut route_pairs: Vec<(Route, Arc<dyn Handler>)> = Vec::new();
         let mut route_metadata: Vec<RouteMetadata> = Vec::new();
         let mut websocket_routes = Vec::new();
         let mut sse_routes = Vec::new();
+        let mut websocket_states = HashMap::new();
 
         for route in parsed_routes {
             handler_refs.push(route.handler.shallow_clone());
@@ -198,7 +208,7 @@ impl PhpNativeTestClient {
             route_pairs.push((route_def, Arc::new(handler) as Arc<dyn Handler>));
         }
 
-        let mut router = build_router_with_handlers_and_config(route_pairs, ServerConfig::default(), route_metadata)
+        let mut router = build_router_with_handlers_and_config(route_pairs, server_config, route_metadata)
             .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
 
         for route in websocket_routes {
@@ -209,6 +219,7 @@ impl PhpNativeTestClient {
             let ws_state =
                 super::create_websocket_state(&route.handler, Some(handler_name), message_schema, response_schema)
                     .map_err(|e| PhpException::default(format!("Failed to build WebSocket state: {}", e)))?;
+            websocket_states.insert(path.clone(), ws_state.clone());
             router = router.route(
                 &path,
                 get(spikard_http::websocket_handler::<super::PhpWebSocketHandler>).with_state(ws_state),
@@ -225,22 +236,20 @@ impl PhpNativeTestClient {
             );
         }
 
-        let client = Arc::new(
-            CoreTestClient::from_router(router)
-                .map_err(|e| PhpException::default(format!("Test client error: {}", e)))?,
-        );
+        let router = Arc::new(router);
 
         Ok(Self {
             inner: RefCell::new(Some(NativeClientInner {
-                client,
+                router,
                 handlers: handler_refs,
+                websocket_states,
             })),
         })
     }
 
     /// Execute an HTTP request using the full Rust HTTP stack.
     #[php(name = "request")]
-    pub fn request(&self, method: String, path: String, options: Option<&Zval>) -> PhpResult<super::PhpResponse> {
+    pub fn request(&self, method: String, path: String, options: Option<&Zval>) -> PhpResult<PhpTestResponse> {
         let inner_ref = self.inner.borrow();
         let inner = inner_ref
             .as_ref()
@@ -251,11 +260,13 @@ impl PhpNativeTestClient {
 
         let runtime = super::get_runtime()?;
         let response = runtime.block_on(async {
-            dispatch_request(
-                &inner.client,
+            dispatch_request_direct(
+                &inner.router,
                 method,
                 path,
                 request_options.body,
+                request_options.raw_body,
+                request_options.form_data,
                 request_options.multipart,
                 headers,
             )
@@ -273,14 +284,24 @@ impl PhpNativeTestClient {
             .as_ref()
             .ok_or_else(|| PhpException::default("TestClient is closed".to_string()))?;
 
-        let runtime = super::get_runtime()?;
-        let mut ws = runtime.block_on(spikard_http::testing::connect_websocket(inner.client.server(), &path));
+        let lookup_path = normalize_websocket_path(&path);
+        let Some(state) = inner.websocket_states.get(&lookup_path) else {
+            return Err(PhpException::default(format!(
+                "WebSocket route not found for path '{}'",
+                path
+            )));
+        };
 
+        let runtime = super::get_runtime()?;
+        let state = state.clone();
+        runtime.block_on(state.on_connect());
+
+        let mut connection = PhpWebSocketTestConnection::from_state(state, inner.router.clone());
         if let Some(text) = send_text {
-            runtime.block_on(ws.send_text(text));
+            connection.send_text(text)?;
         }
 
-        Ok(PhpWebSocketTestConnection::from_connection(ws, inner.client.clone()))
+        Ok(connection)
     }
 
     /// Connect to an SSE endpoint for testing.
@@ -293,11 +314,17 @@ impl PhpNativeTestClient {
 
         let runtime = super::get_runtime()?;
         let response = runtime.block_on(async {
-            inner
-                .client
-                .get(&path, None, None)
-                .await
-                .map_err(|e| PhpException::default(format!("SSE request failed: {}", e)))
+            dispatch_request_direct(
+                &inner.router,
+                "GET".to_string(),
+                path,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
         })?;
 
         PhpSseStream::from_snapshot(response)
@@ -539,6 +566,8 @@ struct ParsedRequestOptions {
     headers: HashMap<String, String>,
     cookies: HashMap<String, String>,
     body: Option<JsonValue>,
+    raw_body: Option<Vec<u8>>,
+    form_data: Option<JsonValue>,
     multipart: MultipartPayload,
 }
 
@@ -561,8 +590,16 @@ fn parse_native_routes(routes: &Zval) -> PhpResult<Vec<ParsedRoute>> {
         let websocket = route_array.get("websocket").and_then(|v| v.bool()).unwrap_or(false);
         let sse = route_array.get("sse").and_then(|v| v.bool()).unwrap_or(false);
 
-        let json_val = zval_to_json(route_val)
+        let mut json_val = zval_to_json(route_val)
             .map_err(|e| PhpException::default(format!("Failed to convert route to JSON: {}", e)))?;
+
+        if let Some(obj) = json_val.as_object_mut() {
+            for key in ["request_schema", "response_schema", "parameter_schema"] {
+                if let Some(schema_val) = obj.get_mut(key) {
+                    normalize_schema_empty_arrays(schema_val);
+                }
+            }
+        }
 
         let payload = serde_json::from_value::<crate::php::start::RegisteredRoutePayload>(json_val)
             .map_err(|e| PhpException::default(format!("Invalid route payload: {}", e)))?;
@@ -578,10 +615,32 @@ fn parse_native_routes(routes: &Zval) -> PhpResult<Vec<ParsedRoute>> {
     Ok(parsed)
 }
 
+fn normalize_schema_empty_arrays(value: &mut JsonValue) {
+    match value {
+        JsonValue::Array(items) => {
+            if items.is_empty() {
+                *value = JsonValue::Object(serde_json::Map::new());
+            } else {
+                for item in items {
+                    normalize_schema_empty_arrays(item);
+                }
+            }
+        }
+        JsonValue::Object(map) => {
+            for val in map.values_mut() {
+                normalize_schema_empty_arrays(val);
+            }
+        }
+        _ => {}
+    }
+}
+
 fn parse_request_options(options: Option<&Zval>) -> PhpResult<ParsedRequestOptions> {
     let mut headers = HashMap::new();
     let mut cookies = HashMap::new();
     let mut body = None;
+    let mut raw_body = None;
+    let mut form_data = None;
     let mut multipart = None;
 
     let Some(options_val) = options else {
@@ -589,6 +648,8 @@ fn parse_request_options(options: Option<&Zval>) -> PhpResult<ParsedRequestOptio
             headers,
             cookies,
             body,
+            raw_body,
+            form_data,
             multipart,
         });
     };
@@ -598,6 +659,8 @@ fn parse_request_options(options: Option<&Zval>) -> PhpResult<ParsedRequestOptio
             headers,
             cookies,
             body,
+            raw_body,
+            form_data,
             multipart,
         });
     };
@@ -608,18 +671,71 @@ fn parse_request_options(options: Option<&Zval>) -> PhpResult<ParsedRequestOptio
     if let Some(body_val) = options_array.get("body")
         && !body_val.is_null()
     {
-        body = Some(zval_to_json(body_val).map_err(PhpException::default)?);
+        let content_type = header_value(&headers, "content-type");
+        let is_json = content_type
+            .as_deref()
+            .map(is_json_content_type)
+            .unwrap_or(true);
+
+        if !is_json {
+            if let Some(body_str) = body_val.string() {
+                raw_body = Some(body_str.as_bytes().to_vec());
+            } else {
+                let json_val = zval_to_json(body_val).map_err(PhpException::default)?;
+                let encoded = serde_json::to_string(&json_val).unwrap_or_default();
+                raw_body = Some(encoded.into_bytes());
+            }
+        } else if let Some(body_str) = body_val.string() {
+            match serde_json::from_str::<JsonValue>(&body_str) {
+                Ok(parsed) => body = Some(parsed),
+                Err(_) => body = Some(JsonValue::String(body_str.to_string())),
+            }
+        } else {
+            body = Some(zval_to_json(body_val).map_err(PhpException::default)?);
+        }
     }
 
+    if let Some(form_val) = options_array
+        .get("form_data")
+        .or_else(|| options_array.get("form"))
+        .or_else(|| options_array.get("data"))
+        && !form_val.is_null()
+    {
+        form_data = Some(zval_to_json(form_val).map_err(PhpException::default)?);
+    }
+    if body.is_some() || raw_body.is_some() {
+        form_data = None;
+    }
+
+    let files_specified = options_array.get("files").is_some();
     let files = parse_files(options_array.get("files"));
-    if body.is_none() && !files.is_empty() {
+    let content_type = header_value(&headers, "content-type");
+    let is_multipart = content_type
+        .as_deref()
+        .map(|ct| ct.to_ascii_lowercase().starts_with("multipart/form-data"))
+        .unwrap_or(false);
+    let form_fields = form_data
+        .as_ref()
+        .map(form_fields_from_json)
+        .unwrap_or_default();
+
+    if (is_multipart || !files.is_empty()) && (!files.is_empty() || !form_fields.is_empty()) {
+        multipart = Some((form_fields, files));
+        form_data = None;
+    } else if (is_multipart || files_specified) && multipart.is_none() {
+        multipart = Some((form_fields, files));
+        form_data = None;
+    } else if !files.is_empty() && body.is_none() && raw_body.is_none() {
         multipart = Some((Vec::new(), files));
+        form_data = None;
     }
 
     Ok(ParsedRequestOptions {
         headers,
         cookies,
         body,
+        raw_body,
+        form_data,
         multipart,
     })
 }
@@ -647,23 +763,101 @@ fn parse_files(value: Option<&Zval>) -> Vec<spikard_http::testing::MultipartFile
     };
 
     for (key, val) in array.iter() {
-        let field_name = array_key_to_string(key);
+        let fallback_field = array_key_to_string(key);
+        if let Ok(json_val) = zval_to_json(val)
+            && let Some(obj) = json_val.as_object()
+        {
+            let field_name = obj
+                .get("field_name")
+                .and_then(|v| v.as_str())
+                .unwrap_or(&fallback_field)
+                .to_string();
+            let filename = obj
+                .get("filename")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let content_type = obj
+                .get("content_type")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+            let content = file_content_from_json(obj);
+            files.push(spikard_http::testing::MultipartFilePart {
+                field_name,
+                filename,
+                content_type,
+                content,
+            });
+            continue;
+        }
+
         let content = if let Some(val_str) = val.string() {
-            val_str.to_string()
+            val_str.as_bytes().to_vec()
         } else {
             let json_val = zval_to_json(val).unwrap_or(JsonValue::Null);
-            serde_json::to_string(&json_val).unwrap_or_default()
+            serde_json::to_string(&json_val).unwrap_or_default().into_bytes()
         };
 
         files.push(spikard_http::testing::MultipartFilePart {
-            field_name: field_name.clone(),
-            filename: field_name,
+            field_name: fallback_field.clone(),
+            filename: fallback_field,
             content_type: None,
-            content: content.into_bytes(),
+            content,
         });
     }
 
     files
+}
+
+fn file_content_from_json(obj: &serde_json::Map<String, JsonValue>) -> Vec<u8> {
+    if let Some(content) = obj.get("content").and_then(|v| v.as_str()) {
+        return content.as_bytes().to_vec();
+    }
+    if let Some(magic) = obj.get("magic_bytes").and_then(|v| v.as_str()) {
+        return decode_hex_bytes(magic);
+    }
+    Vec::new()
+}
+
+fn decode_hex_bytes(value: &str) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    let mut chars = value.as_bytes().iter().copied();
+    while let (Some(high), Some(low)) = (chars.next(), chars.next()) {
+        let hi = (high as char).to_digit(16);
+        let lo = (low as char).to_digit(16);
+        if let (Some(hi), Some(lo)) = (hi, lo) {
+            bytes.push(((hi << 4) | lo) as u8);
+        } else {
+            return Vec::new();
+        }
+    }
+    bytes
+}
+
+fn form_fields_from_json(value: &JsonValue) -> Vec<(String, String)> {
+    match value {
+        JsonValue::Object(map) => map
+            .iter()
+            .flat_map(|(key, val)| match val {
+                JsonValue::Array(items) => items
+                    .iter()
+                    .map(|item| (key.clone(), json_value_to_string(item)))
+                    .collect::<Vec<_>>(),
+                _ => vec![(key.clone(), json_value_to_string(val))],
+            })
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+fn json_value_to_string(value: &JsonValue) -> String {
+    match value {
+        JsonValue::String(s) => s.clone(),
+        JsonValue::Number(num) => num.to_string(),
+        JsonValue::Bool(b) => b.to_string(),
+        JsonValue::Null => String::new(),
+        _ => serde_json::to_string(value).unwrap_or_default(),
+    }
 }
 
 fn array_key_to_string(key: ext_php_rs::types::ArrayKey) -> String {
@@ -671,6 +865,14 @@ fn array_key_to_string(key: ext_php_rs::types::ArrayKey) -> String {
         ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
         ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
         ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+    }
+}
+
+fn normalize_websocket_path(path: &str) -> String {
+    if path.starts_with('/') {
+        path.to_string()
+    } else {
+        format!("/{}", path)
     }
 }
 
@@ -690,61 +892,105 @@ fn build_header_list(
     if combined.is_empty() { None } else { Some(combined) }
 }
 
-async fn dispatch_request(
-    client: &CoreTestClient,
+async fn dispatch_request_direct(
+    router: &Router,
     method: String,
     path: String,
     body: Option<JsonValue>,
+    raw_body: Option<Vec<u8>>,
+    form_data: Option<JsonValue>,
     multipart: MultipartPayload,
     headers: Option<Vec<(String, String)>>,
 ) -> PhpResult<ResponseSnapshot> {
     let method_upper = method.to_ascii_uppercase();
-    let response = match method_upper.as_str() {
-        "GET" => client.get(&path, None, headers).await,
-        "DELETE" => client.delete(&path, None, headers).await,
-        "HEAD" => client.head(&path, None, headers).await,
-        "OPTIONS" => client.options(&path, None, headers).await,
-        "TRACE" => client.trace(&path, None, headers).await,
-        "POST" => client.post(&path, body, None, multipart, None, headers).await,
-        "PUT" => client.put(&path, body, None, headers).await,
-        "PATCH" => client.patch(&path, body, None, headers).await,
-        _ => {
-            return Err(PhpException::default(format!(
-                "Unsupported HTTP method: {}",
-                method_upper
-            )));
-        }
-    };
+    let method = Method::from_bytes(method_upper.as_bytes())
+        .map_err(|e| PhpException::default(format!("Invalid HTTP method: {}", e)))?;
+    let uri: Uri = path
+        .parse()
+        .map_err(|e| PhpException::default(format!("Invalid request URI: {}", e)))?;
 
-    response.map_err(|e| PhpException::default(format!("Test request failed: {}", e)))
+    let mut builder = AxumRequest::builder().method(method).uri(uri);
+    let mut header_entries = headers.unwrap_or_default();
+    let has_content_type = header_entries
+        .iter()
+        .any(|(key, _)| key.eq_ignore_ascii_case("content-type"));
+
+    let mut body_bytes: Vec<u8> = Vec::new();
+    let mut content_type_override: Option<String> = None;
+    let mut force_content_type = false;
+
+    if let Some(raw_body) = raw_body {
+        body_bytes = raw_body;
+    } else if let Some((form_fields, files)) = multipart {
+        let (body, boundary) = spikard_http::testing::build_multipart_body(&form_fields, &files);
+        content_type_override = Some(format!("multipart/form-data; boundary={}", boundary));
+        force_content_type = true;
+        body_bytes = body;
+    } else if let Some(form_value) = form_data {
+        let encoded = spikard_http::testing::encode_urlencoded_body(&form_value)
+            .map_err(|e| PhpException::default(format!("Form encoding failed: {}", e)))?;
+        content_type_override = Some("application/x-www-form-urlencoded".to_string());
+        body_bytes = encoded;
+    } else if let Some(json_value) = body {
+        body_bytes = serde_json::to_vec(&json_value).unwrap_or_default();
+        content_type_override = Some("application/json".to_string());
+    }
+
+    if let Some(content_type) = content_type_override {
+        if force_content_type || !has_content_type {
+            header_entries.retain(|(key, _)| !key.eq_ignore_ascii_case("content-type"));
+            builder = builder.header("content-type", content_type);
+        }
+    }
+
+    for (key, value) in header_entries {
+        let header_name = HeaderName::from_bytes(key.as_bytes())
+            .map_err(|e| PhpException::default(format!("Invalid header name: {}", e)))?;
+        let header_value =
+            HeaderValue::from_str(&value).map_err(|e| PhpException::default(format!("Invalid header value: {}", e)))?;
+        builder = builder.header(header_name, header_value);
+    }
+
+    let request = builder
+        .body(Body::from(body_bytes))
+        .map_err(|e| PhpException::default(format!("Failed to build request: {}", e)))?;
+
+    let response = router
+        .clone()
+        .oneshot(request)
+        .await
+        .map_err(|e| PhpException::default(format!("Test request failed: {}", e)))?;
+    snapshot_http_response(response)
+        .await
+        .map_err(|e| PhpException::default(format!("Test request failed: {}", e)))
 }
 
-fn snapshot_to_php_response(snapshot: ResponseSnapshot) -> PhpResult<super::PhpResponse> {
+fn snapshot_to_php_response(snapshot: ResponseSnapshot) -> PhpResult<PhpTestResponse> {
     let status_code = snapshot.status as i64;
     let headers = snapshot.headers;
-
-    let body_value = if snapshot.body.is_empty() {
-        JsonValue::Null
-    } else if is_json_response(&headers) {
-        serde_json::from_slice(&snapshot.body)
-            .unwrap_or_else(|_| JsonValue::String(String::from_utf8_lossy(&snapshot.body).into_owned()))
+    let body = if snapshot.body.is_empty() {
+        String::new()
     } else {
-        JsonValue::String(String::from_utf8_lossy(&snapshot.body).into_owned())
+        String::from_utf8_lossy(&snapshot.body).into_owned()
     };
 
-    Ok(super::PhpResponse {
-        status_code,
-        body: body_value,
+    Ok(PhpTestResponse {
+        status: status_code,
+        body,
         headers,
-        cookies: HashMap::new(),
     })
 }
 
-fn is_json_response(headers: &HashMap<String, String>) -> bool {
+fn is_json_content_type(value: &str) -> bool {
+    let lower = value.to_ascii_lowercase();
+    lower.starts_with("application/json") || lower.contains("+json")
+}
+
+fn header_value(headers: &HashMap<String, String>, name: &str) -> Option<String> {
     headers
-        .get("content-type")
-        .map(|value| value.starts_with("application/json"))
-        .unwrap_or(false)
+        .iter()
+        .find(|(key, _)| key.eq_ignore_ascii_case(name))
+        .map(|(_, value)| value.clone())
 }
 
 /// Advanced test client that uses axum-test for full HTTP stack testing.
@@ -824,12 +1070,16 @@ impl PhpHttpTestClient {
 /// WebSocket test connection for PHP.
 ///
 /// This provides methods to send and receive WebSocket messages in tests.
+struct LocalWebSocketConnection {
+    state: WebSocketState<super::PhpWebSocketHandler>,
+}
+
 #[php_class]
 #[php(name = "Spikard\\Testing\\WebSocketTestConnection")]
 pub struct PhpWebSocketTestConnection {
-    inner: RefCell<Option<WebSocketConnection>>,
+    inner: RefCell<Option<LocalWebSocketConnection>>,
     #[allow(dead_code)]
-    keepalive: Arc<CoreTestClient>,
+    keepalive: Arc<Router>,
 }
 
 impl PhpWebSocketTestConnection {
@@ -839,16 +1089,16 @@ impl PhpWebSocketTestConnection {
         ))
     }
 
-    fn from_connection(connection: WebSocketConnection, keepalive: Arc<CoreTestClient>) -> Self {
+    fn from_state(state: WebSocketState<super::PhpWebSocketHandler>, keepalive: Arc<Router>) -> Self {
         Self {
-            inner: RefCell::new(Some(connection)),
+            inner: RefCell::new(Some(LocalWebSocketConnection { state })),
             keepalive,
         }
     }
 
     fn with_connection_mut<F, T>(&self, op: F) -> PhpResult<T>
     where
-        F: FnOnce(&mut WebSocketConnection) -> PhpResult<T>,
+        F: FnOnce(&mut LocalWebSocketConnection) -> PhpResult<T>,
     {
         let mut inner = self.inner.borrow_mut();
         let ws = inner
@@ -865,7 +1115,16 @@ impl PhpWebSocketTestConnection {
     pub fn send_text(&mut self, text: String) -> PhpResult<()> {
         self.with_connection_mut(|ws| {
             let runtime = super::get_runtime()?;
-            runtime.block_on(ws.send_text(text));
+            let message: JsonValue =
+                serde_json::from_str(&text).map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
+            runtime
+                .block_on(async {
+                    ws.state
+                        .handle_message_validated(message)
+                        .await
+                        .map(|_| ())
+                        .map_err(PhpException::default)
+                })?;
             Ok(())
         })
     }
@@ -873,11 +1132,18 @@ impl PhpWebSocketTestConnection {
     /// Send a JSON message to the WebSocket.
     #[php(name = "sendJson")]
     pub fn send_json(&mut self, data: String) -> PhpResult<()> {
-        let value: JsonValue =
-            serde_json::from_str(&data).map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
         self.with_connection_mut(|ws| {
             let runtime = super::get_runtime()?;
-            runtime.block_on(ws.send_json(&value));
+            let message: JsonValue =
+                serde_json::from_str(&data).map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
+            runtime
+                .block_on(async {
+                    ws.state
+                        .handle_message_validated(message)
+                        .await
+                        .map(|_| ())
+                        .map_err(PhpException::default)
+                })?;
             Ok(())
         })
     }
@@ -886,9 +1152,10 @@ impl PhpWebSocketTestConnection {
     #[php(name = "receiveText")]
     pub fn receive_text(&self) -> PhpResult<String> {
         self.with_connection_mut(|ws| {
-            let runtime = super::get_runtime()?;
-            let text = runtime.block_on(ws.receive_text());
-            Ok(text)
+            let _ = ws;
+            Err(PhpException::default(
+                "Local WebSocket connections do not support receiving messages".to_string(),
+            ))
         })
     }
 
@@ -905,9 +1172,10 @@ impl PhpWebSocketTestConnection {
     #[php(name = "receiveBytes")]
     pub fn receive_bytes(&self) -> PhpResult<Vec<u8>> {
         self.with_connection_mut(|ws| {
-            let runtime = super::get_runtime()?;
-            let bytes = runtime.block_on(ws.receive_bytes());
-            Ok(bytes.to_vec())
+            let _ = ws;
+            Err(PhpException::default(
+                "Local WebSocket connections do not support receiving messages".to_string(),
+            ))
         })
     }
 
@@ -917,7 +1185,7 @@ impl PhpWebSocketTestConnection {
         let mut inner = self.inner.borrow_mut();
         if let Some(ws) = inner.take() {
             let runtime = super::get_runtime()?;
-            runtime.block_on(ws.close());
+            runtime.block_on(ws.state.on_disconnect());
         }
         Ok(())
     }

@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Spikard;
 
 use ReflectionClass;
+use ReflectionMethod;
+use ReflectionNamedType;
 use RuntimeException;
+use Spikard\Attributes\JsonRpcMethod;
 use Spikard\Attributes\Middleware;
 use Spikard\Attributes\Route;
+use Spikard\Attributes\SchemaRef;
 use Spikard\Config\LifecycleHooks;
 use Spikard\Config\ServerConfig;
 use Spikard\DI\DependencyContainer;
@@ -15,7 +19,6 @@ use Spikard\Handlers\ControllerMethodHandler;
 use Spikard\Handlers\HandlerInterface;
 use Spikard\Handlers\SseEventProducerInterface;
 use Spikard\Handlers\WebSocketHandlerInterface;
-use Spikard\Http\JsonRpcMethodInfo;
 use Spikard\Http\Request;
 use Spikard\Native\TestClient as NativeClient;
 
@@ -27,12 +30,21 @@ use Spikard\Native\TestClient as NativeClient;
  */
 final class App
 {
+    /** @var array<string, array{request: array<mixed>|null, parameter: array<mixed>|null}> */
+    private static array $methodSchemaCache = [];
+
     private ?ServerConfig $config;
     private ?LifecycleHooks $hooks = null;
     private ?DependencyContainer $dependencies = null;
     private ?int $serverHandle = null;
+    /** @var array<string, array<mixed>>|null */
+    private ?array $requestSchemas = null;
+    /** @var array<string, array<mixed>>|null */
+    private ?array $responseSchemas = null;
+    /** @var array<string, array<mixed>>|null */
+    private ?array $parameterSchemas = null;
 
-    /** @var array<int, array{method: string, path: string, handler: HandlerInterface, request_schema?: array<mixed>|null, response_schema?: array<mixed>|null, parameter_schema?: array<mixed>|null, jsonrpc_method?: JsonRpcMethodInfo|null}> */
+    /** @var array<int, array{method: string, path: string, handler: HandlerInterface, request_schema?: array<mixed>|null, response_schema?: array<mixed>|null, parameter_schema?: array<mixed>|null, jsonrpc_method?: \Spikard\Http\JsonRpcMethodInfo|null}> */
     private array $routes = [];
 
     /** @var array<string, WebSocketHandlerInterface> */
@@ -68,76 +80,18 @@ final class App
     }
 
     /**
-     * Register an HTTP route with a handler.
+     * Provide shared schema maps for attribute-driven routes.
+     *
+     * @param array<string, array<mixed>> $requestSchemas
+     * @param array<string, array<mixed>> $responseSchemas
+     * @param array<string, array<mixed>> $parameterSchemas
      */
-    public function addRoute(string $method, string $path, HandlerInterface $handler): self
+    public function withSchemas(array $requestSchemas, array $responseSchemas, array $parameterSchemas): self
     {
         $clone = clone $this;
-        $clone->routes[] = [
-            'method' => $method,
-            'path' => $path,
-            'handler' => $handler,
-        ];
-        return $clone;
-    }
-
-    /**
-     * Register an HTTP route with JSON schemas (request/response/parameters).
-     * Schemas must already match the fixture schema.json shapes.
-     *
-     * @param array<string,mixed>|null $requestSchema
-     * @param array<string,mixed>|null $responseSchema
-     * @param array<string,mixed>|null $parameterSchema
-     */
-    public function addRouteWithSchemas(
-        string $method,
-        string $path,
-        HandlerInterface $handler,
-        ?array $requestSchema,
-        ?array $responseSchema,
-        ?array $parameterSchema
-    ): self {
-        $clone = clone $this;
-        $clone->routes[] = [
-            'method' => $method,
-            'path' => $path,
-            'handler' => $handler,
-            'request_schema' => $requestSchema,
-            'response_schema' => $responseSchema,
-            'parameter_schema' => $parameterSchema,
-        ];
-        return $clone;
-    }
-
-    /**
-     * Register a JSON-RPC 2.0 method route with metadata.
-     *
-     * @param JsonRpcMethodInfo|null $jsonrpcMethod JSON-RPC method metadata
-     */
-    /**
-     * @param array<string, mixed>|null $requestSchema
-     * @param array<string, mixed>|null $responseSchema
-     * @param array<string, mixed>|null $parameterSchema
-     */
-    public function addJsonRpcRoute(
-        string $method,
-        string $path,
-        HandlerInterface $handler,
-        ?JsonRpcMethodInfo $jsonrpcMethod = null,
-        ?array $requestSchema = null,
-        ?array $responseSchema = null,
-        ?array $parameterSchema = null
-    ): self {
-        $clone = clone $this;
-        $clone->routes[] = [
-            'method' => $method,
-            'path' => $path,
-            'handler' => $handler,
-            'request_schema' => $requestSchema,
-            'response_schema' => $responseSchema,
-            'parameter_schema' => $parameterSchema,
-            'jsonrpc_method' => $jsonrpcMethod,
-        ];
+        $clone->requestSchemas = $requestSchemas;
+        $clone->responseSchemas = $responseSchemas;
+        $clone->parameterSchemas = $parameterSchemas;
         return $clone;
     }
 
@@ -173,7 +127,7 @@ final class App
      *     }
      *
      *     #[Post('/users')]
-     *     public function create(#[Body] array $data): array {
+     *     public function create(array $data = new Body()): array {
      *         return ['user' => $data];
      *     }
      * }
@@ -218,23 +172,50 @@ final class App
             // Create handler wrapper
             $handler = new ControllerMethodHandler($instance, $method);
 
-            // Register the route
-            if ($routeAttr->requestSchema !== null || $routeAttr->responseSchema !== null || $routeAttr->parameterSchema !== null) {
-                $clone = $clone->addRouteWithSchemas(
-                    $routeAttr->method,
-                    $routeAttr->path,
-                    $handler,
-                    $routeAttr->requestSchema,
-                    $routeAttr->responseSchema,
-                    $routeAttr->parameterSchema
-                );
-            } else {
-                $clone = $clone->addRoute(
-                    $routeAttr->method,
-                    $routeAttr->path,
-                    $handler
-                );
+            $jsonRpcAttributes = $method->getAttributes(JsonRpcMethod::class);
+            $jsonRpcMethod = null;
+            if (\count($jsonRpcAttributes) > 0) {
+                $jsonRpcMethod = $jsonRpcAttributes[0]->newInstance()->toMethodInfo();
             }
+
+            $schemaRefs = $method->getAttributes(SchemaRef::class);
+            $schemaRef = \count($schemaRefs) > 0 ? $schemaRefs[0]->newInstance() : null;
+
+            $requestSchema = $routeAttr->requestSchema ?? $this->resolveSchemaRef(
+                $schemaRef?->request,
+                $this->requestSchemas,
+                'request'
+            );
+            $responseSchema = $routeAttr->responseSchema ?? $this->resolveSchemaRef(
+                $schemaRef?->response,
+                $this->responseSchemas,
+                'response'
+            );
+            $parameterSchema = $routeAttr->parameterSchema ?? $this->resolveSchemaRef(
+                $schemaRef?->parameters,
+                $this->parameterSchemas,
+                'parameter'
+            );
+            if ($requestSchema === null || $parameterSchema === null) {
+                $extracted = $this->extractMethodSchemas($method, $routeAttr->path);
+                if ($requestSchema === null) {
+                    $requestSchema = $extracted['request'];
+                }
+                if ($parameterSchema === null) {
+                    $parameterSchema = $extracted['parameter'];
+                }
+            }
+
+            // Register the route
+            $clone = $clone->registerRoute(
+                $routeAttr->method,
+                $routeAttr->path,
+                $handler,
+                $requestSchema,
+                $responseSchema,
+                $parameterSchema,
+                $jsonRpcMethod
+            );
         }
 
         return $clone;
@@ -274,6 +255,16 @@ final class App
             // Strip query string from registered route path for comparison
             $routePath = \explode('?', $route['path'], 2)[0];
             if (\strtoupper($route['method']) === $needleMethod && $routePath === $path) {
+                if (isset($route['jsonrpc_method'])) {
+                    $jsonrpcName = $route['jsonrpc_method']->methodName ?? null;
+                    $bodyMethod = null;
+                    if (\is_array($request->body) && \array_key_exists('method', $request->body)) {
+                        $bodyMethod = $request->body['method'];
+                    }
+                    if (!\is_string($bodyMethod) || $jsonrpcName !== $bodyMethod) {
+                        continue;
+                    }
+                }
                 if ($route['handler']->matches($request)) {
                     return $route['handler'];
                 }
@@ -338,6 +329,13 @@ final class App
         return $routes;
     }
 
+    /** @return array<string, mixed> */
+    public function nativeConfig(): array
+    {
+        $config = $this->config ?? ServerConfig::builder()->build();
+        return $this->configToNative($config);
+    }
+
     /** @return array<string, WebSocketHandlerInterface> */
     public function websocketHandlers(): array
     {
@@ -400,14 +398,6 @@ final class App
             spikard_stop_server($this->serverHandle);
         }
         $this->serverHandle = null;
-    }
-
-    /**
-     * Convenience entry point for single-route applications.
-     */
-    public static function singleRoute(string $method, string $path, HandlerInterface $handler): self
-    {
-        return (new self())->addRoute($method, $path, $handler);
     }
 
     /**
@@ -553,5 +543,234 @@ final class App
         }
 
         return $payload;
+    }
+
+    /**
+     * Register an HTTP route discovered from controller attributes.
+     *
+     * @param array<string, mixed>|null $requestSchema
+     * @param array<string, mixed>|null $responseSchema
+     * @param array<string, mixed>|null $parameterSchema
+     */
+    private function registerRoute(
+        string $method,
+        string $path,
+        HandlerInterface $handler,
+        ?array $requestSchema,
+        ?array $responseSchema,
+        ?array $parameterSchema,
+        ?\Spikard\Http\JsonRpcMethodInfo $jsonRpcMethod
+    ): self {
+        $clone = clone $this;
+        $pathOnly = \explode('?', $path, 2)[0];
+        $route = [
+            'method' => $method,
+            'path' => $pathOnly,
+            'handler' => $handler,
+        ];
+
+        if ($requestSchema !== null) {
+            $route['request_schema'] = $requestSchema;
+        }
+        if ($responseSchema !== null) {
+            $route['response_schema'] = $responseSchema;
+        }
+        if ($parameterSchema !== null) {
+            $route['parameter_schema'] = $parameterSchema;
+        }
+        if ($jsonRpcMethod !== null) {
+            $route['jsonrpc_method'] = $jsonRpcMethod;
+        }
+
+        $clone->routes[] = $route;
+        return $clone;
+    }
+
+    /**
+     * @param array<string, array<mixed>>|null $schemas
+     * @return array<mixed>|null
+     */
+    private function resolveSchemaRef(?string $key, ?array $schemas, string $label): ?array
+    {
+        if ($key === null) {
+            return null;
+        }
+
+        if ($schemas === null) {
+            throw new RuntimeException(\sprintf('Missing %s schema registry; cannot resolve "%s".', $label, $key));
+        }
+
+        if (!\array_key_exists($key, $schemas)) {
+            throw new RuntimeException(\sprintf('Missing %s schema for key: %s', $label, $key));
+        }
+
+        return $schemas[$key];
+    }
+
+    /**
+     * @return array{request: array<mixed>|null, parameter: array<mixed>|null}
+     */
+    private function extractMethodSchemas(ReflectionMethod $method, string $path): array
+    {
+        $cacheKey = $method->getDeclaringClass()->getName() . '::' . $method->getName() . '|' . $path;
+        if (isset(self::$methodSchemaCache[$cacheKey])) {
+            return self::$methodSchemaCache[$cacheKey];
+        }
+
+        $pathParams = $this->extractPathParams($path);
+        $properties = [];
+        $required = [];
+        $requestSchema = null;
+
+        foreach ($method->getParameters() as $param) {
+            $name = $param->getName();
+            if ($name === 'request' || $name === 'req') {
+                continue;
+            }
+
+            $hasDefault = $param->isDefaultValueAvailable();
+            $defaultValue = $hasDefault ? $param->getDefaultValue() : null;
+            $isOptional = $param->isOptional() || $param->allowsNull();
+
+            if ($defaultValue instanceof \Spikard\Http\Params\Body) {
+                if ($requestSchema === null) {
+                    $requestSchema = $defaultValue->getSchema();
+                }
+                continue;
+            }
+
+            $source = null;
+            $schema = null;
+
+            if ($defaultValue instanceof \Spikard\Http\Params\Query) {
+                $source = 'query';
+                $schema = $defaultValue->getSchema();
+            } elseif ($defaultValue instanceof \Spikard\Http\Params\Path) {
+                $source = 'path';
+                $schema = $defaultValue->getSchema();
+            } elseif ($defaultValue instanceof \Spikard\Http\Params\Header) {
+                $source = 'header';
+                $schema = $defaultValue->getSchema();
+                $name = $this->normalizeHeaderKey($name, $defaultValue);
+            } elseif ($defaultValue instanceof \Spikard\Http\Params\Cookie) {
+                $source = 'cookie';
+                $schema = $defaultValue->getSchema();
+            } elseif (\in_array($name, $pathParams, true)) {
+                $source = 'path';
+            } else {
+                $source = 'query';
+            }
+
+            $typeSchema = $this->schemaForType($param->getType());
+            if ($schema === null) {
+                $schema = $typeSchema;
+            } elseif ($typeSchema !== null) {
+                foreach ($typeSchema as $key => $value) {
+                    if (!\array_key_exists($key, $schema)) {
+                        $schema[$key] = $value;
+                    }
+                }
+            }
+
+            if ($schema === null) {
+                $schema = [];
+            }
+
+            $schema['source'] = $source;
+            if ($isOptional || ($defaultValue instanceof \Spikard\Http\Params\ParamBase && $defaultValue->hasDefault())) {
+                $schema['optional'] = true;
+            }
+
+            $properties[$name] = $schema;
+            if (!$isOptional && !($defaultValue instanceof \Spikard\Http\Params\ParamBase && $defaultValue->hasDefault())) {
+                $required[] = $name;
+            }
+        }
+
+        $parameterSchema = null;
+        if (!empty($properties)) {
+            $parameterSchema = [
+                'type' => 'object',
+                'properties' => $properties,
+            ];
+            if (!empty($required)) {
+                $parameterSchema['required'] = $required;
+            }
+        }
+
+        $result = [
+            'request' => $requestSchema,
+            'parameter' => $parameterSchema,
+        ];
+
+        self::$methodSchemaCache[$cacheKey] = $result;
+        return $result;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractPathParams(string $path): array
+    {
+        $params = [];
+        if (\preg_match_all('/\\{([A-Za-z_][A-Za-z0-9_]*)(?::[^}]+)?\\}/', $path, $matches)) {
+            $params = \array_merge($params, $matches[1]);
+        }
+        if (\preg_match_all('/:([A-Za-z_][A-Za-z0-9_]*)/', $path, $matches)) {
+            $params = \array_merge($params, $matches[1]);
+        }
+        return \array_values(\array_unique($params));
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function schemaForType(?\ReflectionType $type): ?array
+    {
+        if ($type instanceof \ReflectionUnionType) {
+            $schemas = [];
+            foreach ($type->getTypes() as $inner) {
+                if ($inner instanceof ReflectionNamedType && $inner->getName() === 'null') {
+                    continue;
+                }
+                if (!$inner instanceof ReflectionNamedType || !$inner->isBuiltin()) {
+                    return null;
+                }
+                $innerSchema = $this->schemaForType($inner);
+                if ($innerSchema === null) {
+                    return null;
+                }
+                $schemas[] = $innerSchema;
+            }
+            if (empty($schemas)) {
+                return null;
+            }
+            if (\count($schemas) == 1) {
+                return $schemas[0];
+            }
+            return ['anyOf' => $schemas];
+        }
+
+        if (!$type instanceof ReflectionNamedType || !$type->isBuiltin()) {
+            return null;
+        }
+
+        return match ($type->getName()) {
+            'int' => ['type' => 'integer'],
+            'float' => ['type' => 'number'],
+            'string' => ['type' => 'string'],
+            'bool' => ['type' => 'boolean'],
+            'array' => ['type' => 'array'],
+            default => null,
+        };
+    }
+
+    private function normalizeHeaderKey(string $name, \Spikard\Http\Params\Header $header): string
+    {
+        $key = $header->getAlias() ?? $name;
+        if ($header->shouldConvertUnderscores()) {
+            $key = \str_replace('_', '-', $key);
+        }
+        return \strtolower($key);
     }
 }
