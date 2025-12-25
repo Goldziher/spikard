@@ -28,8 +28,8 @@ mod websocket;
 
 pub use background::{clear_handle, install_handle, process_pending_tasks};
 pub use di::{PhpFactoryDependency, PhpValueDependency, extract_di_container_from_php};
-pub use handler::{PhpHandler, clear_handler_registry, leak_handler_registry};
 pub use handler::get_runtime;
+pub use handler::{PhpHandler, clear_handler_registry, leak_handler_registry};
 pub use hooks::{PhpHookResult, PhpLifecycleHooks};
 pub use request::PhpRequest;
 pub use response::PhpResponse;
@@ -40,7 +40,7 @@ pub use testing::{
     PhpHttpTestClient, PhpNativeTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse,
     PhpWebSocketTestConnection,
 };
-pub use websocket::{PhpWebSocketHandler, create_websocket_state, clear_ws_handler_registry, leak_ws_handler_registry};
+pub use websocket::{PhpWebSocketHandler, clear_ws_handler_registry, create_websocket_state, leak_ws_handler_registry};
 
 pub(crate) fn map_ext_php_err(e: ExtPhpError) -> PhpException {
     PhpException::default(e.to_string())
@@ -119,7 +119,7 @@ unsafe extern "C" fn spikard_shutdown(_type: i32, _module_number: i32) -> i32 {
     leak_handler_registry();
     leak_ws_handler_registry();
     leak_sse_producer_registry();
-    ext_php_rs::ffi::ZEND_RESULT_CODE_SUCCESS as i32
+    ext_php_rs::ffi::ZEND_RESULT_CODE_SUCCESS
 }
 
 /// Return the crate version.
@@ -269,20 +269,20 @@ pub fn zval_to_json(value: &ext_php_rs::types::Zval) -> Result<Value, String> {
         return Ok(Value::String(s.to_string()));
     }
 
-    if let Some(obj) = value.object() {
-        if let Ok(props) = obj.get_properties() {
-            let mut map = serde_json::Map::new();
-            for (key, val) in props.iter() {
-                let key_str = match key {
-                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                };
-                let json_val = zval_to_json(val)?;
-                map.insert(key_str, json_val);
-            }
-            return Ok(Value::Object(map));
+    if let Some(obj) = value.object()
+        && let Ok(props) = obj.get_properties()
+    {
+        let mut map = serde_json::Map::new();
+        for (key, val) in props.iter() {
+            let key_str = match key {
+                ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+            };
+            let json_val = zval_to_json(val)?;
+            map.insert(key_str, json_val);
         }
+        return Ok(Value::Object(map));
     }
 
     if let Some(arr) = value.array() {

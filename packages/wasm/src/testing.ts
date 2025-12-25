@@ -1080,17 +1080,31 @@ function encodeBodyBytes(body: HandlerBody): Uint8Array {
 	return textEncoder.encode(JSON.stringify(body));
 }
 
-function toUint8Array(value: ArrayBuffer | ArrayLike<number> | Uint8Array): Uint8Array {
+function toUint8Array(value: BinaryLike | ArrayLike<number>): Uint8Array {
 	if (value instanceof Uint8Array) {
 		return value;
-	}
-	if (ArrayBuffer.isView(value)) {
-		return new Uint8Array(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
 	}
 	if (value instanceof ArrayBuffer) {
 		return new Uint8Array(value);
 	}
-	return Uint8Array.from(value as ArrayLike<number>);
+	if (ArrayBuffer.isView(value)) {
+		return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+	}
+	if (typeof Blob !== "undefined" && value instanceof Blob) {
+		throw new Error("Blob payloads are not supported synchronously");
+	}
+	if (isArrayLike(value)) {
+		return Uint8Array.from(value);
+	}
+	throw new Error("Unsupported binary payload");
+}
+
+function isArrayLike(value: unknown): value is ArrayLike<number> {
+	if (typeof value === "object" && value !== null) {
+		const length = (value as { length?: unknown }).length;
+		return typeof length === "number";
+	}
+	return false;
 }
 
 function gunzipBytes(data: Uint8Array): Uint8Array {

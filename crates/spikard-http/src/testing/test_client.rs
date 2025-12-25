@@ -31,11 +31,10 @@ impl TestClient {
     /// Create a new test client from an Axum router
     pub fn from_router(router: axum::Router) -> Result<Self, String> {
         let server = if tokio::runtime::Handle::try_current().is_ok() {
-            let server = TestServer::builder()
+            TestServer::builder()
                 .http_transport()
                 .build(router)
-                .map_err(|e| format!("Failed to create test server: {}", e))?;
-            server
+                .map_err(|e| format!("Failed to create test server: {}", e))?
         } else {
             TestServer::new(router).map_err(|e| format!("Failed to create test server: {}", e))?
         };
