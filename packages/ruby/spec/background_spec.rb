@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'timeout'
 
 RSpec.describe Spikard::Converters do
   describe '.convert_handler_body' do
@@ -89,22 +90,26 @@ RSpec.describe Spikard::Background do
     end
 
     it 'executes tasks asynchronously' do
-      started = false
+      started = Queue.new
+      release = Queue.new
       finished = false
 
       described_class.run do
-        started = true
-        sleep 0.05
+        started << true
+        release.pop
         finished = true
       end
 
-      # Check that task started but not finished immediately
-      sleep 0.01
-      expect(started).to be true
+      Timeout.timeout(1) { started.pop }
       expect(finished).to be false
 
-      # Wait for completion
-      sleep 0.1
+      release << true
+      Timeout.timeout(1) do
+        loop do
+          break if finished
+          sleep 0.01
+        end
+      end
       expect(finished).to be true
     end
   end
