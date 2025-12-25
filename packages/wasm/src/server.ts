@@ -2,7 +2,13 @@ import type { ServerConfig } from "./config";
 import type { SpikardApp } from "./index";
 import { type MultipartFile, TestClient, type TestResponse } from "./testing";
 import { isStreamingResponse } from "./streaming";
-import type { BinaryLike, JsonValue, WebSocketHandlerLike, WebSocketServerSocket } from "./types";
+import type {
+	BinaryLike,
+	JsonValue,
+	WebSocketHandler,
+	WebSocketHandlerLike,
+	WebSocketServerSocket,
+} from "./types";
 import type { RouteMetadata } from "./index";
 
 export interface ServerOptions {
@@ -253,9 +259,14 @@ async function maybeHandleWebSocketUpgrade(app: SpikardApp, request: Request): P
 	if (webSocketPair) {
 		const pair = new webSocketPair();
 		const [clientSocket, serverSocket] = pair;
-		serverSocket.accept();
+		const serverSocketWithAccept = serverSocket as WebSocket & { accept?: () => void };
+		serverSocketWithAccept.accept?.();
 		startWebSocketSession(serverSocket, match.handler);
-		return new Response(null, { status: 101, webSocket: clientSocket });
+		const responseInit: ResponseInit & { webSocket?: WebSocket } = {
+			status: 101,
+			webSocket: clientSocket,
+		};
+		return new Response(null, responseInit);
 	}
 
 	return new Response("WebSocket upgrade not supported in this runtime", { status: 501 });
@@ -453,11 +464,7 @@ function closeSocket(socket: WebSocketServerSocket, code?: number, reason?: stri
 	} catch {}
 }
 
-function isWebSocketHandler(handler: WebSocketHandlerLike): handler is {
-	onOpen?: (socket: WebSocketServerSocket) => Promise<void> | void;
-	onMessage?: (socket: WebSocketServerSocket, data: JsonValue | string | BinaryLike) => Promise<unknown> | unknown;
-	onClose?: (socket: WebSocketServerSocket, code?: number, reason?: string) => Promise<void> | void;
-} {
+function isWebSocketHandler(handler: WebSocketHandlerLike): handler is WebSocketHandler {
 	if (typeof handler !== "object" || handler === null) {
 		return false;
 	}
@@ -515,7 +522,7 @@ function maybeUpgradeBunWebSocket(request: Request, server: BunServer | undefine
 
 function createBunWebSocketHandlers() {
 	return {
-		open(ws: { data?: { handler?: WebSocketHandlerLike }; send: (data: unknown) => void }) {
+		open(ws: { data?: { handler?: WebSocketHandlerLike; socket?: WebSocketServerSocket }; send: (data: unknown) => void }) {
 			const handler = ws.data?.handler;
 			if (!handler) {
 				return;

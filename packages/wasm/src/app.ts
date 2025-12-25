@@ -120,8 +120,6 @@ export class Spikard implements SpikardApp {
 			handler_name: handlerName,
 			request_schema: options.messageSchema as never,
 			response_schema: options.responseSchema as never,
-			parameter_schema: undefined,
-			file_params: undefined,
 			is_async: true,
 		};
 
