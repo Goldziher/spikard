@@ -273,7 +273,6 @@ impl PhpSseEventProducer {
             }
         })
     }
-
 }
 
 impl SseEventProducer for PhpSseEventProducer {

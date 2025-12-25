@@ -149,9 +149,7 @@ fn build_fixture_test(category: &str, index: usize, fixture: &Fixture) -> String
     let mut options = Vec::new();
     let mut headers = fixture.request.headers.clone().unwrap_or_default();
     if let Some(content_type) = fixture.request.content_type.as_ref() {
-        let has_content_type = headers
-            .keys()
-            .any(|key| key.eq_ignore_ascii_case("content-type"));
+        let has_content_type = headers.keys().any(|key| key.eq_ignore_ascii_case("content-type"));
         if !has_content_type {
             headers.insert("Content-Type".to_string(), content_type.clone());
         }

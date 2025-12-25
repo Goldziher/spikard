@@ -76,11 +76,7 @@ fn build_app_factory(
     for (index, fixture) in sse_fixtures.iter().enumerate() {
         let channel_name = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
         let channel = normalize_path(&channel_name);
-        let factory_method = format!(
-            "create_sse_{}_{}",
-            sanitize_identifier(&channel_name),
-            index + 1
-        );
+        let factory_method = format!("create_sse_{}_{}", sanitize_identifier(&channel_name), index + 1);
         let producer_class = format!("SseProducer_{}", index + 1);
 
         code.push_str(&format!(
@@ -112,11 +108,7 @@ fn build_app_factory(
     for (index, fixture) in websocket_fixtures.iter().enumerate() {
         let channel_name = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
         let channel = normalize_path(&channel_name);
-        let factory_method = format!(
-            "create_websocket_{}_{}",
-            sanitize_identifier(&channel_name),
-            index + 1
-        );
+        let factory_method = format!("create_websocket_{}_{}", sanitize_identifier(&channel_name), index + 1);
         let handler_class = format!("WebSocketHandler_{}", index + 1);
 
         code.push_str(&format!(
