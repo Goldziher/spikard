@@ -547,6 +547,8 @@ mod tests {
         assert!(names.contains(&"morojs-validation"));
         assert!(names.contains(&"express-validation"));
         assert!(names.contains(&"express-raw"));
+        assert!(names.contains(&"kito-validation"));
+        assert!(names.contains(&"kito-raw"));
 
         assert!(names.contains(&"hanami-api-validation"));
         assert!(names.contains(&"hanami-api-raw"));
@@ -556,7 +558,7 @@ mod tests {
         assert!(names.contains(&"trongate-raw"));
         assert!(names.contains(&"phalcon-raw"));
 
-        assert_eq!(registry.len(), 39);
+        assert_eq!(registry.len(), 42);
     }
 
     #[test]
@@ -612,7 +614,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 39);
+        assert_eq!(frameworks.len(), 42);
     }
 
     #[test]

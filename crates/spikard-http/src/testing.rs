@@ -154,13 +154,7 @@ fn decode_body(headers: &HashMap<String, String>, body: Vec<u8>) -> Result<Vec<u
         .map(|value| value.trim().to_ascii_lowercase());
 
     match encoding.as_deref() {
-        Some("gzip" | "x-gzip") => {
-            if body.len() >= 2 && body[0] == 0x1f && body[1] == 0x8b {
-                decode_gzip(body)
-            } else {
-                Ok(body)
-            }
-        }
+        Some("gzip" | "x-gzip") => decode_gzip(body),
         Some("br") => decode_brotli(body),
         _ => Ok(body),
     }
