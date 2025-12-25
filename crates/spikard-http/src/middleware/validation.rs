@@ -199,10 +199,18 @@ pub fn validate_content_length(headers: &HeaderMap, actual_size: usize) -> Resul
             return Ok(());
         };
         if declared_length != actual_size {
-            let body = json!({"error": "Content-Length header does not match actual body size"}).to_string();
+            let problem = ProblemDetails::new(
+                "https://spikard.dev/errors/content-length-mismatch",
+                "Content-Length header mismatch",
+                StatusCode::BAD_REQUEST,
+            )
+            .with_detail("Content-Length header does not match actual body size");
+            let body = problem.to_json().unwrap_or_else(|_| {
+                json!({"error": "Content-Length header does not match actual body size"}).to_string()
+            });
             return Err((
                 StatusCode::BAD_REQUEST,
-                [(axum::http::header::CONTENT_TYPE, "application/json")],
+                [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
                 body,
             )
                 .into_response());

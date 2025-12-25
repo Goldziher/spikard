@@ -3,10 +3,10 @@
 //! This module implements `NativeTestClient`, a PHP class that provides
 //! HTTP testing capabilities against a Spikard server without network overhead.
 
+use axum::Router;
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Method, Request as AxumRequest, Uri};
 use axum::routing::get;
-use axum::Router;
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
@@ -256,22 +256,8 @@ impl PhpNativeTestClient {
             .ok_or_else(|| PhpException::default("TestClient is closed".to_string()))?;
 
         let request_options = parse_request_options(options)?;
-        let headers = build_header_list(request_options.headers, request_options.cookies);
-
         let runtime = super::get_runtime()?;
-        let response = runtime.block_on(async {
-            dispatch_request_direct(
-                &inner.router,
-                method,
-                path,
-                request_options.body,
-                request_options.raw_body,
-                request_options.form_data,
-                request_options.multipart,
-                headers,
-            )
-            .await
-        })?;
+        let response = runtime.block_on(dispatch_request_direct(&inner.router, method, path, request_options))?;
 
         snapshot_to_php_response(response)
     }
@@ -313,19 +299,13 @@ impl PhpNativeTestClient {
             .ok_or_else(|| PhpException::default("TestClient is closed".to_string()))?;
 
         let runtime = super::get_runtime()?;
-        let response = runtime.block_on(async {
-            dispatch_request_direct(
-                &inner.router,
-                "GET".to_string(),
-                path,
-                None,
-                None,
-                None,
-                None,
-                None,
-            )
-            .await
-        })?;
+        let request_options = parse_request_options(None)?;
+        let response = runtime.block_on(dispatch_request_direct(
+            &inner.router,
+            "GET".to_string(),
+            path,
+            request_options,
+        ))?;
 
         PhpSseStream::from_snapshot(response)
     }
@@ -672,10 +652,7 @@ fn parse_request_options(options: Option<&Zval>) -> PhpResult<ParsedRequestOptio
         && !body_val.is_null()
     {
         let content_type = header_value(&headers, "content-type");
-        let is_json = content_type
-            .as_deref()
-            .map(is_json_content_type)
-            .unwrap_or(true);
+        let is_json = content_type.as_deref().map(is_json_content_type).unwrap_or(true);
 
         if !is_json {
             if let Some(body_str) = body_val.string() {
@@ -714,15 +691,13 @@ fn parse_request_options(options: Option<&Zval>) -> PhpResult<ParsedRequestOptio
         .as_deref()
         .map(|ct| ct.to_ascii_lowercase().starts_with("multipart/form-data"))
         .unwrap_or(false);
-    let form_fields = form_data
-        .as_ref()
-        .map(form_fields_from_json)
-        .unwrap_or_default();
+    let form_fields = form_data.as_ref().map(form_fields_from_json).unwrap_or_default();
 
-    if (is_multipart || !files.is_empty()) && (!files.is_empty() || !form_fields.is_empty()) {
-        multipart = Some((form_fields, files));
-        form_data = None;
-    } else if (is_multipart || files_specified) && multipart.is_none() {
+    let should_force_multipart = ((is_multipart || !files.is_empty())
+        && (!files.is_empty() || !form_fields.is_empty()))
+        || ((is_multipart || files_specified) && multipart.is_none());
+
+    if should_force_multipart {
         multipart = Some((form_fields, files));
         form_data = None;
     } else if !files.is_empty() && body.is_none() && raw_body.is_none() {
@@ -772,15 +747,8 @@ fn parse_files(value: Option<&Zval>) -> Vec<spikard_http::testing::MultipartFile
                 .and_then(|v| v.as_str())
                 .unwrap_or(&fallback_field)
                 .to_string();
-            let filename = obj
-                .get("filename")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string();
-            let content_type = obj
-                .get("content_type")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
+            let filename = obj.get("filename").and_then(|v| v.as_str()).unwrap_or("").to_string();
+            let content_type = obj.get("content_type").and_then(|v| v.as_str()).map(|s| s.to_string());
             let content = file_content_from_json(obj);
             files.push(spikard_http::testing::MultipartFilePart {
                 field_name,
@@ -896,12 +864,16 @@ async fn dispatch_request_direct(
     router: &Router,
     method: String,
     path: String,
-    body: Option<JsonValue>,
-    raw_body: Option<Vec<u8>>,
-    form_data: Option<JsonValue>,
-    multipart: MultipartPayload,
-    headers: Option<Vec<(String, String)>>,
+    options: ParsedRequestOptions,
 ) -> PhpResult<ResponseSnapshot> {
+    let ParsedRequestOptions {
+        headers,
+        cookies,
+        body,
+        raw_body,
+        form_data,
+        multipart,
+    } = options;
     let method_upper = method.to_ascii_uppercase();
     let method = Method::from_bytes(method_upper.as_bytes())
         .map_err(|e| PhpException::default(format!("Invalid HTTP method: {}", e)))?;
@@ -910,7 +882,7 @@ async fn dispatch_request_direct(
         .map_err(|e| PhpException::default(format!("Invalid request URI: {}", e)))?;
 
     let mut builder = AxumRequest::builder().method(method).uri(uri);
-    let mut header_entries = headers.unwrap_or_default();
+    let mut header_entries = build_header_list(headers, cookies).unwrap_or_default();
     let has_content_type = header_entries
         .iter()
         .any(|(key, _)| key.eq_ignore_ascii_case("content-type"));
@@ -936,11 +908,11 @@ async fn dispatch_request_direct(
         content_type_override = Some("application/json".to_string());
     }
 
-    if let Some(content_type) = content_type_override {
-        if force_content_type || !has_content_type {
-            header_entries.retain(|(key, _)| !key.eq_ignore_ascii_case("content-type"));
-            builder = builder.header("content-type", content_type);
-        }
+    if let Some(content_type) = content_type_override
+        && (force_content_type || !has_content_type)
+    {
+        header_entries.retain(|(key, _)| !key.eq_ignore_ascii_case("content-type"));
+        builder = builder.header("content-type", content_type);
     }
 
     for (key, value) in header_entries {
@@ -1117,14 +1089,13 @@ impl PhpWebSocketTestConnection {
             let runtime = super::get_runtime()?;
             let message: JsonValue =
                 serde_json::from_str(&text).map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
-            runtime
-                .block_on(async {
-                    ws.state
-                        .handle_message_validated(message)
-                        .await
-                        .map(|_| ())
-                        .map_err(PhpException::default)
-                })?;
+            runtime.block_on(async {
+                ws.state
+                    .handle_message_validated(message)
+                    .await
+                    .map(|_| ())
+                    .map_err(PhpException::default)
+            })?;
             Ok(())
         })
     }
@@ -1136,14 +1107,13 @@ impl PhpWebSocketTestConnection {
             let runtime = super::get_runtime()?;
             let message: JsonValue =
                 serde_json::from_str(&data).map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
-            runtime
-                .block_on(async {
-                    ws.state
-                        .handle_message_validated(message)
-                        .await
-                        .map(|_| ())
-                        .map_err(PhpException::default)
-                })?;
+            runtime.block_on(async {
+                ws.state
+                    .handle_message_validated(message)
+                    .await
+                    .map(|_| ())
+                    .map_err(PhpException::default)
+            })?;
             Ok(())
         })
     }
