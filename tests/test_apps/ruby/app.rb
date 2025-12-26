@@ -13,56 +13,39 @@ require 'json'
 # - Path parameter extraction
 module SpikardTestApp
   def self.create_app
-    server = Spikard::Server.new(host: '127.0.0.1', port: 0)
+    app = Spikard::App.new
 
-    # Health check
-    server.get '/health' do |_req|
+    # Health check endpoint
+    app.get '/health' do |_req|
+      { status: 'ok' }
+    end
+
+    # Query parameters endpoint
+    app.get '/query' do |req|
       {
-        status: 200,
-        headers: { 'Content-Type' => 'application/json' },
-        body: JSON.generate({ status: 'ok' })
+        name: req.query['name'],
+        age: req.query['age']&.to_i
       }
     end
 
-    # Query parameters
-    server.get '/query' do |req|
-      params = req.query_params || {}
+    # JSON echo endpoint
+    app.post '/echo' do |req|
+      body = req.body
       {
-        status: 200,
-        headers: { 'Content-Type' => 'application/json' },
-        body: JSON.generate({
-          name: params['name'],
-          age: params['age']&.to_i
-        })
+        received: body,
+        method: req.method
       }
     end
 
-    # JSON echo
-    server.post '/echo' do |req|
-      body = req.body ? JSON.parse(req.body) : {}
+    # Path parameters endpoint
+    app.get '/users/:id' do |req|
+      user_id = req.path_params['id']
       {
-        status: 200,
-        headers: { 'Content-Type' => 'application/json' },
-        body: JSON.generate({
-          received: body,
-          method: req.method
-        })
+        userId: user_id,
+        type: user_id.class.to_s
       }
     end
 
-    # Path parameters
-    server.get '/users/:id' do |req|
-      user_id = req.path_params&.fetch('id', nil)
-      {
-        status: 200,
-        headers: { 'Content-Type' => 'application/json' },
-        body: JSON.generate({
-          userId: user_id,
-          type: user_id.class.to_s
-        })
-      }
-    end
-
-    server
+    app
   end
 end

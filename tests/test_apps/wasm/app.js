@@ -1,4 +1,4 @@
-import { init, TestClient } from '@spikard/wasm';
+import { Spikard, get, post, TestClient } from '@spikard/wasm';
 
 /**
  * WASM test application for Spikard
@@ -9,84 +9,57 @@ import { init, TestClient } from '@spikard/wasm';
  * - JSON request/response
  * - Path parameter extraction
  *
- * Note: The WASM TestClient is an in-memory test client for unit testing.
- * It doesn't support HTTP server features (start/stop), but provides
- * request routing for testing handler functions.
+ * Uses TestClient for in-memory testing without actual HTTP server.
  */
 
-const routes = {};
-let testClient = null;
+export function createApp() {
+  const app = new Spikard();
 
-// Register route handlers
-function registerRoute(method, path, handler) {
-  const key = `${method} ${path}`;
-  routes[key] = handler;
-}
+  // Health check endpoint
+  get('/health', async (_req) => {
+    return { status: 'ok' };
+  });
 
-// Register health check
-registerRoute('GET', '/health', async (_req) => {
-  return {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ status: 'ok' }),
-  };
-});
+  // Query parameters endpoint
+  get('/query', async (req) => {
+    return {
+      name: req.query?.name ?? null,
+      age: req.query?.age ? parseInt(String(req.query.age)) : null,
+    };
+  });
 
-// Register query parameters route
-registerRoute('GET', '/query', async (req) => {
-  const params = req.queryParams || {};
-  return {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      name: params.name ? (Array.isArray(params.name) ? params.name[0] : params.name) : null,
-      age: params.age ? parseInt(Array.isArray(params.age) ? params.age[0] : params.age) : null,
-    }),
-  };
-});
-
-// Register JSON echo route
-registerRoute('POST', '/echo', async (req) => {
-  const body = req.body ? (typeof req.body === 'string' ? JSON.parse(req.body) : req.body) : {};
-  return {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
+  // JSON echo endpoint
+  post('/echo', async (req) => {
+    const body = req.json();
+    return {
       received: body,
       method: req.method,
-    }),
-  };
-});
+    };
+  });
 
-// Register path parameters route
-registerRoute('GET', '/users/:id', async (req) => {
-  const userId = req.pathParams?.id;
-  return {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
+  // Path parameters endpoint
+  get('/users/{id}', async (req) => {
+    const userId = req.pathParams?.id;
+    return {
       userId,
       type: typeof userId,
-    }),
-  };
-});
+    };
+  });
 
-export async function createApp() {
-  // Initialize WASM module
-  await init();
-
-  // Create a test client wrapper
+  // Return app and test client
   return {
-    routes,
-    start: async () => {
-      // WASM TestClient doesn't support actual server start
-      // In real use, you'd use the Spikard API instead
+    app,
+    async start() {
+      // TestClient doesn't require start
     },
-    stop: async () => {
-      // WASM TestClient doesn't support server stop
+    async stop() {
+      // TestClient doesn't require stop
     },
-    address: () => {
+    address() {
       return { host: '127.0.0.1', port: 8000 };
+    },
+    async getTestClient() {
+      return new TestClient(app);
     },
   };
 }

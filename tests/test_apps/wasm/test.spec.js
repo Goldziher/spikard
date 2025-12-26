@@ -7,18 +7,17 @@ import { createApp } from './app.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 describe('Spikard WASM Test App', () => {
-  let server;
-  let baseUrl;
+  let appWrapper;
+  let client;
 
   beforeAll(async () => {
-    server = await createApp();
-    await server.start();
-    const address = server.address();
-    baseUrl = `http://${address.host}:${address.port}`;
+    appWrapper = createApp();
+    await appWrapper.start();
+    client = await appWrapper.getTestClient();
   });
 
   afterAll(async () => {
-    await server.stop();
+    await appWrapper.stop();
   });
 
   it('should use the correct package version', () => {
@@ -29,36 +28,32 @@ describe('Spikard WASM Test App', () => {
   });
 
   it('should respond to health check', async () => {
-    const res = await fetch(`${baseUrl}/health`);
-    expect(res.status).toBe(200);
-    const data = await res.json();
+    const res = await client.get('/health');
+    expect(res.statusCode).toBe(200);
+    const data = res.json();
     expect(data).toEqual({ status: 'ok' });
   });
 
   it('should handle query parameters', async () => {
-    const res = await fetch(`${baseUrl}/query?name=Alice&age=30`);
-    expect(res.status).toBe(200);
-    const data = await res.json();
+    const res = await client.get('/query?name=Alice&age=30');
+    expect(res.statusCode).toBe(200);
+    const data = res.json();
     expect(data).toEqual({ name: 'Alice', age: 30 });
   });
 
   it('should echo JSON requests', async () => {
     const payload = { message: 'Hello from WASM!' };
-    const res = await fetch(`${baseUrl}/echo`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    expect(res.status).toBe(200);
-    const data = await res.json();
+    const res = await client.post('/echo', { json: payload });
+    expect(res.statusCode).toBe(200);
+    const data = res.json();
     expect(data.received).toEqual(payload);
     expect(data.method).toBe('POST');
   });
 
   it('should extract path parameters', async () => {
-    const res = await fetch(`${baseUrl}/users/42`);
-    expect(res.status).toBe(200);
-    const data = await res.json();
+    const res = await client.get('/users/42');
+    expect(res.statusCode).toBe(200);
+    const data = res.json();
     expect(data.userId).toBe('42');
     expect(data.type).toBe('string');
   });

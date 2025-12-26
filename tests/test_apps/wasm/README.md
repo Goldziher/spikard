@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Test application that validates the published `@spikard/wasm` npm package (v0.6.0) works correctly in a WebAssembly environment.
+Test application that validates the published `@spikard/wasm` npm package (v0.6.1) works correctly in a WebAssembly environment.
 
 ## Setup
 
@@ -20,7 +20,7 @@ pnpm test
 ## Troubleshooting
 
 ### Package not found
-- Verify `@spikard/wasm@0.6.0` is published to npm
+- Verify `@spikard/wasm@0.6.1` is published to npm
 - Check registry access: `pnpm view @spikard/wasm versions`
 - Try clearing cache: `pnpm store prune`
 
