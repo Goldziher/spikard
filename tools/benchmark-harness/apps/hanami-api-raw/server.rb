@@ -8,6 +8,7 @@
 
 require 'hanami/api'
 require 'json'
+require 'date'
 
 # ============================================================================
 # Hanami API Application (Raw - No Validation)
@@ -80,7 +81,9 @@ class BenchmarkApp < Hanami::API
   end
 
   get '/path/int/:id' do
-    json({ id: params[:id].to_i })
+    id_str = params[:id]
+    id_int = id_str =~ /\A-?\d+\z/ ? id_str.to_i : id_str.to_i
+    json({ id: id_int })
   end
 
   get '/path/uuid/:uuid' do
@@ -88,7 +91,13 @@ class BenchmarkApp < Hanami::API
   end
 
   get '/path/date/:date' do
-    json({ date: params[:date] })
+    date_str = params[:date]
+    begin
+      Date.iso8601(date_str)
+    rescue ArgumentError
+      # In raw mode, we still convert but don't validate strictly
+    end
+    json({ date: date_str })
   end
 
   # Query parameter endpoints
