@@ -169,6 +169,7 @@ jobs:
       contents: read
     outputs:
       exists: ${{ steps.check.outputs.exists }}
+      check_status: ${{ steps.check.outputs.check_status }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -177,7 +178,52 @@ jobs:
 
       - name: Check RubyGems for existing version
         id: check
-        run: bash scripts/publish/check_rubygems.sh "${{ needs.prepare.outputs.version }}"
+        continue-on-error: true
+        run: |
+          bash scripts/publish/check_rubygems.sh "${{ needs.prepare.outputs.version }}"
+          exit_code=$?
+
+          case $exit_code in
+            0)
+              echo "check_status=success" >> $GITHUB_OUTPUT
+              exit 0
+              ;;
+            1)
+              echo "check_status=success" >> $GITHUB_OUTPUT
+              exit 0
+              ;;
+            2)
+              echo "check_status=transient_failure" >> $GITHUB_OUTPUT
+              exit 2
+              ;;
+            *)
+              echo "check_status=unexpected_failure" >> $GITHUB_OUTPUT
+              exit 2
+              ;;
+          esac
+
+      - name: Evaluate check result
+        if: always()
+        run: |
+          status="${{ steps.check.outputs.check_status }}"
+          case "$status" in
+            success)
+              echo "✓ RubyGems check completed successfully"
+              exit 0
+              ;;
+            transient_failure)
+              echo "⚠ RubyGems check failed with transient error - publishing will be skipped (retry workflow if needed)"
+              exit 0
+              ;;
+            unexpected_failure)
+              echo "✗ RubyGems check failed unexpectedly"
+              exit 1
+              ;;
+            *)
+              echo "✗ Unknown check status: $status"
+              exit 1
+              ;;
+          esac
 
   rubygems-already-published:
     name: RubyGems already published summary
@@ -988,7 +1034,11 @@ jobs:
         needs.prepare.outputs.tag &&
         needs.prepare.outputs.is_tag == 'true' &&
         needs.prepare.outputs.release_ruby == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-rubygems.outputs.exists != 'true')
+        needs.check-rubygems.result == 'success' &&
+        (
+          needs.prepare.outputs.force_republish == 'true' ||
+          needs.check-rubygems.outputs.exists != 'true'
+        )
       }}
     runs-on: ubuntu-latest
     permissions:
