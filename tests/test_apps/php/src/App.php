@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Spikard\TestApp;
 
-use Spikard\Server;
-use Spikard\Request;
-use Spikard\Response;
+use Spikard\App as SpikardApp;
+use Spikard\Attributes\Get;
+use Spikard\Attributes\Post;
+use Spikard\Config\ServerConfig;
+use Spikard\Http\Request;
+use Spikard\Http\Response;
+use Spikard\Testing\TestClient;
 
 /**
  * PHP test application for Spikard
@@ -19,61 +23,58 @@ use Spikard\Response;
  */
 final class App
 {
-    public static function createApp(): Server
+    /**
+     * Create and configure the test application
+     */
+    public static function createApp(): TestClient
     {
-        $server = new Server(['host' => '127.0.0.1', 'port' => 0]);
+        // Create controller with routes
+        $controller = new class {
+            #[Get('/health')]
+            public function health(): Response
+            {
+                return Response::json(['status' => 'ok']);
+            }
 
-        // Health check
-        $server->get('/health', static function (Request $req): Response {
-            return new Response(
-                status: 200,
-                headers: ['Content-Type' => 'application/json'],
-                body: json_encode(['status' => 'ok'], JSON_THROW_ON_ERROR)
-            );
-        });
+            #[Get('/query')]
+            public function query(Request $request): Response
+            {
+                $query = $request->queryParams ?? [];
+                // Query params are arrays from the parser, get the first value
+                $name = isset($query['name']) ? ($query['name'][0] ?? null) : null;
+                $age = isset($query['age']) ? (int) ($query['age'][0] ?? 0) : null;
+                return Response::json([
+                    'name' => $name,
+                    'age' => $age,
+                ]);
+            }
 
-        // Query parameters
-        $server->get('/query', static function (Request $req): Response {
-            $params = $req->queryParams() ?? [];
-            return new Response(
-                status: 200,
-                headers: ['Content-Type' => 'application/json'],
-                body: json_encode([
-                    'name' => $params['name'] ?? null,
-                    'age' => isset($params['age']) ? (int)$params['age'] : null,
-                ], JSON_THROW_ON_ERROR)
-            );
-        });
-
-        // JSON echo
-        $server->post('/echo', static function (Request $req): Response {
-            $body = $req->body() !== null
-                ? json_decode($req->body(), true, 512, JSON_THROW_ON_ERROR)
-                : [];
-
-            return new Response(
-                status: 200,
-                headers: ['Content-Type' => 'application/json'],
-                body: json_encode([
+            #[Post('/echo')]
+            public function echo(Request $request): Response
+            {
+                // Body is already a parsed array from JSON
+                $body = $request->body ?? [];
+                return Response::json([
                     'received' => $body,
-                    'method' => $req->method(),
-                ], JSON_THROW_ON_ERROR)
-            );
-        });
+                    'method' => $request->method,
+                ]);
+            }
 
-        // Path parameters
-        $server->get('/users/:id', static function (Request $req): Response {
-            $userId = $req->pathParams()['id'] ?? null;
-            return new Response(
-                status: 200,
-                headers: ['Content-Type' => 'application/json'],
-                body: json_encode([
+            #[Get('/users/:id')]
+            public function user(Request $request): Response
+            {
+                $userId = $request->pathParams['id'] ?? null;
+                return Response::json([
                     'userId' => $userId,
                     'type' => get_debug_type($userId),
-                ], JSON_THROW_ON_ERROR)
-            );
-        });
+                ]);
+            }
+        };
 
-        return $server;
+        // Create and configure the app
+        $config = new ServerConfig(host: '127.0.0.1', port: 0);
+        $app = (new SpikardApp($config))->registerController($controller);
+
+        return TestClient::create($app);
     }
 }
