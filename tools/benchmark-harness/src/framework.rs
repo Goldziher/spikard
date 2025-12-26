@@ -380,6 +380,14 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "php -S 0.0.0.0:{port} server.php",
             None,
         ),
+        FrameworkConfig::new(
+            "phalcon-validation",
+            vec!["server.php".to_string(), "composer.json".to_string()],
+            Some("composer install --no-dev --optimize-autoloader".to_string()),
+            "php -S 0.0.0.0:{port} server.php",
+            None,
+        )
+        .with_supported_categories(vec!["json-bodies".to_string()]),
     ]
 }
 
@@ -557,8 +565,9 @@ mod tests {
 
         assert!(names.contains(&"trongate-raw"));
         assert!(names.contains(&"phalcon-raw"));
+        assert!(names.contains(&"phalcon-validation"));
 
-        assert_eq!(registry.len(), 42);
+        assert_eq!(registry.len(), 43);
     }
 
     #[test]
@@ -614,7 +623,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 42);
+        assert_eq!(frameworks.len(), 43);
     }
 
     #[test]
