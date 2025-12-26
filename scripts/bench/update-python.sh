@@ -6,8 +6,13 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
 
 cd "${REPO_ROOT}"
 
-for app in fastapi-uvicorn-validation fastapi-uvicorn-raw fastapi-granian-validation fastapi-granian-raw robyn-validation robyn-raw spikard-python-validation spikard-python-raw; do
-	echo "Updating $app..."
-	cd "tools/benchmark-harness/apps/$app" && uv run uv-bump && uv sync --upgrade
+for pyproject in tools/benchmark-harness/apps/*/pyproject.toml; do
+	if [ ! -f "$pyproject" ]; then
+		continue
+	fi
+	app_dir="$(dirname "$pyproject")"
+	app_name="$(basename "$app_dir")"
+	echo "Updating $app_name..."
+	cd "$app_dir" && uv run uv-bump && uv sync --upgrade
 	cd - >/dev/null
 done
