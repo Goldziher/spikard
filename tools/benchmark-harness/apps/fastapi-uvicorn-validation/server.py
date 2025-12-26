@@ -130,9 +130,9 @@ async def get_path_int(id: int) -> dict[str, int]:
     return {"id": id}
 
 
-@app.get("/path/uuid/{id}")
-async def get_path_uuid(id: str) -> dict[str, str]:
-    return {"id": id}
+@app.get("/path/uuid/{uuid}")
+async def get_path_uuid(uuid: str) -> dict[str, str]:
+    return {"uuid": uuid}
 
 
 @app.get("/path/date/{date}")
