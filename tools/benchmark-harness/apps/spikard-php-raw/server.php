@@ -520,19 +520,74 @@ final class BenchmarkController
     #[Get('/path/int/{id}')]
     public function pathInt(Request $request): Response
     {
-        return $this->pathParams($request);
+        $id = $request->pathParams['id'] ?? null;
+        if ($id === null) {
+            return new Response([
+                'error' => 'Missing id parameter',
+                'code' => 'VALIDATION_ERROR',
+                'details' => ['id' => 'required'],
+            ], 400, []);
+        }
+
+        // Validate and convert to integer
+        if (filter_var($id, FILTER_VALIDATE_INT) === false) {
+            return new Response([
+                'error' => 'Invalid integer',
+                'code' => 'VALIDATION_ERROR',
+                'details' => ['id' => 'must be a valid integer'],
+            ], 400, []);
+        }
+
+        return new Response(['id' => (int) $id], 200, []);
     }
 
     #[Get('/path/uuid/{uuid}')]
     public function pathUuid(Request $request): Response
     {
-        return $this->pathParams($request);
+        $uuid = $request->pathParams['uuid'] ?? null;
+        if ($uuid === null) {
+            return new Response([
+                'error' => 'Missing uuid parameter',
+                'code' => 'VALIDATION_ERROR',
+                'details' => ['uuid' => 'required'],
+            ], 400, []);
+        }
+
+        // Validate UUID (RFC 4122)
+        if (!preg_match('/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i', $uuid)) {
+            return new Response([
+                'error' => 'Invalid UUID',
+                'code' => 'VALIDATION_ERROR',
+                'details' => ['uuid' => 'must be a valid RFC 4122 UUID'],
+            ], 400, []);
+        }
+
+        return new Response(['uuid' => $uuid], 200, []);
     }
 
     #[Get('/path/date/{date}')]
     public function pathDate(Request $request): Response
     {
-        return $this->pathParams($request);
+        $date = $request->pathParams['date'] ?? null;
+        if ($date === null) {
+            return new Response([
+                'error' => 'Missing date parameter',
+                'code' => 'VALIDATION_ERROR',
+                'details' => ['date' => 'required'],
+            ], 400, []);
+        }
+
+        // Validate date (Y-m-d format)
+        $parsed = DateTimeImmutable::createFromFormat('Y-m-d', $date);
+        if ($parsed === false || $parsed->format('Y-m-d') !== $date) {
+            return new Response([
+                'error' => 'Invalid date',
+                'code' => 'VALIDATION_ERROR',
+                'details' => ['date' => 'must be in Y-m-d format'],
+            ], 400, []);
+        }
+
+        return new Response(['date' => $date], 200, []);
     }
 
     #[Get('/query/few')]

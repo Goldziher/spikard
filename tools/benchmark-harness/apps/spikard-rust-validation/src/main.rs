@@ -13,6 +13,8 @@ use spikard::{App, RequestContext, ServerConfig, get, post};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
+use uuid::Uuid;
+use chrono::NaiveDate;
 
 #[derive(Parser, Debug)]
 #[command(name = "spikard-rust-bench")]
@@ -81,6 +83,21 @@ struct VeryLargePayload {
     images: Vec<Image>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct PathInt {
+    id: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct PathUuid {
+    uuid: Uuid,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct PathDate {
+    date: NaiveDate,
+}
+
 const REQUEST_SCHEMAS: &str =
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../schemas/request_schemas.json"));
 const RESPONSE_SCHEMAS: &str =
@@ -98,41 +115,41 @@ fn schema_value(map: &HashMap<String, Value>, key: &str) -> Value {
 async fn post_json_small(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: SmallPayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn post_json_medium(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: MediumPayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn post_json_large(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: LargePayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn post_json_very_large(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: VeryLargePayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 
@@ -141,11 +158,11 @@ async fn post_multipart_small(_ctx: RequestContext) -> Result<Response<Body>, (S
         "files_received": 1,
         "total_bytes": 1024
     });
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn post_multipart_medium(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
@@ -153,11 +170,11 @@ async fn post_multipart_medium(_ctx: RequestContext) -> Result<Response<Body>, (
         "files_received": 2,
         "total_bytes": 10240
     });
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn post_multipart_large(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
@@ -165,43 +182,43 @@ async fn post_multipart_large(_ctx: RequestContext) -> Result<Response<Body>, (S
         "files_received": 5,
         "total_bytes": 102400
     });
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 
 async fn post_urlencoded_simple(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: Value = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn post_urlencoded_complex(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: Value = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 
 async fn get_path_simple(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let id = ctx.path_param("id").unwrap_or("unknown");
     let result = serde_json::json!({ "id": id });
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn get_path_multiple(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
@@ -211,11 +228,11 @@ async fn get_path_multiple(ctx: RequestContext) -> Result<Response<Body>, (Statu
         "user_id": user_id,
         "post_id": post_id
     });
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn get_path_deep(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
@@ -231,41 +248,41 @@ async fn get_path_deep(ctx: RequestContext) -> Result<Response<Body>, (StatusCod
         "resource": resource,
         "id": id
     });
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn get_path_int(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let id = ctx.path_param("id").unwrap_or("0");
-    let result = serde_json::json!({ "id": id.parse::<i64>().unwrap_or(0) });
-    Ok(Response::builder()
+    let PathInt { id } = ctx.path().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let result = serde_json::json!({ "id": id });
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn get_path_uuid(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let uuid = ctx.path_param("uuid").unwrap_or("unknown");
+    let PathUuid { uuid } = ctx.path().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let result = serde_json::json!({ "uuid": uuid });
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn get_path_date(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let date = ctx.path_param("date").unwrap_or("unknown");
-    let result = serde_json::json!({ "date": date });
-    Ok(Response::builder()
+    let PathDate { date } = ctx.path().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let result = serde_json::json!({ "date": date.to_string() });
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 
@@ -295,11 +312,11 @@ async fn get_query_few(ctx: RequestContext) -> Result<Response<Body>, (StatusCod
         limit: None,
     });
     let json = serde_json::to_string(&params).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn get_query_medium(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
@@ -314,42 +331,42 @@ async fn get_query_medium(ctx: RequestContext) -> Result<Response<Body>, (Status
         limit: None,
     });
     let json = serde_json::to_string(&params).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn get_query_many(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let params: HashMap<String, String> = ctx.query().unwrap_or_default();
     let json = serde_json::to_string(&params).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 
 async fn health(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let result = serde_json::json!({ "status": "ok" });
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn benchmark_profile_start(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let params: HashMap<String, String> = ctx.query().unwrap_or_default();
     let Some(output) = params.get("output").filter(|s| !s.is_empty()) else {
         let result = serde_json::json!({ "ok": false, "error": "missing_output" });
-        return Ok(Response::builder()
+        return Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .header("content-type", "application/json")
             .body(Body::from(result.to_string()))
-            .unwrap());
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
     };
 
     let output_path = PathBuf::from(output);
