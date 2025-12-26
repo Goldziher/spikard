@@ -6,7 +6,7 @@
  * Uses Moro's validation (Zod adapter) to match the validated "DTO" baseline apps.
  */
 
-import { createApp, z } from "@morojs/moro";
+import { createApp, params, z } from "@morojs/moro";
 
 const app = createApp({
 	autoDiscover: false,
@@ -77,6 +77,21 @@ const VeryLargePayloadSchema = z.object({
 	images: z.array(ImageSchema),
 });
 
+/**
+ * Path parameter schemas
+ */
+const IntParamSchema = z.object({
+	id: z.coerce.number().int(),
+});
+
+const UuidParamSchema = z.object({
+	uuid: z.string().uuid(),
+});
+
+const DateParamSchema = z.object({
+	date: z.string().date(),
+});
+
 app.post("/json/small")
 	.body(SmallPayloadSchema)
 	.handler((req, res) => res.json(req.body));
@@ -116,9 +131,9 @@ app.get("/path/deep/:org/:team/:project/:resource/:id").handler((req, res) =>
 	}),
 );
 
-app.get("/path/int/:id").handler((req, res) => res.json({ id: Number.parseInt(req.params.id, 10) }));
-app.get("/path/uuid/:uuid").handler((req, res) => res.json({ uuid: req.params.uuid }));
-app.get("/path/date/:date").handler((req, res) => res.json({ date: req.params.date }));
+app.get("/path/int/:id").handler(params(IntParamSchema)((req, res) => res.json({ id: req.params.id })));
+app.get("/path/uuid/:uuid").handler(params(UuidParamSchema)((req, res) => res.json({ uuid: req.params.uuid })));
+app.get("/path/date/:date").handler(params(DateParamSchema)((req, res) => res.json({ date: req.params.date })));
 
 app.get("/query/few").handler((req, res) => res.json(req.query));
 app.get("/query/medium").handler((req, res) => res.json(req.query));
