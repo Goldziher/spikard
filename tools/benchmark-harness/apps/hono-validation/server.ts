@@ -180,8 +180,12 @@ interface IntIdResponse {
 	id: number;
 }
 
-app.get("/path/int/:id", (c) => {
-	const id: number = Number.parseInt(c.req.param("id"), 10);
+const IntParamSchema = z.object({
+	id: z.coerce.number().int(),
+});
+
+app.get("/path/int/:id", zValidator("param", IntParamSchema), (c) => {
+	const { id } = c.req.valid("param");
 	const response: IntIdResponse = { id };
 	return c.json(response);
 });
@@ -190,8 +194,12 @@ interface UuidResponse {
 	uuid: string;
 }
 
-app.get("/path/uuid/:uuid", (c) => {
-	const uuid: string = c.req.param("uuid");
+const UuidParamSchema = z.object({
+	uuid: z.string().uuid(),
+});
+
+app.get("/path/uuid/:uuid", zValidator("param", UuidParamSchema), (c) => {
+	const { uuid } = c.req.valid("param");
 	const response: UuidResponse = { uuid };
 	return c.json(response);
 });
@@ -200,8 +208,12 @@ interface DateResponse {
 	date: string;
 }
 
-app.get("/path/date/:date", (c) => {
-	const date: string = c.req.param("date");
+const DateParamSchema = z.object({
+	date: z.string().date(),
+});
+
+app.get("/path/date/:date", zValidator("param", DateParamSchema), (c) => {
+	const { date } = c.req.valid("param");
 	const response: DateResponse = { date };
 	return c.json(response);
 });
