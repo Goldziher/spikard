@@ -6,9 +6,10 @@ from typing import Any
 
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel
 
-app = FastAPI()
+app = FastAPI(default_response_class=ORJSONResponse)
 
 
 async def _parse_urlencoded(request: Request) -> dict[str, Any]:

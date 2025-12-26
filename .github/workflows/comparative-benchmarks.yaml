@@ -356,27 +356,6 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-robyn-validation:
-    name: robyn-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v7
-        with:
-          name: benchmark-harness
-          path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: robyn-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
   bench-fastapi-uvicorn-raw:
     name: fastapi-uvicorn-raw
     needs: build-harness
@@ -608,6 +587,27 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
+  bench-morojs-raw:
+    name: morojs-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: morojs-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
   bench-kito-validation:
     name: kito-validation
     needs: build-harness
@@ -730,6 +730,27 @@ jobs:
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: roda-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-phalcon-validation:
+    name: phalcon-validation
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: phalcon-validation
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
