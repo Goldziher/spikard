@@ -5,6 +5,7 @@
 //! - Compare mode: Framework comparisons
 //! - CI integration: Structured JSON for analytics
 
+pub mod aggregate;
 pub mod compare;
 pub mod profile;
 pub mod workload;

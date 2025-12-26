@@ -269,6 +269,7 @@ nav:
   # Performance Analysis
   - Benchmarks:
       - Overview: benchmarks/index.md
+      - Results Dashboard: benchmarks/results.md
       - Methodology: benchmarks/methodology.md
       - Frameworks: benchmarks/frameworks.md
       - Running Benchmarks: benchmarks/running.md
