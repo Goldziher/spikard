@@ -36,7 +36,6 @@ base64 = "0.22"
 hmac = "0.12"
 sha2 = "0.10"
 uuid = { version = "1.19", features = ["v4", "js"] }
-thiserror.workspace = true
 time = { version = "0.3", default-features = false, features = ["formatting", "parsing", "macros", "std"] }
 
 [dev-dependencies]

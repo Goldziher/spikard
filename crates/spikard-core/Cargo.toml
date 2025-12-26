@@ -30,11 +30,11 @@ uuid = "1.19"
 indexmap = "2.12"
 tokio = { version = "1", optional = true, default-features = false, features = ["rt", "macros", "sync", "time"] }
 bytes = { version = "1.11", optional = true }
-thiserror = { workspace = true, optional = true }
+thiserror = { workspace = true }
 
 [features]
 default = []
-di = ["dep:tokio", "dep:bytes", "dep:thiserror"]
+di = ["dep:tokio", "dep:bytes"]
 
 [dev-dependencies]
 tokio-test = "0.4"

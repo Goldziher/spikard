@@ -34,7 +34,7 @@ thiserror = "2.0"
 
 [features]
 default = []
-di = ["dep:tokio", "dep:bytes", "dep:thiserror"]
+di = ["dep:tokio", "dep:bytes"]
 
 [dev-dependencies]
 tokio-test = "0.4"
