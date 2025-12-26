@@ -218,19 +218,52 @@ fastify.get("/path/deep/:org/:team/:project/:resource/:id", async (request, _rep
 	return { org, team, project, resource, id };
 });
 
-fastify.get("/path/int/:id", async (request, _reply) => {
-	const { id } = request.params as { id: string };
-	return { id: parseInt(id, 10) };
+fastify.get("/path/int/:id", {
+	schema: {
+		params: {
+			type: "object",
+			properties: {
+				id: { type: "integer" },
+			},
+			required: ["id"],
+		},
+	},
+	handler: async (request, _reply) => {
+		const { id } = request.params as { id: number };
+		return { id };
+	},
 });
 
-fastify.get("/path/uuid/:uuid", async (request, _reply) => {
-	const { uuid } = request.params as { uuid: string };
-	return { uuid };
+fastify.get("/path/uuid/:uuid", {
+	schema: {
+		params: {
+			type: "object",
+			properties: {
+				uuid: { type: "string", format: "uuid" },
+			},
+			required: ["uuid"],
+		},
+	},
+	handler: async (request, _reply) => {
+		const { uuid } = request.params as { uuid: string };
+		return { uuid };
+	},
 });
 
-fastify.get("/path/date/:date", async (request, _reply) => {
-	const { date } = request.params as { date: string };
-	return { date };
+fastify.get("/path/date/:date", {
+	schema: {
+		params: {
+			type: "object",
+			properties: {
+				date: { type: "string", format: "date" },
+			},
+			required: ["date"],
+		},
+	},
+	handler: async (request, _reply) => {
+		const { date } = request.params as { date: string };
+		return { date };
+	},
 });
 
 fastify.get("/query/few", async (request, _reply) => {
