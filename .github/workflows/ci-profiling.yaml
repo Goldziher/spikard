@@ -91,13 +91,10 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download benchmark tools
-        uses: actions/download-artifact@v7
+        uses: ./.github/actions/setup-benchmark-tools
         with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+          artifact-name: bench-tools
+          extra-binaries: "py-spy"
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -141,13 +138,10 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download benchmark tools
-        uses: actions/download-artifact@v7
+        uses: ./.github/actions/setup-benchmark-tools
         with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+          artifact-name: bench-tools
+          extra-binaries: "py-spy"
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -207,13 +201,10 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download benchmark tools
-        uses: actions/download-artifact@v7
+        uses: ./.github/actions/setup-benchmark-tools
         with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+          artifact-name: bench-tools
+          extra-binaries: "py-spy"
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -267,13 +258,10 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download benchmark tools
-        uses: actions/download-artifact@v7
+        uses: ./.github/actions/setup-benchmark-tools
         with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+          artifact-name: bench-tools
+          extra-binaries: "py-spy"
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -329,13 +317,10 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download benchmark tools
-        uses: actions/download-artifact@v7
+        uses: ./.github/actions/setup-benchmark-tools
         with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+          artifact-name: bench-tools
+          extra-binaries: "py-spy"
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -420,13 +405,10 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download benchmark tools
-        uses: actions/download-artifact@v7
+        uses: ./.github/actions/setup-benchmark-tools
         with:
-          name: bench-tools
-          path: ~/.cargo/bin
-
-      - name: Make benchmark tools executable
-        run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha ~/.cargo/bin/py-spy
+          artifact-name: bench-tools
+          extra-binaries: "py-spy"
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust

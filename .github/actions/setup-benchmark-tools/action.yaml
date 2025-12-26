@@ -1,0 +1,40 @@
+name: Setup Benchmark Tools
+description: Download and install benchmark harness + oha
+
+inputs:
+  artifact-name:
+    description: "Benchmark tools artifact name"
+    required: false
+    default: "benchmark-tools"
+  install-dir:
+    description: "Destination directory to place binaries"
+    required: false
+    default: "~/.cargo/bin"
+  extra-binaries:
+    description: "Additional binary names to chmod (space-separated)"
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Download benchmark tools
+      uses: actions/download-artifact@v7
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.install-dir }}
+
+    - name: Make benchmark tools executable
+      shell: bash
+      run: |
+        extra="${{ inputs.extra-binaries }}"
+        chmod +x "${{ inputs.install-dir }}/benchmark-harness" "${{ inputs.install-dir }}/oha"
+        if [ -n "$extra" ]; then
+          for bin in $extra; do
+            chmod +x "${{ inputs.install-dir }}/${bin}"
+          done
+        fi
+
+    - name: Add tools to PATH
+      shell: bash
+      run: echo "${{ inputs.install-dir }}" >> $GITHUB_PATH
