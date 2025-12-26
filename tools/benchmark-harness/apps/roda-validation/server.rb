@@ -9,6 +9,7 @@
 require 'roda'
 require 'dry/schema'
 require 'json'
+require 'date'
 
 # ============================================================================
 # Validation Schemas
@@ -163,14 +164,24 @@ class BenchmarkApp < Roda
       end
 
       r.get 'int', Integer do |id|
-        { id: id, type: 'integer' }
+        { id: id }
       end
 
       r.get 'uuid', String do |uuid|
+        unless uuid =~ /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i
+          response.status = 400
+          next { error: 'Invalid UUID format' }
+        end
         { uuid: uuid }
       end
 
       r.get 'date', String do |date|
+        begin
+          Date.iso8601(date)
+        rescue ArgumentError
+          response.status = 400
+          next { error: 'Invalid date format' }
+        end
         { date: date }
       end
     end
