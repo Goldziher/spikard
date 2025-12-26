@@ -28,13 +28,17 @@ runs:
     - name: Setup Rust (needed for maturin and wasm-pack)
       uses: ./.github/actions/setup-rust
 
-    - name: Install oha load generator
+    - name: Ensure cargo bin is on PATH
+      shell: bash
+      run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Verify oha availability
       shell: bash
       run: |
         if ! command -v oha &> /dev/null; then
-          cargo install oha
+          echo "oha not found on PATH; ensure benchmark tools are provisioned before running benchmarks." >&2
+          exit 1
         fi
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
     - name: Detect framework language
       id: detect
@@ -100,6 +104,17 @@ runs:
       with:
         bun-version: latest
 
+    - name: Cache Bun dependencies
+      if: steps.detect.outputs.language == 'node' && (startsWith(inputs.framework, 'elysia') || startsWith(inputs.framework, 'spikard-bun-'))
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.bun/install/cache
+          ~/.cache/bun
+        key: bun-${{ runner.os }}-${{ hashFiles(format('tools/benchmark-harness/apps/{0}/bun.lockb', inputs.framework)) }}
+        restore-keys: |
+          bun-${{ runner.os }}-
+
     - name: Install Node benchmark app dependencies
       if: steps.detect.outputs.language == 'node' && !startsWith(inputs.framework, 'elysia') && !startsWith(inputs.framework, 'spikard-bun-')
       shell: bash
@@ -131,11 +146,24 @@ runs:
         bundler: "4.0.0"
         bundler-cache: false
 
+    - name: Cache Ruby gems
+      if: steps.detect.outputs.language == 'ruby' && !startsWith(inputs.framework, 'spikard-ruby-')
+      uses: actions/cache@v4
+      with:
+        path: |
+          tools/benchmark-harness/apps/${{ inputs.framework }}/vendor/bundle
+          ~/.bundle
+        key: bundler-${{ runner.os }}-${{ inputs.framework }}-${{ hashFiles(format('tools/benchmark-harness/apps/{0}/Gemfile.lock', inputs.framework)) }}
+        restore-keys: |
+          bundler-${{ runner.os }}-${{ inputs.framework }}-
+
     - name: Install Ruby benchmark app dependencies
       if: steps.detect.outputs.language == 'ruby' && !startsWith(inputs.framework, 'spikard-ruby-')
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
-      run: bundle install
+      run: |
+        bundle config set path vendor/bundle
+        bundle install
 
     - name: Setup PHP with Phalcon extension
       if: steps.detect.outputs.language == 'php' && inputs.framework == 'phalcon-raw'
@@ -171,6 +199,17 @@ runs:
           php -m | grep spikard
         fi
 
+    - name: Cache Composer downloads
+      if: steps.detect.outputs.language == 'php'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.composer/cache
+          ~/.cache/composer
+        key: composer-${{ runner.os }}-${{ inputs.framework }}-${{ hashFiles(format('tools/benchmark-harness/apps/{0}/composer.lock', inputs.framework), 'packages/php/composer.lock') }}
+        restore-keys: |
+          composer-${{ runner.os }}-${{ inputs.framework }}-
+
     - name: Install PHP package dependencies
       if: steps.detect.outputs.language == 'php' && startsWith(inputs.framework, 'spikard-php-')
       shell: bash
@@ -189,6 +228,22 @@ runs:
       with:
         deno-version: v2.x
 
+    - name: Cache Deno dependencies
+      if: steps.detect.outputs.language == 'wasm'
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/deno
+        key: deno-${{ runner.os }}-${{ hashFiles(format('tools/benchmark-harness/apps/{0}/deno.json', inputs.framework), format('tools/benchmark-harness/apps/{0}/deno.lock', inputs.framework)) }}
+        restore-keys: |
+          deno-${{ runner.os }}-
+
+    - name: Cache wasm-pack
+      if: steps.detect.outputs.language == 'wasm'
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/wasm-pack
+        key: wasm-pack-${{ runner.os }}-v1
+
     - name: Build WASM binding (if needed)
       if: steps.detect.outputs.language == 'wasm' && startsWith(inputs.framework, 'spikard-wasm-')
       shell: bash
@@ -196,7 +251,9 @@ runs:
         # Build the WASM module using wasm-pack for Deno
         cd $GITHUB_WORKSPACE/crates/spikard-wasm
         rustup target add wasm32-unknown-unknown
-        cargo install wasm-pack || true
+        if ! command -v wasm-pack &> /dev/null; then
+          cargo install wasm-pack --locked
+        fi
         # Build with deno target, which outputs to dist-deno
         wasm-pack build --target deno --out-dir dist-deno --release
         # Copy the deno build to the benchmark app pkg directories

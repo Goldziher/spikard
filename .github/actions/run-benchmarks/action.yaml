@@ -33,11 +33,16 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install oha load generator
+    - name: Ensure cargo bin is on PATH
+      shell: bash
+      run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Verify oha availability
       shell: bash
       run: |
         if ! command -v oha &> /dev/null; then
-          cargo install oha
+          echo "oha not found on PATH; ensure benchmark tools are provisioned before running benchmarks." >&2
+          exit 1
         fi
 
     - name: Create results directory

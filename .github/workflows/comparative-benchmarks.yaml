@@ -39,7 +39,7 @@ env:
 
 jobs:
   build-harness:
-    name: Build Benchmark Harness
+    name: Build Benchmark Tools
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -55,12 +55,23 @@ jobs:
       - name: Build benchmark harness
         run: cargo build --manifest-path tools/benchmark-harness/Cargo.toml --release
 
-      - name: Upload benchmark harness
+      - name: Install oha load generator
+        run: cargo install oha --locked
+
+      - name: Package benchmark tools
+        run: |
+          mkdir -p artifacts/bin
+          cp target/release/benchmark-harness artifacts/bin/benchmark-harness
+          cp ~/.cargo/bin/oha artifacts/bin/oha
+          chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha
+
+      - name: Upload benchmark tools
         uses: actions/upload-artifact@v6
         with:
-          name: benchmark-harness
-          path: target/release/benchmark-harness
+          name: benchmark-tools
+          path: artifacts/bin/
           retention-days: 1
+          if-no-files-found: error
 
   bench-spikard-rust-validation:
     name: spikard-rust-validation
@@ -73,9 +84,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-rust-validation
@@ -94,9 +105,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-rust-raw
@@ -115,9 +126,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-python-validation
@@ -136,9 +147,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-python-raw
@@ -157,9 +168,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-node-validation
@@ -178,9 +189,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-bun-validation
@@ -199,9 +210,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-node-raw
@@ -220,9 +231,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-bun-raw
@@ -241,9 +252,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-ruby-validation
@@ -262,9 +273,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-ruby-raw
@@ -283,9 +294,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-wasm-validation
@@ -304,9 +315,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-wasm-raw
@@ -325,9 +336,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: fastapi-uvicorn-validation
@@ -346,9 +357,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: fastapi-granian-validation
@@ -367,9 +378,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: fastapi-uvicorn-raw
@@ -388,9 +399,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: fastapi-granian-raw
@@ -409,9 +420,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: robyn-raw
@@ -430,9 +441,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: fastify-validation
@@ -451,9 +462,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: fastify-raw
@@ -472,9 +483,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: hono-validation
@@ -493,9 +504,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: elysia-validation
@@ -514,9 +525,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: hono-raw
@@ -535,9 +546,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: express-validation
@@ -556,9 +567,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: express-raw
@@ -577,9 +588,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: morojs-validation
@@ -598,9 +609,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: morojs-raw
@@ -619,9 +630,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: kito-validation
@@ -640,9 +651,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: kito-raw
@@ -661,9 +672,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: hanami-api-validation
@@ -682,9 +693,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: hanami-api-raw
@@ -703,9 +714,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: roda-validation
@@ -724,9 +735,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: roda-raw
@@ -745,9 +756,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: phalcon-validation
@@ -766,9 +777,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: phalcon-raw
@@ -787,9 +798,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-php-validation
@@ -808,9 +819,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: spikard-php-raw
@@ -829,9 +840,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
-          name: benchmark-harness
+          name: benchmark-tools
           path: ~/.cargo/bin
-      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - run: chmod +x ~/.cargo/bin/benchmark-harness ~/.cargo/bin/oha
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: trongate-raw
