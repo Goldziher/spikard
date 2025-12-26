@@ -8,7 +8,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@spikard/wasm": "0.6.0"
+    "@spikard/wasm": "0.6.1"
   },
   "devDependencies": {
     "vitest": "^2.1.8"

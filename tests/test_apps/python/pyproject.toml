@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "E2E test app for published Spikard Python package"
 requires-python = ">=3.10"
 dependencies = [
-    "spikard==0.6.0",  # Exact version pin - updated by scripts/update-versions.sh
+    "spikard==0.6.1",  # Exact version pin - updated by scripts/update-versions.sh
 ]
 
 [project.optional-dependencies]
