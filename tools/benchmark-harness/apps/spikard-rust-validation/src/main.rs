@@ -385,11 +385,11 @@ async fn benchmark_profile_start(ctx: RequestContext) -> Result<Response<Body>, 
         Some(output_path);
 
     let result = serde_json::json!({ "ok": true });
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 async fn benchmark_profile_stop(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
@@ -407,19 +407,19 @@ async fn benchmark_profile_stop(_ctx: RequestContext) -> Result<Response<Body>, 
 
     let Some(guard) = guard else {
         let result = serde_json::json!({ "ok": false, "error": "not_running" });
-        return Ok(Response::builder()
+        return Response::builder()
             .status(StatusCode::OK)
             .header("content-type", "application/json")
             .body(Body::from(result.to_string()))
-            .unwrap());
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
     };
     let Some(output_path) = output_path else {
         let result = serde_json::json!({ "ok": false, "error": "missing_output" });
-        return Ok(Response::builder()
+        return Response::builder()
             .status(StatusCode::OK)
             .header("content-type", "application/json")
             .body(Body::from(result.to_string()))
-            .unwrap());
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
     };
 
     let report = guard
@@ -432,11 +432,11 @@ async fn benchmark_profile_stop(_ctx: RequestContext) -> Result<Response<Body>, 
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let result = serde_json::json!({ "ok": true });
-    Ok(Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(result.to_string()))
-        .unwrap())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
 #[tokio::main]
