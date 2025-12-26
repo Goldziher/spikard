@@ -108,13 +108,37 @@ app.get("/path/deep/:org/:team/:project/:resource/:id", ({ params: { org, team, 
 	id,
 }));
 
-app.get("/path/int/:id", ({ params: { id } }) => ({
-	id: parseInt(id, 10),
-}));
+app.get(
+	"/path/int/:id",
+	({ params: { id } }) => ({
+		id,
+	}),
+	{
+		params: t.Object({
+			id: t.Integer(),
+		}),
+	},
+);
 
-app.get("/path/uuid/:uuid", ({ params: { uuid } }) => ({ uuid }));
+app.get(
+	"/path/uuid/:uuid",
+	({ params: { uuid } }) => ({ uuid }),
+	{
+		params: t.Object({
+			uuid: t.String({ format: "uuid" }),
+		}),
+	},
+);
 
-app.get("/path/date/:date", ({ params: { date } }) => ({ date }));
+app.get(
+	"/path/date/:date",
+	({ params: { date } }) => ({ date }),
+	{
+		params: t.Object({
+			date: t.String({ format: "date" }),
+		}),
+	},
+);
 
 app.get("/query/few", ({ query }) => query ?? {});
 
