@@ -261,6 +261,14 @@ pub trait Handler: Send + Sync {
     fn wants_cookies(&self) -> bool {
         true
     }
+
+    /// Whether this handler needs `RequestData` stored in request extensions.
+    ///
+    /// When `false`, the server avoids inserting `RequestData` into extensions to
+    /// skip cloning in hot paths.
+    fn wants_request_extensions(&self) -> bool {
+        false
+    }
 }
 
 /// Validated parameters from request (path, query, headers, cookies)

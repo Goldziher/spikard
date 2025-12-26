@@ -1,7 +1,7 @@
 [dependency-groups]
 dev = [
   "annotated-types>=0.7.0",
-  "fastapi>=0.127.0",
+  "fastapi>=0.127.1",
   "httpx-sse>=0.4.3",
   "jsonschema>=4.23.0",
   "maturin>=1.10.2",

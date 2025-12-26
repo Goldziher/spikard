@@ -6,8 +6,8 @@ use serde_json::Value as JsonValue;
 use std::cell::RefCell;
 use std::net::{TcpStream, ToSocketAddrs};
 use std::time::Duration;
-use tungstenite::{Message, WebSocket};
 use tungstenite::stream::MaybeTlsStream;
+use tungstenite::{Message, WebSocket};
 use url::Url;
 
 #[derive(Debug)]
@@ -41,8 +41,7 @@ impl WebSocketConnection {
             .map_err(|err| WebSocketIoError::Other(err.to_string()))?
             .next()
             .ok_or_else(|| WebSocketIoError::Other("Unable to resolve WebSocket host".to_string()))?;
-        let tcp_stream = TcpStream::connect_timeout(&addr, timeout)
-            .map_err(map_io_error)?;
+        let tcp_stream = TcpStream::connect_timeout(&addr, timeout).map_err(map_io_error)?;
         tcp_stream
             .set_read_timeout(Some(timeout))
             .map_err(|err| WebSocketIoError::Other(err.to_string()))?;
@@ -58,13 +57,12 @@ impl WebSocketConnection {
 
     pub(crate) fn send_text(&mut self, text: String) -> Result<(), WebSocketIoError> {
         self.stream
-            .write_message(Message::Text(text))
+            .write_message(Message::Text(text.into()))
             .map_err(map_tungstenite_error)
     }
 
     pub(crate) fn send_json(&mut self, json_value: &JsonValue) -> Result<(), WebSocketIoError> {
-        let text = serde_json::to_string(json_value)
-            .map_err(|err| WebSocketIoError::Other(err.to_string()))?;
+        let text = serde_json::to_string(json_value).map_err(|err| WebSocketIoError::Other(err.to_string()))?;
         self.send_text(text)
     }
 
@@ -91,9 +89,7 @@ impl WebSocketConnection {
     }
 
     pub(crate) fn close(mut self) -> Result<(), WebSocketIoError> {
-        self.stream
-            .close(None)
-            .map_err(map_tungstenite_error)
+        self.stream.close(None).map_err(map_tungstenite_error)
     }
 }
 
@@ -117,9 +113,10 @@ fn map_io_error(err: std::io::Error) -> WebSocketIoError {
 
 fn message_to_text(message: Message) -> Result<String, WebSocketIoError> {
     match message {
-        Message::Text(text) => Ok(text),
-        Message::Binary(bytes) => String::from_utf8(bytes)
-            .map_err(|err| WebSocketIoError::Other(err.to_string())),
+        Message::Text(text) => Ok(text.to_string()),
+        Message::Binary(bytes) => {
+            String::from_utf8(bytes.to_vec()).map_err(|err| WebSocketIoError::Other(err.to_string()))
+        }
         Message::Close(frame) => Ok(frame.map(|f| f.reason.to_string()).unwrap_or_default()),
         Message::Ping(_) | Message::Pong(_) => Ok(String::new()),
         Message::Frame(_) => Err(WebSocketIoError::Other(
@@ -130,13 +127,13 @@ fn message_to_text(message: Message) -> Result<String, WebSocketIoError> {
 
 fn message_to_bytes(message: Message) -> Result<bytes::Bytes, WebSocketIoError> {
     match message {
-        Message::Text(text) => Ok(bytes::Bytes::from(text)),
-        Message::Binary(bytes) => Ok(bytes::Bytes::from(bytes)),
+        Message::Text(text) => Ok(bytes::Bytes::from(text.to_string())),
+        Message::Binary(bytes) => Ok(bytes),
         Message::Close(frame) => Ok(bytes::Bytes::from(
             frame.map(|f| f.reason.to_string()).unwrap_or_default(),
         )),
-        Message::Ping(data) => Ok(bytes::Bytes::from(data)),
-        Message::Pong(data) => Ok(bytes::Bytes::from(data)),
+        Message::Ping(data) => Ok(data),
+        Message::Pong(data) => Ok(data),
         Message::Frame(_) => Err(WebSocketIoError::Other(
             "Unexpected frame message while reading bytes".to_string(),
         )),
@@ -175,10 +172,7 @@ impl WebSocketTestConnection {
             Ok(()) => Ok(()),
             Err(WebSocketIoError::Timeout) => Err(Error::new(
                 magnus::exception::runtime_error(),
-                format!(
-                    "WebSocket send timed out after {}ms",
-                    timeout_duration.as_millis()
-                ),
+                format!("WebSocket send timed out after {}ms", timeout_duration.as_millis()),
             )),
             Err(WebSocketIoError::Closed) => Err(Error::new(
                 magnus::exception::runtime_error(),
@@ -216,10 +210,7 @@ impl WebSocketTestConnection {
             Ok(()) => Ok(()),
             Err(WebSocketIoError::Timeout) => Err(Error::new(
                 ruby.exception_runtime_error(),
-                format!(
-                    "WebSocket send timed out after {}ms",
-                    timeout_duration.as_millis()
-                ),
+                format!("WebSocket send timed out after {}ms", timeout_duration.as_millis()),
             )),
             Err(WebSocketIoError::Closed) => Err(Error::new(
                 ruby.exception_runtime_error(),
@@ -253,10 +244,7 @@ impl WebSocketTestConnection {
         .map_err(|err| match err {
             WebSocketIoError::Timeout => Error::new(
                 magnus::exception::runtime_error(),
-                format!(
-                    "WebSocket receive timed out after {}ms",
-                    timeout_duration.as_millis()
-                ),
+                format!("WebSocket receive timed out after {}ms", timeout_duration.as_millis()),
             ),
             WebSocketIoError::Closed => Error::new(
                 magnus::exception::runtime_error(),
@@ -290,10 +278,7 @@ impl WebSocketTestConnection {
         .map_err(|err| match err {
             WebSocketIoError::Timeout => Error::new(
                 ruby.exception_runtime_error(),
-                format!(
-                    "WebSocket receive timed out after {}ms",
-                    timeout_duration.as_millis()
-                ),
+                format!("WebSocket receive timed out after {}ms", timeout_duration.as_millis()),
             ),
             WebSocketIoError::Closed => Error::new(
                 ruby.exception_runtime_error(),
@@ -327,10 +312,7 @@ impl WebSocketTestConnection {
         let bytes = result.map_err(|err| match err {
             WebSocketIoError::Timeout => Error::new(
                 ruby.exception_runtime_error(),
-                format!(
-                    "WebSocket receive timed out after {}ms",
-                    timeout_duration.as_millis()
-                ),
+                format!("WebSocket receive timed out after {}ms", timeout_duration.as_millis()),
             ),
             WebSocketIoError::Closed => Error::new(
                 ruby.exception_runtime_error(),
@@ -364,10 +346,7 @@ impl WebSocketTestConnection {
         let msg = result.map_err(|err| match err {
             WebSocketIoError::Timeout => Error::new(
                 ruby.exception_runtime_error(),
-                format!(
-                    "WebSocket receive timed out after {}ms",
-                    timeout_duration.as_millis()
-                ),
+                format!("WebSocket receive timed out after {}ms", timeout_duration.as_millis()),
             ),
             WebSocketIoError::Closed => Error::new(
                 ruby.exception_runtime_error(),
@@ -437,10 +416,7 @@ fn block_on_receive_bytes(
     ws.receive_bytes()
 }
 
-fn block_on_receive_text(
-    timeout_duration: Duration,
-    ws: &mut WebSocketConnection,
-) -> Result<String, WebSocketIoError> {
+fn block_on_receive_text(timeout_duration: Duration, ws: &mut WebSocketConnection) -> Result<String, WebSocketIoError> {
     set_stream_timeouts(ws, timeout_duration)?;
     ws.receive_text()
 }
@@ -466,16 +442,13 @@ fn block_on_close(ws: WebSocketConnection) -> Result<(), WebSocketIoError> {
 }
 
 fn set_stream_timeouts(ws: &mut WebSocketConnection, timeout: Duration) -> Result<(), WebSocketIoError> {
-    match ws.stream.get_mut() {
-        MaybeTlsStream::Plain(stream) => {
-            stream
-                .set_read_timeout(Some(timeout))
-                .map_err(|e| WebSocketIoError::Other(e.to_string()))?;
-            stream
-                .set_write_timeout(Some(timeout))
-                .map_err(|e| WebSocketIoError::Other(e.to_string()))?;
-        }
-        _ => {}
+    if let MaybeTlsStream::Plain(stream) = ws.stream.get_mut() {
+        stream
+            .set_read_timeout(Some(timeout))
+            .map_err(|e| WebSocketIoError::Other(e.to_string()))?;
+        stream
+            .set_write_timeout(Some(timeout))
+            .map_err(|e| WebSocketIoError::Other(e.to_string()))?;
     }
     Ok(())
 }
@@ -503,11 +476,11 @@ pub enum WebSocketMessageData {
 impl WebSocketMessageData {
     fn from_tungstenite(message: Message) -> Result<Self, WebSocketIoError> {
         match message {
-            Message::Text(text) => Ok(Self::Text(text)),
-            Message::Binary(bytes) => Ok(Self::Binary(bytes)),
+            Message::Text(text) => Ok(Self::Text(text.to_string())),
+            Message::Binary(bytes) => Ok(Self::Binary(bytes.to_vec())),
             Message::Close(frame) => Ok(Self::Close(frame.map(|f| f.reason.to_string()))),
-            Message::Ping(bytes) => Ok(Self::Ping(bytes)),
-            Message::Pong(bytes) => Ok(Self::Pong(bytes)),
+            Message::Ping(bytes) => Ok(Self::Ping(bytes.to_vec())),
+            Message::Pong(bytes) => Ok(Self::Pong(bytes.to_vec())),
             Message::Frame(_) => Err(WebSocketIoError::Other(
                 "Unexpected frame message while reading WebSocket".to_string(),
             )),

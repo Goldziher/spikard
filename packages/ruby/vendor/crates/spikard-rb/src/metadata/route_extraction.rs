@@ -238,10 +238,7 @@ pub fn parse_cors_config(ruby: &Ruby, value: Value) -> Result<Option<spikard_htt
     }
 
     let hash = RHash::try_convert(value)?;
-    let lookup = |key: &str| -> Option<Value> {
-        hash.get(ruby.to_symbol(key))
-            .or_else(|| hash.get(ruby.str_new(key)))
-    };
+    let lookup = |key: &str| -> Option<Value> { hash.get(ruby.to_symbol(key)).or_else(|| hash.get(ruby.str_new(key))) };
 
     let allowed_origins = lookup("allowed_origins")
         .and_then(|v| Vec::<String>::try_convert(v).ok())
@@ -252,13 +249,11 @@ pub fn parse_cors_config(ruby: &Ruby, value: Value) -> Result<Option<spikard_htt
     let allowed_headers = lookup("allowed_headers")
         .and_then(|v| Vec::<String>::try_convert(v).ok())
         .unwrap_or_default();
-    let expose_headers = lookup("expose_headers")
-        .and_then(|v| Vec::<String>::try_convert(v).ok());
+    let expose_headers = lookup("expose_headers").and_then(|v| Vec::<String>::try_convert(v).ok());
     let max_age = lookup("max_age")
         .and_then(|v| i64::try_convert(v).ok())
         .map(|v| v as u32);
-    let allow_credentials = lookup("allow_credentials")
-        .and_then(|v| bool::try_convert(v).ok());
+    let allow_credentials = lookup("allow_credentials").and_then(|v| bool::try_convert(v).ok());
 
     Ok(Some(spikard_http::CorsConfig {
         allowed_origins,

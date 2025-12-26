@@ -6,8 +6,8 @@
 
 #![allow(dead_code)]
 
-use axum::http::Method;
 use axum::Router;
+use axum::http::Method;
 use axum_test::{TestServer, TestServerConfig, Transport};
 use bytes::Bytes;
 use cookie::Cookie;
@@ -15,12 +15,7 @@ use magnus::prelude::*;
 use magnus::{Error, RHash, Ruby, Value, gc::Marker};
 use serde_json::Value as JsonValue;
 use spikard_http::testing::{
-    MultipartFilePart,
-    ResponseSnapshot,
-    SnapshotError,
-    build_multipart_body,
-    encode_urlencoded_body,
-    snapshot_response,
+    MultipartFilePart, ResponseSnapshot, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
 };
 use spikard_http::{Route, RouteMetadata};
 use std::cell::RefCell;
@@ -274,12 +269,12 @@ impl NativeTestClient {
             ),
             return_type: Result<TestResponseData, NativeRequestError>
         )
-            .map_err(|err| {
-                Error::new(
-                    ruby.exception_runtime_error(),
-                    format!("Request failed for {method_upper} {path}: {}", err.0),
-                )
-            })?;
+        .map_err(|err| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                format!("Request failed for {method_upper} {path}: {}", err.0),
+            )
+        })?;
 
         response_to_ruby(ruby, response)
     }
@@ -314,10 +309,7 @@ impl NativeTestClient {
         .map_err(|err| match err {
             WebSocketConnectError::Timeout => Error::new(
                 ruby.exception_runtime_error(),
-                format!(
-                    "WebSocket connect timed out after {}ms",
-                    timeout_duration.as_millis()
-                ),
+                format!("WebSocket connect timed out after {}ms", timeout_duration.as_millis()),
             ),
             WebSocketConnectError::Other(message) => Error::new(
                 ruby.exception_runtime_error(),
@@ -356,12 +348,7 @@ impl NativeTestClient {
             ),
             return_type: Result<TestResponseData, NativeRequestError>
         )
-        .map_err(|err| {
-            Error::new(
-                ruby.exception_runtime_error(),
-                format!("SSE request failed: {}", err.0),
-            )
-        })?;
+        .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", err.0)))?;
 
         let body = response.body_text.unwrap_or_default().into_bytes();
         let snapshot = ResponseSnapshot {

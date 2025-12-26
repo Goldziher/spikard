@@ -23,11 +23,8 @@ use crate::handler::RubyHandler;
 ///
 /// Initialized once and reused for all async operations throughout the lifetime
 /// of the Ruby process.
-pub static GLOBAL_RUNTIME: Lazy<Result<Runtime, std::io::Error>> = Lazy::new(|| {
-    Builder::new_multi_thread()
-        .enable_all()
-        .build()
-});
+pub static GLOBAL_RUNTIME: Lazy<Result<Runtime, std::io::Error>> =
+    Lazy::new(|| Builder::new_multi_thread().enable_all().build());
 
 pub fn global_runtime_raw() -> Result<&'static Runtime, std::io::Error> {
     match &*GLOBAL_RUNTIME {

@@ -49,8 +49,7 @@ use magnus::{
 use serde_json::Value as JsonValue;
 use spikard_http::ProblemDetails;
 use spikard_http::testing::{
-    MultipartFilePart, ResponseSnapshot, SnapshotError, build_multipart_body, encode_urlencoded_body,
-    snapshot_response,
+    MultipartFilePart, ResponseSnapshot, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
 };
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
@@ -682,10 +681,7 @@ impl NativeTestClient {
         .map_err(|err| match err {
             WebSocketConnectError::Timeout => Error::new(
                 ruby.exception_runtime_error(),
-                format!(
-                    "WebSocket connect timed out after {}ms",
-                    timeout_duration.as_millis()
-                ),
+                format!("WebSocket connect timed out after {}ms", timeout_duration.as_millis()),
             ),
             WebSocketConnectError::Other(message) => Error::new(
                 ruby.exception_runtime_error(),

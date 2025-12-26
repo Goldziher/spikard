@@ -119,6 +119,35 @@ pub async fn snapshot_response(response: AxumTestResponse) -> Result<ResponseSna
     })
 }
 
+/// Convert an Axum response into a reusable [`ResponseSnapshot`].
+pub async fn snapshot_http_response(
+    response: axum::response::Response<Body>,
+) -> Result<ResponseSnapshot, SnapshotError> {
+    let (parts, body) = response.into_parts();
+    let status = parts.status.as_u16();
+
+    let mut headers = HashMap::new();
+    for (name, value) in parts.headers.iter() {
+        let header_value = value
+            .to_str()
+            .map_err(|e| SnapshotError::InvalidHeader(e.to_string()))?;
+        headers.insert(name.to_string().to_ascii_lowercase(), header_value.to_string());
+    }
+
+    let collected = body
+        .collect()
+        .await
+        .map_err(|e| SnapshotError::Decompression(e.to_string()))?;
+    let bytes = collected.to_bytes();
+    let decoded_body = decode_body(&headers, bytes.to_vec())?;
+
+    Ok(ResponseSnapshot {
+        status,
+        headers,
+        body: decoded_body,
+    })
+}
+
 fn decode_body(headers: &HashMap<String, String>, body: Vec<u8>) -> Result<Vec<u8>, SnapshotError> {
     let encoding = headers
         .get("content-encoding")
