@@ -8,13 +8,13 @@ repository = "https://github.com/Goldziher/spikard"
 homepage = "https://github.com/Goldziher/spikard"
 
 [dependencies]
-serde = { workspace = true }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 axum = { version = "0.8", features = ["multipart", "ws"] }
 tokio = { version = "1", features = ["full"] }
 thiserror = "2.0"
-spikard-core = { path = "../spikard-core", features = ["di"] }
-spikard-http = { path = "../spikard-http", features = ["di"] }
+spikard-core = { path = "../spikard-core" }
+spikard-http = "1.4"
 tracing = "0.1"
 http = "1.4"
 http-body-util = "0.1"

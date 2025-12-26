@@ -13,20 +13,20 @@ documentation = "https://docs.rs/spikard-http"
 readme = "README.md"
 
 [dependencies]
-axum = { workspace = true, features = ["multipart", "ws"] }
+axum = { version = "0.8", features = ["multipart", "ws"] }
 tokio = { version = "1", features = ["full"] }
 tokio-util = "0.7"
 tower = "0.5"
 tower-http = { version = "0.6.8", features = ["fs", "trace", "compression-gzip", "compression-br", "compression-deflate", "cors", "request-id", "limit", "timeout"] }
-tower_governor.workspace = true
-jsonwebtoken.workspace = true
-utoipa.workspace = true
-utoipa-swagger-ui.workspace = true
-utoipa-redoc.workspace = true
+tower_governor = "0.5"
+jsonwebtoken = "9.3"
+utoipa = "5.3"
+utoipa-swagger-ui = { version = "8.0", features = ["axum"] }
+utoipa-redoc = { version = "5.0", features = ["axum"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tracing = "0.1"
-tracing-subscriber.workspace = true
+tracing-subscriber = "0.3"
 spikard-core = { path = "../spikard-core" }
 futures-util = "0.3"
 futures = "0.3"
@@ -51,8 +51,6 @@ base64 = "0.22.1"
 flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }
 brotli = "8.0"
 
-[lints]
-workspace = true
 
 [features]
 default = []

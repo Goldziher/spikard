@@ -52,8 +52,14 @@ patch_cargo_toml() {
 	sed -i.bak 's/serde\.workspace = true/serde = { version = "1.0", features = ["derive"] }/' "$file"
 	sed -i.bak 's/serde_json\.workspace = true/serde_json = "1.0"/' "$file"
 	sed -i.bak 's/tracing\.workspace = true/tracing = "0.1"/' "$file"
+	sed -i.bak 's/tracing-subscriber\.workspace = true/tracing-subscriber = "0.3"/' "$file"
 	sed -i.bak 's/thiserror\.workspace = true/thiserror = "2.0"/' "$file"
 	sed -i.bak 's/jsonschema\.workspace = true/jsonschema = { version = "0.37", default-features = false }/' "$file"
+	sed -i.bak 's/jsonwebtoken\.workspace = true/jsonwebtoken = "9.3"/' "$file"
+	sed -i.bak 's/tower_governor\.workspace = true/tower_governor = "0.5"/' "$file"
+	sed -i.bak 's/utoipa\.workspace = true/utoipa = "5.3"/' "$file"
+	sed -i.bak 's/utoipa-swagger-ui\.workspace = true/utoipa-swagger-ui = { version = "8.0", features = ["axum"] }/' "$file"
+	sed -i.bak 's/utoipa-redoc\.workspace = true/utoipa-redoc = { version = "5.0", features = ["axum"] }/' "$file"
 	sed -i.bak 's/flate2\.workspace = true/flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }/' "$file"
 	sed -i.bak 's/tower-http\.workspace = true/tower-http = { version = "0.6.8", features = ["fs", "trace", "compression-gzip", "compression-br", "compression-deflate", "cors", "request-id", "limit", "timeout"] }/' "$file"
 	sed -i.bak 's/^http\.workspace = true$/http = "1.4"/' "$file"
@@ -61,19 +67,44 @@ patch_cargo_toml() {
 	sed -i.bak 's/tokio\.workspace = true/tokio = { version = "1", features = ["full"] }/' "$file"
 	sed -i.bak 's/tower\.workspace = true/tower = "0.5"/' "$file"
 
-	# Handle brace-style workspace references
-	sed -i.bak 's/axum = { workspace = true }/axum = { version = "0.8", features = ["multipart", "ws"] }/' "$file"
-	sed -i.bak 's/tokio = { workspace = true }/tokio = { version = "1", features = ["full"] }/' "$file"
-	sed -i.bak 's/http = { workspace = true }/http = "1.4"/' "$file"
-	sed -i.bak 's/tower = { workspace = true }/tower = "0.5"/' "$file"
+	# Handle brace-style workspace references (with and without additional properties)
+	sed -i.bak 's/axum = { workspace = true[^}]*}/axum = { version = "0.8", features = ["multipart", "ws"] }/' "$file"
+	sed -i.bak 's/tokio = { workspace = true[^}]*}/tokio = { version = "1", features = ["full"] }/' "$file"
+	sed -i.bak 's/http = { workspace = true[^}]*}/http = "1.4"/' "$file"
+	sed -i.bak 's/tower = { workspace = true[^}]*}/tower = "0.5"/' "$file"
+	sed -i.bak 's/serde = { workspace = true[^}]*}/serde = { version = "1.0", features = ["derive"] }/' "$file"
+	sed -i.bak 's/serde_json = { workspace = true[^}]*}/serde_json = "1.0"/' "$file"
+	sed -i.bak 's/tracing = { workspace = true[^}]*}/tracing = "0.1"/' "$file"
+	sed -i.bak 's/tracing-subscriber = { workspace = true[^}]*}/tracing-subscriber = "0.3"/' "$file"
+	sed -i.bak 's/thiserror = { workspace = true[^}]*}/thiserror = "2.0"/' "$file"
+	sed -i.bak 's/jsonschema = { workspace = true[^}]*}/jsonschema = { version = "0.37", default-features = false }/' "$file"
+	sed -i.bak 's/jsonwebtoken = { workspace = true[^}]*}/jsonwebtoken = "9.3"/' "$file"
+	sed -i.bak 's/tower_governor = { workspace = true[^}]*}/tower_governor = "0.5"/' "$file"
+	sed -i.bak 's/utoipa = { workspace = true[^}]*}/utoipa = "5.3"/' "$file"
+	sed -i.bak 's/utoipa-swagger-ui = { workspace = true[^}]*}/utoipa-swagger-ui = { version = "8.0", features = ["axum"] }/' "$file"
+	sed -i.bak 's/utoipa-redoc = { workspace = true[^}]*}/utoipa-redoc = { version = "5.0", features = ["axum"] }/' "$file"
+	sed -i.bak 's/flate2 = { workspace = true[^}]*}/flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }/' "$file"
+	sed -i.bak 's/tower-http = { workspace = true[^}]*}/tower-http = { version = "0.6.8", features = ["fs", "trace", "compression-gzip", "compression-br", "compression-deflate", "cors", "request-id", "limit", "timeout"] }/' "$file"
+
+	# Remove [lints] section if it only contains workspace = true
+	sed -i.bak '/^\[lints\]/,/^$/{ /^workspace = true$/d; /^\[lints\]$/d; }' "$file"
 
 	# Internal dependencies use path
 	# Handle both brace-style and dot-style workspace references
-	sed -i.bak 's|spikard-core = { workspace = true\(.*\)}|spikard-core = { path = "../spikard-core"\1}|' "$file"
-	sed -i.bak 's|spikard-http = { workspace = true\(.*\)}|spikard-http = { path = "../spikard-http"\1}|' "$file"
+	sed -i.bak 's|spikard-core = { workspace = true[^}]*}|spikard-core = { path = "../spikard-core" }|' "$file"
+	sed -i.bak 's|spikard-http = { workspace = true[^}]*}|spikard-http = { path = "../spikard-http" }|' "$file"
+	sed -i.bak 's|spikard-bindings-shared = { workspace = true[^}]*}|spikard-bindings-shared = { path = "../spikard-bindings-shared" }|' "$file"
+	sed -i.bak 's|spikard-rb-macros = { workspace = true[^}]*}|spikard-rb-macros = { path = "../spikard-rb-macros" }|' "$file"
 	sed -i.bak 's|spikard-core\.workspace = true|spikard-core = { path = "../spikard-core" }|' "$file"
 	sed -i.bak 's|spikard-http\.workspace = true|spikard-http = { path = "../spikard-http" }|' "$file"
 	sed -i.bak 's|spikard-bindings-shared\.workspace = true|spikard-bindings-shared = { path = "../spikard-bindings-shared" }|' "$file"
+	sed -i.bak 's|spikard-rb-macros\.workspace = true|spikard-rb-macros = { path = "../spikard-rb-macros" }|' "$file"
+
+	# Catch-all: warn about any remaining workspace references
+	if grep -q "workspace = true" "$file"; then
+		echo "  ⚠️  WARNING: Found remaining workspace references in $(basename "$(dirname "$file")")/Cargo.toml"
+		grep "workspace = true" "$file" || true
+	fi
 
 	# Clean up backup files
 	rm -f "$file.bak"
