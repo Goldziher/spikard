@@ -101,6 +101,36 @@ Latest comparative run (2025-12-20, commit `25e4fdf`, Linux x86_64, AMD EPYC 776
 
 These numbers are CI snapshots meant for relative comparison; workload mix covers JSON, query/path params, forms, and multipart.
 
+## Testing Strategy
+
+Spikard uses a three-tier testing approach to ensure quality across development, integration, and production:
+
+| Tier | Directory | Purpose | Dependencies | Execution |
+|------|-----------|---------|--------------|-----------|
+| **Unit/Integration** | `packages/*/tests/` | Test workspace crates with local builds | `workspace:*` | Every commit (CI) |
+| **E2E** | `e2e/` | Generated tests across 700+ scenarios with local builds | `workspace:*` | Every commit (CI) |
+| **Published Package** | `tests/test_apps/` | Validate published packages from registries | Registry versions | After releases |
+
+### Running Test Apps
+
+Test apps validate that published packages work correctly across platforms:
+
+```bash
+# Test all languages
+task test:apps:all
+
+# Test specific language
+task test:apps:python
+task test:apps:node
+task test:apps:ruby
+task test:apps:php
+task test:apps:rust
+task test:apps:wasm
+
+# Update versions after release
+task test:apps:update-versions VERSION=0.7.0
+```
+
 ## Design Principles
 
 **Correctness First**

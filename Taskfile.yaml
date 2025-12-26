@@ -536,7 +536,7 @@ tasks:
     dir: crates/spikard-py
     cmds:
       - uv run maturin build --release --out ../../target/wheels
-      - uv pip install --force-reinstall ../../target/wheels/spikard_bindings-0.6.0-cp310-abi3-macosx_11_0_arm64.whl
+      - uv pip install --force-reinstall ../../target/wheels/spikard_bindings-0.6.1-cp310-abi3-macosx_11_0_arm64.whl
 
   build:local:python:
     desc: "Clean rebuild Python bindings for local testing (removes cached .so files)"
@@ -1337,6 +1337,64 @@ tasks:
       - rm -f docs/assets/benchmarks/*.html
       - rm -f docs/assets/benchmarks/metadata.json
       - rm -f docs/assets/benchmarks/aggregated.json
+
+  test:apps:python:
+    desc: "Run Python published package test app"
+    dir: tests/test_apps/python
+    cmds:
+      - uv sync --all-extras
+      - uv run pytest -v
+
+  test:apps:node:
+    desc: "Run Node.js published package test app"
+    dir: tests/test_apps/node
+    cmds:
+      - pnpm install --ignore-workspace
+      - pnpm test
+
+  test:apps:ruby:
+    desc: "Run Ruby published package test app"
+    dir: tests/test_apps/ruby
+    cmds:
+      - bundle install
+      - bundle exec rspec
+
+  test:apps:php:
+    desc: "Run PHP published package test app"
+    dir: tests/test_apps/php
+    cmds:
+      - composer install --no-interaction
+      - composer test
+
+  test:apps:rust:
+    desc: "Run Rust published package test app"
+    dir: tests/test_apps/rust
+    cmds:
+      - cargo test --locked
+
+  test:apps:wasm:
+    desc: "Run WASM published package test app"
+    dir: tests/test_apps/wasm
+    cmds:
+      - pnpm install --frozen-lockfile
+      - pnpm test
+
+  test:apps:all:
+    desc: "Run all published package test apps"
+    cmds:
+      - task: test:apps:python
+      - task: test:apps:node
+      - task: test:apps:ruby
+      - task: test:apps:php
+      - task: test:apps:rust
+      - task: test:apps:wasm
+
+  test:apps:update-versions:
+    desc: "Update all test app package versions"
+    cmds:
+      - bash tests/test_apps/scripts/update-versions.sh {{.VERSION}}
+    vars:
+      VERSION: '{{.VERSION | default "0.6.0"}}'
 
   default:
     desc: "Show available tasks"

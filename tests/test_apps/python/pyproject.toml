@@ -1,0 +1,21 @@
+[project]
+name = "spikard-test-app"
+version = "0.1.0"
+description = "E2E test app for published Spikard Python package"
+requires-python = ">=3.10"
+dependencies = [
+    "spikard==0.6.0",  # Exact version pin - updated by scripts/update-versions.sh
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["."]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]

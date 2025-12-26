@@ -1,0 +1,17 @@
+[workspace]
+
+[package]
+name = "spikard-test-app-rust"
+version = "0.6.1"
+edition = "2024"
+publish = false
+
+[dependencies]
+spikard = "0.6.0"
+axum = "0.8"
+tokio = { version = "1.42", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+reqwest = { version = "0.12", features = ["json"] }
