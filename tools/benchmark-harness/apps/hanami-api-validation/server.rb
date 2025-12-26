@@ -9,6 +9,7 @@
 require 'hanami/api'
 require 'dry/schema'
 require 'json'
+require 'date'
 
 # ============================================================================
 # Validation Schemas (Dry::Schema.JSON matching Python Pydantic patterns)
@@ -201,15 +202,29 @@ class BenchmarkApp < Hanami::API
   end
 
   get '/path/int/:id' do
-    json({ id: params[:id].to_i })
+    id_str = params[:id]
+    unless id_str =~ /\A-?\d+\z/
+      halt 400, json({ error: 'Invalid integer format' })
+    end
+    json({ id: id_str.to_i })
   end
 
   get '/path/uuid/:uuid' do
-    json({ uuid: params[:uuid] })
+    uuid = params[:uuid]
+    unless uuid =~ /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i
+      halt 400, json({ error: 'Invalid UUID format' })
+    end
+    json({ uuid: uuid })
   end
 
   get '/path/date/:date' do
-    json({ date: params[:date] })
+    date_str = params[:date]
+    begin
+      Date.iso8601(date_str)
+      json({ date: date_str })
+    rescue ArgumentError
+      halt 400, json({ error: 'Invalid date format' })
+    end
   end
 
   # Query parameter endpoints - return query params as JSON
