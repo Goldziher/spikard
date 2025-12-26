@@ -14,9 +14,11 @@ import os
 import signal
 import sys
 import threading
+from datetime import date as DateType
 from functools import wraps
 from pathlib import Path as PathLib
 from typing import Any, Callable, Coroutine, ParamSpec, TypeVar
+from uuid import UUID
 
 from spikard import Path, Query, Spikard, get, post
 from spikard.config import ServerConfig
@@ -372,16 +374,16 @@ async def get_path_int(id: int = Path()) -> dict[str, JsonScalar]:
 
 @get("/path/uuid/{uuid}", response_schema=response_schema("path/uuid"), parameter_schema=parameter_schema("path/uuid"))
 @profile_once("path-uuid")
-async def get_path_uuid(uuid: str = Path()) -> dict[str, JsonScalar]:
+async def get_path_uuid(uuid: UUID = Path()) -> dict[str, JsonScalar]:
     """UUID path parameter."""
-    return {"uuid": uuid}
+    return {"uuid": str(uuid)}
 
 
 @get("/path/date/{date}", response_schema=response_schema("path/date"), parameter_schema=parameter_schema("path/date"))
 @profile_once("path-date")
-async def get_path_date(date: str = Path()) -> dict[str, JsonScalar]:
+async def get_path_date(date: DateType = Path()) -> dict[str, JsonScalar]:
     """Date path parameter."""
-    return {"date": date}
+    return {"date": date.isoformat()}
 
 
 @get("/query/few", response_schema=response_schema("query/few"), parameter_schema=parameter_schema("query/few"))

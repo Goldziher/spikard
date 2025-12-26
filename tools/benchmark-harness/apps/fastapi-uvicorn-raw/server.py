@@ -2,7 +2,9 @@
 
 import sys
 import urllib.parse
+from datetime import date as DateType
 from typing import Any
+from uuid import UUID
 
 import uvicorn
 from fastapi import FastAPI, Request
@@ -84,13 +86,13 @@ async def get_path_int(id: int) -> dict[str, int]:
 
 
 @app.get("/path/uuid/{uuid}")
-async def get_path_uuid(uuid: str) -> dict[str, str]:
-    return {"uuid": uuid}
+async def get_path_uuid(uuid: UUID) -> dict[str, str]:
+    return {"uuid": str(uuid)}
 
 
 @app.get("/path/date/{date}")
-async def get_path_date(date: str) -> dict[str, str]:
-    return {"date": date}
+async def get_path_date(date: DateType) -> dict[str, str]:
+    return {"date": date.isoformat()}
 
 
 @app.get("/query/few")

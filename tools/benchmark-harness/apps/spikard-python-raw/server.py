@@ -9,8 +9,10 @@ This allows benchmarking Spikard's raw performance separate from validation over
 
 import os
 import sys
+from datetime import date as DateType
 from pathlib import Path as PathLib
 from typing import Any
+from uuid import UUID
 
 from spikard import Path, Query, Spikard, get, post
 from spikard.config import ServerConfig
@@ -138,15 +140,15 @@ async def get_path_int(id: int = Path()) -> dict[str, Any]:
 
 
 @get("/path/uuid/{uuid}")
-async def get_path_uuid(uuid: str = Path()) -> dict[str, Any]:
+async def get_path_uuid(uuid: UUID = Path()) -> dict[str, Any]:
     """UUID path parameter."""
-    return {"uuid": uuid}
+    return {"uuid": str(uuid)}
 
 
 @get("/path/date/{date}")
-async def get_path_date(date: str = Path()) -> dict[str, Any]:
+async def get_path_date(date: DateType = Path()) -> dict[str, Any]:
     """Date path parameter."""
-    return {"date": date}
+    return {"date": date.isoformat()}
 
 
 @get("/query/few")
