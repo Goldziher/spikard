@@ -269,23 +269,87 @@ function setupRoutes(): SimpleRouter {
     $router->register('POST', '/urlencoded/complex', fn($p, $q, $b) => echoHandler($p, $q, $b));
 
     // Benchmark path endpoints
-    $router->register('GET', '/path/simple/test123', fn($p, $q, $b) => jsonResponse(['id' => 'test123'], 200));
-    $router->register('GET', '/path/multiple/user456/post789', fn($p, $q, $b) => jsonResponse([
-        'user_id' => 'user456',
-        'post_id' => 'post789',
-    ], 200));
-    $router->register('GET', '/path/deep/acme/engineering/backend/api/item123', fn($p, $q, $b) => jsonResponse([
-        'org' => 'acme',
-        'team' => 'engineering',
-        'project' => 'backend',
-        'resource' => 'api',
-        'id' => 'item123',
-    ], 200));
-    $router->register('GET', '/path/int/42', fn($p, $q, $b) => jsonResponse(['id' => 42], 200));
-    $router->register('GET', '/path/uuid/550e8400-e29b-41d4-a716-446655440000', fn($p, $q, $b) => jsonResponse([
-        'uuid' => '550e8400-e29b-41d4-a716-446655440000',
-    ], 200));
-    $router->register('GET', '/path/date/2024-01-15', fn($p, $q, $b) => jsonResponse(['date' => '2024-01-15'], 200));
+    $router->register('GET', '/path/simple/{id}', function (string $p, array $q, array $b): array {
+        // Extract id from path
+        if (preg_match('#/path/simple/([^/]+)$#', $p, $matches)) {
+            return jsonResponse(['id' => $matches[1]], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+
+    $router->register('GET', '/path/multiple/{user_id}/{post_id}', function (string $p, array $q, array $b): array {
+        // Extract user_id and post_id from path
+        if (preg_match('#/path/multiple/([^/]+)/([^/]+)$#', $p, $matches)) {
+            return jsonResponse([
+                'user_id' => $matches[1],
+                'post_id' => $matches[2],
+            ], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+
+    $router->register('GET', '/path/deep/{org}/{team}/{project}/{resource}/{id}', function (string $p, array $q, array $b): array {
+        // Extract all path segments
+        if (preg_match('#/path/deep/([^/]+)/([^/]+)/([^/]+)/([^/]+)/([^/]+)$#', $p, $matches)) {
+            return jsonResponse([
+                'org' => $matches[1],
+                'team' => $matches[2],
+                'project' => $matches[3],
+                'resource' => $matches[4],
+                'id' => $matches[5],
+            ], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+
+    $router->register('GET', '/path/int/{id}', function (string $p, array $q, array $b): array {
+        // Extract and validate integer from path
+        if (preg_match('#/path/int/([^/]+)$#', $p, $matches)) {
+            $id = $matches[1];
+            if (filter_var($id, FILTER_VALIDATE_INT) === false) {
+                return jsonResponse([
+                    'error' => 'Invalid integer',
+                    'code' => 'VALIDATION_ERROR',
+                    'details' => ['id' => 'must be a valid integer'],
+                ], 400);
+            }
+            return jsonResponse(['id' => (int) $id], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+
+    $router->register('GET', '/path/uuid/{uuid}', function (string $p, array $q, array $b): array {
+        // Extract and validate UUID from path
+        if (preg_match('#/path/uuid/([^/]+)$#', $p, $matches)) {
+            $uuid = $matches[1];
+            if (!preg_match('/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i', $uuid)) {
+                return jsonResponse([
+                    'error' => 'Invalid UUID',
+                    'code' => 'VALIDATION_ERROR',
+                    'details' => ['uuid' => 'must be a valid RFC 4122 UUID'],
+                ], 400);
+            }
+            return jsonResponse(['uuid' => $uuid], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+
+    $router->register('GET', '/path/date/{date}', function (string $p, array $q, array $b): array {
+        // Extract and validate date from path
+        if (preg_match('#/path/date/([^/]+)$#', $p, $matches)) {
+            $date = $matches[1];
+            $parsed = DateTimeImmutable::createFromFormat('Y-m-d', $date);
+            if ($parsed === false || $parsed->format('Y-m-d') !== $date) {
+                return jsonResponse([
+                    'error' => 'Invalid date',
+                    'code' => 'VALIDATION_ERROR',
+                    'details' => ['date' => 'must be in Y-m-d format'],
+                ], 400);
+            }
+            return jsonResponse(['date' => $date], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
 
     // Benchmark query endpoints
     $router->register('GET', '/query/few', fn($p, $q, $b) => jsonResponse($q, 200));
