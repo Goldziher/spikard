@@ -896,8 +896,12 @@ jobs:
       - name: List downloaded artifacts
         run: |
           echo "Downloaded artifacts:"
-          ls -la benchmark-results/artifacts/ || echo "No artifacts downloaded"
-          find benchmark-results/artifacts -name "profile.json" -exec echo "Found: {}" \;
+          if [ -d "benchmark-results/artifacts" ]; then
+            ls -la benchmark-results/artifacts/
+            find benchmark-results/artifacts -name "profile.json" -exec echo "Found: {}" \;
+          else
+            echo "No artifacts downloaded"
+          fi
 
       - name: Create aggregated results manually
         run: |
