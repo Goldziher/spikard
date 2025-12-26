@@ -90,7 +90,13 @@ jobs:
         if: runner.os == 'Linux'
         run: bash scripts/ci/php/install-dev-headers-linux.sh
 
+      - name: Configure bindgen for Windows
+        if: runner.os == 'Windows'
+        shell: bash
+        run: bash scripts/ci/php/configure-bindgen-windows.sh
+
       - name: Detect PHP configuration
+        shell: bash
         run: bash scripts/ci/php/detect-php-config.sh
 
       - name: Build PHP extension (Unix)
