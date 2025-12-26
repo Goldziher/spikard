@@ -61,6 +61,24 @@ const veryLargePayloadSchema = schema({
 	}),
 });
 
+const intParamSchema = schema({
+	params: t.object({
+		id: t.num().int(),
+	}),
+});
+
+const uuidParamSchema = schema({
+	params: t.object({
+		uuid: t.str().uuid(),
+	}),
+});
+
+const dateParamSchema = schema({
+	params: t.object({
+		date: t.str().date(),
+	}),
+});
+
 app.post(
 	"/json/small",
 	({ req, res }) => {
@@ -156,18 +174,29 @@ app.get("/path/deep/:org/:team/:project/:resource/:id", ({ req, res }) => {
 	});
 });
 
-app.get("/path/int/:id", ({ req, res }) => {
-	const id = Number.parseInt(req.params.id as string, 10);
-	res.json({ id });
-});
+app.get(
+	"/path/int/:id",
+	({ req, res }) => {
+		res.json({ id: req.params.id });
+	},
+	intParamSchema,
+);
 
-app.get("/path/uuid/:uuid", ({ req, res }) => {
-	res.json({ uuid: req.params.uuid });
-});
+app.get(
+	"/path/uuid/:uuid",
+	({ req, res }) => {
+		res.json({ uuid: req.params.uuid });
+	},
+	uuidParamSchema,
+);
 
-app.get("/path/date/:date", ({ req, res }) => {
-	res.json({ date: req.params.date });
-});
+app.get(
+	"/path/date/:date",
+	({ req, res }) => {
+		res.json({ date: req.params.date });
+	},
+	dateParamSchema,
+);
 
 app.get("/query/few", ({ req, res }) => {
 	res.json(req.query || {});
