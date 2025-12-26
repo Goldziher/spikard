@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2025-12-26
+
+### Fixed
+- **Ruby gem build failure**: Fixed invalid Cargo.toml feature configuration that incorrectly marked `thiserror` as optional in the `di` feature, preventing Ruby gem from building
+- **PHP test app API compatibility**: Updated PHP test app to use correct v0.6.1 API for handlers and server configuration
+- **Ruby test app API compatibility**: Updated Ruby test app to use correct v0.6.1 API for handlers and server configuration
+- **WASM test app API compatibility**: Updated WASM test app to use correct v0.6.1 API for handlers and server configuration
+
 ## [0.6.1] - 2025-12-26
 
 ### Fixed
