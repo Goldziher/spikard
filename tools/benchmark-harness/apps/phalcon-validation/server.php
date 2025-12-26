@@ -317,14 +317,39 @@ $app->get('/path/deep/{org}/{team}/{project}/{resource}/{id}', function (
 });
 
 $app->get('/path/int/{id:[0-9]+}', function (string $id) use ($app) {
+    // Validate integer
+    if (filter_var($id, FILTER_VALIDATE_INT) === false) {
+        return jsonResponse($app->response, [
+            'error' => 'Invalid integer',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['id' => 'must be a valid integer'],
+        ], 400);
+    }
     return jsonResponse($app->response, ['id' => (int) $id]);
 });
 
 $app->get('/path/uuid/{id}', function (string $id) use ($app) {
+    // Validate UUID (RFC 4122)
+    if (!preg_match('/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i', $id)) {
+        return jsonResponse($app->response, [
+            'error' => 'Invalid UUID',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['uuid' => 'must be a valid RFC 4122 UUID'],
+        ], 400);
+    }
     return jsonResponse($app->response, ['id' => $id]);
 });
 
 $app->get('/path/date/{date}', function (string $date) use ($app) {
+    // Validate date (Y-m-d format)
+    $parsed = DateTimeImmutable::createFromFormat('Y-m-d', $date);
+    if ($parsed === false || $parsed->format('Y-m-d') !== $date) {
+        return jsonResponse($app->response, [
+            'error' => 'Invalid date',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['date' => 'must be in Y-m-d format'],
+        ], 400);
+    }
     return jsonResponse($app->response, ['date' => $date]);
 });
 
