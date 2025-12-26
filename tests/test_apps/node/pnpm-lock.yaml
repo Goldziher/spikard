@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@spikard/node':
-        specifier: 0.6.0
-        version: 0.6.0
+        specifier: 0.6.1
+        version: 0.6.1
     devDependencies:
       '@types/node':
         specifier: ^22.10.2
@@ -434,32 +434,32 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@spikard/node-darwin-arm64@0.6.0':
-    resolution: {integrity: sha512-oiBSPp2/3zZV1WOJN3D54k2iZ1+biY3qUAZwReFpz9P3TcFRQQH6AaXlj0cK0VNnMPeyv7XNh9kM+WwefNwXaA==}
+  '@spikard/node-darwin-arm64@0.6.1':
+    resolution: {integrity: sha512-7AS/YD52WPYUKqM9xhMx2jTHccYsO42W0Tn4GtBLX0hX04KDg2EcR1mQpQowMQCiGiqUvMf+Q+jktir1Rx5xEA==}
     engines: {node: '>=20'}
     cpu: [arm64]
     os: [darwin]
 
-  '@spikard/node-darwin-x64@0.6.0':
-    resolution: {integrity: sha512-DbEkCg2eadMPHje6UBazxyLZRrmMLxx/mnxve/nZBKi58l6BIHogXdlPqRsT3j5Bz4NSHj7wIDTp8ft4f0ynUg==}
+  '@spikard/node-darwin-x64@0.6.1':
+    resolution: {integrity: sha512-vnqZEupbjMxWi9kGMpZCA3jZqJb4VHQaCBNX1JtIfs4dJv5diLLLHp4H3CuWbHu9XcLxIu+3cn6U/hgIHJCdfA==}
     engines: {node: '>=20'}
     cpu: [x64]
     os: [darwin]
 
-  '@spikard/node-linux-x64-gnu@0.6.0':
-    resolution: {integrity: sha512-bZn6oTjyY/kLORW0V60kTXihkr2Tpru+K4nFNo0hbIu8rJ3NbySeRpSEbd/MfL3zGpKMKrztgjgIR/eU9BDHHg==}
+  '@spikard/node-linux-x64-gnu@0.6.1':
+    resolution: {integrity: sha512-DeYRPVffTMy7MBJfE22w/K9pZmaFdn96jErPazkzTlJu03GLURiM3HJYQy4plUPsftdNUvKoUg4T+38wt76PZQ==}
     engines: {node: '>=20'}
     cpu: [x64]
     os: [linux]
 
-  '@spikard/node-win32-x64-msvc@0.6.0':
-    resolution: {integrity: sha512-Kp2Hmh9B0J/6M5zpQgvJ7HmAIFspZ5vYIr1X8NTZJ6cZLtFEgUCGTk3YjBskTKzV6UKzcEyr0MnvN1GFCBAWdw==}
+  '@spikard/node-win32-x64-msvc@0.6.1':
+    resolution: {integrity: sha512-vNQMvMcwPxFmiZQGiNOQSksVnKnSxXpWK0P43KP9dPOyrD87YnFsMiVr7q36Yg96UQKgpmvadRqdAzj8eeXcdw==}
     engines: {node: '>=20'}
     cpu: [x64]
     os: [win32]
 
-  '@spikard/node@0.6.0':
-    resolution: {integrity: sha512-AnikvftiukxPNv+VtHVbUdVuzHNr4phc3lnA4UbXxDwBIBICX8i1Bs9VwT9f/07MbTpP94dyPS4SEvOquBu8nA==}
+  '@spikard/node@0.6.1':
+    resolution: {integrity: sha512-UgzGNHd7cP3uSnww1cPIhxcvxGxQcndo35ur4Es7FJAy8RovosIQGihjxRbahdj9dqaRg4SZy28fuCdcs67h3Q==}
     engines: {node: '>=20'}
 
   '@types/estree@1.0.8':
@@ -920,26 +920,26 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.54.0':
     optional: true
 
-  '@spikard/node-darwin-arm64@0.6.0':
+  '@spikard/node-darwin-arm64@0.6.1':
     optional: true
 
-  '@spikard/node-darwin-x64@0.6.0':
+  '@spikard/node-darwin-x64@0.6.1':
     optional: true
 
-  '@spikard/node-linux-x64-gnu@0.6.0':
+  '@spikard/node-linux-x64-gnu@0.6.1':
     optional: true
 
-  '@spikard/node-win32-x64-msvc@0.6.0':
+  '@spikard/node-win32-x64-msvc@0.6.1':
     optional: true
 
-  '@spikard/node@0.6.0':
+  '@spikard/node@0.6.1':
     dependencies:
       zod: 4.2.1
     optionalDependencies:
-      '@spikard/node-darwin-arm64': 0.6.0
-      '@spikard/node-darwin-x64': 0.6.0
-      '@spikard/node-linux-x64-gnu': 0.6.0
-      '@spikard/node-win32-x64-msvc': 0.6.0
+      '@spikard/node-darwin-arm64': 0.6.1
+      '@spikard/node-darwin-x64': 0.6.1
+      '@spikard/node-linux-x64-gnu': 0.6.1
+      '@spikard/node-win32-x64-msvc': 0.6.1
 
   '@types/estree@1.0.8': {}
 

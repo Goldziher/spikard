@@ -15,9 +15,9 @@ from spikard import TestClient
 
 
 def test_package_version() -> None:
-    """Validate that the installed version is 0.6.0 from PyPI."""
+    """Validate that the installed version is 0.6.1 from PyPI."""
     version = importlib.metadata.version("spikard")
-    assert version == "0.6.0", f"Expected version 0.6.0, got {version}"
+    assert version == "0.6.1", f"Expected version 0.6.1, got {version}"
 
 
 @pytest.mark.asyncio

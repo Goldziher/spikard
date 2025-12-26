@@ -72,7 +72,7 @@ describe('Spikard Node.js Test App', () => {
     const pkg = JSON.parse(
       readFileSync(join(__dirname, 'package.json'), 'utf-8')
     );
-    expect(pkg.dependencies['@spikard/node']).toBe('0.6.0');
+    expect(pkg.dependencies['@spikard/node']).toBe('0.6.1');
   });
 
   it('should respond to health check', async () => {
