@@ -5,7 +5,9 @@ Uses ORJSONResponse for optimal JSON performance + Granian Rust server.
 
 import sys
 import urllib.parse
+from datetime import date as DateType
 from typing import Any
+from uuid import UUID
 
 from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
@@ -154,15 +156,15 @@ async def get_path_int(id: int) -> dict[str, Any]:
 
 
 @app.get("/path/uuid/{uuid}")
-async def get_path_uuid(uuid: str) -> dict[str, Any]:
+async def get_path_uuid(uuid: UUID) -> dict[str, Any]:
     """Path parameter with UUID."""
-    return {"uuid": uuid}
+    return {"uuid": str(uuid)}
 
 
 @app.get("/path/date/{date}")
-async def get_path_date(date: str) -> dict[str, Any]:
+async def get_path_date(date: DateType) -> dict[str, Any]:
     """Path parameter with date."""
-    return {"date": date}
+    return {"date": date.isoformat()}
 
 
 @app.get("/query/few")
