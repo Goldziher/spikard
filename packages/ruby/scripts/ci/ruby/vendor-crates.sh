@@ -48,6 +48,7 @@ patch_cargo_toml() {
 	sed -i.bak 's/homepage\.workspace = true/homepage = "https:\/\/github.com\/Goldziher\/spikard"/' "$file"
 
 	# Replace workspace dependencies with explicit versions (external deps)
+	# Handle both dot-style (foo.workspace) and brace-style (foo = { workspace = true })
 	sed -i.bak 's/serde\.workspace = true/serde = { version = "1.0", features = ["derive"] }/' "$file"
 	sed -i.bak 's/serde_json\.workspace = true/serde_json = "1.0"/' "$file"
 	sed -i.bak 's/tracing\.workspace = true/tracing = "0.1"/' "$file"
@@ -60,9 +61,19 @@ patch_cargo_toml() {
 	sed -i.bak 's/tokio\.workspace = true/tokio = { version = "1", features = ["full"] }/' "$file"
 	sed -i.bak 's/tower\.workspace = true/tower = "0.5"/' "$file"
 
+	# Handle brace-style workspace references
+	sed -i.bak 's/axum = { workspace = true }/axum = { version = "0.8", features = ["multipart", "ws"] }/' "$file"
+	sed -i.bak 's/tokio = { workspace = true }/tokio = { version = "1", features = ["full"] }/' "$file"
+	sed -i.bak 's/http = { workspace = true }/http = "1.4"/' "$file"
+	sed -i.bak 's/tower = { workspace = true }/tower = "0.5"/' "$file"
+
 	# Internal dependencies use path
+	# Handle both brace-style and dot-style workspace references
 	sed -i.bak 's|spikard-core = { workspace = true\(.*\)}|spikard-core = { path = "../spikard-core"\1}|' "$file"
 	sed -i.bak 's|spikard-http = { workspace = true\(.*\)}|spikard-http = { path = "../spikard-http"\1}|' "$file"
+	sed -i.bak 's|spikard-core\.workspace = true|spikard-core = { path = "../spikard-core" }|' "$file"
+	sed -i.bak 's|spikard-http\.workspace = true|spikard-http = { path = "../spikard-http" }|' "$file"
+	sed -i.bak 's|spikard-bindings-shared\.workspace = true|spikard-bindings-shared = { path = "../spikard-bindings-shared" }|' "$file"
 
 	# Clean up backup files
 	rm -f "$file.bak"
@@ -77,3 +88,4 @@ for toml in "$VENDOR_DIR"/*/Cargo.toml; do
 done
 
 echo "✓ Vendoring complete"
+echo "Note: Using committed Cargo.lock with --locked flag to avoid workspace collisions"

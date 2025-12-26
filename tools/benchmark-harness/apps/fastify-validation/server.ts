@@ -113,40 +113,48 @@ const urlencodedComplexSchema = {
 fastify.post("/json/small", {
 	schema: {
 		body: smallPayloadSchema,
+		response: {
+			200: smallPayloadSchema,
+		},
 	},
 	handler: async (request, _reply) => {
-		void request;
-		return { ok: true };
+		return request.body;
 	},
 });
 
 fastify.post("/json/medium", {
 	schema: {
 		body: mediumPayloadSchema,
+		response: {
+			200: mediumPayloadSchema,
+		},
 	},
 	handler: async (request, _reply) => {
-		void request;
-		return { ok: true };
+		return request.body;
 	},
 });
 
 fastify.post("/json/large", {
 	schema: {
 		body: largePayloadSchema,
+		response: {
+			200: largePayloadSchema,
+		},
 	},
 	handler: async (request, _reply) => {
-		void request;
-		return { ok: true };
+		return request.body;
 	},
 });
 
 fastify.post("/json/very-large", {
 	schema: {
 		body: veryLargePayloadSchema,
+		response: {
+			200: veryLargePayloadSchema,
+		},
 	},
 	handler: async (request, _reply) => {
-		void request;
-		return { ok: true };
+		return request.body;
 	},
 });
 
@@ -165,20 +173,24 @@ fastify.post("/multipart/large", async (_request, _reply) => {
 fastify.post("/urlencoded/simple", {
 	schema: {
 		body: urlencodedSimpleSchema,
+		response: {
+			200: urlencodedSimpleSchema,
+		},
 	},
 	handler: async (request, _reply) => {
-		void request;
-		return { ok: true };
+		return request.body;
 	},
 });
 
 fastify.post("/urlencoded/complex", {
 	schema: {
 		body: urlencodedComplexSchema,
+		response: {
+			200: urlencodedComplexSchema,
+		},
 	},
 	handler: async (request, _reply) => {
-		void request;
-		return { ok: true };
+		return request.body;
 	},
 });
 

@@ -146,7 +146,10 @@ impl WebSocketHandler for RubyWebSocketHandler {
         let (reply_tx, reply_rx) = oneshot::channel();
         if self
             .work_tx
-            .send(WebSocketWorkItem::HandleMessage { message, reply: reply_tx })
+            .send(WebSocketWorkItem::HandleMessage {
+                message,
+                reply: reply_tx,
+            })
             .is_err()
         {
             error!("Ruby WebSocket handler '{}' worker thread closed", self.name);

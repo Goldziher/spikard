@@ -29,7 +29,7 @@ axum-test = "18"
 bytes = "1.11"
 cookie = "0.18"
 tokio = { version = "1", features = ["full"] }
-tungstenite = "0.24"
+tungstenite = "0.28"
 tracing = "0.1"
 serde_qs = "0.15"
 urlencoding = "2.1"

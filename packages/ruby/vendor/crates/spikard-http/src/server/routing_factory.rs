@@ -7,7 +7,7 @@
 //! - Handler wrapping and request data extraction
 //! - Lifecycle hook integration
 
-use crate::handler_trait::Handler;
+use crate::handler_trait::{Handler, HandlerResult, RequestData};
 use axum::body::Body;
 use axum::extract::{Path, Request as AxumRequest};
 use axum::http::Request;
@@ -18,6 +18,20 @@ use std::sync::Arc;
 
 use super::lifecycle_execution;
 use super::request_extraction;
+
+#[inline]
+async fn call_with_optional_hooks(
+    req: Request<Body>,
+    request_data: RequestData,
+    handler: Arc<dyn Handler>,
+    hooks: Option<Arc<crate::LifecycleHooks>>,
+) -> HandlerResult {
+    if hooks.as_ref().is_some_and(|h| !h.is_empty()) {
+        call_with_optional_hooks(req, request_data, handler, hooks).await
+    } else {
+        handler.call(req, request_data).await
+    }
+}
 
 /// HTTP method type enumeration for routing
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -152,9 +166,10 @@ impl MethodRouterFactory {
                                     parts,
                                     Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
                                 );
+                                if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
-                                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                    .await
+                            }
+                                call_with_optional_hooks(req, request_data, handler, hooks).await
                             }
                         },
                     )
@@ -183,9 +198,10 @@ impl MethodRouterFactory {
                                     parts,
                                     Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
                                 );
+                                if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
-                                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                    .await
+                            }
+                                call_with_optional_hooks(req, request_data, handler, hooks).await
                             }
                         },
                     )
@@ -214,9 +230,10 @@ impl MethodRouterFactory {
                                     parts,
                                     Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
                                 );
+                                if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
-                                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                    .await
+                            }
+                                call_with_optional_hooks(req, request_data, handler, hooks).await
                             }
                         },
                     )
@@ -241,9 +258,10 @@ impl MethodRouterFactory {
                                     without_body_options,
                                 );
                                 let mut req = req;
+                                if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
-                                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                    .await
+                            }
+                                call_with_optional_hooks(req, request_data, handler, hooks).await
                             }
                         },
                     )
@@ -264,9 +282,10 @@ impl MethodRouterFactory {
                                     without_body_options,
                                 );
                                 let mut req = req;
+                                if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
-                                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                    .await
+                            }
+                                call_with_optional_hooks(req, request_data, handler, hooks).await
                             }
                         },
                     )
@@ -287,9 +306,10 @@ impl MethodRouterFactory {
                                     without_body_options,
                                 );
                                 let mut req = req;
+                                if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
-                                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                    .await
+                            }
+                                call_with_optional_hooks(req, request_data, handler, hooks).await
                             }
                         },
                     )
@@ -310,9 +330,10 @@ impl MethodRouterFactory {
                                     without_body_options,
                                 );
                                 let mut req = req;
+                                if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
-                                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                    .await
+                            }
+                                call_with_optional_hooks(req, request_data, handler, hooks).await
                             }
                         },
                     )
@@ -333,9 +354,10 @@ impl MethodRouterFactory {
                                     without_body_options,
                                 );
                                 let mut req = req;
+                                if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
-                                lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                    .await
+                            }
+                                call_with_optional_hooks(req, request_data, handler, hooks).await
                             }
                         },
                     )
@@ -389,9 +411,10 @@ impl MethodRouterFactory {
                                 parts,
                                 Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
                             );
-                            req.extensions_mut().insert(Arc::new(request_data.clone()));
-                            lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                .await
+                            if handler.wants_request_extensions() {
+                                req.extensions_mut().insert(Arc::new(request_data.clone()));
+                            }
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
                         }
                     })
                 }
@@ -418,9 +441,10 @@ impl MethodRouterFactory {
                                 parts,
                                 Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
                             );
-                            req.extensions_mut().insert(Arc::new(request_data.clone()));
-                            lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                .await
+                            if handler.wants_request_extensions() {
+                                req.extensions_mut().insert(Arc::new(request_data.clone()));
+                            }
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
                         }
                     })
                 }
@@ -447,9 +471,10 @@ impl MethodRouterFactory {
                                 parts,
                                 Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
                             );
-                            req.extensions_mut().insert(Arc::new(request_data.clone()));
-                            lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                .await
+                            if handler.wants_request_extensions() {
+                                req.extensions_mut().insert(Arc::new(request_data.clone()));
+                            }
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
                         }
                     })
                 }
@@ -472,9 +497,10 @@ impl MethodRouterFactory {
                                 without_body_options,
                             );
                             let mut req = req;
-                            req.extensions_mut().insert(Arc::new(request_data.clone()));
-                            lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                .await
+                            if handler.wants_request_extensions() {
+                                req.extensions_mut().insert(Arc::new(request_data.clone()));
+                            }
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
                         }
                     })
                 }
@@ -493,9 +519,10 @@ impl MethodRouterFactory {
                                 without_body_options,
                             );
                             let mut req = req;
-                            req.extensions_mut().insert(Arc::new(request_data.clone()));
-                            lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                .await
+                            if handler.wants_request_extensions() {
+                                req.extensions_mut().insert(Arc::new(request_data.clone()));
+                            }
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
                         }
                     })
                 }
@@ -514,9 +541,10 @@ impl MethodRouterFactory {
                                 without_body_options,
                             );
                             let mut req = req;
-                            req.extensions_mut().insert(Arc::new(request_data.clone()));
-                            lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                .await
+                            if handler.wants_request_extensions() {
+                                req.extensions_mut().insert(Arc::new(request_data.clone()));
+                            }
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
                         }
                     })
                 }
@@ -535,9 +563,10 @@ impl MethodRouterFactory {
                                 without_body_options,
                             );
                             let mut req = req;
-                            req.extensions_mut().insert(Arc::new(request_data.clone()));
-                            lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                .await
+                            if handler.wants_request_extensions() {
+                                req.extensions_mut().insert(Arc::new(request_data.clone()));
+                            }
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
                         }
                     })
                 }
@@ -556,9 +585,10 @@ impl MethodRouterFactory {
                                 without_body_options,
                             );
                             let mut req = req;
-                            req.extensions_mut().insert(Arc::new(request_data.clone()));
-                            lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks)
-                                .await
+                            if handler.wants_request_extensions() {
+                                req.extensions_mut().insert(Arc::new(request_data.clone()));
+                            }
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
                         }
                     })
                 }

@@ -13,20 +13,20 @@ documentation = "https://docs.rs/spikard-http"
 readme = "README.md"
 
 [dependencies]
-axum = { version = "0.8", features = ["multipart", "ws"]  }
+axum = { workspace = true, features = ["multipart", "ws"] }
 tokio = { version = "1", features = ["full"] }
 tokio-util = "0.7"
 tower = "0.5"
-tower-http = { version = "0.6.8", features = ["trace", "request-id", "compression-gzip", "compression-br", "timeout", "limit", "fs", "set-header", "sensitive-headers"] }
-tower_governor = "0.8"
-jsonwebtoken = { version = "10.2", features = ["use_pem", "rust_crypto"] }
-utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
-utoipa-swagger-ui = { version = "9", features = ["axum"] }
-utoipa-redoc = { version = "6", features = ["axum"] }
+tower-http = { version = "0.6.8", features = ["fs", "trace", "compression-gzip", "compression-br", "compression-deflate", "cors", "request-id", "limit", "timeout"] }
+tower_governor.workspace = true
+jsonwebtoken.workspace = true
+utoipa.workspace = true
+utoipa-swagger-ui.workspace = true
+utoipa-redoc.workspace = true
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber.workspace = true
 spikard-core = { path = "../spikard-core" }
 futures-util = "0.3"
 futures = "0.3"
@@ -61,4 +61,4 @@ di = ["spikard-core/di"]
 [dev-dependencies]
 chrono = "0.4"
 doc-comment = "0.3"
-tempfile = "3.23"
+tempfile = "3.24"
