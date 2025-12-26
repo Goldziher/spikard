@@ -60,6 +60,24 @@ const VeryLargePayloadSchema = z.object({
 	images: z.array(ImageSchema),
 });
 
+const IntParamSchema = z.object({
+	id: z.string().transform((val) => {
+		const num = Number.parseInt(val, 10);
+		if (Number.isNaN(num)) {
+			throw new Error("Invalid integer");
+		}
+		return num;
+	}),
+});
+
+const UuidParamSchema = z.object({
+	uuid: z.string().uuid(),
+});
+
+const DateParamSchema = z.object({
+	date: z.string().date(),
+});
+
 type SmallPayload = z.infer<typeof SmallPayloadSchema>;
 type MediumPayload = z.infer<typeof MediumPayloadSchema>;
 type LargePayload = z.infer<typeof LargePayloadSchema>;
@@ -103,6 +121,27 @@ function validateBody<T>(schema: ZodSchema<T>): RequestHandler {
 	return (req: Request, res: Response, next: NextFunction): void => {
 		try {
 			req.body = schema.parse(req.body) as T;
+			next();
+		} catch (error) {
+			if (error instanceof z.ZodError) {
+				res.status(400).json({
+					error: "Validation failed",
+					details: error.issues,
+				});
+			} else {
+				res.status(400).json({
+					error: "Validation failed",
+					details: String(error),
+				});
+			}
+		}
+	};
+}
+
+function validateParams<T>(schema: ZodSchema<T>): RequestHandler {
+	return (req: Request, res: Response, next: NextFunction): void => {
+		try {
+			req.params = schema.parse(req.params) as T & Record<string, string>;
 			next();
 		} catch (error) {
 			if (error instanceof z.ZodError) {
@@ -202,17 +241,29 @@ app.get(
 	},
 );
 
-app.get("/path/int/:id", (req: Request<{ id: string }>, res: Response<IdResponse>): void => {
-	res.json({ id: Number.parseInt(req.params.id ?? "0", 10) });
-});
+app.get(
+	"/path/int/:id",
+	validateParams(IntParamSchema),
+	(req: Request<{ id: number }>, res: Response<IdResponse>): void => {
+		res.json({ id: req.params.id });
+	},
+);
 
-app.get("/path/uuid/:uuid", (req: Request<{ uuid: string }>, res: Response<UuidResponse>): void => {
-	res.json({ uuid: req.params.uuid });
-});
+app.get(
+	"/path/uuid/:uuid",
+	validateParams(UuidParamSchema),
+	(req: Request<{ uuid: string }>, res: Response<UuidResponse>): void => {
+		res.json({ uuid: req.params.uuid });
+	},
+);
 
-app.get("/path/date/:date", (req: Request<{ date: string }>, res: Response<DateResponse>): void => {
-	res.json({ date: req.params.date });
-});
+app.get(
+	"/path/date/:date",
+	validateParams(DateParamSchema),
+	(req: Request<{ date: string }>, res: Response<DateResponse>): void => {
+		res.json({ date: req.params.date });
+	},
+);
 
 app.get("/query/few", (req: Request, res: Response<Record<string, unknown>>): void => {
 	res.json(req.query ?? {});
