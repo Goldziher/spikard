@@ -8,6 +8,7 @@
 
 require 'roda'
 require 'json'
+require 'date'
 
 # ============================================================================
 # Roda Application - Raw Performance (No Validation)
@@ -85,8 +86,8 @@ class BenchmarkApp < Roda
         }
       end
 
-      r.get 'int', String do |id|
-        { id: id.to_i }
+      r.get 'int', Integer do |id|
+        { id: id }
       end
 
       r.get 'uuid', String do |uuid|
@@ -94,6 +95,11 @@ class BenchmarkApp < Roda
       end
 
       r.get 'date', String do |date|
+        begin
+          Date.iso8601(date)
+        rescue ArgumentError
+          # In raw mode, still convert but don't strictly validate
+        end
         { date: date }
       end
     end
