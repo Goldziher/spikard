@@ -116,6 +116,15 @@ RSpec.describe Spikard::Background do
   end
 
   describe 'error handling' do
+    # NOTE: Tests in this section intentionally raise errors to verify the error handling
+    # system works correctly. The error messages and warnings that appear in CI logs are
+    # EXPECTED OUTPUT from the background worker's error handling mechanism in
+    # packages/ruby/lib/spikard/background.rb (line 15). These are NOT failures.
+    #
+    # The worker catches StandardError and other exceptions, logs them via warn(), and
+    # continues processing. This ensures that one task's failure doesn't block subsequent
+    # tasks in the queue.
+
     it 'catches and warns on StandardError in tasks' do
       warning_output = StringIO.new
 
@@ -123,6 +132,8 @@ RSpec.describe Spikard::Background do
         warning_output.puts(msg)
       end
 
+      # INTENTIONAL ERROR: This task raises an error to verify the error handling system.
+      # The worker catches it, logs it with warn(), and continues normally.
       described_class.run do
         raise StandardError, 'test error'
       end
@@ -136,12 +147,14 @@ RSpec.describe Spikard::Background do
       results = []
       mutex = Mutex.new
 
-      # First task fails
+      # INTENTIONAL ERROR: First task fails to verify worker resilience.
+      # The background worker catches this exception, logs it with warn(), and remains alive.
+      # Error message: "[spikard.background] job failed: failed task"
       described_class.run do
         raise StandardError, 'failed task'
       end
 
-      # Second task should still execute
+      # Second task should still execute (proves worker didn't crash)
       described_class.run do
         mutex.synchronize { results << 'success' }
       end
@@ -154,6 +167,9 @@ RSpec.describe Spikard::Background do
       results = []
       mutex = Mutex.new
 
+      # INTENTIONAL ERROR: This task raises a RuntimeError to verify error handling.
+      # The background worker catches it, logs it with warn(), and continues processing.
+      # Error message: "[spikard.background] job failed: runtime issue"
       described_class.run do
         raise 'runtime issue'
       end
@@ -170,6 +186,10 @@ RSpec.describe Spikard::Background do
     end
 
     it 'does not let errors propagate to caller' do
+      # INTENTIONAL ERROR: This test verifies that task errors are isolated from the caller.
+      # The background worker catches this error, logs it with warn(), and the caller's
+      # expect block does not raise an error. This is the correct behavior.
+      # Error message: "[spikard.background] job failed: background error"
       expect do
         described_class.run do
           raise StandardError, 'background error'

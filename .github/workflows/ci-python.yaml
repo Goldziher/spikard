@@ -130,6 +130,9 @@ jobs:
           $wheel = $wheel.Trim()
           uv pip install $wheel
 
+      - name: Sync dev dependencies
+        run: uv sync --all-extras
+
       - name: Run pytest (Unix)
         if: runner.os != 'Windows'
         shell: bash
