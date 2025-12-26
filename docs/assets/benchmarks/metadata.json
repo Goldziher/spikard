@@ -1,0 +1,18 @@
+{
+  "generated_at": "2024-01-01T00:00:00Z",
+  "workflow_run_id": "pending",
+  "workflow_run_url": "#",
+  "git_commit": null,
+  "git_branch": "main",
+  "frameworks": {
+    "total": 0,
+    "completed": 0,
+    "failed": 0
+  },
+  "charts": [
+    "throughput-by-framework.html",
+    "latency-percentiles.html",
+    "validation-overhead.html",
+    "resources.html"
+  ]
+}

@@ -838,3 +838,117 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
+
+  aggregate-results:
+    name: Aggregate Benchmark Results
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - bench-spikard-rust-validation
+      - bench-spikard-rust-raw
+      - bench-spikard-python-validation
+      - bench-spikard-python-raw
+      - bench-spikard-node-validation
+      - bench-spikard-bun-validation
+      - bench-spikard-node-raw
+      - bench-spikard-bun-raw
+      - bench-spikard-ruby-validation
+      - bench-spikard-ruby-raw
+      - bench-spikard-wasm-validation
+      - bench-spikard-wasm-raw
+      - bench-fastapi-uvicorn-validation
+      - bench-fastapi-granian-validation
+      - bench-fastapi-uvicorn-raw
+      - bench-fastapi-granian-raw
+      - bench-robyn-raw
+      - bench-fastify-validation
+      - bench-fastify-raw
+      - bench-hono-validation
+      - bench-elysia-validation
+      - bench-hono-raw
+      - bench-express-validation
+      - bench-express-raw
+      - bench-morojs-validation
+      - bench-morojs-raw
+      - bench-kito-validation
+      - bench-kito-raw
+      - bench-hanami-api-validation
+      - bench-hanami-api-raw
+      - bench-roda-validation
+      - bench-roda-raw
+      - bench-phalcon-validation
+      - bench-phalcon-raw
+      - bench-spikard-php-validation
+      - bench-spikard-php-raw
+      - bench-trongate-raw
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download all benchmark artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: benchmark-results-*
+          path: benchmark-results/artifacts
+          merge-multiple: false
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          ls -la benchmark-results/artifacts/ || echo "No artifacts downloaded"
+          find benchmark-results/artifacts -name "profile.json" -exec echo "Found: {}" \;
+
+      - name: Create aggregated results manually
+        run: |
+          mkdir -p benchmark-results
+
+          # Create aggregated JSON structure
+          cat > benchmark-results/aggregated.json <<'EOF'
+          {
+            "metadata": {
+              "run_id": "${{ github.run_id }}",
+              "run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+              "workflow": "Comparative Benchmarks",
+              "commit": "${{ github.sha }}",
+              "branch": "${{ github.ref_name }}",
+              "aggregated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "artifact_count": 0,
+              "artifacts": []
+            },
+            "frameworks": [],
+            "summary": {
+              "total_frameworks": 0,
+              "completed": 0,
+              "failed": 0,
+              "total_requests": 0,
+              "total_duration_secs": 0.0
+            }
+          }
+          EOF
+
+          # Merge all profile.json files into frameworks array using jq if available
+          if command -v jq >/dev/null 2>&1; then
+            for profile in benchmark-results/artifacts/*/profile.json; do
+              if [ -f "$profile" ]; then
+                framework=$(dirname "$profile" | xargs basename | sed 's/benchmark-results-//')
+                echo "Processing framework: $framework"
+
+                # Add to frameworks array
+                jq --arg fw "$framework" \
+                   --slurpfile prof "$profile" \
+                   '.frameworks += [{framework: $fw, profile: $prof[0], status: "completed"}] |
+                    .summary.completed += 1 |
+                    .summary.total_frameworks += 1' \
+                   benchmark-results/aggregated.json > benchmark-results/aggregated.tmp
+                mv benchmark-results/aggregated.tmp benchmark-results/aggregated.json
+              fi
+            done
+          fi
+
+      - name: Upload aggregated results
+        uses: actions/upload-artifact@v6
+        with:
+          name: benchmark-aggregated-results
+          path: benchmark-results/aggregated.json
+          retention-days: 90

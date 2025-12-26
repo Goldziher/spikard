@@ -3,10 +3,12 @@
 use benchmark_harness::{
     BenchmarkRunner, Fixture, FixtureManager, Result, RunnerConfig, StreamingBenchmarkRunner, StreamingFixture,
     StreamingRunnerConfig,
+    aggregate::AggregateRunner,
     compare::{CompareConfig, CompareRunner},
     consolidate::consolidate_profile_dir,
     framework::detect_framework,
     profile::{ProfileRunner, ProfileRunnerConfig},
+    visualize::{VisualizeRunner, parse_chart_types},
 };
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
@@ -235,6 +237,52 @@ enum Commands {
         /// Also print consolidated JSON to stdout
         #[arg(long)]
         stdout: bool,
+    },
+
+    /// Aggregate benchmark results from GitHub Actions artifacts
+    Aggregate {
+        /// GitHub Actions run ID (if not provided, uses latest successful run)
+        #[arg(short, long)]
+        run_id: Option<String>,
+
+        /// Workflow name
+        #[arg(short, long, default_value = "Comparative Benchmarks")]
+        workflow: String,
+
+        /// Output file path
+        #[arg(short, long, default_value = "./benchmark-results/aggregated.json")]
+        output: PathBuf,
+
+        /// Directory for downloaded artifacts
+        #[arg(long, default_value = "./benchmark-results/artifacts")]
+        download_dir: PathBuf,
+
+        /// Keep downloaded artifacts after aggregation
+        #[arg(long)]
+        keep_artifacts: bool,
+    },
+
+    /// Generate interactive HTML visualizations from aggregated results
+    Visualize {
+        /// Input aggregated results file
+        #[arg(short, long)]
+        input: PathBuf,
+
+        /// Output directory for charts
+        #[arg(short, long, default_value = "./benchmark-results/charts")]
+        output: PathBuf,
+
+        /// Charts to generate (comma-separated: throughput,latency,validation,resources,all)
+        #[arg(short, long, default_value = "all")]
+        charts: String,
+
+        /// Chart title prefix
+        #[arg(long)]
+        title: Option<String>,
+
+        /// Python executable path
+        #[arg(long)]
+        python_path: Option<PathBuf>,
     },
 }
 
@@ -635,6 +683,29 @@ async fn main() -> Result<()> {
             }
 
             Ok(())
+        }
+
+        Commands::Aggregate {
+            run_id,
+            workflow,
+            output,
+            download_dir,
+            keep_artifacts,
+        } => {
+            let runner = AggregateRunner::new(run_id, workflow, download_dir, keep_artifacts);
+            runner.run(&output).await
+        }
+
+        Commands::Visualize {
+            input,
+            output,
+            charts,
+            title,
+            python_path,
+        } => {
+            let chart_types = parse_chart_types(&charts)?;
+            let runner = VisualizeRunner::new(input, output, chart_types, title, python_path);
+            runner.run().await
         }
     }
 }

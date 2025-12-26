@@ -3,6 +3,7 @@
 //! A tool for benchmarking Spikard HTTP framework across different language bindings
 //! and comparing against external frameworks.
 
+pub mod aggregate;
 pub mod analysis;
 pub mod compare;
 pub mod comparison;
@@ -19,6 +20,7 @@ pub mod schema;
 pub mod server;
 pub mod streaming;
 pub mod types;
+pub mod visualize;
 pub mod workload;
 
 pub use analysis::{AggregatedResult, MetricStats, aggregate_runs};

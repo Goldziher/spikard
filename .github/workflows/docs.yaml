@@ -46,6 +46,38 @@ jobs:
       - name: Configure Git for mike
         run: bash scripts/docs/configure-git-for-mike.sh
 
+      - name: Download benchmark results (if available)
+        uses: dawidd6/action-download-artifact@v8
+        continue-on-error: true
+        with:
+          workflow: comparative-benchmarks.yaml
+          name: benchmark-aggregated-results
+          path: benchmark-results
+          search_artifacts: true
+
+      - name: Setup Rust (for benchmark CLI)
+        if: hashFiles('benchmark-results/aggregated.json') != ''
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build benchmark-harness
+        if: hashFiles('benchmark-results/aggregated.json') != ''
+        run: cargo build --release -p benchmark-harness
+
+      - name: Install Python visualization dependencies
+        if: hashFiles('benchmark-results/aggregated.json') != ''
+        run: pip install -r tools/benchmark-harness/requirements.txt
+
+      - name: Generate benchmark charts
+        if: hashFiles('benchmark-results/aggregated.json') != ''
+        run: |
+          mkdir -p docs/assets/benchmarks
+          ./target/release/benchmark-harness visualize \
+            --input benchmark-results/aggregated.json \
+            --output docs/assets/benchmarks \
+            --charts all
+          cp benchmark-results/aggregated.json docs/assets/benchmarks/
+          echo "✅ Generated benchmark charts"
+
       - name: Build documentation with mike
         run: bash scripts/docs/build-docs.sh
 

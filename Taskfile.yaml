@@ -1309,6 +1309,35 @@ tasks:
     vars:
       COLON: ":"
 
+  benchmarks:aggregate:
+    desc: "Aggregate benchmark results from latest GitHub Actions run"
+    dir: "{{.ROOT_DIR}}"
+    cmds:
+      - ./scripts/benchmarks/aggregate-results.sh
+
+  benchmarks:visualize:
+    desc: "Generate visualization charts from aggregated results"
+    dir: "{{.ROOT_DIR}}"
+    deps: [build:rust]
+    cmds:
+      - ./scripts/benchmarks/generate-charts.sh
+
+  benchmarks:update:
+    desc: "Download latest results and regenerate charts"
+    dir: "{{.ROOT_DIR}}"
+    cmds:
+      - task: benchmarks:aggregate
+      - task: benchmarks:visualize
+
+  benchmarks:clean:
+    desc: "Clean benchmark results and charts"
+    dir: "{{.ROOT_DIR}}"
+    cmds:
+      - rm -rf benchmark-results/
+      - rm -f docs/assets/benchmarks/*.html
+      - rm -f docs/assets/benchmarks/metadata.json
+      - rm -f docs/assets/benchmarks/aggregated.json
+
   default:
     desc: "Show available tasks"
     cmds:
