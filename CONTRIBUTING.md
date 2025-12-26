@@ -304,6 +304,12 @@ pnpm test:coverage
 - Multi-language client/server combinations
 - Generated from fixtures via `test-generator`
 
+**Tier 4: Published Package Tests**
+- Validate published packages from registries
+- Test apps in `tests/test_apps/`
+- Executed after releases in CI
+- Catches registry-specific issues (binary distribution, platform compatibility)
+
 ### Adding New Fixtures
 
 1. **Create fixture file:**
@@ -675,6 +681,38 @@ end
 - Follow the development workflow above
 - Include tests and benchmarks
 - Update relevant ADRs if architecture changes
+
+### Testing Published Packages
+
+After releasing a new version, update and test the test apps:
+
+1. **Update versions across all test apps:**
+   ```bash
+   task test:apps:update-versions VERSION=0.7.0
+   ```
+
+2. **Update lock files:**
+   ```bash
+   cd tests/test_apps/python && uv sync && cd ../../..
+   cd tests/test_apps/node && pnpm install && cd ../../..
+   cd tests/test_apps/ruby && bundle install && cd ../../..
+   cd tests/test_apps/php && composer install && cd ../../..
+   cd tests/test_apps/rust && cargo update && cd ../../..
+   cd tests/test_apps/wasm && pnpm install && cd ../../..
+   ```
+
+3. **Run all test apps:**
+   ```bash
+   task test:apps:all
+   ```
+
+4. **Commit changes:**
+   ```bash
+   git add tests/test_apps/
+   git commit -m "chore: update test apps to v0.7.0"
+   ```
+
+**Note**: CI automatically runs test apps after successful releases, but manual testing before release is recommended.
 
 ### Contributing Language Bindings
 

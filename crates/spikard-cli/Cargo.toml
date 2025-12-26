@@ -39,7 +39,7 @@ heck = "0.5"  # For case conversion (snake_case, PascalCase)
 
 # Optional language-specific dependencies
 pyo3 = { workspace = true, optional = true }
-_spikard = { package = "spikard-py", version = "0.6.0", path = "../spikard-py", optional = true, default-features = false }
+_spikard = { package = "spikard-py", version = "0.6.1", path = "../spikard-py", optional = true, default-features = false }
 
 [features]
 default = []

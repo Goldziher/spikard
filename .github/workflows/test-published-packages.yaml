@@ -1,0 +1,403 @@
+name: Test Published Packages
+
+on:
+  workflow_run:
+    workflows: ["Publish Release"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version to test (e.g., 0.6.0)'
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.version || github.run_id }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  prepare:
+    name: Prepare test matrix
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      registries_ready: ${{ steps.validate.outputs.ready }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Testing published packages for version: $VERSION"
+
+      - name: Wait for registry indexing
+        run: |
+          echo "Waiting 5 minutes for package registries to index new version..."
+          sleep 300
+
+      - name: Validate registry availability
+        id: validate
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MISSING=()
+
+          echo "Checking package registries for version $VERSION..."
+
+          # PyPI
+          if curl -s "https://pypi.org/pypi/spikard/$VERSION/json" | jq -e '.info.version' > /dev/null 2>&1; then
+            echo "✓ PyPI: spikard $VERSION found"
+          else
+            echo "✗ PyPI: spikard $VERSION not found"
+            MISSING+=("PyPI")
+          fi
+
+          # npm (@spikard/node)
+          if curl -s "https://registry.npmjs.org/@spikard/node/$VERSION" | jq -e '.version' > /dev/null 2>&1; then
+            echo "✓ npm: @spikard/node $VERSION found"
+          else
+            echo "✗ npm: @spikard/node $VERSION not found"
+            MISSING+=("npm:@spikard/node")
+          fi
+
+          # npm (@spikard/wasm)
+          if curl -s "https://registry.npmjs.org/@spikard/wasm/$VERSION" | jq -e '.version' > /dev/null 2>&1; then
+            echo "✓ npm: @spikard/wasm $VERSION found"
+          else
+            echo "✗ npm: @spikard/wasm $VERSION not found"
+            MISSING+=("npm:@spikard/wasm")
+          fi
+
+          # RubyGems
+          if curl -s "https://rubygems.org/api/v1/versions/spikard.json" | jq -e ".[] | select(.number == \"$VERSION\")" > /dev/null 2>&1; then
+            echo "✓ RubyGems: spikard $VERSION found"
+          else
+            echo "✗ RubyGems: spikard $VERSION not found"
+            MISSING+=("RubyGems")
+          fi
+
+          # Packagist
+          if curl -s "https://repo.packagist.org/p2/spikard/spikard.json" | jq -e ".packages[\"spikard/spikard\"][\"$VERSION\"]" > /dev/null 2>&1; then
+            echo "✓ Packagist: spikard/spikard $VERSION found"
+          else
+            echo "✗ Packagist: spikard/spikard $VERSION not found"
+            MISSING+=("Packagist")
+          fi
+
+          # crates.io
+          if curl -s "https://crates.io/api/v1/crates/spikard/$VERSION" | jq -e '.version.num' > /dev/null 2>&1; then
+            echo "✓ crates.io: spikard $VERSION found"
+          else
+            echo "✗ crates.io: spikard $VERSION not found"
+            MISSING+=("crates.io")
+          fi
+
+          if [ ${#MISSING[@]} -eq 0 ]; then
+            echo "ready=true" >> $GITHUB_OUTPUT
+            echo "All registries have version $VERSION available"
+          else
+            echo "ready=false" >> $GITHUB_OUTPUT
+            echo "Missing from registries: ${MISSING[*]}"
+            echo "::warning::Not all registries have version $VERSION yet. Tests may fail."
+          fi
+
+  test-python:
+    name: Test Python package (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.12", "3.14"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Update pyproject.toml version
+        working-directory: tests/test_apps/python
+        shell: bash
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          sed -i.bak "s/spikard==.*/spikard==$VERSION\",/" pyproject.toml
+          rm -f pyproject.toml.bak
+
+      - name: Install dependencies
+        working-directory: tests/test_apps/python
+        run: uv sync
+
+      - name: Run tests
+        working-directory: tests/test_apps/python
+        run: uv run pytest -v
+
+  test-node:
+    name: Test Node package (${{ matrix.os }}, Node ${{ matrix.node-version }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node-version: ["20", "22"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: package.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Update package.json version
+        working-directory: tests/test_apps/node
+        shell: bash
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          jq ".dependencies[\"@spikard/node\"] = \"$VERSION\"" package.json > package.json.tmp
+          mv package.json.tmp package.json
+
+      - name: Install dependencies
+        working-directory: tests/test_apps/node
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run tests
+        working-directory: tests/test_apps/node
+        run: pnpm test
+
+  test-ruby:
+    name: Test Ruby gem (${{ matrix.os }}, Ruby ${{ matrix.ruby-version }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        ruby-version: ["3.2", "3.4"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler: "4.0.0"
+
+      - name: Update Gemfile version
+        working-directory: tests/test_apps/ruby
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          sed -i.bak "s/gem 'spikard', '.*/gem 'spikard', '$VERSION'/" Gemfile
+          rm -f Gemfile.bak
+
+      - name: Install dependencies
+        working-directory: tests/test_apps/ruby
+        run: bundle install
+
+      - name: Run tests
+        working-directory: tests/test_apps/ruby
+        run: bundle exec rspec
+
+  test-php:
+    name: Test PHP package (${{ matrix.os }}, PHP ${{ matrix.php-version }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        php-version: ["8.2", "8.3"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+
+      - name: Update composer.json version
+        working-directory: tests/test_apps/php
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          jq ".require[\"spikard/spikard\"] = \"$VERSION\"" composer.json > composer.json.tmp
+          mv composer.json.tmp composer.json
+
+      - name: Install dependencies
+        working-directory: tests/test_apps/php
+        run: composer install --no-interaction
+
+      - name: Run tests
+        working-directory: tests/test_apps/php
+        run: composer test
+
+  test-rust:
+    name: Test Rust crate (${{ matrix.os }}, Rust ${{ matrix.rust-version }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust-version: ["stable", "1.80"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust-version }}
+
+      - name: Update Cargo.toml version
+        working-directory: tests/test_apps/rust
+        shell: bash
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          sed -i.bak "s/spikard = { version = \".*\" }/spikard = { version = \"$VERSION\" }/" Cargo.toml
+          rm -f Cargo.toml.bak
+
+      - name: Update Cargo.lock
+        working-directory: tests/test_apps/rust
+        run: cargo update
+
+      - name: Run tests
+        working-directory: tests/test_apps/rust
+        run: cargo test --locked
+
+  test-wasm:
+    name: Test WASM package
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: package.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: 'pnpm'
+
+      - name: Update package.json version
+        working-directory: tests/test_apps/wasm
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          jq ".dependencies[\"@spikard/wasm\"] = \"$VERSION\"" package.json > package.json.tmp
+          mv package.json.tmp package.json
+
+      - name: Install dependencies
+        working-directory: tests/test_apps/wasm
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run tests
+        working-directory: tests/test_apps/wasm
+        run: pnpm test
+
+  report:
+    name: Report test results
+    needs: [prepare, test-python, test-node, test-ruby, test-php, test-rust, test-wasm]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check test results and create issue on failure
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          FAILED=()
+
+          if [ "${{ needs.test-python.result }}" != "success" ]; then
+            FAILED+=("Python")
+          fi
+          if [ "${{ needs.test-node.result }}" != "success" ]; then
+            FAILED+=("Node.js")
+          fi
+          if [ "${{ needs.test-ruby.result }}" != "success" ]; then
+            FAILED+=("Ruby")
+          fi
+          if [ "${{ needs.test-php.result }}" != "success" ]; then
+            FAILED+=("PHP")
+          fi
+          if [ "${{ needs.test-rust.result }}" != "success" ]; then
+            FAILED+=("Rust")
+          fi
+          if [ "${{ needs.test-wasm.result }}" != "success" ]; then
+            FAILED+=("WASM")
+          fi
+
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "Tests failed for: ${FAILED[*]}"
+
+            # Create GitHub issue
+            TITLE="Published package tests failed for v$VERSION"
+            BODY="## Published Package Test Failures
+
+          **Version:** $VERSION
+          **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          **Failed packages:**
+          $(for pkg in "${FAILED[@]}"; do echo "- $pkg"; done)
+
+          ### Next Steps
+          1. Review the workflow logs for detailed error messages
+          2. Check if the packages were published correctly to their respective registries
+          3. Verify platform-specific binary compatibility issues
+          4. Consider yanking and republishing if critical issues are found
+
+          ### Related Links
+          - [PyPI: spikard](https://pypi.org/project/spikard/$VERSION/)
+          - [npm: @spikard/node](https://www.npmjs.com/package/@spikard/node/v/$VERSION)
+          - [npm: @spikard/wasm](https://www.npmjs.com/package/@spikard/wasm/v/$VERSION)
+          - [RubyGems: spikard](https://rubygems.org/gems/spikard/versions/$VERSION)
+          - [Packagist: spikard/spikard](https://packagist.org/packages/spikard/spikard#$VERSION)
+          - [crates.io: spikard](https://crates.io/crates/spikard/$VERSION)
+          "
+
+            gh issue create \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --label "bug,release,published-packages"
+
+            exit 1
+          else
+            echo "All published package tests passed for version $VERSION"
+          fi

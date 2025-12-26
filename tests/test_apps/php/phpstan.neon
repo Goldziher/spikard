@@ -1,0 +1,8 @@
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+    strictRules:
+        allRules: true
+    ignoreErrors: []

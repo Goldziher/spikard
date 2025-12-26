@@ -179,25 +179,36 @@ jobs:
       - name: Check RubyGems for existing version
         id: check
         continue-on-error: true
+        shell: bash
         run: |
+          set +e  # Explicitly disable exit-on-error
           bash scripts/publish/check_rubygems.sh "${{ needs.prepare.outputs.version }}"
           exit_code=$?
+          set -e  # Re-enable for safety
 
           case $exit_code in
             0)
+              echo "exists=true" >> $GITHUB_OUTPUT
               echo "check_status=success" >> $GITHUB_OUTPUT
+              echo "Ruby gem version already exists on RubyGems"
               exit 0
               ;;
             1)
+              echo "exists=false" >> $GITHUB_OUTPUT
               echo "check_status=success" >> $GITHUB_OUTPUT
+              echo "Ruby gem version not found on RubyGems, will publish"
               exit 0
               ;;
             2)
+              echo "exists=false" >> $GITHUB_OUTPUT
               echo "check_status=transient_failure" >> $GITHUB_OUTPUT
+              echo "RubyGems check encountered transient error"
               exit 2
               ;;
             *)
+              echo "exists=false" >> $GITHUB_OUTPUT
               echo "check_status=unexpected_failure" >> $GITHUB_OUTPUT
+              echo "Error checking RubyGems: exit code $exit_code"
               exit 2
               ;;
           esac

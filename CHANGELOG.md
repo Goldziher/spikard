@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2025-12-26
+
+### Fixed
+- **Node.js package publishing**: Fixed @spikard/node package.json to correctly publish the TypeScript wrapper layer (Spikard class, routing decorators, type-safe utilities) that was missing from v0.6.0, which only contained low-level FFI bindings
+- **Ruby gem publishing workflow**: Fixed bash exit handling in RubyGems version check script to prevent premature workflow failures when gem version doesn't exist
+
 ## [0.6.0] - 2025-12-25
 
 ### Changed
