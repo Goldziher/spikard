@@ -195,6 +195,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                     type_name: format_type(&arg.value_type),
                     is_nullable: is_nullable_type(&arg.value_type),
                     is_list: is_list_type(&arg.value_type),
+                    list_item_nullable: extract_list_item_nullability(&arg.value_type),
                     default_value: arg.default_value.as_ref().map(|v| format!("{:?}", v)),
                     description: arg.description.clone(),
                 })
@@ -303,6 +304,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                                 type_name: format_type(&f.value_type),
                                 is_nullable: is_nullable_type(&f.value_type),
                                 is_list: is_list_type(&f.value_type),
+                                list_item_nullable: extract_list_item_nullability(&f.value_type),
                                 default_value: f.default_value.as_ref().map(|v| format!("{:?}", v)),
                                 description: f.description.clone(),
                             })
