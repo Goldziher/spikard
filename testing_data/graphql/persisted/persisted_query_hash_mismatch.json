@@ -1,0 +1,69 @@
+{
+  "name": "persisted_query_hash_mismatch",
+  "description": "Hash mismatch - query string provided but hash does not match the query content",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  user(id: ID!): User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n    email\n  }\n}",
+    "variables": {
+      "id": "user-999"
+    },
+    "extensions": {
+      "persistedQuery": {
+        "version": 1,
+        "sha256Hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    },
+    "operationName": "GetUser",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n    email\n  }\n}",
+      "variables": {
+        "id": "user-999"
+      },
+      "operationName": "GetUser",
+      "extensions": {
+        "persistedQuery": {
+          "version": 1,
+          "sha256Hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        }
+      }
+    }
+  },
+  "request_notes": "Client provides query string but the SHA256 hash doesn't match the actual query. This may indicate a client-side error or tampering.",
+  "expected_response": {
+    "status_code": 400,
+    "errors": [
+      {
+        "message": "Hash mismatch",
+        "extensions": {
+          "code": "PERSISTED_QUERY_HASH_MISMATCH",
+          "expected_hash": "4a5b4c8d9e2f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5f7a",
+          "provided_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        }
+      }
+    ]
+  },
+  "resolvers": {
+    "Query.user": {
+      "type": "error",
+      "error_message": "Hash mismatch",
+      "error_extensions": {
+        "code": "PERSISTED_QUERY_HASH_MISMATCH",
+        "expected_hash": "4a5b4c8d9e2f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5f7a",
+        "provided_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    }
+  },
+  "tags": [
+    "queries",
+    "persisted-queries",
+    "validation",
+    "hash-validation"
+  ]
+}

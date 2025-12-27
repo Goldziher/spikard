@@ -1,0 +1,204 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║         GRAPHQL FEDERATION FIXTURES - QUICK REFERENCE GUIDE               ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+LOCATION: testing_data/graphql/federation/
+
+┌─ FIXTURES BY FEATURE ─────────────────────────────────────────────────────┐
+│                                                                              │
+│ ENTITY RESOLUTION (Basic)                                                   │
+│   └─ entity_resolution_basic.json                                          │
+│      Query: _entities(representations: [{__typename: "User", id: "1"}])    │
+│      Response: 200 with User { id, name, email }                          │
+│                                                                              │
+│ ENTITY KEYS (@key directive)                                               │
+│   ├─ entity_with_key.json                                                  │
+│   │  Type: User @key(fields: "id")                                        │
+│   │  Includes nested UserProfile object                                    │
+│   │  Response: 200 with full User entity                                   │
+│   │                                                                          │
+│   └─ entity_with_compound_key.json                                         │
+│      Type: Product @key(fields: "sku category")                            │
+│      Composite key resolution                                              │
+│      Response: 200 with Product { sku, category, name, ... }             │
+│                                                                              │
+│ FIELD DEPENDENCIES (@requires directive)                                   │
+│   └─ requires_directive.json                                               │
+│      Field: shippingEstimate @requires(fields: "weight destination")       │
+│      Computes shipping based on required fields                            │
+│      Response: 200 with calculated shippingEstimate (24.75)               │
+│                                                                              │
+│ FIELD OPTIMIZATION (@provides directive)                                   │
+│   └─ provides_directive.json                                               │
+│      Field: reviews @provides(fields: "author { id name }")                │
+│      Provides nested author data for optimization                          │
+│      Response: 200 with reviews and resolved authors                       │
+│                                                                              │
+│ EXTERNAL FIELD REFERENCES (@external directive)                            │
+│   └─ external_field.json                                                   │
+│      Fields: weight, dimensions marked @external                           │
+│      Computed field uses external field values                             │
+│      Response: 200 with generated label "SMALL_PACKAGE_2.5KG"             │
+│                                                                              │
+│ SUBGRAPH INTROSPECTION (_service query)                                    │
+│   └─ subgraph_introspection.json                                           │
+│      Query: _service { sdl }                                               │
+│      Returns subgraph Schema Definition Language                           │
+│      Response: 200 with SDL string for gateway composition                │
+│                                                                              │
+│ CROSS-SUBGRAPH QUERIES                                                     │
+│   └─ cross_subgraph_query.json                                             │
+│      Query: user(id) { orders { id, total } }                             │
+│      User from users subgraph, Orders from orders subgraph                │
+│      Response: 200 with federated data from multiple subgraphs            │
+│                                                                              │
+│ ERROR HANDLING                                                              │
+│   ├─ federation_error_missing_entity.json                                  │
+│   │  Entity ID not found (999999)                                          │
+│   │  Response: 200 with null in _entities array                           │
+│   │  (Per Apollo Federation spec, not a 404 error)                        │
+│   │                                                                          │
+│   └─ federation_type_mismatch.json                                         │
+│      Invalid __typename: "InvalidType"                                     │
+│      Response: 400 Bad Request with error message                         │
+│      Error: "Unknown type 'InvalidType' in entity representation"         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌─ FEDERATION DIRECTIVES ───────────────────────────────────────────────────┐
+│                                                                              │
+│ @key(fields: "fieldName")                                                  │
+│   Used in: 8 fixtures                                                      │
+│   Purpose: Designate entity and define uniqueness fields                  │
+│   Examples:                                                                 │
+│     • @key(fields: "id")                          [single field]           │
+│     • @key(fields: "sku category")                [compound key]           │
+│                                                                              │
+│ @requires(fields: "fieldName")                                             │
+│   Used in: 2 fixtures (requires_directive, external_field)                │
+│   Purpose: Field depends on other fields for resolution                   │
+│   Example: shippingEstimate: Float! @requires(fields: "weight")          │
+│                                                                              │
+│ @provides(fields: "fieldPath")                                             │
+│   Used in: 1 fixture (provides_directive)                                 │
+│   Purpose: Field provides data available from another subgraph            │
+│   Example: reviews @provides(fields: "author { id name }")                │
+│                                                                              │
+│ @external                                                                   │
+│   Used in: 1 fixture (external_field)                                     │
+│   Purpose: Field is owned/defined by another subgraph                     │
+│   Example: weight: Float! @external                                       │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌─ FEDERATION QUERIES ──────────────────────────────────────────────────────┐
+│                                                                              │
+│ _entities(representations: [_Any!]!): [_Entity]!                           │
+│   Used in: 9 fixtures                                                      │
+│   Purpose: Core federation query for entity resolution                    │
+│   Example:                                                                  │
+│     {                                                                       │
+│       _entities(representations: [                                         │
+│         {__typename: "User", id: "1"},                                    │
+│         {__typename: "Product", sku: "ABC", category: "electronics"}      │
+│       ]) {                                                                  │
+│         ... on User { id name }                                           │
+│         ... on Product { sku category name }                              │
+│       }                                                                      │
+│     }                                                                       │
+│                                                                              │
+│ _service: _Service { sdl: String! }                                        │
+│   Used in: All 10 fixtures (in schema)                                    │
+│   Purpose: Retrieve subgraph SDL for gateway composition                  │
+│   Example: { _service { sdl } }                                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌─ FIXTURE STATISTICS ──────────────────────────────────────────────────────┐
+│                                                                              │
+│ Total Fixtures:        10 files                                            │
+│ Total Size:            ~16.4 KB (fixtures only)                           │
+│                                                                              │
+│ Success Responses:     9 fixtures (200 OK)                                │
+│ Error Responses:       1 fixture (400 Bad Request)                        │
+│                                                                              │
+│ Directives Covered:    4 (@key, @requires, @provides, @external)        │
+│ Queries Covered:       2 (_entities, _service)                            │
+│                                                                              │
+│ Features Covered:      10 distinct federation v2 features                 │
+│ Test Scenarios:        10 comprehensive test cases                        │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌─ QUICK FILE LOOKUP ───────────────────────────────────────────────────────┐
+│                                                                              │
+│ Feature                    │ Fixture Filename                              │
+│ ──────────────────────────────────────────────────────────────────────    │
+│ Basic Resolution           │ entity_resolution_basic.json                  │
+│ Single-Field Key           │ entity_with_key.json                         │
+│ Compound Key               │ entity_with_compound_key.json                │
+│ Field Requirements         │ requires_directive.json                      │
+│ Field Optimization         │ provides_directive.json                      │
+│ External Fields            │ external_field.json                          │
+│ Schema Introspection       │ subgraph_introspection.json                  │
+│ Multi-Subgraph Query       │ cross_subgraph_query.json                    │
+│ Missing Entity Error       │ federation_error_missing_entity.json         │
+│ Type Validation Error      │ federation_type_mismatch.json                │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌─ EXPECTED RESPONSES ──────────────────────────────────────────────────────┐
+│                                                                              │
+│ SUCCESS (200 OK):                                                          │
+│   ├─ entity_resolution_basic       → User { id, name, email }            │
+│   ├─ entity_with_key               → User { id, name, username, ... }    │
+│   ├─ entity_with_compound_key      → Product { sku, category, name, ... }│
+│   ├─ requires_directive            → Shipment { shippingEstimate: 24.75 }│
+│   ├─ provides_directive            → Post { reviews { author { ... } } } │
+│   ├─ external_field                → Parcel { label: "SMALL_PACKAGE_..." }│
+│   ├─ subgraph_introspection        → _service { sdl: "type User ..." }   │
+│   ├─ cross_subgraph_query          → User { orders { id, total } }       │
+│   └─ federation_error_missing_entity → _entities: [null]                 │
+│                                                                              │
+│ ERROR (400):                                                                │
+│   └─ federation_type_mismatch      → error: "Unknown type 'InvalidType'"  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌─ DOCUMENTATION ───────────────────────────────────────────────────────────┐
+│                                                                              │
+│ README.md                    → Comprehensive documentation (340+ lines)   │
+│   • Detailed fixture descriptions                                         │
+│   • Federation directives reference                                       │
+│   • Federation queries reference                                          │
+│   • Usage examples and testing patterns                                   │
+│   • Integration notes for Apollo Gateway                                  │
+│   • Apollo Federation spec coverage                                       │
+│                                                                              │
+│ schema.json                  → Metadata and federation feature overview   │
+│   • Fixture metadata and descriptions                                     │
+│   • Federation directives reference                                       │
+│   • Federation queries reference                                          │
+│   • Coverage summary statistics                                           │
+│   • Standards compliance notes                                            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌─ APOLLO FEDERATION SPECIFICATION COMPLIANCE ──────────────────────────────┐
+│                                                                              │
+│ ✓ Entity Resolution Pattern      → Representation format, union types     │
+│ ✓ Entity Key Design              → Single & compound keys                 │
+│ ✓ Field Dependencies             → @requires directive                    │
+│ ✓ Field Optimization             → @provides directive                    │
+│ ✓ External Field References      → @external directive                    │
+│ ✓ Subgraph Introspection         → _service query                         │
+│ ✓ Error Handling                 → Null vs error responses                │
+│ ✓ Cross-Subgraph Composition     → Multi-entity federation               │
+│                                                                              │
+│ Specification Version: Apollo Federation v2                               │
+│ Compliance: Full core feature coverage                                    │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+For detailed information on each fixture, see README.md
+For fixture metadata and feature overview, see schema.json

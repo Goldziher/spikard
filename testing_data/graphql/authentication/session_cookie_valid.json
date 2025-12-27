@@ -1,0 +1,46 @@
+{
+  "name": "session_cookie_valid",
+  "description": "Query with valid session cookie",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  userProfile: UserProfile!\n}\n\ntype UserProfile {\n  id: String!\n  username: String!\n  email: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  userProfile {\n    id\n    username\n    email\n  }\n}",
+    "cookies": {
+      "session": "valid_session_id_abc123xyz"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  userProfile {\n    id\n    username\n    email\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "userProfile": {
+        "id": "user456",
+        "username": "alice_smith",
+        "email": "alice@example.com"
+      }
+    }
+  },
+  "resolvers": {
+    "Query.userProfile": {
+      "type": "mock",
+      "return_value": {
+        "id": "user456",
+        "username": "alice_smith",
+        "email": "alice@example.com"
+      }
+    }
+  },
+  "tags": [
+    "authentication",
+    "session-cookie",
+    "valid-session"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "deprecated_field",
+  "description": "Field with @deprecated directive showing deprecation warning in response extensions",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "directive @deprecated(reason: String) on FIELD_DEFINITION\n\ntype Query {\n  oldField: String! @deprecated(reason: \"Use newField instead\")\n  newField: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  oldField\n  newField\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  oldField\n  newField\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "oldField": "legacy value",
+      "newField": "modern value"
+    },
+    "extensions": {
+      "deprecations": [
+        {
+          "field": "Query.oldField",
+          "reason": "Use newField instead"
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Query.oldField": {
+      "type": "mock",
+      "return_value": "legacy value"
+    },
+    "Query.newField": {
+      "type": "mock",
+      "return_value": "modern value"
+    }
+  },
+  "tags": [
+    "directives",
+    "deprecation",
+    "metadata"
+  ]
+}

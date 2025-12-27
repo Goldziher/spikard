@@ -1,0 +1,56 @@
+{
+  "name": "subscription_with_variables",
+  "description": "Subscription using GraphQL variables to filter events by user ID with required variable",
+  "operation_type": "subscription",
+  "endpoint": "/graphql",
+  "schema": "type Subscription {\n  userActivity(userId: ID!): ActivityEvent!\n}\n\ntype ActivityEvent {\n  id: ID!\n  userId: ID!\n  action: String!\n  description: String!\n  timestamp: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "subscription OnUserActivity($userId: ID!) {\n  userActivity(userId: $userId) {\n    id\n    userId\n    action\n    description\n    timestamp\n  }\n}",
+    "variables": {
+      "userId": "user123"
+    },
+    "operationName": "OnUserActivity",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "subscription OnUserActivity($userId: ID!) {\n  userActivity(userId: $userId) {\n    id\n    userId\n    action\n    description\n    timestamp\n  }\n}",
+      "variables": {
+        "userId": "user123"
+      },
+      "operationName": "OnUserActivity"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "userActivity": {
+        "id": "event-789",
+        "userId": "user123",
+        "action": "LOGIN",
+        "description": "User logged in from browser",
+        "timestamp": "2025-12-27T12:15:00Z"
+      }
+    }
+  },
+  "resolvers": {
+    "Subscription.userActivity": {
+      "type": "mock_with_args",
+      "return_value": {
+        "id": "event-789",
+        "userId": "user123",
+        "action": "LOGIN",
+        "description": "User logged in from browser",
+        "timestamp": "2025-12-27T12:15:00Z"
+      }
+    }
+  },
+  "tags": [
+    "subscriptions",
+    "websocket",
+    "variables",
+    "required-args"
+  ]
+}

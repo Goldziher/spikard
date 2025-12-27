@@ -817,40 +817,68 @@ fn generate_graphql_tests(fixtures: &[GraphQLFixture]) -> Result<String> {
         code.push_str(&format!("        // Operation type: {}\n", fixture.operation_type));
         code.push_str(&format!("        // Endpoint: {}\n\n", fixture.endpoint));
 
-        // Build GraphQL query payload
-        code.push_str("        let query = r#\"\n");
-        code.push_str(&fixture.request.query);
-        code.push_str("\n        \"#;\n\n");
+        // Use request from fixture (single-step) or first step in sequence
+        let request = fixture.request.as_ref().or_else(|| {
+            fixture.request_sequence.as_ref().and_then(|seq| seq.first().map(|step| &step.request))
+        });
 
-        // Build request payload
-        code.push_str("        let mut payload = serde_json::json!({\n");
-        code.push_str("            \"query\": query,\n");
+        if let Some(req) = request {
+            // Build GraphQL query payload (optional for persisted queries)
+            if let Some(ref query) = req.query {
+                code.push_str("        let query = r#\"\n");
+                code.push_str(query);
+                code.push_str("\n        \"#;\n\n");
+            } else {
+                code.push_str("        let query: Option<&str> = None;\n\n");
+            }
 
-        if let Some(variables) = &fixture.request.variables {
-            code.push_str("            \"variables\": ");
-            code.push_str(&serde_json::to_string(variables)?);
-            code.push_str(",\n");
+            // Build request payload
+            code.push_str("        let mut payload = serde_json::json!({\n");
+            if req.query.is_some() {
+                code.push_str("            \"query\": query,\n");
+            } else {
+                code.push_str("            \"query\": null,\n");
+            }
+
+            if let Some(variables) = &req.variables {
+                code.push_str("            \"variables\": ");
+                code.push_str(&serde_json::to_string(variables)?);
+                code.push_str(",\n");
+            }
+
+            if let Some(op_name) = &req.operation_name {
+                code.push_str(&format!("            \"operationName\": \"{}\",\n", escape_rust_string(op_name)));
+            }
+
+            if let Some(extensions) = &req.extensions {
+                code.push_str("            \"extensions\": ");
+                code.push_str(&serde_json::to_string(extensions)?);
+                code.push_str(",\n");
+            }
+
+            code.push_str("        });\n\n");
         }
 
-        if let Some(op_name) = &fixture.request.operation_name {
-            code.push_str(&format!("            \"operationName\": \"{}\",\n", escape_rust_string(op_name)));
-        }
+        // Get expected response (from single fixture or sequence)
+        let expected_response = fixture.expected_response.as_ref().or_else(|| {
+            fixture.request_sequence.as_ref().and_then(|seq| seq.first().map(|step| &step.expected_response))
+        });
 
-        code.push_str("        });\n\n");
+        if let Some(resp) = expected_response {
+            // Expected status code
+            code.push_str(&format!(
+                "        // Expected status code: {}\n",
+                resp.status_code
+            ));
 
-        // Expected status code
-        code.push_str(&format!(
-            "        // Expected status code: {}\n",
-            fixture.expected_response.status_code
-        ));
+            // Validate expected response structure
+            if resp.data.is_some() {
+                code.push_str("        // Response should contain data field\n");
+            }
 
-        // Validate expected response structure
-        if fixture.expected_response.data.is_some() {
-            code.push_str("        // Response should contain data field\n");
-        }
-
-        if fixture.expected_response.errors.is_some() {
-            code.push_str("        // Response should contain errors field\n");
+            if resp.errors.is_some() {
+                code.push_str("        // Response should contain errors field\n");
+            }
         }
 
         code.push_str("    }\n\n");

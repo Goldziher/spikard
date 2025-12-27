@@ -1,0 +1,57 @@
+{
+  "name": "filtered_subscription",
+  "description": "Subscription with filter arguments to receive events matching specific status values",
+  "operation_type": "subscription",
+  "endpoint": "/graphql",
+  "schema": "enum OrderStatus {\n  PENDING\n  SHIPPED\n  DELIVERED\n  CANCELLED\n}\n\ntype Subscription {\n  orderUpdated(status: OrderStatus): Order!\n}\n\ntype Order {\n  id: ID!\n  orderId: String!\n  status: OrderStatus!\n  amount: Float!\n  updatedAt: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "subscription OnOrderUpdated($status: OrderStatus) {\n  orderUpdated(status: $status) {\n    id\n    orderId\n    status\n    amount\n    updatedAt\n  }\n}",
+    "variables": {
+      "status": "SHIPPED"
+    },
+    "operationName": "OnOrderUpdated",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "subscription OnOrderUpdated($status: OrderStatus) {\n  orderUpdated(status: $status) {\n    id\n    orderId\n    status\n    amount\n    updatedAt\n  }\n}",
+      "variables": {
+        "status": "SHIPPED"
+      },
+      "operationName": "OnOrderUpdated"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "orderUpdated": {
+        "id": "order-456",
+        "orderId": "ORD-2025-00123",
+        "status": "SHIPPED",
+        "amount": 149.99,
+        "updatedAt": "2025-12-27T11:30:00Z"
+      }
+    }
+  },
+  "resolvers": {
+    "Subscription.orderUpdated": {
+      "type": "mock_with_args",
+      "return_value": {
+        "id": "order-456",
+        "orderId": "ORD-2025-00123",
+        "status": "SHIPPED",
+        "amount": 149.99,
+        "updatedAt": "2025-12-27T11:30:00Z"
+      }
+    }
+  },
+  "tags": [
+    "subscriptions",
+    "websocket",
+    "filters",
+    "enums",
+    "arguments"
+  ]
+}

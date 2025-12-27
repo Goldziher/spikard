@@ -1,0 +1,48 @@
+{
+  "name": "transform_directive",
+  "description": "Custom @uppercase directive transforming field output to uppercase",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "directive @uppercase on FIELD\n\ntype Query {\n  message: String!\n  title: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  message @uppercase\n  title @uppercase\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  message @uppercase\n  title @uppercase\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "message": "HELLO FROM GRAPHQL",
+      "title": "WELCOME TO SPIKARD"
+    }
+  },
+  "resolvers": {
+    "Query.message": {
+      "type": "mock",
+      "return_value": "hello from GraphQL"
+    },
+    "Query.title": {
+      "type": "mock",
+      "return_value": "welcome to Spikard"
+    }
+  },
+  "directive_behaviors": {
+    "@uppercase": {
+      "description": "Transforms string output to uppercase",
+      "applicable_to": "String fields",
+      "example_input": "hello world",
+      "example_output": "HELLO WORLD"
+    }
+  },
+  "tags": [
+    "directives",
+    "transformation",
+    "formatting"
+  ]
+}

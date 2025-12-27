@@ -1,0 +1,100 @@
+{
+  "name": "dataloader_n_plus_one_prevention",
+  "description": "DataLoader preventing N+1 query problem by batching nested author loads",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  posts: [Post!]!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  content: String!\n  author: User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  posts {\n    id\n    title\n    content\n    author {\n      id\n      name\n      email\n    }\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  posts {\n    id\n    title\n    content\n    author {\n      id\n      name\n      email\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "posts": [
+        {
+          "id": "post-1",
+          "title": "GraphQL Basics",
+          "content": "Introduction to GraphQL...",
+          "author": {
+            "id": "user-1",
+            "name": "Alice Johnson",
+            "email": "alice@example.com"
+          }
+        },
+        {
+          "id": "post-2",
+          "title": "DataLoader Patterns",
+          "content": "Optimizing GraphQL queries...",
+          "author": {
+            "id": "user-2",
+            "name": "Bob Smith",
+            "email": "bob@example.com"
+          }
+        },
+        {
+          "id": "post-3",
+          "title": "Advanced GraphQL",
+          "content": "Custom directives and more...",
+          "author": {
+            "id": "user-1",
+            "name": "Alice Johnson",
+            "email": "alice@example.com"
+          }
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Query.posts": {
+      "type": "async_factory",
+      "factory_fn": "load_all_posts"
+    },
+    "Post.author": {
+      "type": "async_factory",
+      "factory_fn": "load_user_by_id_batched"
+    }
+  },
+  "n_plus_one_analysis": {
+    "scenario": "Fetch 3 posts with their authors",
+    "without_dataloader": {
+      "total_queries": 4,
+      "breakdown": {
+        "posts_query": 1,
+        "individual_author_queries": 3
+      },
+      "description": "Each post requires separate author lookup"
+    },
+    "with_dataloader": {
+      "total_queries": 2,
+      "breakdown": {
+        "posts_query": 1,
+        "batched_author_query": 1
+      },
+      "description": "Authors batched into single query despite appearing twice (user-1 appears in post-1 and post-3)"
+    },
+    "improvement": {
+      "queries_prevented": 2,
+      "efficiency_gain_percent": 50
+    }
+  },
+  "dataloader_features": {
+    "batching": true,
+    "caching": true,
+    "deduplication": "user-1 loaded once for posts 1 and 3",
+    "db_queries_expected": 2
+  },
+  "tags": [
+    "dataloader",
+    "n-plus-one",
+    "nested-queries",
+    "performance-optimization"
+  ]
+}

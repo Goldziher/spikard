@@ -1,0 +1,77 @@
+{
+  "name": "file_upload_with_variables",
+  "description": "Upload file with additional scalar variables in the same request",
+  "operation_type": "mutation",
+  "endpoint": "/graphql",
+  "schema": "scalar Upload\n\ntype Mutation {\n  uploadProfilePicture(userId: ID!, file: Upload!): User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n  profilePicture: File!\n}\n\ntype File {\n  id: ID!\n  filename: String!\n  mimetype: String!\n  size: Int!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "mutation UploadProfile($userId: ID!, $file: Upload!) {\n  uploadProfilePicture(userId: $userId, file: $file) {\n    id\n    name\n    email\n    profilePicture {\n      id\n      filename\n      mimetype\n      size\n    }\n  }\n}",
+    "variables": {
+      "userId": "user-123",
+      "file": null
+    },
+    "operationName": "UploadProfile"
+  },
+  "multipart_request": {
+    "description": "File upload with scalar variables combined",
+    "parts": {
+      "operations": {
+        "type": "form-data",
+        "name": "operations",
+        "content": "{\"query\": \"mutation UploadProfile($userId: ID!, $file: Upload!) { uploadProfilePicture(userId: $userId, file: $file) { id name email profilePicture { id filename mimetype size } } }\", \"variables\": {\"userId\": \"user-123\", \"file\": null}}"
+      },
+      "map": {
+        "type": "form-data",
+        "name": "map",
+        "content": "{\"0\": [\"variables.file\"]}"
+      },
+      "file": {
+        "type": "file",
+        "name": "0",
+        "filename": "profile.jpg",
+        "mimetype": "image/jpeg",
+        "content": "\u00ff\u00d8\u00ff\u00e0... mock JPEG data ..."
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "uploadProfilePicture": {
+        "id": "user-123",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "profilePicture": {
+          "id": "file-005",
+          "filename": "profile.jpg",
+          "mimetype": "image/jpeg",
+          "size": 24568
+        }
+      }
+    }
+  },
+  "resolvers": {
+    "Mutation.uploadProfilePicture": {
+      "type": "mock",
+      "return_value": {
+        "id": "user-123",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "profilePicture": {
+          "id": "file-005",
+          "filename": "profile.jpg",
+          "mimetype": "image/jpeg",
+          "size": 24568
+        }
+      }
+    }
+  },
+  "tags": [
+    "mutations",
+    "file-upload",
+    "multipart",
+    "variables"
+  ]
+}

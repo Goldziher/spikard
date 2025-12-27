@@ -1,0 +1,62 @@
+{
+  "name": "subscription_multiple_fields",
+  "description": "Multiple concurrent subscription fields in single query to test multiplexing and parallel event delivery",
+  "operation_type": "subscription",
+  "endpoint": "/graphql",
+  "schema": "type Subscription {\n  messageAdded: Message!\n  userOnline: UserStatus!\n}\n\ntype Message {\n  id: ID!\n  text: String!\n  author: String!\n}\n\ntype UserStatus {\n  userId: ID!\n  username: String!\n  isOnline: Boolean!\n  lastSeen: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "subscription MultiStream {\n  messageAdded {\n    id\n    text\n    author\n  }\n  userOnline {\n    userId\n    username\n    isOnline\n    lastSeen\n  }\n}",
+    "operationName": "MultiStream",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "subscription MultiStream {\n  messageAdded {\n    id\n    text\n    author\n  }\n  userOnline {\n    userId\n    username\n    isOnline\n    lastSeen\n  }\n}",
+      "operationName": "MultiStream"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "messageAdded": {
+        "id": "msg-101",
+        "text": "Hey everyone!",
+        "author": "alice"
+      },
+      "userOnline": {
+        "userId": "user-42",
+        "username": "bob",
+        "isOnline": true,
+        "lastSeen": "2025-12-27T13:00:00Z"
+      }
+    }
+  },
+  "resolvers": {
+    "Subscription.messageAdded": {
+      "type": "mock",
+      "return_value": {
+        "id": "msg-101",
+        "text": "Hey everyone!",
+        "author": "alice"
+      }
+    },
+    "Subscription.userOnline": {
+      "type": "mock",
+      "return_value": {
+        "userId": "user-42",
+        "username": "bob",
+        "isOnline": true,
+        "lastSeen": "2025-12-27T13:00:00Z"
+      }
+    }
+  },
+  "tags": [
+    "subscriptions",
+    "websocket",
+    "multiplexing",
+    "multiple-fields",
+    "concurrent"
+  ]
+}

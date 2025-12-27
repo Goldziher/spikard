@@ -1,0 +1,45 @@
+{
+  "name": "federation_error_missing_entity",
+  "description": "Entity not found - returns null in _entities array per Apollo Federation spec",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n}\n\nunion _Entity = Customer\n\ntype Customer @key(fields: \"id\") {\n  id: ID!\n  firstName: String!\n  lastName: String!\n  email: String!\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  _entities(representations: [{__typename: \"Customer\", id: \"999999\"}]) {\n    ... on Customer {\n      id\n      firstName\n      lastName\n      email\n    }\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  _entities(representations: [{__typename: \"Customer\", id: \"999999\"}]) {\n    ... on Customer {\n      id\n      firstName\n      lastName\n      email\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "_entities": [
+        null
+      ]
+    }
+  },
+  "resolvers": {
+    "Query._entities": {
+      "type": "factory",
+      "factory_fn": "resolve_entities_with_missing"
+    },
+    "Query._service": {
+      "type": "mock",
+      "return_value": {
+        "sdl": "type Customer @key(fields: \"id\") {\n  id: ID!\n  firstName: String!\n  lastName: String!\n  email: String!\n}"
+      }
+    }
+  },
+  "tags": [
+    "federation",
+    "error-handling",
+    "entity-resolution"
+  ],
+  "complexity_limit": 50,
+  "depth_limit": 3
+}

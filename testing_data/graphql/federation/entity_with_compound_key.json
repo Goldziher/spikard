@@ -1,0 +1,56 @@
+{
+  "name": "entity_with_compound_key",
+  "description": "Entity with compound @key directive spanning multiple fields",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n  product(sku: String!, category: String!): Product\n}\n\nunion _Entity = Product\n\ntype Product @key(fields: \"sku category\") {\n  sku: String!\n  category: String!\n  name: String!\n  description: String!\n  price: Float!\n  stock: Int!\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  _entities(representations: [{__typename: \"Product\", sku: \"ABC123\", category: \"electronics\"}]) {\n    ... on Product {\n      sku\n      category\n      name\n      description\n      price\n      stock\n    }\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  _entities(representations: [{__typename: \"Product\", sku: \"ABC123\", category: \"electronics\"}]) {\n    ... on Product {\n      sku\n      category\n      name\n      description\n      price\n      stock\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "_entities": [
+        {
+          "sku": "ABC123",
+          "category": "electronics",
+          "name": "Wireless Headphones",
+          "description": "Premium noise-cancelling wireless headphones",
+          "price": 199.99,
+          "stock": 45
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Query._entities": {
+      "type": "factory",
+      "factory_fn": "resolve_product_entities"
+    },
+    "Query._service": {
+      "type": "mock",
+      "return_value": {
+        "sdl": "type Product @key(fields: \"sku category\") {\n  sku: String!\n  category: String!\n  name: String!\n  description: String!\n  price: Float!\n  stock: Int!\n}"
+      }
+    },
+    "Query.product": {
+      "type": "factory",
+      "factory_fn": "resolve_product_by_sku_category"
+    }
+  },
+  "tags": [
+    "federation",
+    "compound-keys",
+    "entity-resolution"
+  ],
+  "complexity_limit": 80,
+  "depth_limit": 3
+}

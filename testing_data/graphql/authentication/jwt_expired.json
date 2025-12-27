@@ -1,0 +1,38 @@
+{
+  "name": "jwt_expired",
+  "description": "Query with expired JWT token",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  currentUser: User\n}\n\ntype User {\n  id: String!\n  email: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  currentUser {\n    id\n    email\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  currentUser {\n    id\n    email\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 401,
+    "errors": [
+      {
+        "message": "Token expired"
+      }
+    ]
+  },
+  "resolvers": {
+    "Query.currentUser": {
+      "type": "error",
+      "error_message": "Token expired"
+    }
+  },
+  "tags": [
+    "authentication",
+    "jwt",
+    "expired-token",
+    "error"
+  ]
+}

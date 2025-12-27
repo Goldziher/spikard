@@ -1,0 +1,38 @@
+{
+  "name": "api_key_invalid",
+  "description": "Query with invalid API key",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  secureData: String!\n}\n",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  secureData\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  secureData\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 401,
+    "errors": [
+      {
+        "message": "Invalid API key"
+      }
+    ]
+  },
+  "resolvers": {
+    "Query.secureData": {
+      "type": "error",
+      "error_message": "Invalid API key"
+    }
+  },
+  "tags": [
+    "authentication",
+    "api-key",
+    "invalid-key",
+    "error"
+  ]
+}

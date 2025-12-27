@@ -1,0 +1,45 @@
+{
+  "name": "mutation_permission_check",
+  "description": "Mutation requiring specific permission - user has READ but not DELETE",
+  "operation_type": "mutation",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  dummy: String\n}\n\ntype Mutation {\n  deleteUser(id: String!): DeleteResult!\n}\n\ntype DeleteResult {\n  success: Boolean!\n  message: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "mutation DeleteUser($userId: String!) {\n  deleteUser(id: $userId) {\n    success\n    message\n  }\n}",
+    "variables": {
+      "userId": "user123"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "mutation DeleteUser($userId: String!) {\n  deleteUser(id: $userId) {\n    success\n    message\n  }\n}",
+      "variables": {
+        "userId": "user123"
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 403,
+    "errors": [
+      {
+        "message": "Missing required permission: DELETE"
+      }
+    ]
+  },
+  "resolvers": {
+    "Mutation.deleteUser": {
+      "type": "error",
+      "error_message": "Missing required permission: DELETE"
+    }
+  },
+  "tags": [
+    "authorization",
+    "permissions",
+    "mutation",
+    "denied",
+    "error"
+  ]
+}

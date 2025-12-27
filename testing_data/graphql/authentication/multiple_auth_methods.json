@@ -1,0 +1,43 @@
+{
+  "name": "multiple_auth_methods",
+  "description": "Query with multiple auth headers present (JWT and API key) - should use JWT",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  currentUser: User\n}\n\ntype User {\n  id: String!\n  email: String!\n  authMethod: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  currentUser {\n    id\n    email\n    authMethod\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  currentUser {\n    id\n    email\n    authMethod\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "currentUser": {
+        "id": "user123",
+        "email": "john@example.com",
+        "authMethod": "jwt"
+      }
+    }
+  },
+  "resolvers": {
+    "Query.currentUser": {
+      "type": "mock",
+      "return_value": {
+        "id": "user123",
+        "email": "john@example.com",
+        "authMethod": "jwt"
+      }
+    }
+  },
+  "tags": [
+    "authentication",
+    "multiple-methods",
+    "priority"
+  ]
+}

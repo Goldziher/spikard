@@ -425,59 +425,109 @@
 		}
 	},
 	"fixture_coverage_summary": {
-		"total_fixture_files": 20,
-		"total_test_cases": 64,
+		"total_fixture_files": 77,
+		"total_test_cases": 77,
 		"directory_breakdown": {
-			"core_queries": {
+			"authentication": {
+				"count": 8,
+				"test_cases": 8,
+				"description": "Authentication mechanisms: API keys, JWT, sessions, OAuth"
+			},
+			"authorization": {
+				"count": 8,
+				"test_cases": 8,
+				"description": "Authorization and access control: role-based, directive-based, field-level"
+			},
+			"dataloader": {
+				"count": 8,
+				"test_cases": 8,
+				"description": "DataLoader pattern for N+1 query prevention and batch resolution"
+			},
+			"directives": {
+				"count": 6,
+				"test_cases": 6,
+				"description": "GraphQL custom directives: caching, validation, transformation, rate limiting"
+			},
+			"federation": {
+				"count": 10,
+				"test_cases": 10,
+				"description": "Apollo Federation subgraph support: @key, @external, @requires, @provides, entity resolution"
+			},
+			"persisted": {
+				"count": 6,
+				"test_cases": 6,
+				"description": "Persisted query patterns: allowlist, hash verification, registration, caching"
+			},
+			"subscriptions": {
+				"count": 8,
+				"test_cases": 8,
+				"description": "WebSocket subscriptions: simple, filtered, with authentication, connection parameters"
+			},
+			"upload": {
+				"count": 6,
+				"test_cases": 6,
+				"description": "File upload handling: single file, multiple files, stream processing"
+			},
+			"queries": {
 				"count": 3,
-				"test_cases": 7,
+				"test_cases": 3,
 				"description": "Basic field selection and query operations"
 			},
 			"mutations": {
 				"count": 3,
-				"test_cases": 8,
+				"test_cases": 3,
 				"description": "Data mutation operations (create, update, delete)"
 			},
 			"validation": {
 				"count": 2,
-				"test_cases": 14,
-				"description": "Input validation and scalar constraints"
+				"test_cases": 2,
+				"description": "Input validation and constraint testing"
 			},
 			"scalars": {
 				"count": 3,
-				"test_cases": 10,
-				"description": "Custom scalar type handling"
+				"test_cases": 3,
+				"description": "Custom scalar type handling (DateTime, UUID, JSON)"
 			},
 			"errors": {
 				"count": 4,
-				"test_cases": 14,
+				"test_cases": 4,
 				"description": "Error handling and error reporting"
 			},
 			"edge_cases": {
-				"count": 6,
-				"test_cases": 17,
+				"count": 2,
+				"test_cases": 2,
 				"description": "Complex queries and protocol boundaries"
 			}
 		},
 		"standards_compliance": [
 			"GraphQL Specification (October 2021)",
 			"GraphQL Schema Definition Language (SDL)",
+			"Apollo Federation Specification",
 			"HTTP/1.1 - Transport layer",
+			"WebSocket Protocol (RFC 6455)",
 			"JSON (RFC 8259) - Data format"
 		],
 		"coverage_areas": [
-			"Query operations with field selection",
+			"Basic query operations with field selection",
 			"Arguments and variable substitution",
 			"Nested object resolution",
-			"Mutation operations",
-			"Input type validation",
-			"Custom scalar types",
+			"Mutation operations (create, update, delete)",
+			"Input type validation and constraints",
+			"Custom scalar types (DateTime, UUID, JSON)",
 			"Error reporting and location tracking",
 			"Field resolution errors",
 			"Type validation and coercion",
 			"Depth and complexity limits",
+			"Authentication (API keys, JWT, sessions)",
+			"Authorization and access control",
+			"Apollo Federation (entity resolution, references)",
+			"Custom directives (caching, validation, rate limiting)",
+			"WebSocket subscriptions and streaming",
+			"File uploads (single and multipart)",
+			"Persisted queries and query allowlisting",
+			"DataLoader batch resolution",
 			"Fragment handling",
-			"Directives (@skip, @include)",
+			"Directives (@skip, @include, @deprecated)",
 			"Field aliases",
 			"Multi-operation requests"
 		]

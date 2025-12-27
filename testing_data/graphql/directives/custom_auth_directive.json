@@ -1,0 +1,75 @@
+{
+  "name": "custom_auth_directive",
+  "description": "Custom @auth directive enforcing authorization rules based on user role",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "enum Role {\n  ADMIN\n  MODERATOR\n  USER\n}\n\ndirective @auth(requires: Role!) on FIELD_DEFINITION\n\ntype Query {\n  publicData: String!\n  secretData: String! @auth(requires: ADMIN)\n  moderatorData: String! @auth(requires: MODERATOR)\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  publicData\n  secretData\n  moderatorData\n}",
+    "variables": null,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  publicData\n  secretData\n  moderatorData\n}",
+      "variables": null
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "publicData": "Anyone can see this",
+      "secretData": null,
+      "moderatorData": null
+    },
+    "errors": [
+      {
+        "message": "Unauthorized: User role USER cannot access ADMIN field",
+        "path": [
+          "secretData"
+        ],
+        "extensions": {
+          "code": "FORBIDDEN",
+          "required_role": "ADMIN",
+          "user_role": "USER"
+        }
+      },
+      {
+        "message": "Unauthorized: User role USER cannot access MODERATOR field",
+        "path": [
+          "moderatorData"
+        ],
+        "extensions": {
+          "code": "FORBIDDEN",
+          "required_role": "MODERATOR",
+          "user_role": "USER"
+        }
+      }
+    ]
+  },
+  "resolvers": {
+    "Query.publicData": {
+      "type": "mock",
+      "return_value": "Anyone can see this"
+    },
+    "Query.secretData": {
+      "type": "mock",
+      "return_value": "Admin only data"
+    },
+    "Query.moderatorData": {
+      "type": "mock",
+      "return_value": "Moderator data"
+    }
+  },
+  "context": {
+    "user_role": "USER",
+    "authenticated": true
+  },
+  "tags": [
+    "directives",
+    "authorization",
+    "security"
+  ]
+}

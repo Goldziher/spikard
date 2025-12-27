@@ -1,0 +1,52 @@
+{
+  "name": "entity_resolution_basic",
+  "description": "Basic _entities query for Apollo Federation entity resolution",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n}\n\nunion _Entity = User\n\ntype User @key(fields: \"id\") {\n  id: ID!\n  name: String!\n  email: String!\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  _entities(representations: [{__typename: \"User\", id: \"1\"}]) {\n    ... on User {\n      id\n      name\n      email\n    }\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  _entities(representations: [{__typename: \"User\", id: \"1\"}]) {\n    ... on User {\n      id\n      name\n      email\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "_entities": [
+        {
+          "id": "1",
+          "name": "Alice Johnson",
+          "email": "alice@example.com"
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Query._entities": {
+      "type": "factory",
+      "factory_fn": "resolve_entities_basic"
+    },
+    "Query._service": {
+      "type": "mock",
+      "return_value": {
+        "sdl": "type User @key(fields: \"id\") {\n  id: ID!\n  name: String!\n  email: String!\n}"
+      }
+    },
+    "User": {
+      "type": "factory",
+      "factory_fn": "resolve_user_entity"
+    }
+  },
+  "tags": [
+    "federation",
+    "entity-resolution"
+  ],
+  "complexity_limit": 50,
+  "depth_limit": 5
+}

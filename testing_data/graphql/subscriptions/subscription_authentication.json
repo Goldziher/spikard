@@ -1,0 +1,42 @@
+{
+  "name": "subscription_authentication",
+  "description": "Subscription to private messages that requires authentication token in headers, returns 401 when auth is missing",
+  "operation_type": "subscription",
+  "endpoint": "/graphql",
+  "schema": "type Subscription {\n  privateMessages: Message!\n}\n\ntype Message {\n  id: ID!\n  from: String!\n  content: String!\n  isPrivate: Boolean!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "subscription {\n  privateMessages {\n    id\n    from\n    content\n    isPrivate\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "subscription {\n  privateMessages {\n    id\n    from\n    content\n    isPrivate\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 401,
+    "data": null,
+    "graphql": {
+      "errors": [
+        {
+          "message": "Unauthorized: Missing authentication token"
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Subscription.privateMessages": {
+      "type": "error",
+      "error_message": "Unauthorized: Missing authentication token"
+    }
+  },
+  "tags": [
+    "subscriptions",
+    "websocket",
+    "authentication",
+    "security",
+    "error-handling"
+  ]
+}

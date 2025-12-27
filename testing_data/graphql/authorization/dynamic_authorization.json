@@ -1,0 +1,45 @@
+{
+  "name": "dynamic_authorization",
+  "description": "Authorization based on resource state - only post author or admin can approve",
+  "operation_type": "mutation",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  dummy: String\n}\n\ntype Mutation {\n  approvePost(id: String!): ApproveResult!\n}\n\ntype ApproveResult {\n  success: Boolean!\n  postId: String!\n  status: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "mutation ApprovePost($postId: String!) {\n  approvePost(id: $postId) {\n    success\n    postId\n    status\n  }\n}",
+    "variables": {
+      "postId": "post123"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "mutation ApprovePost($postId: String!) {\n  approvePost(id: $postId) {\n    success\n    postId\n    status\n  }\n}",
+      "variables": {
+        "postId": "post123"
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 403,
+    "errors": [
+      {
+        "message": "Only post author or admin can approve posts"
+      }
+    ]
+  },
+  "resolvers": {
+    "Mutation.approvePost": {
+      "type": "error",
+      "error_message": "Only post author or admin can approve posts"
+    }
+  },
+  "tags": [
+    "authorization",
+    "dynamic",
+    "resource-state",
+    "mutation",
+    "error"
+  ]
+}

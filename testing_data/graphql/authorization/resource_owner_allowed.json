@@ -1,0 +1,57 @@
+{
+  "name": "resource_owner_allowed",
+  "description": "User accessing their own resource - allowed",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  user(id: String!): User\n}\n\ntype User {\n  id: String!\n  profile: UserProfile!\n  email: String!\n}\n\ntype UserProfile {\n  bio: String\n  website: String\n  joinDate: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query GetUserProfile($userId: String!) {\n  user(id: $userId) {\n    id\n    profile {\n      bio\n      website\n      joinDate\n    }\n  }\n}",
+    "variables": {
+      "userId": "user123"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query GetUserProfile($userId: String!) {\n  user(id: $userId) {\n    id\n    profile {\n      bio\n      website\n      joinDate\n    }\n  }\n}",
+      "variables": {
+        "userId": "user123"
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "user": {
+        "id": "user123",
+        "profile": {
+          "bio": "Software engineer from San Francisco",
+          "website": "https://example.com",
+          "joinDate": "2020-01-15"
+        }
+      }
+    }
+  },
+  "resolvers": {
+    "Query.user": {
+      "type": "mock",
+      "return_value": {
+        "id": "user123",
+        "profile": {
+          "bio": "Software engineer from San Francisco",
+          "website": "https://example.com",
+          "joinDate": "2020-01-15"
+        },
+        "email": "john@example.com"
+      }
+    }
+  },
+  "tags": [
+    "authorization",
+    "resource-ownership",
+    "allowed",
+    "ownership-check"
+  ]
+}

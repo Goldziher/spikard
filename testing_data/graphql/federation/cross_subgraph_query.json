@@ -1,0 +1,71 @@
+{
+  "name": "cross_subgraph_query",
+  "description": "Query spanning multiple subgraphs with federation entity references",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n  user(id: ID!): User\n}\n\nunion _Entity = User | Order\n\ntype User @key(fields: \"id\") {\n  id: ID!\n  name: String!\n  email: String!\n  orders: [Order!]!\n}\n\ntype Order @key(fields: \"id\") {\n  id: ID!\n  orderId: String!\n  total: Float!\n  status: String!\n  createdAt: String!\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  user(id: \"usr-42\") {\n    id\n    name\n    email\n    orders {\n      id\n      orderId\n      total\n      status\n      createdAt\n    }\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  user(id: \"usr-42\") {\n    id\n    name\n    email\n    orders {\n      id\n      orderId\n      total\n      status\n      createdAt\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "user": {
+        "id": "usr-42",
+        "name": "Emma Wilson",
+        "email": "emma@example.com",
+        "orders": [
+          {
+            "id": "order-101",
+            "orderId": "ORD-2024-001",
+            "total": 149.99,
+            "status": "DELIVERED",
+            "createdAt": "2024-01-15T10:30:00Z"
+          },
+          {
+            "id": "order-102",
+            "orderId": "ORD-2024-002",
+            "total": 89.5,
+            "status": "PROCESSING",
+            "createdAt": "2024-12-20T14:22:00Z"
+          }
+        ]
+      }
+    }
+  },
+  "resolvers": {
+    "Query._entities": {
+      "type": "factory",
+      "factory_fn": "resolve_federated_entities"
+    },
+    "Query._service": {
+      "type": "mock",
+      "return_value": {
+        "sdl": "type User @key(fields: \"id\") {\n  id: ID!\n  name: String!\n  email: String!\n  orders: [Order!]!\n}\n\ntype Order @key(fields: \"id\") {\n  id: ID!\n  orderId: String!\n  total: Float!\n  status: String!\n  createdAt: String!\n}"
+      }
+    },
+    "Query.user": {
+      "type": "factory",
+      "factory_fn": "resolve_user_with_orders"
+    },
+    "User.orders": {
+      "type": "factory",
+      "factory_fn": "resolve_user_orders"
+    }
+  },
+  "tags": [
+    "federation",
+    "cross-subgraph",
+    "entity-references"
+  ],
+  "complexity_limit": 200,
+  "depth_limit": 5
+}

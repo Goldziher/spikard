@@ -1,0 +1,108 @@
+{
+  "name": "file_upload_multipart_spec",
+  "description": "GraphQL multipart request spec compliance test (RFC 2388, graphql-multipart-request-spec)",
+  "operation_type": "mutation",
+  "endpoint": "/graphql",
+  "schema": "scalar Upload\n\ntype Mutation {\n  uploadDocument(title: String!, files: [Upload!]!): Document!\n}\n\ntype Document {\n  id: ID!\n  title: String!\n  files: [File!]!\n  uploadedAt: String!\n}\n\ntype File {\n  id: ID!\n  filename: String!\n  mimetype: String!\n  size: Int!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "mutation UploadDocument($title: String!, $files: [Upload!]!) {\n  uploadDocument(title: $title, files: $files) {\n    id\n    title\n    files {\n      id\n      filename\n      mimetype\n      size\n    }\n    uploadedAt\n  }\n}",
+    "variables": {
+      "title": "Important Documents",
+      "files": [
+        null,
+        null
+      ]
+    },
+    "operationName": "UploadDocument"
+  },
+  "multipart_request": {
+    "description": "Fully compliant graphql-multipart-request-spec implementation",
+    "specification": "https://github.com/jaydenseric/graphql-multipart-request-spec",
+    "parts": {
+      "operations": {
+        "type": "form-data",
+        "name": "operations",
+        "content": "{\"query\": \"mutation UploadDocument($title: String!, $files: [Upload!]!) { uploadDocument(title: $title, files: $files) { id title files { id filename mimetype size } uploadedAt } }\", \"variables\": {\"title\": \"Important Documents\", \"files\": [null, null]}}"
+      },
+      "map": {
+        "type": "form-data",
+        "name": "map",
+        "content": "{\"0\": [\"variables.files.0\"], \"1\": [\"variables.files.1\"]}"
+      },
+      "file1": {
+        "type": "file",
+        "name": "0",
+        "filename": "contract.pdf",
+        "mimetype": "application/pdf",
+        "content": "%PDF-1.4\n... PDF content for testing multipart spec compliance ..."
+      },
+      "file2": {
+        "type": "file",
+        "name": "1",
+        "filename": "summary.txt",
+        "mimetype": "text/plain",
+        "content": "This document summarizes the contract terms and conditions."
+      }
+    },
+    "headers": {
+      "Content-Type": "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "uploadDocument": {
+        "id": "doc-001",
+        "title": "Important Documents",
+        "files": [
+          {
+            "id": "file-006",
+            "filename": "contract.pdf",
+            "mimetype": "application/pdf",
+            "size": 88
+          },
+          {
+            "id": "file-007",
+            "filename": "summary.txt",
+            "mimetype": "text/plain",
+            "size": 65
+          }
+        ],
+        "uploadedAt": "2025-12-27T14:30:00Z"
+      }
+    }
+  },
+  "resolvers": {
+    "Mutation.uploadDocument": {
+      "type": "mock",
+      "return_value": {
+        "id": "doc-001",
+        "title": "Important Documents",
+        "files": [
+          {
+            "id": "file-006",
+            "filename": "contract.pdf",
+            "mimetype": "application/pdf",
+            "size": 88
+          },
+          {
+            "id": "file-007",
+            "filename": "summary.txt",
+            "mimetype": "text/plain",
+            "size": 65
+          }
+        ],
+        "uploadedAt": "2025-12-27T14:30:00Z"
+      }
+    }
+  },
+  "tags": [
+    "mutations",
+    "file-upload",
+    "multipart",
+    "spec-compliance",
+    "rfc2388"
+  ]
+}

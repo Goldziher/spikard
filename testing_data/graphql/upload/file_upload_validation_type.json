@@ -1,0 +1,78 @@
+{
+  "name": "file_upload_validation_type",
+  "description": "File upload with invalid file type (expects image, receives text)",
+  "operation_type": "mutation",
+  "endpoint": "/graphql",
+  "schema": "scalar Upload\n\ntype Mutation {\n  uploadImage(file: Upload!): Image!\n}\n\ntype Image {\n  id: ID!\n  filename: String!\n  mimetype: String!\n  width: Int!\n  height: Int!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "mutation UploadImage($file: Upload!) {\n  uploadImage(file: $file) {\n    id\n    filename\n    mimetype\n    width\n    height\n  }\n}",
+    "variables": {
+      "file": null
+    },
+    "operationName": "UploadImage"
+  },
+  "multipart_request": {
+    "description": "Text file uploaded when image is expected",
+    "parts": {
+      "operations": {
+        "type": "form-data",
+        "name": "operations",
+        "content": "{\"query\": \"mutation UploadImage($file: Upload!) { uploadImage(file: $file) { id filename mimetype width height } }\", \"variables\": {\"file\": null}}"
+      },
+      "map": {
+        "type": "form-data",
+        "name": "map",
+        "content": "{\"0\": [\"variables.file\"]}"
+      },
+      "file": {
+        "type": "file",
+        "name": "0",
+        "filename": "document.txt",
+        "mimetype": "text/plain",
+        "content": "This is a plain text file, not an image."
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 400,
+    "errors": [
+      {
+        "message": "Invalid file type",
+        "extensions": {
+          "code": "INVALID_FILE_TYPE",
+          "expected": [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+          ],
+          "received": "text/plain"
+        }
+      }
+    ]
+  },
+  "resolvers": {
+    "Mutation.uploadImage": {
+      "type": "error",
+      "error_message": "Invalid file type",
+      "error_extensions": {
+        "code": "INVALID_FILE_TYPE",
+        "expected": [
+          "image/jpeg",
+          "image/png",
+          "image/gif",
+          "image/webp"
+        ],
+        "received": "text/plain"
+      }
+    }
+  },
+  "tags": [
+    "mutations",
+    "file-upload",
+    "validation",
+    "type-check"
+  ]
+}

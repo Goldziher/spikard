@@ -1,0 +1,104 @@
+{
+  "name": "dataloader_batch_users",
+  "description": "DataLoader batch loading multiple users in a single database call",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  users(ids: [ID!]!): [User!]!\n  user(id: ID!): User\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n  age: Int\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n    age\n  }\n}",
+    "variables": {
+      "ids": [
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n    age\n  }\n}",
+      "variables": {
+        "ids": [
+          "1",
+          "2",
+          "3"
+        ]
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "users": [
+        {
+          "id": "1",
+          "name": "Alice Johnson",
+          "email": "alice@example.com",
+          "age": 28
+        },
+        {
+          "id": "2",
+          "name": "Bob Smith",
+          "email": "bob@example.com",
+          "age": 34
+        },
+        {
+          "id": "3",
+          "name": "Carol Davis",
+          "email": "carol@example.com",
+          "age": 26
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Query.users": {
+      "type": "async_factory",
+      "factory_fn": "batch_load_users"
+    },
+    "User.id": {
+      "type": "mock",
+      "return_value": null
+    },
+    "User.name": {
+      "type": "mock",
+      "return_value": null
+    },
+    "User.email": {
+      "type": "mock",
+      "return_value": null
+    },
+    "User.age": {
+      "type": "mock",
+      "return_value": null
+    }
+  },
+  "dataloader_behavior": {
+    "batching_enabled": true,
+    "batch_scheduler": "per_request",
+    "batch_size_limit": null,
+    "cache_enabled": true,
+    "db_queries_expected": 1,
+    "description": "All three users loaded with single batched query instead of 3 separate queries"
+  },
+  "performance_metrics": {
+    "without_dataloader": {
+      "database_queries": 3,
+      "query_time_ms": 30
+    },
+    "with_dataloader": {
+      "database_queries": 1,
+      "query_time_ms": 12,
+      "improvement_percent": 60
+    }
+  },
+  "tags": [
+    "dataloader",
+    "batching",
+    "performance",
+    "query-optimization"
+  ]
+}

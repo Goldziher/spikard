@@ -1,0 +1,65 @@
+{
+  "name": "single_file_upload",
+  "description": "Upload a single file via GraphQL multipart request",
+  "operation_type": "mutation",
+  "endpoint": "/graphql",
+  "schema": "scalar Upload\n\ntype Mutation {\n  singleUpload(file: Upload!): File!\n}\n\ntype File {\n  id: ID!\n  filename: String!\n  mimetype: String!\n  size: Int!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "mutation Upload($file: Upload!) {\n  singleUpload(file: $file) {\n    id\n    filename\n    mimetype\n    size\n  }\n}",
+    "variables": {
+      "file": null
+    },
+    "operationName": "Upload"
+  },
+  "multipart_request": {
+    "description": "GraphQL multipart form request following https://github.com/jaydenseric/graphql-multipart-request-spec",
+    "parts": {
+      "operations": {
+        "type": "form-data",
+        "name": "operations",
+        "content": "{\"query\": \"mutation Upload($file: Upload!) { singleUpload(file: $file) { id filename mimetype size } }\", \"variables\": {\"file\": null}}"
+      },
+      "map": {
+        "type": "form-data",
+        "name": "map",
+        "content": "{\"0\": [\"variables.file\"]}"
+      },
+      "file": {
+        "type": "file",
+        "name": "0",
+        "filename": "test.txt",
+        "mimetype": "text/plain",
+        "content": "This is a test file for GraphQL upload."
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "singleUpload": {
+        "id": "file-001",
+        "filename": "test.txt",
+        "mimetype": "text/plain",
+        "size": 39
+      }
+    }
+  },
+  "resolvers": {
+    "Mutation.singleUpload": {
+      "type": "mock",
+      "return_value": {
+        "id": "file-001",
+        "filename": "test.txt",
+        "mimetype": "text/plain",
+        "size": 39
+      }
+    }
+  },
+  "tags": [
+    "mutations",
+    "file-upload",
+    "multipart"
+  ]
+}

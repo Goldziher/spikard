@@ -1,0 +1,66 @@
+{
+  "name": "rate_limit_directive",
+  "description": "Custom @rateLimit directive enforcing request rate limiting on expensive fields",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "directive @rateLimit(max: Int!, window: Int!) on FIELD_DEFINITION\n\ntype Query {\n  publicQuery: String!\n  expensiveQuery: String! @rateLimit(max: 10, window: 60)\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  expensiveQuery\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  expensiveQuery\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "expensiveQuery": "Result from expensive computation"
+    },
+    "extensions": {
+      "rateLimit": {
+        "remaining": 9,
+        "limit": 10,
+        "reset_in_seconds": 60
+      }
+    }
+  },
+  "resolvers": {
+    "Query.publicQuery": {
+      "type": "mock",
+      "return_value": "Public data"
+    },
+    "Query.expensiveQuery": {
+      "type": "async_factory",
+      "factory_fn": "expensive_computation"
+    }
+  },
+  "rate_limit_scenarios": [
+    {
+      "name": "First request succeeds",
+      "request_count": 1,
+      "expected_status": 200,
+      "remaining": 9
+    },
+    {
+      "name": "Tenth request succeeds",
+      "request_count": 10,
+      "expected_status": 200,
+      "remaining": 0
+    },
+    {
+      "name": "Eleventh request rate limited",
+      "request_count": 11,
+      "expected_status": 429,
+      "error_message": "Rate limit exceeded for expensiveQuery (10 requests per 60 seconds)"
+    }
+  ],
+  "tags": [
+    "directives",
+    "rate-limiting",
+    "performance"
+  ]
+}

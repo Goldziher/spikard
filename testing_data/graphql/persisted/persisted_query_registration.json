@@ -1,0 +1,95 @@
+{
+  "name": "persisted_query_registration",
+  "description": "Register new persisted query - first request with both query string and hash, server caches it",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  posts(userId: ID!): [Post!]!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  content: String!\n  author: User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query GetUserPosts($userId: ID!) {\n  posts(userId: $userId) {\n    id\n    title\n    content\n    author {\n      id\n      name\n    }\n  }\n}",
+    "variables": {
+      "userId": "user-789"
+    },
+    "extensions": {
+      "persistedQuery": {
+        "version": 1,
+        "sha256Hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      }
+    },
+    "operationName": "GetUserPosts",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query GetUserPosts($userId: ID!) {\n  posts(userId: $userId) {\n    id\n    title\n    content\n    author {\n      id\n      name\n    }\n  }\n}",
+      "variables": {
+        "userId": "user-789"
+      },
+      "operationName": "GetUserPosts",
+      "extensions": {
+        "persistedQuery": {
+          "version": 1,
+          "sha256Hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        }
+      }
+    }
+  },
+  "request_notes": "First request includes full query string AND hash. Server stores for future APQ requests with hash only.",
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "posts": [
+        {
+          "id": "post-1",
+          "title": "GraphQL Best Practices",
+          "content": "Understanding GraphQL query optimization...",
+          "author": {
+            "id": "user-789",
+            "name": "Bob Johnson"
+          }
+        },
+        {
+          "id": "post-2",
+          "title": "Persisted Queries Guide",
+          "content": "How to implement persisted queries for performance...",
+          "author": {
+            "id": "user-789",
+            "name": "Bob Johnson"
+          }
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Query.posts": {
+      "type": "mock",
+      "return_value": [
+        {
+          "id": "post-1",
+          "title": "GraphQL Best Practices",
+          "content": "Understanding GraphQL query optimization...",
+          "author": {
+            "id": "user-789",
+            "name": "Bob Johnson"
+          }
+        },
+        {
+          "id": "post-2",
+          "title": "Persisted Queries Guide",
+          "content": "How to implement persisted queries for performance...",
+          "author": {
+            "id": "user-789",
+            "name": "Bob Johnson"
+          }
+        }
+      ]
+    }
+  },
+  "tags": [
+    "queries",
+    "persisted-queries",
+    "registration",
+    "apq"
+  ]
+}

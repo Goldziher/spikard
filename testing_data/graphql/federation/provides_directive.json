@@ -1,0 +1,73 @@
+{
+  "name": "provides_directive",
+  "description": "Field with @provides directive for optimized nested field resolution",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n}\n\nunion _Entity = Post\n\ntype Post @key(fields: \"id\") {\n  id: ID!\n  title: String!\n  content: String!\n  reviews: [Review!]! @provides(fields: \"author { id name }\")\n}\n\ntype Review {\n  id: ID!\n  rating: Int!\n  text: String!\n  author: User!\n}\n\ntype User @key(fields: \"id\") {\n  id: ID!\n  name: String!\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  _entities(representations: [{__typename: \"Post\", id: \"post-123\"}]) {\n    ... on Post {\n      id\n      title\n      content\n      reviews {\n        id\n        rating\n        text\n        author {\n          id\n          name\n        }\n      }\n    }\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  _entities(representations: [{__typename: \"Post\", id: \"post-123\"}]) {\n    ... on Post {\n      id\n      title\n      content\n      reviews {\n        id\n        rating\n        text\n        author {\n          id\n          name\n        }\n      }\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "_entities": [
+        {
+          "id": "post-123",
+          "title": "Getting Started with GraphQL Federation",
+          "content": "Learn how to build scalable microservices...",
+          "reviews": [
+            {
+              "id": "rev-001",
+              "rating": 5,
+              "text": "Excellent post!",
+              "author": {
+                "id": "user-1",
+                "name": "Charlie Brown"
+              }
+            },
+            {
+              "id": "rev-002",
+              "rating": 4,
+              "text": "Very helpful",
+              "author": {
+                "id": "user-2",
+                "name": "Diana Prince"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Query._entities": {
+      "type": "factory",
+      "factory_fn": "resolve_post_entities_with_provides"
+    },
+    "Query._service": {
+      "type": "mock",
+      "return_value": {
+        "sdl": "type Post @key(fields: \"id\") {\n  id: ID!\n  title: String!\n  content: String!\n  reviews: [Review!]! @provides(fields: \"author { id name }\")\n}\n\ntype Review {\n  id: ID!\n  rating: Int!\n  text: String!\n  author: User!\n}\n\ntype User @key(fields: \"id\") {\n  id: ID!\n  name: String!\n}"
+      }
+    },
+    "Post.reviews": {
+      "type": "factory",
+      "factory_fn": "resolve_post_reviews"
+    }
+  },
+  "tags": [
+    "federation",
+    "provides-directive",
+    "field-optimization"
+  ],
+  "complexity_limit": 150,
+  "depth_limit": 5
+}

@@ -1,0 +1,118 @@
+{
+  "name": "dataloader_custom_key",
+  "description": "DataLoader using custom cache key (slug) instead of traditional ID for lookup",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  productBySlug(slug: String!): Product\n  productsByCategory(category: String!): [Product!]!\n}\n\ntype Product {\n  id: ID!\n  name: String!\n  slug: String!\n  price: Float!\n  category: String!\n  description: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query GetProduct($slug: String!) {\n  productBySlug(slug: $slug) {\n    id\n    name\n    slug\n    price\n    category\n    description\n  }\n}",
+    "variables": {
+      "slug": "laptop-pro-2025"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query GetProduct($slug: String!) {\n  productBySlug(slug: $slug) {\n    id\n    name\n    slug\n    price\n    category\n    description\n  }\n}",
+      "variables": {
+        "slug": "laptop-pro-2025"
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "productBySlug": {
+        "id": "prod-1",
+        "name": "Professional Laptop",
+        "slug": "laptop-pro-2025",
+        "price": 1299.99,
+        "category": "electronics",
+        "description": "High-performance laptop for professionals"
+      }
+    }
+  },
+  "resolvers": {
+    "Query.productBySlug": {
+      "type": "async_factory",
+      "factory_fn": "load_product_by_slug_batched"
+    },
+    "Query.productsByCategory": {
+      "type": "async_factory",
+      "factory_fn": "load_products_by_category_batched"
+    }
+  },
+  "custom_key_configuration": {
+    "primary_key": "slug",
+    "description": "Using slug string as DataLoader cache key instead of numeric ID",
+    "use_cases": [
+      "SEO-friendly URL lookups",
+      "Business logic keyed by names/codes",
+      "Composite keys (tenant_id + slug)"
+    ],
+    "implementation": {
+      "key_extraction": "slug parameter from resolver args",
+      "cache_key_format": "slug_string",
+      "examples": [
+        "laptop-pro-2025",
+        "gaming-mouse-rgb",
+        "wireless-keyboard"
+      ]
+    }
+  },
+  "slug_based_scenarios": [
+    {
+      "name": "Direct slug lookup",
+      "slug": "laptop-pro-2025",
+      "expected_id": "prod-1",
+      "db_query_key": "slug"
+    },
+    {
+      "name": "Repeated slug requests",
+      "requests": [
+        {
+          "slug": "laptop-pro-2025"
+        },
+        {
+          "slug": "laptop-pro-2025"
+        }
+      ],
+      "db_queries": 1,
+      "cache_hits": 1,
+      "description": "Second request served from cache"
+    },
+    {
+      "name": "Multiple slug lookups",
+      "slugs": [
+        "laptop-pro-2025",
+        "gaming-mouse-rgb",
+        "wireless-keyboard"
+      ],
+      "db_queries": 1,
+      "batching": true,
+      "description": "All three product lookups batched into single query by slug"
+    }
+  ],
+  "alternative_cache_keys": [
+    {
+      "key_type": "slug",
+      "description": "Product slug string"
+    },
+    {
+      "key_type": "sku",
+      "description": "Stock keeping unit"
+    },
+    {
+      "key_type": "composite_tenant_slug",
+      "description": "Combination of tenant ID and product slug for multi-tenancy"
+    }
+  ],
+  "tags": [
+    "dataloader",
+    "custom-keys",
+    "slug-based",
+    "non-id-lookups"
+  ]
+}

@@ -1,53 +1,69 @@
 {
-	"name": "datetime_scalar",
-	"description": "Custom DateTime scalar type handling with ISO 8601 format validation",
-	"operation_type": "query",
-	"endpoint": "/graphql",
-	"schema": "scalar DateTime\n\ntype Query {\n  events(since: DateTime, until: DateTime): [Event!]!\n}\n\ntype Event {\n  id: ID!\n  title: String!\n  scheduledAt: DateTime!\n  completedAt: DateTime\n}",
-	"request": {
-		"query": "query GetEvents($since: DateTime, $until: DateTime) {\n  events(since: $since, until: $until) {\n    id\n    title\n    scheduledAt\n    completedAt\n  }\n}",
-		"variables": {
-			"since": "2025-01-01T00:00:00Z",
-			"until": "2025-12-31T23:59:59Z"
-		}
-	},
-	"expected_response": {
-		"status_code": 200,
-		"data": {
-			"events": [
-				{
-					"id": "event-1",
-					"title": "Conference",
-					"scheduledAt": "2025-06-15T09:00:00Z",
-					"completedAt": "2025-06-15T17:00:00Z"
-				},
-				{
-					"id": "event-2",
-					"title": "Hackathon",
-					"scheduledAt": "2025-08-20T10:00:00Z",
-					"completedAt": null
-				}
-			]
-		}
-	},
-	"resolvers": {
-		"Query.events": {
-			"type": "mock",
-			"return_value": [
-				{
-					"id": "event-1",
-					"title": "Conference",
-					"scheduledAt": "2025-06-15T09:00:00Z",
-					"completedAt": "2025-06-15T17:00:00Z"
-				},
-				{
-					"id": "event-2",
-					"title": "Hackathon",
-					"scheduledAt": "2025-08-20T10:00:00Z",
-					"completedAt": null
-				}
-			]
-		}
-	},
-	"tags": ["scalars", "datetime", "custom-types"]
+  "name": "datetime_scalar",
+  "description": "Custom DateTime scalar type handling with ISO 8601 format validation",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "scalar DateTime\n\ntype Query {\n  events(since: DateTime, until: DateTime): [Event!]!\n}\n\ntype Event {\n  id: ID!\n  title: String!\n  scheduledAt: DateTime!\n  completedAt: DateTime\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query GetEvents($since: DateTime, $until: DateTime) {\n  events(since: $since, until: $until) {\n    id\n    title\n    scheduledAt\n    completedAt\n  }\n}",
+    "variables": {
+      "since": "2025-01-01T00:00:00Z",
+      "until": "2025-12-31T23:59:59Z"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query GetEvents($since: DateTime, $until: DateTime) {\n  events(since: $since, until: $until) {\n    id\n    title\n    scheduledAt\n    completedAt\n  }\n}",
+      "variables": {
+        "since": "2025-01-01T00:00:00Z",
+        "until": "2025-12-31T23:59:59Z"
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "events": [
+        {
+          "id": "event-1",
+          "title": "Conference",
+          "scheduledAt": "2025-06-15T09:00:00Z",
+          "completedAt": "2025-06-15T17:00:00Z"
+        },
+        {
+          "id": "event-2",
+          "title": "Hackathon",
+          "scheduledAt": "2025-08-20T10:00:00Z",
+          "completedAt": null
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Query.events": {
+      "type": "mock",
+      "return_value": [
+        {
+          "id": "event-1",
+          "title": "Conference",
+          "scheduledAt": "2025-06-15T09:00:00Z",
+          "completedAt": "2025-06-15T17:00:00Z"
+        },
+        {
+          "id": "event-2",
+          "title": "Hackathon",
+          "scheduledAt": "2025-08-20T10:00:00Z",
+          "completedAt": null
+        }
+      ]
+    }
+  },
+  "tags": [
+    "scalars",
+    "datetime",
+    "custom-types"
+  ]
 }

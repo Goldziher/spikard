@@ -1,0 +1,58 @@
+{
+  "name": "entity_with_key",
+  "description": "Entity with @key directive for federation subgraph key definition",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n  user(id: ID!): User\n}\n\nunion _Entity = User\n\ntype User @key(fields: \"id\") {\n  id: ID!\n  name: String!\n  username: String!\n  profile: UserProfile!\n}\n\ntype UserProfile {\n  bio: String\n  avatar: String\n  joinDate: String!\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  _entities(representations: [{__typename: \"User\", id: \"42\"}]) {\n    ... on User {\n      id\n      name\n      username\n      profile {\n        bio\n        avatar\n        joinDate\n      }\n    }\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  _entities(representations: [{__typename: \"User\", id: \"42\"}]) {\n    ... on User {\n      id\n      name\n      username\n      profile {\n        bio\n        avatar\n        joinDate\n      }\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "_entities": [
+        {
+          "id": "42",
+          "name": "Bob Smith",
+          "username": "bobsmith",
+          "profile": {
+            "bio": "Software engineer and open source enthusiast",
+            "avatar": "https://example.com/avatars/bob.jpg",
+            "joinDate": "2020-03-15"
+          }
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Query._entities": {
+      "type": "factory",
+      "factory_fn": "resolve_entities_with_key"
+    },
+    "Query._service": {
+      "type": "mock",
+      "return_value": {
+        "sdl": "type User @key(fields: \"id\") {\n  id: ID!\n  name: String!\n  username: String!\n  profile: UserProfile!\n}\n\ntype UserProfile {\n  bio: String\n  avatar: String\n  joinDate: String!\n}"
+      }
+    },
+    "Query.user": {
+      "type": "factory",
+      "factory_fn": "resolve_user_by_id"
+    }
+  },
+  "tags": [
+    "federation",
+    "keys",
+    "entity-resolution"
+  ],
+  "complexity_limit": 100,
+  "depth_limit": 4
+}

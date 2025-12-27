@@ -1,0 +1,175 @@
+{
+  "name": "persisted_query_automatic_persisted",
+  "description": "Automatic Persisted Queries (APQ) flow - client sends hash, gets miss, retries with full query",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  search(q: String!): [Result!]!\n}\n\ntype Result {\n  id: ID!\n  title: String!\n  relevance: Float!\n}",
+  "request_sequence": [
+    {
+      "step": 1,
+      "description": "Client sends hash only (APQ optimization)",
+      "request": {
+        "method": "POST",
+        "path": "/graphql",
+        "variables": {
+          "q": "GraphQL"
+        },
+        "extensions": {
+          "persistedQuery": {
+            "version": 1,
+            "sha256Hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "variables": {
+            "q": "GraphQL"
+          },
+          "extensions": {
+            "persistedQuery": {
+              "version": 1,
+              "sha256Hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+            }
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 400,
+        "errors": [
+          {
+            "message": "PersistedQueryNotFound",
+            "extensions": {
+              "code": "PERSISTED_QUERY_NOT_FOUND"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "step": 2,
+      "description": "Client retries with full query string + hash (automatic registration)",
+      "request": {
+        "method": "POST",
+        "path": "/graphql",
+        "query": "query Search($q: String!) {\n  search(q: $q) {\n    id\n    title\n    relevance\n  }\n}",
+        "variables": {
+          "q": "GraphQL"
+        },
+        "extensions": {
+          "persistedQuery": {
+            "version": 1,
+            "sha256Hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+          }
+        },
+        "operationName": "Search",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "query": "query Search($q: String!) {\n  search(q: $q) {\n    id\n    title\n    relevance\n  }\n}",
+          "variables": {
+            "q": "GraphQL"
+          },
+          "operationName": "Search",
+          "extensions": {
+            "persistedQuery": {
+              "version": 1,
+              "sha256Hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+            }
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "data": {
+          "search": [
+            {
+              "id": "result-1",
+              "title": "GraphQL Official Website",
+              "relevance": 0.98
+            },
+            {
+              "id": "result-2",
+              "title": "GraphQL Best Practices",
+              "relevance": 0.95
+            }
+          ]
+        }
+      }
+    },
+    {
+      "step": 3,
+      "description": "Subsequent request with hash only (cache hit)",
+      "request": {
+        "method": "POST",
+        "path": "/graphql",
+        "variables": {
+          "q": "GraphQL"
+        },
+        "extensions": {
+          "persistedQuery": {
+            "version": 1,
+            "sha256Hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "variables": {
+            "q": "GraphQL"
+          },
+          "extensions": {
+            "persistedQuery": {
+              "version": 1,
+              "sha256Hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+            }
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "data": {
+          "search": [
+            {
+              "id": "result-1",
+              "title": "GraphQL Official Website",
+              "relevance": 0.98
+            },
+            {
+              "id": "result-2",
+              "title": "GraphQL Best Practices",
+              "relevance": 0.95
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "resolvers": {
+    "Query.search": {
+      "type": "mock",
+      "return_value": [
+        {
+          "id": "result-1",
+          "title": "GraphQL Official Website",
+          "relevance": 0.98
+        },
+        {
+          "id": "result-2",
+          "title": "GraphQL Best Practices",
+          "relevance": 0.95
+        }
+      ]
+    }
+  },
+  "tags": [
+    "queries",
+    "persisted-queries",
+    "apq",
+    "automatic",
+    "cache"
+  ]
+}

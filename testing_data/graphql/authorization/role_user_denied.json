@@ -1,0 +1,39 @@
+{
+  "name": "role_user_denied",
+  "description": "Admin-only query accessed with user role - denied",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  adminPanel: AdminPanel\n}\n\ntype AdminPanel {\n  stats: AdminStats!\n}\n\ntype AdminStats {\n  totalUsers: Int!\n  activeUsers: Int!\n  totalRevenue: Float!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  adminPanel {\n    stats {\n      totalUsers\n      activeUsers\n    }\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  adminPanel {\n    stats {\n      totalUsers\n      activeUsers\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 403,
+    "errors": [
+      {
+        "message": "Insufficient permissions to access adminPanel"
+      }
+    ]
+  },
+  "resolvers": {
+    "Query.adminPanel": {
+      "type": "error",
+      "error_message": "Insufficient permissions to access adminPanel"
+    }
+  },
+  "tags": [
+    "authorization",
+    "role-based",
+    "user-role",
+    "denied",
+    "error"
+  ]
+}

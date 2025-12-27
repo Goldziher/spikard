@@ -1,30 +1,46 @@
 {
-	"name": "with_arguments",
-	"description": "Query with scalar arguments and variable substitution",
-	"operation_type": "query",
-	"endpoint": "/graphql",
-	"schema": "type Query {\n  greet(name: String!): String!\n  add(a: Int!, b: Int!): Int!\n}",
-	"request": {
-		"query": "query Greet($name: String!) {\n  greet(name: $name)\n}",
-		"variables": {
-			"name": "Alice"
-		},
-		"operationName": "Greet"
-	},
-	"expected_response": {
-		"status_code": 200,
-		"data": {
-			"greet": "Hello, Alice!"
-		}
-	},
-	"resolvers": {
-		"Query.greet": {
-			"type": "mock_with_args",
-			"template": "Hello, {name}!",
-			"arg_mapping": {
-				"name": "name"
-			}
-		}
-	},
-	"tags": ["queries", "arguments", "variables"]
+  "name": "with_arguments",
+  "description": "Query with scalar arguments and variable substitution",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  greet(name: String!): String!\n  add(a: Int!, b: Int!): Int!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query Greet($name: String!) {\n  greet(name: $name)\n}",
+    "variables": {
+      "name": "Alice"
+    },
+    "operationName": "Greet",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query Greet($name: String!) {\n  greet(name: $name)\n}",
+      "variables": {
+        "name": "Alice"
+      },
+      "operationName": "Greet"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "greet": "Hello, Alice!"
+    }
+  },
+  "resolvers": {
+    "Query.greet": {
+      "type": "mock_with_args",
+      "template": "Hello, {name}!",
+      "arg_mapping": {
+        "name": "name"
+      }
+    }
+  },
+  "tags": [
+    "queries",
+    "arguments",
+    "variables"
+  ]
 }

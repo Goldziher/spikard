@@ -1,0 +1,35 @@
+{
+  "name": "api_key_valid",
+  "description": "Query with valid API key in X-API-Key header",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  secureData: String!\n}\n",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  secureData\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  secureData\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "secureData": "Protected data from API key authentication"
+    }
+  },
+  "resolvers": {
+    "Query.secureData": {
+      "type": "mock",
+      "return_value": "Protected data from API key authentication"
+    }
+  },
+  "tags": [
+    "authentication",
+    "api-key",
+    "valid-key"
+  ]
+}

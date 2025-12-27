@@ -1,0 +1,233 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "GraphQL Federation Test Fixtures Schema",
+	"description": "Comprehensive fixtures for Apollo Federation v2 features including subgraph delegation, entity resolution, and federation directives (@key, @requires, @provides, @external)",
+	"federation_features": [
+		"Entity Resolution via _entities Query",
+		"Entity Keys (@key directive)",
+		"Compound Keys (Multiple fields)",
+		"Field Requirements (@requires directive)",
+		"Field Provisions (@provides directive)",
+		"External Fields (@external directive)",
+		"Subgraph Introspection (_service query)",
+		"Cross-Subgraph Queries",
+		"Entity Not Found Handling",
+		"Type Validation & Error Handling"
+	],
+	"fixture_count": 10,
+	"fixtures": {
+		"entity_resolution_basic": {
+			"name": "entity_resolution_basic.json",
+			"description": "Basic _entities query for Apollo Federation entity resolution",
+			"feature": "Entity Resolution",
+			"federation_directives": [
+				"@key"
+			],
+			"test_scenario": "Simple entity lookup by ID via _entities query",
+			"expected_status": 200,
+			"apollo_federation_spec_section": "Entity Resolution"
+		},
+		"entity_with_key": {
+			"name": "entity_with_key.json",
+			"description": "Entity with @key directive for federation subgraph key definition",
+			"feature": "Entity Keys",
+			"federation_directives": [
+				"@key"
+			],
+			"key_fields": [
+				"id"
+			],
+			"test_scenario": "Resolve entity with single @key field and nested object",
+			"expected_status": 200,
+			"apollo_federation_spec_section": "Entity Keys"
+		},
+		"entity_with_compound_key": {
+			"name": "entity_with_compound_key.json",
+			"description": "Entity with compound @key directive spanning multiple fields",
+			"feature": "Compound Keys",
+			"federation_directives": [
+				"@key"
+			],
+			"key_fields": [
+				"sku",
+				"category"
+			],
+			"test_scenario": "Resolve entity using composite key (sku + category)",
+			"expected_status": 200,
+			"apollo_federation_spec_section": "Compound Entity Keys"
+		},
+		"requires_directive": {
+			"name": "requires_directive.json",
+			"description": "Field with @requires directive for dependent field resolution",
+			"feature": "Field Requirements",
+			"federation_directives": [
+				"@key",
+				"@requires"
+			],
+			"requires_fields": [
+				"weight",
+				"destination"
+			],
+			"computed_field": "shippingEstimate",
+			"test_scenario": "Resolve computed field that requires access to other fields",
+			"expected_status": 200,
+			"apollo_federation_spec_section": "Field Requirements (@requires)"
+		},
+		"provides_directive": {
+			"name": "provides_directive.json",
+			"description": "Field with @provides directive for optimized nested field resolution",
+			"feature": "Field Provisions",
+			"federation_directives": [
+				"@key",
+				"@provides"
+			],
+			"provides_fields": [
+				"author { id name }"
+			],
+			"optimized_field": "reviews",
+			"test_scenario": "Resolve field with provided nested data for optimization",
+			"expected_status": 200,
+			"apollo_federation_spec_section": "Field Provisions (@provides)"
+		},
+		"external_field": {
+			"name": "external_field.json",
+			"description": "Reference to @external field used by @requires in another subgraph",
+			"feature": "External Fields",
+			"federation_directives": [
+				"@key",
+				"@external",
+				"@requires"
+			],
+			"external_fields": [
+				"weight",
+				"dimensions"
+			],
+			"test_scenario": "Resolve computed field based on external (reference) fields",
+			"expected_status": 200,
+			"apollo_federation_spec_section": "External Fields (@external)"
+		},
+		"subgraph_introspection": {
+			"name": "subgraph_introspection.json",
+			"description": "Federation _service query returning subgraph Schema Definition Language",
+			"feature": "Subgraph Introspection",
+			"federation_directives": [],
+			"introspection_query": "_service { sdl }",
+			"test_scenario": "Retrieve subgraph SDL for federation gateway composition",
+			"expected_status": 200,
+			"apollo_federation_spec_section": "Subgraph Introspection (_service)"
+		},
+		"cross_subgraph_query": {
+			"name": "cross_subgraph_query.json",
+			"description": "Query spanning multiple subgraphs with federation entity references",
+			"feature": "Cross-Subgraph Queries",
+			"federation_directives": [
+				"@key"
+			],
+			"multiple_entity_types": [
+				"User",
+				"Order"
+			],
+			"test_scenario": "Query entities from multiple federated subgraphs with references",
+			"expected_status": 200,
+			"apollo_federation_spec_section": "Entity Resolution Across Subgraphs"
+		},
+		"federation_error_missing_entity": {
+			"name": "federation_error_missing_entity.json",
+			"description": "Entity not found - returns null in _entities array per Apollo Federation spec",
+			"feature": "Error Handling",
+			"federation_directives": [
+				"@key"
+			],
+			"error_scenario": "Missing Entity (404 not returned, null in response)",
+			"test_scenario": "Request entity with non-existent ID returns null",
+			"expected_status": 200,
+			"expected_entity_value": null,
+			"apollo_federation_spec_section": "Entity Resolution Error Handling"
+		},
+		"federation_type_mismatch": {
+			"name": "federation_type_mismatch.json",
+			"description": "Wrong __typename in entity representation - returns 400 error",
+			"feature": "Error Handling",
+			"federation_directives": [],
+			"error_scenario": "Unknown Type in Representation",
+			"test_scenario": "Request with invalid __typename returns GraphQL error",
+			"expected_status": 400,
+			"error_code": "FEDERATION_ERROR",
+			"apollo_federation_spec_section": "Type Validation"
+		}
+	},
+	"federation_directives_reference": {
+		"@key": {
+			"description": "Designates an object type as an entity and defines the fields that uniquely identify it",
+			"example": "type User @key(fields: \"id\") { id: ID! ... }",
+			"fixtures_using": [
+				"entity_resolution_basic",
+				"entity_with_key",
+				"entity_with_compound_key",
+				"requires_directive",
+				"provides_directive",
+				"external_field",
+				"cross_subgraph_query",
+				"federation_error_missing_entity"
+			]
+		},
+		"@requires": {
+			"description": "Indicates that a field requires the presence of specific other fields in order to be resolved",
+			"example": "type Shipment { shippingEstimate: Float @requires(fields: \"weight destination\") }",
+			"fixtures_using": [
+				"requires_directive",
+				"external_field"
+			]
+		},
+		"@provides": {
+			"description": "Indicates that a field in one subgraph may return data that would be available from another subgraph",
+			"example": "type Post { reviews: [Review!] @provides(fields: \"author { id name }\") }",
+			"fixtures_using": [
+				"provides_directive"
+			]
+		},
+		"@external": {
+			"description": "Indicates that a field is defined and owned by another subgraph",
+			"example": "type Parcel { weight: Float @external }",
+			"fixtures_using": [
+				"external_field"
+			]
+		}
+	},
+	"federation_queries_reference": {
+		"_entities": {
+			"description": "Core federation query for resolving entities by their key representations",
+			"signature": "_entities(representations: [_Any!]!): [_Entity]!",
+			"purpose": "Entity resolution for gateway composition",
+			"fixtures_using": 9
+		},
+		"_service": {
+			"description": "Subgraph introspection query returning Schema Definition Language",
+			"signature": "_service: _Service { sdl: String! }",
+			"purpose": "SDL retrieval for federation gateway composition and introspection",
+			"fixtures_using": 9
+		}
+	},
+	"coverage_summary": {
+		"total_fixtures": 10,
+		"federation_directives_covered": 4,
+		"federation_queries_covered": 2,
+		"entity_resolution_scenarios": 3,
+		"field_dependency_scenarios": 2,
+		"cross_subgraph_scenarios": 1,
+		"error_handling_scenarios": 2,
+		"introspection_scenarios": 1,
+		"apollo_federation_v2_compliance": "Full coverage of core v2 features"
+	},
+	"standards_compliance": [
+		"Apollo Federation Specification v2",
+		"GraphQL Specification (October 2021)",
+		"GraphQL Schema Definition Language (SDL)"
+	],
+	"usage_notes": {
+		"testing": "These fixtures support integration testing of Apollo Federation v2 implementations",
+		"gateway_composition": "Fixtures demonstrate entity resolution patterns used by Apollo Federation Gateway",
+		"cross_language": "All fixtures follow the standard spikard GraphQL fixture format for multi-language test generation",
+		"mock_resolvers": "Each fixture includes resolver configuration for factory-based implementation"
+	}
+}

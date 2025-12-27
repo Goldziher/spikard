@@ -1,0 +1,92 @@
+{
+  "name": "dataloader_cache_hit",
+  "description": "DataLoader cache hits when same entity is requested multiple times in single request",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  user1: User\n  user2: User\n  user3: User\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n  username: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  user1: user(id: \"1\") {\n    id\n    name\n    email\n  }\n  user2: user(id: \"1\") {\n    id\n    name\n    username\n  }\n  user3: user(id: \"2\") {\n    id\n    name\n    email\n  }\n}",
+    "variables": null,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  user1: user(id: \"1\") {\n    id\n    name\n    email\n  }\n  user2: user(id: \"1\") {\n    id\n    name\n    username\n  }\n  user3: user(id: \"2\") {\n    id\n    name\n    email\n  }\n}",
+      "variables": null
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "user1": {
+        "id": "1",
+        "name": "Alice Smith",
+        "email": "alice@example.com"
+      },
+      "user2": {
+        "id": "1",
+        "name": "Alice Smith",
+        "username": "alice_smith"
+      },
+      "user3": {
+        "id": "2",
+        "name": "Bob Johnson",
+        "email": "bob@example.com"
+      }
+    }
+  },
+  "resolvers": {
+    "Query.user1": {
+      "type": "async_factory",
+      "factory_fn": "load_user"
+    },
+    "Query.user2": {
+      "type": "async_factory",
+      "factory_fn": "load_user"
+    },
+    "Query.user3": {
+      "type": "async_factory",
+      "factory_fn": "load_user"
+    }
+  },
+  "dataloader_cache_analysis": {
+    "cache_enabled": true,
+    "request_pattern": "Same ID requested twice (user-1), different ID once (user-2)",
+    "behavior": {
+      "user_id_1_first_request": {
+        "action": "load_from_db",
+        "description": "User 1 loaded from database"
+      },
+      "user_id_1_second_request": {
+        "action": "return_from_cache",
+        "description": "Same user ID (1) served from cache, no DB query"
+      },
+      "user_id_2_first_request": {
+        "action": "load_from_db",
+        "description": "User 2 loaded from database"
+      }
+    },
+    "total_db_queries": 2,
+    "cache_hits": 1,
+    "cache_hit_ratio": "33%"
+  },
+  "performance_metrics": {
+    "without_cache": {
+      "db_queries": 3,
+      "execution_time_ms": 45
+    },
+    "with_cache": {
+      "db_queries": 2,
+      "execution_time_ms": 30,
+      "improvement_percent": 33
+    }
+  },
+  "tags": [
+    "dataloader",
+    "caching",
+    "cache-hits",
+    "performance"
+  ]
+}

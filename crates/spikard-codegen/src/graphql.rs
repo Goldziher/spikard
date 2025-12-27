@@ -24,10 +24,15 @@ pub struct GraphQLFixture {
     pub endpoint: String,
     /// GraphQL schema definition (SDL format)
     pub schema: String,
-    /// GraphQL request details
-    pub request: GraphQLRequest,
-    /// Expected GraphQL response
-    pub expected_response: GraphQLResponse,
+    /// GraphQL request details (optional for sequence-based fixtures)
+    #[serde(default)]
+    pub request: Option<GraphQLRequest>,
+    /// Expected GraphQL response (optional for sequence-based fixtures)
+    #[serde(default)]
+    pub expected_response: Option<GraphQLResponse>,
+    /// Optional request sequence for multi-step fixtures (e.g., APQ flows)
+    #[serde(default)]
+    pub request_sequence: Option<Vec<GraphQLRequestStep>>,
     /// Optional resolver configurations
     #[serde(default)]
     pub resolvers: HashMap<String, GraphQLResolver>,
@@ -50,8 +55,9 @@ fn default_endpoint() -> String {
 /// GraphQL request payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphQLRequest {
-    /// GraphQL query document
-    pub query: String,
+    /// GraphQL query document (optional for persisted queries)
+    #[serde(default)]
+    pub query: Option<String>,
     /// Optional variables for parametrized queries
     #[serde(default)]
     pub variables: Option<Value>,
@@ -59,6 +65,23 @@ pub struct GraphQLRequest {
     #[serde(default)]
     #[serde(rename = "operationName")]
     pub operation_name: Option<String>,
+    /// Optional extensions (e.g., for APQ or persisted queries)
+    #[serde(default)]
+    pub extensions: Option<Value>,
+}
+
+/// GraphQL request step for multi-step fixtures (e.g., APQ flows)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GraphQLRequestStep {
+    /// Step number in the sequence
+    pub step: usize,
+    /// Optional description of this step
+    #[serde(default)]
+    pub description: Option<String>,
+    /// GraphQL request for this step
+    pub request: GraphQLRequest,
+    /// Expected response for this step
+    pub expected_response: GraphQLResponse,
 }
 
 /// GraphQL response structure

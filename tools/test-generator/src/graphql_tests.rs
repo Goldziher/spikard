@@ -114,71 +114,97 @@ fn generate_graphql_test_function(fixture: &GraphQLFixture) -> Result<String> {
     code.push_str("\t\t\t{\n");
     code.push_str(&format!("\t\t\t\tjson: {{\n"));
 
-    // GraphQL query
-    code.push_str(&format!(
-        "\t\t\t\t\tquery: {},\n",
-        json_to_typescript_string(&fixture.request.query)
-    ));
+    // Use request from fixture (single-step) or first step in sequence
+    let request = fixture.request.as_ref().or_else(|| {
+        fixture.request_sequence.as_ref().and_then(|seq| seq.first().map(|step| &step.request))
+    });
 
-    // Variables (if present)
-    if let Some(ref variables) = fixture.request.variables {
-        code.push_str(&format!(
-            "\t\t\t\t\tvariables: {},\n",
-            json_to_typescript(variables)
-        ));
-    } else {
-        code.push_str("\t\t\t\t\tvariables: null,\n");
-    }
+    if let Some(req) = request {
+        // GraphQL query (optional for persisted queries)
+        if let Some(ref query) = req.query {
+            code.push_str(&format!(
+                "\t\t\t\t\tquery: {},\n",
+                json_to_typescript_string(query)
+            ));
+        } else {
+            code.push_str("\t\t\t\t\tquery: null,\n");
+        }
 
-    // Operation name (if present)
-    if let Some(ref op_name) = fixture.request.operation_name {
-        code.push_str(&format!(
-            "\t\t\t\t\toperationName: \"{}\",\n",
-            escape_string(op_name)
-        ));
-    } else {
-        code.push_str("\t\t\t\t\toperationName: null,\n");
+        // Variables (if present)
+        if let Some(ref variables) = req.variables {
+            code.push_str(&format!(
+                "\t\t\t\t\tvariables: {},\n",
+                json_to_typescript(variables)
+            ));
+        } else {
+            code.push_str("\t\t\t\t\tvariables: null,\n");
+        }
+
+        // Operation name (if present)
+        if let Some(ref op_name) = req.operation_name {
+            code.push_str(&format!(
+                "\t\t\t\t\toperationName: \"{}\",\n",
+                escape_string(op_name)
+            ));
+        } else {
+            code.push_str("\t\t\t\t\toperationName: null,\n");
+        }
+
+        // Extensions (if present, e.g., for persisted queries)
+        if let Some(ref extensions) = req.extensions {
+            code.push_str(&format!(
+                "\t\t\t\t\textensions: {},\n",
+                json_to_typescript(extensions)
+            ));
+        }
     }
 
     code.push_str("\t\t\t\t},\n");
     code.push_str("\t\t\t},\n");
     code.push_str("\t\t);\n\n");
 
-    // Status code assertion
-    code.push_str(&format!(
-        "\t\texpect(response.statusCode).toBe({});\n",
-        fixture.expected_response.status_code
-    ));
+    // Get expected response (from single fixture or sequence)
+    let expected_response = fixture.expected_response.as_ref().or_else(|| {
+        fixture.request_sequence.as_ref().and_then(|seq| seq.first().map(|step| &step.expected_response))
+    });
 
-    // Parse response as JSON
-    code.push_str("\t\tconst responseBody = response.json();\n\n");
-
-    // GraphQL data assertions
-    if let Some(ref expected_data) = fixture.expected_response.data {
-        code.push_str("\t\tconst data = responseBody.data;\n");
-        generate_graphql_data_assertions(&mut code, expected_data, "data", 2);
-    }
-
-    // GraphQL errors assertions
-    if let Some(ref expected_errors) = fixture.expected_response.errors {
-        code.push_str("\t\tconst errors = responseBody.errors;\n");
-        code.push_str("\t\texpect(errors).toBeDefined();\n");
+    if let Some(resp) = expected_response {
+        // Status code assertion
         code.push_str(&format!(
-            "\t\texpect(errors?.length).toBe({});\n",
-            expected_errors.len()
+            "\t\texpect(response.statusCode).toBe({});\n",
+            resp.status_code
         ));
 
-        for (idx, error) in expected_errors.iter().enumerate() {
-            code.push_str(&format!(
-                "\t\texpect(errors?.[{}]?.message).toContain(\"{}\");\n",
-                idx,
-                escape_string(&error.message)
-            ));
+        // Parse response as JSON
+        code.push_str("\t\tconst responseBody = response.json();\n\n");
+
+        // GraphQL data assertions
+        if let Some(ref expected_data) = resp.data {
+            code.push_str("\t\tconst data = responseBody.data;\n");
+            generate_graphql_data_assertions(&mut code, expected_data, "data", 2);
         }
-    } else {
-        // No errors expected
-        code.push_str("\t\tconst errors = responseBody.errors;\n");
-        code.push_str("\t\texpect(errors?.length ?? 0).toBe(0);\n");
+
+        // GraphQL errors assertions
+        if let Some(ref expected_errors) = resp.errors {
+            code.push_str("\t\tconst errors = responseBody.errors;\n");
+            code.push_str("\t\texpect(errors).toBeDefined();\n");
+            code.push_str(&format!(
+                "\t\texpect(errors?.length).toBe({});\n",
+                expected_errors.len()
+            ));
+
+            for (idx, error) in expected_errors.iter().enumerate() {
+                code.push_str(&format!(
+                    "\t\texpect(errors?.[{}]?.message).toContain(\"{}\");\n",
+                    idx,
+                    escape_string(&error.message)
+                ));
+            }
+        } else {
+            // No errors expected
+            code.push_str("\t\tconst errors = responseBody.errors;\n");
+            code.push_str("\t\texpect(errors?.length ?? 0).toBe(0);\n");
+        }
     }
 
     code.push_str("\t});\n");

@@ -1,0 +1,90 @@
+{
+  "name": "subscription_unsubscribe",
+  "description": "Subscription lifecycle test: subscribe to ticker, receive events, then unsubscribe and verify no more events are received",
+  "operation_type": "subscription",
+  "endpoint": "/graphql",
+  "schema": "type Subscription {\n  ticker: TickerEvent!\n}\n\ntype TickerEvent {\n  id: ID!\n  symbol: String!\n  price: Float!\n  timestamp: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "subscription OnTick {\n  ticker {\n    id\n    symbol\n    price\n    timestamp\n  }\n}",
+    "operationName": "OnTick",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "subscription OnTick {\n  ticker {\n    id\n    symbol\n    price\n    timestamp\n  }\n}",
+      "operationName": "OnTick"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "ticker": {
+        "id": "tick-1",
+        "symbol": "AAPL",
+        "price": 195.45,
+        "timestamp": "2025-12-27T15:00:00Z"
+      }
+    }
+  },
+  "lifecycle": {
+    "events": [
+      {
+        "type": "subscribe",
+        "description": "Initial subscription to ticker stream"
+      },
+      {
+        "type": "message",
+        "description": "Receive first tick event",
+        "data": {
+          "ticker": {
+            "id": "tick-1",
+            "symbol": "AAPL",
+            "price": 195.45,
+            "timestamp": "2025-12-27T15:00:00Z"
+          }
+        }
+      },
+      {
+        "type": "message",
+        "description": "Receive second tick event",
+        "data": {
+          "ticker": {
+            "id": "tick-2",
+            "symbol": "AAPL",
+            "price": 195.67,
+            "timestamp": "2025-12-27T15:00:01Z"
+          }
+        }
+      },
+      {
+        "type": "unsubscribe",
+        "description": "Client initiates unsubscribe"
+      },
+      {
+        "type": "verify_no_messages",
+        "description": "Verify no more messages are delivered after unsubscribe"
+      }
+    ]
+  },
+  "resolvers": {
+    "Subscription.ticker": {
+      "type": "mock",
+      "return_value": {
+        "id": "tick-1",
+        "symbol": "AAPL",
+        "price": 195.45,
+        "timestamp": "2025-12-27T15:00:00Z"
+      }
+    }
+  },
+  "tags": [
+    "subscriptions",
+    "websocket",
+    "lifecycle",
+    "unsubscribe",
+    "cleanup",
+    "stream-termination"
+  ]
+}
