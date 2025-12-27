@@ -4,12 +4,14 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
+use crate::codegen_utils::json_to_python;
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::jsonrpc::JsonRpcFixture;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
+use spikard_codegen::{GraphQLFixture, load_graphql_fixtures};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -45,6 +47,8 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
     let jsonrpc_fixtures =
         crate::jsonrpc::load_jsonrpc_fixtures(fixtures_dir).context("Failed to load JSON-RPC fixtures")?;
+    let graphql_fixtures =
+        load_graphql_fixtures(fixtures_dir).context("Failed to load GraphQL fixtures")?;
 
     for (category, fixtures) in fixtures_by_category.iter() {
         let test_content = generate_test_file(category, fixtures)?;
@@ -70,6 +74,13 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
     if !jsonrpc_fixtures.is_empty() {
         generate_jsonrpc_tests(&jsonrpc_fixtures, output_dir)?;
         println!("  ✓ Generated tests/test_jsonrpc.py");
+    }
+
+    if !graphql_fixtures.is_empty() {
+        let graphql_content = generate_graphql_test_module(&graphql_fixtures)?;
+        fs::write(tests_dir.join("test_graphql.py"), graphql_content)
+            .context("Failed to write test_graphql.py")?;
+        println!("  ✓ Generated tests/test_graphql.py ({} tests)", graphql_fixtures.len());
     }
 
     Ok(())
@@ -860,35 +871,6 @@ fn hashmap_to_python(map: &HashMap<String, serde_json::Value>) -> String {
     format!("{{{}}}", items.join(", "))
 }
 
-/// Convert JSON value to Python literal
-fn json_to_python(value: &serde_json::Value) -> String {
-    match value {
-        serde_json::Value::Null => "None".to_string(),
-        serde_json::Value::Bool(b) => if *b { "True" } else { "False" }.to_string(),
-        serde_json::Value::Number(n) => n.to_string(),
-        serde_json::Value::String(s) => {
-            let escaped = s
-                .replace('\\', "\\\\")
-                .replace('"', "\\\"")
-                .replace('\n', "\\n")
-                .replace('\r', "\\r")
-                .replace('\t', "\\t")
-                .replace('\0', "\\0");
-            format!("\"{}\"", escaped)
-        }
-        serde_json::Value::Array(arr) => {
-            let items: Vec<String> = arr.iter().map(json_to_python).collect();
-            format!("[{}]", items.join(", "))
-        }
-        serde_json::Value::Object(obj) => {
-            let items: Vec<String> = obj
-                .iter()
-                .map(|(k, v)| format!("\"{}\": {}", k, json_to_python(v)))
-                .collect();
-            format!("{{{}}}", items.join(", "))
-        }
-    }
-}
 
 /// Sanitize fixture name for test function
 fn sanitize_test_name(name: &str) -> String {
@@ -1186,4 +1168,157 @@ fn json_to_python_literal(json_str: &str) -> String {
         .replace("true", "True")
         .replace("false", "False")
         .replace("null", "None")
+}
+
+/// Generate Python test module for GraphQL fixtures
+fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
+    let mut code = String::new();
+
+    code.push_str("\"\"\"E2E tests for GraphQL operations.\"\"\"\n\n");
+    code.push_str("from spikard.testing import TestClient\n");
+    code.push_str("from app.main import (\n");
+
+    // Collect unique app factories
+    let mut app_factories: Vec<String> = fixtures
+        .iter()
+        .map(|fixture| {
+            format!("create_app_graphql_{}", sanitize_identifier(&fixture.name))
+        })
+        .collect();
+    app_factories.sort();
+    app_factories.dedup();
+
+    for factory in &app_factories {
+        code.push_str(&format!("    {},\n", factory));
+    }
+    code.push_str(")\n\n");
+
+    // Generate test functions
+    for fixture in fixtures {
+        let fixture_id = sanitize_identifier(&fixture.name);
+        let test_name = format!("test_graphql_{}", fixture_id);
+        let factory_name = format!("create_app_graphql_{}", fixture_id);
+
+        code.push_str(&format!("async def {}() -> None:\n", test_name));
+        let desc: &str = fixture.description.as_ref().map(|s| s.as_str()).unwrap_or(&fixture.name);
+        code.push_str(&format!(
+            "    \"\"\"{}.\"\"\"\n",
+            desc
+        ));
+        code.push('\n');
+
+        code.push_str(&format!("    async with TestClient({}()) as client:\n", factory_name));
+
+        // Escape GraphQL query for Python string
+        let escaped_query = fixture.request.query
+            .replace('\\', "\\\\")
+            .replace('"', "\\\"")
+            .replace('\n', "\\n")
+            .replace('\r', "\\r")
+            .replace('\t', "\\t");
+
+        code.push_str("        response = await client.graphql(\n");
+        code.push_str(&format!("            query=\"{}\",\n", escaped_query));
+
+        if let Some(variables) = &fixture.request.variables {
+            code.push_str(&format!("            variables={},\n", json_to_python(variables)));
+        } else {
+            code.push_str("            variables=None,\n");
+        }
+
+        if let Some(op_name) = &fixture.request.operation_name {
+            code.push_str(&format!("            operation_name=\"{}\",\n", op_name));
+        } else {
+            code.push_str("            operation_name=None,\n");
+        }
+
+        code.push_str(&format!("            path=\"{}\"\n", fixture.endpoint));
+        code.push_str("        )\n\n");
+
+        // Assert status code
+        code.push_str(&format!(
+            "        assert response.status_code == {}\n",
+            fixture.expected_response.status_code
+        ));
+
+        // Handle successful responses with data
+        if let Some(ref expected_data) = fixture.expected_response.data {
+            code.push_str("        response_data = response.json()\n");
+            code.push_str("        assert \"data\" in response_data\n");
+
+            generate_graphql_data_assertions(&mut code, expected_data, "response_data[\"data\"]");
+        }
+
+        // Handle error responses
+        if let Some(ref errors) = fixture.expected_response.errors {
+            code.push_str("        response_data = response.json()\n");
+            code.push_str("        assert \"errors\" in response_data\n");
+            code.push_str(&format!("        assert len(response_data[\"errors\"]) == {}\n", errors.len()));
+
+            for (idx, error) in errors.iter().enumerate() {
+                code.push_str(&format!("        error_{} = response_data[\"errors\"][{}]\n", idx, idx));
+                code.push_str(&format!(
+                    "        assert error_{}[\"message\"] == \"{}\"\n",
+                    idx,
+                    error.message.replace('"', "\\\"")
+                ));
+
+                if let Some(ref path) = error.path {
+                    if !path.is_empty() {
+                        let path_literal = json_to_python(&serde_json::Value::Array(path.clone()));
+                        code.push_str(&format!("        assert error_{}[\"path\"] == {}\n", idx, path_literal));
+                    }
+                }
+
+                if let Some(ref locations) = error.locations {
+                    if !locations.is_empty() {
+                        code.push_str(&format!("        assert \"locations\" in error_{}\n", idx));
+                        code.push_str(&format!("        assert len(error_{}[\"locations\"]) >= 1\n", idx));
+                    }
+                }
+            }
+        } else {
+            // No errors expected
+            code.push_str("        response_data = response.json()\n");
+            code.push_str("        assert response_data.get(\"errors\") is None or response_data.get(\"errors\") == []\n");
+        }
+
+        code.push_str("\n\n");
+    }
+
+    Ok(code)
+}
+
+/// Generate assertions for GraphQL response data
+fn generate_graphql_data_assertions(code: &mut String, value: &serde_json::Value, path: &str) {
+    match value {
+        serde_json::Value::Object(obj) => {
+            for (key, val) in obj {
+                code.push_str(&format!("        assert \"{}\" in {}\n", key, path));
+                let new_path = format!("{}[\"{}\"]", path, key);
+
+                match val {
+                    serde_json::Value::Object(_) => {
+                        generate_graphql_data_assertions(code, val, &new_path);
+                    }
+                    serde_json::Value::Array(_) => {
+                        generate_graphql_data_assertions(code, val, &new_path);
+                    }
+                    _ => {
+                        code.push_str(&format!("        assert {} == {}\n", new_path, json_to_python(val)));
+                    }
+                }
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            code.push_str(&format!("        assert len({}) == {}\n", path, arr.len()));
+            for (idx, item) in arr.iter().enumerate() {
+                let new_path = format!("{}[{}]", path, idx);
+                generate_graphql_data_assertions(code, item, &new_path);
+            }
+        }
+        _ => {
+            code.push_str(&format!("        assert {} == {}\n", path, json_to_python(value)));
+        }
+    }
 }

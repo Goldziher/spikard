@@ -4,6 +4,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
+use crate::codegen_utils::{format_property_access, is_large_integer, is_value_effectively_empty};
 use crate::dependencies::{Dependency, DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, streaming_data};
@@ -16,8 +17,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
-
-const MAX_SAFE_INTEGER: i128 = 9007199254740991;
 
 /// Generate Node.js test application from fixtures
 pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeScriptTarget) -> Result<()> {
@@ -1953,48 +1952,6 @@ fn build_openapi_config_ts(openapi_obj: &serde_json::Map<String, Value>) -> Resu
     Ok(Some(format!("\t\topenapi: {{\n{}\n\t\t}}", parts.join(",\n"))))
 }
 
-fn is_valid_identifier(name: &str) -> bool {
-    let mut chars = name.chars();
-    match chars.next() {
-        Some(c) if c == '_' || c == '$' || c.is_ascii_alphabetic() => {}
-        _ => return false,
-    }
-    for ch in chars {
-        if ch == '_' || ch == '$' || ch.is_ascii_alphanumeric() {
-            continue;
-        }
-        return false;
-    }
-    true
-}
-
-fn format_property_access(base: &str, key: &str) -> String {
-    if is_valid_identifier(key) {
-        format!("{}.{}", base, key)
-    } else {
-        format!("{}[\"{}\"]", base, key)
-    }
-}
-
-fn is_large_integer(number: &serde_json::Number) -> bool {
-    if let Some(i) = number.as_i64() {
-        i128::from(i).abs() > MAX_SAFE_INTEGER
-    } else if let Some(u) = number.as_u64() {
-        (u as i128) > MAX_SAFE_INTEGER
-    } else {
-        false
-    }
-}
-
-fn is_value_effectively_empty(value: &Value) -> bool {
-    match value {
-        Value::Null => true,
-        Value::Bool(_) | Value::Number(_) => false,
-        Value::String(s) => s.is_empty(),
-        Value::Array(arr) => arr.is_empty(),
-        Value::Object(obj) => obj.is_empty(),
-    }
-}
 
 fn convert_large_numbers_to_strings(value: &serde_json::Value) -> serde_json::Value {
     match value {

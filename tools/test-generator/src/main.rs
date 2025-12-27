@@ -7,7 +7,9 @@
 
 mod asyncapi;
 mod background;
+mod codegen_utils;
 mod dependencies;
+mod graphql_tests;
 mod jsonrpc;
 mod middleware;
 mod node_app;
@@ -157,18 +159,22 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
         "node" => {
             node_app::generate_node_app(&fixtures, &output, &ts_target::NODE_TARGET)?;
             node_tests::generate_node_tests(&fixtures, &output, &ts_target::NODE_TARGET)?;
+            graphql_tests::generate_graphql_tests(&fixtures, &output, &ts_target::NODE_TARGET)?;
         }
         "wasm" => {
             node_app::generate_node_app(&fixtures, &output, &ts_target::WASM_TARGET)?;
             node_tests::generate_node_tests(&fixtures, &output, &ts_target::WASM_TARGET)?;
+            graphql_tests::generate_graphql_tests(&fixtures, &output, &ts_target::WASM_TARGET)?;
         }
         "deno" => {
             node_app::generate_node_app(&fixtures, &output, &ts_target::DENO_TARGET)?;
             node_tests::generate_node_tests(&fixtures, &output, &ts_target::DENO_TARGET)?;
+            graphql_tests::generate_graphql_tests(&fixtures, &output, &ts_target::DENO_TARGET)?;
         }
         "cloudflare" => {
             node_app::generate_node_app(&fixtures, &output, &ts_target::CLOUDFLARE_TARGET)?;
             node_tests::generate_node_tests(&fixtures, &output, &ts_target::CLOUDFLARE_TARGET)?;
+            graphql_tests::generate_graphql_tests(&fixtures, &output, &ts_target::CLOUDFLARE_TARGET)?;
         }
         "ruby" => {
             ruby_app::generate_ruby_app(&fixtures, &output)?;

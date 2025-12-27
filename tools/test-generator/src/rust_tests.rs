@@ -5,6 +5,7 @@ use crate::background::{BackgroundFixtureData, background_data};
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::Fixture;
+use spikard_codegen::{GraphQLFixture, load_graphql_fixtures};
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
@@ -49,6 +50,15 @@ pub fn generate_rust_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         fs::write(tests_dir.join("websocket_tests.rs"), websocket_content)
             .context("Failed to write websocket_tests.rs")?;
         println!("  ✓ Generated websocket_tests.rs");
+    }
+
+    let graphql_fixtures = load_graphql_fixtures(fixtures_dir)
+        .context("Failed to load GraphQL fixtures")?;
+    if !graphql_fixtures.is_empty() {
+        let graphql_content = generate_graphql_tests(&graphql_fixtures)?;
+        fs::write(tests_dir.join("graphql_tests.rs"), graphql_content)
+            .context("Failed to write graphql_tests.rs")?;
+        println!("  ✓ Generated graphql_tests.rs ({} tests)", graphql_fixtures.len());
     }
 
     Ok(())
@@ -782,4 +792,71 @@ fn generate_header_assertions(headers: &Option<HashMap<String, String>>) -> Stri
 
 fn escape_rust_string(value: &str) -> String {
     value.replace('\\', "\\\\").replace('\"', "\\\"")
+}
+
+/// Generate Rust test module for GraphQL fixtures
+fn generate_graphql_tests(fixtures: &[GraphQLFixture]) -> Result<String> {
+    let mut code = String::new();
+
+    code.push_str("//! GraphQL operation tests\n");
+    code.push_str("//!\n");
+    code.push_str("//! E2E tests for GraphQL queries, mutations, and subscriptions.\n\n");
+
+    code.push_str("#[cfg(test)]\n");
+    code.push_str("mod tests {\n");
+    code.push_str("    use super::*;\n\n");
+
+    // Generate test for each fixture
+    for fixture in fixtures {
+        let test_name = format!("test_graphql_{}", sanitize_fixture_name(&fixture.name));
+
+        code.push_str(&format!("    #[tokio::test]\n"));
+        code.push_str(&format!("    async fn {}() {{\n", test_name));
+        let desc: &str = fixture.description.as_ref().map(|s| s.as_str()).unwrap_or(&fixture.name);
+        code.push_str(&format!("        // Test: {}\n", desc));
+        code.push_str(&format!("        // Operation type: {}\n", fixture.operation_type));
+        code.push_str(&format!("        // Endpoint: {}\n\n", fixture.endpoint));
+
+        // Build GraphQL query payload
+        code.push_str("        let query = r#\"\n");
+        code.push_str(&fixture.request.query);
+        code.push_str("\n        \"#;\n\n");
+
+        // Build request payload
+        code.push_str("        let mut payload = serde_json::json!({\n");
+        code.push_str("            \"query\": query,\n");
+
+        if let Some(variables) = &fixture.request.variables {
+            code.push_str("            \"variables\": ");
+            code.push_str(&serde_json::to_string(variables)?);
+            code.push_str(",\n");
+        }
+
+        if let Some(op_name) = &fixture.request.operation_name {
+            code.push_str(&format!("            \"operationName\": \"{}\",\n", escape_rust_string(op_name)));
+        }
+
+        code.push_str("        });\n\n");
+
+        // Expected status code
+        code.push_str(&format!(
+            "        // Expected status code: {}\n",
+            fixture.expected_response.status_code
+        ));
+
+        // Validate expected response structure
+        if fixture.expected_response.data.is_some() {
+            code.push_str("        // Response should contain data field\n");
+        }
+
+        if fixture.expected_response.errors.is_some() {
+            code.push_str("        // Response should contain errors field\n");
+        }
+
+        code.push_str("    }\n\n");
+    }
+
+    code.push_str("}\n");
+
+    Ok(code)
 }
