@@ -2,10 +2,8 @@
 //!
 //! Uses the shared spikard_http router pipeline and bridges into JavaScript
 //! handlers via napi ThreadsafeFunction.
-//!
-//! NOTE: This module is temporarily disabled pending handler trait refactor
 
-#![allow(dead_code, unused_imports)]
+#![allow(unused_imports)]
 
 use crate::response::{HandlerReturnValue, TestResponse};
 use axum::body::Body;
@@ -241,7 +239,9 @@ fn problem_to_json(problem: &ProblemDetails) -> String {
 struct JsHandler {
     handler_fn: Arc<ThreadsafeFunction<String, Promise<HandlerReturnValue>, Vec<String>, napi::Status, false>>,
     handler_name: String,
+    #[allow(dead_code)]
     method: String,
+    #[allow(dead_code)]
     path: String,
     request_validator: Option<Arc<SchemaValidator>>,
     response_validator: Option<Arc<SchemaValidator>>,
