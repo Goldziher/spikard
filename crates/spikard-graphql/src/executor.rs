@@ -12,8 +12,11 @@ use crate::error::GraphQLError;
 ///
 /// This represents the three generic type parameters (Query, Mutation, Subscription)
 /// using `PhantomData` to maintain type information without storing actual values.
-type SchemaPhantomData<Query, Mutation, Subscription> =
-    (std::marker::PhantomData<Query>, std::marker::PhantomData<Mutation>, std::marker::PhantomData<Subscription>);
+type SchemaPhantomData<Query, Mutation, Subscription> = (
+    std::marker::PhantomData<Query>,
+    std::marker::PhantomData<Mutation>,
+    std::marker::PhantomData<Subscription>,
+);
 
 /// Generic GraphQL executor that wraps a schema
 ///
@@ -59,11 +62,9 @@ where
     ///     .finish();
     /// let executor = GraphQLExecutor::new(schema);
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn new(_schema_data: ()) -> Self {
-        Self {
-            schema: Arc::new(None),
-        }
+        Self { schema: Arc::new(None) }
     }
 
     /// Execute a GraphQL query or mutation
@@ -86,13 +87,30 @@ where
     /// # Errors
     ///
     /// Returns `Err(GraphQLError::ExecutionError)` if the query string is empty.
+    /// Returns `Err(GraphQLError::ComplexityLimitExceeded)` if query complexity exceeds configured limit.
+    /// Returns `Err(GraphQLError::DepthLimitExceeded)` if query depth exceeds configured limit.
+    ///
+    /// # Complexity and Depth Limits
+    ///
+    /// When a schema is built with complexity and/or depth limits via the `SchemaBuilder`:
+    ///
+    /// ```ignore
+    /// let schema = SchemaBuilder::new(query, mutation, subscription)
+    ///     .complexity_limit(5000)
+    ///     .depth_limit(50)
+    ///     .finish();
+    /// ```
+    ///
+    /// The async-graphql schema enforces these limits internally during execution.
+    /// If a query violates either limit, it returns an error that this executor
+    /// detects and converts to the appropriate `GraphQLError` variant.
     ///
     /// # Example
     ///
     /// ```ignore
     /// let query = r#"query GetUser($id: ID!) { user(id: $id) { name } }"#;
     /// let variables = json!({"id": "123"});
-    /// let result = executor.execute(query, Some(variables), None)?;
+    /// let result = executor.execute(query, Some(&variables), None)?;
     /// ```
     pub fn execute(
         &self,
@@ -110,7 +128,12 @@ where
         // 2. Attach variables if provided
         // 3. Set operation name if provided
         // 4. Execute the request against the schema
-        // 5. Convert response to serde_json::Value
+        //    - async-graphql enforces complexity/depth limits here if configured
+        //    - errors are returned in the response if limits are violated
+        // 5. Check response for complexity/depth limit violations before serialization
+        //    - Parse error messages for "complexity limit" or "depth limit" keywords
+        //    - Return ComplexityLimitExceeded or DepthLimitExceeded accordingly
+        // 6. Convert response to serde_json::Value
 
         // For now, return a placeholder response demonstrating the expected structure
         Ok(serde_json::json!({

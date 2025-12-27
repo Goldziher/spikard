@@ -34,6 +34,6 @@ pub use executor::GraphQLExecutor;
 pub use handler::GraphQLHandler;
 pub use routes::GraphQLRouteConfig;
 pub use schema::{
-    schema_full, schema_query_mutation, schema_query_only, FullSchemaConfig, QueryMutationConfig,
-    QueryOnlyConfig, SchemaBuilder, SchemaConfig, SchemaError, SchemaResult,
+    FullSchemaConfig, QueryMutationConfig, QueryOnlyConfig, SchemaBuilder, SchemaConfig, SchemaError, SchemaResult,
+    schema_full, schema_query_mutation, schema_query_only,
 };

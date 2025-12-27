@@ -166,8 +166,12 @@ impl PySchemaBuilder {
     ///
     /// Args:
     ///     enable (bool): Whether to enable introspection
-    fn enable_introspection(&mut self, enable: bool) {
-        self.config.introspection_enabled = enable;
+    ///
+    /// Returns:
+    ///     self: The builder instance for method chaining
+    fn enable_introspection(mut slf: PyRefMut<Self>, enable: bool) -> PyRefMut<Self> {
+        slf.config.introspection_enabled = enable;
+        slf
     }
 
     /// Set the maximum complexity allowed for queries
@@ -177,8 +181,12 @@ impl PySchemaBuilder {
     ///
     /// Args:
     ///     limit (int): The maximum complexity allowed (0 = unlimited)
-    fn complexity_limit(&mut self, limit: usize) {
-        self.config.complexity_limit = if limit > 0 { Some(limit) } else { None };
+    ///
+    /// Returns:
+    ///     self: The builder instance for method chaining
+    fn complexity_limit(mut slf: PyRefMut<Self>, limit: usize) -> PyRefMut<Self> {
+        slf.config.complexity_limit = if limit > 0 { Some(limit) } else { None };
+        slf
     }
 
     /// Set the maximum depth allowed for queries
@@ -188,8 +196,12 @@ impl PySchemaBuilder {
     ///
     /// Args:
     ///     limit (int): The maximum depth allowed (0 = unlimited)
-    fn depth_limit(&mut self, limit: usize) {
-        self.config.depth_limit = if limit > 0 { Some(limit) } else { None };
+    ///
+    /// Returns:
+    ///     self: The builder instance for method chaining
+    fn depth_limit(mut slf: PyRefMut<Self>, limit: usize) -> PyRefMut<Self> {
+        slf.config.depth_limit = if limit > 0 { Some(limit) } else { None };
+        slf
     }
 
     /// Check if introspection is enabled
