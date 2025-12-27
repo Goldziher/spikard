@@ -18,6 +18,22 @@ struct SdlFormatter<'a> {
 }
 
 impl PythonGenerator {
+    /// Escape triple quotes in docstring content for safe Python embedding.
+    ///
+    /// Replaces """ with \" \" to avoid breaking docstring delimiters.
+    /// This ensures descriptions with triple quotes generate valid Python syntax.
+    fn escape_docstring(content: &str) -> String {
+        content.replace("\"\"\"", "\" \" \"")
+    }
+
+    /// Escape triple quotes in GraphQL SDL descriptions.
+    ///
+    /// In GraphQL SDL, descriptions use triple quotes like Python docstrings.
+    /// This escapes them to prevent syntax errors when embedding descriptions.
+    fn escape_sdl_description(content: &str) -> String {
+        content.replace("\"\"\"", "\\\"\\\"\\\"")
+    }
+
     /// Map GraphQL scalar type to Python type
     ///
     /// Converts GraphQL scalar types to their Python equivalents.
@@ -139,15 +155,20 @@ impl PythonGenerator {
     /// - nullable → `User`
     /// - list → `[User!]!`
     /// - nullable list → `[User]`
+    ///
+    /// Strips any existing GraphQL notation (!, [, ]) from type_name to avoid double notation
     fn format_gql_type(&self, type_name: &str, is_nullable: bool, is_list: bool, list_item_nullable: bool) -> String {
+        // Strip any existing GraphQL notation from type_name to prevent double notation
+        let clean_type = type_name.trim_matches(|c| c == '!' || c == '[' || c == ']');
+
         let mut result = if is_list {
             if list_item_nullable {
-                format!("[{}]", type_name)
+                format!("[{}]", clean_type)
             } else {
-                format!("[{}!]", type_name)
+                format!("[{}!]", clean_type)
             }
         } else {
-            type_name.to_string()
+            clean_type.to_string()
         };
 
         if !is_nullable {
@@ -229,7 +250,7 @@ impl PythonGenerator {
         for directive in &schema.directives {
             if let Some(desc) = &directive.description {
                 sdl.push_str("\"\"\"");
-                sdl.push_str(desc);
+                sdl.push_str(&Self::escape_sdl_description(desc));
                 sdl.push_str("\"\"\"\n");
             }
             sdl.push_str("directive @");
@@ -270,7 +291,7 @@ impl PythonGenerator {
             for field in &schema.queries {
                 if let Some(desc) = &field.description {
                     sdl.push_str("  \"\"\"");
-                    sdl.push_str(desc);
+                    sdl.push_str(&Self::escape_sdl_description(desc));
                     sdl.push_str("\"\"\"\n");
                 }
                 sdl.push_str(&self.format_sdl_field_line(field, true));
@@ -285,7 +306,7 @@ impl PythonGenerator {
             for field in &schema.mutations {
                 if let Some(desc) = &field.description {
                     sdl.push_str("  \"\"\"");
-                    sdl.push_str(desc);
+                    sdl.push_str(&Self::escape_sdl_description(desc));
                     sdl.push_str("\"\"\"\n");
                 }
                 sdl.push_str(&self.format_sdl_field_line(field, true));
@@ -300,7 +321,7 @@ impl PythonGenerator {
             for field in &schema.subscriptions {
                 if let Some(desc) = &field.description {
                     sdl.push_str("  \"\"\"");
-                    sdl.push_str(desc);
+                    sdl.push_str(&Self::escape_sdl_description(desc));
                     sdl.push_str("\"\"\"\n");
                 }
                 sdl.push_str(&self.format_sdl_field_line(field, true));
@@ -321,7 +342,7 @@ impl PythonGenerator {
 
             if let Some(desc) = &type_def.description {
                 sdl.push_str("\"\"\"");
-                sdl.push_str(desc);
+                sdl.push_str(&Self::escape_sdl_description(desc));
                 sdl.push_str("\"\"\"\n");
             }
 
@@ -333,7 +354,7 @@ impl PythonGenerator {
                     for field in &type_def.fields {
                         if let Some(desc) = &field.description {
                             sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
+                            sdl.push_str(&Self::escape_sdl_description(desc));
                             sdl.push_str("\"\"\"\n");
                         }
                         sdl.push_str(&self.format_sdl_field_line(field, true));
@@ -348,7 +369,7 @@ impl PythonGenerator {
                     for field in &type_def.input_fields {
                         if let Some(desc) = &field.description {
                             sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
+                            sdl.push_str(&Self::escape_sdl_description(desc));
                             sdl.push_str("\"\"\"\n");
                         }
                         sdl.push_str("  ");
@@ -376,7 +397,7 @@ impl PythonGenerator {
                     for value in &type_def.enum_values {
                         if let Some(desc) = &value.description {
                             sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
+                            sdl.push_str(&Self::escape_sdl_description(desc));
                             sdl.push_str("\"\"\"\n");
                         }
                         sdl.push_str("  ");
@@ -413,7 +434,7 @@ impl PythonGenerator {
                     for field in &type_def.fields {
                         if let Some(desc) = &field.description {
                             sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
+                            sdl.push_str(&Self::escape_sdl_description(desc));
                             sdl.push_str("\"\"\"\n");
                         }
                         sdl.push_str(&self.format_sdl_field_line(field, true));
@@ -435,6 +456,10 @@ impl GraphQLGenerator for PythonGenerator {
 
         let mut code = String::new();
         code.push_str("#!/usr/bin/env python3\n");
+        code.push_str("# DO NOT EDIT - Auto-generated by Spikard CLI\n");
+        code.push_str("#\n");
+        code.push_str("# This file was automatically generated from your GraphQL schema.\n");
+        code.push_str("# Any manual changes will be overwritten on the next generation.\n");
         code.push_str("\"\"\"GraphQL types generated from schema.\"\"\"\n\n");
         // Only import Any if there are unions (which may need it for compatibility)
         let has_unions = schema.types.values().any(|t| t.kind == TypeKind::Union);
@@ -449,7 +474,7 @@ impl GraphQLGenerator for PythonGenerator {
             if type_def.kind == TypeKind::Enum {
                 code.push_str(&format!("class {}(str, Enum):\n", type_def.name));
                 if let Some(desc) = &type_def.description {
-                    code.push_str(&format!("    \"\"\"{}\"\"\"\n", desc));
+                    code.push_str(&format!("    \"\"\"{}\"\"\"\n", Self::escape_docstring(desc)));
                 }
                 for value in &type_def.enum_values {
                     if let Some(desc) = &value.description {
@@ -466,7 +491,7 @@ impl GraphQLGenerator for PythonGenerator {
             if type_def.kind == TypeKind::InputObject {
                 code.push_str(&format!("class {}(Struct, frozen=True, kw_only=True):\n", type_def.name));
                 if let Some(desc) = &type_def.description {
-                    code.push_str(&format!("    \"\"\"{}\"\"\"\n", desc));
+                    code.push_str(&format!("    \"\"\"{}\"\"\"\n", Self::escape_docstring(desc)));
                 }
                 if type_def.input_fields.is_empty() {
                     code.push_str("    pass\n");
@@ -486,7 +511,7 @@ impl GraphQLGenerator for PythonGenerator {
             {
                 code.push_str(&format!("class {}(Struct, frozen=True, kw_only=True):\n", type_def.name));
                 if let Some(desc) = &type_def.description {
-                    code.push_str(&format!("    \"\"\"{}\"\"\"\n", desc));
+                    code.push_str(&format!("    \"\"\"{}\"\"\"\n", Self::escape_docstring(desc)));
                 }
                 if type_def.fields.is_empty() {
                     code.push_str("    pass\n");
@@ -514,6 +539,10 @@ impl GraphQLGenerator for PythonGenerator {
     fn generate_resolvers(&self, schema: &GraphQLSchema) -> Result<String> {
         let mut code = String::new();
         code.push_str("#!/usr/bin/env python3\n");
+        code.push_str("# DO NOT EDIT - Auto-generated by Spikard CLI\n");
+        code.push_str("#\n");
+        code.push_str("# This file was automatically generated from your GraphQL schema.\n");
+        code.push_str("# Any manual changes will be overwritten on the next generation.\n");
         code.push_str("\"\"\"GraphQL resolver functions.\"\"\"\n\n");
         code.push_str("from typing import Any\n");
         code.push_str("import asyncio\n\n");
@@ -562,11 +591,12 @@ impl GraphQLGenerator for PythonGenerator {
         let mut code = String::new();
 
         // Header with generation info
-        code.push_str("# GraphQL Schema Definition\n");
-        code.push_str("# Auto-generated by Spikard CLI\n");
+        code.push_str("#!/usr/bin/env python3\n");
+        code.push_str("# DO NOT EDIT - Auto-generated by Spikard CLI\n");
         code.push_str("#\n");
-        code.push_str("# This file combines the GraphQL SDL with resolvers to create\n");
-        code.push_str("# an executable schema using Ariadne.\n\n");
+        code.push_str("# This file was automatically generated from your GraphQL schema.\n");
+        code.push_str("# Any manual changes will be overwritten on the next generation.\n");
+        code.push_str("\"\"\"GraphQL Schema Definition.\"\"\"\n\n");
 
         // Build imports based on what's in the schema
         code.push_str("from ariadne import make_executable_schema, QueryType, MutationType");

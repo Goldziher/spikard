@@ -189,7 +189,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                 .iter()
                 .map(|arg| GraphQLArgument {
                     name: arg.name.clone(),
-                    type_name: format_type(&arg.value_type),
+                    type_name: extract_bare_type_name(&arg.value_type),
                     is_nullable: is_nullable_type(&arg.value_type),
                     is_list: is_list_type(&arg.value_type),
                     list_item_nullable: extract_list_item_nullability(&arg.value_type),
@@ -331,7 +331,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                             .iter()
                             .map(|f| GraphQLInputField {
                                 name: f.name.clone(),
-                                type_name: format_type(&f.value_type),
+                                type_name: extract_bare_type_name(&f.value_type),
                                 is_nullable: is_nullable_type(&f.value_type),
                                 is_list: is_list_type(&f.value_type),
                                 list_item_nullable: extract_list_item_nullability(&f.value_type),
@@ -481,7 +481,7 @@ fn extract_fields_from_object(obj: &ObjectType<String>) -> Vec<GraphQLField> {
         .iter()
         .map(|field| GraphQLField {
             name: field.name.clone(),
-            type_name: format_type(&field.field_type),
+            type_name: extract_bare_type_name(&field.field_type),
             is_list: is_list_type(&field.field_type),
             list_item_nullable: extract_list_item_nullability(&field.field_type),
             is_nullable: is_nullable_type(&field.field_type),
@@ -490,7 +490,7 @@ fn extract_fields_from_object(obj: &ObjectType<String>) -> Vec<GraphQLField> {
                 .iter()
                 .map(|arg| GraphQLArgument {
                     name: arg.name.clone(),
-                    type_name: format_type(&arg.value_type),
+                    type_name: extract_bare_type_name(&arg.value_type),
                     is_nullable: is_nullable_type(&arg.value_type),
                     is_list: is_list_type(&arg.value_type),
                     list_item_nullable: extract_list_item_nullability(&arg.value_type),
@@ -511,7 +511,7 @@ fn extract_fields_from_interface(interface: &graphql_parser::schema::InterfaceTy
         .iter()
         .map(|field| GraphQLField {
             name: field.name.clone(),
-            type_name: format_type(&field.field_type),
+            type_name: extract_bare_type_name(&field.field_type),
             is_list: is_list_type(&field.field_type),
             list_item_nullable: extract_list_item_nullability(&field.field_type),
             is_nullable: is_nullable_type(&field.field_type),
@@ -520,7 +520,7 @@ fn extract_fields_from_interface(interface: &graphql_parser::schema::InterfaceTy
                 .iter()
                 .map(|arg| GraphQLArgument {
                     name: arg.name.clone(),
-                    type_name: format_type(&arg.value_type),
+                    type_name: extract_bare_type_name(&arg.value_type),
                     is_nullable: is_nullable_type(&arg.value_type),
                     is_list: is_list_type(&arg.value_type),
                     list_item_nullable: extract_list_item_nullability(&arg.value_type),
@@ -540,6 +540,16 @@ fn format_type(type_def: &graphql_parser::schema::Type<String>) -> String {
         graphql_parser::schema::Type::NamedType(name) => name.clone(),
         graphql_parser::schema::Type::ListType(inner) => format!("[{}]", format_type(inner)),
         graphql_parser::schema::Type::NonNullType(inner) => format!("{}!", format_type(inner)),
+    }
+}
+
+/// Extract the bare type name (e.g., "String" from "String!" or "[String!]!")
+/// This should be used for type_name field to avoid double notation in SDL reconstruction
+fn extract_bare_type_name(type_def: &graphql_parser::schema::Type<String>) -> String {
+    match type_def {
+        graphql_parser::schema::Type::NamedType(name) => name.clone(),
+        graphql_parser::schema::Type::ListType(inner) => extract_bare_type_name(inner),
+        graphql_parser::schema::Type::NonNullType(inner) => extract_bare_type_name(inner),
     }
 }
 

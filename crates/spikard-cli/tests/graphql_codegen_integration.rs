@@ -455,8 +455,8 @@ fn test_parse_simple_schema() -> Result<()> {
     assert!(!schema.queries.is_empty(), "queries not parsed");
     assert_eq!(schema.queries[0].name, "hello", "query name incorrect");
     assert_eq!(
-        schema.queries[0].type_name, "String!",
-        "query type should include ! for non-nullable"
+        schema.queries[0].type_name, "String",
+        "query type should contain bare type name only"
     );
     assert!(!schema.queries[0].is_nullable, "String! should not be nullable");
 
@@ -1205,6 +1205,86 @@ fn test_typescript_mutation_resolver() -> Result<()> {
     assert!(
         result.contains("updateUser") || result.contains("update"),
         "updateUser resolver missing"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_typescript_schema_definition_no_broken_imports() -> Result<()> {
+    let schema = r#"
+        type Query {
+            hello: String!
+            user(id: ID!): User
+        }
+        type User {
+            id: ID!
+            name: String!
+            email: String
+        }
+        type Mutation {
+            createUser(name: String!): User!
+        }
+    "#;
+
+    let result = generate_typescript_graphql(schema, "schema")?;
+
+    // Verify it doesn't have the broken import at the top level (not in comments)
+    // The generated code should NOT have an active import statement like:
+    // import { resolvers } from './resolvers';
+    // But it's OK to have it in comments or TODO sections
+
+    // Extract just the imports section (first 1000 chars usually)
+    let imports_section = &result[..std::cmp::min(1000, result.len())];
+    let has_broken_import = imports_section.lines()
+        .any(|line| !line.trim_start().starts_with("*") &&  // Not a comment
+             !line.trim_start().starts_with("//") &&  // Not a comment
+             line.contains("import { resolvers } from './resolvers'"));
+
+    assert!(
+        !has_broken_import,
+        "ERROR: TypeScript schema definition has broken import statement in code"
+    );
+
+    // Verify it imports makeExecutableSchema
+    assert!(
+        result.contains("import { makeExecutableSchema }"),
+        "ERROR: Missing makeExecutableSchema import"
+    );
+
+    // Verify it has resolver instructions
+    assert!(
+        result.contains("TODO") && result.contains("resolvers from './resolvers'"),
+        "ERROR: Missing resolver instructions"
+    );
+
+    // Verify it exports typeDefs
+    assert!(
+        result.contains("export { typeDefs }"),
+        "ERROR: Missing typeDefs export"
+    );
+
+    // Verify it exports createSchema function
+    assert!(
+        result.contains("export function createSchema"),
+        "ERROR: Missing createSchema function"
+    );
+
+    // Verify SDL is embedded
+    assert!(
+        result.contains("const typeDefs") && result.contains("type Query"),
+        "ERROR: Missing SDL in typeDefs"
+    );
+
+    // Verify field names are documented
+    assert!(
+        result.contains("hello") && result.contains("user"),
+        "ERROR: Query field names not documented"
+    );
+
+    assert!(
+        result.contains("createUser"),
+        "ERROR: Mutation field names not documented"
     );
 
     Ok(())
