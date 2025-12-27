@@ -179,8 +179,10 @@ where
                     extensions: None,
                 };
 
-                let body = serde_json::to_string(&response_payload).unwrap_or_else(|_| {
-                    json!({"errors": [{"message": "Failed to serialize response"}]}).to_string()
+                // Optimize serialization: avoid double JSON encoding (Value -> String -> Bytes)
+                let body = serde_json::to_vec(&response_payload).unwrap_or_else(|_| {
+                    serde_json::to_vec(&json!({"errors": [{"message": "Failed to serialize response"}]}))
+                        .unwrap_or_else(|_| b"Internal server error".to_vec())
                 });
 
                 Response::builder()
@@ -206,8 +208,10 @@ where
                     extensions: None,
                 };
 
-                let body = serde_json::to_string(&error_response).unwrap_or_else(|_| {
-                    json!({"errors": [{"message": "Internal server error"}]}).to_string()
+                // Optimize serialization: avoid double JSON encoding (Value -> String -> Bytes)
+                let body = serde_json::to_vec(&error_response).unwrap_or_else(|_| {
+                    serde_json::to_vec(&json!({"errors": [{"message": "Internal server error"}]}))
+                        .unwrap_or_else(|_| b"Internal server error".to_vec())
                 });
 
                 Response::builder()
