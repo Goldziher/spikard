@@ -745,6 +745,16 @@ jobs:
         working-directory: packages/ruby
         run: ../../scripts/publish/ruby/install-deps-windows.ps1
 
+      - name: Vendor Rust crates
+        if: runner.os != 'Windows'
+        shell: bash
+        run: bash packages/ruby/scripts/ci/ruby/vendor-crates.sh
+
+      - name: Vendor Rust crates (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: bash packages/ruby/scripts/ci/ruby/vendor-crates.sh
+
       - name: Build gem (Unix)
         if: runner.os != 'Windows'
         shell: bash
