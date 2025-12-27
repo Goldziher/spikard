@@ -90,6 +90,7 @@ packages/ruby/ext/spikard_rb/target/
 reports/
 results/
 rust-coverage.lcov
+rust-toolchain.toml
 target/
 tools/benchmark-harness/apps/spikard-rust/target/
 temp-test-*

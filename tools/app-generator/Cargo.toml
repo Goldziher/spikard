@@ -4,6 +4,7 @@
 name = "app-generator"
 version = "0.6.2"
 edition = "2024"
+rust-version = "1.88"
 
 [[bin]]
 name = "app-generator"
