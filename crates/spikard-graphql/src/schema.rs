@@ -279,9 +279,7 @@ impl<Query, Mutation, Subscription> SchemaBuilder<Query, Mutation, Subscription>
 
 impl<Query, Mutation, Subscription> fmt::Debug for SchemaBuilder<Query, Mutation, Subscription> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("SchemaBuilder")
-            .field("config", &self.config)
-            .finish()
+        f.debug_struct("SchemaBuilder").field("config", &self.config).finish()
     }
 }
 
@@ -420,8 +418,7 @@ mod tests {
         struct DummyMutation;
         struct DummySubscription;
 
-        let builder = SchemaBuilder::new(DummyQuery, DummyMutation, DummySubscription)
-            .enable_introspection(false);
+        let builder = SchemaBuilder::new(DummyQuery, DummyMutation, DummySubscription).enable_introspection(false);
         assert!(!builder.is_introspection_enabled());
     }
 
@@ -431,8 +428,7 @@ mod tests {
         struct DummyMutation;
         struct DummySubscription;
 
-        let builder = SchemaBuilder::new(DummyQuery, DummyMutation, DummySubscription)
-            .complexity_limit(5000);
+        let builder = SchemaBuilder::new(DummyQuery, DummyMutation, DummySubscription).complexity_limit(5000);
         assert_eq!(builder.get_complexity_limit(), Some(5000));
     }
 
@@ -442,8 +438,7 @@ mod tests {
         struct DummyMutation;
         struct DummySubscription;
 
-        let builder = SchemaBuilder::new(DummyQuery, DummyMutation, DummySubscription)
-            .depth_limit(50);
+        let builder = SchemaBuilder::new(DummyQuery, DummyMutation, DummySubscription).depth_limit(50);
         assert_eq!(builder.get_depth_limit(), Some(50));
     }
 

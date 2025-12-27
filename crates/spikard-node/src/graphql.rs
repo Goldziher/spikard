@@ -40,11 +40,11 @@ pub struct SchemaConfig {
 
     /// Maximum query complexity (0 = unlimited)
     #[napi(js_name = "complexityLimit")]
-    pub complexity_limit: Option<u32>,
+    pub complexity_limit: Option<usize>,
 
     /// Maximum query depth (0 = unlimited)
     #[napi(js_name = "depthLimit")]
-    pub depth_limit: Option<u32>,
+    pub depth_limit: Option<usize>,
 }
 
 impl fmt::Display for SchemaConfig {
@@ -64,8 +64,8 @@ impl fmt::Display for SchemaConfig {
 #[napi]
 pub struct GraphQLSchemaBuilder {
     introspection_enabled: bool,
-    complexity_limit: Option<u32>,
-    depth_limit: Option<u32>,
+    complexity_limit: Option<usize>,
+    depth_limit: Option<usize>,
 }
 
 #[napi]
@@ -102,7 +102,7 @@ impl GraphQLSchemaBuilder {
     ///
     /// * `limit` - The maximum complexity allowed (0 = unlimited)
     #[napi(js_name = "complexityLimit")]
-    pub fn complexity_limit(&mut self, limit: u32) {
+    pub fn complexity_limit(&mut self, limit: usize) {
         self.complexity_limit = if limit > 0 { Some(limit) } else { None };
     }
 
@@ -115,7 +115,7 @@ impl GraphQLSchemaBuilder {
     ///
     /// * `limit` - The maximum depth allowed (0 = unlimited)
     #[napi(js_name = "depthLimit")]
-    pub fn depth_limit(&mut self, limit: u32) {
+    pub fn depth_limit(&mut self, limit: usize) {
         self.depth_limit = if limit > 0 { Some(limit) } else { None };
     }
 
@@ -127,13 +127,13 @@ impl GraphQLSchemaBuilder {
 
     /// Get the current complexity limit if set
     #[napi(js_name = "getComplexityLimit")]
-    pub fn get_complexity_limit(&self) -> Option<u32> {
+    pub fn get_complexity_limit(&self) -> Option<usize> {
         self.complexity_limit
     }
 
     /// Get the current depth limit if set
     #[napi(js_name = "getDepthLimit")]
-    pub fn get_depth_limit(&self) -> Option<u32> {
+    pub fn get_depth_limit(&self) -> Option<usize> {
         self.depth_limit
     }
 

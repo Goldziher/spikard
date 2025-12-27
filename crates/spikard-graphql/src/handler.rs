@@ -17,6 +17,9 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
+/// Maximum allowed GraphQL query size (1MB)
+const MAX_QUERY_SIZE: usize = 1_048_576;
+
 /// GraphQL request payload
 ///
 /// Represents a standard GraphQL HTTP request body as defined by the GraphQL
@@ -84,6 +87,11 @@ pub struct GraphQLErrorResponse {
 ///
 /// Parsed GraphQL request payload or error
 fn parse_graphql_request(raw_body: &[u8]) -> Result<GraphQLRequestPayload, GraphQLError> {
+    if raw_body.len() > MAX_QUERY_SIZE {
+        return Err(GraphQLError::RequestHandlingError(format!(
+            "Request body exceeds maximum size of {MAX_QUERY_SIZE} bytes"
+        )));
+    }
     serde_json::from_slice(raw_body).map_err(|e| {
         GraphQLError::RequestHandlingError(format!("Failed to parse GraphQL request: {e}"))
     })
@@ -361,6 +369,43 @@ mod tests {
     fn test_parse_request_missing_query() {
         let result = parse_graphql_request(b"{}");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_request_exceeds_size_limit() {
+        let huge_request = vec![b'x'; MAX_QUERY_SIZE + 1];
+        let result = parse_graphql_request(&huge_request);
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            GraphQLError::RequestHandlingError(msg) => {
+                assert!(msg.contains("exceeds maximum size"));
+                assert!(msg.contains("1048576"));
+            }
+            _ => panic!("Expected RequestHandlingError"),
+        }
+    }
+
+    #[test]
+    fn test_parse_request_at_size_limit() {
+        let request_at_limit = vec![b'x'; MAX_QUERY_SIZE];
+        let result = parse_graphql_request(&request_at_limit);
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            GraphQLError::RequestHandlingError(msg) => {
+                assert!(!msg.contains("exceeds maximum size"));
+                assert!(msg.contains("Failed to parse GraphQL request"));
+            }
+            _ => panic!("Expected RequestHandlingError"),
+        }
+    }
+
+    #[test]
+    fn test_parse_request_normal_size_succeeds() {
+        let json = r#"{"query":"{ hello }"}"#;
+        let result = parse_graphql_request(json.as_bytes());
+        assert!(result.is_ok());
+        let payload = result.unwrap();
+        assert_eq!(payload.query, "{ hello }");
     }
 
     #[test]

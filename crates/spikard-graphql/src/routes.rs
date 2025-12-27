@@ -219,25 +219,25 @@ impl GraphQLRouteConfig {
     }
 
     /// Get the configured path
-    #[must_use] 
+    #[must_use]
     pub fn get_path(&self) -> &str {
         &self.path
     }
 
     /// Get the configured method
-    #[must_use] 
+    #[must_use]
     pub fn get_method(&self) -> &str {
         &self.method
     }
 
     /// Check if playground is enabled
-    #[must_use] 
+    #[must_use]
     pub const fn is_playground_enabled(&self) -> bool {
         self.enable_playground
     }
 
     /// Get the description if set
-    #[must_use] 
+    #[must_use]
     pub fn get_description(&self) -> Option<&str> {
         self.description.as_deref()
     }
@@ -285,9 +285,7 @@ mod tests {
 
     #[test]
     fn test_graphql_route_config_clone() {
-        let config1 = GraphQLRouteConfig::new()
-            .path("/graphql")
-            .description("Test API");
+        let config1 = GraphQLRouteConfig::new().path("/graphql").description("Test API");
         let config2 = config1.clone();
 
         assert_eq!(config1.get_path(), config2.get_path());

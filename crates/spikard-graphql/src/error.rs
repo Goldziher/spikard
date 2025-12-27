@@ -94,6 +94,18 @@ pub enum GraphQLError {
         details: Option<Box<Self>>,
     },
 
+    /// Query complexity limit exceeded
+    ///
+    /// Occurs when a GraphQL query exceeds the configured complexity limit.
+    #[error("Query complexity limit exceeded")]
+    ComplexityLimitExceeded,
+
+    /// Query depth limit exceeded
+    ///
+    /// Occurs when a GraphQL query exceeds the configured depth limit.
+    #[error("Query depth limit exceeded")]
+    DepthLimitExceeded,
+
     /// Internal server error
     ///
     /// Occurs when an unexpected internal error happens.
@@ -129,7 +141,7 @@ impl GraphQLError {
     pub const fn status_code(&self) -> u16 {
         match self {
             Self::ParseError(_) | Self::JsonError(_) => 400,
-            Self::ValidationError(_) | Self::InvalidInput { .. } => 422,
+            Self::ValidationError(_) | Self::InvalidInput { .. } | Self::ComplexityLimitExceeded | Self::DepthLimitExceeded => 422,
             Self::AuthenticationError(_) => 401,
             Self::AuthorizationError(_) => 403,
             Self::NotFound(_) => 404,
@@ -223,7 +235,7 @@ impl GraphQLError {
         let status = self.status_code();
         let title = match self {
             Self::ParseError(_) | Self::JsonError(_) => "Bad Request",
-            Self::ValidationError(_) | Self::InvalidInput { .. } => "Validation Failed",
+            Self::ValidationError(_) | Self::InvalidInput { .. } | Self::ComplexityLimitExceeded | Self::DepthLimitExceeded => "Validation Failed",
             Self::AuthenticationError(_) => "Unauthorized",
             Self::AuthorizationError(_) => "Forbidden",
             Self::NotFound(_) => "Not Found",
@@ -263,6 +275,8 @@ impl GraphQLError {
             Self::NotFound(_) => "NOT_FOUND",
             Self::RateLimitExceeded(_) => "RATE_LIMIT_EXCEEDED",
             Self::InvalidInput { .. } => "VALIDATION_ERROR",
+            Self::ComplexityLimitExceeded => "GRAPHQL_COMPLEXITY_LIMIT_EXCEEDED",
+            Self::DepthLimitExceeded => "GRAPHQL_DEPTH_LIMIT_EXCEEDED",
             Self::InternalError(_) => "INTERNAL_SERVER_ERROR",
         }
     }
@@ -284,6 +298,8 @@ impl GraphQLError {
             Self::NotFound(_) => "https://spikard.dev/errors/not-found",
             Self::RateLimitExceeded(_) => "https://spikard.dev/errors/rate-limit-exceeded",
             Self::InvalidInput { .. } => "https://spikard.dev/errors/validation-error",
+            Self::ComplexityLimitExceeded => "https://spikard.dev/errors/complexity-limit-exceeded",
+            Self::DepthLimitExceeded => "https://spikard.dev/errors/depth-limit-exceeded",
             Self::InternalError(_) => "https://spikard.dev/errors/internal-server-error",
         }
     }
@@ -430,6 +446,48 @@ mod tests {
         assert_eq!(error.status_code(), 200);
         let response = error.to_graphql_response();
         assert_eq!(response["errors"][0]["extensions"]["code"], "GRAPHQL_SCHEMA_BUILD_ERROR");
+    }
+
+    #[test]
+    fn test_complexity_limit_exceeded_status_code() {
+        let error = GraphQLError::ComplexityLimitExceeded;
+        assert_eq!(error.status_code(), 422);
+        assert_eq!(error.error_code(), "GRAPHQL_COMPLEXITY_LIMIT_EXCEEDED");
+    }
+
+    #[test]
+    fn test_depth_limit_exceeded_status_code() {
+        let error = GraphQLError::DepthLimitExceeded;
+        assert_eq!(error.status_code(), 422);
+        assert_eq!(error.error_code(), "GRAPHQL_DEPTH_LIMIT_EXCEEDED");
+    }
+
+    #[test]
+    fn test_complexity_limit_exceeded_response() {
+        let error = GraphQLError::ComplexityLimitExceeded;
+        let response = error.to_graphql_response();
+        assert_eq!(response["errors"][0]["extensions"]["code"], "GRAPHQL_COMPLEXITY_LIMIT_EXCEEDED");
+        assert_eq!(response["errors"][0]["extensions"]["status"], 422);
+    }
+
+    #[test]
+    fn test_depth_limit_exceeded_response() {
+        let error = GraphQLError::DepthLimitExceeded;
+        let response = error.to_graphql_response();
+        assert_eq!(response["errors"][0]["extensions"]["code"], "GRAPHQL_DEPTH_LIMIT_EXCEEDED");
+        assert_eq!(response["errors"][0]["extensions"]["status"], 422);
+    }
+
+    #[test]
+    fn test_complexity_limit_exceeded_error_type_uri() {
+        let error = GraphQLError::ComplexityLimitExceeded;
+        assert_eq!(error.error_type_uri(), "https://spikard.dev/errors/complexity-limit-exceeded");
+    }
+
+    #[test]
+    fn test_depth_limit_exceeded_error_type_uri() {
+        let error = GraphQLError::DepthLimitExceeded;
+        assert_eq!(error.error_type_uri(), "https://spikard.dev/errors/depth-limit-exceeded");
     }
 
     #[test]
