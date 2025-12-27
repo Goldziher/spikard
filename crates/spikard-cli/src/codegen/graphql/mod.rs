@@ -17,82 +17,120 @@ pub use generators::{GraphQLGenerator, RustGenerator};
 
 use anyhow::Result;
 
-/// Generate Python GraphQL code from a schema
-pub fn generate_python_graphql(schema: &str, target: &str) -> Result<String> {
+/// Configuration for placeholder GraphQL code generation
+struct PlaceholderConfig {
+    language: &'static str,
+    comment_marker: &'static str,
+    file_header: &'static str,
+    file_footer: &'static str,
+    imports: &'static str,
+}
+
+impl PlaceholderConfig {
+    /// Create configuration for Python
+    fn python() -> Self {
+        Self {
+            language: "Python",
+            comment_marker: "#",
+            file_header: "#!/usr/bin/env python3\n\"\"\"GraphQL code generated from schema.\n\n",
+            file_footer: "\"\"\"\n\n",
+            imports: "from typing import Any, Dict, List, Optional\n\n",
+        }
+    }
+
+    /// Create configuration for TypeScript
+    fn typescript() -> Self {
+        Self {
+            language: "TypeScript",
+            comment_marker: "//",
+            file_header: "/**\n * GraphQL code generated from schema.\n",
+            file_footer: " */\n\n",
+            imports: "",
+        }
+    }
+
+    /// Create configuration for Ruby
+    fn ruby() -> Self {
+        Self {
+            language: "Ruby",
+            comment_marker: "#",
+            file_header: "#!/usr/bin/env ruby\n\n# GraphQL code generated from schema.\n",
+            file_footer: "",
+            imports: "require 'graphql'\n\n",
+        }
+    }
+
+    /// Create configuration for PHP
+    fn php() -> Self {
+        Self {
+            language: "PHP",
+            comment_marker: "//",
+            file_header: "<?php\n\n/**\n * GraphQL code generated from schema.\n",
+            file_footer: " */\n\ndeclare(strict_types=1);\n\nnamespace GraphQL;\n\n",
+            imports: "",
+        }
+    }
+}
+
+/// Generate placeholder GraphQL code from a schema using language-specific configuration
+fn generate_placeholder_graphql(schema: &str, target: &str, config: &PlaceholderConfig) -> Result<String> {
     let mut code = String::new();
-    code.push_str("#!/usr/bin/env python3\n");
-    code.push_str("\"\"\"GraphQL code generated from schema.\n\n");
+
+    code.push_str(config.file_header);
     code.push_str("This is a placeholder implementation.\n");
-    code.push_str("TODO: Implement full Python GraphQL codegen.\n");
-    code.push_str("\"\"\"\n\n");
+    code.push_str(&format!("TODO: Implement full {} GraphQL codegen.\n", config.language));
 
-    code.push_str("from typing import Any, Dict, List, Optional\n\n");
+    if config.file_footer.contains("/**") {
+        // For multi-line comment blocks (TypeScript, PHP)
+        code.push_str(" *\n");
+    }
 
-    code.push_str("# GraphQL Types\n");
+    code.push_str(config.file_footer);
+    code.push_str(config.imports);
+
+    code.push_str(&format!("{} GraphQL Types\n", config.comment_marker));
     match target {
         "all" | "types" => {
-            code.push_str("# TODO: Generate type definitions from schema\n");
+            code.push_str(&format!(
+                "{} TODO: Generate type definitions from schema\n",
+                config.comment_marker
+            ));
             for line in schema.lines().take(5) {
-                code.push_str("# ");
+                code.push_str(&format!("{} ", config.comment_marker));
                 code.push_str(line);
                 code.push('\n');
             }
             if schema.lines().count() > 5 {
-                code.push_str("# ... (and more)\n");
+                code.push_str(&format!("{} ... (and more)\n", config.comment_marker));
             }
         }
         _ => {}
     }
 
     if target == "all" || target == "resolvers" {
-        code.push_str("\n# GraphQL Resolvers\n");
-        code.push_str("# TODO: Implement resolver functions\n");
+        code.push_str(&format!("\n{} GraphQL Resolvers\n", config.comment_marker));
+        code.push_str(&format!(
+            "{} TODO: Implement resolver functions\n",
+            config.comment_marker
+        ));
     }
 
     if target == "all" || target == "schema" {
-        code.push_str("\n# Schema Definition\n");
-        code.push_str("# TODO: Export schema object\n");
+        code.push_str(&format!("\n{} Schema Definition\n", config.comment_marker));
+        code.push_str(&format!("{} TODO: Export schema object\n", config.comment_marker));
     }
 
     Ok(code)
 }
 
+/// Generate Python GraphQL code from a schema
+pub fn generate_python_graphql(schema: &str, target: &str) -> Result<String> {
+    generate_placeholder_graphql(schema, target, &PlaceholderConfig::python())
+}
+
 /// Generate TypeScript GraphQL code from a schema
 pub fn generate_typescript_graphql(schema: &str, target: &str) -> Result<String> {
-    let mut code = String::new();
-    code.push_str("/**\n");
-    code.push_str(" * GraphQL code generated from schema.\n");
-    code.push_str(" * This is a placeholder implementation.\n");
-    code.push_str(" * TODO: Implement full TypeScript GraphQL codegen.\n");
-    code.push_str(" */\n\n");
-
-    code.push_str("// GraphQL Types\n");
-    match target {
-        "all" | "types" => {
-            code.push_str("// TODO: Generate type definitions from schema\n");
-            for line in schema.lines().take(5) {
-                code.push_str("// ");
-                code.push_str(line);
-                code.push('\n');
-            }
-            if schema.lines().count() > 5 {
-                code.push_str("// ... (and more)\n");
-            }
-        }
-        _ => {}
-    }
-
-    if target == "all" || target == "resolvers" {
-        code.push_str("\n// GraphQL Resolvers\n");
-        code.push_str("// TODO: Implement resolver functions\n");
-    }
-
-    if target == "all" || target == "schema" {
-        code.push_str("\n// Schema Definition\n");
-        code.push_str("// TODO: Export schema object\n");
-    }
-
-    Ok(code)
+    generate_placeholder_graphql(schema, target, &PlaceholderConfig::typescript())
 }
 
 /// Generate Rust GraphQL code from a schema
@@ -131,81 +169,10 @@ pub fn generate_rust_graphql(schema: &str, target: &str) -> Result<String> {
 
 /// Generate Ruby GraphQL code from a schema
 pub fn generate_ruby_graphql(schema: &str, target: &str) -> Result<String> {
-    let mut code = String::new();
-    code.push_str("#!/usr/bin/env ruby\n\n");
-    code.push_str("# GraphQL code generated from schema.\n");
-    code.push_str("# This is a placeholder implementation.\n");
-    code.push_str("# TODO: Implement full Ruby GraphQL codegen.\n\n");
-
-    code.push_str("require 'graphql'\n\n");
-
-    code.push_str("# GraphQL Types\n");
-    match target {
-        "all" | "types" => {
-            code.push_str("# TODO: Generate type definitions from schema\n");
-            for line in schema.lines().take(5) {
-                code.push_str("# ");
-                code.push_str(line);
-                code.push('\n');
-            }
-            if schema.lines().count() > 5 {
-                code.push_str("# ... (and more)\n");
-            }
-        }
-        _ => {}
-    }
-
-    if target == "all" || target == "resolvers" {
-        code.push_str("\n# GraphQL Resolvers\n");
-        code.push_str("# TODO: Implement resolver methods\n");
-    }
-
-    if target == "all" || target == "schema" {
-        code.push_str("\n# Schema Definition\n");
-        code.push_str("# TODO: Export schema object\n");
-    }
-
-    Ok(code)
+    generate_placeholder_graphql(schema, target, &PlaceholderConfig::ruby())
 }
 
 /// Generate PHP GraphQL code from a schema
 pub fn generate_php_graphql(schema: &str, target: &str) -> Result<String> {
-    let mut code = String::new();
-    code.push_str("<?php\n\n");
-    code.push_str("/**\n");
-    code.push_str(" * GraphQL code generated from schema.\n");
-    code.push_str(" * This is a placeholder implementation.\n");
-    code.push_str(" * TODO: Implement full PHP GraphQL codegen.\n");
-    code.push_str(" */\n\n");
-
-    code.push_str("declare(strict_types=1);\n\n");
-    code.push_str("namespace GraphQL;\n\n");
-
-    code.push_str("// GraphQL Types\n");
-    match target {
-        "all" | "types" => {
-            code.push_str("// TODO: Generate type definitions from schema\n");
-            for line in schema.lines().take(5) {
-                code.push_str("// ");
-                code.push_str(line);
-                code.push('\n');
-            }
-            if schema.lines().count() > 5 {
-                code.push_str("// ... (and more)\n");
-            }
-        }
-        _ => {}
-    }
-
-    if target == "all" || target == "resolvers" {
-        code.push_str("\n// GraphQL Resolvers\n");
-        code.push_str("// TODO: Implement resolver methods\n");
-    }
-
-    if target == "all" || target == "schema" {
-        code.push_str("\n// Schema Definition\n");
-        code.push_str("// TODO: Export schema object\n");
-    }
-
-    Ok(code)
+    generate_placeholder_graphql(schema, target, &PlaceholderConfig::php())
 }

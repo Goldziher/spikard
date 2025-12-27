@@ -78,6 +78,8 @@ pub struct GraphQLField {
     pub type_name: String,
     /// Whether the field returns a list
     pub is_list: bool,
+    /// Whether list items are nullable (only meaningful if is_list is true)
+    pub list_item_nullable: bool,
     /// Whether the field is nullable (default true)
     pub is_nullable: bool,
     /// Field arguments
@@ -99,6 +101,8 @@ pub struct GraphQLArgument {
     pub is_nullable: bool,
     /// Whether argument type is a list
     pub is_list: bool,
+    /// Whether list items are nullable (only meaningful if is_list is true)
+    pub list_item_nullable: bool,
     /// Default value as string (e.g., "10", "\"default\"")
     pub default_value: Option<String>,
     /// Argument description
@@ -142,6 +146,8 @@ pub struct GraphQLInputField {
     pub is_nullable: bool,
     /// Whether field type is a list
     pub is_list: bool,
+    /// Whether list items are nullable (only meaningful if is_list is true)
+    pub list_item_nullable: bool,
     /// Default value as string
     pub default_value: Option<String>,
     /// Field description
@@ -271,11 +277,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                                 is_deprecated: v.directives
                                     .iter()
                                     .any(|d| d.name == "deprecated"),
-                                deprecation_reason: v
-                                    .directives
-                                    .iter()
-                                    .find(|d| d.name == "deprecated")
-                                    .and_then(|_| Some("Deprecated".to_string())),
+                                deprecation_reason: extract_deprecation_reason(&v.directives),
                             })
                             .collect();
 
@@ -409,6 +411,23 @@ fn parse_graphql_introspection_value(_value: &Value) -> Result<GraphQLSchema> {
 
 // Helper functions
 
+/// Extract deprecation reason from directive arguments
+fn extract_deprecation_reason(directives: &[graphql_parser::schema::Directive<String>]) -> Option<String> {
+    directives
+        .iter()
+        .find(|d| d.name == "deprecated")
+        .and_then(|d| {
+            d.arguments
+                .iter()
+                .find(|(arg_name, _)| arg_name == "reason")
+                .and_then(|(_, value)| match value {
+                    graphql_parser::schema::Value::String(s) => Some(s.clone()),
+                    _ => None,
+                })
+                .or_else(|| Some("Deprecated".to_string()))
+        })
+}
+
 /// Extract fields from an Object type definition (SDL)
 fn extract_fields_from_object(obj: &ObjectType<String>) -> Vec<GraphQLField> {
     obj.fields
@@ -431,7 +450,7 @@ fn extract_fields_from_object(obj: &ObjectType<String>) -> Vec<GraphQLField> {
                 })
                 .collect(),
             description: field.description.clone(),
-            deprecation_reason: None,
+            deprecation_reason: extract_deprecation_reason(&field.directives),
         })
         .collect()
 }
@@ -461,7 +480,7 @@ fn extract_fields_from_interface(
                 })
                 .collect(),
             description: field.description.clone(),
-            deprecation_reason: None,
+            deprecation_reason: extract_deprecation_reason(&field.directives),
         })
         .collect()
 }
@@ -666,5 +685,148 @@ mod tests {
         let nullable_list = schema.queries.iter().find(|f| f.name == "nullableList").unwrap();
         assert!(nullable_list.is_nullable);
         assert!(nullable_list.is_list);
+    }
+
+    #[test]
+    fn test_enum_deprecation_with_custom_reason() {
+        let sdl = r#"
+            enum Status {
+                ACTIVE
+                INACTIVE @deprecated(reason: "Use ARCHIVED instead")
+                PENDING @deprecated
+            }
+
+            type Query {
+                status: Status
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse SDL");
+        let status_enum = &schema.types["Status"];
+        assert_eq!(status_enum.enum_values.len(), 3);
+
+        // Check ACTIVE (not deprecated)
+        let active = &status_enum.enum_values[0];
+        assert_eq!(active.name, "ACTIVE");
+        assert!(!active.is_deprecated);
+        assert!(active.deprecation_reason.is_none());
+
+        // Check INACTIVE (deprecated with custom reason)
+        let inactive = &status_enum.enum_values[1];
+        assert_eq!(inactive.name, "INACTIVE");
+        assert!(inactive.is_deprecated);
+        assert_eq!(inactive.deprecation_reason, Some("Use ARCHIVED instead".to_string()));
+
+        // Check PENDING (deprecated with default reason)
+        let pending = &status_enum.enum_values[2];
+        assert_eq!(pending.name, "PENDING");
+        assert!(pending.is_deprecated);
+        assert_eq!(pending.deprecation_reason, Some("Deprecated".to_string()));
+    }
+
+    #[test]
+    fn test_field_deprecation_with_custom_reason() {
+        let sdl = r#"
+            type User {
+                id: ID!
+                name: String!
+                email: String @deprecated(reason: "Use emailAddress instead")
+                oldField: String @deprecated
+            }
+
+            type Query {
+                user(id: ID!): User
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse SDL");
+        let user_type = &schema.types["User"];
+        assert_eq!(user_type.fields.len(), 4);
+
+        // Check id (not deprecated)
+        let id_field = &user_type.fields[0];
+        assert_eq!(id_field.name, "id");
+        assert!(id_field.deprecation_reason.is_none());
+
+        // Check name (not deprecated)
+        let name_field = &user_type.fields[1];
+        assert_eq!(name_field.name, "name");
+        assert!(name_field.deprecation_reason.is_none());
+
+        // Check email (deprecated with custom reason)
+        let email_field = &user_type.fields[2];
+        assert_eq!(email_field.name, "email");
+        assert_eq!(email_field.deprecation_reason, Some("Use emailAddress instead".to_string()));
+
+        // Check oldField (deprecated with default reason)
+        let old_field = &user_type.fields[3];
+        assert_eq!(old_field.name, "oldField");
+        assert_eq!(old_field.deprecation_reason, Some("Deprecated".to_string()));
+    }
+
+    #[test]
+    fn test_interface_field_deprecation() {
+        let sdl = r#"
+            interface Node {
+                id: ID!
+                createdAt: String @deprecated(reason: "Use timestamp instead")
+            }
+
+            type Query {
+                node(id: ID!): Node
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse SDL");
+        let node_interface = &schema.types["Node"];
+        assert_eq!(node_interface.fields.len(), 2);
+
+        // Check id (not deprecated)
+        let id_field = &node_interface.fields[0];
+        assert_eq!(id_field.name, "id");
+        assert!(id_field.deprecation_reason.is_none());
+
+        // Check createdAt (deprecated with custom reason)
+        let created_at_field = &node_interface.fields[1];
+        assert_eq!(created_at_field.name, "createdAt");
+        assert_eq!(created_at_field.deprecation_reason, Some("Use timestamp instead".to_string()));
+    }
+
+    #[test]
+    fn test_list_item_nullability_detection() {
+        let sdl = r#"
+            type Query {
+                listOfNullableStrings: [String]
+                listOfNonNullStrings: [String!]
+                nonNullListOfNullableStrings: [String]!
+                nonNullListOfNonNullStrings: [String!]!
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse SDL");
+
+        // [String] → Option<Vec<Option<String>>>
+        let list_nullable = schema.queries.iter().find(|f| f.name == "listOfNullableStrings").unwrap();
+        assert!(list_nullable.is_nullable);
+        assert!(list_nullable.is_list);
+        assert!(list_nullable.list_item_nullable);
+
+        // [String!] → Vec<Option<String>>
+        let list_non_null = schema.queries.iter().find(|f| f.name == "listOfNonNullStrings").unwrap();
+        assert!(list_non_null.is_nullable);
+        assert!(list_non_null.is_list);
+        assert!(!list_non_null.list_item_nullable);
+
+        // [String]! → Option<Vec<String>>
+        let non_null_list_nullable = schema.queries.iter().find(|f| f.name == "nonNullListOfNullableStrings").unwrap();
+        assert!(!non_null_list_nullable.is_nullable);
+        assert!(non_null_list_nullable.is_list);
+        assert!(non_null_list_nullable.list_item_nullable);
+
+        // [String!]! → Vec<String>
+        let non_null_list_non_null = schema.queries.iter().find(|f| f.name == "nonNullListOfNonNullStrings").unwrap();
+        assert!(!non_null_list_non_null.is_nullable);
+        assert!(non_null_list_non_null.is_list);
+        assert!(!non_null_list_non_null.list_item_nullable);
     }
 }

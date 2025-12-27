@@ -65,9 +65,19 @@ impl RustGenerator {
 
     /// Map GraphQL type to Rust type with proper nullability and list handling
     fn map_type(&self, field_type: &str, is_nullable: bool, is_list: bool) -> String {
+        // Default assumes list items can be nullable
+        self.map_type_with_list_item_nullability(field_type, is_nullable, is_list, true)
+    }
+
+    /// Map GraphQL type to Rust type with explicit list item nullability
+    fn map_type_with_list_item_nullability(&self, field_type: &str, is_nullable: bool, is_list: bool, list_item_nullable: bool) -> String {
         let base = self.map_scalar_type(field_type);
         let with_list = if is_list {
-            format!("Vec<{}>", base)
+            if list_item_nullable {
+                format!("Vec<Option<{}>>", base)
+            } else {
+                format!("Vec<{}>", base)
+            }
         } else {
             base
         };
@@ -461,13 +471,43 @@ mod tests {
     #[test]
     fn test_map_type_list() {
         let generator = RustGenerator::new();
-        assert_eq!(generator.map_type("String", false, true), "Vec<String>");
+        // Default list_item_nullable is true, so [String] (without !) → Vec<Option<String>>
+        assert_eq!(generator.map_type("String", false, true), "Vec<Option<String>>");
     }
 
     #[test]
     fn test_map_type_nullable_list() {
         let generator = RustGenerator::new();
-        assert_eq!(generator.map_type("String", true, true), "Option<Vec<String>>");
+        // Default list_item_nullable is true, so [String] (without !) → Option<Vec<Option<String>>>
+        assert_eq!(generator.map_type("String", true, true), "Option<Vec<Option<String>>>");
+    }
+
+    #[test]
+    fn test_map_type_with_list_item_nullability_nullable_items() {
+        let generator = RustGenerator::new();
+        // [String] → Option<Vec<Option<String>>>
+        assert_eq!(generator.map_type_with_list_item_nullability("String", true, true, true), "Option<Vec<Option<String>>>");
+    }
+
+    #[test]
+    fn test_map_type_with_list_item_nullability_non_nullable_items() {
+        let generator = RustGenerator::new();
+        // [String!] → Option<Vec<String>>
+        assert_eq!(generator.map_type_with_list_item_nullability("String", true, true, false), "Option<Vec<String>>");
+    }
+
+    #[test]
+    fn test_map_type_with_list_item_nullability_non_null_list_nullable_items() {
+        let generator = RustGenerator::new();
+        // [String]! → Vec<Option<String>>
+        assert_eq!(generator.map_type_with_list_item_nullability("String", false, true, true), "Vec<Option<String>>");
+    }
+
+    #[test]
+    fn test_map_type_with_list_item_nullability_non_null_list_non_null_items() {
+        let generator = RustGenerator::new();
+        // [String!]! → Vec<String>
+        assert_eq!(generator.map_type_with_list_item_nullability("String", false, true, false), "Vec<String>");
     }
 
     #[test]
