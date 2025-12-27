@@ -19,22 +19,30 @@ runs:
   using: composite
   steps:
     - name: Download benchmark tools
-      uses: actions/download-artifact@v7
+      shell: bash
+      run: |
+        install_dir="${{ inputs.install-dir }}"
+        install_dir="${install_dir/#\~/$HOME}"
+        mkdir -p "$install_dir"
+        echo "BENCHMARK_INSTALL_DIR=$install_dir" >> $GITHUB_ENV
+
+    - uses: actions/download-artifact@v7
       with:
         name: ${{ inputs.artifact-name }}
-        path: ${{ inputs.install-dir }}
+        path: ${{ env.BENCHMARK_INSTALL_DIR }}
 
     - name: Make benchmark tools executable
       shell: bash
       run: |
+        install_dir="${{ env.BENCHMARK_INSTALL_DIR }}"
         extra="${{ inputs.extra-binaries }}"
-        chmod +x "${{ inputs.install-dir }}/benchmark-harness" "${{ inputs.install-dir }}/oha"
+        chmod +x "$install_dir/benchmark-harness" "$install_dir/oha"
         if [ -n "$extra" ]; then
           for bin in $extra; do
-            chmod +x "${{ inputs.install-dir }}/${bin}"
+            chmod +x "$install_dir/${bin}"
           done
         fi
 
     - name: Add tools to PATH
       shell: bash
-      run: echo "${{ inputs.install-dir }}" >> $GITHUB_PATH
+      run: echo "${{ env.BENCHMARK_INSTALL_DIR }}" >> $GITHUB_PATH
