@@ -1093,7 +1093,7 @@ fn response_snapshot_to_ruby(ruby: &Ruby, snapshot: ResponseSnapshot) -> Result<
     hash.aset(ruby.intern("headers"), headers_hash)?;
 
     let body_value = ruby.str_new(&String::from_utf8_lossy(&snapshot.body));
-    hash.aset(ruby.intern("body"), body_value.clone())?;
+    hash.aset(ruby.intern("body"), body_value)?;
     hash.aset(ruby.intern("body_text"), body_value)?;
 
     Ok(hash.as_value())

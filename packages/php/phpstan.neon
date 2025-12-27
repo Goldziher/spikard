@@ -3,10 +3,11 @@ parameters:
     paths:
         - src
         - tests
+        - stubs
     tmpDir: var/cache/phpstan
     bootstrapFiles:
         - vendor/autoload.php
         - tests/bootstrap.php
-    scanFiles:
+    stubFiles:
         - stubs/ext.php
     treatPhpDocTypesAsCertain: true

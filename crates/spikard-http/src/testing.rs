@@ -44,6 +44,28 @@ impl ResponseSnapshot {
     pub fn header(&self, name: &str) -> Option<&str> {
         self.headers.get(&name.to_ascii_lowercase()).map(|s| s.as_str())
     }
+
+    /// Extract GraphQL data from response
+    pub fn graphql_data(&self) -> Result<Value, SnapshotError> {
+        let body: Value = serde_json::from_slice(&self.body)
+            .map_err(|e| SnapshotError::Decompression(format!("Failed to parse JSON: {}", e)))?;
+
+        body.get("data")
+            .cloned()
+            .ok_or_else(|| SnapshotError::Decompression("No 'data' field in GraphQL response".to_string()))
+    }
+
+    /// Extract GraphQL errors from response
+    pub fn graphql_errors(&self) -> Result<Vec<Value>, SnapshotError> {
+        let body: Value = serde_json::from_slice(&self.body)
+            .map_err(|e| SnapshotError::Decompression(format!("Failed to parse JSON: {}", e)))?;
+
+        Ok(body
+            .get("errors")
+            .and_then(|e| e.as_array())
+            .cloned()
+            .unwrap_or_default())
+    }
 }
 
 /// Possible errors while converting an Axum response into a snapshot.
@@ -402,5 +424,99 @@ mod tests {
             data: "not-json".to_string(),
         };
         assert!(event.as_json().is_err());
+    }
+
+    #[test]
+    fn test_graphql_data_extraction() {
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+
+        let graphql_response = serde_json::json!({
+            "data": {
+                "user": {
+                    "id": "1",
+                    "name": "Alice"
+                }
+            }
+        });
+
+        let snapshot = ResponseSnapshot {
+            status: 200,
+            headers,
+            body: serde_json::to_vec(&graphql_response).unwrap(),
+        };
+
+        let data = snapshot.graphql_data().expect("data extraction");
+        assert_eq!(data["user"]["id"], "1");
+        assert_eq!(data["user"]["name"], "Alice");
+    }
+
+    #[test]
+    fn test_graphql_errors_extraction() {
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+
+        let graphql_response = serde_json::json!({
+            "errors": [
+                {
+                    "message": "Field not found",
+                    "path": ["user", "email"]
+                },
+                {
+                    "message": "Unauthorized",
+                    "extensions": { "code": "UNAUTHENTICATED" }
+                }
+            ]
+        });
+
+        let snapshot = ResponseSnapshot {
+            status: 400,
+            headers,
+            body: serde_json::to_vec(&graphql_response).unwrap(),
+        };
+
+        let errors = snapshot.graphql_errors().expect("errors extraction");
+        assert_eq!(errors.len(), 2);
+        assert_eq!(errors[0]["message"], "Field not found");
+        assert_eq!(errors[1]["message"], "Unauthorized");
+    }
+
+    #[test]
+    fn test_graphql_missing_data_field() {
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+
+        let graphql_response = serde_json::json!({
+            "errors": [{ "message": "Query failed" }]
+        });
+
+        let snapshot = ResponseSnapshot {
+            status: 400,
+            headers,
+            body: serde_json::to_vec(&graphql_response).unwrap(),
+        };
+
+        let result = snapshot.graphql_data();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("No 'data' field"));
+    }
+
+    #[test]
+    fn test_graphql_empty_errors() {
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+
+        let graphql_response = serde_json::json!({
+            "data": { "result": null }
+        });
+
+        let snapshot = ResponseSnapshot {
+            status: 200,
+            headers,
+            body: serde_json::to_vec(&graphql_response).unwrap(),
+        };
+
+        let errors = snapshot.graphql_errors().expect("errors extraction");
+        assert!(errors.is_empty());
     }
 }

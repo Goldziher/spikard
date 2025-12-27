@@ -1,0 +1,27 @@
+{
+	"name": "syntax_error",
+	"description": "GraphQL document with invalid syntax - unterminated string and missing closing brace",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  user(id: ID!): String!\n}",
+	"request": {
+		"query": "query {\n  user(id: \"123\n}"
+	},
+	"expected_response": {
+		"status_code": 400,
+		"data": null,
+		"errors": [
+			{
+				"message": "Syntax Error in GraphQL query at line 2, column 17: Unterminated string.",
+				"locations": [
+					{
+						"line": 2,
+						"column": 17
+					}
+				]
+			}
+		]
+	},
+	"resolvers": {},
+	"tags": ["errors", "syntax", "validation"]
+}

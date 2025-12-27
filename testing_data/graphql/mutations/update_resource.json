@@ -1,0 +1,43 @@
+{
+	"name": "update_resource",
+	"description": "Mutation that updates a resource with partial input fields",
+	"operation_type": "mutation",
+	"endpoint": "/graphql",
+	"schema": "type Mutation {\n  updateUser(id: ID!, input: UpdateUserInput!): User!\n}\n\ninput UpdateUserInput {\n  name: String\n  email: String\n  role: String\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n  role: String\n  updatedAt: String!\n}",
+	"request": {
+		"query": "mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {\n  updateUser(id: $id, input: $input) {\n    id\n    name\n    email\n    role\n    updatedAt\n  }\n}",
+		"variables": {
+			"id": "user-123",
+			"input": {
+				"email": "john.doe@example.com",
+				"role": "editor"
+			}
+		},
+		"operationName": "UpdateUser"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"updateUser": {
+				"id": "user-123",
+				"name": "John Doe",
+				"email": "john.doe@example.com",
+				"role": "editor",
+				"updatedAt": "2025-12-27T11:45:00Z"
+			}
+		}
+	},
+	"resolvers": {
+		"Mutation.updateUser": {
+			"type": "mock_with_args",
+			"return_value": {
+				"id": "user-123",
+				"name": "John Doe",
+				"email": "john.doe@example.com",
+				"role": "editor",
+				"updatedAt": "2025-12-27T11:45:00Z"
+			}
+		}
+	},
+	"tags": ["mutations", "update-operations", "partial-input"]
+}

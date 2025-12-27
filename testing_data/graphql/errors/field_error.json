@@ -1,0 +1,31 @@
+{
+	"name": "field_error",
+	"description": "Query requesting non-existent field with error path and location information",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  user(id: ID!): User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n}",
+	"request": {
+		"query": "query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n    invalidField\n  }\n}",
+		"variables": {
+			"id": "user-123"
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"data": null,
+		"errors": [
+			{
+				"message": "Cannot query field \"invalidField\" on type \"User\". Did you mean \"id\", \"name\", or \"email\"?",
+				"locations": [
+					{
+						"line": 4,
+						"column": 5
+					}
+				],
+				"path": ["user", "invalidField"]
+			}
+		]
+	},
+	"resolvers": {},
+	"tags": ["errors", "field-resolution", "validation"]
+}

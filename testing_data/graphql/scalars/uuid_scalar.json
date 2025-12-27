@@ -1,0 +1,44 @@
+{
+	"name": "uuid_scalar",
+	"description": "Custom UUID scalar type validation with RFC 4122 format",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "scalar UUID\n\ntype Query {\n  resource(id: UUID!): Resource!\n}\n\ntype Resource {\n  id: UUID!\n  parentId: UUID\n  name: String!\n  ownerId: UUID!\n  relatedIds: [UUID!]!\n}",
+	"request": {
+		"query": "query GetResource($id: UUID!) {\n  resource(id: $id) {\n    id\n    parentId\n    name\n    ownerId\n    relatedIds\n  }\n}",
+		"variables": {
+			"id": "550e8400-e29b-41d4-a716-446655440000"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"resource": {
+				"id": "550e8400-e29b-41d4-a716-446655440000",
+				"parentId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+				"name": "Primary Resource",
+				"ownerId": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+				"relatedIds": [
+					"6ba7b812-9dad-11d1-80b4-00c04fd430c8",
+					"6ba7b814-9dad-11d1-80b4-00c04fd430c8"
+				]
+			}
+		}
+	},
+	"resolvers": {
+		"Query.resource": {
+			"type": "mock",
+			"return_value": {
+				"id": "550e8400-e29b-41d4-a716-446655440000",
+				"parentId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+				"name": "Primary Resource",
+				"ownerId": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+				"relatedIds": [
+					"6ba7b812-9dad-11d1-80b4-00c04fd430c8",
+					"6ba7b814-9dad-11d1-80b4-00c04fd430c8"
+				]
+			}
+		}
+	},
+	"tags": ["scalars", "uuid", "custom-types"]
+}

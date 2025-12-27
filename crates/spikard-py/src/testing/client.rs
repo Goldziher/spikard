@@ -73,11 +73,7 @@ impl TestClient {
                 .get(
                     &path,
                     Some(query_params_vec),
-                    if headers_vec.is_empty() {
-                        None
-                    } else {
-                        Some(headers_vec)
-                    },
+                    wrap_optional_vec(headers_vec),
                 )
                 .await
                 .map(|snapshot| TestResponse { snapshot })
@@ -112,11 +108,7 @@ impl TestClient {
         headers: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
-        let json_value = if let Some(j) = json {
-            Some(python_to_json(py, j)?)
-        } else {
-            None
-        };
+        let json_value = python_to_json_opt(py, json)?;
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
         let client = Arc::clone(&self.client);
@@ -160,11 +152,7 @@ impl TestClient {
                     form_for_encoding,
                     multipart,
                     Some(query_params_vec),
-                    if headers_vec.is_empty() {
-                        None
-                    } else {
-                        Some(headers_vec)
-                    },
+                    wrap_optional_vec(headers_vec),
                 )
                 .await
                 .map(|snapshot| TestResponse { snapshot })
@@ -185,11 +173,7 @@ impl TestClient {
         headers: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
-        let json_value = if let Some(j) = json {
-            Some(python_to_json(py, j)?)
-        } else {
-            None
-        };
+        let json_value = python_to_json_opt(py, json)?;
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
         let client = Arc::clone(&self.client);
@@ -200,11 +184,7 @@ impl TestClient {
                     &path,
                     json_value,
                     Some(query_params_vec),
-                    if headers_vec.is_empty() {
-                        None
-                    } else {
-                        Some(headers_vec)
-                    },
+                    wrap_optional_vec(headers_vec),
                 )
                 .await
                 .map(|snapshot| TestResponse { snapshot })
@@ -225,11 +205,7 @@ impl TestClient {
         headers: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
-        let json_value = if let Some(j) = json {
-            Some(python_to_json(py, j)?)
-        } else {
-            None
-        };
+        let json_value = python_to_json_opt(py, json)?;
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
         let client = Arc::clone(&self.client);
@@ -240,11 +216,7 @@ impl TestClient {
                     &path,
                     json_value,
                     Some(query_params_vec),
-                    if headers_vec.is_empty() {
-                        None
-                    } else {
-                        Some(headers_vec)
-                    },
+                    wrap_optional_vec(headers_vec),
                 )
                 .await
                 .map(|snapshot| TestResponse { snapshot })
@@ -273,11 +245,7 @@ impl TestClient {
                 .delete(
                     &path,
                     Some(query_params_vec),
-                    if headers_vec.is_empty() {
-                        None
-                    } else {
-                        Some(headers_vec)
-                    },
+                    wrap_optional_vec(headers_vec),
                 )
                 .await
                 .map(|snapshot| TestResponse { snapshot })
@@ -306,11 +274,7 @@ impl TestClient {
                 .options(
                     &path,
                     Some(query_params_vec),
-                    if headers_vec.is_empty() {
-                        None
-                    } else {
-                        Some(headers_vec)
-                    },
+                    wrap_optional_vec(headers_vec),
                 )
                 .await
                 .map(|snapshot| TestResponse { snapshot })
@@ -339,11 +303,7 @@ impl TestClient {
                 .head(
                     &path,
                     Some(query_params_vec),
-                    if headers_vec.is_empty() {
-                        None
-                    } else {
-                        Some(headers_vec)
-                    },
+                    wrap_optional_vec(headers_vec),
                 )
                 .await
                 .map(|snapshot| TestResponse { snapshot })
@@ -372,11 +332,7 @@ impl TestClient {
                 .trace(
                     &path,
                     Some(query_params_vec),
-                    if headers_vec.is_empty() {
-                        None
-                    } else {
-                        Some(headers_vec)
-                    },
+                    wrap_optional_vec(headers_vec),
                 )
                 .await
                 .map(|snapshot| TestResponse { snapshot })
@@ -408,6 +364,69 @@ impl TestClient {
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
 
             sse::sse_stream_from_response(&snapshot)
+        };
+
+        pyo3_async_runtimes::tokio::future_into_py(py, fut)
+    }
+
+    /// Send a GraphQL query/mutation
+    ///
+    /// Args:
+    ///     query: GraphQL query string
+    ///     variables: Optional GraphQL variables dict
+    ///     operation_name: Optional operation name string
+    ///
+    /// Returns:
+    ///     TestResponse with GraphQL response
+    #[pyo3(signature = (query, variables=None, operation_name=None))]
+    fn graphql<'py>(
+        &self,
+        py: Python<'py>,
+        query: String,
+        variables: Option<&Bound<'py, PyAny>>,
+        operation_name: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let variables_json = python_to_json_opt(py, variables)?;
+        let client = Arc::clone(&self.client);
+
+        let fut = async move {
+            client
+                .graphql(&query, variables_json, operation_name.as_deref())
+                .await
+                .map(|snapshot| TestResponse { snapshot })
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
+        };
+
+        pyo3_async_runtimes::tokio::future_into_py(py, fut)
+    }
+
+    /// Send a GraphQL query and get HTTP status separately
+    ///
+    /// Args:
+    ///     query: GraphQL query string
+    ///     variables: Optional GraphQL variables dict
+    ///     operation_name: Optional operation name string
+    ///
+    /// Returns:
+    ///     Tuple of (status_code, TestResponse)
+    #[pyo3(signature = (query, variables=None, operation_name=None))]
+    fn graphql_with_status<'py>(
+        &self,
+        py: Python<'py>,
+        query: String,
+        variables: Option<&Bound<'py, PyAny>>,
+        operation_name: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let variables_json = python_to_json_opt(py, variables)?;
+        let client = Arc::clone(&self.client);
+
+        let fut = async move {
+            let (status, snapshot) = client
+                .graphql_with_status(&query, variables_json, operation_name.as_deref())
+                .await
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+
+            Ok((status, TestResponse { snapshot }))
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -502,6 +521,55 @@ impl TestResponse {
     fn __repr__(&self) -> String {
         format!("<TestResponse status={}>", self.snapshot.status)
     }
+
+    /// Extract GraphQL data from response
+    ///
+    /// Returns:
+    ///     The 'data' field from the GraphQL response as a Python object
+    fn graphql_data<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let data = self
+            .snapshot
+            .graphql_data()
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+
+        json_to_python(py, &data)
+    }
+
+    /// Extract GraphQL errors from response
+    ///
+    /// Returns:
+    ///     A list of error objects from the GraphQL response
+    fn graphql_errors<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyList>> {
+        let errors = self
+            .snapshot
+            .graphql_errors()
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+
+        let py_list = PyList::empty(py);
+        for error in errors {
+            let py_error = json_to_python(py, &error)?;
+            py_list.append(py_error)?;
+        }
+        Ok(py_list)
+    }
+}
+
+/// Convert a vector of (String, String) to Option<Vec<...>> if non-empty
+/// This wraps header and query param vectors into the format expected by the test client
+#[inline]
+fn wrap_optional_vec(vec: Vec<(String, String)>) -> Option<Vec<(String, String)>> {
+    if vec.is_empty() {
+        None
+    } else {
+        Some(vec)
+    }
+}
+
+/// Convert optional Python value to JSON, handling None case
+/// This eliminates duplicated json conversion logic across methods
+#[inline]
+fn python_to_json_opt(py: Python<'_>, value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<Value>> {
+    value.map(|v| python_to_json(py, v)).transpose()
 }
 
 /// Extract a PyDict to a Vec of (String, String) tuples

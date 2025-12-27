@@ -104,6 +104,52 @@ impl PhpTestResponse {
     pub fn is_server_error(&self) -> bool {
         self.status >= 500 && self.status < 600
     }
+
+    /// Extract GraphQL data from response.
+    ///
+    /// Returns the "data" field from the GraphQL response as a PHP array.
+    /// Throws PhpException if the response body is invalid JSON or contains no "data" field.
+    ///
+    /// # Errors
+    /// - Invalid JSON in response body
+    /// - Missing "data" field in GraphQL response
+    #[php(name = "graphqlData")]
+    pub fn graphql_data(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let value: JsonValue =
+            serde_json::from_str(&self.body).map_err(|e| PhpException::default(format!("Invalid JSON body: {}", e)))?;
+
+        let data = value
+            .get("data")
+            .ok_or_else(|| PhpException::default("No 'data' field in GraphQL response".to_string()))?;
+
+        super::json_to_php_table(data)
+    }
+
+    /// Extract GraphQL errors from response.
+    ///
+    /// Returns the "errors" field from the GraphQL response as a PHP array of error objects.
+    /// Returns an empty array if no errors are present.
+    ///
+    /// # Errors
+    /// - Invalid JSON in response body
+    #[php(name = "graphqlErrors")]
+    pub fn graphql_errors(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let value: JsonValue =
+            serde_json::from_str(&self.body).map_err(|e| PhpException::default(format!("Invalid JSON body: {}", e)))?;
+
+        let errors = value
+            .get("errors")
+            .and_then(|e| e.as_array())
+            .cloned()
+            .unwrap_or_default();
+
+        let mut table = super::php_table_with_capacity(errors.len());
+        for error in errors {
+            table.push(super::json_to_php_table(&error)?).map_err(super::map_ext_php_err)?;
+        }
+
+        Ok(table)
+    }
 }
 
 struct NativeClientInner {
@@ -308,6 +354,65 @@ impl PhpNativeTestClient {
         ))?;
 
         PhpSseStream::from_snapshot(response)
+    }
+
+    /// Send a GraphQL query/mutation.
+    #[php(name = "graphql")]
+    pub fn graphql(
+        &self,
+        query: String,
+        variables: Option<&Zval>,
+        operation_name: Option<String>,
+    ) -> PhpResult<PhpTestResponse> {
+        let variables_json = match variables {
+            Some(v) => {
+                // Convert PHP Zval to serde_json::Value
+                let json_val = zval_to_json(v).map_err(|e| PhpException::default(e))?;
+                Some(json_val)
+            }
+            None => None,
+        };
+
+        let mut body = serde_json::json!({ "query": query });
+        if let Some(vars) = variables_json {
+            body["variables"] = vars;
+        }
+        if let Some(op_name) = operation_name {
+            body["operationName"] = JsonValue::String(op_name);
+        }
+
+        let inner_ref = self.inner.borrow();
+        let inner = inner_ref
+            .as_ref()
+            .ok_or_else(|| PhpException::default("TestClient is closed".to_string()))?;
+
+        let runtime = super::get_runtime()?;
+        let mut request_options = parse_request_options(None)?;
+        request_options.body = Some(body);
+
+        let response = runtime.block_on(dispatch_request_direct(
+            &inner.router,
+            "POST".to_string(),
+            "/graphql".to_string(),
+            request_options,
+        ))?;
+
+        snapshot_to_php_response(response)
+    }
+
+    /// Send a GraphQL query and get HTTP status separately.
+    #[php(name = "graphqlWithStatus")]
+    pub fn graphql_with_status(
+        &self,
+        query: String,
+        variables: Option<&Zval>,
+        operation_name: Option<String>,
+    ) -> PhpResult<Vec<Zval>> {
+        let response = self.graphql(query, variables, operation_name)?;
+        let status_zval = (response.status as i64).into_zval(false).map_err(super::map_ext_php_err)?;
+        let body_zval = response.body.clone().into_zval(false).map_err(super::map_ext_php_err)?;
+
+        Ok(vec![status_zval, body_zval])
     }
 
     /// Close the test client and release resources.

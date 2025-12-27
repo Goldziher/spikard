@@ -432,3 +432,58 @@ app.run(host="127.0.0.1", port={self._port})
         url = f"{self.base_url}{path}"
         async with aconnect_sse(self._http_client, "GET", url) as event_source:
             yield event_source.aiter_sse()
+
+    async def graphql(
+        self,
+        query: str,
+        variables: dict[str, Any] | None = None,
+        operation_name: str | None = None,
+        path: str = "/graphql",
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> httpx.Response:
+        """Send a GraphQL query or mutation.
+
+        Args:
+            query: GraphQL query string
+            variables: Optional GraphQL variables dict
+            operation_name: Optional operation name string
+            path: Path to the GraphQL endpoint (default: "/graphql")
+            headers: Optional request headers
+            cookies: Optional cookies to send
+
+        Returns:
+            httpx.Response: The response from the server
+        """
+        body: dict[str, Any] = {"query": query}
+        if variables is not None:
+            body["variables"] = variables
+        if operation_name is not None:
+            body["operationName"] = operation_name
+
+        return await self.post(path, json=body, headers=headers, cookies=cookies)
+
+    async def graphql_with_status(
+        self,
+        query: str,
+        variables: dict[str, Any] | None = None,
+        operation_name: str | None = None,
+        path: str = "/graphql",
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> tuple[int, httpx.Response]:
+        """Send a GraphQL query and return status code and response.
+
+        Args:
+            query: GraphQL query string
+            variables: Optional GraphQL variables dict
+            operation_name: Optional operation name string
+            path: Path to the GraphQL endpoint (default: "/graphql")
+            headers: Optional request headers
+            cookies: Optional cookies to send
+
+        Returns:
+            Tuple of (status_code, httpx.Response)
+        """
+        response = await self.graphql(query, variables, operation_name, path, headers, cookies)
+        return response.status_code, response

@@ -1,0 +1,35 @@
+{
+	"name": "delete_resource",
+	"description": "Mutation that deletes a resource by ID and returns success status",
+	"operation_type": "mutation",
+	"endpoint": "/graphql",
+	"schema": "type Mutation {\n  deleteUser(id: ID!): DeleteResult!\n}\n\ntype DeleteResult {\n  success: Boolean!\n  message: String!\n  deletedId: ID!\n}",
+	"request": {
+		"query": "mutation DeleteUser($id: ID!) {\n  deleteUser(id: $id) {\n    success\n    message\n    deletedId\n  }\n}",
+		"variables": {
+			"id": "user-123"
+		},
+		"operationName": "DeleteUser"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"deleteUser": {
+				"success": true,
+				"message": "User successfully deleted",
+				"deletedId": "user-123"
+			}
+		}
+	},
+	"resolvers": {
+		"Mutation.deleteUser": {
+			"type": "mock_with_args",
+			"return_value": {
+				"success": true,
+				"message": "User successfully deleted",
+				"deletedId": "user-123"
+			}
+		}
+	},
+	"tags": ["mutations", "delete-operations", "destructive"]
+}

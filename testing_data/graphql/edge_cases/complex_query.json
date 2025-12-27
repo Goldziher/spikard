@@ -1,0 +1,257 @@
+{
+	"name": "complex_query",
+	"description": "Query with high complexity score testing multiple fields, aliases, and fragments",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  users(limit: Int, offset: Int): [User!]!\n  user(id: String!): User\n  search(term: String!): SearchResult!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n  posts(limit: Int): [Post!]!\n  followers(limit: Int): [User!]!\n  following(limit: Int): [User!]!\n  profile: UserProfile!\n}\n\ntype UserProfile {\n  bio: String\n  avatar: String\n  website: String\n  joinedAt: String!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  content: String!\n  likes: Int!\n  comments(limit: Int): [Comment!]!\n  author: User!\n  createdAt: String!\n}\n\ntype Comment {\n  id: ID!\n  text: String!\n  author: User!\n  likes: Int!\n}\n\ntype SearchResult {\n  users: [User!]!\n  posts: [Post!]!\n  total: Int!\n}",
+	"request": {
+		"query": "query ComplexSearch($searchTerm: String!, $userLimit: Int!, $postLimit: Int!) {\n  search(term: $searchTerm) {\n    total\n    users(limit: $userLimit) {\n      id\n      name\n      email\n      profile {\n        bio\n        avatar\n        joinedAt\n      }\n      recentPosts: posts(limit: 3) {\n        id\n        title\n        likes\n      }\n      followerCount: followers(limit: 100) {\n        id\n      }\n    }\n    posts(limit: $postLimit) {\n      id\n      title\n      content\n      likes\n      author {\n        id\n        name\n        profile {\n          avatar\n        }\n      }\n      topComments: comments(limit: 5) {\n        id\n        text\n        likes\n        author {\n          id\n          name\n        }\n      }\n    }\n  }\n}",
+		"variables": {
+			"searchTerm": "graphql",
+			"userLimit": 5,
+			"postLimit": 10
+		},
+		"operationName": "ComplexSearch"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"search": {
+				"total": 42,
+				"users": [
+					{
+						"id": "user-1",
+						"name": "GraphQL Expert",
+						"email": "expert@example.com",
+						"profile": {
+							"bio": "GraphQL enthusiast and API designer",
+							"avatar": "https://example.com/avatars/expert.jpg",
+							"joinedAt": "2024-01-15T08:30:00Z"
+						},
+						"recentPosts": [
+							{
+								"id": "post-101",
+								"title": "GraphQL Best Practices",
+								"likes": 234
+							},
+							{
+								"id": "post-102",
+								"title": "Schema Design Patterns",
+								"likes": 189
+							},
+							{
+								"id": "post-103",
+								"title": "Performance Optimization",
+								"likes": 156
+							}
+						],
+						"followerCount": [
+							{"id": "user-2"},
+							{"id": "user-3"}
+						]
+					},
+					{
+						"id": "user-2",
+						"name": "API Developer",
+						"email": "developer@example.com",
+						"profile": {
+							"bio": "Building scalable APIs",
+							"avatar": "https://example.com/avatars/developer.jpg",
+							"joinedAt": "2024-02-20T10:15:00Z"
+						},
+						"recentPosts": [
+							{
+								"id": "post-201",
+								"title": "GraphQL vs REST",
+								"likes": 145
+							}
+						],
+						"followerCount": [
+							{"id": "user-1"}
+						]
+					}
+				],
+				"posts": [
+					{
+						"id": "post-101",
+						"title": "GraphQL Best Practices",
+						"content": "A comprehensive guide to GraphQL best practices and patterns...",
+						"likes": 234,
+						"author": {
+							"id": "user-1",
+							"name": "GraphQL Expert",
+							"profile": {
+								"avatar": "https://example.com/avatars/expert.jpg"
+							}
+						},
+						"topComments": [
+							{
+								"id": "comment-1",
+								"text": "Great post, very helpful!",
+								"likes": 45,
+								"author": {
+									"id": "user-2",
+									"name": "API Developer"
+								}
+							},
+							{
+								"id": "comment-2",
+								"text": "Could you elaborate on caching?",
+								"likes": 32,
+								"author": {
+									"id": "user-3",
+									"name": "Data Scientist"
+								}
+							}
+						]
+					},
+					{
+						"id": "post-102",
+						"title": "Schema Design Patterns",
+						"content": "Exploring common patterns for designing GraphQL schemas...",
+						"likes": 189,
+						"author": {
+							"id": "user-1",
+							"name": "GraphQL Expert",
+							"profile": {
+								"avatar": "https://example.com/avatars/expert.jpg"
+							}
+						},
+						"topComments": [
+							{
+								"id": "comment-3",
+								"text": "Excellent breakdown",
+								"likes": 28,
+								"author": {
+									"id": "user-4",
+									"name": "Backend Engineer"
+								}
+							}
+						]
+					}
+				]
+			}
+		}
+	},
+	"resolvers": {
+		"Query.search": {
+			"type": "mock",
+			"return_value": {
+				"total": 42,
+				"users": [
+					{
+						"id": "user-1",
+						"name": "GraphQL Expert",
+						"email": "expert@example.com",
+						"profile": {
+							"bio": "GraphQL enthusiast and API designer",
+							"avatar": "https://example.com/avatars/expert.jpg",
+							"joinedAt": "2024-01-15T08:30:00Z"
+						},
+						"posts": [
+							{
+								"id": "post-101",
+								"title": "GraphQL Best Practices",
+								"likes": 234
+							},
+							{
+								"id": "post-102",
+								"title": "Schema Design Patterns",
+								"likes": 189
+							},
+							{
+								"id": "post-103",
+								"title": "Performance Optimization",
+								"likes": 156
+							}
+						],
+						"followers": [
+							{"id": "user-2"},
+							{"id": "user-3"}
+						]
+					},
+					{
+						"id": "user-2",
+						"name": "API Developer",
+						"email": "developer@example.com",
+						"profile": {
+							"bio": "Building scalable APIs",
+							"avatar": "https://example.com/avatars/developer.jpg",
+							"joinedAt": "2024-02-20T10:15:00Z"
+						},
+						"posts": [
+							{
+								"id": "post-201",
+								"title": "GraphQL vs REST",
+								"likes": 145
+							}
+						],
+						"followers": [
+							{"id": "user-1"}
+						]
+					}
+				],
+				"posts": [
+					{
+						"id": "post-101",
+						"title": "GraphQL Best Practices",
+						"content": "A comprehensive guide to GraphQL best practices and patterns...",
+						"likes": 234,
+						"author": {
+							"id": "user-1",
+							"name": "GraphQL Expert",
+							"profile": {
+								"avatar": "https://example.com/avatars/expert.jpg"
+							}
+						},
+						"comments": [
+							{
+								"id": "comment-1",
+								"text": "Great post, very helpful!",
+								"likes": 45,
+								"author": {
+									"id": "user-2",
+									"name": "API Developer"
+								}
+							},
+							{
+								"id": "comment-2",
+								"text": "Could you elaborate on caching?",
+								"likes": 32,
+								"author": {
+									"id": "user-3",
+									"name": "Data Scientist"
+								}
+							}
+						]
+					},
+					{
+						"id": "post-102",
+						"title": "Schema Design Patterns",
+						"content": "Exploring common patterns for designing GraphQL schemas...",
+						"likes": 189,
+						"author": {
+							"id": "user-1",
+							"name": "GraphQL Expert",
+							"profile": {
+								"avatar": "https://example.com/avatars/expert.jpg"
+							}
+						},
+						"comments": [
+							{
+								"id": "comment-3",
+								"text": "Excellent breakdown",
+								"likes": 28,
+								"author": {
+									"id": "user-4",
+									"name": "Backend Engineer"
+								}
+							}
+						]
+					}
+				]
+			}
+		}
+	},
+	"tags": ["edge-cases", "complex-queries", "aliases", "fragments", "performance", "high-complexity"]
+}

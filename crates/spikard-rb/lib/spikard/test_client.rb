@@ -35,6 +35,16 @@ module Spikard
       request('OPTIONS', path, headers, nil)
     end
 
+    def graphql(query, variables = nil, operation_name = nil)
+      native_response = @client.graphql(query, variables, operation_name)
+      Response.new(native_response)
+    end
+
+    def graphql_with_status(query, variables = nil, operation_name = nil)
+      status, native_response = @client.graphql_with_status(query, variables, operation_name)
+      [status, Response.new(native_response)]
+    end
+
     private
 
     def request(method, path, headers, body)

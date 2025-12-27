@@ -74,4 +74,104 @@ final class Response
         $encoded = \json_encode($this->body);
         return $encoded === false ? '' : $encoded;
     }
+
+    /**
+     * Check if response was successful (2xx status).
+     */
+    public function isSuccess(): bool
+    {
+        return $this->statusCode >= 200 && $this->statusCode < 300;
+    }
+
+    /**
+     * Check if response was a redirect (3xx status).
+     */
+    public function isRedirect(): bool
+    {
+        return $this->statusCode >= 300 && $this->statusCode < 400;
+    }
+
+    /**
+     * Check if response was a client error (4xx status).
+     */
+    public function isClientError(): bool
+    {
+        return $this->statusCode >= 400 && $this->statusCode < 500;
+    }
+
+    /**
+     * Check if response was a server error (5xx status).
+     */
+    public function isServerError(): bool
+    {
+        return $this->statusCode >= 500 && $this->statusCode < 600;
+    }
+
+    /**
+     * Parse response body as JSON.
+     *
+     * @return array<string, mixed>
+     *
+     * @throws \Exception if JSON is invalid
+     */
+    public function parseJson(): array
+    {
+        $body = $this->getBody();
+        /** @var array<string, mixed>|null $decoded */
+        $decoded = \json_decode($body, true);
+        if (!\is_array($decoded)) {
+            throw new \Exception('Invalid JSON body: ' . \json_last_error_msg());
+        }
+        return $decoded;
+    }
+
+    /**
+     * Extract GraphQL data from response.
+     *
+     * @return array<string, mixed>
+     *
+     * @throws \Exception if response has no 'data' field or JSON is invalid
+     */
+    public function graphqlData(): array
+    {
+        $data = $this->parseJson();
+        if (!\array_key_exists('data', $data)) {
+            throw new \Exception("No 'data' field in GraphQL response");
+        }
+        /** @var array<string, mixed> $graphqlData */
+        $graphqlData = $data['data'];
+        return $graphqlData;
+    }
+
+    /**
+     * Extract GraphQL errors from response.
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * @throws \Exception if JSON is invalid
+     */
+    public function graphqlErrors(): array
+    {
+        $data = $this->parseJson();
+        if (!\array_key_exists('errors', $data)) {
+            return [];
+        }
+        /** @var array<int, array<string, mixed>> $errors */
+        $errors = \is_array($data['errors']) ? $data['errors'] : [];
+        return $errors;
+    }
+
+    /**
+     * Get a specific header value (case-insensitive).
+     */
+    public function getHeader(string $name): ?string
+    {
+        $name_lower = \strtolower($name);
+        foreach ($this->headers as $key => $value) {
+            if (\strtolower($key) === $name_lower) {
+                return $value;
+            }
+        }
+        return null;
+    }
 }

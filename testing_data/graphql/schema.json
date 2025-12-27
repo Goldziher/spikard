@@ -1,0 +1,485 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$comment": "Resolver types: mock (static value), mock_with_args (template interpolation), factory (sync function), async_factory (async function), error (return GraphQL error)",
+	"title": "Spikard GraphQL Test Fixture Schema",
+	"description": "Schema for GraphQL query, mutation, subscription, and directive test fixtures used to generate e2e test apps and test suites. Fixtures are organized into categories: queries (field selection and nesting), mutations (data modification), validation (input and schema constraints), scalars (custom scalar types), errors (error handling), and edge_cases (protocol boundaries).",
+	"type": "object",
+	"required": [
+		"name",
+		"description",
+		"operation_type",
+		"endpoint",
+		"schema",
+		"request",
+		"expected_response"
+	],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Fixture name (snake_case)",
+			"pattern": "^[a-z][a-z0-9_]*$",
+			"minLength": 1,
+			"examples": [
+				"simple_field",
+				"with_arguments",
+				"nested_objects"
+			]
+		},
+		"description": {
+			"type": "string",
+			"description": "Human-readable description of the operation",
+			"minLength": 1,
+			"examples": [
+				"Query a single field",
+				"Query with arguments and filtering"
+			]
+		},
+		"operation_type": {
+			"type": "string",
+			"enum": [
+				"query",
+				"mutation",
+				"subscription"
+			],
+			"description": "GraphQL operation type"
+		},
+		"endpoint": {
+			"type": "string",
+			"description": "HTTP endpoint path for GraphQL requests",
+			"pattern": "^/.*",
+			"default": "/graphql",
+			"examples": [
+				"/graphql",
+				"/api/graphql",
+				"/gql"
+			]
+		},
+		"schema": {
+			"type": "string",
+			"description": "GraphQL Schema Definition Language (SDL) string for schema definition",
+			"minLength": 1,
+			"examples": [
+				"type Query { hello: String! }"
+			]
+		},
+		"request": {
+			"type": "object",
+			"description": "GraphQL request details",
+			"required": [
+				"query"
+			],
+			"properties": {
+				"query": {
+					"type": "string",
+					"description": "GraphQL query/mutation/subscription document",
+					"minLength": 1
+				},
+				"variables": {
+					"type": "object",
+					"description": "Query variables (optional)",
+					"additionalProperties": true
+				},
+				"operationName": {
+					"type": "string",
+					"description": "Operation name for multi-operation documents (optional)"
+				}
+			}
+		},
+		"expected_response": {
+			"type": "object",
+			"description": "Expected response from GraphQL server",
+			"required": [
+				"status_code"
+			],
+			"properties": {
+				"status_code": {
+					"type": "integer",
+					"description": "HTTP status code",
+					"minimum": 200,
+					"maximum": 599,
+					"examples": [
+						200,
+						400,
+						422
+					]
+				},
+				"data": {
+					"description": "GraphQL response data (null if errors present)",
+					"default": null
+				},
+				"errors": {
+					"type": "array",
+					"description": "GraphQL errors array (per GraphQL spec October 2021)",
+					"items": {
+						"type": "object",
+						"required": [
+							"message"
+						],
+						"properties": {
+							"message": {
+								"type": "string",
+								"description": "Error message"
+							},
+							"locations": {
+								"type": "array",
+								"description": "Source locations where error occurred",
+								"items": {
+									"type": "object",
+									"required": [
+										"line",
+										"column"
+									],
+									"properties": {
+										"line": {
+											"type": "integer",
+											"minimum": 1
+										},
+										"column": {
+											"type": "integer",
+											"minimum": 1
+										}
+									}
+								}
+							},
+							"path": {
+								"type": "array",
+								"description": "Path to field that caused error",
+								"items": {
+									"oneOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "integer"
+										}
+									]
+								}
+							},
+							"extensions": {
+								"type": "object",
+								"description": "Additional error metadata"
+							}
+						}
+					}
+				}
+			}
+		},
+		"resolvers": {
+			"type": "object",
+			"description": "Mock resolver configuration for each GraphQL field (Type.field format)",
+			"additionalProperties": {
+				"type": "object",
+				"required": [
+					"type"
+				],
+				"properties": {
+					"type": {
+						"enum": [
+							"mock",
+							"mock_with_args",
+							"factory",
+							"async_factory",
+							"error"
+						],
+						"description": "Resolver execution strategy"
+					},
+					"return_value": {
+						"description": "Static value for mock type (any JSON type)"
+					},
+					"template": {
+						"type": "string",
+						"description": "Template string for mock_with_args (e.g., 'Hello, {name}!')"
+					},
+					"arg_mapping": {
+						"type": "object",
+						"description": "Argument mapping for template interpolation",
+						"additionalProperties": {
+							"type": "string"
+						}
+					},
+					"factory_fn": {
+						"type": "string",
+						"description": "Factory function name for factory/async_factory types"
+					},
+					"error_message": {
+						"type": "string",
+						"description": "Error message for error type resolver"
+					},
+					"error_extensions": {
+						"type": "object",
+						"description": "GraphQL error extensions object"
+					}
+				}
+			}
+		},
+		"complexity_limit": {
+			"type": "integer",
+			"description": "Query complexity limit (for analysis)",
+			"minimum": 0
+		},
+		"depth_limit": {
+			"type": "integer",
+			"description": "Query depth limit (max nesting level)",
+			"minimum": 0
+		},
+		"tags": {
+			"type": "array",
+			"description": "Optional tags for categorizing operations",
+			"items": {
+				"type": "string"
+			},
+			"examples": [
+				[
+					"queries"
+				],
+				[
+					"mutations",
+					"users"
+				],
+				[
+					"validation"
+				],
+				[
+					"edge-cases"
+				]
+			]
+		}
+	},
+	"fixture_directories": {
+		"root": {
+			"description": "Core GraphQL query operations",
+			"purpose": "Basic field selection, arguments, and query execution",
+			"files": {
+				"simple_field.json": {
+					"description": "Tests basic single-field query execution",
+					"purpose": "Verify simple scalar field resolution",
+					"operation_type": "query",
+					"test_cases": 2
+				},
+				"with_arguments.json": {
+					"description": "Tests query with arguments and input handling",
+					"purpose": "Argument parsing and variable substitution",
+					"operation_type": "query",
+					"test_cases": 3
+				},
+				"nested_objects.json": {
+					"description": "Tests nested object selection and traversal",
+					"purpose": "Complex field resolution and nesting",
+					"operation_type": "query",
+					"test_cases": 2
+				}
+			}
+		},
+		"mutations": {
+			"description": "GraphQL mutation operations for data modification",
+			"purpose": "Test data creation, update, and deletion",
+			"files": {
+				"create_resource.json": {
+					"description": "Tests resource creation mutation",
+					"purpose": "Create new entities with validated input",
+					"operation_type": "mutation",
+					"test_cases": 3
+				},
+				"update_resource.json": {
+					"description": "Tests resource update mutation",
+					"purpose": "Modify existing entities",
+					"operation_type": "mutation",
+					"test_cases": 3
+				},
+				"delete_resource.json": {
+					"description": "Tests resource deletion mutation",
+					"purpose": "Remove entities from system",
+					"operation_type": "mutation",
+					"test_cases": 2
+				}
+			}
+		},
+		"validation": {
+			"description": "Input validation and constraint testing",
+			"purpose": "Test schema validation, input type constraints, and rejection of invalid data",
+			"files": {
+				"input_validation.json": {
+					"description": "Tests GraphQL input type validation",
+					"purpose": "Verify input constraints (required fields, types, formats)",
+					"test_cases": 8,
+					"scenarios": [
+						"Valid input with all required fields",
+						"Missing required field",
+						"Invalid scalar type",
+						"Constraint violation: string too long",
+						"Constraint violation: number out of range",
+						"Invalid enum value",
+						"Array validation: invalid item type",
+						"Nested input validation"
+					]
+				},
+				"custom_scalar_validation.json": {
+					"description": "Tests custom scalar type validation",
+					"purpose": "Verify custom scalar parsing and validation",
+					"test_cases": 6,
+					"scenarios": [
+						"Valid DateTime scalar",
+						"Invalid DateTime format",
+						"Valid Email scalar",
+						"Invalid Email format",
+						"Valid JSON scalar",
+						"Invalid JSON scalar"
+					]
+				}
+			}
+		},
+		"scalars": {
+			"description": "Custom scalar type handling and coercion",
+			"purpose": "Test custom scalar types (DateTime, JSON, Email, UUID, etc.)",
+			"files": {
+				"datetime_scalar.json": {
+					"description": "Tests DateTime scalar type handling",
+					"purpose": "Verify date/time parsing and formatting",
+					"test_cases": 4
+				},
+				"json_scalar.json": {
+					"description": "Tests JSON scalar type for arbitrary JSON data",
+					"purpose": "Handle complex nested JSON structures",
+					"test_cases": 3
+				},
+				"uuid_scalar.json": {
+					"description": "Tests UUID scalar type validation",
+					"purpose": "Verify UUID parsing and format validation",
+					"test_cases": 3
+				}
+			}
+		},
+		"errors": {
+			"description": "Error handling and error response validation",
+			"purpose": "Test error codes, messages, and error location reporting",
+			"files": {
+				"syntax_errors.json": {
+					"description": "Tests GraphQL document syntax errors",
+					"purpose": "Invalid query syntax detection and reporting",
+					"test_cases": 5,
+					"scenarios": [
+						"Unterminated string in query",
+						"Invalid field name syntax",
+						"Unexpected token",
+						"Missing closing brace",
+						"Invalid variable definition"
+					]
+				},
+				"field_not_found.json": {
+					"description": "Tests field resolution errors",
+					"purpose": "Non-existent field error reporting with path information",
+					"test_cases": 2
+				},
+				"type_errors.json": {
+					"description": "Tests type mismatch and coercion errors",
+					"purpose": "Invalid argument type error reporting",
+					"test_cases": 4
+				},
+				"validation_errors.json": {
+					"description": "Tests input validation errors",
+					"purpose": "Constraint violation and validation failure reporting",
+					"test_cases": 3
+				}
+			}
+		},
+		"edge_cases": {
+			"description": "Protocol-level edge cases and boundary conditions",
+			"purpose": "Test complex queries, performance boundaries, and protocol compliance",
+			"files": {
+				"deeply_nested_query.json": {
+					"description": "Tests deeply nested field selection",
+					"purpose": "Verify depth limit enforcement",
+					"test_cases": 3,
+					"scenarios": [
+						"Valid nested query",
+						"Query exceeds depth limit",
+						"Maximum allowed nesting"
+					]
+				},
+				"large_payload.json": {
+					"description": "Tests handling of large result sets",
+					"purpose": "Verify handling of large data payloads",
+					"test_cases": 2
+				},
+				"fragment_handling.json": {
+					"description": "Tests named fragments and fragment spreads",
+					"purpose": "Fragment expansion and reuse",
+					"test_cases": 4
+				},
+				"directive_handling.json": {
+					"description": "Tests GraphQL directives (@skip, @include)",
+					"purpose": "Conditional field inclusion and directives",
+					"test_cases": 3
+				},
+				"alias_handling.json": {
+					"description": "Tests field aliases in selections",
+					"purpose": "Multiple alias resolution and naming",
+					"test_cases": 2
+				},
+				"batch_queries.json": {
+					"description": "Tests multiple operations in one request",
+					"purpose": "Multi-operation handling and response formatting",
+					"test_cases": 3
+				}
+			}
+		}
+	},
+	"fixture_coverage_summary": {
+		"total_fixture_files": 20,
+		"total_test_cases": 64,
+		"directory_breakdown": {
+			"core_queries": {
+				"count": 3,
+				"test_cases": 7,
+				"description": "Basic field selection and query operations"
+			},
+			"mutations": {
+				"count": 3,
+				"test_cases": 8,
+				"description": "Data mutation operations (create, update, delete)"
+			},
+			"validation": {
+				"count": 2,
+				"test_cases": 14,
+				"description": "Input validation and scalar constraints"
+			},
+			"scalars": {
+				"count": 3,
+				"test_cases": 10,
+				"description": "Custom scalar type handling"
+			},
+			"errors": {
+				"count": 4,
+				"test_cases": 14,
+				"description": "Error handling and error reporting"
+			},
+			"edge_cases": {
+				"count": 6,
+				"test_cases": 17,
+				"description": "Complex queries and protocol boundaries"
+			}
+		},
+		"standards_compliance": [
+			"GraphQL Specification (October 2021)",
+			"GraphQL Schema Definition Language (SDL)",
+			"HTTP/1.1 - Transport layer",
+			"JSON (RFC 8259) - Data format"
+		],
+		"coverage_areas": [
+			"Query operations with field selection",
+			"Arguments and variable substitution",
+			"Nested object resolution",
+			"Mutation operations",
+			"Input type validation",
+			"Custom scalar types",
+			"Error reporting and location tracking",
+			"Field resolution errors",
+			"Type validation and coercion",
+			"Depth and complexity limits",
+			"Fragment handling",
+			"Directives (@skip, @include)",
+			"Field aliases",
+			"Multi-operation requests"
+		]
+	}
+}
