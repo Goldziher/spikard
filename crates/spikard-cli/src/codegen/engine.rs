@@ -23,6 +23,7 @@ pub enum SchemaKind {
     OpenApi,
     AsyncApi,
     OpenRpc,
+    GraphQL,
 }
 
 /// Type of artifact to generate for a schema
@@ -43,6 +44,12 @@ pub enum CodegenTargetKind {
     AsyncAll { output: PathBuf },
     /// Generate JSON-RPC handler scaffolding for a language
     JsonRpcHandlers { language: TargetLanguage, output: PathBuf },
+    /// Generate GraphQL types, resolvers, or schema for a language
+    GraphQL {
+        language: TargetLanguage,
+        output: PathBuf,
+        target: String,
+    },
 }
 
 /// Request executed by the code generation engine
@@ -121,6 +128,11 @@ impl CodegenEngine {
                 let spec = parse_openrpc_schema(&request.schema_path)
                     .context("Failed to parse OpenRPC schema for handler generation")?;
                 let asset = Self::generate_openrpc_handler(&spec, *language, output)?;
+                Ok(CodegenOutcome::Files(vec![asset]))
+            }
+            (SchemaKind::GraphQL, CodegenTargetKind::GraphQL { language, output, target }) => {
+                let asset = Self::generate_graphql_code(&request.schema_path, *language, output, target)
+                    .context("Failed to generate code from GraphQL schema")?;
                 Ok(CodegenOutcome::Files(vec![asset]))
             }
             _ => bail!(
@@ -241,6 +253,38 @@ impl CodegenEngine {
         Self::write_asset(output, format!("{} JSON-RPC handlers", language_name(language)), code)
     }
 
+    fn generate_graphql_code(
+        schema_path: &Path,
+        language: TargetLanguage,
+        output: &Path,
+        target: &str,
+    ) -> Result<GeneratedAsset> {
+        // Read the GraphQL schema file
+        let schema_content = fs::read_to_string(schema_path)
+            .with_context(|| format!("Failed to read GraphQL schema: {}", schema_path.display()))?;
+
+        // Generate code based on language
+        let code = match language {
+            TargetLanguage::Python => {
+                super::graphql::generate_python_graphql(&schema_content, target)?
+            }
+            TargetLanguage::TypeScript => {
+                super::graphql::generate_typescript_graphql(&schema_content, target)?
+            }
+            TargetLanguage::Rust => {
+                super::graphql::generate_rust_graphql(&schema_content, target)?
+            }
+            TargetLanguage::Ruby => {
+                super::graphql::generate_ruby_graphql(&schema_content, target)?
+            }
+            TargetLanguage::Php => {
+                super::graphql::generate_php_graphql(&schema_content, target)?
+            }
+        };
+
+        Self::write_asset(output, format!("{} GraphQL code", language_name(language)), code)
+    }
+
     fn write_asset(path: &Path, description: impl Into<String>, content: impl AsRef<[u8]>) -> Result<GeneratedAsset> {
         if let Some(parent) = path.parent()
             && !parent.as_os_str().is_empty()
@@ -292,6 +336,12 @@ impl std::fmt::Debug for CodegenTargetKind {
                 .debug_struct("JsonRpcHandlers")
                 .field("language", language)
                 .field("output", output)
+                .finish(),
+            CodegenTargetKind::GraphQL { language, output, target } => f
+                .debug_struct("GraphQL")
+                .field("language", language)
+                .field("output", output)
+                .field("target", target)
                 .finish(),
         }
     }

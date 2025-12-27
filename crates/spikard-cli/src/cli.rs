@@ -47,6 +47,8 @@ enum GenerateCommand {
     Asyncapi(AsyncapiHandlerArgs),
     /// Generate JSON-RPC 2.0 handlers from OpenRPC schemas
     Jsonrpc(JsonrpcArgs),
+    /// Generate GraphQL types, resolvers, or schema
+    Graphql(GraphqlArgs),
     /// Generate PHP DTO classes (Request/Response) for Spikard integration
     PhpDto(PhpDtoArgs),
 }
@@ -99,6 +101,24 @@ struct JsonrpcArgs {
     /// Output file path (prints to stdout if not specified)
     #[arg(long, short = 'o')]
     output: Option<PathBuf>,
+}
+
+#[derive(Args, Debug)]
+struct GraphqlArgs {
+    /// Path to GraphQL schema file (.graphql, .gql, or .json for introspection)
+    schema: PathBuf,
+
+    /// Target language (python, typescript, rust, ruby, php)
+    #[arg(long, short = 'l', default_value = "python")]
+    lang: GenerateLanguage,
+
+    /// Output file path (prints to stdout if not specified)
+    #[arg(long, short = 'o')]
+    output: Option<PathBuf>,
+
+    /// Target specific features (all, types, resolvers, schema)
+    #[arg(long, default_value = "all")]
+    target: String,
 }
 
 #[derive(Subcommand, Debug)]
@@ -321,6 +341,45 @@ fn run(cli: Cli) -> Result<()> {
                 };
 
                 match CodegenEngine::execute(request).context("Failed to generate code from OpenRPC schema")? {
+                    CodegenOutcome::InMemory(code) => println!("{}", code),
+                    CodegenOutcome::Files(files) => {
+                        for asset in files {
+                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
+                        }
+                    }
+                }
+            }
+            GenerateCommand::Graphql(args) => {
+                println!("Generating GraphQL code from schema...");
+                println!("  Input: {}", args.schema.display());
+                println!("  Language: {:?}", args.lang);
+                println!("  Target: {}", args.target);
+                if let Some(ref path) = args.output {
+                    println!("  Output: {}", path.display());
+                }
+                let output_path = args.output.clone().unwrap_or_else(|| {
+                    let ext = match args.lang {
+                        GenerateLanguage::Python => ".py",
+                        GenerateLanguage::TypeScript => ".ts",
+                        GenerateLanguage::Rust => ".rs",
+                        GenerateLanguage::Ruby => ".rb",
+                        GenerateLanguage::Php => ".php",
+                    };
+                    PathBuf::from(format!("generated{}", ext))
+                });
+
+                let request = CodegenRequest {
+                    schema_path: args.schema.clone(),
+                    schema_kind: SchemaKind::GraphQL,
+                    target: CodegenTargetKind::GraphQL {
+                        language: args.lang.into(),
+                        output: output_path.clone(),
+                        target: args.target.clone(),
+                    },
+                    dto: None,
+                };
+
+                match CodegenEngine::execute(request).context("Failed to generate code from GraphQL schema")? {
                     CodegenOutcome::InMemory(code) => println!("{}", code),
                     CodegenOutcome::Files(files) => {
                         for asset in files {

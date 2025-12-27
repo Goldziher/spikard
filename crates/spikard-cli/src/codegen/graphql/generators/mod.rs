@@ -1,0 +1,36 @@
+//! Language-specific GraphQL code generators.
+
+use anyhow::Result;
+use super::spec_parser::GraphQLSchema;
+
+pub mod base;
+pub mod php;
+pub mod python;
+pub mod ruby;
+pub mod rust;
+pub mod typescript;
+
+pub use base::{
+    escape_string, format_description, generate_field_docs, indent, map_graphql_type_to_language,
+    sanitize_identifier, sanitize_typescript_identifier, to_camel_case, to_pascal_case,
+    TypeNameCache,
+};
+pub use php::PhpGenerator;
+pub use python::PythonGenerator;
+pub use ruby::RubyGenerator;
+pub use rust::RustGenerator;
+pub use typescript::TypeScriptGenerator;
+
+/// Language-agnostic GraphQL code generator trait
+pub trait GraphQLGenerator {
+    fn generate_types(&self, schema: &GraphQLSchema) -> Result<String>;
+    fn generate_resolvers(&self, schema: &GraphQLSchema) -> Result<String>;
+    fn generate_schema_definition(&self, schema: &GraphQLSchema) -> Result<String>;
+
+    fn generate_complete(&self, schema: &GraphQLSchema) -> Result<String> {
+        let types = self.generate_types(schema)?;
+        let resolvers = self.generate_resolvers(schema)?;
+        let schema = self.generate_schema_definition(schema)?;
+        Ok(format!("{}\n\n{}\n\n{}", types, resolvers, schema))
+    }
+}

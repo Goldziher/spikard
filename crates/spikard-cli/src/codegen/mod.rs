@@ -3,6 +3,7 @@
 mod asyncapi;
 mod base;
 mod engine;
+mod graphql;
 mod openapi;
 mod openrpc;
 mod php;
@@ -21,6 +22,12 @@ pub use asyncapi::{
 };
 pub use base::OpenApiGenerator;
 pub use engine::{CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, GeneratedAsset, SchemaKind};
+pub use graphql::{
+    generate_php_graphql, generate_python_graphql, generate_ruby_graphql, generate_rust_graphql,
+    generate_typescript_graphql, parse_graphql_schema, parse_graphql_sdl, parse_graphql_sdl_string,
+    GraphQLArgument, GraphQLDirective, GraphQLEnumValue, GraphQLField, GraphQLInputField, GraphQLSchema,
+    GraphQLType, TypeKind,
+};
 pub use openapi::parse_openapi_schema;
 pub use openrpc::{
     generate_php_handler_app as generate_openrpc_php_handler_app,
