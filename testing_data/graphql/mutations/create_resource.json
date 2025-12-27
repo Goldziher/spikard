@@ -1,0 +1,43 @@
+{
+	"name": "create_resource",
+	"description": "Mutation that creates a new resource with input type and returns the created object",
+	"operation_type": "mutation",
+	"endpoint": "/graphql",
+	"schema": "type Mutation {\n  createUser(input: CreateUserInput!): User!\n}\n\ninput CreateUserInput {\n  name: String!\n  email: String!\n  role: String\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n  role: String\n  createdAt: String!\n}",
+	"request": {
+		"query": "mutation CreateUser($input: CreateUserInput!) {\n  createUser(input: $input) {\n    id\n    name\n    email\n    role\n    createdAt\n  }\n}",
+		"variables": {
+			"input": {
+				"name": "John Doe",
+				"email": "john@example.com",
+				"role": "admin"
+			}
+		},
+		"operationName": "CreateUser"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"createUser": {
+				"id": "user-123",
+				"name": "John Doe",
+				"email": "john@example.com",
+				"role": "admin",
+				"createdAt": "2025-12-27T10:30:00Z"
+			}
+		}
+	},
+	"resolvers": {
+		"Mutation.createUser": {
+			"type": "mock_with_args",
+			"return_value": {
+				"id": "user-123",
+				"name": "John Doe",
+				"email": "john@example.com",
+				"role": "admin",
+				"createdAt": "2025-12-27T10:30:00Z"
+			}
+		}
+	},
+	"tags": ["mutations", "input-types", "creation"]
+}

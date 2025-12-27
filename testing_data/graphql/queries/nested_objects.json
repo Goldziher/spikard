@@ -1,0 +1,43 @@
+{
+	"name": "nested_objects",
+	"description": "Query with nested object selection and traversal",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  user(id: String!): User\n}\n\ntype User {\n  id: String!\n  name: String!\n  email: String!\n  profile: Profile!\n}\n\ntype Profile {\n  bio: String\n  avatar: String\n  location: String\n}",
+	"request": {
+		"query": "query GetUser($userId: String!) {\n  user(id: $userId) {\n    id\n    name\n    email\n    profile {\n      bio\n      location\n    }\n  }\n}",
+		"variables": {
+			"userId": "550e8400-e29b-41d4-a716-446655440000"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"user": {
+				"id": "550e8400-e29b-41d4-a716-446655440000",
+				"name": "Alice Johnson",
+				"email": "alice@example.com",
+				"profile": {
+					"bio": "Software engineer and open source enthusiast",
+					"location": "San Francisco, CA"
+				}
+			}
+		}
+	},
+	"resolvers": {
+		"Query.user": {
+			"type": "mock",
+			"return_value": {
+				"id": "550e8400-e29b-41d4-a716-446655440000",
+				"name": "Alice Johnson",
+				"email": "alice@example.com",
+				"profile": {
+					"bio": "Software engineer and open source enthusiast",
+					"avatar": "https://example.com/avatars/alice.jpg",
+					"location": "San Francisco, CA"
+				}
+			}
+		}
+	},
+	"tags": ["queries", "nested-objects", "object-selection"]
+}

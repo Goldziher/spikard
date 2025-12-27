@@ -168,28 +168,6 @@ module Spikard
       def bytes
         body_bytes.bytes
       end
-
-      # Extract GraphQL data from response
-      # @return [Hash, nil] The data field from GraphQL response
-      def graphql_data
-        return nil if @body.nil? || @body.empty?
-
-        parsed = JSON.parse(@body)
-        parsed['data']
-      rescue JSON::ParserError => e
-        raise "Failed to parse GraphQL response: #{e.message}"
-      end
-
-      # Extract GraphQL errors from response
-      # @return [Array<Hash>] Array of GraphQL error objects
-      def graphql_errors
-        return [] if @body.nil? || @body.empty?
-
-        parsed = JSON.parse(@body)
-        parsed.fetch('errors', [])
-      rescue JSON::ParserError => e
-        raise "Failed to parse GraphQL response: #{e.message}"
-      end
     end
   end
 end

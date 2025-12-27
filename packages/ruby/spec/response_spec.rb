@@ -54,6 +54,66 @@ RSpec.describe Spikard::Testing::Response do
       expect(empty_response.json).to be_nil
     end
   end
+
+  describe '#graphql_data' do
+    it 'extracts data field from GraphQL response' do
+      graphql_response = '{"data":{"user":{"id":"123","name":"Alice"}}}'
+      response = described_class.new(status_code: 200, headers: {}, body: graphql_response)
+
+      expect(response.graphql_data).to eq('user' => { 'id' => '123', 'name' => 'Alice' })
+    end
+
+    it 'returns nil for empty body' do
+      response = described_class.new(status_code: 200, headers: {}, body: nil)
+      expect(response.graphql_data).to be_nil
+
+      empty_response = described_class.new(status_code: 200, headers: {}, body: '')
+      expect(empty_response.graphql_data).to be_nil
+    end
+
+    it 'returns nil when data field is missing' do
+      graphql_response = '{"errors":[{"message":"Field error"}]}'
+      response = described_class.new(status_code: 200, headers: {}, body: graphql_response)
+
+      expect(response.graphql_data).to be_nil
+    end
+
+    it 'raises on invalid JSON' do
+      response = described_class.new(status_code: 200, headers: {}, body: 'invalid json')
+
+      expect { response.graphql_data }.to raise_error(/Failed to parse GraphQL response/)
+    end
+  end
+
+  describe '#graphql_errors' do
+    it 'extracts errors array from GraphQL response' do
+      graphql_response = '{"errors":[{"message":"Field error","extensions":{"code":"FIELD_ERROR"}}]}'
+      response = described_class.new(status_code: 200, headers: {}, body: graphql_response)
+
+      expect(response.graphql_errors).to eq([{ 'message' => 'Field error', 'extensions' => { 'code' => 'FIELD_ERROR' } }])
+    end
+
+    it 'returns empty array when errors field is missing' do
+      graphql_response = '{"data":{"user":null}}'
+      response = described_class.new(status_code: 200, headers: {}, body: graphql_response)
+
+      expect(response.graphql_errors).to eq([])
+    end
+
+    it 'returns empty array for empty body' do
+      response = described_class.new(status_code: 200, headers: {}, body: nil)
+      expect(response.graphql_errors).to eq([])
+
+      empty_response = described_class.new(status_code: 200, headers: {}, body: '')
+      expect(empty_response.graphql_errors).to eq([])
+    end
+
+    it 'raises on invalid JSON' do
+      response = described_class.new(status_code: 200, headers: {}, body: 'invalid json')
+
+      expect { response.graphql_errors }.to raise_error(/Failed to parse GraphQL response/)
+    end
+  end
 end
 
 RSpec.describe Spikard::StreamingResponse do

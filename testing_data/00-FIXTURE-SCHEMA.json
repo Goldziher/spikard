@@ -3,19 +3,29 @@
 	"title": "Spikard Test Fixture Schema",
 	"description": "Unified schema for all Spikard test fixtures across parameter types, bodies, and validation scenarios",
 	"type": "object",
-	"required": ["name", "description", "handler", "request", "expected_response"],
+	"required": [
+		"name",
+		"description",
+		"handler",
+		"request",
+		"expected_response"
+	],
 	"properties": {
 		"name": {
 			"type": "string",
 			"description": "Human-readable test case name",
 			"minLength": 1,
-			"examples": ["Required string query parameter - success"]
+			"examples": [
+				"Required string query parameter - success"
+			]
 		},
 		"description": {
 			"type": "string",
 			"description": "What this test validates and why it matters",
 			"minLength": 1,
-			"examples": ["Validates that required query parameters are properly extracted and validated"]
+			"examples": [
+				"Validates that required query parameters are properly extracted and validated"
+			]
 		},
 		"category": {
 			"type": "string",
@@ -40,7 +50,8 @@
 				"request_timeout",
 				"request_id",
 				"body_limits",
-				"static_files"
+				"static_files",
+				"graphql"
 			],
 			"description": "Test category for organization"
 		},
@@ -50,7 +61,15 @@
 			"properties": {
 				"framework": {
 					"type": "string",
-					"enum": ["spikard", "litestar", "fastapi", "fastify", "nestjs", "express", "robyn"],
+					"enum": [
+						"spikard",
+						"litestar",
+						"fastapi",
+						"fastify",
+						"nestjs",
+						"express",
+						"robyn"
+					],
 					"description": "Source framework (spikard = native test)"
 				},
 				"test_file": {
@@ -72,17 +91,32 @@
 		"handler": {
 			"type": "object",
 			"description": "Handler definition - describes the route and parameter schema",
-			"required": ["route", "method"],
+			"required": [
+				"route",
+				"method"
+			],
 			"properties": {
 				"route": {
 					"type": "string",
 					"description": "Route pattern with parameter placeholders (e.g., '/users/{user_id:int}')",
 					"minLength": 1,
-					"examples": ["/users/{user_id:int}", "/items", "/search"]
+					"examples": [
+						"/users/{user_id:int}",
+						"/items",
+						"/search"
+					]
 				},
 				"method": {
 					"type": "string",
-					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+					"enum": [
+						"GET",
+						"POST",
+						"PUT",
+						"PATCH",
+						"DELETE",
+						"HEAD",
+						"OPTIONS"
+					],
 					"description": "HTTP method"
 				},
 				"parameters": {
@@ -131,10 +165,19 @@
 						{
 							"type": "object",
 							"properties": {
-								"name": { "type": "string", "minLength": 1 },
-								"email": { "type": "string", "format": "email" }
+								"name": {
+									"type": "string",
+									"minLength": 1
+								},
+								"email": {
+									"type": "string",
+									"format": "email"
+								}
 							},
-							"required": ["name", "email"]
+							"required": [
+								"name",
+								"email"
+							]
 						}
 					]
 				},
@@ -148,11 +191,17 @@
 					"additionalProperties": {
 						"type": "object",
 						"description": "Dependency definition",
-						"required": ["type"],
+						"required": [
+							"type"
+						],
 						"properties": {
 							"type": {
 								"type": "string",
-								"enum": ["value", "factory", "async_factory"],
+								"enum": [
+									"value",
+									"factory",
+									"async_factory"
+								],
 								"description": "Dependency type: value (static), factory (sync creation), async_factory (async creation)"
 							},
 							"value": {
@@ -160,7 +209,15 @@
 							},
 							"value_type": {
 								"type": "string",
-								"enum": ["string", "number", "integer", "boolean", "object", "array", "null"],
+								"enum": [
+									"string",
+									"number",
+									"integer",
+									"boolean",
+									"object",
+									"array",
+									"null"
+								],
 								"description": "Type of the value for type='value' dependencies"
 							},
 							"factory": {
@@ -170,7 +227,9 @@
 							"depends_on": {
 								"type": "array",
 								"description": "Array of dependency keys that this dependency depends on",
-								"items": { "type": "string" },
+								"items": {
+									"type": "string"
+								},
 								"default": []
 							},
 							"singleton": {
@@ -190,7 +249,10 @@
 							},
 							"scope": {
 								"type": "string",
-								"enum": ["app", "route"],
+								"enum": [
+									"app",
+									"route"
+								],
 								"description": "Scope of the dependency: app-level (default) or route-level override",
 								"default": "app"
 							},
@@ -205,7 +267,9 @@
 				"handler_dependencies": {
 					"type": "array",
 					"description": "Array of dependency keys required by this handler (in resolution order)",
-					"items": { "type": "string" }
+					"items": {
+						"type": "string"
+					}
 				},
 				"route_overrides": {
 					"type": "object",
@@ -217,13 +281,20 @@
 				},
 				"injection_strategy": {
 					"type": "string",
-					"enum": ["name", "type", "destructure", "keyword_args"],
+					"enum": [
+						"name",
+						"type",
+						"destructure",
+						"keyword_args"
+					],
 					"description": "Language-specific injection strategy: name (Python param names), type (Python type hints), destructure (Node/TS), keyword_args (Ruby)"
 				},
 				"expected_types": {
 					"type": "object",
 					"description": "Expected types for dependencies (used to test type mismatch errors)",
-					"additionalProperties": { "type": "string" }
+					"additionalProperties": {
+						"type": "string"
+					}
 				},
 				"middleware": {
 					"type": "object",
@@ -233,8 +304,14 @@
 							"type": "object",
 							"description": "Enable tower-http compression middleware with custom settings.",
 							"properties": {
-								"gzip": { "type": "boolean", "description": "Enable gzip encoding (default true)" },
-								"brotli": { "type": "boolean", "description": "Enable brotli encoding (default true)" },
+								"gzip": {
+									"type": "boolean",
+									"description": "Enable gzip encoding (default true)"
+								},
+								"brotli": {
+									"type": "boolean",
+									"description": "Enable brotli encoding (default true)"
+								},
 								"min_size": {
 									"type": "integer",
 									"minimum": 0,
@@ -252,11 +329,25 @@
 						"rate_limit": {
 							"type": "object",
 							"description": "Rate limiting configuration using tower-governor. Optional warmup directives instruct the generated tests to issue multiple requests before asserting the final status.",
-							"required": ["per_second", "burst"],
+							"required": [
+								"per_second",
+								"burst"
+							],
 							"properties": {
-								"per_second": { "type": "integer", "minimum": 1, "description": "Allowed requests per second" },
-								"burst": { "type": "integer", "minimum": 1, "description": "Burst capacity" },
-								"ip_based": { "type": "boolean", "description": "Apply limits per IP (default true)" },
+								"per_second": {
+									"type": "integer",
+									"minimum": 1,
+									"description": "Allowed requests per second"
+								},
+								"burst": {
+									"type": "integer",
+									"minimum": 1,
+									"description": "Burst capacity"
+								},
+								"ip_based": {
+									"type": "boolean",
+									"description": "Apply limits per IP (default true)"
+								},
 								"warmup_requests": {
 									"type": "integer",
 									"minimum": 0,
@@ -277,9 +368,15 @@
 						"request_timeout": {
 							"type": "object",
 							"description": "Request timeout configuration and simulated handler delay.",
-							"required": ["seconds"],
+							"required": [
+								"seconds"
+							],
 							"properties": {
-								"seconds": { "type": "integer", "minimum": 1, "description": "Timeout duration in seconds" },
+								"seconds": {
+									"type": "integer",
+									"minimum": 1,
+									"description": "Timeout duration in seconds"
+								},
 								"sleep_ms": {
 									"type": "integer",
 									"minimum": 0,
@@ -292,7 +389,10 @@
 							"type": "object",
 							"description": "Enable/disable automatic X-Request-ID header propagation.",
 							"properties": {
-								"enabled": { "type": "boolean", "description": "Set to false to disable request ID middleware" }
+								"enabled": {
+									"type": "boolean",
+									"description": "Set to false to disable request ID middleware"
+								}
 							},
 							"additionalProperties": false
 						},
@@ -313,14 +413,23 @@
 							"description": "Static directories to serve via tower-http ServeDir. The generator will create these files under the e2e apps.",
 							"items": {
 								"type": "object",
-								"required": ["route_prefix", "files"],
+								"required": [
+									"route_prefix",
+									"files"
+								],
 								"properties": {
-									"route_prefix": { "type": "string", "description": "Path prefix (e.g., '/public')" },
+									"route_prefix": {
+										"type": "string",
+										"description": "Path prefix (e.g., '/public')"
+									},
 									"directory_name": {
 										"type": "string",
 										"description": "Optional deterministic name for generated assets (defaults to fixture id)"
 									},
-									"index_file": { "type": "boolean", "description": "Append index.html for directory requests" },
+									"index_file": {
+										"type": "boolean",
+										"description": "Append index.html for directory requests"
+									},
 									"cache_control": {
 										"type": "string",
 										"description": "Cache-Control header to apply to all static responses"
@@ -330,9 +439,15 @@
 										"minItems": 1,
 										"items": {
 											"type": "object",
-											"required": ["path", "content"],
+											"required": [
+												"path",
+												"content"
+											],
 											"properties": {
-												"path": { "type": "string", "description": "Relative file path within the static directory" },
+												"path": {
+													"type": "string",
+													"description": "Relative file path within the static directory"
+												},
 												"content": {
 													"type": "string",
 													"description": "File contents (utf-8). Use escaped sequences for HTML."
@@ -364,9 +479,72 @@
 							"type": "object",
 							"description": "Lifecycle hook definitions. See lifecycle_hooks fixtures.",
 							"additionalProperties": true
+						},
+						"graphql": {
+							"type": "object",
+							"description": "GraphQL configuration for handlers that serve GraphQL endpoints.",
+							"additionalProperties": true
 						}
 					},
 					"additionalProperties": true
+				},
+				"graphql": {
+					"type": "object",
+					"description": "GraphQL schema and resolver configuration for this handler",
+					"properties": {
+						"schema": {
+							"type": "string",
+							"description": "GraphQL SDL (Schema Definition Language) schema"
+						},
+						"resolvers": {
+							"type": "object",
+							"description": "Map of Type.field to resolver configs",
+							"additionalProperties": {
+								"type": "object",
+								"description": "Resolver configuration for a specific field",
+								"properties": {
+									"type": {
+										"type": "string",
+										"enum": [
+											"mock",
+											"factory",
+											"async_factory",
+											"error"
+										],
+										"description": "Resolver type: mock (static), factory (sync creation), async_factory (async creation), error (throws error)"
+									},
+									"return_value": {
+										"description": "Return value for mock type (any JSON type)"
+									},
+									"error_message": {
+										"type": "string",
+										"description": "Error message for error type resolvers"
+									}
+								}
+							}
+						},
+						"endpoint": {
+							"type": "string",
+							"description": "GraphQL endpoint path",
+							"default": "/graphql"
+						},
+						"complexity_limit": {
+							"type": "integer",
+							"description": "Maximum query complexity allowed",
+							"minimum": 0
+						},
+						"depth_limit": {
+							"type": "integer",
+							"description": "Maximum query depth allowed",
+							"minimum": 0
+						},
+						"batch_size": {
+							"type": "integer",
+							"description": "Maximum batch size for batch requests",
+							"minimum": 1
+						}
+					},
+					"additionalProperties": false
 				}
 			},
 			"additionalProperties": false
@@ -374,7 +552,9 @@
 		"streaming": {
 			"type": "object",
 			"description": "Streaming response metadata. When present, handlers should return a streaming response using these chunks.",
-			"required": ["chunks"],
+			"required": [
+				"chunks"
+			],
 			"properties": {
 				"content_type": {
 					"type": "string",
@@ -386,11 +566,16 @@
 					"description": "Ordered list of chunks yielded by the stream",
 					"items": {
 						"type": "object",
-						"required": ["type"],
+						"required": [
+							"type"
+						],
 						"properties": {
 							"type": {
 								"type": "string",
-								"enum": ["text", "bytes"],
+								"enum": [
+									"text",
+									"bytes"
+								],
 								"description": "Chunk payload type"
 							},
 							"value": {
@@ -405,12 +590,32 @@
 						"additionalProperties": false,
 						"allOf": [
 							{
-								"if": { "properties": { "type": { "const": "text" } } },
-								"then": { "required": ["value"] }
+								"if": {
+									"properties": {
+										"type": {
+											"const": "text"
+										}
+									}
+								},
+								"then": {
+									"required": [
+										"value"
+									]
+								}
 							},
 							{
-								"if": { "properties": { "type": { "const": "bytes" } } },
-								"then": { "required": ["base64"] }
+								"if": {
+									"properties": {
+										"type": {
+											"const": "bytes"
+										}
+									}
+								},
+								"then": {
+									"required": [
+										"base64"
+									]
+								}
 							}
 						]
 					}
@@ -420,7 +625,12 @@
 		"background": {
 			"type": "object",
 			"description": "Background task metadata. When present, handlers enqueue fire-and-forget work and tests assert against a state endpoint.",
-			"required": ["state_path", "state_key", "value_field", "expected_state"],
+			"required": [
+				"state_path",
+				"state_key",
+				"value_field",
+				"expected_state"
+			],
 			"properties": {
 				"state_path": {
 					"type": "string",
@@ -444,37 +654,79 @@
 		"request": {
 			"type": "object",
 			"description": "HTTP request details",
-			"required": ["method", "path"],
+			"required": [
+				"method",
+				"path"
+			],
 			"properties": {
 				"method": {
 					"type": "string",
-					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+					"enum": [
+						"GET",
+						"POST",
+						"PUT",
+						"PATCH",
+						"DELETE",
+						"HEAD",
+						"OPTIONS"
+					],
 					"description": "HTTP method"
 				},
 				"path": {
 					"type": "string",
 					"description": "Request path without query string",
 					"minLength": 1,
-					"examples": ["/users/123", "/items", "/search"]
+					"examples": [
+						"/users/123",
+						"/items",
+						"/search"
+					]
 				},
 				"query_params": {
 					"type": "object",
 					"description": "Query parameters as key-value pairs. Arrays represented as JSON arrays.",
 					"additionalProperties": {
 						"oneOf": [
-							{ "type": "string" },
-							{ "type": "number" },
-							{ "type": "boolean" },
-							{ "type": "null" },
+							{
+								"type": "string"
+							},
+							{
+								"type": "number"
+							},
+							{
+								"type": "boolean"
+							},
+							{
+								"type": "null"
+							},
 							{
 								"type": "array",
 								"items": {
-									"oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }]
+									"oneOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "number"
+										},
+										{
+											"type": "boolean"
+										}
+									]
 								}
 							}
 						]
 					},
-					"examples": [{ "page": 1, "limit": 10, "tags": ["rust", "web"] }]
+					"examples": [
+						{
+							"page": 1,
+							"limit": 10,
+							"tags": [
+								"rust",
+								"web"
+							]
+						}
+					]
 				},
 				"query_string": {
 					"type": "string",
@@ -483,18 +735,42 @@
 				"headers": {
 					"type": "object",
 					"description": "HTTP headers (lowercase keys preferred)",
-					"additionalProperties": { "type": "string" },
-					"examples": [{ "content-type": "application/json", "x-api-key": "secret" }]
+					"additionalProperties": {
+						"type": "string"
+					},
+					"examples": [
+						{
+							"content-type": "application/json",
+							"x-api-key": "secret"
+						}
+					]
 				},
 				"cookies": {
 					"type": "object",
 					"description": "Cookies as key-value pairs",
-					"additionalProperties": { "type": "string" },
-					"examples": [{ "session": "abc123", "theme": "dark" }]
+					"additionalProperties": {
+						"type": "string"
+					},
+					"examples": [
+						{
+							"session": "abc123",
+							"theme": "dark"
+						}
+					]
 				},
 				"body": {
 					"description": "Request body (any JSON type)",
-					"examples": [{ "name": "Alice", "email": "alice@example.com" }, ["item1", "item2"], "plain string"]
+					"examples": [
+						{
+							"name": "Alice",
+							"email": "alice@example.com"
+						},
+						[
+							"item1",
+							"item2"
+						],
+						"plain string"
+					]
 				},
 				"body_raw": {
 					"type": "string",
@@ -503,7 +779,37 @@
 				"content_type": {
 					"type": "string",
 					"description": "Content-Type header (convenience field, also in headers)",
-					"examples": ["application/json", "multipart/form-data", "application/x-www-form-urlencoded"]
+					"examples": [
+						"application/json",
+						"multipart/form-data",
+						"application/x-www-form-urlencoded"
+					]
+				},
+				"graphql": {
+					"type": "object",
+					"description": "GraphQL request details (query, variables, operation name)",
+					"properties": {
+						"query": {
+							"type": "string",
+							"description": "GraphQL query string"
+						},
+						"variables": {
+							"type": "object",
+							"description": "GraphQL variables object"
+						},
+						"operation_name": {
+							"type": "string",
+							"description": "GraphQL operation name"
+						},
+						"extensions": {
+							"type": "object",
+							"description": "GraphQL extensions object"
+						}
+					},
+					"required": [
+						"query"
+					],
+					"additionalProperties": false
 				}
 			},
 			"additionalProperties": false
@@ -511,14 +817,22 @@
 		"expected_response": {
 			"type": "object",
 			"description": "Expected HTTP response",
-			"required": ["status_code"],
+			"required": [
+				"status_code"
+			],
 			"properties": {
 				"status_code": {
 					"type": "integer",
 					"description": "Expected HTTP status code",
 					"minimum": 100,
 					"maximum": 599,
-					"examples": [200, 201, 400, 422, 500]
+					"examples": [
+						200,
+						201,
+						400,
+						422,
+						500
+					]
 				},
 				"body": {
 					"description": "Expected response body (any JSON type)"
@@ -531,19 +845,27 @@
 				"headers": {
 					"type": "object",
 					"description": "Expected response headers (partial match). Special tokens: '<<uuid>>' asserts the header is present and matches a UUID, '<<present>>' asserts presence with any value, '<<absent>>' asserts that the header must be missing.",
-					"additionalProperties": { "type": "string" }
+					"additionalProperties": {
+						"type": "string"
+					}
 				},
 				"validation_errors": {
 					"type": "array",
 					"description": "Expected validation errors for 422 responses (Spikard format)",
 					"items": {
 						"type": "object",
-						"required": ["loc", "msg", "type"],
+						"required": [
+							"loc",
+							"msg",
+							"type"
+						],
 						"properties": {
 							"loc": {
 								"type": "array",
 								"description": "Error location path (e.g., ['query', 'param_name'], ['body', 'field'])",
-								"items": { "type": "string" },
+								"items": {
+									"type": "string"
+								},
 								"minItems": 1
 							},
 							"msg": {
@@ -574,9 +896,82 @@
 					"items": {
 						"type": "array",
 						"description": "Batch of dependency keys that can be resolved in parallel",
-						"items": { "type": "string" }
+						"items": {
+							"type": "string"
+						}
 					},
-					"examples": [[["config"], ["db_pool", "cache"], ["auth_service"]]]
+					"examples": [
+						[
+							[
+								"config"
+							],
+							[
+								"db_pool",
+								"cache"
+							],
+							[
+								"auth_service"
+							]
+						]
+					]
+				},
+				"graphql": {
+					"type": "object",
+					"description": "GraphQL response details (data, errors, extensions)",
+					"properties": {
+						"data": {
+							"description": "GraphQL response data (any JSON type)"
+						},
+						"data_partial": {
+							"type": "object",
+							"description": "Partial data match (check only these fields exist with these values)"
+						},
+						"errors": {
+							"type": "array",
+							"description": "GraphQL errors array (per GraphQL spec October 2021)",
+							"items": {
+								"type": "object",
+								"required": ["message"],
+								"properties": {
+									"message": {
+										"type": "string",
+										"description": "Error message"
+									},
+									"locations": {
+										"type": "array",
+										"description": "Source locations where error occurred",
+										"items": {
+											"type": "object",
+											"required": ["line", "column"],
+											"properties": {
+												"line": {"type": "integer", "minimum": 1},
+												"column": {"type": "integer", "minimum": 1}
+											}
+										}
+									},
+									"path": {
+										"type": "array",
+										"description": "Path to field that caused error",
+										"items": {
+											"oneOf": [
+												{"type": "string"},
+												{"type": "integer"}
+											]
+										}
+									},
+									"extensions": {
+										"type": "object",
+										"description": "Additional error metadata"
+									}
+								}
+							}
+						},
+						"extensions": {
+							"type": "object",
+							"description": "GraphQL extensions object"
+						}
+					},
+					"additionalProperties": false
 				}
 			},
 			"additionalProperties": false
@@ -584,8 +979,22 @@
 		"tags": {
 			"type": "array",
 			"description": "Tags for filtering/organization",
-			"items": { "type": "string" },
-			"examples": [["validation", "required"], ["edge-case", "unicode"], ["performance"]]
+			"items": {
+				"type": "string"
+			},
+			"examples": [
+				[
+					"validation",
+					"required"
+				],
+				[
+					"edge-case",
+					"unicode"
+				],
+				[
+					"performance"
+				]
+			]
 		},
 		"skip": {
 			"type": "boolean",
@@ -636,7 +1045,11 @@
 					"query": "rust web framework"
 				}
 			},
-			"tags": ["validation", "required", "string"]
+			"tags": [
+				"validation",
+				"required",
+				"string"
+			]
 		}
 	]
 }

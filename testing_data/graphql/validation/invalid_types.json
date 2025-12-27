@@ -1,0 +1,40 @@
+{
+	"name": "invalid_types",
+	"description": "Input validation for wrong types in arguments and input fields",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  searchUsers(limit: Int!, offset: Int): [User!]!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n}",
+	"request": {
+		"query": "query SearchUsers($limit: Int!, $offset: Int) {\n  searchUsers(limit: $limit, offset: $offset) {\n    id\n    name\n    email\n  }\n}",
+		"variables": {
+			"limit": "not_an_integer",
+			"offset": 10
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"data": null,
+		"errors": [
+			{
+				"message": "Variable \"$limit\" of type \"Int!\" was provided invalid value.",
+				"locations": [
+					{
+						"line": 1,
+						"column": 16
+					}
+				],
+				"extensions": {
+					"value": "not_an_integer",
+					"problems": [
+						{
+							"path": [],
+							"explanation": "Expected value to be an integer, but received: \"not_an_integer\""
+						}
+					]
+				}
+			}
+		]
+	},
+	"resolvers": {},
+	"tags": ["validation", "type-checking", "variables"]
+}

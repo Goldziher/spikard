@@ -76,6 +76,38 @@ impl TestResponse {
     pub fn bytes(&self) -> Buffer {
         Buffer::from(self.body.clone())
     }
+
+    /// Extract GraphQL data from response
+    #[napi]
+    pub fn graphql_data(&self) -> napi::Result<serde_json::Value> {
+        if self.body.is_empty() {
+            return Err(napi::Error::from_reason("Response body is empty"));
+        }
+
+        let body: Value = serde_json::from_slice(&self.body)
+            .map_err(|e| napi::Error::from_reason(format!("Failed to parse JSON: {}", e)))?;
+
+        body.get("data")
+            .cloned()
+            .ok_or_else(|| napi::Error::from_reason("No 'data' field in GraphQL response"))
+    }
+
+    /// Extract GraphQL errors from response
+    #[napi]
+    pub fn graphql_errors(&self) -> napi::Result<Vec<serde_json::Value>> {
+        if self.body.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let body: Value = serde_json::from_slice(&self.body)
+            .map_err(|e| napi::Error::from_reason(format!("Failed to parse JSON: {}", e)))?;
+
+        Ok(body
+            .get("errors")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.to_vec())
+            .unwrap_or_default())
+    }
 }
 
 /// Optional configuration for a streaming response.

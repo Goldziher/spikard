@@ -17,8 +17,12 @@ use Spikard\Http\Response;
 final class TestClient
 {
     /**
-     * @param array<int, mixed>|null $routes
-     * @param array<string, mixed>|null $config
+     * Create a new test client.
+     *
+     * @param array<int, array<string, mixed>>|null $routes HTTP routes configuration
+     * @param array<string, mixed>|null $config Server configuration options
+     *
+     * @throws RuntimeException if Spikard PHP extension is not loaded
      */
     public function __construct(?array $routes = null, ?array $config = null)
     {
@@ -32,6 +36,34 @@ final class TestClient
     public function request(string $method, string $path, array $options = []): Response
     {
         unset($method, $path, $options);
+        throw new RuntimeException('Spikard PHP extension is not loaded.');
+    }
+
+    /**
+     * Send a GraphQL query or mutation.
+     *
+     * @param string $query GraphQL query/mutation string
+     * @param array<string, mixed>|null $variables Optional GraphQL variables
+     * @param string|null $operationName Optional operation name for multi-operation documents
+     */
+    public function graphql(string $query, ?array $variables = null, ?string $operationName = null): Response
+    {
+        unset($query, $variables, $operationName);
+        throw new RuntimeException('Spikard PHP extension is not loaded.');
+    }
+
+    /**
+     * Send a GraphQL query and get HTTP status and body separately.
+     *
+     * @param string $query GraphQL query/mutation string
+     * @param array<string, mixed>|null $variables Optional GraphQL variables
+     * @param string|null $operationName Optional operation name for multi-operation documents
+     *
+     * @return array<int, string|int>
+     */
+    public function graphqlWithStatus(string $query, ?array $variables = null, ?string $operationName = null): array
+    {
+        unset($query, $variables, $operationName);
         throw new RuntimeException('Spikard PHP extension is not loaded.');
     }
 

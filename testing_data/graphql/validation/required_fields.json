@@ -1,0 +1,48 @@
+{
+	"name": "required_fields",
+	"description": "Input validation for required fields in mutations and input types",
+	"operation_type": "mutation",
+	"endpoint": "/graphql",
+	"schema": "type Mutation {\n  registerUser(input: UserRegistrationInput!): RegistrationResult!\n}\n\ninput UserRegistrationInput {\n  username: String!\n  email: String!\n  password: String!\n  firstName: String\n  lastName: String\n}\n\ntype RegistrationResult {\n  success: Boolean!\n  userId: ID\n  message: String!\n}",
+	"request": {
+		"query": "mutation Register($input: UserRegistrationInput!) {\n  registerUser(input: $input) {\n    success\n    userId\n    message\n  }\n}",
+		"variables": {
+			"input": {
+				"username": "johndoe",
+				"email": "john@example.com"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"data": null,
+		"errors": [
+			{
+				"message": "Field \"UserRegistrationInput.password\" of required type \"String!\" was not provided.",
+				"locations": [
+					{
+						"line": 1,
+						"column": 21
+					}
+				],
+				"extensions": {
+					"fieldName": "password",
+					"typeName": "UserRegistrationInput",
+					"kind": "MISSING_REQUIRED_FIELD"
+				}
+			}
+		]
+	},
+	"resolvers": {
+		"Mutation.registerUser": {
+			"type": "error",
+			"error_message": "Field \"UserRegistrationInput.password\" of required type \"String!\" was not provided.",
+			"error_extensions": {
+				"fieldName": "password",
+				"typeName": "UserRegistrationInput",
+				"kind": "MISSING_REQUIRED_FIELD"
+			}
+		}
+	},
+	"tags": ["validation", "input-types", "required-fields"]
+}
