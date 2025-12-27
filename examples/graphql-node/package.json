@@ -1,0 +1,18 @@
+{
+  "name": "spikard-graphql-node-example",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Example of using Spikard GraphQL bindings with Node.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "dev": "tsc --watch & node --watch dist/main.js"
+  },
+  "dependencies": {
+    "spikard": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}

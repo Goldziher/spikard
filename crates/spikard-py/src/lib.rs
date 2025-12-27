@@ -6,6 +6,8 @@ mod background;
 pub mod conversion;
 #[cfg(feature = "di")]
 pub mod di;
+#[cfg(feature = "graphql")]
+pub mod graphql;
 pub mod handler;
 mod handler_request;
 pub mod lifecycle;
@@ -801,6 +803,12 @@ pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(create_test_client, m)?)?;
     m.add_function(wrap_pyfunction!(process, m)?)?;
     m.add_function(wrap_pyfunction!(run_server, m)?)?;
+
+    #[cfg(feature = "graphql")]
+    {
+        m.add_class::<graphql::PySchemaConfig>()?;
+        m.add_class::<graphql::PySchemaBuilder>()?;
+    }
 
     Ok(())
 }

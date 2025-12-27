@@ -1,0 +1,38 @@
+[package]
+name = "spikard-graphql"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "GraphQL support for Spikard with async-graphql integration"
+keywords = ["graphql", "async-graphql", "server", "api"]
+categories = ["web-programming::http-server", "web-programming"]
+documentation = "https://docs.rs/spikard-graphql"
+readme = "README.md"
+
+[dependencies]
+spikard-http = { workspace = true }
+spikard-core = { workspace = true }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tower.workspace = true
+http.workspace = true
+tracing.workspace = true
+axum = { version = "0.8" }
+futures = "0.3"
+bytes = "1.11"
+
+[lints]
+workspace = true
+
+[features]
+default = []
+subscription = []
+
+[dev-dependencies]
+doc-comment = "0.3"
+tokio-test = "0.4"

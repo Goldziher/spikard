@@ -20,6 +20,7 @@ doctest = false
 [dependencies]
 spikard-core = { path = "../spikard-core", features = ["di"] }
 spikard-http = { path = "../spikard-http", features = ["di"] }
+spikard-graphql = { path = "../spikard-graphql", optional = true }
 http.workspace = true
 pyo3.workspace = true
 pyo3-async-runtimes.workspace = true
@@ -44,3 +45,4 @@ default = ["di"]
 # test compilation. It's enabled only by maturin in pyproject.toml for wheel builds.
 extension-module = ["pyo3/extension-module"]
 di = ["spikard-core/di", "spikard-http/di"]
+graphql = ["spikard-graphql"]
