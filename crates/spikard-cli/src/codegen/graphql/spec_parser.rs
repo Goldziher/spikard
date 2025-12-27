@@ -235,10 +235,24 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                         } else if obj.name == "Subscription" {
                             schema.subscriptions = fields;
                         } else {
+                            // Detect duplicate type definitions
+                            if schema.types.contains_key(&obj.name) {
+                                return Err(anyhow!(
+                                    "Duplicate type definition: '{}' is defined more than once in the schema",
+                                    obj.name
+                                ));
+                            }
                             schema.types.insert(obj.name.clone(), gql_type);
                         }
                     }
                     TypeDefinition::Interface(interface) => {
+                        // Detect duplicate type definitions
+                        if schema.types.contains_key(&interface.name) {
+                            return Err(anyhow!(
+                                "Duplicate type definition: '{}' is defined more than once in the schema",
+                                interface.name
+                            ));
+                        }
                         let fields = extract_fields_from_interface(interface);
                         schema.types.insert(
                             interface.name.clone(),
@@ -254,6 +268,13 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                         );
                     }
                     TypeDefinition::Union(union) => {
+                        // Detect duplicate type definitions
+                        if schema.types.contains_key(&union.name) {
+                            return Err(anyhow!(
+                                "Duplicate type definition: '{}' is defined more than once in the schema",
+                                union.name
+                            ));
+                        }
                         let possible_types = union.types.iter().map(|t| t.clone()).collect();
                         schema.types.insert(
                             union.name.clone(),
@@ -269,6 +290,13 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                         );
                     }
                     TypeDefinition::Enum(enum_type) => {
+                        // Detect duplicate type definitions
+                        if schema.types.contains_key(&enum_type.name) {
+                            return Err(anyhow!(
+                                "Duplicate type definition: '{}' is defined more than once in the schema",
+                                enum_type.name
+                            ));
+                        }
                         let enum_values = enum_type
                             .values
                             .iter()
@@ -296,6 +324,13 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                         );
                     }
                     TypeDefinition::InputObject(input_obj) => {
+                        // Detect duplicate type definitions
+                        if schema.types.contains_key(&input_obj.name) {
+                            return Err(anyhow!(
+                                "Duplicate type definition: '{}' is defined more than once in the schema",
+                                input_obj.name
+                            ));
+                        }
                         let input_fields = input_obj
                             .fields
                             .iter()
@@ -324,6 +359,13 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                         );
                     }
                     TypeDefinition::Scalar(scalar) => {
+                        // Detect duplicate type definitions
+                        if schema.types.contains_key(&scalar.name) {
+                            return Err(anyhow!(
+                                "Duplicate type definition: '{}' is defined more than once in the schema",
+                                scalar.name
+                            ));
+                        }
                         schema.types.insert(
                             scalar.name.clone(),
                             GraphQLType {
@@ -341,6 +383,22 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
             }
             _ => {}
         }
+    }
+
+    // Validate that schema is not empty
+    if schema.types.is_empty() && schema.queries.is_empty() {
+        return Err(anyhow!(
+            "Empty GraphQL schema - no types or queries defined"
+        ));
+    }
+
+    // Validate that Query type exists (required by GraphQL spec)
+    if schema.queries.is_empty() {
+        return Err(anyhow!(
+            "Invalid GraphQL schema - Query type is required by the GraphQL specification.\n\
+             Add a Query type to your schema:\n\
+             type Query {{\n  hello: String!\n}}"
+        ));
     }
 
     Ok(schema)
@@ -846,5 +904,206 @@ mod tests {
         assert!(!non_null_list_non_null.is_nullable);
         assert!(non_null_list_non_null.is_list);
         assert!(!non_null_list_non_null.list_item_nullable);
+    }
+
+    #[test]
+    fn test_empty_schema_rejected() {
+        let sdl = r#"
+            directive @example on FIELD_DEFINITION
+        "#;
+
+        let result = parse_graphql_sdl_string(sdl);
+        assert!(result.is_err());
+        let error_msg = format!("{}", result.unwrap_err());
+        assert!(error_msg.contains("Empty GraphQL schema"));
+        assert!(error_msg.contains("no types or queries defined"));
+    }
+
+    #[test]
+    fn test_schema_without_query_rejected() {
+        let sdl = r#"
+            type Mutation {
+                createUser(name: String!): User!
+            }
+
+            type User {
+                id: ID!
+                name: String!
+            }
+        "#;
+
+        let result = parse_graphql_sdl_string(sdl);
+        assert!(result.is_err());
+        let error_msg = format!("{}", result.unwrap_err());
+        assert!(error_msg.contains("Query type is required"));
+        assert!(error_msg.contains("GraphQL specification"));
+    }
+
+    #[test]
+    fn test_duplicate_type_definition_rejected() {
+        let sdl = r#"
+            type Query {
+                hello: String!
+            }
+
+            type User {
+                id: ID!
+                name: String!
+            }
+
+            type User {
+                id: ID!
+                email: String!
+            }
+        "#;
+
+        let result = parse_graphql_sdl_string(sdl);
+        assert!(result.is_err());
+        let error_msg = format!("{}", result.unwrap_err());
+        assert!(error_msg.contains("Duplicate type definition"));
+        assert!(error_msg.contains("User"));
+        assert!(error_msg.contains("defined more than once"));
+    }
+
+    #[test]
+    fn test_duplicate_enum_definition_rejected() {
+        let sdl = r#"
+            enum Status {
+                ACTIVE
+                INACTIVE
+            }
+
+            type Query {
+                status: Status!
+            }
+
+            enum Status {
+                PENDING
+                ARCHIVED
+            }
+        "#;
+
+        let result = parse_graphql_sdl_string(sdl);
+        assert!(result.is_err());
+        let error_msg = format!("{}", result.unwrap_err());
+        assert!(error_msg.contains("Duplicate type definition"));
+        assert!(error_msg.contains("Status"));
+    }
+
+    #[test]
+    fn test_duplicate_scalar_definition_rejected() {
+        let sdl = r#"
+            scalar DateTime
+
+            type Query {
+                now: DateTime!
+            }
+
+            scalar DateTime
+        "#;
+
+        let result = parse_graphql_sdl_string(sdl);
+        assert!(result.is_err());
+        let error_msg = format!("{}", result.unwrap_err());
+        assert!(error_msg.contains("Duplicate type definition"));
+        assert!(error_msg.contains("DateTime"));
+    }
+
+    #[test]
+    fn test_duplicate_interface_definition_rejected() {
+        let sdl = r#"
+            interface Node {
+                id: ID!
+            }
+
+            type Query {
+                node(id: ID!): Node
+            }
+
+            interface Node {
+                id: ID!
+                createdAt: String!
+            }
+        "#;
+
+        let result = parse_graphql_sdl_string(sdl);
+        assert!(result.is_err());
+        let error_msg = format!("{}", result.unwrap_err());
+        assert!(error_msg.contains("Duplicate type definition"));
+        assert!(error_msg.contains("Node"));
+    }
+
+    #[test]
+    fn test_duplicate_input_object_definition_rejected() {
+        let sdl = r#"
+            input UserInput {
+                name: String!
+            }
+
+            type Query {
+                createUser(input: UserInput!): String!
+            }
+
+            input UserInput {
+                email: String!
+            }
+        "#;
+
+        let result = parse_graphql_sdl_string(sdl);
+        assert!(result.is_err());
+        let error_msg = format!("{}", result.unwrap_err());
+        assert!(error_msg.contains("Duplicate type definition"));
+        assert!(error_msg.contains("UserInput"));
+    }
+
+    #[test]
+    fn test_duplicate_union_definition_rejected() {
+        let sdl = r#"
+            union SearchResult = User | Post
+
+            type Query {
+                search(query: String!): SearchResult!
+            }
+
+            type User {
+                id: ID!
+            }
+
+            type Post {
+                id: ID!
+            }
+
+            union SearchResult = User | Post | Comment
+        "#;
+
+        let result = parse_graphql_sdl_string(sdl);
+        assert!(result.is_err());
+        let error_msg = format!("{}", result.unwrap_err());
+        assert!(error_msg.contains("Duplicate type definition"));
+        assert!(error_msg.contains("SearchResult"));
+    }
+
+    #[test]
+    fn test_valid_schema_with_query_and_mutations() {
+        let sdl = r#"
+            type Query {
+                hello: String!
+                user(id: ID!): User
+            }
+
+            type Mutation {
+                createUser(name: String!): User!
+            }
+
+            type User {
+                id: ID!
+                name: String!
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse valid SDL");
+        assert!(!schema.queries.is_empty());
+        assert!(!schema.mutations.is_empty());
+        assert!(schema.types.contains_key("User"));
     }
 }
