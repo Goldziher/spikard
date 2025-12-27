@@ -360,6 +360,122 @@ impl NativeTestClient {
         crate::testing::sse::sse_stream_from_response(ruby, &snapshot)
     }
 
+    /// Send a GraphQL query/mutation
+    pub fn graphql(
+        ruby: &Ruby,
+        this: &Self,
+        query: String,
+        variables: Value,
+        operation_name: Value,
+    ) -> Result<Value, Error> {
+        let inner_borrow = this.inner.borrow();
+        let inner = inner_borrow
+            .as_ref()
+            .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
+
+        let json_module = ruby
+            .class_object()
+            .const_get("JSON")
+            .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
+
+        let variables_json = if variables.is_nil() {
+            None
+        } else {
+            Some(crate::conversion::ruby_value_to_json(ruby, json_module, variables)?)
+        };
+
+        let operation_name_str = if operation_name.is_nil() {
+            None
+        } else {
+            Some(String::try_convert(operation_name)?)
+        };
+
+        let runtime = crate::server::global_runtime(ruby)?;
+        let server = inner.http_server.clone();
+        let query_value = query.clone();
+
+        let snapshot = crate::call_without_gvl!(
+            block_on_graphql,
+            args: (
+                runtime, &tokio::runtime::Runtime,
+                server, Arc<TestServer>,
+                query_value, String,
+                variables_json, Option<JsonValue>,
+                operation_name_str, Option<String>
+            ),
+            return_type: Result<ResponseSnapshot, NativeRequestError>
+        )
+        .map_err(|err| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                format!("GraphQL request failed: {}", err.0),
+            )
+        })?;
+
+        response_snapshot_to_ruby(ruby, snapshot)
+    }
+
+    /// Send a GraphQL query and get HTTP status separately
+    pub fn graphql_with_status(
+        ruby: &Ruby,
+        this: &Self,
+        query: String,
+        variables: Value,
+        operation_name: Value,
+    ) -> Result<Value, Error> {
+        let inner_borrow = this.inner.borrow();
+        let inner = inner_borrow
+            .as_ref()
+            .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
+
+        let json_module = ruby
+            .class_object()
+            .const_get("JSON")
+            .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
+
+        let variables_json = if variables.is_nil() {
+            None
+        } else {
+            Some(crate::conversion::ruby_value_to_json(ruby, json_module, variables)?)
+        };
+
+        let operation_name_str = if operation_name.is_nil() {
+            None
+        } else {
+            Some(String::try_convert(operation_name)?)
+        };
+
+        let runtime = crate::server::global_runtime(ruby)?;
+        let server = inner.http_server.clone();
+        let query_value = query.clone();
+
+        let snapshot = crate::call_without_gvl!(
+            block_on_graphql,
+            args: (
+                runtime, &tokio::runtime::Runtime,
+                server, Arc<TestServer>,
+                query_value, String,
+                variables_json, Option<JsonValue>,
+                operation_name_str, Option<String>
+            ),
+            return_type: Result<ResponseSnapshot, NativeRequestError>
+        )
+        .map_err(|err| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                format!("GraphQL request failed: {}", err.0),
+            )
+        })?;
+
+        let status = snapshot.status;
+        let response = response_snapshot_to_ruby(ruby, snapshot)?;
+
+        let array = ruby.ary_new_capa(2);
+        array.push(ruby.integer_from_i64(status as i64))?;
+        array.push(response)?;
+        Ok(array.as_value())
+    }
+
     /// GC mark hook so Ruby keeps handler closures alive.
     #[allow(dead_code)]
     pub fn mark(&self, marker: &Marker) {
@@ -381,7 +497,7 @@ fn websocket_timeout() -> Duration {
     Duration::from_millis(timeout_ms)
 }
 
-fn block_on_request(
+pub fn block_on_request(
     runtime: &tokio::runtime::Runtime,
     server: Arc<TestServer>,
     method: Method,
@@ -535,4 +651,54 @@ pub async fn execute_request(
 
 fn snapshot_err_to_native(err: SnapshotError) -> NativeRequestError {
     NativeRequestError(err.to_string())
+}
+
+pub fn block_on_graphql(
+    runtime: &tokio::runtime::Runtime,
+    server: Arc<TestServer>,
+    query: String,
+    variables: Option<JsonValue>,
+    operation_name: Option<String>,
+) -> Result<ResponseSnapshot, NativeRequestError> {
+    runtime.block_on(execute_graphql_request(server, query, variables, operation_name))
+}
+
+async fn execute_graphql_request(
+    server: Arc<TestServer>,
+    query: String,
+    variables: Option<JsonValue>,
+    operation_name: Option<String>,
+) -> Result<ResponseSnapshot, NativeRequestError> {
+    let mut body = serde_json::json!({ "query": query });
+    if let Some(vars) = variables {
+        body["variables"] = vars;
+    }
+    if let Some(op_name) = operation_name {
+        body["operationName"] = JsonValue::String(op_name);
+    }
+
+    let response = server.post("/graphql").json(&body).await;
+    let snapshot = snapshot_response(response).await.map_err(snapshot_err_to_native)?;
+    Ok(snapshot)
+}
+
+fn response_snapshot_to_ruby(ruby: &Ruby, snapshot: ResponseSnapshot) -> Result<Value, Error> {
+    let hash = ruby.hash_new();
+
+    hash.aset(
+        ruby.intern("status_code"),
+        ruby.integer_from_i64(snapshot.status as i64),
+    )?;
+
+    let headers_hash = ruby.hash_new();
+    for (key, value) in snapshot.headers {
+        headers_hash.aset(ruby.str_new(&key), ruby.str_new(&value))?;
+    }
+    hash.aset(ruby.intern("headers"), headers_hash)?;
+
+    let body_value = ruby.str_new(&String::from_utf8_lossy(&snapshot.body));
+    hash.aset(ruby.intern("body"), body_value.clone())?;
+    hash.aset(ruby.intern("body_text"), body_value)?;
+
+    Ok(hash.as_value())
 }
