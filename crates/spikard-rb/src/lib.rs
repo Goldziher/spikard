@@ -40,7 +40,6 @@ use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Method, StatusCode};
 use axum_test::{TestServer, TestServerConfig, Transport};
 use bytes::Bytes;
-use cookie::Cookie;
 use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
 use magnus::{
@@ -48,9 +47,7 @@ use magnus::{
 };
 use serde_json::Value as JsonValue;
 use spikard_http::ProblemDetails;
-use spikard_http::testing::{
-    MultipartFilePart, ResponseSnapshot, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
-};
+use spikard_http::testing::ResponseSnapshot;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::cell::RefCell;
@@ -82,22 +79,8 @@ struct ClientInner {
     _handlers: Vec<RubyHandler>,
 }
 
-struct RequestConfig {
-    query: Option<JsonValue>,
-    headers: HashMap<String, String>,
-    cookies: HashMap<String, String>,
-    body: Option<RequestBody>,
-}
-
-enum RequestBody {
-    Json(JsonValue),
-    Form(JsonValue),
-    Raw(String),
-    Multipart {
-        form_data: Vec<(String, String)>,
-        files: Vec<MultipartFilePart>,
-    },
-}
+// Re-export from testing::client to avoid duplication
+use testing::client::{RequestBody, RequestConfig};
 
 #[derive(Clone)]
 struct RubyHandler {
@@ -451,15 +434,6 @@ fn ruby_value_to_bytes(value: Value) -> Result<Bytes, io::Error> {
     Err(io::Error::other("Streaming chunks must be Strings or Arrays of bytes"))
 }
 
-struct TestResponseData {
-    status: u16,
-    headers: HashMap<String, String>,
-    body_text: Option<String>,
-}
-
-#[derive(Debug)]
-struct NativeRequestError(String);
-
 impl NativeTestClient {
     #[allow(clippy::too_many_arguments)]
     fn initialize(
@@ -636,19 +610,25 @@ impl NativeTestClient {
         let request_config = parse_request_config(ruby, options)?;
 
         let runtime = crate::server::global_runtime(ruby)?;
-        let response = runtime
-            .block_on(execute_request(
-                inner.http_server.clone(),
-                http_method,
-                path.clone(),
-                request_config,
-            ))
-            .map_err(|err| {
-                Error::new(
-                    ruby.exception_runtime_error(),
-                    format!("Request failed for {method_upper} {path}: {}", err.0),
-                )
-            })?;
+        let server = inner.http_server.clone();
+        let path_value = path.clone();
+        let response = crate::call_without_gvl!(
+            testing::client::block_on_request,
+            args: (
+                runtime, &tokio::runtime::Runtime,
+                server, Arc<TestServer>,
+                http_method, Method,
+                path_value, String,
+                request_config, testing::client::RequestConfig
+            ),
+            return_type: Result<testing::client::TestResponseData, testing::client::NativeRequestError>
+        )
+        .map_err(|err| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                format!("Request failed for {method_upper} {path}: {}", err.0),
+            )
+        })?;
 
         response_to_ruby(ruby, response)
     }
@@ -700,20 +680,26 @@ impl NativeTestClient {
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
 
         let runtime = crate::server::global_runtime(ruby)?;
+        let server = inner.http_server.clone();
+        let http_method = Method::GET;
         let request_config = RequestConfig {
             query: None,
             headers: HashMap::new(),
             cookies: HashMap::new(),
             body: None,
         };
-        let response = runtime
-            .block_on(execute_request(
-                inner.http_server.clone(),
-                Method::GET,
-                path.clone(),
-                request_config,
-            ))
-            .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", err.0)))?;
+        let response = crate::call_without_gvl!(
+            testing::client::block_on_request,
+            args: (
+                runtime, &tokio::runtime::Runtime,
+                server, Arc<TestServer>,
+                http_method, Method,
+                path, String,
+                request_config, RequestConfig
+            ),
+            return_type: Result<testing::client::TestResponseData, testing::client::NativeRequestError>
+        )
+        .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", err.0)))?;
 
         let body = response.body_text.unwrap_or_default().into_bytes();
         let snapshot = ResponseSnapshot {
@@ -723,6 +709,70 @@ impl NativeTestClient {
         };
 
         testing::sse::sse_stream_from_response(ruby, &snapshot)
+    }
+
+    fn graphql(ruby: &Ruby, this: &Self, query: String, variables: Value, operation_name: Value) -> Result<Value, Error> {
+        let (_status, response) = Self::execute_graphql_impl(ruby, this, query, variables, operation_name)?;
+        Ok(response)
+    }
+
+    fn graphql_with_status(ruby: &Ruby, this: &Self, query: String, variables: Value, operation_name: Value) -> Result<Value, Error> {
+        let (status, response) = Self::execute_graphql_impl(ruby, this, query, variables, operation_name)?;
+
+        let array = ruby.ary_new_capa(2);
+        array.push(ruby.integer_from_i64(status as i64))?;
+        array.push(response)?;
+        Ok(array.as_value())
+    }
+
+    fn execute_graphql_impl(ruby: &Ruby, this: &Self, query: String, variables: Value, operation_name: Value) -> Result<(u16, Value), Error> {
+        let inner_borrow = this.inner.borrow();
+        let inner = inner_borrow
+            .as_ref()
+            .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
+
+        let json_module = ruby
+            .class_object()
+            .const_get("JSON")
+            .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
+
+        let variables_json = if variables.is_nil() {
+            None
+        } else {
+            Some(ruby_value_to_json(ruby, json_module, variables)?)
+        };
+
+        let operation_name_str = if operation_name.is_nil() {
+            None
+        } else {
+            Some(String::try_convert(operation_name)?)
+        };
+
+        let runtime = crate::server::global_runtime(ruby)?;
+        let server = inner.http_server.clone();
+        let query_value = query.clone();
+
+        let snapshot = crate::call_without_gvl!(
+            testing::client::block_on_graphql,
+            args: (
+                runtime, &tokio::runtime::Runtime,
+                server, Arc<TestServer>,
+                query_value, String,
+                variables_json, Option<JsonValue>,
+                operation_name_str, Option<String>
+            ),
+            return_type: Result<ResponseSnapshot, testing::client::NativeRequestError>
+        )
+        .map_err(|err| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                format!("GraphQL request failed: {}", err.0),
+            )
+        })?;
+
+        let status = snapshot.status;
+        let response = response_snapshot_to_ruby(ruby, snapshot)?;
+        Ok((status, response))
     }
 }
 
@@ -1026,77 +1076,27 @@ impl Handler for RubyHandler {
     }
 }
 
-async fn execute_request(
-    server: Arc<TestServer>,
-    method: Method,
-    path: String,
-    config: RequestConfig,
-) -> Result<TestResponseData, NativeRequestError> {
-    let mut request = match method {
-        Method::GET => server.get(&path),
-        Method::POST => server.post(&path),
-        Method::PUT => server.put(&path),
-        Method::PATCH => server.patch(&path),
-        Method::DELETE => server.delete(&path),
-        Method::HEAD => server.method(Method::HEAD, &path),
-        Method::OPTIONS => server.method(Method::OPTIONS, &path),
-        Method::TRACE => server.method(Method::TRACE, &path),
-        other => return Err(NativeRequestError(format!("Unsupported HTTP method {other}"))),
-    };
+// These functions are now in testing::client module - use call_without_gvl! macro to call them
 
-    if let Some(query) = config.query {
-        request = request.add_query_params(&query);
+fn response_snapshot_to_ruby(ruby: &Ruby, snapshot: ResponseSnapshot) -> Result<Value, Error> {
+    let hash = ruby.hash_new();
+
+    hash.aset(
+        ruby.intern("status_code"),
+        ruby.integer_from_i64(snapshot.status as i64),
+    )?;
+
+    let headers_hash = ruby.hash_new();
+    for (key, value) in snapshot.headers {
+        headers_hash.aset(ruby.str_new(&key), ruby.str_new(&value))?;
     }
+    hash.aset(ruby.intern("headers"), headers_hash)?;
 
-    for (name, value) in config.headers {
-        request = request.add_header(name.as_str(), value.as_str());
-    }
+    let body_value = ruby.str_new(&String::from_utf8_lossy(&snapshot.body));
+    hash.aset(ruby.intern("body"), body_value.clone())?;
+    hash.aset(ruby.intern("body_text"), body_value)?;
 
-    for (name, value) in config.cookies {
-        request = request.add_cookie(Cookie::new(name, value));
-    }
-
-    if let Some(body) = config.body {
-        match body {
-            RequestBody::Json(json_value) => {
-                request = request.json(&json_value);
-            }
-            RequestBody::Form(form_value) => {
-                let encoded = encode_urlencoded_body(&form_value)
-                    .map_err(|err| NativeRequestError(format!("Failed to encode form body: {err}")))?;
-                request = request
-                    .content_type("application/x-www-form-urlencoded")
-                    .bytes(Bytes::from(encoded));
-            }
-            RequestBody::Raw(raw) => {
-                request = request.bytes(Bytes::from(raw));
-            }
-            RequestBody::Multipart { form_data, files } => {
-                let (multipart_body, boundary) = build_multipart_body(&form_data, &files);
-                request = request
-                    .content_type(&format!("multipart/form-data; boundary={}", boundary))
-                    .bytes(Bytes::from(multipart_body));
-            }
-        }
-    }
-
-    let response = request.await;
-    let snapshot = snapshot_response(response).await.map_err(snapshot_err_to_native)?;
-    let body_text = if snapshot.body.is_empty() {
-        None
-    } else {
-        Some(String::from_utf8_lossy(&snapshot.body).into_owned())
-    };
-
-    Ok(TestResponseData {
-        status: snapshot.status,
-        headers: snapshot.headers,
-        body_text,
-    })
-}
-
-fn snapshot_err_to_native(err: SnapshotError) -> NativeRequestError {
-    NativeRequestError(err.to_string())
+    Ok(hash.as_value())
 }
 
 fn parse_request_config(ruby: &Ruby, options: Value) -> Result<RequestConfig, Error> {
@@ -1377,7 +1377,7 @@ fn is_streaming_response(ruby: &Ruby, value: Value) -> Result<bool, Error> {
     Ok(value.respond_to(stream_sym, false)? && value.respond_to(status_sym, false)?)
 }
 
-fn response_to_ruby(ruby: &Ruby, response: TestResponseData) -> Result<Value, Error> {
+fn response_to_ruby(ruby: &Ruby, response: testing::client::TestResponseData) -> Result<Value, Error> {
     let hash = ruby.hash_new();
 
     hash.aset(
@@ -1573,6 +1573,8 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("request", method!(NativeTestClient::request, 3))?;
     class.define_method("websocket", method!(NativeTestClient::websocket, 1))?;
     class.define_method("sse", method!(NativeTestClient::sse, 1))?;
+    class.define_method("graphql", method!(NativeTestClient::graphql, 3))?;
+    class.define_method("graphql_with_status", method!(NativeTestClient::graphql_with_status, 3))?;
     class.define_method("close", method!(NativeTestClient::close, 0))?;
 
     let built_response_class = native.define_class("BuiltResponse", ruby.class_object())?;
