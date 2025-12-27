@@ -438,6 +438,7 @@ fn extract_fields_from_object(obj: &ObjectType<String>) -> Vec<GraphQLField> {
             name: field.name.clone(),
             type_name: format_type(&field.field_type),
             is_list: is_list_type(&field.field_type),
+            list_item_nullable: extract_list_item_nullability(&field.field_type),
             is_nullable: is_nullable_type(&field.field_type),
             arguments: field
                 .arguments
@@ -447,6 +448,7 @@ fn extract_fields_from_object(obj: &ObjectType<String>) -> Vec<GraphQLField> {
                     type_name: format_type(&arg.value_type),
                     is_nullable: is_nullable_type(&arg.value_type),
                     is_list: is_list_type(&arg.value_type),
+                    list_item_nullable: extract_list_item_nullability(&arg.value_type),
                     default_value: arg.default_value.as_ref().map(|v| format!("{:?}", v)),
                     description: arg.description.clone(),
                 })
@@ -468,6 +470,7 @@ fn extract_fields_from_interface(
             name: field.name.clone(),
             type_name: format_type(&field.field_type),
             is_list: is_list_type(&field.field_type),
+            list_item_nullable: extract_list_item_nullability(&field.field_type),
             is_nullable: is_nullable_type(&field.field_type),
             arguments: field
                 .arguments
@@ -477,6 +480,7 @@ fn extract_fields_from_interface(
                     type_name: format_type(&arg.value_type),
                     is_nullable: is_nullable_type(&arg.value_type),
                     is_list: is_list_type(&arg.value_type),
+                    list_item_nullable: extract_list_item_nullability(&arg.value_type),
                     default_value: arg.default_value.as_ref().map(|v| format!("{:?}", v)),
                     description: arg.description.clone(),
                 })
@@ -507,6 +511,18 @@ fn is_list_type(type_def: &graphql_parser::schema::Type<String>) -> bool {
         graphql_parser::schema::Type::ListType(_) => true,
         graphql_parser::schema::Type::NonNullType(inner) => is_list_type(inner),
         _ => false,
+    }
+}
+
+/// Extract whether list items are nullable
+/// For a type like [String!], returns false (items are non-null)
+/// For a type like [String], returns true (items are nullable)
+/// For non-list types, returns true (default)
+fn extract_list_item_nullability(type_def: &graphql_parser::schema::Type<String>) -> bool {
+    match type_def {
+        graphql_parser::schema::Type::NonNullType(inner) => extract_list_item_nullability(inner),
+        graphql_parser::schema::Type::ListType(inner) => is_nullable_type(inner),
+        _ => true,
     }
 }
 
