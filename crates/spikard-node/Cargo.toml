@@ -18,12 +18,14 @@ crate-type = ["cdylib"]
 [features]
 default = ["di"]
 di = ["spikard/di", "spikard-http/di"]
+graphql = ["spikard-graphql"]
 
 [dependencies]
 spikard.workspace = true
 spikard-http = { path = "../spikard-http", features = ["di"] }
 spikard-core = { path = "../spikard-core" }
 spikard-bindings-shared = { path = "../spikard-bindings-shared" }
+spikard-graphql = { path = "../spikard-graphql", optional = true }
 napi = { version = "3.7", default-features = false, features = ["napi8", "async", "serde-json"] }
 napi-derive = "3.4"
 tokio = { workspace = true }

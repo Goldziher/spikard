@@ -39,6 +39,8 @@ mod background;
 mod conversion_tests;
 #[cfg(feature = "di")]
 pub mod di;
+#[cfg(feature = "graphql")]
+pub mod graphql;
 mod handler;
 pub mod handler_input;
 pub mod handler_output;
