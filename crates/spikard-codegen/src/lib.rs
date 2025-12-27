@@ -35,12 +35,14 @@
 
 pub mod error;
 pub mod generators;
+pub mod graphql;
 pub mod ir;
 pub mod openapi;
 pub mod parser;
 
 pub use error::{CodegenError, Result};
 pub use generators::{Generator, Target};
+pub use graphql::{GraphQLFixture, load_graphql_fixtures, load_graphql_fixtures_by_category};
 pub use parser::Config;
 
 /// Protocol types supported by Spikard

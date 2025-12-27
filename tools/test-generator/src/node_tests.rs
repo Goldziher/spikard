@@ -4,6 +4,10 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
+use crate::codegen_utils::{
+    escape_string, format_property_access, format_ts_property_key, is_large_integer,
+    is_value_effectively_empty, json_to_typescript,
+};
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
@@ -18,8 +22,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
-
-const MAX_SAFE_INTEGER: i128 = 9007199254740991;
 
 /// Generate Node.js test suite from fixtures
 pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &TypeScriptTarget) -> Result<()> {
@@ -108,6 +110,9 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
             .with_context(|| format!("Failed to write {}", websocket_file))?;
         println!("  ✓ Generated tests/{}", websocket_file);
     }
+
+    // Note: GraphQL test generation is now handled by graphql_tests::generate_graphql_tests()
+    // in main.rs to consolidate duplicate code and ensure consistent categorized output
 
     if !matches!(target.runtime, crate::ts_target::Runtime::Deno) {
         format_generated_ts(output_dir)?;
@@ -1230,41 +1235,6 @@ fn generate_body_assertions(
 }
 
 /// Convert JSON value to TypeScript literal
-fn json_to_typescript(value: &serde_json::Value) -> String {
-    match value {
-        serde_json::Value::Null => "null".to_string(),
-        serde_json::Value::Bool(b) => b.to_string(),
-        serde_json::Value::Number(n) => {
-            if is_large_integer(n) {
-                if let Some(i) = n.as_i64() {
-                    format!("{}n", i)
-                } else if let Some(u) = n.as_u64() {
-                    format!("{}n", u)
-                } else {
-                    n.to_string()
-                }
-            } else {
-                n.to_string()
-            }
-        }
-        serde_json::Value::String(s) => {
-            let escaped = escape_string(s);
-            format!("\"{}\"", escaped)
-        }
-        serde_json::Value::Array(arr) => {
-            let items: Vec<String> = arr.iter().map(json_to_typescript).collect();
-            format!("[{}]", items.join(", "))
-        }
-        serde_json::Value::Object(obj) => {
-            let items: Vec<String> = obj
-                .iter()
-                .map(|(k, v)| format!("{}: {}", format_ts_property_key(k), json_to_typescript(v)))
-                .collect();
-            format!("{{ {} }}", items.join(", "))
-        }
-    }
-}
-
 fn looks_like_regex_pattern(value: &str) -> bool {
     value.contains(".*")
 }
@@ -1272,67 +1242,6 @@ fn looks_like_regex_pattern(value: &str) -> bool {
 fn regex_literal(pattern: &str) -> String {
     let escaped = pattern.replace('/', "\\/");
     format!("/{escaped}/")
-}
-
-fn is_large_integer(number: &serde_json::Number) -> bool {
-    if let Some(i) = number.as_i64() {
-        i128::from(i).abs() > MAX_SAFE_INTEGER
-    } else if let Some(u) = number.as_u64() {
-        (u as i128) > MAX_SAFE_INTEGER
-    } else {
-        false
-    }
-}
-
-fn is_value_effectively_empty(value: &serde_json::Value) -> bool {
-    match value {
-        serde_json::Value::Null => true,
-        serde_json::Value::Bool(_) => false,
-        serde_json::Value::Number(_) => false,
-        serde_json::Value::String(s) => s.is_empty(),
-        serde_json::Value::Array(arr) => arr.is_empty(),
-        serde_json::Value::Object(obj) => obj.is_empty(),
-    }
-}
-
-/// Escape special characters in strings
-fn escape_string(s: &str) -> String {
-    s.replace('\\', "\\\\")
-        .replace('"', "\\\"")
-        .replace('\n', "\\n")
-        .replace('\r', "\\r")
-        .replace('\t', "\\t")
-}
-
-fn is_valid_identifier(name: &str) -> bool {
-    let mut chars = name.chars();
-    match chars.next() {
-        Some(c) if c == '_' || c == '$' || c.is_ascii_alphabetic() => {}
-        _ => return false,
-    }
-    for ch in chars {
-        if ch == '_' || ch == '$' || ch.is_ascii_alphanumeric() {
-            continue;
-        }
-        return false;
-    }
-    true
-}
-
-fn format_ts_property_key(key: &str) -> String {
-    if is_valid_identifier(key) {
-        key.to_string()
-    } else {
-        format!("\"{}\"", escape_string(key))
-    }
-}
-
-fn format_property_access(base: &str, key: &str) -> String {
-    if is_valid_identifier(key) {
-        format!("{}.{}", base, key)
-    } else {
-        format!("{}[\"{}\"]", base, escape_string(key))
-    }
 }
 
 fn path_contains_segment(path: &str, segment: &str) -> bool {
@@ -1695,3 +1604,4 @@ fn build_request_call(method: &str, path_with_query: &str, option_fields: &[&str
         format!("await client.{}(\"{}\")", method, path_with_query)
     }
 }
+
