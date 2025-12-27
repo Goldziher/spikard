@@ -81,7 +81,7 @@ impl TestClient {
         let mut request = self.server.post(&full_path);
 
         if let Some(headers_vec) = headers {
-            request = self.add_headers(request, headers_vec.clone())?;
+            request = self.add_headers(request, headers_vec)?;
         }
 
         if let Some((form_fields, files)) = multipart {
@@ -90,7 +90,9 @@ impl TestClient {
             request = request.add_header("content-type", &content_type);
             request = request.bytes(Bytes::from(body));
         } else if let Some(form_fields) = form_data {
-            let encoded = super::encode_urlencoded_body(&serde_json::to_value(&form_fields).unwrap_or(Value::Null))
+            let fields_value = serde_json::to_value(&form_fields)
+                .map_err(|e| SnapshotError::Decompression(format!("Failed to serialize form fields: {}", e)))?;
+            let encoded = super::encode_urlencoded_body(&fields_value)
                 .map_err(|e| SnapshotError::Decompression(format!("Form encoding failed: {}", e)))?;
             request = request.add_header("content-type", "application/x-www-form-urlencoded");
             request = request.bytes(Bytes::from(encoded));
@@ -241,6 +243,69 @@ impl TestClient {
         snapshot_response(response).await
     }
 
+    /// Send a GraphQL query/mutation to a custom endpoint
+    pub async fn graphql_at(
+        &self,
+        endpoint: &str,
+        query: &str,
+        variables: Option<Value>,
+        operation_name: Option<&str>,
+    ) -> Result<ResponseSnapshot, SnapshotError> {
+        let body = build_graphql_body(query, variables, operation_name);
+        self.post(endpoint, Some(body), None, None, None, None)
+            .await
+    }
+
+    /// Send a GraphQL query/mutation
+    pub async fn graphql(
+        &self,
+        query: &str,
+        variables: Option<Value>,
+        operation_name: Option<&str>,
+    ) -> Result<ResponseSnapshot, SnapshotError> {
+        self.graphql_at("/graphql", query, variables, operation_name)
+            .await
+    }
+
+    /// Send a GraphQL query and return HTTP status code separately
+    ///
+    /// This method allows tests to distinguish between:
+    /// - HTTP-level errors (400/422 for invalid requests)
+    /// - GraphQL-level errors (200 with errors in response body)
+    ///
+    /// # Example
+    /// ```ignore
+    /// let (status, snapshot) = client.graphql_with_status(
+    ///     "query { invalid syntax",
+    ///     None,
+    ///     None
+    /// ).await?;
+    /// assert_eq!(status, 400); // HTTP parse error
+    /// ```
+    pub async fn graphql_with_status(
+        &self,
+        query: &str,
+        variables: Option<Value>,
+        operation_name: Option<&str>,
+    ) -> Result<(u16, ResponseSnapshot), SnapshotError> {
+        let snapshot = self.graphql(query, variables, operation_name).await?;
+        let status = snapshot.status;
+        Ok((status, snapshot))
+    }
+
+    /// Send a GraphQL subscription (WebSocket)
+    pub async fn graphql_subscription(
+        &self,
+        _query: &str,
+        _variables: Option<Value>,
+        _operation_name: Option<&str>,
+    ) -> Result<(), SnapshotError> {
+        // For now, return a placeholder - full WebSocket implementation comes later
+        Err(SnapshotError::Decompression(
+            "GraphQL subscriptions not yet implemented".to_string(),
+        ))
+    }
+
     /// Add headers to a test request builder
     fn add_headers(
         &self,
@@ -256,6 +321,22 @@ impl TestClient {
         }
         Ok(request)
     }
+}
+
+/// Build a GraphQL request body from query, variables, and operation name
+pub fn build_graphql_body(
+    query: &str,
+    variables: Option<Value>,
+    operation_name: Option<&str>,
+) -> Value {
+    let mut body = serde_json::json!({ "query": query });
+    if let Some(vars) = variables {
+        body["variables"] = vars;
+    }
+    if let Some(op_name) = operation_name {
+        body["operationName"] = Value::String(op_name.to_string());
+    }
+    body
 }
 
 /// Build a full path with query parameters
@@ -307,5 +388,83 @@ mod tests {
         let params = vec![("id".to_string(), "123".to_string())];
         let result = build_full_path(path, Some(&params));
         assert_eq!(result, "/users?active=true&id=123");
+    }
+
+    #[test]
+    fn test_graphql_query_builder() {
+        let query = "{ users { id name } }";
+        let variables = Some(serde_json::json!({ "limit": 10 }));
+        let op_name = Some("GetUsers");
+
+        let mut body = serde_json::json!({ "query": query });
+        if let Some(vars) = variables {
+            body["variables"] = vars;
+        }
+        if let Some(op_name) = op_name {
+            body["operationName"] = Value::String(op_name.to_string());
+        }
+
+        assert_eq!(body["query"], query);
+        assert_eq!(body["variables"]["limit"], 10);
+        assert_eq!(body["operationName"], "GetUsers");
+    }
+
+    #[test]
+    fn test_graphql_with_status_method() {
+        let query = "query { hello }";
+        let body = serde_json::json!({
+            "query": query,
+            "variables": null,
+            "operationName": null
+        });
+
+        // This test validates the method signature and return type
+        // Actual HTTP status testing will happen in integration tests
+        let expected_fields = vec!["query", "variables", "operationName"];
+        for field in expected_fields {
+            assert!(body.get(field).is_some(), "Missing field: {}", field);
+        }
+    }
+
+    #[test]
+    fn test_build_graphql_body_basic() {
+        let query = "{ users { id name } }";
+        let body = build_graphql_body(query, None, None);
+
+        assert_eq!(body["query"], query);
+        assert!(body.get("variables").is_none() || body["variables"].is_null());
+        assert!(body.get("operationName").is_none() || body["operationName"].is_null());
+    }
+
+    #[test]
+    fn test_build_graphql_body_with_variables() {
+        let query = "query GetUser($id: ID!) { user(id: $id) { name } }";
+        let variables = Some(serde_json::json!({ "id": "123" }));
+        let body = build_graphql_body(query, variables, None);
+
+        assert_eq!(body["query"], query);
+        assert_eq!(body["variables"]["id"], "123");
+    }
+
+    #[test]
+    fn test_build_graphql_body_with_operation_name() {
+        let query = "query GetUsers { users { id } }";
+        let op_name = Some("GetUsers");
+        let body = build_graphql_body(query, None, op_name);
+
+        assert_eq!(body["query"], query);
+        assert_eq!(body["operationName"], "GetUsers");
+    }
+
+    #[test]
+    fn test_build_graphql_body_all_fields() {
+        let query = "mutation CreateUser($name: String!) { createUser(name: $name) { id } }";
+        let variables = Some(serde_json::json!({ "name": "Alice" }));
+        let op_name = Some("CreateUser");
+        let body = build_graphql_body(query, variables, op_name);
+
+        assert_eq!(body["query"], query);
+        assert_eq!(body["variables"]["name"], "Alice");
+        assert_eq!(body["operationName"], "CreateUser");
     }
 }

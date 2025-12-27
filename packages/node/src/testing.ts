@@ -18,6 +18,8 @@ interface NativeTestResponse {
 	text(): string;
 	json<T>(): T;
 	bytes(): Buffer;
+	graphqlData(): unknown;
+	graphqlErrors(): Array<Record<string, unknown>>;
 }
 
 interface WebSocketTestConnection {
@@ -215,6 +217,26 @@ class JsTestResponse implements NativeTestResponse {
 			}
 		}
 		return this.body;
+	}
+
+	/**
+	 * Extract GraphQL data from response
+	 *
+	 * @returns The data field from GraphQL response, or null/undefined if not present
+	 */
+	graphqlData(): unknown {
+		const response = this.json<{ data?: unknown }>();
+		return typeof response === "object" && response !== null && "data" in response ? response.data : undefined;
+	}
+
+	/**
+	 * Extract GraphQL errors from response
+	 *
+	 * @returns Array of GraphQL error objects, or empty array if none present
+	 */
+	graphqlErrors(): Array<Record<string, unknown>> {
+		const response = this.json<{ errors?: Array<Record<string, unknown>> }>();
+		return typeof response === "object" && response !== null && Array.isArray(response.errors) ? response.errors : [];
 	}
 }
 
@@ -947,6 +969,67 @@ export class TestClient {
 		}
 
 		return this.nativeClient.websocket(path);
+	}
+
+	/**
+	 * Send a GraphQL query/mutation
+	 *
+	 * Convenience method for sending GraphQL queries and mutations.
+	 *
+	 * @param query - GraphQL query string
+	 * @param variables - Optional GraphQL variables object
+	 * @param operationName - Optional GraphQL operation name
+	 * @returns Response promise
+	 *
+	 * @example
+	 * ```typescript
+	 * const response = await client.graphql('query { user(id: "1") { id name } }');
+	 * const user = response.graphqlData().user;
+	 * ```
+	 */
+	async graphql(
+		query: string,
+		variables?: Record<string, unknown> | null,
+		operationName?: string | null,
+	): Promise<TestResponse> {
+		const json: Record<string, JsonValue> = { query };
+		if (variables !== null && variables !== undefined) {
+			json.variables = variables as JsonValue;
+		}
+		if (operationName !== null && operationName !== undefined) {
+			json.operationName = operationName;
+		}
+		return this.post("/graphql", { json: json as JsonValue });
+	}
+
+	/**
+	 * Send a GraphQL query and get HTTP status separately
+	 *
+	 * Returns status information alongside the response for cases where
+	 * you need both the HTTP status and the full response details.
+	 *
+	 * @param query - GraphQL query string
+	 * @param variables - Optional GraphQL variables object
+	 * @param operationName - Optional GraphQL operation name
+	 * @returns Promise with status and response details
+	 */
+	async graphqlWithStatus(
+		query: string,
+		variables?: Record<string, unknown> | null,
+		operationName?: string | null,
+	): Promise<{
+		status: number;
+		statusCode: number;
+		headers: string;
+		bodyText: string;
+	}> {
+		const response = await this.graphql(query, variables, operationName);
+		return {
+			status: response.statusCode,
+			statusCode: response.statusCode,
+			headers: JSON.stringify(response.headers()),
+			bodyText: response.text(),
+		};
 	}
 
 	/**
