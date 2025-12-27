@@ -4,8 +4,8 @@
 //! and introspection JSON formats, extracting structured data for code generation including
 //! types, fields, arguments, directives, and their relationships.
 
-use anyhow::{anyhow, Context, Result};
-use graphql_parser::schema::{parse_schema, Document, ObjectType, TypeDefinition};
+use anyhow::{Context, Result, anyhow};
+use graphql_parser::schema::{Document, ObjectType, TypeDefinition, parse_schema};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -162,18 +162,15 @@ pub struct GraphQLInputField {
 /// # Returns
 /// Parsed GraphQLSchema or error
 pub fn parse_graphql_sdl(path: &Path) -> Result<GraphQLSchema> {
-    let content = fs::read_to_string(path)
-        .with_context(|| format!("Failed to read GraphQL SDL file: {}", path.display()))?;
+    let content =
+        fs::read_to_string(path).with_context(|| format!("Failed to read GraphQL SDL file: {}", path.display()))?;
 
-    parse_graphql_sdl_string(&content).with_context(|| {
-        format!("Failed to parse GraphQL SDL from {}", path.display())
-    })
+    parse_graphql_sdl_string(&content).with_context(|| format!("Failed to parse GraphQL SDL from {}", path.display()))
 }
 
 /// Parse GraphQL SDL from a string
 pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
-    let doc: Document<String> = parse_schema(content)
-        .map_err(|e| anyhow!("GraphQL parsing error: {}", e))?;
+    let doc: Document<String> = parse_schema(content).map_err(|e| anyhow!("GraphQL parsing error: {}", e))?;
 
     let mut schema = GraphQLSchema {
         types: HashMap::new(),
@@ -303,9 +300,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                             .map(|v| GraphQLEnumValue {
                                 name: v.name.clone(),
                                 description: v.description.clone(),
-                                is_deprecated: v.directives
-                                    .iter()
-                                    .any(|d| d.name == "deprecated"),
+                                is_deprecated: v.directives.iter().any(|d| d.name == "deprecated"),
                                 deprecation_reason: extract_deprecation_reason(&v.directives),
                             })
                             .collect();
@@ -387,9 +382,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
 
     // Validate that schema is not empty
     if schema.types.is_empty() && schema.queries.is_empty() {
-        return Err(anyhow!(
-            "Empty GraphQL schema - no types or queries defined"
-        ));
+        return Err(anyhow!("Empty GraphQL schema - no types or queries defined"));
     }
 
     // Validate that Query type exists (required by GraphQL spec)
@@ -412,10 +405,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
 /// # Returns
 /// Parsed GraphQLSchema or error
 pub fn parse_graphql_schema(path: &Path) -> Result<GraphQLSchema> {
-    let ext = path
-        .extension()
-        .and_then(|s| s.to_str())
-        .map(|s| s.to_lowercase());
+    let ext = path.extension().and_then(|s| s.to_str()).map(|s| s.to_lowercase());
 
     match ext.as_deref() {
         Some("json") => {
@@ -432,8 +422,8 @@ pub fn parse_graphql_schema(path: &Path) -> Result<GraphQLSchema> {
         Some("graphql") | Some("gql") => parse_graphql_sdl(path),
         _ => {
             // Try to detect by content
-            let content = fs::read_to_string(path)
-                .with_context(|| format!("Failed to read file: {}", path.display()))?;
+            let content =
+                fs::read_to_string(path).with_context(|| format!("Failed to read file: {}", path.display()))?;
 
             if content.trim().starts_with('{') {
                 // Likely JSON
@@ -454,8 +444,8 @@ fn parse_graphql_introspection(path: &Path) -> Result<GraphQLSchema> {
     let content = fs::read_to_string(path)
         .with_context(|| format!("Failed to read GraphQL introspection file: {}", path.display()))?;
 
-    let value: Value = serde_json::from_str(&content)
-        .with_context(|| format!("Failed to parse JSON from {}", path.display()))?;
+    let value: Value =
+        serde_json::from_str(&content).with_context(|| format!("Failed to parse JSON from {}", path.display()))?;
 
     parse_graphql_introspection_value(&value)
 }
@@ -473,19 +463,16 @@ fn parse_graphql_introspection_value(_value: &Value) -> Result<GraphQLSchema> {
 
 /// Extract deprecation reason from directive arguments
 fn extract_deprecation_reason(directives: &[graphql_parser::schema::Directive<String>]) -> Option<String> {
-    directives
-        .iter()
-        .find(|d| d.name == "deprecated")
-        .and_then(|d| {
-            d.arguments
-                .iter()
-                .find(|(arg_name, _)| arg_name == "reason")
-                .and_then(|(_, value)| match value {
-                    graphql_parser::schema::Value::String(s) => Some(s.clone()),
-                    _ => None,
-                })
-                .or_else(|| Some("Deprecated".to_string()))
-        })
+    directives.iter().find(|d| d.name == "deprecated").and_then(|d| {
+        d.arguments
+            .iter()
+            .find(|(arg_name, _)| arg_name == "reason")
+            .and_then(|(_, value)| match value {
+                graphql_parser::schema::Value::String(s) => Some(s.clone()),
+                _ => None,
+            })
+            .or_else(|| Some("Deprecated".to_string()))
+    })
 }
 
 /// Extract fields from an Object type definition (SDL)
@@ -518,9 +505,7 @@ fn extract_fields_from_object(obj: &ObjectType<String>) -> Vec<GraphQLField> {
 }
 
 /// Extract fields from an Interface type definition (SDL)
-fn extract_fields_from_interface(
-    interface: &graphql_parser::schema::InterfaceType<String>,
-) -> Vec<GraphQLField> {
+fn extract_fields_from_interface(interface: &graphql_parser::schema::InterfaceType<String>) -> Vec<GraphQLField> {
     interface
         .fields
         .iter()
@@ -728,7 +713,11 @@ mod tests {
 
         let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse SDL");
         assert!(!schema.directives.is_empty());
-        let auth_dir = schema.directives.iter().find(|d| d.name == "auth").expect("auth directive");
+        let auth_dir = schema
+            .directives
+            .iter()
+            .find(|d| d.name == "auth")
+            .expect("auth directive");
         assert_eq!(auth_dir.arguments.len(), 1);
     }
 
@@ -832,7 +821,10 @@ mod tests {
         // Check email (deprecated with custom reason)
         let email_field = &user_type.fields[2];
         assert_eq!(email_field.name, "email");
-        assert_eq!(email_field.deprecation_reason, Some("Use emailAddress instead".to_string()));
+        assert_eq!(
+            email_field.deprecation_reason,
+            Some("Use emailAddress instead".to_string())
+        );
 
         // Check oldField (deprecated with default reason)
         let old_field = &user_type.fields[3];
@@ -865,7 +857,10 @@ mod tests {
         // Check createdAt (deprecated with custom reason)
         let created_at_field = &node_interface.fields[1];
         assert_eq!(created_at_field.name, "createdAt");
-        assert_eq!(created_at_field.deprecation_reason, Some("Use timestamp instead".to_string()));
+        assert_eq!(
+            created_at_field.deprecation_reason,
+            Some("Use timestamp instead".to_string())
+        );
     }
 
     #[test]
@@ -882,25 +877,41 @@ mod tests {
         let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse SDL");
 
         // [String] → Option<Vec<Option<String>>>
-        let list_nullable = schema.queries.iter().find(|f| f.name == "listOfNullableStrings").unwrap();
+        let list_nullable = schema
+            .queries
+            .iter()
+            .find(|f| f.name == "listOfNullableStrings")
+            .unwrap();
         assert!(list_nullable.is_nullable);
         assert!(list_nullable.is_list);
         assert!(list_nullable.list_item_nullable);
 
         // [String!] → Vec<Option<String>>
-        let list_non_null = schema.queries.iter().find(|f| f.name == "listOfNonNullStrings").unwrap();
+        let list_non_null = schema
+            .queries
+            .iter()
+            .find(|f| f.name == "listOfNonNullStrings")
+            .unwrap();
         assert!(list_non_null.is_nullable);
         assert!(list_non_null.is_list);
         assert!(!list_non_null.list_item_nullable);
 
         // [String]! → Option<Vec<String>>
-        let non_null_list_nullable = schema.queries.iter().find(|f| f.name == "nonNullListOfNullableStrings").unwrap();
+        let non_null_list_nullable = schema
+            .queries
+            .iter()
+            .find(|f| f.name == "nonNullListOfNullableStrings")
+            .unwrap();
         assert!(!non_null_list_nullable.is_nullable);
         assert!(non_null_list_nullable.is_list);
         assert!(non_null_list_nullable.list_item_nullable);
 
         // [String!]! → Vec<String>
-        let non_null_list_non_null = schema.queries.iter().find(|f| f.name == "nonNullListOfNonNullStrings").unwrap();
+        let non_null_list_non_null = schema
+            .queries
+            .iter()
+            .find(|f| f.name == "nonNullListOfNonNullStrings")
+            .unwrap();
         assert!(!non_null_list_non_null.is_nullable);
         assert!(non_null_list_non_null.is_list);
         assert!(!non_null_list_non_null.list_item_nullable);

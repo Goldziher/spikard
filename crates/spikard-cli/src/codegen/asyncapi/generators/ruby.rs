@@ -50,8 +50,9 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
 
         code.push_str("'\n");
         code.push_str("  puts \"Connecting to #{uri}...\"\n");
+        code.push_str("  # TODO: Implement connection logic\n");
         code.push_str("end\n\n");
-        code.push_str("main\n");
+        code.push_str("main if __FILE__ == $PROGRAM_NAME\n");
 
         Ok(code)
     }
@@ -83,27 +84,48 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
             match protocol {
                 "websocket" => {
                     code.push_str(&format!(
-                        "app.websocket(\"{}\", handler_name: \"{}\") do\n",
-                        channel.path, handler_name
+                        "# WebSocket handler for {}\n",
+                        channel.path
                     ));
-                    code.push_str("  handler = Object.new\n");
-                    code.push_str("  def handler.handle_message(message)\n");
+                    code.push_str(&format!(
+                        "class {}Handler\n",
+                        handler_name
+                    ));
+                    code.push_str("  def initialize(ws)\n");
+                    code.push_str("    @ws = ws\n");
+                    code.push_str("  end\n\n");
+                    code.push_str("  def handle_message(message)\n");
                     code.push_str(&format!(
                         "    # TODO: Handle {} for {}\n",
                         message_description, channel.path
                     ));
-                    code.push_str("    message\n");
+                    code.push_str("    # Process message and send response\n");
+                    code.push_str("    @ws.send(message)\n");
                     code.push_str("  end\n");
-                    code.push_str("  handler\n");
+                    code.push_str("end\n\n");
+                    code.push_str(&format!(
+                        "app.websocket(\"{}\") do |ws|\n",
+                        channel.path
+                    ));
+                    code.push_str(&format!("  handler = {}Handler.new(ws)\n", handler_name));
+                    code.push_str("  ws.on(:message) { |msg| handler.handle_message(msg) }\n");
                     code.push_str("end\n\n");
                 }
                 "sse" => {
                     code.push_str(&format!(
-                        "app.get(\"{}\", handler_name: \"{}\") do |_request|\n",
-                        channel.path, handler_name
+                        "# Server-Sent Events handler for {}\n",
+                        channel.path
+                    ));
+                    code.push_str(&format!(
+                        "app.get(\"{}\") do |_request|\n",
+                        channel.path
                     ));
                     code.push_str("  stream = Enumerator.new do |yielder|\n");
-                    code.push_str("    yielder << \"data: {\\\"message\\\": \\\"replace with event\\\"}\\n\\n\"\n");
+                    code.push_str(&format!(
+                        "    # TODO: Stream {} events\n",
+                        message_description
+                    ));
+                    code.push_str("    yielder << \"data: {\\\"status\\\": \\\"connected\\\"}\\n\\n\"\n");
                     code.push_str("  end\n\n");
                     code.push_str(
                         "  Spikard::StreamingResponse.new(stream, status_code: 200, headers: { \"content-type\" => \"text/event-stream\" })\n",
@@ -152,6 +174,7 @@ mod tests {
 
         let code = generator.generate_handler_app(&channels, "websocket").unwrap();
         assert!(code.contains("app.websocket"));
-        assert!(code.contains("def handler.handle_message"));
+        assert!(code.contains("def handle_message"));
+        assert!(code.contains("Handler") && code.contains("class"));
     }
 }

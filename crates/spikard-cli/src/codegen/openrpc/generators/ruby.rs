@@ -41,7 +41,7 @@ impl OpenRpcGenerator for RubyOpenRpcGenerator {
         code.push_str("HANDLERS = {\n");
         for method in &spec.methods {
             let handler_class = format!("Handle{}", pascal_case(&method.name));
-            code.push_str(&format!("  \"{}\" => {}Async,\n", method.name, handler_class));
+            code.push_str(&format!("  \"{}\" => {},\n", method.name, handler_class));
         }
         code.push_str("}.freeze\n\n");
 
@@ -117,10 +117,11 @@ fn generate_ruby_handler(
 ) -> Result<()> {
     let handler_name = format!("Handle{}", pascal_case(&method.name));
 
-    code.push_str(&format!("class {}Async\n", handler_name));
-    code.push_str("  # JSON-RPC handler\n");
+    code.push_str(&format!("class {}\n", handler_name));
+    code.push_str("  # JSON-RPC 2.0 handler method\n");
     if let Some(summary) = &method.summary {
-        code.push_str(&format!("  # {}\n", summary));
+        let safe_summary = summary.replace('"', "\\\"").replace('\n', " ");
+        code.push_str(&format!("  # {}\n", safe_summary));
     }
     code.push_str("  def execute(params)\n");
 
@@ -128,21 +129,25 @@ fn generate_ruby_handler(
         code.push_str("    validate_params(params)\n");
     }
 
-    // TODO comment
+    // Implementation placeholder
     code.push_str("\n    # TODO: Implement business logic\n");
     code.push_str("    # This handler receives parameters and should:\n");
-    code.push_str("    # 1. Validate inputs\n");
+    code.push_str("    # 1. Validate inputs against the schema\n");
     code.push_str("    # 2. Execute business logic\n");
-    code.push_str("    # 3. Return result as Hash matching schema\n");
+    code.push_str("    # 3. Return result as Hash matching result schema\n");
     code.push_str("    # 4. Raise appropriate JSON-RPC errors on failure\n\n");
 
-    code.push_str("    # Example return structure (update with real data):\n");
+    code.push_str("    # Example return structure (update with actual data):\n");
     code.push_str("    result = {}\n");
     if let Some(properties) = method.result.schema.get("properties")
         && let Some(props) = properties.as_object()
     {
         for field_name in props.keys().take(3) {
-            code.push_str(&format!("    result[\"{}\"] = \"TODO\"\n", field_name));
+            let safe_field = field_name.replace('"', "\\\"");
+            code.push_str(&format!("    result[\"{}\"] = nil  # TODO: implement\n", safe_field));
+        }
+        if props.len() > 3 {
+            code.push_str("    # ... add remaining fields\n");
         }
     }
     code.push_str("    result\n");
@@ -152,10 +157,11 @@ fn generate_ruby_handler(
         code.push_str("\n  private\n\n");
         code.push_str("  def validate_params(params)\n");
         for param in &method.params {
+            let safe_name = param.name.replace('"', "\\\"");
             if param.required {
                 code.push_str(&format!(
-                    "    raise \"Missing required parameter: {}\" unless params[\"{}\"]\n",
-                    param.name, param.name
+                    "    raise JsonRpcError.invalid_params(\"Missing required parameter: {}\") unless params[\\\"{}\\\"]\n",
+                    safe_name, safe_name
                 ));
             }
         }

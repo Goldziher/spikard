@@ -178,9 +178,7 @@ pub struct TypeNameCache {
 
 impl TypeNameCache {
     pub fn new() -> Self {
-        Self {
-            cache: HashMap::new(),
-        }
+        Self { cache: HashMap::new() }
     }
 
     pub fn get_or_create(&mut self, graphql_name: &str, language: &str) -> String {

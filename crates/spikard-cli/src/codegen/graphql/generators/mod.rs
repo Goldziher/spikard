@@ -1,7 +1,7 @@
 //! Language-specific GraphQL code generators.
 
-use anyhow::Result;
 use super::spec_parser::GraphQLSchema;
+use anyhow::Result;
 
 pub mod base;
 pub mod php;
@@ -11,9 +11,8 @@ pub mod rust;
 pub mod typescript;
 
 pub use base::{
-    escape_string, format_description, generate_field_docs, indent, map_graphql_type_to_language,
+    TypeNameCache, escape_string, format_description, generate_field_docs, indent, map_graphql_type_to_language,
     sanitize_identifier, sanitize_typescript_identifier, to_camel_case, to_pascal_case,
-    TypeNameCache,
 };
 pub use php::PhpGenerator;
 pub use python::PythonGenerator;

@@ -130,7 +130,14 @@ impl CodegenEngine {
                 let asset = Self::generate_openrpc_handler(&spec, *language, output)?;
                 Ok(CodegenOutcome::Files(vec![asset]))
             }
-            (SchemaKind::GraphQL, CodegenTargetKind::GraphQL { language, output, target }) => {
+            (
+                SchemaKind::GraphQL,
+                CodegenTargetKind::GraphQL {
+                    language,
+                    output,
+                    target,
+                },
+            ) => {
                 let asset = Self::generate_graphql_code(&request.schema_path, *language, output, target)
                     .context("Failed to generate code from GraphQL schema")?;
                 Ok(CodegenOutcome::Files(vec![asset]))
@@ -265,21 +272,11 @@ impl CodegenEngine {
 
         // Generate code based on language
         let code = match language {
-            TargetLanguage::Python => {
-                super::graphql::generate_python_graphql(&schema_content, target)?
-            }
-            TargetLanguage::TypeScript => {
-                super::graphql::generate_typescript_graphql(&schema_content, target)?
-            }
-            TargetLanguage::Rust => {
-                super::graphql::generate_rust_graphql(&schema_content, target)?
-            }
-            TargetLanguage::Ruby => {
-                super::graphql::generate_ruby_graphql(&schema_content, target)?
-            }
-            TargetLanguage::Php => {
-                super::graphql::generate_php_graphql(&schema_content, target)?
-            }
+            TargetLanguage::Python => super::graphql::generate_python_graphql(&schema_content, target)?,
+            TargetLanguage::TypeScript => super::graphql::generate_typescript_graphql(&schema_content, target)?,
+            TargetLanguage::Rust => super::graphql::generate_rust_graphql(&schema_content, target)?,
+            TargetLanguage::Ruby => super::graphql::generate_ruby_graphql(&schema_content, target)?,
+            TargetLanguage::Php => super::graphql::generate_php_graphql(&schema_content, target)?,
         };
 
         Self::write_asset(output, format!("{} GraphQL code", language_name(language)), code)
@@ -337,7 +334,11 @@ impl std::fmt::Debug for CodegenTargetKind {
                 .field("language", language)
                 .field("output", output)
                 .finish(),
-            CodegenTargetKind::GraphQL { language, output, target } => f
+            CodegenTargetKind::GraphQL {
+                language,
+                output,
+                target,
+            } => f
                 .debug_struct("GraphQL")
                 .field("language", language)
                 .field("output", output)

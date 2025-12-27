@@ -516,7 +516,7 @@ fn test_ruby_generator_module_definition() {
     let output = generator.generate_handler_app(&spec).unwrap();
 
     assert!(
-        output.contains("class HandleUserGetAsync"),
+        output.contains("class HandleUserGet"),
         "Should define handler class"
     );
 }

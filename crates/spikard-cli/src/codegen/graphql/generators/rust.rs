@@ -4,9 +4,9 @@
 //! GraphQL schema implementations. Generated code follows Rust 2024 edition standards,
 //! includes comprehensive error handling, and respects async/await patterns.
 
-use anyhow::Result;
 use super::GraphQLGenerator;
-use crate::codegen::graphql::spec_parser::{GraphQLSchema, GraphQLType, TypeKind, GraphQLField};
+use crate::codegen::graphql::spec_parser::{GraphQLField, GraphQLSchema, GraphQLType, TypeKind};
+use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
 
 /// Rust GraphQL code generator
@@ -70,7 +70,13 @@ impl RustGenerator {
     }
 
     /// Map GraphQL type to Rust type with explicit list item nullability
-    fn map_type_with_list_item_nullability(&self, field_type: &str, is_nullable: bool, is_list: bool, list_item_nullable: bool) -> String {
+    fn map_type_with_list_item_nullability(
+        &self,
+        field_type: &str,
+        is_nullable: bool,
+        is_list: bool,
+        list_item_nullable: bool,
+    ) -> String {
         let base = self.map_scalar_type(field_type);
         let with_list = if is_list {
             if list_item_nullable {
@@ -235,10 +241,7 @@ impl RustGenerator {
 
         for field in &type_def.fields {
             code.push_str(&self.gen_doc(field.description.as_deref(), 4));
-            code.push_str(&format!(
-                "    async fn {}(&self",
-                field.name.to_snake_case()
-            ));
+            code.push_str(&format!("    async fn {}(&self", field.name.to_snake_case()));
 
             for arg in &field.arguments {
                 code.push_str(&format!(
@@ -296,10 +299,7 @@ impl GraphQLGenerator for RustGenerator {
 
         // Generate all type definitions (skip built-in scalars)
         for (type_name, type_def) in &schema.types {
-            if matches!(
-                type_name.as_str(),
-                "String" | "Int" | "Float" | "Boolean" | "ID"
-            ) {
+            if matches!(type_name.as_str(), "String" | "Int" | "Float" | "Boolean" | "ID") {
                 continue;
             }
 
@@ -327,10 +327,7 @@ impl GraphQLGenerator for RustGenerator {
         if !schema.queries.is_empty() {
             for field in &schema.queries {
                 code.push_str(&self.gen_doc(field.description.as_deref(), 4));
-                code.push_str(&format!(
-                    "    pub async fn {}(&self",
-                    field.name.to_snake_case()
-                ));
+                code.push_str(&format!("    pub async fn {}(&self", field.name.to_snake_case()));
 
                 for arg in &field.arguments {
                     code.push_str(&format!(
@@ -365,10 +362,7 @@ impl GraphQLGenerator for RustGenerator {
 
             for field in &schema.mutations {
                 code.push_str(&self.gen_doc(field.description.as_deref(), 4));
-                code.push_str(&format!(
-                    "    pub async fn {}(&self",
-                    field.name.to_snake_case()
-                ));
+                code.push_str(&format!("    pub async fn {}(&self", field.name.to_snake_case()));
 
                 for arg in &field.arguments {
                     code.push_str(&format!(
@@ -486,28 +480,40 @@ mod tests {
     fn test_map_type_with_list_item_nullability_nullable_items() {
         let generator = RustGenerator::new();
         // [String] → Option<Vec<Option<String>>>
-        assert_eq!(generator.map_type_with_list_item_nullability("String", true, true, true), "Option<Vec<Option<String>>>");
+        assert_eq!(
+            generator.map_type_with_list_item_nullability("String", true, true, true),
+            "Option<Vec<Option<String>>>"
+        );
     }
 
     #[test]
     fn test_map_type_with_list_item_nullability_non_nullable_items() {
         let generator = RustGenerator::new();
         // [String!] → Option<Vec<String>>
-        assert_eq!(generator.map_type_with_list_item_nullability("String", true, true, false), "Option<Vec<String>>");
+        assert_eq!(
+            generator.map_type_with_list_item_nullability("String", true, true, false),
+            "Option<Vec<String>>"
+        );
     }
 
     #[test]
     fn test_map_type_with_list_item_nullability_non_null_list_nullable_items() {
         let generator = RustGenerator::new();
         // [String]! → Vec<Option<String>>
-        assert_eq!(generator.map_type_with_list_item_nullability("String", false, true, true), "Vec<Option<String>>");
+        assert_eq!(
+            generator.map_type_with_list_item_nullability("String", false, true, true),
+            "Vec<Option<String>>"
+        );
     }
 
     #[test]
     fn test_map_type_with_list_item_nullability_non_null_list_non_null_items() {
         let generator = RustGenerator::new();
         // [String!]! → Vec<String>
-        assert_eq!(generator.map_type_with_list_item_nullability("String", false, true, false), "Vec<String>");
+        assert_eq!(
+            generator.map_type_with_list_item_nullability("String", false, true, false),
+            "Vec<String>"
+        );
     }
 
     #[test]
@@ -518,10 +524,7 @@ mod tests {
 
     #[test]
     fn test_generator_builder_methods() {
-        let generator = RustGenerator::new()
-            .without_serde()
-            .without_debug()
-            .with_bare_types();
+        let generator = RustGenerator::new().without_serde().without_debug().with_bare_types();
         assert!(!generator.include_serde);
         assert!(!generator.include_debug);
         assert!(!generator.use_result_types);
