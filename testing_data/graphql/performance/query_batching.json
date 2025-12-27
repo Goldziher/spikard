@@ -1,0 +1,87 @@
+{
+  "name": "query_batching",
+  "description": "Batched query execution with multiple queries in a single request, executed in parallel for optimal performance",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  user(id: String!): User\n  post(id: String!): Post\n}\n\ntype User {\n  id: String!\n  name: String!\n  email: String!\n}\n\ntype Post {\n  id: String!\n  title: String!\n  content: String!\n  author_id: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "body": [
+      {
+        "query": "query GetUser1 {\n  user(id: \"user-1\") {\n    id\n    name\n    email\n  }\n}"
+      },
+      {
+        "query": "query GetUser2 {\n  user(id: \"user-2\") {\n    id\n    name\n    email\n  }\n}"
+      },
+      {
+        "query": "query GetPost1 {\n  post(id: \"post-1\") {\n    id\n    title\n    author_id\n  }\n}"
+      }
+    ],
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": [
+      {
+        "user": {
+          "id": "user-1",
+          "name": "Alice Johnson",
+          "email": "alice@example.com"
+        }
+      },
+      {
+        "user": {
+          "id": "user-2",
+          "name": "Bob Smith",
+          "email": "bob@example.com"
+        }
+      },
+      {
+        "post": {
+          "id": "post-1",
+          "title": "GraphQL Performance Tips",
+          "author_id": "user-1"
+        }
+      }
+    ],
+    "extensions": {
+      "timing": {
+        "parsing_ms": 2,
+        "validation_ms": 1,
+        "execution_ms": 5,
+        "total_ms": 8
+      },
+      "query_count": 3,
+      "parallelized": true
+    }
+  },
+  "resolvers": {
+    "Query.user": {
+      "type": "mock_with_args",
+      "template": "{\"id\": \"{id}\", \"name\": \"{name}\", \"email\": \"{email}\"}",
+      "arg_mapping": {
+        "user-1": "{\"id\": \"user-1\", \"name\": \"Alice Johnson\", \"email\": \"alice@example.com\"}",
+        "user-2": "{\"id\": \"user-2\", \"name\": \"Bob Smith\", \"email\": \"bob@example.com\"}"
+      }
+    },
+    "Query.post": {
+      "type": "mock",
+      "return_value": {
+        "id": "post-1",
+        "title": "GraphQL Performance Tips",
+        "content": "Learn how to optimize your GraphQL queries for better performance",
+        "author_id": "user-1"
+      }
+    }
+  },
+  "complexity_limit": 10,
+  "tags": [
+    "performance",
+    "batching",
+    "optimization",
+    "parallel-execution"
+  ]
+}

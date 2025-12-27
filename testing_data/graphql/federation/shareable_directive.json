@@ -1,0 +1,66 @@
+{
+  "name": "shareable_directive",
+  "description": "Field with @shareable directive - multiple subgraphs can contribute to the same field",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n  product(id: ID!): Product\n}\n\nunion _Entity = Product\n\ntype Product @key(fields: \"id\") {\n  id: ID!\n  name: String! @shareable\n  description: String! @shareable\n  category: String!\n  price: Float!\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  _entities(representations: [{__typename: \"Product\", id: \"prod-001\"}]) {\n    ... on Product {\n      id\n      name\n      description\n      category\n      price\n    }\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  _entities(representations: [{__typename: \"Product\", id: \"prod-001\"}]) {\n    ... on Product {\n      id\n      name\n      description\n      category\n      price\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "_entities": [
+        {
+          "id": "prod-001",
+          "name": "Wireless Headphones",
+          "description": "Premium noise-canceling headphones with 30-hour battery life",
+          "category": "Electronics",
+          "price": 199.99
+        }
+      ]
+    }
+  },
+  "resolvers": {
+    "Query._entities": {
+      "type": "factory",
+      "factory_fn": "resolve_shareable_entities"
+    },
+    "Query._service": {
+      "type": "mock",
+      "return_value": {
+        "sdl": "type Product @key(fields: \"id\") {\n  id: ID!\n  name: String! @shareable\n  description: String! @shareable\n  category: String!\n  price: Float!\n}"
+      }
+    },
+    "Query.product": {
+      "type": "factory",
+      "factory_fn": "resolve_product_by_id"
+    }
+  },
+  "metadata": {
+    "federation_v2_feature": "@shareable",
+    "subgraph_composition": "multiple_subgraphs",
+    "shared_fields": [
+      "name",
+      "description"
+    ],
+    "use_case": "Field ownership across multiple subgraphs allowing independent resolution"
+  },
+  "tags": [
+    "federation",
+    "directives",
+    "v2",
+    "shareable",
+    "multi-subgraph"
+  ],
+  "complexity_limit": 150,
+  "depth_limit": 5
+}

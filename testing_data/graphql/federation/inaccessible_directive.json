@@ -1,0 +1,72 @@
+{
+  "name": "inaccessible_directive",
+  "description": "Field with @inaccessible directive - internal-only fields hidden from public schema",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "type Query {\n  user(id: ID!): User\n  _service: _Service!\n}\n\ntype User @key(fields: \"id\") {\n  id: ID!\n  name: String!\n  email: String!\n  internalScore: Int @inaccessible\n  internalNotes: String @inaccessible\n  publicStatus: String!\n}\n\ntype _Service {\n  sdl: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query {\n  user(id: \"user-42\") {\n    id\n    name\n    email\n    internalScore\n    publicStatus\n  }\n}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query {\n  user(id: \"user-42\") {\n    id\n    name\n    email\n    internalScore\n    publicStatus\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 400,
+    "errors": [
+      {
+        "message": "Cannot query field 'internalScore' on type 'User'. This field is @inaccessible and not available in the public schema.",
+        "extensions": {
+          "code": "GRAPHQL_VALIDATION_FAILED",
+          "specifiedBy": "https://spec.apollographql.com/core/v0.3#sec-Query-Root-Type"
+        }
+      }
+    ]
+  },
+  "alternative_valid_query": {
+    "query": "query {\n  user(id: \"user-42\") {\n    id\n    name\n    email\n    publicStatus\n  }\n}",
+    "expected_status": 200,
+    "expected_data": {
+      "user": {
+        "id": "user-42",
+        "name": "Alice Johnson",
+        "email": "alice@example.com",
+        "publicStatus": "active"
+      }
+    }
+  },
+  "resolvers": {
+    "Query.user": {
+      "type": "factory",
+      "factory_fn": "resolve_user_public"
+    },
+    "Query._service": {
+      "type": "mock",
+      "return_value": {
+        "sdl": "type User @key(fields: \"id\") {\n  id: ID!\n  name: String!\n  email: String!\n  internalScore: Int @inaccessible\n  internalNotes: String @inaccessible\n  publicStatus: String!\n}"
+      }
+    }
+  },
+  "metadata": {
+    "federation_v2_feature": "@inaccessible",
+    "schema_visibility": "public_schema_filtering",
+    "inaccessible_fields": [
+      "internalScore",
+      "internalNotes"
+    ],
+    "use_case": "Hide internal implementation details and sensitive metadata from public API consumers"
+  },
+  "tags": [
+    "federation",
+    "directives",
+    "v2",
+    "inaccessible",
+    "schema-visibility"
+  ],
+  "complexity_limit": 100,
+  "depth_limit": 3
+}

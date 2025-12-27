@@ -1,0 +1,62 @@
+{
+  "name": "introspection_disabled",
+  "description": "Introspection query rejected when introspection is disabled in production",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "handler_config": {
+    "introspection_enabled": false,
+    "environment": "production"
+  },
+  "schema": "scalar DateTime\nscalar UUID\n\ntype Query {\n  hello: String!\n  version: String!\n  user(id: UUID!): User\n  users(limit: Int, offset: Int): [User!]!\n}\n\ntype Mutation {\n  createPost(input: CreatePostInput!): Post!\n  updateUser(id: UUID!, name: String!): User!\n  deletePost(id: UUID!): Boolean!\n}\n\ntype User {\n  id: UUID!\n  name: String!\n  email: String!\n  createdAt: DateTime!\n  posts: [Post!]!\n}\n\ntype Post {\n  id: UUID!\n  title: String!\n  content: String!\n  authorId: UUID!\n  author: User!\n  createdAt: DateTime!\n  updatedAt: DateTime!\n}\n\ninput CreatePostInput {\n  title: String!\n  content: String!\n  authorId: UUID!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query IntrospectionQuery {\n  __schema {\n    queryType { name }\n    mutationType { name }\n    types {\n      name\n      kind\n      description\n      fields(includeDeprecated: true) {\n        name\n        description\n        type {\n          kind\n          name\n        }\n      }\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 400,
+    "data": null,
+    "errors": [
+      {
+        "message": "Introspection is disabled",
+        "extensions": {
+          "code": "INTROSPECTION_DISABLED",
+          "introspection_enabled": false
+        }
+      }
+    ]
+  },
+  "alternative_responses": [
+    {
+      "status_code": 403,
+      "data": null,
+      "errors": [
+        {
+          "message": "Introspection query execution is not allowed",
+          "extensions": {
+            "code": "FORBIDDEN"
+          }
+        }
+      ]
+    }
+  ],
+  "resolvers": {
+    "__schema": {
+      "type": "security_guard",
+      "behavior": "reject_with_error",
+      "error_message": "Introspection is disabled",
+      "error_code": "INTROSPECTION_DISABLED"
+    }
+  },
+  "notes": "In production environments, introspection queries can be disabled to prevent schema enumeration and reduce attack surface. This fixture validates that __schema queries are properly rejected.",
+  "tags": [
+    "introspection",
+    "security",
+    "disabled"
+  ]
+}

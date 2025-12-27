@@ -9,12 +9,15 @@
 		"Field Requirements (@requires directive)",
 		"Field Provisions (@provides directive)",
 		"External Fields (@external directive)",
+		"Shared Fields (@shareable directive)",
+		"Inaccessible Fields (@inaccessible directive)",
+		"Field Override (@override directive)",
 		"Subgraph Introspection (_service query)",
 		"Cross-Subgraph Queries",
 		"Entity Not Found Handling",
 		"Type Validation & Error Handling"
 	],
-	"fixture_count": 10,
+	"fixture_count": 13,
 	"fixtures": {
 		"entity_resolution_basic": {
 			"name": "entity_resolution_basic.json",
@@ -154,6 +157,51 @@
 			"expected_status": 400,
 			"error_code": "FEDERATION_ERROR",
 			"apollo_federation_spec_section": "Type Validation"
+		},
+		"shareable_directive": {
+			"name": "shareable_directive.json",
+			"description": "Field with @shareable directive - multiple subgraphs can contribute to the same field",
+			"feature": "Shared Fields",
+			"federation_directives": [
+				"@key",
+				"@shareable"
+			],
+			"shareable_fields": [
+				"name",
+				"description"
+			],
+			"test_scenario": "Resolve entity with shared field resolved by multiple subgraphs",
+			"expected_status": 200,
+			"apollo_federation_spec_section": "Shared Fields (@shareable)"
+		},
+		"inaccessible_directive": {
+			"name": "inaccessible_directive.json",
+			"description": "Field with @inaccessible directive - internal-only fields hidden from public schema",
+			"feature": "Inaccessible Fields",
+			"federation_directives": [
+				"@inaccessible"
+			],
+			"inaccessible_fields": [
+				"internalScore",
+				"internalNotes"
+			],
+			"test_scenario": "Query attempting to access @inaccessible field returns validation error",
+			"expected_status": 400,
+			"error_code": "GRAPHQL_VALIDATION_FAILED",
+			"apollo_federation_spec_section": "Inaccessible Fields (@inaccessible)"
+		},
+		"override_directive": {
+			"name": "override_directive.json",
+			"description": "Field with @override directive for progressive field ownership migration",
+			"feature": "Field Override",
+			"federation_directives": [
+				"@key",
+				"@override"
+			],
+			"overridden_field": "email",
+			"test_scenario": "Resolve entity where field ownership migrates from legacy to new subgraph",
+			"expected_status": 200,
+			"apollo_federation_spec_section": "Field Override (@override)"
 		}
 	},
 	"federation_directives_reference": {
@@ -168,7 +216,9 @@
 				"provides_directive",
 				"external_field",
 				"cross_subgraph_query",
-				"federation_error_missing_entity"
+				"federation_error_missing_entity",
+				"shareable_directive",
+				"override_directive"
 			]
 		},
 		"@requires": {
@@ -192,6 +242,27 @@
 			"fixtures_using": [
 				"external_field"
 			]
+		},
+		"@shareable": {
+			"description": "Designates a field as shareable across multiple subgraphs - enables independent resolution by multiple subgraphs",
+			"example": "type Product { name: String! @shareable description: String! @shareable }",
+			"fixtures_using": [
+				"shareable_directive"
+			]
+		},
+		"@inaccessible": {
+			"description": "Marks a field as inaccessible to clients - hidden from public schema and filtered by the gateway",
+			"example": "type User { internalScore: Int @inaccessible internalNotes: String @inaccessible }",
+			"fixtures_using": [
+				"inaccessible_directive"
+			]
+		},
+		"@override": {
+			"description": "Indicates that a field is being migrated from one subgraph to another - enables progressive field ownership transfers",
+			"example": "type User { email: String! @override(from: \"legacy-subgraph\") }",
+			"fixtures_using": [
+				"override_directive"
+			]
 		}
 	},
 	"federation_queries_reference": {
@@ -209,15 +280,18 @@
 		}
 	},
 	"coverage_summary": {
-		"total_fixtures": 10,
-		"federation_directives_covered": 4,
+		"total_fixtures": 13,
+		"federation_directives_covered": 7,
 		"federation_queries_covered": 2,
 		"entity_resolution_scenarios": 3,
 		"field_dependency_scenarios": 2,
+		"field_sharing_scenarios": 1,
+		"field_visibility_scenarios": 1,
+		"field_migration_scenarios": 1,
 		"cross_subgraph_scenarios": 1,
 		"error_handling_scenarios": 2,
 		"introspection_scenarios": 1,
-		"apollo_federation_v2_compliance": "Full coverage of core v2 features"
+		"apollo_federation_v2_compliance": "Full coverage of core and advanced v2 features"
 	},
 	"standards_compliance": [
 		"Apollo Federation Specification v2",

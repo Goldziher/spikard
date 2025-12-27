@@ -1,0 +1,612 @@
+{
+  "name": "full_schema_introspection",
+  "description": "Complete __schema introspection query returning full schema metadata",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "scalar DateTime\nscalar UUID\n\ntype Query {\n  hello: String!\n  version: String!\n  user(id: UUID!): User\n  users(limit: Int, offset: Int): [User!]!\n}\n\ntype Mutation {\n  createPost(input: CreatePostInput!): Post!\n  updateUser(id: UUID!, name: String!): User!\n  deletePost(id: UUID!): Boolean!\n}\n\ntype User {\n  id: UUID!\n  name: String!\n  email: String!\n  createdAt: DateTime!\n  posts: [Post!]!\n}\n\ntype Post {\n  id: UUID!\n  title: String!\n  content: String!\n  authorId: UUID!\n  author: User!\n  createdAt: DateTime!\n  updatedAt: DateTime!\n}\n\ninput CreatePostInput {\n  title: String!\n  content: String!\n  authorId: UUID!\n}\n\ntype PageInfo {\n  hasNextPage: Boolean!\n  endCursor: String\n}\n\ntype Query {\n  posts(first: Int, after: String): PostConnection!\n}\n\ntype PostConnection {\n  edges: [PostEdge!]!\n  pageInfo: PageInfo!\n}\n\ntype PostEdge {\n  cursor: String!\n  node: Post!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "query IntrospectionQuery {\n  __schema {\n    queryType { name }\n    mutationType { name }\n    subscriptionType { name }\n    types {\n      ...FullType\n    }\n    directives {\n      name\n      description\n      locations\n      args {\n        ...InputValue\n      }\n    }\n  }\n}\n\nfragment FullType on __Type {\n  kind\n  name\n  description\n  fields(includeDeprecated: true) {\n    name\n    description\n    args {\n      ...InputValue\n    }\n    type {\n      ...TypeRef\n    }\n    isDeprecated\n    deprecationReason\n  }\n  inputFields {\n    ...InputValue\n  }\n  interfaces {\n    ...TypeRef\n  }\n  enumValues(includeDeprecated: true) {\n    name\n    description\n    isDeprecated\n    deprecationReason\n  }\n  possibleTypes {\n    ...TypeRef\n  }\n}\n\nfragment InputValue on __InputValue {\n  name\n  description\n  type { ...TypeRef }\n  defaultValue\n}\n\nfragment TypeRef on __Type {\n  kind\n  name\n  ofType {\n    kind\n    name\n    ofType {\n      kind\n      name\n      ofType {\n        kind\n        name\n        ofType {\n          kind\n          name\n          ofType {\n            kind\n            name\n            ofType {\n              kind\n              name\n              ofType {\n                kind\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query"
+        },
+        "mutationType": {
+          "name": "Mutation"
+        },
+        "subscriptionType": null,
+        "types": [
+          {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "description": "ISO 8601 DateTime scalar",
+            "fields": null,
+            "inputFields": null,
+            "interfaces": null,
+            "enumValues": null,
+            "possibleTypes": null
+          },
+          {
+            "kind": "SCALAR",
+            "name": "UUID",
+            "description": "UUID scalar type",
+            "fields": null,
+            "inputFields": null,
+            "interfaces": null,
+            "enumValues": null,
+            "possibleTypes": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "Query",
+            "description": "Root query type",
+            "fields": [
+              {
+                "name": "hello",
+                "description": "Greeting message",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "version",
+                "description": "API version",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "user",
+                "description": "Get user by ID",
+                "args": [
+                  {
+                    "name": "id",
+                    "description": "User ID",
+                    "type": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "SCALAR",
+                        "name": "UUID"
+                      }
+                    },
+                    "defaultValue": null
+                  }
+                ],
+                "type": {
+                  "kind": "OBJECT",
+                  "name": "User"
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "users",
+                "description": "Get all users with pagination",
+                "args": [
+                  {
+                    "name": "limit",
+                    "description": "Maximum number of results",
+                    "type": {
+                      "kind": "SCALAR",
+                      "name": "Int"
+                    },
+                    "defaultValue": "10"
+                  },
+                  {
+                    "name": "offset",
+                    "description": "Number of results to skip",
+                    "type": {
+                      "kind": "SCALAR",
+                      "name": "Int"
+                    },
+                    "defaultValue": "0"
+                  }
+                ],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "OBJECT",
+                        "name": "User"
+                      }
+                    }
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "inputFields": null,
+            "interfaces": [],
+            "enumValues": null,
+            "possibleTypes": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "Mutation",
+            "description": "Root mutation type",
+            "fields": [
+              {
+                "name": "createPost",
+                "description": "Create a new post",
+                "args": [
+                  {
+                    "name": "input",
+                    "description": "Post creation input",
+                    "type": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "CreatePostInput"
+                      }
+                    },
+                    "defaultValue": null
+                  }
+                ],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "Post"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "updateUser",
+                "description": "Update user information",
+                "args": [
+                  {
+                    "name": "id",
+                    "description": "User ID",
+                    "type": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "SCALAR",
+                        "name": "UUID"
+                      }
+                    },
+                    "defaultValue": null
+                  },
+                  {
+                    "name": "name",
+                    "description": "New user name",
+                    "type": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "SCALAR",
+                        "name": "String"
+                      }
+                    },
+                    "defaultValue": null
+                  }
+                ],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "User"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "deletePost",
+                "description": "Delete a post",
+                "args": [
+                  {
+                    "name": "id",
+                    "description": "Post ID",
+                    "type": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "SCALAR",
+                        "name": "UUID"
+                      }
+                    },
+                    "defaultValue": null
+                  }
+                ],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "inputFields": null,
+            "interfaces": [],
+            "enumValues": null,
+            "possibleTypes": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "User",
+            "description": "User entity",
+            "fields": [
+              {
+                "name": "id",
+                "description": "Unique identifier",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "UUID"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "description": "User's full name",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "email",
+                "description": "User's email address",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "createdAt",
+                "description": "Creation timestamp",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "DateTime"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "posts",
+                "description": "User's posts",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "OBJECT",
+                        "name": "Post"
+                      }
+                    }
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "inputFields": null,
+            "interfaces": [],
+            "enumValues": null,
+            "possibleTypes": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "Post",
+            "description": "Blog post entity",
+            "fields": [
+              {
+                "name": "id",
+                "description": "Unique identifier",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "UUID"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "title",
+                "description": "Post title",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "content",
+                "description": "Post content",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "authorId",
+                "description": "Author's ID",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "UUID"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "author",
+                "description": "Post author",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "User"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "createdAt",
+                "description": "Creation timestamp",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "DateTime"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "updatedAt",
+                "description": "Last update timestamp",
+                "args": [],
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "DateTime"
+                  }
+                },
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "inputFields": null,
+            "interfaces": [],
+            "enumValues": null,
+            "possibleTypes": null
+          },
+          {
+            "kind": "INPUT_OBJECT",
+            "name": "CreatePostInput",
+            "description": "Input for creating posts",
+            "fields": null,
+            "inputFields": [
+              {
+                "name": "title",
+                "description": "Post title",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String"
+                  }
+                },
+                "defaultValue": null
+              },
+              {
+                "name": "content",
+                "description": "Post content",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String"
+                  }
+                },
+                "defaultValue": null
+              },
+              {
+                "name": "authorId",
+                "description": "Author ID",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "UUID"
+                  }
+                },
+                "defaultValue": null
+              }
+            ],
+            "interfaces": null,
+            "enumValues": null,
+            "possibleTypes": null
+          }
+        ],
+        "directives": [
+          {
+            "name": "skip",
+            "description": "Directs the executor to skip this field or fragment when the `if` argument is true.",
+            "locations": [
+              "FIELD",
+              "FRAGMENT_SPREAD",
+              "INLINE_FRAGMENT"
+            ],
+            "args": [
+              {
+                "name": "if",
+                "description": "Skipped when true",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean"
+                  }
+                },
+                "defaultValue": null
+              }
+            ]
+          },
+          {
+            "name": "include",
+            "description": "Directs the executor to include this field or fragment when the `if` argument is true.",
+            "locations": [
+              "FIELD",
+              "FRAGMENT_SPREAD",
+              "INLINE_FRAGMENT"
+            ],
+            "args": [
+              {
+                "name": "if",
+                "description": "Included when true",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean"
+                  }
+                },
+                "defaultValue": null
+              }
+            ]
+          },
+          {
+            "name": "deprecated",
+            "description": "Marks an element of a GraphQL schema as no longer supported.",
+            "locations": [
+              "FIELD_DEFINITION",
+              "ENUM_VALUE"
+            ],
+            "args": [
+              {
+                "name": "reason",
+                "description": "Explains why this element was deprecated",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String"
+                },
+                "defaultValue": "No longer supported"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "resolvers": {
+    "__schema": {
+      "type": "mock",
+      "return_value": "introspection_result"
+    }
+  },
+  "tags": [
+    "introspection",
+    "schema",
+    "metadata"
+  ]
+}

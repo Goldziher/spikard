@@ -1,0 +1,161 @@
+{
+  "name": "custom_scalar_validation",
+  "description": "Multiple custom scalars with validation - Email, URL, and PhoneNumber types",
+  "operation_type": "mutation",
+  "endpoint": "/graphql",
+  "schema": "scalar Email\nscalar URL\nscalar PhoneNumber\n\ntype Mutation {\n  createContact(input: CreateContactInput!): Contact!\n}\n\ninput CreateContactInput {\n  name: String!\n  email: Email!\n  website: URL!\n  phone: PhoneNumber!\n}\n\ntype Contact {\n  id: ID!\n  name: String!\n  email: Email!\n  website: URL!\n  phone: PhoneNumber!\n  createdAt: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "mutation CreateContact($input: CreateContactInput!) {\n  createContact(input: $input) {\n    id\n    name\n    email\n    website\n    phone\n    createdAt\n  }\n}",
+    "variables": {
+      "input": {
+        "name": "Alice Johnson",
+        "email": "alice.johnson@example.com",
+        "website": "https://example.com",
+        "phone": "+1-555-123-4567"
+      }
+    },
+    "operationName": "CreateContact",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "mutation CreateContact($input: CreateContactInput!) {\n  createContact(input: $input) {\n    id\n    name\n    email\n    website\n    phone\n    createdAt\n  }\n}",
+      "variables": {
+        "input": {
+          "name": "Alice Johnson",
+          "email": "alice.johnson@example.com",
+          "website": "https://example.com",
+          "phone": "+1-555-123-4567"
+        }
+      },
+      "operationName": "CreateContact"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "data": {
+      "createContact": {
+        "id": "contact-001",
+        "name": "Alice Johnson",
+        "email": "alice.johnson@example.com",
+        "website": "https://example.com",
+        "phone": "+1-555-123-4567",
+        "createdAt": "2025-12-27T14:30:00Z"
+      }
+    }
+  },
+  "resolvers": {
+    "Mutation.createContact": {
+      "type": "mock_with_args",
+      "validation_rules": {
+        "email": {
+          "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+          "message": "Email must be a valid email address"
+        },
+        "website": {
+          "pattern": "^https?://",
+          "message": "URL must start with http:// or https://"
+        },
+        "phone": {
+          "pattern": "^\\+?[1-9]\\d{1,14}$",
+          "message": "PhoneNumber must be a valid E.164 format (+1-555-123-4567 or +1555123456)"
+        }
+      },
+      "return_value": {
+        "id": "contact-001",
+        "name": "Alice Johnson",
+        "email": "alice.johnson@example.com",
+        "website": "https://example.com",
+        "phone": "+1-555-123-4567",
+        "createdAt": "2025-12-27T14:30:00Z"
+      }
+    }
+  },
+  "test_cases": {
+    "valid_scalars": {
+      "description": "All custom scalars with valid values",
+      "expected_status": 200,
+      "variables": {
+        "input": {
+          "name": "Alice Johnson",
+          "email": "alice.johnson@example.com",
+          "website": "https://example.com",
+          "phone": "+1-555-123-4567"
+        }
+      }
+    },
+    "alternative_valid_email": {
+      "description": "Alternative valid email format",
+      "expected_status": 200,
+      "variables": {
+        "input": {
+          "name": "Bob Smith",
+          "email": "bob+tag@company.co.uk",
+          "website": "http://company.co.uk",
+          "phone": "+44-7700-900000"
+        }
+      }
+    },
+    "invalid_email": {
+      "description": "Email validation failure",
+      "expected_status": 422,
+      "variables": {
+        "input": {
+          "name": "Charlie Brown",
+          "email": "not-an-email",
+          "website": "https://example.com",
+          "phone": "+1-555-123-4567"
+        }
+      },
+      "expected_error": {
+        "field": "email",
+        "message": "Email must be a valid email address",
+        "code": "CUSTOM_SCALAR_COERCION_ERROR"
+      }
+    },
+    "invalid_url": {
+      "description": "URL validation failure - missing protocol",
+      "expected_status": 422,
+      "variables": {
+        "input": {
+          "name": "Diana Prince",
+          "email": "diana@example.com",
+          "website": "not a url",
+          "phone": "+1-555-123-4567"
+        }
+      },
+      "expected_error": {
+        "field": "website",
+        "message": "URL must start with http:// or https://",
+        "code": "CUSTOM_SCALAR_COERCION_ERROR"
+      }
+    },
+    "invalid_phone": {
+      "description": "PhoneNumber validation failure - too short",
+      "expected_status": 422,
+      "variables": {
+        "input": {
+          "name": "Eve Wilson",
+          "email": "eve@example.com",
+          "website": "https://example.com",
+          "phone": "123"
+        }
+      },
+      "expected_error": {
+        "field": "phone",
+        "message": "PhoneNumber must be a valid E.164 format (+1-555-123-4567 or +1555123456)",
+        "code": "CUSTOM_SCALAR_COERCION_ERROR"
+      }
+    }
+  },
+  "tags": [
+    "scalars",
+    "validation",
+    "custom-types",
+    "email",
+    "url",
+    "phone"
+  ]
+}

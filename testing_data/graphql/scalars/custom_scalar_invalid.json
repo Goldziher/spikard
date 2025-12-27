@@ -1,0 +1,179 @@
+{
+  "name": "custom_scalar_invalid",
+  "description": "Custom scalar validation failure - all custom scalars receive invalid values",
+  "operation_type": "mutation",
+  "endpoint": "/graphql",
+  "schema": "scalar Email\nscalar URL\nscalar PhoneNumber\n\ntype Mutation {\n  createContact(input: CreateContactInput!): Contact!\n}\n\ninput CreateContactInput {\n  name: String!\n  email: Email!\n  website: URL!\n  phone: PhoneNumber!\n}\n\ntype Contact {\n  id: ID!\n  name: String!\n  email: Email!\n  website: URL!\n  phone: PhoneNumber!\n  createdAt: String!\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "mutation CreateContact($input: CreateContactInput!) {\n  createContact(input: $input) {\n    id\n    name\n    email\n    website\n    phone\n    createdAt\n  }\n}",
+    "variables": {
+      "input": {
+        "name": "Invalid Contact",
+        "email": "not-an-email",
+        "website": "not a url",
+        "phone": "123"
+      }
+    },
+    "operationName": "CreateContact",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "query": "mutation CreateContact($input: CreateContactInput!) {\n  createContact(input: $input) {\n    id\n    name\n    email\n    website\n    phone\n    createdAt\n  }\n}",
+      "variables": {
+        "input": {
+          "name": "Invalid Contact",
+          "email": "not-an-email",
+          "website": "not a url",
+          "phone": "123"
+        }
+      },
+      "operationName": "CreateContact"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "data": null,
+    "errors": [
+      {
+        "message": "Email must be a valid email address",
+        "locations": [
+          {
+            "line": 1,
+            "column": 30
+          }
+        ],
+        "extensions": {
+          "field": "email",
+          "received_value": "not-an-email",
+          "expected_format": "RFC 5322 compliant email address",
+          "kind": "CUSTOM_SCALAR_COERCION_ERROR",
+          "code": "INVALID_EMAIL_FORMAT"
+        }
+      },
+      {
+        "message": "URL must start with http:// or https://",
+        "locations": [
+          {
+            "line": 1,
+            "column": 30
+          }
+        ],
+        "extensions": {
+          "field": "website",
+          "received_value": "not a url",
+          "expected_format": "Valid absolute URL with http:// or https:// scheme",
+          "kind": "CUSTOM_SCALAR_COERCION_ERROR",
+          "code": "INVALID_URL_FORMAT"
+        }
+      },
+      {
+        "message": "PhoneNumber must be a valid E.164 format",
+        "locations": [
+          {
+            "line": 1,
+            "column": 30
+          }
+        ],
+        "extensions": {
+          "field": "phone",
+          "received_value": "123",
+          "expected_format": "E.164 format: +1-555-123-4567 or +1555123456",
+          "kind": "CUSTOM_SCALAR_COERCION_ERROR",
+          "code": "INVALID_PHONE_FORMAT"
+        }
+      }
+    ]
+  },
+  "resolvers": {
+    "Mutation.createContact": {
+      "type": "custom_scalar_validator",
+      "validation_rules": {
+        "email": {
+          "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+          "message": "Email must be a valid email address",
+          "code": "INVALID_EMAIL_FORMAT",
+          "description": "Email scalar requires RFC 5322 compliant format"
+        },
+        "website": {
+          "pattern": "^https?://[\\w.-]+\\.[a-zA-Z]{2,}",
+          "message": "URL must start with http:// or https://",
+          "code": "INVALID_URL_FORMAT",
+          "description": "URL scalar requires absolute URL with http:// or https:// scheme"
+        },
+        "phone": {
+          "pattern": "^\\+?[1-9]\\d{1,14}$",
+          "message": "PhoneNumber must be a valid E.164 format",
+          "code": "INVALID_PHONE_FORMAT",
+          "description": "PhoneNumber scalar requires E.164 format: +1-555-123-4567 or +1555123456 (min 1 digit, max 15 digits)"
+        }
+      },
+      "fail_on_first_error": false,
+      "collect_all_errors": true
+    }
+  },
+  "validation_details": {
+    "email_validation": {
+      "input": "not-an-email",
+      "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+      "reason": "Missing @ symbol and proper domain format",
+      "valid_examples": [
+        "user@example.com",
+        "alice.johnson@company.co.uk",
+        "bob+tag@domain.org"
+      ],
+      "invalid_examples": [
+        "not-an-email",
+        "user@",
+        "@example.com",
+        "user@domain",
+        "user domain@example.com"
+      ]
+    },
+    "url_validation": {
+      "input": "not a url",
+      "pattern": "^https?://[\\w.-]+\\.[a-zA-Z]{2,}",
+      "reason": "Missing http:// or https:// scheme and valid domain",
+      "valid_examples": [
+        "https://example.com",
+        "http://www.domain.org",
+        "https://subdomain.example.co.uk"
+      ],
+      "invalid_examples": [
+        "not a url",
+        "example.com",
+        "ftp://example.com",
+        "https://"
+      ]
+    },
+    "phone_validation": {
+      "input": "123",
+      "pattern": "^\\+?[1-9]\\d{1,14}$",
+      "reason": "Too short - E.164 requires 1-15 digits (optional + prefix, must start with 1-9)",
+      "valid_examples": [
+        "+1-555-123-4567",
+        "+1555123456",
+        "+44-7700-900000",
+        "15551234567"
+      ],
+      "invalid_examples": [
+        "123",
+        "0555123456",
+        "+0555123456",
+        "555-123-4567",
+        "(555) 123-4567"
+      ]
+    }
+  },
+  "tags": [
+    "scalars",
+    "validation",
+    "errors",
+    "custom-types",
+    "email",
+    "url",
+    "phone"
+  ]
+}

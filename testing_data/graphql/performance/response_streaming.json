@@ -1,0 +1,218 @@
+{
+  "name": "response_streaming",
+  "description": "Response streaming with @defer and @stream directives for progressive data delivery and improved perceived performance",
+  "operation_type": "query",
+  "endpoint": "/graphql",
+  "schema": "directive @defer(label: String, if: Boolean = true) on FRAGMENT_SPREAD | INLINE_FRAGMENT\n\ndirective @stream(label: String, initialCount: Int = 0, if: Boolean = true) on FIELD\n\ntype Query {\n  user(id: String!): User\n}\n\ntype User {\n  id: String!\n  name: String!\n  email: String!\n  posts: [Post!]!\n  followers: [User!]!\n}\n\ntype Post {\n  id: String!\n  title: String!\n  content: String!\n  published_at: String\n}",
+  "request": {
+    "method": "POST",
+    "path": "/graphql",
+    "query": "query GetUserWithDeferred($userId: String!) {\n  user(id: $userId) {\n    id\n    name\n    email\n    ...DeferredPosts @defer(label: \"userPosts\")\n    ...DeferredFollowers @defer(label: \"userFollowers\")\n  }\n}\n\nfragment DeferredPosts on User {\n  posts @stream(initialCount: 1, label: \"postsStream\") {\n    id\n    title\n    published_at\n  }\n}\n\nfragment DeferredFollowers on User {\n  followers @stream(initialCount: 2, label: \"followersStream\") {\n    id\n    name\n  }\n}",
+    "variables": {
+      "userId": "user-123"
+    },
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "multipart/mixed"
+    },
+    "body": {
+      "query": "query GetUserWithDeferred($userId: String!) {\n  user(id: $userId) {\n    id\n    name\n    email\n    ...DeferredPosts @defer(label: \"userPosts\")\n    ...DeferredFollowers @defer(label: \"userFollowers\")\n  }\n}\n\nfragment DeferredPosts on User {\n  posts @stream(initialCount: 1, label: \"postsStream\") {\n    id\n    title\n    published_at\n  }\n}\n\nfragment DeferredFollowers on User {\n  followers @stream(initialCount: 2, label: \"followersStream\") {\n    id\n    name\n  }\n}",
+      "variables": {
+        "userId": "user-123"
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "content_type": "multipart/mixed; boundary=graphql",
+    "streaming": true,
+    "chunks": [
+      {
+        "chunk_index": 0,
+        "label": "initial",
+        "content_type": "application/json",
+        "data": {
+          "data": {
+            "user": {
+              "id": "user-123",
+              "name": "Charlie Davis",
+              "email": "charlie@example.com"
+            }
+          },
+          "hasNext": true
+        }
+      },
+      {
+        "chunk_index": 1,
+        "label": "userPosts",
+        "content_type": "application/json",
+        "data": {
+          "incremental": [
+            {
+              "label": "postsStream",
+              "path": [
+                "user",
+                "posts"
+              ],
+              "data": [
+                {
+                  "id": "post-1",
+                  "title": "Getting Started with GraphQL",
+                  "published_at": "2025-01-15T10:30:00Z"
+                }
+              ]
+            }
+          ],
+          "hasNext": true
+        }
+      },
+      {
+        "chunk_index": 2,
+        "label": "postsStream_continuation",
+        "content_type": "application/json",
+        "data": {
+          "incremental": [
+            {
+              "label": "postsStream",
+              "path": [
+                "user",
+                "posts",
+                1
+              ],
+              "data": {
+                "id": "post-2",
+                "title": "Advanced GraphQL Patterns",
+                "published_at": "2025-01-20T14:45:00Z"
+              }
+            }
+          ],
+          "hasNext": true
+        }
+      },
+      {
+        "chunk_index": 3,
+        "label": "userFollowers",
+        "content_type": "application/json",
+        "data": {
+          "incremental": [
+            {
+              "label": "followersStream",
+              "path": [
+                "user",
+                "followers"
+              ],
+              "data": [
+                {
+                  "id": "user-456",
+                  "name": "Diana Prince"
+                },
+                {
+                  "id": "user-789",
+                  "name": "Eve Wilson"
+                }
+              ]
+            }
+          ],
+          "hasNext": true
+        }
+      },
+      {
+        "chunk_index": 4,
+        "label": "followersStream_continuation",
+        "content_type": "application/json",
+        "data": {
+          "incremental": [
+            {
+              "label": "followersStream",
+              "path": [
+                "user",
+                "followers",
+                2
+              ],
+              "data": {
+                "id": "user-101",
+                "name": "Frank Miller"
+              }
+            }
+          ],
+          "hasNext": false
+        }
+      }
+    ]
+  },
+  "resolvers": {
+    "Query.user": {
+      "type": "mock",
+      "return_value": {
+        "id": "user-123",
+        "name": "Charlie Davis",
+        "email": "charlie@example.com",
+        "posts": [
+          {
+            "id": "post-1",
+            "title": "Getting Started with GraphQL",
+            "content": "An introduction to GraphQL concepts and best practices",
+            "published_at": "2025-01-15T10:30:00Z"
+          },
+          {
+            "id": "post-2",
+            "title": "Advanced GraphQL Patterns",
+            "content": "Deep dive into federation, subscriptions, and optimization",
+            "published_at": "2025-01-20T14:45:00Z"
+          },
+          {
+            "id": "post-3",
+            "title": "GraphQL Performance Optimization",
+            "content": "Strategies for optimizing query execution and response times",
+            "published_at": "2025-01-25T09:15:00Z"
+          }
+        ],
+        "followers": [
+          {
+            "id": "user-456",
+            "name": "Diana Prince",
+            "email": "diana@example.com"
+          },
+          {
+            "id": "user-789",
+            "name": "Eve Wilson",
+            "email": "eve@example.com"
+          },
+          {
+            "id": "user-101",
+            "name": "Frank Miller",
+            "email": "frank@example.com"
+          }
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "timing": {
+      "parsing_ms": 3,
+      "validation_ms": 2,
+      "execution_ms": 12,
+      "total_ms": 17
+    },
+    "streaming": {
+      "enabled": true,
+      "protocol": "multipart/mixed",
+      "chunks": 5,
+      "time_to_first_byte_ms": 3,
+      "total_streaming_time_ms": 17
+    },
+    "deferred_fields": [
+      "user.posts",
+      "user.followers"
+    ]
+  },
+  "depth_limit": 4,
+  "complexity_limit": 15,
+  "tags": [
+    "performance",
+    "streaming",
+    "defer",
+    "incremental",
+    "progressive-rendering"
+  ]
+}
