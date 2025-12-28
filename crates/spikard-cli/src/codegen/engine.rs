@@ -138,9 +138,9 @@ impl CodegenEngine {
                     target,
                 },
             ) => {
-                let asset = Self::generate_graphql_code(&request.schema_path, *language, output, target)
+                let assets = Self::generate_graphql_code(&request.schema_path, *language, output, target)
                     .context("Failed to generate code from GraphQL schema")?;
-                Ok(CodegenOutcome::Files(vec![asset]))
+                Ok(CodegenOutcome::Files(assets))
             }
             _ => bail!(
                 "Unsupported schema/target combination: {:?} -> {:?}",
@@ -265,7 +265,7 @@ impl CodegenEngine {
         language: TargetLanguage,
         output: &Path,
         target: &str,
-    ) -> Result<GeneratedAsset> {
+    ) -> Result<Vec<GeneratedAsset>> {
         // Read the GraphQL schema file
         let schema_content = fs::read_to_string(schema_path)
             .with_context(|| format!("Failed to read GraphQL schema: {}", schema_path.display()))?;
@@ -279,7 +279,29 @@ impl CodegenEngine {
             TargetLanguage::Php => super::graphql::generate_php_graphql(&schema_content, target)?,
         };
 
-        Self::write_asset(output, format!("{} GraphQL code", language_name(language)), code)
+        // For Ruby, also generate RBS type signatures when appropriate
+        let mut assets = vec![Self::write_asset(output, format!("{} GraphQL code", language_name(language)), &code)?];
+
+        if language == TargetLanguage::Ruby && (target == "all" || target == "types" || target == "schema") {
+            use super::graphql::parse_graphql_sdl_string;
+            use super::graphql::generators::ruby::RubyGenerator;
+            use super::graphql::generators::GraphQLGenerator;
+
+            let parsed_schema = parse_graphql_sdl_string(&schema_content)?;
+            let generator = RubyGenerator::default();
+            let rbs_code = generator.generate_type_signatures(&parsed_schema)?;
+
+            // Determine RBS output path (replace .rb extension with .rbs)
+            let rbs_output = if output.extension().map_or(false, |ext| ext == "rb") {
+                output.with_extension("rbs")
+            } else {
+                output.with_extension("rbs")
+            };
+
+            assets.push(Self::write_asset(&rbs_output, format!("{} GraphQL RBS types", language_name(language)), &rbs_code)?);
+        }
+
+        Ok(assets)
     }
 
     fn write_asset(path: &Path, description: impl Into<String>, content: impl AsRef<[u8]>) -> Result<GeneratedAsset> {

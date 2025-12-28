@@ -46,7 +46,7 @@ use anyhow::Result;
 use std::path::Path;
 
 /// Supported target languages for code generation
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TargetLanguage {
     Python,
     TypeScript,
