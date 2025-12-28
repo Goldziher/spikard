@@ -2137,7 +2137,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-bindings-shared"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "axum 0.8.8",
  "http",
@@ -2153,7 +2153,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -2177,7 +2177,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "axum 0.8.8",
@@ -2220,7 +2220,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "async-stream",
  "axum 0.8.8",
@@ -2249,7 +2249,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb-ext"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "magnus",
  "spikard-rb",
@@ -2257,7 +2257,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb-macros"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3270,9 +3270,9 @@ dependencies = [
 
 [[package]]
 name = "zmij"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6d6085d62852e35540689d1f97ad663e3971fc19cf5eceab364d62c646ea167"
+checksum = "f5858cd3a46fff31e77adea2935e357e3a2538d870741617bfb7c943e218fee6"
 
 [[package]]
 name = "zopfli"

@@ -20,6 +20,7 @@ exclude = [
     "e2e/*",
     "examples/*",
     "tests/test_apps/*",
+    "tools/test-generator",
 ]
 
 [workspace.package]
