@@ -47,14 +47,21 @@ macro_rules! call_without_gvl {
     ($func:expr, args: ($($arg:expr, $ty:ty),+), return_type: $return_ty:ty) => {{
         $crate::gvl::paste::paste! {
             let mut result: std::mem::MaybeUninit<$return_ty> = std::mem::MaybeUninit::uninit();
-            let data = std::mem::ManuallyDrop::new(($($arg,)+ &mut result));
-            let data_ptr: *mut std::ffi::c_void = (&*data as *const _ as *mut std::ffi::c_void);
+            // Box the arguments to ensure they live on the heap for the entire duration of the FFI call
+            let data = std::boxed::Box::new((
+                ($($arg,)+),
+                &mut result as *mut std::mem::MaybeUninit<$return_ty>,
+            ));
+            let data_ptr = std::boxed::Box::into_raw(data) as *mut std::ffi::c_void;
 
             unsafe extern "C" fn __decl_macro_anon_wrapper(data: *mut std::ffi::c_void) -> *mut std::ffi::c_void {
-                let data = data as *mut ( $($ty,)+ &mut std::mem::MaybeUninit<$return_ty> );
-                let ( $([<__ $arg _name>],)+ result_output) = unsafe { data.read() };
+                let data = unsafe { std::boxed::Box::from_raw(data as *mut (
+                    ( $($ty,)+ ),
+                    *mut std::mem::MaybeUninit<$return_ty>,
+                )) };
+                let (( $([<__ $arg _name>],)+ ), result_output) = *data;
                 let result = $func( $( [<__ $arg _name>], )+);
-                result_output.write(result);
+                unsafe { (*result_output).write(result); }
                 std::ptr::null_mut()
             }
 
