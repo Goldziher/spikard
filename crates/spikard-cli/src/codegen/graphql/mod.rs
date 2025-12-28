@@ -5,6 +5,7 @@
 
 pub mod generators;
 pub mod spec_parser;
+pub mod sdl;
 
 // Re-export parser types and functions for public use
 pub use spec_parser::{
@@ -14,6 +15,9 @@ pub use spec_parser::{
 
 // Re-export generators trait and implementations
 pub use generators::{GraphQLGenerator, RustGenerator};
+
+// Re-export SDL utilities
+pub use sdl::{SdlBuilder, TargetLanguage, TypeMapper};
 
 use anyhow::Result;
 

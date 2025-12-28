@@ -6,439 +6,18 @@
 
 use super::{GraphQLGenerator, sanitize_typescript_identifier};
 use crate::codegen::graphql::spec_parser::{GraphQLField, GraphQLSchema, TypeKind};
+use crate::codegen::graphql::sdl::{SdlBuilder, TargetLanguage, TypeMapper};
+use crate::codegen::common::escaping::{EscapeContext, escape_template_literal};
+use crate::codegen::formatters::{Formatter, HeaderMetadata, Import, Section, TypeScriptFormatter};
 use anyhow::Result;
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct TypeScriptGenerator;
 
 impl TypeScriptGenerator {
-    /// Reconstruct GraphQL SDL from parsed schema
-    ///
-    /// Converts the parsed GraphQLSchema back into SDL format as a string,
-    /// which can be used as typeDefs in makeExecutableSchema.
+    /// Reconstruct GraphQL SDL from parsed schema using shared SdlBuilder
     fn reconstruct_sdl(&self, schema: &GraphQLSchema) -> String {
-        let mut sdl = String::new();
-
-        // Add directives
-        for directive in &schema.directives {
-            if let Some(desc) = &directive.description {
-                sdl.push_str("\"\"\"");
-                sdl.push_str(desc);
-                sdl.push_str("\"\"\"\n");
-            }
-            sdl.push_str("directive @");
-            sdl.push_str(&directive.name);
-
-            if !directive.arguments.is_empty() {
-                sdl.push('(');
-                for (i, arg) in directive.arguments.iter().enumerate() {
-                    if i > 0 {
-                        sdl.push_str(", ");
-                    }
-                    sdl.push_str(&arg.name);
-                    sdl.push_str(": ");
-                    sdl.push_str(&self.format_gql_type(
-                        &arg.type_name,
-                        arg.is_nullable,
-                        arg.is_list,
-                        arg.list_item_nullable,
-                    ));
-                    if let Some(default) = &arg.default_value {
-                        sdl.push_str(" = ");
-                        sdl.push_str(default);
-                    }
-                }
-                sdl.push(')');
-            }
-
-            if !directive.locations.is_empty() {
-                sdl.push_str(" on ");
-                sdl.push_str(&directive.locations.join(" | "));
-            }
-            sdl.push_str("\n\n");
-        }
-
-        // Add Query type
-        if !schema.queries.is_empty() {
-            sdl.push_str("type Query {\n");
-            for field in &schema.queries {
-                if let Some(desc) = &field.description {
-                    sdl.push_str("  \"\"\"");
-                    sdl.push_str(desc);
-                    sdl.push_str("\"\"\"\n");
-                }
-                sdl.push_str("  ");
-                sdl.push_str(&field.name);
-                if !field.arguments.is_empty() {
-                    sdl.push('(');
-                    for (i, arg) in field.arguments.iter().enumerate() {
-                        if i > 0 {
-                            sdl.push_str(", ");
-                        }
-                        sdl.push_str(&arg.name);
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &arg.type_name,
-                            arg.is_nullable,
-                            arg.is_list,
-                            arg.list_item_nullable,
-                        ));
-                        if let Some(default) = &arg.default_value {
-                            sdl.push_str(" = ");
-                            sdl.push_str(default);
-                        }
-                    }
-                    sdl.push(')');
-                }
-                sdl.push_str(": ");
-                sdl.push_str(&self.format_gql_type(
-                    &field.type_name,
-                    field.is_nullable,
-                    field.is_list,
-                    field.list_item_nullable,
-                ));
-                if let Some(reason) = &field.deprecation_reason {
-                    sdl.push_str(" @deprecated(reason: \"");
-                    sdl.push_str(&reason.replace('"', "\\\""));
-                    sdl.push_str("\")");
-                }
-                sdl.push_str("\n");
-            }
-            sdl.push_str("}\n\n");
-        }
-
-        // Add Mutation type
-        if !schema.mutations.is_empty() {
-            sdl.push_str("type Mutation {\n");
-            for field in &schema.mutations {
-                if let Some(desc) = &field.description {
-                    sdl.push_str("  \"\"\"");
-                    sdl.push_str(desc);
-                    sdl.push_str("\"\"\"\n");
-                }
-                sdl.push_str("  ");
-                sdl.push_str(&field.name);
-                if !field.arguments.is_empty() {
-                    sdl.push('(');
-                    for (i, arg) in field.arguments.iter().enumerate() {
-                        if i > 0 {
-                            sdl.push_str(", ");
-                        }
-                        sdl.push_str(&arg.name);
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &arg.type_name,
-                            arg.is_nullable,
-                            arg.is_list,
-                            arg.list_item_nullable,
-                        ));
-                        if let Some(default) = &arg.default_value {
-                            sdl.push_str(" = ");
-                            sdl.push_str(default);
-                        }
-                    }
-                    sdl.push(')');
-                }
-                sdl.push_str(": ");
-                sdl.push_str(&self.format_gql_type(
-                    &field.type_name,
-                    field.is_nullable,
-                    field.is_list,
-                    field.list_item_nullable,
-                ));
-                if let Some(reason) = &field.deprecation_reason {
-                    sdl.push_str(" @deprecated(reason: \"");
-                    sdl.push_str(&reason.replace('"', "\\\""));
-                    sdl.push_str("\")");
-                }
-                sdl.push_str("\n");
-            }
-            sdl.push_str("}\n\n");
-        }
-
-        // Add Subscription type
-        if !schema.subscriptions.is_empty() {
-            sdl.push_str("type Subscription {\n");
-            for field in &schema.subscriptions {
-                if let Some(desc) = &field.description {
-                    sdl.push_str("  \"\"\"");
-                    sdl.push_str(desc);
-                    sdl.push_str("\"\"\"\n");
-                }
-                sdl.push_str("  ");
-                sdl.push_str(&field.name);
-                if !field.arguments.is_empty() {
-                    sdl.push('(');
-                    for (i, arg) in field.arguments.iter().enumerate() {
-                        if i > 0 {
-                            sdl.push_str(", ");
-                        }
-                        sdl.push_str(&arg.name);
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &arg.type_name,
-                            arg.is_nullable,
-                            arg.is_list,
-                            arg.list_item_nullable,
-                        ));
-                        if let Some(default) = &arg.default_value {
-                            sdl.push_str(" = ");
-                            sdl.push_str(default);
-                        }
-                    }
-                    sdl.push(')');
-                }
-                sdl.push_str(": ");
-                sdl.push_str(&self.format_gql_type(
-                    &field.type_name,
-                    field.is_nullable,
-                    field.is_list,
-                    field.list_item_nullable,
-                ));
-                if let Some(reason) = &field.deprecation_reason {
-                    sdl.push_str(" @deprecated(reason: \"");
-                    sdl.push_str(&reason.replace('"', "\\\""));
-                    sdl.push_str("\")");
-                }
-                sdl.push_str("\n");
-            }
-            sdl.push_str("}\n\n");
-        }
-
-        // Add all other types
-        for (type_name, type_def) in &schema.types {
-            // Skip built-in types
-            if matches!(
-                type_name.as_str(),
-                "String" | "Int" | "Float" | "Boolean" | "ID" | "DateTime" | "Date" | "Time" | "JSON" | "Upload"
-            ) {
-                continue;
-            }
-
-            if let Some(desc) = &type_def.description {
-                sdl.push_str("\"\"\"");
-                sdl.push_str(desc);
-                sdl.push_str("\"\"\"\n");
-            }
-
-            match type_def.kind {
-                TypeKind::Object => {
-                    sdl.push_str("type ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for field in &type_def.fields {
-                        if let Some(desc) = &field.description {
-                            sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
-                            sdl.push_str("\"\"\"\n");
-                        }
-                        sdl.push_str("  ");
-                        sdl.push_str(&field.name);
-                        if !field.arguments.is_empty() {
-                            sdl.push('(');
-                            for (i, arg) in field.arguments.iter().enumerate() {
-                                if i > 0 {
-                                    sdl.push_str(", ");
-                                }
-                                sdl.push_str(&arg.name);
-                                sdl.push_str(": ");
-                                sdl.push_str(&self.format_gql_type(
-                                    &arg.type_name,
-                                    arg.is_nullable,
-                                    arg.is_list,
-                                    arg.list_item_nullable,
-                                ));
-                                if let Some(default) = &arg.default_value {
-                                    sdl.push_str(" = ");
-                                    sdl.push_str(default);
-                                }
-                            }
-                            sdl.push(')');
-                        }
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &field.type_name,
-                            field.is_nullable,
-                            field.is_list,
-                            field.list_item_nullable,
-                        ));
-                        if let Some(reason) = &field.deprecation_reason {
-                            sdl.push_str(" @deprecated(reason: \"");
-                            sdl.push_str(&reason.replace('"', "\\\""));
-                            sdl.push_str("\")");
-                        }
-                        sdl.push_str("\n");
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                TypeKind::InputObject => {
-                    sdl.push_str("input ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for field in &type_def.input_fields {
-                        if let Some(desc) = &field.description {
-                            sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
-                            sdl.push_str("\"\"\"\n");
-                        }
-                        sdl.push_str("  ");
-                        sdl.push_str(&field.name);
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &field.type_name,
-                            field.is_nullable,
-                            field.is_list,
-                            field.list_item_nullable,
-                        ));
-                        if let Some(default) = &field.default_value {
-                            sdl.push_str(" = ");
-                            sdl.push_str(default);
-                        }
-                        sdl.push_str("\n");
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                TypeKind::Enum => {
-                    sdl.push_str("enum ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for value in &type_def.enum_values {
-                        if let Some(desc) = &value.description {
-                            sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
-                            sdl.push_str("\"\"\"\n");
-                        }
-                        sdl.push_str("  ");
-                        sdl.push_str(&value.name);
-                        if value.is_deprecated {
-                            if let Some(reason) = &value.deprecation_reason {
-                                sdl.push_str(" @deprecated(reason: \"");
-                                sdl.push_str(&reason.replace('"', "\\\""));
-                                sdl.push_str("\")");
-                            } else {
-                                sdl.push_str(" @deprecated");
-                            }
-                        }
-                        sdl.push_str("\n");
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                TypeKind::Scalar => {
-                    sdl.push_str("scalar ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str("\n\n");
-                }
-                TypeKind::Union => {
-                    sdl.push_str("union ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" = ");
-                    sdl.push_str(&type_def.possible_types.join(" | "));
-                    sdl.push_str("\n\n");
-                }
-                TypeKind::Interface => {
-                    sdl.push_str("interface ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for field in &type_def.fields {
-                        if let Some(desc) = &field.description {
-                            sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
-                            sdl.push_str("\"\"\"\n");
-                        }
-                        sdl.push_str("  ");
-                        sdl.push_str(&field.name);
-                        if !field.arguments.is_empty() {
-                            sdl.push('(');
-                            for (i, arg) in field.arguments.iter().enumerate() {
-                                if i > 0 {
-                                    sdl.push_str(", ");
-                                }
-                                sdl.push_str(&arg.name);
-                                sdl.push_str(": ");
-                                sdl.push_str(&self.format_gql_type(
-                                    &arg.type_name,
-                                    arg.is_nullable,
-                                    arg.is_list,
-                                    arg.list_item_nullable,
-                                ));
-                                if let Some(default) = &arg.default_value {
-                                    sdl.push_str(" = ");
-                                    sdl.push_str(default);
-                                }
-                            }
-                            sdl.push(')');
-                        }
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &field.type_name,
-                            field.is_nullable,
-                            field.is_list,
-                            field.list_item_nullable,
-                        ));
-                        sdl.push_str("\n");
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                _ => {}
-            }
-        }
-
-        sdl.trim_end().to_string()
-    }
-
-    /// Format a GraphQL type with proper null/list notation
-    ///
-    /// Strips any existing GraphQL notation (!, [, ]) from type_name to avoid double notation
-    fn format_gql_type(&self, type_name: &str, is_nullable: bool, is_list: bool, list_item_nullable: bool) -> String {
-        // Strip any existing GraphQL notation from type_name to prevent double notation
-        let clean_type = type_name.trim_matches(|c| c == '!' || c == '[' || c == ']');
-
-        let mut result = if is_list {
-            if list_item_nullable {
-                format!("[{}]", clean_type)
-            } else {
-                format!("[{}!]", clean_type)
-            }
-        } else {
-            clean_type.to_string()
-        };
-
-        if !is_nullable {
-            result.push('!');
-        }
-
-        result
-    }
-
-    /// Escape a string for use in a JavaScript template literal or string
-    fn escape_string(&self, s: &str) -> String {
-        s.replace('\\', "\\\\").replace('`', "\\`").replace('$', "\\$")
-    }
-
-    /// Map GraphQL scalar type to TypeScript type
-    /// Handles types like "String", "String!", "[String]", etc. by extracting base type
-    fn map_scalar_type(&self, gql_type: &str, schema: Option<&GraphQLSchema>) -> String {
-        // Extract the base type name by removing !, [, and ]
-        let base_type = gql_type.trim_matches(|c| c == '!' || c == '[' || c == ']');
-
-        match base_type {
-            "String" => "string".to_string(),
-            "Int" => "number".to_string(),
-            "Float" => "number".to_string(),
-            "Boolean" => "boolean".to_string(),
-            "ID" => "string".to_string(),
-            custom => {
-                // Check if it's a scalar type; if not, use the custom type name as-is
-                if let Some(schema) = schema {
-                    if let Some(type_def) = schema.types.get(custom) {
-                        if type_def.kind == TypeKind::Scalar {
-                            return "string".to_string();
-                        }
-                    }
-                }
-                custom.to_string()
-            }
-        }
+        SdlBuilder::new(schema).build()
     }
 
     /// Map GraphQL type to TypeScript type with proper nullability and list handling
@@ -457,7 +36,7 @@ impl TypeScriptGenerator {
         self.map_type_with_schema(field_type, is_nullable, is_list, list_item_nullable, None)
     }
 
-    /// Internal version that accepts optional schema
+    /// Internal version that accepts optional schema for custom type lookups
     fn map_type_with_schema(
         &self,
         field_type: &str,
@@ -466,23 +45,9 @@ impl TypeScriptGenerator {
         list_item_nullable: bool,
         schema: Option<&GraphQLSchema>,
     ) -> String {
-        let base = self.map_scalar_type(field_type, schema);
-
-        let with_list = if is_list {
-            if list_item_nullable {
-                format!("({} | null)[]", base)
-            } else {
-                format!("{}[]", base)
-            }
-        } else {
-            base
-        };
-
-        if is_nullable {
-            format!("{} | null", with_list)
-        } else {
-            with_list
-        }
+        // Use shared TypeMapper for consistent type mapping across all generators
+        let mapper = TypeMapper::new(TargetLanguage::TypeScript, schema);
+        mapper.map_type_with_list_nullability(field_type, is_nullable, is_list, list_item_nullable)
     }
 
     /// Generate resolver argument type for a field
@@ -560,10 +125,16 @@ impl TypeScriptGenerator {
         }
 
         let mut code = String::new();
+        // Create instance name: first letter lowercase + rest of type_name + "Resolvers"
+        let instance_name = if let Some(first_char) = type_name.chars().next() {
+            let lowercased_first = first_char.to_lowercase().to_string();
+            format!("{}{}", lowercased_first, &type_name[first_char.len_utf8()..])
+        } else {
+            type_name.to_string()
+        };
         code.push_str(&format!(
             "export const {}Resolvers: {}Resolvers = {{\n",
-            type_name.chars().next().unwrap().to_lowercase().to_string() + &type_name[1..],
-            type_name
+            instance_name, type_name
         ));
 
         for field in fields {
@@ -888,65 +459,81 @@ impl GraphQLGenerator for TypeScriptGenerator {
     }
 
     fn generate_schema_definition(&self, schema: &GraphQLSchema) -> Result<String> {
-        let mut code = String::new();
+        let formatter = TypeScriptFormatter::new();
+        let mut sections = Vec::new();
 
-        // Header with generation info
-        code.push_str("// DO NOT EDIT - Auto-generated by Spikard CLI\n");
-        code.push_str("// GraphQL Schema Definition\n");
-        code.push_str("//\n");
-        code.push_str("// This file was automatically generated from your GraphQL schema.\n");
-        code.push_str("// Any manual changes will be overwritten on the next generation.\n\n");
+        // Header
+        let metadata = HeaderMetadata {
+            auto_generated: true,
+            schema_file: None,
+            generator_version: Some("0.6.2".to_string()),
+        };
+        let header = formatter.format_header(&metadata);
+        sections.push(Section::Header(header));
 
         // Imports
-        code.push_str("import { makeExecutableSchema } from '@graphql-tools/schema';\n");
-        code.push_str("// TODO: Import your resolvers module:\n");
-        code.push_str("// import { resolvers } from './resolvers';\n\n");
+        let imports = vec![
+            Import::with_items("@graphql-tools/schema", vec!["makeExecutableSchema"]),
+        ];
+        let imports_str = formatter.format_imports(&imports);
+        sections.push(Section::Imports(imports_str));
 
-        // Reconstruct and embed the SDL
+        // Body with SDL and exports
+        let mut body = String::new();
+
+        // Reconstruct SDL
         let sdl = self.reconstruct_sdl(schema);
-        code.push_str("/**\n");
-        code.push_str(" * GraphQL Schema Definition Language (SDL)\n");
-        code.push_str(" *\n");
-        code.push_str(" * Defines all types, queries, mutations, and subscriptions\n");
-        code.push_str(" * in the GraphQL schema.\n");
-        code.push_str(" */\n");
-        code.push_str("const typeDefs = `\n");
 
-        // Escape the SDL for inclusion in a template literal
+        // SDL as a template literal with proper escaping
+        body.push_str("// TODO: Import your resolvers module:\n");
+        body.push_str("// import { resolvers } from './resolvers';\n\n");
+        body.push_str("/**\n");
+        body.push_str(" * GraphQL Schema Definition Language (SDL)\n");
+        body.push_str(" *\n");
+        body.push_str(" * Defines all types, queries, mutations, and subscriptions\n");
+        body.push_str(" * in the GraphQL schema.\n");
+        body.push_str(" */\n");
+        body.push_str("const typeDefs = `\n");
+
+        // Escape SDL lines for template literal
         for line in sdl.lines() {
-            code.push_str("  ");
-            code.push_str(&self.escape_string(line));
-            code.push_str("\n");
+            body.push_str("  ");
+            body.push_str(&escape_template_literal(line, EscapeContext::JavaScript));
+            body.push_str("\n");
         }
 
-        code.push_str("`;\n\n");
+        body.push_str("`;\n\n");
 
-        // Export the executable schema
-        code.push_str("/**\n");
-        code.push_str(" * Executable GraphQL Schema\n");
-        code.push_str(" *\n");
-        code.push_str(" * Combines the type definitions with resolvers to create\n");
-        code.push_str(" * a fully functional GraphQL schema ready for use with\n");
-        code.push_str(" * Apollo Server, GraphQL Yoga, or similar frameworks.\n");
-        code.push_str(" */\n");
-        code.push_str("export const schema = makeExecutableSchema({\n");
-        code.push_str("  typeDefs,\n");
-        code.push_str("  resolvers,\n");
-        code.push_str("});\n\n");
+        // Executable schema
+        body.push_str("/**\n");
+        body.push_str(" * Executable GraphQL Schema\n");
+        body.push_str(" *\n");
+        body.push_str(" * Combines the type definitions with resolvers to create\n");
+        body.push_str(" * a fully functional GraphQL schema ready for use with\n");
+        body.push_str(" * Apollo Server, GraphQL Yoga, or similar frameworks.\n");
+        body.push_str(" */\n");
+        body.push_str("export const schema = makeExecutableSchema({\n");
+        body.push_str("  typeDefs,\n");
+        body.push_str("  resolvers,\n");
+        body.push_str("});\n\n");
 
-        // Export typeDefs for advanced use cases
-        code.push_str("/**\n");
-        code.push_str(" * GraphQL Type Definitions\n");
-        code.push_str(" *\n");
-        code.push_str(" * Exported separately for advanced use cases where the SDL\n");
-        code.push_str(" * string might be needed directly.\n");
-        code.push_str(" */\n");
-        code.push_str("export { typeDefs };\n\n");
+        // Export typeDefs
+        body.push_str("/**\n");
+        body.push_str(" * GraphQL Type Definitions\n");
+        body.push_str(" *\n");
+        body.push_str(" * Exported separately for advanced use cases where the SDL\n");
+        body.push_str(" * string might be needed directly.\n");
+        body.push_str(" */\n");
+        body.push_str("export { typeDefs };\n\n");
 
-        // Export type for resolvers (for external tools)
-        code.push_str("export type { resolvers as Resolvers };\n");
+        // Export type
+        body.push_str("export type { resolvers as Resolvers };\n");
 
-        Ok(code)
+        sections.push(Section::Body(body));
+
+        // Merge and format
+        let result = formatter.merge_sections(&sections);
+        Ok(result)
     }
 }
 
@@ -955,17 +542,6 @@ mod tests {
     use super::*;
     use crate::codegen::graphql::spec_parser::{GraphQLArgument, GraphQLField};
     use std::collections::HashMap;
-
-    #[test]
-    fn test_map_scalar_types() {
-        let generator = TypeScriptGenerator::default();
-        assert_eq!(generator.map_scalar_type("String", None), "string");
-        assert_eq!(generator.map_scalar_type("Int", None), "number");
-        assert_eq!(generator.map_scalar_type("Float", None), "number");
-        assert_eq!(generator.map_scalar_type("Boolean", None), "boolean");
-        assert_eq!(generator.map_scalar_type("ID", None), "string");
-        assert_eq!(generator.map_scalar_type("CustomType", None), "CustomType");
-    }
 
     #[test]
     fn test_map_type_non_nullable() {
@@ -995,6 +571,26 @@ mod tests {
         // Default map_type assumes nullable list items
         assert_eq!(generator.map_type("String", true, true), "(string | null)[] | null");
         assert_eq!(generator.map_type("Int", true, true), "(number | null)[] | null");
+    }
+
+    #[test]
+    fn test_map_type_non_nullable_list_items() {
+        let generator = TypeScriptGenerator::default();
+        assert_eq!(
+            generator.map_type_with_list_item_nullability("String", false, true, false),
+            "string[]"
+        );
+        assert_eq!(
+            generator.map_type_with_list_item_nullability("Int", false, true, false),
+            "number[]"
+        );
+    }
+
+    #[test]
+    fn test_map_type_custom_type() {
+        let generator = TypeScriptGenerator::default();
+        assert_eq!(generator.map_type("User", false, false), "User");
+        assert_eq!(generator.map_type("User", true, false), "User | null");
     }
 
     #[test]

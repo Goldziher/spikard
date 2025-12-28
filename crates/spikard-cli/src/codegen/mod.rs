@@ -2,7 +2,9 @@
 
 mod asyncapi;
 mod base;
+pub mod common;
 mod engine;
+pub mod formatters;
 mod graphql;
 mod openapi;
 mod openrpc;
@@ -22,6 +24,7 @@ pub use asyncapi::{
 };
 pub use base::OpenApiGenerator;
 pub use engine::{CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, GeneratedAsset, SchemaKind};
+pub use formatters::{Formatter, HeaderMetadata, Import, PythonFormatter, RubyFormatter, Section, TypeScriptFormatter};
 pub use graphql::{
     GraphQLArgument, GraphQLDirective, GraphQLEnumValue, GraphQLField, GraphQLInputField, GraphQLSchema, GraphQLType,
     TypeKind, generate_php_graphql, generate_python_graphql, generate_ruby_graphql, generate_rust_graphql,

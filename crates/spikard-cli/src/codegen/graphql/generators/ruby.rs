@@ -11,6 +11,8 @@
 //! - RBS type signatures in comments for optional type checking
 
 use super::GraphQLGenerator;
+use crate::codegen::common::case_conversion::to_snake_case;
+use crate::codegen::graphql::sdl::{SdlBuilder, TargetLanguage, TypeMapper};
 use crate::codegen::graphql::spec_parser::{GraphQLSchema, TypeKind};
 use anyhow::Result;
 
@@ -21,214 +23,6 @@ use crate::codegen::graphql::spec_parser::GraphQLField;
 pub struct RubyGenerator;
 
 impl RubyGenerator {
-    /// Map GraphQL scalar type to Ruby type
-    ///
-    /// Converts GraphQL scalar types to their Ruby equivalents.
-    /// String → "String", Int → "Integer", Float → "Float", Boolean → "true | false"
-    /// Custom scalars are checked against schema; if scalar type, return "String",
-    /// otherwise return the PascalCase type name as-is (e.g., "User", "DateTime")
-    fn map_scalar_type(&self, gql_type: &str, schema: Option<&GraphQLSchema>) -> String {
-        // Validate input
-        if gql_type.is_empty() {
-            return "Object".to_string();
-        }
-
-        // Extract the base type name by removing !, [, and ]
-        let base_type = gql_type.trim_matches(|c| c == '!' || c == '[' || c == ']');
-
-        // Guard against circular type references
-        if base_type.is_empty() {
-            return "Object".to_string();
-        }
-
-        match base_type {
-            "String" => "String".to_string(),
-            "Int" => "Integer".to_string(),
-            "Float" => "Float".to_string(),
-            "Boolean" => "true | false".to_string(),
-            "ID" => "String".to_string(),
-            custom => {
-                // Check if it's a scalar type; if not, use the custom type name as-is
-                if let Some(schema) = schema {
-                    if let Some(type_def) = schema.types.get(custom) {
-                        if type_def.kind == TypeKind::Scalar {
-                            return "String".to_string();
-                        }
-                    }
-                }
-                custom.to_string()
-            }
-        }
-    }
-
-    /// Map GraphQL type to Ruby type with proper nullability and list handling
-    fn map_type(&self, field_type: &str, is_nullable: bool, is_list: bool) -> String {
-        self.map_type_with_list_item_nullability(field_type, is_nullable, is_list, true)
-    }
-
-    /// Map GraphQL type to Ruby with explicit list item nullability
-    ///
-    /// Handles various combinations of nullability and list wrappers:
-    /// - Non-nullable scalar: `String`
-    /// - Nullable scalar: `String | nil`
-    /// - Non-nullable list with nullable items: `Array[String | nil]`
-    /// - Non-nullable list with non-nullable items: `Array[String]`
-    /// - Nullable list with nullable items: `Array[String | nil] | nil`
-    /// - Nullable list with non-nullable items: `Array[String] | nil`
-    /// - Nested lists: `Array[Array[String]]`, `Array[Array[String] | nil]`, etc.
-    fn map_type_with_list_item_nullability(
-        &self,
-        field_type: &str,
-        is_nullable: bool,
-        is_list: bool,
-        list_item_nullable: bool,
-    ) -> String {
-        self.map_type_with_schema(field_type, is_nullable, is_list, list_item_nullable, None)
-    }
-
-    /// Parse nested list structure from GraphQL type string
-    /// Returns (base_type, depth, items_nullable_at_each_level)
-    /// Example: "[[[String!]!]!]!" → ("String", 3, [false, false, false])
-    fn parse_nested_lists(&self, field_type: &str) -> (String, usize, Vec<bool>) {
-        // Work backwards from the end to parse the structure
-        let chars: Vec<char> = field_type.chars().collect();
-        let mut depth = 0;
-        let mut nullability_stack = Vec::new();
-
-        // Count closing brackets from the end and track nullability
-        let mut pos = chars.len();
-        while pos > 0 && chars[pos - 1] == '!' {
-            pos -= 1;
-        }
-        while pos > 0 && chars[pos - 1] == ']' {
-            pos -= 1;
-            depth += 1;
-
-            // Check for ! before the ]
-            if pos > 0 && chars[pos - 1] == '!' {
-                nullability_stack.push(false); // Non-nullable at this level
-                pos -= 1;
-            } else {
-                nullability_stack.push(true); // Nullable at this level
-            }
-
-            // Find matching [ and skip it
-            if pos > 0 && chars[pos - 1] == '[' {
-                pos -= 1;
-            }
-        }
-
-        // Reverse the nullability stack since we built it backwards
-        nullability_stack.reverse();
-
-        // Extract base type (everything from current position to the end)
-        let base_type = chars[pos..].iter().collect::<String>().trim_end_matches('!').trim().to_string();
-
-        (base_type, depth, nullability_stack)
-    }
-
-    /// Internal version that accepts optional schema
-    fn map_type_with_schema(
-        &self,
-        field_type: &str,
-        is_nullable: bool,
-        is_list: bool,
-        list_item_nullable: bool,
-        schema: Option<&GraphQLSchema>,
-    ) -> String {
-        if field_type.is_empty() {
-            return if is_nullable {
-                "Object | nil".to_string()
-            } else {
-                "Object".to_string()
-            };
-        }
-
-        // Handle nested lists
-        if field_type.contains('[') {
-            let (base_type_str, depth, mut nullable_levels) = self.parse_nested_lists(field_type);
-
-            if depth > 0 {
-                let base = self.map_scalar_type(&base_type_str, schema);
-
-                // Ensure we have nullability info for all levels
-                while nullable_levels.len() < depth {
-                    nullable_levels.push(list_item_nullable);
-                }
-
-                // Build nested array from innermost to outermost
-                let mut result = base.clone();
-                for i in (0..depth).rev() {
-                    let is_nullable_at_level = *nullable_levels.get(i).unwrap_or(&true);
-                    if is_nullable_at_level {
-                        result = format!("Array[{} | nil]", result);
-                    } else {
-                        result = format!("Array[{}]", result);
-                    }
-                }
-
-                return if is_nullable {
-                    format!("{} | nil", result)
-                } else {
-                    result
-                };
-            }
-        }
-
-        // Handle non-nested types
-        let base = self.map_scalar_type(field_type, schema);
-
-        let with_list = if is_list {
-            if list_item_nullable {
-                format!("Array[{} | nil]", base)
-            } else {
-                format!("Array[{}]", base)
-            }
-        } else {
-            base
-        };
-
-        if is_nullable {
-            format!("{} | nil", with_list)
-        } else {
-            with_list
-        }
-    }
-
-    /// Convert GraphQL field names to Ruby snake_case
-    ///
-    /// Examples:
-    /// - `user` → `user`
-    /// - `getUser` → `get_user`
-    /// - `createUserProfile` → `create_user_profile`
-    /// - `HTTPServer` → `http_server`
-    fn to_snake_case(s: &str) -> String {
-        let mut result = String::new();
-        let chars: Vec<char> = s.chars().collect();
-
-        for (i, &ch) in chars.iter().enumerate() {
-            if ch.is_uppercase() {
-                let lower = ch.to_lowercase().to_string();
-
-                // Add underscore when transitioning from lowercase to uppercase
-                // OR when we have an uppercase followed by a lowercase (end of acronym)
-                if i > 0 && !result.ends_with('_') {
-                    let prev_is_lower = chars[i - 1].is_lowercase();
-                    let next_is_lower = (i + 1 < chars.len()) && chars[i + 1].is_lowercase();
-
-                    if prev_is_lower || (i > 0 && chars[i - 1].is_uppercase() && next_is_lower) {
-                        result.push('_');
-                    }
-                }
-
-                result.push_str(&lower);
-            } else {
-                result.push(ch);
-            }
-        }
-
-        result
-    }
 
     /// Generate RBS (Ruby Signature) type definitions for Steep type checking
     ///
@@ -250,6 +44,9 @@ impl RubyGenerator {
 
         rbs.push_str("module Types\n");
 
+        // Create type mapper for Ruby
+        let mapper = TypeMapper::new(TargetLanguage::Ruby, Some(schema));
+
         // Generate RBS for each type (skip built-in scalars)
         for (type_name, type_def) in &schema.types {
             if matches!(
@@ -269,12 +66,11 @@ impl RubyGenerator {
                             continue;
                         }
 
-                        let field_type = self.map_type_with_schema(
+                        let field_type = mapper.map_type_with_list_nullability(
                             &field.type_name,
                             field.is_nullable,
                             field.is_list,
                             field.list_item_nullable,
-                            Some(schema),
                         );
 
                         rbs.push_str(&format!(
@@ -294,12 +90,11 @@ impl RubyGenerator {
                             continue;
                         }
 
-                        let field_type = self.map_type_with_schema(
+                        let field_type = mapper.map_type_with_list_nullability(
                             &field.type_name,
                             field.is_nullable,
                             field.is_list,
                             field.list_item_nullable,
-                            Some(schema),
                         );
 
                         rbs.push_str(&format!(
@@ -346,12 +141,11 @@ impl RubyGenerator {
                             continue;
                         }
 
-                        let field_type = self.map_type_with_schema(
+                        let field_type = mapper.map_type_with_list_nullability(
                             &field.type_name,
                             field.is_nullable,
                             field.is_list,
                             field.list_item_nullable,
-                            Some(schema),
                         );
 
                         rbs.push_str(&format!(
@@ -372,32 +166,26 @@ impl RubyGenerator {
         rbs.push_str("    < GraphQL::Schema::Object\n\n");
 
         for field in &schema.queries {
-            let field_type = self.map_type_with_schema(
+            let field_type = mapper.map_type_with_list_nullability(
                 &field.type_name,
                 field.is_nullable,
                 field.is_list,
                 field.list_item_nullable,
-                Some(schema),
             );
 
-            let method_name = Self::to_snake_case(&field.name);
+            let method_name = to_snake_case(&field.name);
             if field.arguments.is_empty() {
                 rbs.push_str(&format!("    def {}: () -> {}\n", method_name, field_type));
             } else {
                 let mut arg_types = Vec::new();
                 for arg in &field.arguments {
-                    let arg_type = self.map_type_with_schema(
+                    let arg_type = mapper.map_type_with_list_nullability(
                         &arg.type_name,
                         arg.is_nullable,
                         arg.is_list,
                         arg.list_item_nullable,
-                        Some(schema),
                     );
-                    arg_types.push(format!(
-                        "{}: {}",
-                        Self::to_snake_case(&arg.name),
-                        arg_type
-                    ));
+                    arg_types.push(format!("{}: {}", to_snake_case(&arg.name), arg_type));
                 }
 
                 rbs.push_str(&format!(
@@ -418,32 +206,26 @@ impl RubyGenerator {
             rbs.push_str("    < GraphQL::Schema::Object\n\n");
 
             for field in &schema.mutations {
-                let field_type = self.map_type_with_schema(
+                let field_type = mapper.map_type_with_list_nullability(
                     &field.type_name,
                     field.is_nullable,
                     field.is_list,
                     field.list_item_nullable,
-                    Some(schema),
                 );
 
-                let method_name = Self::to_snake_case(&field.name);
+                let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
                     rbs.push_str(&format!("    def {}: () -> {}\n", method_name, field_type));
                 } else {
                     let mut arg_types = Vec::new();
                     for arg in &field.arguments {
-                        let arg_type = self.map_type_with_schema(
+                        let arg_type = mapper.map_type_with_list_nullability(
                             &arg.type_name,
                             arg.is_nullable,
                             arg.is_list,
                             arg.list_item_nullable,
-                            Some(schema),
                         );
-                        arg_types.push(format!(
-                            "{}: {}",
-                            Self::to_snake_case(&arg.name),
-                            arg_type
-                        ));
+                        arg_types.push(format!("{}: {}", to_snake_case(&arg.name), arg_type));
                     }
 
                     rbs.push_str(&format!(
@@ -465,32 +247,26 @@ impl RubyGenerator {
             rbs.push_str("    < GraphQL::Schema::Object\n\n");
 
             for field in &schema.subscriptions {
-                let field_type = self.map_type_with_schema(
+                let field_type = mapper.map_type_with_list_nullability(
                     &field.type_name,
                     field.is_nullable,
                     field.is_list,
                     field.list_item_nullable,
-                    Some(schema),
                 );
 
-                let method_name = Self::to_snake_case(&field.name);
+                let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
                     rbs.push_str(&format!("    def {}: () -> {}\n", method_name, field_type));
                 } else {
                     let mut arg_types = Vec::new();
                     for arg in &field.arguments {
-                        let arg_type = self.map_type_with_schema(
+                        let arg_type = mapper.map_type_with_list_nullability(
                             &arg.type_name,
                             arg.is_nullable,
                             arg.is_list,
                             arg.list_item_nullable,
-                            Some(schema),
                         );
-                        arg_types.push(format!(
-                            "{}: {}",
-                            Self::to_snake_case(&arg.name),
-                            arg_type
-                        ));
+                        arg_types.push(format!("{}: {}", to_snake_case(&arg.name), arg_type));
                     }
 
                     rbs.push_str(&format!(
@@ -520,410 +296,6 @@ impl RubyGenerator {
         rbs.push_str("end\n");
 
         Ok(rbs)
-    }
-
-    /// Format a GraphQL type with proper null/list notation for SDL
-    ///
-    /// Converts Ruby type representation back to GraphQL SDL format:
-    /// - `User` → `User!`
-    /// - nullable → `User`
-    /// - list → `[User!]!`
-    /// - nullable list → `[User]`
-    ///
-    /// Strips any existing GraphQL notation (!, [, ]) from type_name to avoid double notation
-    fn format_gql_type(&self, type_name: &str, is_nullable: bool, is_list: bool, list_item_nullable: bool) -> String {
-        // Strip any existing GraphQL notation from type_name to prevent double notation (ID!! instead of ID!)
-        let clean_type = type_name.trim_matches(|c| c == '!' || c == '[' || c == ']');
-
-        let mut result = if is_list {
-            if list_item_nullable {
-                format!("[{}]", clean_type)
-            } else {
-                format!("[{}!]", clean_type)
-            }
-        } else {
-            clean_type.to_string()
-        };
-
-        if !is_nullable {
-            result.push('!');
-        }
-
-        result
-    }
-
-    /// Reconstruct GraphQL SDL from parsed schema
-    ///
-    /// Converts the parsed GraphQLSchema back into SDL format as a string,
-    /// which can be used in the schema definition.
-    fn reconstruct_sdl(&self, schema: &GraphQLSchema) -> String {
-        let mut sdl = String::new();
-
-        // Add directives
-        for directive in &schema.directives {
-            if let Some(desc) = &directive.description {
-                sdl.push_str("\"\"\"");
-                sdl.push_str(desc);
-                sdl.push_str("\"\"\"\n");
-            }
-            sdl.push_str("directive @");
-            sdl.push_str(&directive.name);
-
-            if !directive.arguments.is_empty() {
-                sdl.push('(');
-                for (i, arg) in directive.arguments.iter().enumerate() {
-                    if i > 0 {
-                        sdl.push_str(", ");
-                    }
-                    sdl.push_str(&arg.name);
-                    sdl.push_str(": ");
-                    sdl.push_str(&self.format_gql_type(
-                        &arg.type_name,
-                        arg.is_nullable,
-                        arg.is_list,
-                        arg.list_item_nullable,
-                    ));
-                    if let Some(default) = &arg.default_value {
-                        sdl.push_str(" = ");
-                        sdl.push_str(default);
-                    }
-                }
-                sdl.push(')');
-            }
-
-            if !directive.locations.is_empty() {
-                sdl.push_str(" on ");
-                sdl.push_str(&directive.locations.join(" | "));
-            }
-            sdl.push_str("\n\n");
-        }
-
-        // Add Query type
-        if !schema.queries.is_empty() {
-            sdl.push_str("type Query {\n");
-            for field in &schema.queries {
-                if let Some(desc) = &field.description {
-                    sdl.push_str("  \"\"\"");
-                    sdl.push_str(desc);
-                    sdl.push_str("\"\"\"\n");
-                }
-                sdl.push_str("  ");
-                sdl.push_str(&field.name);
-                if !field.arguments.is_empty() {
-                    sdl.push('(');
-                    for (i, arg) in field.arguments.iter().enumerate() {
-                        if i > 0 {
-                            sdl.push_str(", ");
-                        }
-                        sdl.push_str(&arg.name);
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &arg.type_name,
-                            arg.is_nullable,
-                            arg.is_list,
-                            arg.list_item_nullable,
-                        ));
-                        if let Some(default) = &arg.default_value {
-                            sdl.push_str(" = ");
-                            sdl.push_str(default);
-                        }
-                    }
-                    sdl.push(')');
-                }
-                sdl.push_str(": ");
-                sdl.push_str(&self.format_gql_type(
-                    &field.type_name,
-                    field.is_nullable,
-                    field.is_list,
-                    field.list_item_nullable,
-                ));
-                if let Some(reason) = &field.deprecation_reason {
-                    sdl.push_str(" @deprecated(reason: \"");
-                    sdl.push_str(&reason.replace('"', "\\\""));
-                    sdl.push_str("\")");
-                }
-                sdl.push_str("\n");
-            }
-            sdl.push_str("}\n\n");
-        }
-
-        // Add Mutation type
-        if !schema.mutations.is_empty() {
-            sdl.push_str("type Mutation {\n");
-            for field in &schema.mutations {
-                if let Some(desc) = &field.description {
-                    sdl.push_str("  \"\"\"");
-                    sdl.push_str(desc);
-                    sdl.push_str("\"\"\"\n");
-                }
-                sdl.push_str("  ");
-                sdl.push_str(&field.name);
-                if !field.arguments.is_empty() {
-                    sdl.push('(');
-                    for (i, arg) in field.arguments.iter().enumerate() {
-                        if i > 0 {
-                            sdl.push_str(", ");
-                        }
-                        sdl.push_str(&arg.name);
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &arg.type_name,
-                            arg.is_nullable,
-                            arg.is_list,
-                            arg.list_item_nullable,
-                        ));
-                        if let Some(default) = &arg.default_value {
-                            sdl.push_str(" = ");
-                            sdl.push_str(default);
-                        }
-                    }
-                    sdl.push(')');
-                }
-                sdl.push_str(": ");
-                sdl.push_str(&self.format_gql_type(
-                    &field.type_name,
-                    field.is_nullable,
-                    field.is_list,
-                    field.list_item_nullable,
-                ));
-                if let Some(reason) = &field.deprecation_reason {
-                    sdl.push_str(" @deprecated(reason: \"");
-                    sdl.push_str(&reason.replace('"', "\\\""));
-                    sdl.push_str("\")");
-                }
-                sdl.push_str("\n");
-            }
-            sdl.push_str("}\n\n");
-        }
-
-        // Add Subscription type
-        if !schema.subscriptions.is_empty() {
-            sdl.push_str("type Subscription {\n");
-            for field in &schema.subscriptions {
-                if let Some(desc) = &field.description {
-                    sdl.push_str("  \"\"\"");
-                    sdl.push_str(desc);
-                    sdl.push_str("\"\"\"\n");
-                }
-                sdl.push_str("  ");
-                sdl.push_str(&field.name);
-                if !field.arguments.is_empty() {
-                    sdl.push('(');
-                    for (i, arg) in field.arguments.iter().enumerate() {
-                        if i > 0 {
-                            sdl.push_str(", ");
-                        }
-                        sdl.push_str(&arg.name);
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &arg.type_name,
-                            arg.is_nullable,
-                            arg.is_list,
-                            arg.list_item_nullable,
-                        ));
-                        if let Some(default) = &arg.default_value {
-                            sdl.push_str(" = ");
-                            sdl.push_str(default);
-                        }
-                    }
-                    sdl.push(')');
-                }
-                sdl.push_str(": ");
-                sdl.push_str(&self.format_gql_type(
-                    &field.type_name,
-                    field.is_nullable,
-                    field.is_list,
-                    field.list_item_nullable,
-                ));
-                if let Some(reason) = &field.deprecation_reason {
-                    sdl.push_str(" @deprecated(reason: \"");
-                    sdl.push_str(&reason.replace('"', "\\\""));
-                    sdl.push_str("\")");
-                }
-                sdl.push_str("\n");
-            }
-            sdl.push_str("}\n\n");
-        }
-
-        // Add all other types
-        for (type_name, type_def) in &schema.types {
-            // Skip built-in types
-            if matches!(
-                type_name.as_str(),
-                "String" | "Int" | "Float" | "Boolean" | "ID" | "DateTime" | "Date" | "Time" | "JSON" | "Upload"
-            ) {
-                continue;
-            }
-
-            if let Some(desc) = &type_def.description {
-                sdl.push_str("\"\"\"");
-                sdl.push_str(desc);
-                sdl.push_str("\"\"\"\n");
-            }
-
-            match type_def.kind {
-                TypeKind::Object => {
-                    sdl.push_str("type ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for field in &type_def.fields {
-                        if let Some(desc) = &field.description {
-                            sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
-                            sdl.push_str("\"\"\"\n");
-                        }
-                        sdl.push_str("  ");
-                        sdl.push_str(&field.name);
-                        if !field.arguments.is_empty() {
-                            sdl.push('(');
-                            for (i, arg) in field.arguments.iter().enumerate() {
-                                if i > 0 {
-                                    sdl.push_str(", ");
-                                }
-                                sdl.push_str(&arg.name);
-                                sdl.push_str(": ");
-                                sdl.push_str(&self.format_gql_type(
-                                    &arg.type_name,
-                                    arg.is_nullable,
-                                    arg.is_list,
-                                    arg.list_item_nullable,
-                                ));
-                                if let Some(default) = &arg.default_value {
-                                    sdl.push_str(" = ");
-                                    sdl.push_str(default);
-                                }
-                            }
-                            sdl.push(')');
-                        }
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &field.type_name,
-                            field.is_nullable,
-                            field.is_list,
-                            field.list_item_nullable,
-                        ));
-                        if let Some(reason) = &field.deprecation_reason {
-                            sdl.push_str(" @deprecated(reason: \"");
-                            sdl.push_str(&reason.replace('"', "\\\""));
-                            sdl.push_str("\")");
-                        }
-                        sdl.push_str("\n");
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                TypeKind::InputObject => {
-                    sdl.push_str("input ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for field in &type_def.input_fields {
-                        if let Some(desc) = &field.description {
-                            sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
-                            sdl.push_str("\"\"\"\n");
-                        }
-                        sdl.push_str("  ");
-                        sdl.push_str(&field.name);
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &field.type_name,
-                            field.is_nullable,
-                            field.is_list,
-                            field.list_item_nullable,
-                        ));
-                        if let Some(default) = &field.default_value {
-                            sdl.push_str(" = ");
-                            sdl.push_str(default);
-                        }
-                        sdl.push_str("\n");
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                TypeKind::Enum => {
-                    sdl.push_str("enum ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for value in &type_def.enum_values {
-                        if let Some(desc) = &value.description {
-                            sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
-                            sdl.push_str("\"\"\"\n");
-                        }
-                        sdl.push_str("  ");
-                        sdl.push_str(&value.name);
-                        if value.is_deprecated {
-                            if let Some(reason) = &value.deprecation_reason {
-                                sdl.push_str(" @deprecated(reason: \"");
-                                sdl.push_str(&reason.replace('"', "\\\""));
-                                sdl.push_str("\")");
-                            } else {
-                                sdl.push_str(" @deprecated");
-                            }
-                        }
-                        sdl.push_str("\n");
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                TypeKind::Scalar => {
-                    sdl.push_str("scalar ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str("\n\n");
-                }
-                TypeKind::Union => {
-                    sdl.push_str("union ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" = ");
-                    sdl.push_str(&type_def.possible_types.join(" | "));
-                    sdl.push_str("\n\n");
-                }
-                TypeKind::Interface => {
-                    sdl.push_str("interface ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for field in &type_def.fields {
-                        if let Some(desc) = &field.description {
-                            sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
-                            sdl.push_str("\"\"\"\n");
-                        }
-                        sdl.push_str("  ");
-                        sdl.push_str(&field.name);
-                        if !field.arguments.is_empty() {
-                            sdl.push('(');
-                            for (i, arg) in field.arguments.iter().enumerate() {
-                                if i > 0 {
-                                    sdl.push_str(", ");
-                                }
-                                sdl.push_str(&arg.name);
-                                sdl.push_str(": ");
-                                sdl.push_str(&self.format_gql_type(
-                                    &arg.type_name,
-                                    arg.is_nullable,
-                                    arg.is_list,
-                                    arg.list_item_nullable,
-                                ));
-                                if let Some(default) = &arg.default_value {
-                                    sdl.push_str(" = ");
-                                    sdl.push_str(default);
-                                }
-                            }
-                            sdl.push(')');
-                        }
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &field.type_name,
-                            field.is_nullable,
-                            field.is_list,
-                            field.list_item_nullable,
-                        ));
-                        sdl.push_str("\n");
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                _ => {}
-            }
-        }
-
-        sdl.trim_end().to_string()
     }
 }
 
@@ -1131,7 +503,7 @@ impl GraphQLGenerator for RubyGenerator {
                     code.push_str(&format!("  # {}\n", desc));
                 }
 
-                let method_name = Self::to_snake_case(&field.name);
+                let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
                     code.push_str(&format!("  def {}\n", method_name));
                     code.push_str(&format!("    raise NotImplementedError, \"TODO: Implement QueryType#{}\"\n", method_name));
@@ -1142,7 +514,7 @@ impl GraphQLGenerator for RubyGenerator {
                         if i > 0 {
                             args.push_str(", ");
                         }
-                        let arg_name = Self::to_snake_case(&arg.name);
+                        let arg_name = to_snake_case(&arg.name);
                         args.push_str(&format!("{}:", arg_name));
                     }
                     code.push_str(&format!("  def {}({})\n", method_name, args));
@@ -1163,7 +535,7 @@ impl GraphQLGenerator for RubyGenerator {
                     code.push_str(&format!("  # {}\n", desc));
                 }
 
-                let method_name = Self::to_snake_case(&field.name);
+                let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
                     code.push_str(&format!("  def {}\n", method_name));
                     code.push_str(&format!("    raise NotImplementedError, \"TODO: Implement MutationType#{}\"\n", method_name));
@@ -1174,7 +546,7 @@ impl GraphQLGenerator for RubyGenerator {
                         if i > 0 {
                             args.push_str(", ");
                         }
-                        let arg_name = Self::to_snake_case(&arg.name);
+                        let arg_name = to_snake_case(&arg.name);
                         args.push_str(&format!("{}:", arg_name));
                     }
                     code.push_str(&format!("  def {}({})\n", method_name, args));
@@ -1193,7 +565,7 @@ impl GraphQLGenerator for RubyGenerator {
                     code.push_str(&format!("  # {}\n", desc));
                 }
 
-                let method_name = Self::to_snake_case(&field.name);
+                let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
                     code.push_str(&format!("  def {}\n", method_name));
                     code.push_str(&format!("    raise NotImplementedError, \"TODO: Implement SubscriptionType#{}\"\n", method_name));
@@ -1204,7 +576,7 @@ impl GraphQLGenerator for RubyGenerator {
                         if i > 0 {
                             args.push_str(", ");
                         }
-                        let arg_name = Self::to_snake_case(&arg.name);
+                        let arg_name = to_snake_case(&arg.name);
                         args.push_str(&format!("{}:", arg_name));
                     }
                     code.push_str(&format!("  def {}({})\n", method_name, args));
@@ -1227,8 +599,9 @@ impl GraphQLGenerator for RubyGenerator {
         code.push_str("# This file was automatically generated from your GraphQL schema.\n");
         code.push_str("# Any manual changes will be overwritten on the next generation.\n\n");
 
-        // Reconstruct SDL
-        let sdl = self.reconstruct_sdl(schema);
+        // Use shared SDL builder
+        let builder = SdlBuilder::new(schema);
+        let sdl = builder.build();
 
         // Add schema class
         code.push_str("class AppSchema < GraphQL::Schema\n");
@@ -1268,91 +641,64 @@ mod tests {
     use std::collections::HashMap;
 
     #[test]
-    fn test_map_scalar_types() {
-        let generator = RubyGenerator::default();
-        assert_eq!(generator.map_scalar_type("String", None), "String");
-        assert_eq!(generator.map_scalar_type("Int", None), "Integer");
-        assert_eq!(generator.map_scalar_type("Float", None), "Float");
-        assert_eq!(generator.map_scalar_type("Boolean", None), "true | false");
-        assert_eq!(generator.map_scalar_type("ID", None), "String");
-        assert_eq!(generator.map_scalar_type("CustomType", None), "CustomType");
+    fn test_to_snake_case_via_shared_utility() {
+        // Tests that shared to_snake_case function works correctly
+        assert_eq!(to_snake_case("getUser"), "get_user");
+        assert_eq!(to_snake_case("createUserProfile"), "create_user_profile");
+        assert_eq!(to_snake_case("user"), "user");
+        assert_eq!(to_snake_case("HTTPServer"), "http_server");
     }
 
     #[test]
-    fn test_map_type_non_nullable() {
-        let generator = RubyGenerator::default();
-        assert_eq!(generator.map_type("String", false, false), "String");
-        assert_eq!(generator.map_type("Integer", false, false), "Integer");
+    fn test_type_mapper_ruby_scalars() {
+        let mapper = TypeMapper::new(TargetLanguage::Ruby, None);
+        assert_eq!(mapper.map_scalar("String"), "String");
+        assert_eq!(mapper.map_scalar("Int"), "Integer");
+        assert_eq!(mapper.map_scalar("Float"), "Float");
+        assert_eq!(mapper.map_scalar("Boolean"), "true | false");
+        assert_eq!(mapper.map_scalar("ID"), "String");
+        assert_eq!(mapper.map_scalar("CustomType"), "CustomType");
     }
 
     #[test]
-    fn test_map_type_nullable() {
-        let generator = RubyGenerator::default();
-        assert_eq!(generator.map_type("String", true, false), "String | nil");
-        assert_eq!(generator.map_type("Integer", true, false), "Integer | nil");
+    fn test_type_mapper_ruby_nullability() {
+        let mapper = TypeMapper::new(TargetLanguage::Ruby, None);
+        assert_eq!(mapper.map_type("String", false, false), "String");
+        assert_eq!(mapper.map_type("String", true, false), "String | nil");
+        assert_eq!(mapper.map_type("Integer", false, false), "Integer");
+        assert_eq!(mapper.map_type("Integer", true, false), "Integer | nil");
     }
 
     #[test]
-    fn test_map_type_list() {
-        let generator = RubyGenerator::default();
-        assert_eq!(generator.map_type("String", false, true), "Array[String | nil]");
-        assert_eq!(generator.map_type("Integer", false, true), "Array[Integer | nil]");
+    fn test_type_mapper_ruby_lists() {
+        let mapper = TypeMapper::new(TargetLanguage::Ruby, None);
+        assert_eq!(mapper.map_type("String", false, true), "Array[String | nil]");
+        assert_eq!(
+            mapper.map_type_with_list_nullability("String", false, true, false),
+            "Array[String]"
+        );
+        assert_eq!(mapper.map_type("String", true, true), "Array[String | nil] | nil");
+        assert_eq!(
+            mapper.map_type_with_list_nullability("String", true, true, false),
+            "Array[String] | nil"
+        );
     }
 
     #[test]
-    fn test_map_type_nullable_list() {
-        let generator = RubyGenerator::default();
-        assert_eq!(generator.map_type("String", true, true), "Array[String | nil] | nil");
-        assert_eq!(generator.map_type("Integer", true, true), "Array[Integer | nil] | nil");
-    }
+    fn test_sdl_builder_generates_schema() {
+        let schema = GraphQLSchema {
+            types: HashMap::new(),
+            queries: vec![],
+            mutations: vec![],
+            subscriptions: vec![],
+            directives: vec![],
+            description: None,
+        };
 
-    #[test]
-    fn test_map_type_list_with_schema() {
-        let generator = RubyGenerator::default();
-        // Test basic list handling
-        let result = generator.map_type_with_schema("String", false, true, false, None);
-        assert!(result.contains("Array"));
-        assert!(result.contains("String"));
-    }
-
-    #[test]
-    fn test_map_type_nullable_list_with_schema() {
-        let generator = RubyGenerator::default();
-        // Nullable list with nullable items
-        let result = generator.map_type_with_schema("String", true, true, true, None);
-        assert!(result.contains("Array"));
-        assert!(result.contains("nil"));
-    }
-
-    #[test]
-    fn test_map_type_with_brackets_in_input() {
-        let generator = RubyGenerator::default();
-        // Input already has brackets - should be handled
-        let result = generator.map_type_with_schema("[String!]!", false, false, false, None);
-        assert!(result.contains("Array") || result.contains("String"));
-    }
-
-    #[test]
-    fn test_empty_field_type_handling() {
-        let generator = RubyGenerator::default();
-        let result = generator.map_scalar_type("", None);
-        assert_eq!(result, "Object");
-    }
-
-    #[test]
-    fn test_custom_scalar_types() {
-        let generator = RubyGenerator::default();
-        assert_eq!(generator.map_scalar_type("DateTime", None), "DateTime");
-        assert_eq!(generator.map_scalar_type("JSON", None), "JSON");
-        assert_eq!(generator.map_scalar_type("Upload", None), "Upload");
-    }
-
-    #[test]
-    fn test_to_snake_case() {
-        assert_eq!(RubyGenerator::to_snake_case("getUser"), "get_user");
-        assert_eq!(RubyGenerator::to_snake_case("createUserProfile"), "create_user_profile");
-        assert_eq!(RubyGenerator::to_snake_case("user"), "user");
-        assert_eq!(RubyGenerator::to_snake_case("HTTPServer"), "http_server");
+        let builder = SdlBuilder::new(&schema);
+        let sdl = builder.build();
+        // Just verify it doesn't panic and returns empty/minimal SDL
+        assert_eq!(sdl.trim(), "");
     }
 
     #[test]

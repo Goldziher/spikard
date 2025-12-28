@@ -5,7 +5,8 @@
 //! strict types, full type hints, and PHPDoc annotations compliant with PSR-12.
 
 use super::GraphQLGenerator;
-use crate::codegen::graphql::spec_parser::{GraphQLField, GraphQLSchema, TypeKind};
+use crate::codegen::common::{to_snake_case, escape_quotes, EscapeContext};
+use crate::codegen::graphql::spec_parser::{GraphQLSchema, TypeKind};
 use anyhow::Result;
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -66,240 +67,6 @@ impl PhpGenerator {
         }
     }
 
-    /// Convert camelCase/PascalCase to snake_case for method names
-    fn to_snake_case(s: &str) -> String {
-        let mut result = String::new();
-        let mut chars = s.chars().peekable();
-
-        while let Some(ch) = chars.next() {
-            if ch.is_uppercase() {
-                if !result.is_empty() && !result.ends_with('_') {
-                    result.push('_');
-                }
-                result.push_str(&ch.to_lowercase().to_string());
-            } else {
-                result.push(ch);
-            }
-        }
-
-        result
-    }
-
-    /// Reconstruct GraphQL SDL from parsed schema
-    fn reconstruct_sdl(&self, schema: &GraphQLSchema) -> String {
-        let mut sdl = String::new();
-
-        for directive in &schema.directives {
-            if let Some(desc) = &directive.description {
-                sdl.push_str("\"\"\"");
-                sdl.push_str(desc);
-                sdl.push_str("\"\"\"\n");
-            }
-            sdl.push_str("directive @");
-            sdl.push_str(&directive.name);
-
-            if !directive.arguments.is_empty() {
-                sdl.push('(');
-                for (i, arg) in directive.arguments.iter().enumerate() {
-                    if i > 0 {
-                        sdl.push_str(", ");
-                    }
-                    sdl.push_str(&arg.name);
-                    sdl.push_str(": ");
-                    sdl.push_str(&self.format_gql_type(
-                        &arg.type_name,
-                        arg.is_nullable,
-                        arg.is_list,
-                        arg.list_item_nullable,
-                    ));
-                    if let Some(default) = &arg.default_value {
-                        sdl.push_str(" = ");
-                        sdl.push_str(default);
-                    }
-                }
-                sdl.push(')');
-            }
-
-            if !directive.locations.is_empty() {
-                sdl.push_str(" on ");
-                sdl.push_str(&directive.locations.join(" | "));
-            }
-            sdl.push_str("\n\n");
-        }
-
-        if !schema.queries.is_empty() {
-            sdl.push_str("type Query {\n");
-            for field in &schema.queries {
-                self.append_field_to_sdl(&mut sdl, field);
-            }
-            sdl.push_str("}\n\n");
-        }
-
-        if !schema.mutations.is_empty() {
-            sdl.push_str("type Mutation {\n");
-            for field in &schema.mutations {
-                self.append_field_to_sdl(&mut sdl, field);
-            }
-            sdl.push_str("}\n\n");
-        }
-
-        if !schema.subscriptions.is_empty() {
-            sdl.push_str("type Subscription {\n");
-            for field in &schema.subscriptions {
-                self.append_field_to_sdl(&mut sdl, field);
-            }
-            sdl.push_str("}\n\n");
-        }
-
-        for (type_name, type_def) in &schema.types {
-            if matches!(
-                type_name.as_str(),
-                "String" | "Int" | "Float" | "Boolean" | "ID" | "DateTime" | "Date" | "Time" | "JSON" | "Upload"
-            ) {
-                continue;
-            }
-
-            if let Some(desc) = &type_def.description {
-                sdl.push_str("\"\"\"");
-                sdl.push_str(desc);
-                sdl.push_str("\"\"\"\n");
-            }
-
-            match type_def.kind {
-                TypeKind::Object => {
-                    sdl.push_str("type ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for field in &type_def.fields {
-                        self.append_field_to_sdl(&mut sdl, field);
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                TypeKind::InputObject => {
-                    sdl.push_str("input ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for field in &type_def.input_fields {
-                        if let Some(desc) = &field.description {
-                            sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
-                            sdl.push_str("\"\"\"\n");
-                        }
-                        sdl.push_str("  ");
-                        sdl.push_str(&field.name);
-                        sdl.push_str(": ");
-                        sdl.push_str(&self.format_gql_type(
-                            &field.type_name,
-                            field.is_nullable,
-                            field.is_list,
-                            field.list_item_nullable,
-                        ));
-                        if let Some(default) = &field.default_value {
-                            sdl.push_str(" = ");
-                            sdl.push_str(default);
-                        }
-                        sdl.push_str("\n");
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                TypeKind::Enum => {
-                    sdl.push_str("enum ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for value in &type_def.enum_values {
-                        if let Some(desc) = &value.description {
-                            sdl.push_str("  \"\"\"");
-                            sdl.push_str(desc);
-                            sdl.push_str("\"\"\"\n");
-                        }
-                        sdl.push_str("  ");
-                        sdl.push_str(&value.name);
-                        if value.is_deprecated {
-                            if let Some(reason) = &value.deprecation_reason {
-                                sdl.push_str(" @deprecated(reason: \"");
-                                sdl.push_str(&reason.replace('"', "\\\""));
-                                sdl.push_str("\")");
-                            } else {
-                                sdl.push_str(" @deprecated");
-                            }
-                        }
-                        sdl.push_str("\n");
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                TypeKind::Scalar => {
-                    sdl.push_str("scalar ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str("\n\n");
-                }
-                TypeKind::Union => {
-                    sdl.push_str("union ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" = ");
-                    sdl.push_str(&type_def.possible_types.join(" | "));
-                    sdl.push_str("\n\n");
-                }
-                TypeKind::Interface => {
-                    sdl.push_str("interface ");
-                    sdl.push_str(&type_def.name);
-                    sdl.push_str(" {\n");
-                    for field in &type_def.fields {
-                        self.append_field_to_sdl(&mut sdl, field);
-                    }
-                    sdl.push_str("}\n\n");
-                }
-                _ => {}
-            }
-        }
-
-        sdl.trim_end().to_string()
-    }
-
-    /// Append a field to SDL string
-    fn append_field_to_sdl(&self, sdl: &mut String, field: &GraphQLField) {
-        if let Some(desc) = &field.description {
-            sdl.push_str("  \"\"\"");
-            sdl.push_str(desc);
-            sdl.push_str("\"\"\"\n");
-        }
-        sdl.push_str("  ");
-        sdl.push_str(&field.name);
-        if !field.arguments.is_empty() {
-            sdl.push('(');
-            for (i, arg) in field.arguments.iter().enumerate() {
-                if i > 0 {
-                    sdl.push_str(", ");
-                }
-                sdl.push_str(&arg.name);
-                sdl.push_str(": ");
-                sdl.push_str(&self.format_gql_type(
-                    &arg.type_name,
-                    arg.is_nullable,
-                    arg.is_list,
-                    arg.list_item_nullable,
-                ));
-                if let Some(default) = &arg.default_value {
-                    sdl.push_str(" = ");
-                    sdl.push_str(default);
-                }
-            }
-            sdl.push(')');
-        }
-        sdl.push_str(": ");
-        sdl.push_str(&self.format_gql_type(
-            &field.type_name,
-            field.is_nullable,
-            field.is_list,
-            field.list_item_nullable,
-        ));
-        if let Some(reason) = &field.deprecation_reason {
-            sdl.push_str(" @deprecated(reason: \"");
-            sdl.push_str(&reason.replace('"', "\\\""));
-            sdl.push_str("\")");
-        }
-        sdl.push_str("\n");
-    }
-
     /// Format a GraphQL type with proper null/list notation
     fn format_gql_type(&self, type_name: &str, is_nullable: bool, is_list: bool, list_item_nullable: bool) -> String {
         // Strip any existing GraphQL notation from type_name to prevent double notation
@@ -321,11 +88,6 @@ impl PhpGenerator {
 
         result
     }
-
-    /// Escape string for PHP single-quoted string
-    fn escape_php_string(&self, s: &str) -> String {
-        s.replace('\\', "\\\\").replace('\'', "\\'")
-    }
 }
 
 impl GraphQLGenerator for PhpGenerator {
@@ -346,20 +108,19 @@ impl GraphQLGenerator for PhpGenerator {
         let schema_def = self.generate_schema_definition(schema)?;
 
         // Helper to strip PHP header (<?php through declare line)
-        fn strip_header(s: &str) -> &str {
+        fn strip_header(s: &str) -> String {
             // Find the first namespace line
             s.lines()
                 .skip_while(|line| !line.starts_with("namespace"))
                 .collect::<Vec<_>>()
                 .join("\n")
-                .leak()
         }
 
-        code.push_str(strip_header(&types));
+        code.push_str(&strip_header(&types));
         code.push_str("\n\n");
-        code.push_str(strip_header(&resolvers));
+        code.push_str(&strip_header(&resolvers));
         code.push_str("\n\n");
-        code.push_str(strip_header(&schema_def));
+        code.push_str(&strip_header(&schema_def));
 
         Ok(code)
     }
@@ -541,7 +302,7 @@ impl GraphQLGenerator for PhpGenerator {
 
             for field in &schema.queries {
                 code.push_str(&format!("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n"));
-                code.push_str(&format!("    public function {}(mixed $root, array $args): mixed\n", Self::to_snake_case(&field.name)));
+                code.push_str(&format!("    public function {}(mixed $root, array $args): mixed\n", to_snake_case(&field.name)));
                 code.push_str("    {\n");
                 code.push_str(&format!("        throw new \\RuntimeException('Not implemented: Query.{}');\n", field.name));
                 code.push_str("    }\n\n");
@@ -557,7 +318,7 @@ impl GraphQLGenerator for PhpGenerator {
 
             for field in &schema.mutations {
                 code.push_str(&format!("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n"));
-                code.push_str(&format!("    public function {}(mixed $root, array $args): mixed\n", Self::to_snake_case(&field.name)));
+                code.push_str(&format!("    public function {}(mixed $root, array $args): mixed\n", to_snake_case(&field.name)));
                 code.push_str("    {\n");
                 code.push_str(&format!("        throw new \\RuntimeException('Not implemented: Mutation.{}');\n", field.name));
                 code.push_str("    }\n\n");
@@ -573,7 +334,7 @@ impl GraphQLGenerator for PhpGenerator {
 
             for field in &schema.subscriptions {
                 code.push_str(&format!("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n"));
-                code.push_str(&format!("    public function {}(mixed $root, array $args): mixed\n", Self::to_snake_case(&field.name)));
+                code.push_str(&format!("    public function {}(mixed $root, array $args): mixed\n", to_snake_case(&field.name)));
                 code.push_str("    {\n");
                 code.push_str(&format!("        throw new \\RuntimeException('Not implemented: Subscription.{}');\n", field.name));
                 code.push_str("    }\n\n");
@@ -679,18 +440,17 @@ mod tests {
 
     #[test]
     fn test_to_snake_case() {
-        assert_eq!(PhpGenerator::to_snake_case("user"), "user");
-        assert_eq!(PhpGenerator::to_snake_case("getUser"), "get_user");
-        assert_eq!(PhpGenerator::to_snake_case("createUserProfile"), "create_user_profile");
-        assert_eq!(PhpGenerator::to_snake_case("HTTPServer"), "h_t_t_p_server");
+        assert_eq!(to_snake_case("user"), "user");
+        assert_eq!(to_snake_case("getUser"), "get_user");
+        assert_eq!(to_snake_case("createUserProfile"), "create_user_profile");
+        assert_eq!(to_snake_case("HTTPServer"), "http_server");
     }
 
     #[test]
     fn test_escape_php_string() {
-        let generator = PhpGenerator::default();
-        assert_eq!(generator.escape_php_string("hello"), "hello");
-        assert_eq!(generator.escape_php_string("hello'world"), "hello\\'world");
-        assert_eq!(generator.escape_php_string("path\\to\\file"), "path\\\\to\\\\file");
+        assert_eq!(escape_quotes("hello", EscapeContext::Php), "hello");
+        assert_eq!(escape_quotes("hello'world", EscapeContext::Php), "hello\\'world");
+        assert_eq!(escape_quotes("path\\to\\file", EscapeContext::Php), "path\\\\to\\\\file");
     }
 
     #[test]
