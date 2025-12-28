@@ -625,10 +625,10 @@ fn test_python_generate_union_type() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    // Union types are generated as pure type unions for mypy --strict compliance
-    assert!(result.contains("SearchResult = User | Post"), "SearchResult union not generated");
+    // Union types are generated as quoted strings for forward reference compatibility (PEP 563)
+    assert!(result.contains("SearchResult = \"User | Post\""), "SearchResult union not generated");
     // Ensure we don't have the non-strict version
-    assert!(!result.contains("SearchResult = User | Post | Any"), "SearchResult should not include | Any for mypy compliance");
+    assert!(!result.contains("| Any"), "SearchResult should not include | Any for mypy compliance");
 
     Ok(())
 }

@@ -301,20 +301,23 @@ pub fn generate_rust_graphql(schema: &str, target: &str) -> Result<String> {
 ///
 /// Parses the GraphQL schema string and generates idiomatic Ruby code with graphql-ruby
 /// class definitions for types, resolvers, and schema configuration based on the
-/// target specification.
+/// target specification. Supports RBS (Ruby Signature) type definition generation for
+/// integration with Steep static type checker.
 ///
 /// # Arguments
 ///
 /// * `schema` - GraphQL schema as a string (SDL format)
 /// * `target` - Generation target: "all" (complete), "types" (types only),
-///              "resolvers" (resolver classes), or "schema" (schema definition)
+///              "resolvers" (resolver classes), "schema" (schema definition),
+///              or "rbs" (RBS type signatures for Steep)
 ///
 /// # Returns
 ///
-/// Generated Ruby code as a string, or an error if parsing/generation fails
+/// Generated Ruby code or RBS signatures as a string, or an error if parsing/generation fails
 ///
 /// # Examples
 ///
+/// Generate all Ruby code:
 /// ```ignore
 /// let schema = r#"
 /// type Query {
@@ -323,6 +326,12 @@ pub fn generate_rust_graphql(schema: &str, target: &str) -> Result<String> {
 /// "#;
 /// let code = generate_ruby_graphql(schema, "all")?;
 /// println!("{}", code);
+/// ```
+///
+/// Generate RBS type signatures:
+/// ```ignore
+/// let rbs = generate_ruby_graphql(schema, "rbs")?;
+/// // Output is RBS syntax compatible with Steep type checker
 /// ```
 pub fn generate_ruby_graphql(schema: &str, target: &str) -> Result<String> {
     use generators::ruby::RubyGenerator;
@@ -335,6 +344,7 @@ pub fn generate_ruby_graphql(schema: &str, target: &str) -> Result<String> {
         "types" => generator.generate_types(&parsed_schema),
         "resolvers" => generator.generate_resolvers(&parsed_schema),
         "schema" => generator.generate_schema_definition(&parsed_schema),
+        "rbs" => generator.generate_type_signatures(&parsed_schema),
         "all" => generator.generate_complete(&parsed_schema),
         _ => generator.generate_complete(&parsed_schema),
     }

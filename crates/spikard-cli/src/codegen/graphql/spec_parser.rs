@@ -193,7 +193,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                     is_nullable: is_nullable_type(&arg.value_type),
                     is_list: is_list_type(&arg.value_type),
                     list_item_nullable: extract_list_item_nullability(&arg.value_type),
-                    default_value: arg.default_value.as_ref().map(|v| format!("{:?}", v)),
+                    default_value: arg.default_value.as_ref().map(|v| format_default_value(v)),
                     description: arg.description.clone(),
                 })
                 .collect();
@@ -335,7 +335,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                                 is_nullable: is_nullable_type(&f.value_type),
                                 is_list: is_list_type(&f.value_type),
                                 list_item_nullable: extract_list_item_nullability(&f.value_type),
-                                default_value: f.default_value.as_ref().map(|v| format!("{:?}", v)),
+                                default_value: f.default_value.as_ref().map(|v| format_default_value(v)),
                                 description: f.description.clone(),
                             })
                             .collect();
@@ -461,6 +461,50 @@ fn parse_graphql_introspection_value(_value: &Value) -> Result<GraphQLSchema> {
 
 // Helper functions
 
+/// Format a GraphQL default value as a proper GraphQL literal
+/// Converts graphql_parser Value types to their GraphQL string representation
+/// Examples:
+/// - IntValue(10) -> "10"
+/// - StringValue("hello") -> "\"hello\""
+/// - BooleanValue(true) -> "true"
+/// - EnumValue("ACTIVE") -> "ACTIVE"
+/// - ListValue([1, 2, 3]) -> "[1, 2, 3]"
+fn format_default_value(value: &graphql_parser::schema::Value<String>) -> String {
+    use graphql_parser::schema::Value;
+
+    match value {
+        Value::Int(i) => {
+            // Extract the integer value from IntValue
+            i.as_i64()
+                .map(|num| format!("{}", num))
+                .unwrap_or_else(|| format!("{:?}", i))
+        }
+        Value::Float(f) => format!("{}", f),
+        Value::String(s) => {
+            // Escape quotes in string values
+            format!("\"{}\"", s.replace('"', "\\\""))
+        }
+        Value::Boolean(b) => format!("{}", b),
+        Value::Null => "null".to_string(),
+        Value::Enum(e) => e.clone(),
+        Value::List(items) => {
+            // Recursively format list items
+            let formatted: Vec<String> = items.iter().map(|v| format_default_value(v)).collect();
+            format!("[{}]", formatted.join(", "))
+        }
+        Value::Object(fields) => {
+            // Recursively format object fields
+            let formatted: Vec<String> = fields
+                .iter()
+                .map(|(k, v)| format!("{}: {}", k, format_default_value(v)))
+                .collect();
+            format!("{{{}}}", formatted.join(", "))
+        }
+        // Fallback for any other variants (variables not typically used in defaults)
+        _ => format!("{:?}", value),
+    }
+}
+
 /// Extract deprecation reason from directive arguments
 fn extract_deprecation_reason(directives: &[graphql_parser::schema::Directive<String>]) -> Option<String> {
     directives.iter().find(|d| d.name == "deprecated").and_then(|d| {
@@ -494,7 +538,7 @@ fn extract_fields_from_object(obj: &ObjectType<String>) -> Vec<GraphQLField> {
                     is_nullable: is_nullable_type(&arg.value_type),
                     is_list: is_list_type(&arg.value_type),
                     list_item_nullable: extract_list_item_nullability(&arg.value_type),
-                    default_value: arg.default_value.as_ref().map(|v| format!("{:?}", v)),
+                    default_value: arg.default_value.as_ref().map(|v| format_default_value(v)),
                     description: arg.description.clone(),
                 })
                 .collect(),
@@ -524,7 +568,7 @@ fn extract_fields_from_interface(interface: &graphql_parser::schema::InterfaceTy
                     is_nullable: is_nullable_type(&arg.value_type),
                     is_list: is_list_type(&arg.value_type),
                     list_item_nullable: extract_list_item_nullability(&arg.value_type),
-                    default_value: arg.default_value.as_ref().map(|v| format!("{:?}", v)),
+                    default_value: arg.default_value.as_ref().map(|v| format_default_value(v)),
                     description: arg.description.clone(),
                 })
                 .collect(),
@@ -1126,5 +1170,125 @@ mod tests {
         assert!(!schema.queries.is_empty());
         assert!(!schema.mutations.is_empty());
         assert!(schema.types.contains_key("User"));
+    }
+
+    #[test]
+    fn test_int_default_value() {
+        let sdl = r#"
+            type Query {
+                items(limit: Int = 10): [String!]!
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse");
+        let query = &schema.queries[0];
+        assert_eq!(query.arguments.len(), 1);
+        assert_eq!(query.arguments[0].default_value, Some("10".to_string()));
+    }
+
+    #[test]
+    fn test_string_default_value() {
+        let sdl = r#"
+            type Query {
+                search(query: String = "default"): [String!]!
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse");
+        let query = &schema.queries[0];
+        assert_eq!(query.arguments[0].default_value, Some("\"default\"".to_string()));
+    }
+
+    #[test]
+    fn test_boolean_default_value() {
+        let sdl = r#"
+            type Query {
+                items(active: Boolean = true): [String!]!
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse");
+        let query = &schema.queries[0];
+        assert_eq!(query.arguments[0].default_value, Some("true".to_string()));
+    }
+
+    #[test]
+    fn test_list_default_value() {
+        let sdl = r#"
+            type Query {
+                filter(tags: [String!] = ["a", "b"]): [String!]!
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse");
+        let query = &schema.queries[0];
+        assert_eq!(query.arguments[0].default_value, Some("[\"a\", \"b\"]".to_string()));
+    }
+
+    #[test]
+    fn test_enum_default_value() {
+        let sdl = r#"
+            enum Status {
+                ACTIVE
+                INACTIVE
+            }
+
+            type Query {
+                users(status: Status = ACTIVE): [String!]!
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse");
+        let query = &schema.queries[0];
+        assert_eq!(query.arguments[0].default_value, Some("ACTIVE".to_string()));
+    }
+
+    #[test]
+    fn test_input_field_default_value() {
+        let sdl = r#"
+            input FilterInput {
+                limit: Int = 100
+                name: String = "test"
+            }
+
+            type Query {
+                search(filter: FilterInput!): [String!]!
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse");
+        let input = &schema.types["FilterInput"];
+        assert_eq!(input.input_fields[0].default_value, Some("100".to_string()));
+        assert_eq!(input.input_fields[1].default_value, Some("\"test\"".to_string()));
+    }
+
+    #[test]
+    fn test_directive_argument_default_value() {
+        let sdl = r#"
+            directive @cache(ttl: Int = 3600) on FIELD_DEFINITION
+
+            type Query {
+                cached: String!
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse");
+        let cache_dir = &schema.directives[0];
+        assert_eq!(cache_dir.arguments[0].default_value, Some("3600".to_string()));
+    }
+
+    #[test]
+    fn test_multiple_default_values() {
+        let sdl = r#"
+            type Query {
+                users(limit: Int = 10, offset: Int = 0): [String!]!
+            }
+        "#;
+
+        let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse");
+        let query = &schema.queries[0];
+        assert_eq!(query.arguments.len(), 2);
+        assert_eq!(query.arguments[0].default_value, Some("10".to_string()));
+        assert_eq!(query.arguments[1].default_value, Some("0".to_string()));
     }
 }

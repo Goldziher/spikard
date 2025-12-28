@@ -32,4 +32,10 @@ pub trait GraphQLGenerator {
         let schema = self.generate_schema_definition(schema)?;
         Ok(format!("{}\n\n{}\n\n{}", types, resolvers, schema))
     }
+
+    /// Optional: Generate language-specific type signatures (e.g., RBS for Ruby, .d.ts for TypeScript)
+    /// Default implementation returns an error to indicate unsupported target
+    fn generate_type_signatures(&self, _schema: &GraphQLSchema) -> Result<String> {
+        anyhow::bail!("Type signature generation not supported for this language")
+    }
 }
