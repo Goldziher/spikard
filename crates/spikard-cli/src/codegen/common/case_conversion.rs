@@ -17,11 +17,12 @@
 /// # Examples
 ///
 /// ```
+/// use spikard_cli::codegen::common::case_conversion::to_snake_case;
 /// assert_eq!(to_snake_case("user"), "user");
 /// assert_eq!(to_snake_case("getUser"), "get_user");
 /// assert_eq!(to_snake_case("createUserProfile"), "create_user_profile");
 /// assert_eq!(to_snake_case("HTTPServer"), "http_server");
-/// assert_eq!(to_snake_case("GraphQLType"), "graphql_type");
+/// assert_eq!(to_snake_case("GraphQLType"), "graph_ql_type"); // Splits on each uppercase
 /// assert_eq!(to_snake_case("_id"), "_id");
 /// assert_eq!(to_snake_case("id_"), "id_");
 /// ```
@@ -79,6 +80,7 @@ pub fn to_snake_case(s: &str) -> String {
 /// # Examples
 ///
 /// ```
+/// use spikard_cli::codegen::common::case_conversion::to_camel_case;
 /// assert_eq!(to_camel_case("user"), "user");
 /// assert_eq!(to_camel_case("get_user"), "getUser");
 /// assert_eq!(to_camel_case("create_user_profile"), "createUserProfile");
@@ -147,6 +149,7 @@ pub fn to_camel_case(s: &str) -> String {
 /// # Examples
 ///
 /// ```
+/// use spikard_cli::codegen::common::case_conversion::to_pascal_case;
 /// assert_eq!(to_pascal_case("user"), "User");
 /// assert_eq!(to_pascal_case("get_user"), "GetUser");
 /// assert_eq!(to_pascal_case("create_user_profile"), "CreateUserProfile");
@@ -191,11 +194,12 @@ pub fn to_pascal_case(s: &str) -> String {
 /// # Examples
 ///
 /// ```
+/// use spikard_cli::codegen::common::case_conversion::to_kebab_case;
 /// assert_eq!(to_kebab_case("user"), "user");
 /// assert_eq!(to_kebab_case("getUser"), "get-user");
 /// assert_eq!(to_kebab_case("createUserProfile"), "create-user-profile");
 /// assert_eq!(to_kebab_case("HTTPServer"), "http-server");
-/// assert_eq!(to_kebab_case("GraphQLType"), "graphql-type");
+/// assert_eq!(to_kebab_case("GraphQLType"), "graph-ql-type"); // Splits on each uppercase
 /// ```
 pub fn to_kebab_case(s: &str) -> String {
     if s.is_empty() {

@@ -253,25 +253,40 @@ fn test_python_generate_union_types() -> Result<()> {
 /// Test 9: generate_types() - Scalar type aliases
 #[test]
 fn test_python_generate_scalar_aliases() -> Result<()> {
+    // Test with a schema that actually generates types (not just Query with scalars)
     let schema = r#"
         scalar DateTime
         scalar JSON
         scalar UUID
-        type Query {
-            createdAt: DateTime!
-            data: JSON
+
+        type User {
             id: UUID!
+            name: String!
+            createdAt: DateTime!
+            metadata: JSON
+        }
+
+        type Query {
+            user(id: UUID!): User
         }
     "#;
 
     let result = generate_python_graphql(schema, "types")?;
 
-    // Should generate minimal code for query type
+    // Should generate minimal code for custom types
     assert!(result.contains("#!/usr/bin/env python3"), "shebang required");
-    // Python 3.10+ uses built-in list[T], dict[T], and | for unions
-    // No typing import needed for basic scalar types
-    assert!(result.contains("from enum import Enum") || result.contains("from msgspec import Struct"),
-        "should import enum or msgspec");
+    // Should import msgspec.Struct for User type
+    assert!(result.contains("from msgspec import Struct"),
+        "should import msgspec.Struct for custom types");
+
+    // User class should be generated
+    assert!(result.contains("class User(Struct"), "should generate User class");
+
+    // Custom scalars should map to Python types (all custom scalars map to str)
+    assert!(result.contains("id: str"), "UUID should map to str");
+    assert!(result.contains("name: str"), "String should map to str");
+    assert!(result.contains("createdAt: str"), "DateTime should map to str");
+    assert!(result.contains("metadata: str | None"), "JSON should map to str | None (nullable)");
 
     Ok(())
 }
@@ -587,9 +602,12 @@ fn test_python_no_any_type_usage() -> Result<()> {
     assert!(!types.contains("from typing import Any"),
         "Types MUST NOT import Any type");
 
-    // Union types should NOT have Any appended
-    assert!(types.contains("SearchResult = User | Post") || types.contains("SearchResult = Post | User"),
-        "Union must be User | Post or Post | User (NOT with Any)");
+    // Union types should NOT have Any appended (with TypeAlias annotation)
+    assert!(
+        types.contains("SearchResult: TypeAlias = \"User | Post\"") ||
+        types.contains("SearchResult: TypeAlias = \"Post | User\""),
+        "Union must be 'SearchResult: TypeAlias = \"User | Post\"' (NOT with Any)"
+    );
 
     // No Optional usage (Python 3.10+ uses | None)
     assert!(!types.contains("Optional["),

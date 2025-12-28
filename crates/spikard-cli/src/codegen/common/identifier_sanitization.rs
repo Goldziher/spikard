@@ -7,7 +7,7 @@
 //! # Examples
 //!
 //! ```
-//! use crate::codegen::common::identifier_sanitization::{sanitize_identifier, TargetLanguage};
+//! use spikard_cli::codegen::common::identifier_sanitization::{sanitize_identifier, TargetLanguage};
 //!
 //! // Python reserved word becomes prefixed with underscore
 //! assert_eq!(
@@ -166,7 +166,7 @@ const PHP_SOFT_KEYWORDS: &[&str] = &["mixed", "object", "parent", "self", "stati
 /// # Examples
 ///
 /// ```
-/// use crate::codegen::common::identifier_sanitization::{sanitize_identifier, TargetLanguage};
+/// use spikard_cli::codegen::common::identifier_sanitization::{sanitize_identifier, TargetLanguage};
 ///
 /// // Reserved keyword gets prefixed
 /// assert_eq!(
@@ -255,7 +255,7 @@ pub fn sanitize_identifier(name: &str, language: TargetLanguage) -> String {
 /// # Examples
 ///
 /// ```
-/// use crate::codegen::common::identifier_sanitization::{sanitize_identifier_snake_case, TargetLanguage};
+/// use spikard_cli::codegen::common::identifier_sanitization::{sanitize_identifier_snake_case, TargetLanguage};
 ///
 /// assert_eq!(
 ///     sanitize_identifier_snake_case("HelloWorld", TargetLanguage::Python),
@@ -299,7 +299,7 @@ pub fn sanitize_identifier_snake_case(name: &str, language: TargetLanguage) -> S
 /// # Examples
 ///
 /// ```
-/// use crate::codegen::common::identifier_sanitization::{sanitize_identifier_camel_case, TargetLanguage};
+/// use spikard_cli::codegen::common::identifier_sanitization::{sanitize_identifier_camel_case, TargetLanguage};
 ///
 /// assert_eq!(
 ///     sanitize_identifier_camel_case("hello_world", TargetLanguage::TypeScript),
@@ -344,7 +344,7 @@ pub fn sanitize_identifier_camel_case(name: &str, language: TargetLanguage) -> S
 /// # Examples
 ///
 /// ```
-/// use crate::codegen::common::identifier_sanitization::{sanitize_identifier_pascal_case, TargetLanguage};
+/// use spikard_cli::codegen::common::identifier_sanitization::{sanitize_identifier_pascal_case, TargetLanguage};
 ///
 /// assert_eq!(
 ///     sanitize_identifier_pascal_case("hello_world", TargetLanguage::Rust),
