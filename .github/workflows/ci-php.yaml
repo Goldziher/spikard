@@ -49,29 +49,16 @@ defaults:
 
 jobs:
   build-php-extension:
-    name: Build PHP Extension (${{ matrix.os }} | PHP ${{ matrix.php }})
-    runs-on: ${{ matrix.os }}
+    name: Build PHP Extension
+    runs-on: ubuntu-latest
     timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        php: ["8.2", "8.3"]
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Rust (Nightly for Windows)
-        if: runner.os == 'Windows'
+      - name: Setup Rust
         uses: ./.github/actions/setup-rust
         with:
-          cache-key-prefix: build-php-${{ matrix.os }}-${{ matrix.php }}
-          toolchain: nightly
-
-      - name: Setup Rust (Stable for Unix)
-        if: runner.os != 'Windows'
-        uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: build-php-${{ matrix.os }}-${{ matrix.php }}
+          cache-key-prefix: build-php
 
       - name: Setup LLVM/Clang
         uses: ./.github/actions/setup-llvm-clang
@@ -82,70 +69,43 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: "8.2"
           tools: composer
           coverage: none
           extensions: fileinfo
 
-      - name: Install PHP development headers (Linux)
-        if: runner.os == 'Linux'
+      - name: Install PHP development headers
         run: bash scripts/ci/php/install-dev-headers-linux.sh
-
-      - name: Configure bindgen for Windows
-        if: runner.os == 'Windows'
-        shell: bash
-        run: bash scripts/ci/php/configure-bindgen-windows.sh
 
       - name: Detect PHP configuration
         shell: bash
         run: bash scripts/ci/php/detect-php-config.sh
 
-      - name: Build PHP extension (Unix)
-        if: runner.os != 'Windows'
-        run: cargo build --release -p spikard-php --features extension-module
-
-      - name: Build PHP extension (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
+      - name: Build PHP extension
         run: cargo build --release -p spikard-php --features extension-module
 
       - name: Upload PHP extension artifact
         uses: actions/upload-artifact@v6
         with:
-          name: php-extension-${{ matrix.os }}-${{ matrix.php }}
+          name: php-extension
           path: |
             target/release/*.so
-            target/release/*.dylib
-            target/release/*.dll
           retention-days: 7
 
   test-php:
-    name: Test PHP (${{ matrix.php }} | ${{ matrix.os }})
+    name: Test PHP
     needs: build-php-extension
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        php: ["8.2", "8.3"]
     steps:
       - uses: actions/checkout@v6
 
       - name: Setup Rust
-        if: runner.os != 'Windows'
         uses: ./.github/actions/setup-rust
         with:
-          cache-key-prefix: test-php-${{ matrix.os }}-${{ matrix.php }}
-
-      - name: Setup Rust (Nightly for Windows)
-        if: runner.os == 'Windows'
-        uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: test-php-${{ matrix.os }}-${{ matrix.php }}
-          toolchain: nightly
+          cache-key-prefix: test-php
 
       - name: Setup LLVM/Clang
         uses: ./.github/actions/setup-llvm-clang
@@ -153,7 +113,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: "8.2"
           tools: composer
           coverage: xdebug
           ini-values: xdebug.mode=coverage
@@ -165,18 +125,17 @@ jobs:
           path: |
             ~/.composer/cache
             packages/php/vendor
-          key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
+          key: ubuntu-composer-8.2-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-composer-${{ matrix.php }}-
+            ubuntu-composer-8.2-
 
       - name: Download PHP extension artifact
         uses: actions/download-artifact@v7
         with:
-          name: php-extension-${{ matrix.os }}-${{ matrix.php }}
+          name: php-extension
           path: target/release
 
-      - name: Install PHP extension (Linux)
-        if: runner.os == 'Linux'
+      - name: Install PHP extension
         run: |
           # Find the extension file
           EXT_FILE=$(ls target/release/*.so 2>/dev/null | head -1)
@@ -191,66 +150,8 @@ jobs:
           sudo cp "$EXT_FILE" "$PHP_EXTENSIONS_DIR/spikard.so"
           echo "Copied extension to $PHP_EXTENSIONS_DIR/spikard.so"
           # Enable the extension
-          echo "extension=spikard.so" | sudo tee /etc/php/${{ matrix.php }}/cli/conf.d/20-spikard.ini > /dev/null
-          echo "Added extension to /etc/php/${{ matrix.php }}/cli/conf.d/20-spikard.ini"
-          # Verify extension is loaded
-          php -r "if (extension_loaded('spikard')) { echo 'Extension loaded successfully'; } else { echo 'Failed to load extension'; exit(1); }"
-
-      - name: Install PHP extension (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          # Find the extension file
-          EXT_FILE=$(ls target/release/*.dylib 2>/dev/null | head -1)
-          if [ -z "$EXT_FILE" ]; then
-            echo "Error: Could not find PHP extension (.dylib file)"
-            exit 1
-          fi
-          echo "Found extension: $EXT_FILE"
-          # Copy to PHP extension directory
-          PHP_EXTENSIONS_DIR=$(php-config --extension-dir)
-          echo "PHP extension directory: $PHP_EXTENSIONS_DIR"
-          cp "$EXT_FILE" "$PHP_EXTENSIONS_DIR/spikard.dylib"
-          echo "Copied extension to $PHP_EXTENSIONS_DIR/spikard.dylib"
-          # Enable the extension
-          PHP_INI_DIR=$(php-config --ini-dir)
-          echo "PHP INI directory: $PHP_INI_DIR"
-          # Note: On Homebrew macOS, php-config --ini-dir already returns the conf.d directory
-          # so we don't need to append conf.d again
-          if [ -d "$PHP_INI_DIR" ]; then
-            # If it already points to conf.d, use it directly
-            INI_PATH="$PHP_INI_DIR/20-spikard.ini"
-          else
-            # Otherwise create conf.d subdirectory
-            mkdir -p "$PHP_INI_DIR/conf.d"
-            INI_PATH="$PHP_INI_DIR/conf.d/20-spikard.ini"
-          fi
-          echo "extension=spikard.dylib" >> "$INI_PATH"
-          echo "Added extension to $INI_PATH"
-          # Verify extension is loaded
-          php -r "if (extension_loaded('spikard')) { echo 'Extension loaded successfully'; } else { echo 'Failed to load extension'; exit(1); }"
-
-      - name: Install PHP extension (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          # Find the extension file
-          $EXT_FILE = Get-ChildItem -Path target/release -Filter *.dll | Select-Object -ExpandProperty Name | Select-Object -First 1
-          if (-not $EXT_FILE) {
-            Write-Error "Error: Could not find PHP extension (.dll file)"
-            exit 1
-          }
-          Write-Host "Found extension: $EXT_FILE"
-          # Get PHP directory
-          $PHP_PATH = (php -r "echo dirname(PHP_EXECUTABLE);")
-          Write-Host "PHP path: $PHP_PATH"
-          $EXT_DIR = "$PHP_PATH\ext"
-          # Copy to extension directory
-          Copy-Item -Path "target/release/$EXT_FILE" -Destination "$EXT_DIR\spikard.dll" -Force
-          Write-Host "Copied extension to $EXT_DIR\spikard.dll"
-          # Add to php.ini
-          $PHP_INI = "$PHP_PATH\php.ini"
-          Add-Content -Path $PHP_INI -Value "extension=spikard"
-          Write-Host "Added extension to php.ini"
+          echo "extension=spikard.so" | sudo tee /etc/php/8.2/cli/conf.d/20-spikard.ini > /dev/null
+          echo "Added extension to /etc/php/8.2/cli/conf.d/20-spikard.ini"
           # Verify extension is loaded
           php -r "if (extension_loaded('spikard')) { echo 'Extension loaded successfully'; } else { echo 'Failed to load extension'; exit(1); }"
 
@@ -258,15 +159,8 @@ jobs:
         working-directory: packages/php
         run: composer install --no-interaction --no-progress
 
-      - name: Run PHP tests (Unix)
-        if: runner.os != 'Windows'
+      - name: Run PHP tests
         working-directory: packages/php
-        run: composer test
-
-      - name: Run PHP tests (Windows)
-        if: runner.os == 'Windows'
-        working-directory: packages/php
-        shell: pwsh
         run: composer test
 
   coverage-php:
