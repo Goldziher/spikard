@@ -55,7 +55,7 @@ importers:
         specifier: ^0.11.1
         version: 0.11.1(@cloudflare/workers-types@4.20251228.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))
       '@cloudflare/workers-types':
-        specifier: ^4.20251228.0
+        specifier: ^4.20251225.0
         version: 4.20251228.0
       '@spikard/wasm':
         specifier: workspace:*
