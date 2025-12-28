@@ -162,14 +162,9 @@ pub fn escape_template_literal(s: &str, context: EscapeContext) -> String {
     match context {
         EscapeContext::JavaScript => {
             // Escape backticks, dollar signs, and backslashes
-            s.replace('\\', "\\\\")
-                .replace('`', "\\`")
-                .replace('$', "\\$")
+            s.replace('\\', "\\\\").replace('`', "\\`").replace('$', "\\$")
         }
-        EscapeContext::Python
-        | EscapeContext::Ruby
-        | EscapeContext::Php
-        | EscapeContext::Rust => {
+        EscapeContext::Python | EscapeContext::Ruby | EscapeContext::Php | EscapeContext::Rust => {
             // Other languages don't use template literals, just escape standard sequences
             s.replace('\\', "\\\\").replace('"', "\\\"")
         }
@@ -216,9 +211,7 @@ pub fn escape_for_docstring(s: &str, context: EscapeContext) -> String {
         EscapeContext::JavaScript => {
             // JSDoc comments: standard escape for double quotes and special comment markers
             // Avoid */ and /** within the docstring
-            s.replace("*/", "*\\/")
-                .replace("\\", "\\\\")
-                .replace('"', "\\\"")
+            s.replace("*/", "*\\/").replace("\\", "\\\\").replace('"', "\\\"")
         }
         EscapeContext::Ruby => {
             // YARD documentation: standard escape for quotes
@@ -228,9 +221,7 @@ pub fn escape_for_docstring(s: &str, context: EscapeContext) -> String {
         EscapeContext::Php => {
             // PHPDoc comments: standard escape for quotes and special markers
             // Avoid */ and /** within the docstring
-            s.replace("*/", "*\\/")
-                .replace("\\", "\\\\")
-                .replace('"', "\\\"")
+            s.replace("*/", "*\\/").replace("\\", "\\\\").replace('"', "\\\"")
         }
         EscapeContext::Rust => {
             // Rustdoc: standard escape for quotes
@@ -356,10 +347,7 @@ mod tests {
 
         #[test]
         fn test_escape_quotes_single_quote() {
-            assert_eq!(
-                escape_quotes("it's a string", EscapeContext::Python),
-                "it\\'s a string"
-            );
+            assert_eq!(escape_quotes("it's a string", EscapeContext::Python), "it\\'s a string");
         }
 
         #[test]
@@ -380,30 +368,21 @@ mod tests {
 
         #[test]
         fn test_escape_for_docstring_triple_quotes() {
-            let result = escape_for_docstring(
-                "Description with \"\"\" in it",
-                EscapeContext::Python,
-            );
+            let result = escape_for_docstring("Description with \"\"\" in it", EscapeContext::Python);
             assert!(!result.contains("\"\"\""));
             assert_eq!(result, "Description with \" \" \" in it");
         }
 
         #[test]
         fn test_escape_graphql_sdl_description() {
-            let result = escape_graphql_sdl_description(
-                "Has \"\"\" in description",
-                EscapeContext::Python,
-            );
+            let result = escape_graphql_sdl_description("Has \"\"\" in description", EscapeContext::Python);
             assert!(result.contains("\\\"\\\"\\\""));
             assert_eq!(result, "Has \\\"\\\"\\\" in description");
         }
 
         #[test]
         fn test_escape_docstring_multiple_triple_quotes() {
-            let result = escape_for_docstring(
-                "First \"\"\" and second \"\"\"",
-                EscapeContext::Python,
-            );
+            let result = escape_for_docstring("First \"\"\" and second \"\"\"", EscapeContext::Python);
             assert!(!result.contains("\"\"\""));
         }
     }
@@ -418,10 +397,7 @@ mod tests {
 
         #[test]
         fn test_escape_quotes_single_quote() {
-            assert_eq!(
-                escape_quotes("it's a string", EscapeContext::Php),
-                "it\\'s a string"
-            );
+            assert_eq!(escape_quotes("it's a string", EscapeContext::Php), "it\\'s a string");
         }
 
         #[test]
@@ -442,10 +418,7 @@ mod tests {
 
         #[test]
         fn test_escape_quotes_combined() {
-            assert_eq!(
-                escape_quotes("path\\it's", EscapeContext::Php),
-                "path\\\\it\\'s"
-            );
+            assert_eq!(escape_quotes("path\\it's", EscapeContext::Php), "path\\\\it\\'s");
         }
     }
 
@@ -454,10 +427,7 @@ mod tests {
 
         #[test]
         fn test_escape_quotes_simple() {
-            assert_eq!(
-                escape_quotes("hello", EscapeContext::JavaScript),
-                "hello"
-            );
+            assert_eq!(escape_quotes("hello", EscapeContext::JavaScript), "hello");
         }
 
         #[test]
@@ -494,7 +464,7 @@ mod tests {
 
         #[test]
         fn test_escape_for_docstring_jsdoc() {
-            let result = escape_for_docstring("Some text */" , EscapeContext::JavaScript);
+            let result = escape_for_docstring("Some text */", EscapeContext::JavaScript);
             assert!(!result.contains("*/"));
         }
     }
@@ -509,10 +479,7 @@ mod tests {
 
         #[test]
         fn test_escape_quotes_single_quote() {
-            assert_eq!(
-                escape_quotes("it's a string", EscapeContext::Ruby),
-                "it\\'s a string"
-            );
+            assert_eq!(escape_quotes("it's a string", EscapeContext::Ruby), "it\\'s a string");
         }
 
         #[test]
@@ -550,26 +517,17 @@ mod tests {
 
         #[test]
         fn test_escape_json_newline() {
-            assert_eq!(
-                escape_json_string("line1\nline2", EscapeContext::Rust),
-                "line1\\nline2"
-            );
+            assert_eq!(escape_json_string("line1\nline2", EscapeContext::Rust), "line1\\nline2");
         }
 
         #[test]
         fn test_escape_json_tab() {
-            assert_eq!(
-                escape_json_string("col1\tcol2", EscapeContext::Rust),
-                "col1\\tcol2"
-            );
+            assert_eq!(escape_json_string("col1\tcol2", EscapeContext::Rust), "col1\\tcol2");
         }
 
         #[test]
         fn test_escape_json_combined() {
-            let result = escape_json_string(
-                "path\\to\\file with \"quotes\"\nand\ttabs",
-                EscapeContext::Rust,
-            );
+            let result = escape_json_string("path\\to\\file with \"quotes\"\nand\ttabs", EscapeContext::Rust);
             assert!(result.contains("\\\\"));
             assert!(result.contains("\\\""));
             assert!(result.contains("\\n"));

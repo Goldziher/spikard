@@ -1,372 +1,372 @@
 {
-  "asyncapi": "3.0.0",
-  "info": {
-    "title": "WebSocket Chat API",
-    "description": "Real-time chat application using WebSocket with user and message events",
-    "version": "1.0.0",
-    "contact": {
-      "name": "API Support",
-      "email": "support@example.com"
-    }
-  },
-  "servers": {
-    "production": {
-      "host": "ws.example.com",
-      "protocol": "wss",
-      "description": "Production WebSocket server"
-    },
-    "development": {
-      "host": "localhost:8080",
-      "protocol": "ws",
-      "description": "Development WebSocket server"
-    }
-  },
-  "channels": {
-    "chat": {
-      "address": "/chat/{roomId}",
-      "description": "Chat room for real-time messaging",
-      "parameters": {
-        "roomId": {
-          "description": "Unique chat room identifier",
-          "schema": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
-      },
-      "messages": {
-        "messageReceived": {
-          "$ref": "#/components/messages/Message"
-        },
-        "userJoined": {
-          "$ref": "#/components/messages/UserJoined"
-        },
-        "userLeft": {
-          "$ref": "#/components/messages/UserLeft"
-        },
-        "messageSent": {
-          "$ref": "#/components/messages/MessageSent"
-        },
-        "typingStarted": {
-          "$ref": "#/components/messages/TypingStarted"
-        },
-        "typingStopped": {
-          "$ref": "#/components/messages/TypingStopped"
-        }
-      }
-    },
-    "notifications": {
-      "address": "/notifications/{userId}",
-      "description": "User notifications channel",
-      "parameters": {
-        "userId": {
-          "description": "User identifier",
-          "schema": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
-      },
-      "messages": {
-        "notificationReceived": {
-          "$ref": "#/components/messages/Notification"
-        }
-      }
-    },
-    "presence": {
-      "address": "/presence",
-      "description": "User presence updates",
-      "messages": {
-        "presenceUpdate": {
-          "$ref": "#/components/messages/PresenceUpdate"
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "User": {
-        "type": "object",
-        "required": ["id", "username", "status"],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Unique user identifier"
-          },
-          "username": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100,
-            "description": "User display name"
-          },
-          "avatar": {
-            "type": "string",
-            "format": "uri",
-            "nullable": true,
-            "description": "User avatar URL"
-          },
-          "status": {
-            "type": "string",
-            "enum": ["online", "away", "offline"],
-            "description": "Current user status"
-          },
-          "lastSeen": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "Message": {
-        "type": "object",
-        "required": ["id", "content", "sender", "timestamp"],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "content": {
-            "type": "string",
-            "maxLength": 4000,
-            "description": "Message text content"
-          },
-          "sender": {
-            "$ref": "#/components/schemas/User"
-          },
-          "roomId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "type": {
-            "type": "string",
-            "enum": ["text", "image", "file", "link"],
-            "default": "text"
-          },
-          "metadata": {
-            "type": "object",
-            "properties": {
-              "imageUrl": {
-                "type": "string",
-                "format": "uri",
-                "nullable": true
-              },
-              "fileName": {
-                "type": "string",
-                "nullable": true
-              },
-              "fileSize": {
-                "type": "integer",
-                "nullable": true
-              },
-              "linkTitle": {
-                "type": "string",
-                "nullable": true
-              },
-              "linkDescription": {
-                "type": "string",
-                "nullable": true
-              }
-            }
-          },
-          "mentions": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "User IDs mentioned in message"
-          },
-          "reactions": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "format": "uuid"
-              }
-            },
-            "description": "Emoji reactions and users who added them"
-          },
-          "isEdited": {
-            "type": "boolean",
-            "default": false
-          },
-          "editedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "deletedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "Notification": {
-        "type": "object",
-        "required": ["id", "type", "timestamp"],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "type": {
-            "type": "string",
-            "enum": ["message", "mention", "friend_request", "system"]
-          },
-          "title": {
-            "type": "string"
-          },
-          "body": {
-            "type": "string"
-          },
-          "data": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "isRead": {
-            "type": "boolean",
-            "default": false
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "PresenceUpdate": {
-        "type": "object",
-        "required": ["userId", "status"],
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "status": {
-            "type": "string",
-            "enum": ["online", "away", "offline"]
-          },
-          "lastActivity": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      }
-    },
-    "messages": {
-      "Message": {
-        "contentType": "application/json",
-        "payload": {
-          "$ref": "#/components/schemas/Message"
-        }
-      },
-      "UserJoined": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "required": ["user", "timestamp"],
-          "properties": {
-            "user": {
-              "$ref": "#/components/schemas/User"
-            },
-            "roomId": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "timestamp": {
-              "type": "string",
-              "format": "date-time"
-            }
-          }
-        }
-      },
-      "UserLeft": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "required": ["userId", "timestamp"],
-          "properties": {
-            "userId": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "roomId": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "timestamp": {
-              "type": "string",
-              "format": "date-time"
-            }
-          }
-        }
-      },
-      "MessageSent": {
-        "contentType": "application/json",
-        "payload": {
-          "$ref": "#/components/schemas/Message"
-        }
-      },
-      "TypingStarted": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "required": ["userId", "roomId", "timestamp"],
-          "properties": {
-            "userId": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "roomId": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "timestamp": {
-              "type": "string",
-              "format": "date-time"
-            }
-          }
-        }
-      },
-      "TypingStopped": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "required": ["userId", "roomId", "timestamp"],
-          "properties": {
-            "userId": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "roomId": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "timestamp": {
-              "type": "string",
-              "format": "date-time"
-            }
-          }
-        }
-      },
-      "Notification": {
-        "contentType": "application/json",
-        "payload": {
-          "$ref": "#/components/schemas/Notification"
-        }
-      },
-      "PresenceUpdate": {
-        "contentType": "application/json",
-        "payload": {
-          "$ref": "#/components/schemas/PresenceUpdate"
-        }
-      }
-    }
-  }
+	"asyncapi": "3.0.0",
+	"info": {
+		"title": "WebSocket Chat API",
+		"description": "Real-time chat application using WebSocket with user and message events",
+		"version": "1.0.0",
+		"contact": {
+			"name": "API Support",
+			"email": "support@example.com"
+		}
+	},
+	"servers": {
+		"production": {
+			"host": "ws.example.com",
+			"protocol": "wss",
+			"description": "Production WebSocket server"
+		},
+		"development": {
+			"host": "localhost:8080",
+			"protocol": "ws",
+			"description": "Development WebSocket server"
+		}
+	},
+	"channels": {
+		"chat": {
+			"address": "/chat/{roomId}",
+			"description": "Chat room for real-time messaging",
+			"parameters": {
+				"roomId": {
+					"description": "Unique chat room identifier",
+					"schema": {
+						"type": "string",
+						"format": "uuid"
+					}
+				}
+			},
+			"messages": {
+				"messageReceived": {
+					"$ref": "#/components/messages/Message"
+				},
+				"userJoined": {
+					"$ref": "#/components/messages/UserJoined"
+				},
+				"userLeft": {
+					"$ref": "#/components/messages/UserLeft"
+				},
+				"messageSent": {
+					"$ref": "#/components/messages/MessageSent"
+				},
+				"typingStarted": {
+					"$ref": "#/components/messages/TypingStarted"
+				},
+				"typingStopped": {
+					"$ref": "#/components/messages/TypingStopped"
+				}
+			}
+		},
+		"notifications": {
+			"address": "/notifications/{userId}",
+			"description": "User notifications channel",
+			"parameters": {
+				"userId": {
+					"description": "User identifier",
+					"schema": {
+						"type": "string",
+						"format": "uuid"
+					}
+				}
+			},
+			"messages": {
+				"notificationReceived": {
+					"$ref": "#/components/messages/Notification"
+				}
+			}
+		},
+		"presence": {
+			"address": "/presence",
+			"description": "User presence updates",
+			"messages": {
+				"presenceUpdate": {
+					"$ref": "#/components/messages/PresenceUpdate"
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"User": {
+				"type": "object",
+				"required": ["id", "username", "status"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid",
+						"description": "Unique user identifier"
+					},
+					"username": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 100,
+						"description": "User display name"
+					},
+					"avatar": {
+						"type": "string",
+						"format": "uri",
+						"nullable": true,
+						"description": "User avatar URL"
+					},
+					"status": {
+						"type": "string",
+						"enum": ["online", "away", "offline"],
+						"description": "Current user status"
+					},
+					"lastSeen": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					}
+				}
+			},
+			"Message": {
+				"type": "object",
+				"required": ["id", "content", "sender", "timestamp"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"content": {
+						"type": "string",
+						"maxLength": 4000,
+						"description": "Message text content"
+					},
+					"sender": {
+						"$ref": "#/components/schemas/User"
+					},
+					"roomId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"type": {
+						"type": "string",
+						"enum": ["text", "image", "file", "link"],
+						"default": "text"
+					},
+					"metadata": {
+						"type": "object",
+						"properties": {
+							"imageUrl": {
+								"type": "string",
+								"format": "uri",
+								"nullable": true
+							},
+							"fileName": {
+								"type": "string",
+								"nullable": true
+							},
+							"fileSize": {
+								"type": "integer",
+								"nullable": true
+							},
+							"linkTitle": {
+								"type": "string",
+								"nullable": true
+							},
+							"linkDescription": {
+								"type": "string",
+								"nullable": true
+							}
+						}
+					},
+					"mentions": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"description": "User IDs mentioned in message"
+					},
+					"reactions": {
+						"type": "object",
+						"additionalProperties": {
+							"type": "array",
+							"items": {
+								"type": "string",
+								"format": "uuid"
+							}
+						},
+						"description": "Emoji reactions and users who added them"
+					},
+					"isEdited": {
+						"type": "boolean",
+						"default": false
+					},
+					"editedAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					},
+					"deletedAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"Notification": {
+				"type": "object",
+				"required": ["id", "type", "timestamp"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"type": {
+						"type": "string",
+						"enum": ["message", "mention", "friend_request", "system"]
+					},
+					"title": {
+						"type": "string"
+					},
+					"body": {
+						"type": "string"
+					},
+					"data": {
+						"type": "object",
+						"additionalProperties": true
+					},
+					"isRead": {
+						"type": "boolean",
+						"default": false
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"PresenceUpdate": {
+				"type": "object",
+				"required": ["userId", "status"],
+				"properties": {
+					"userId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"status": {
+						"type": "string",
+						"enum": ["online", "away", "offline"]
+					},
+					"lastActivity": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			}
+		},
+		"messages": {
+			"Message": {
+				"contentType": "application/json",
+				"payload": {
+					"$ref": "#/components/schemas/Message"
+				}
+			},
+			"UserJoined": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"required": ["user", "timestamp"],
+					"properties": {
+						"user": {
+							"$ref": "#/components/schemas/User"
+						},
+						"roomId": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"timestamp": {
+							"type": "string",
+							"format": "date-time"
+						}
+					}
+				}
+			},
+			"UserLeft": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"required": ["userId", "timestamp"],
+					"properties": {
+						"userId": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"roomId": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"timestamp": {
+							"type": "string",
+							"format": "date-time"
+						}
+					}
+				}
+			},
+			"MessageSent": {
+				"contentType": "application/json",
+				"payload": {
+					"$ref": "#/components/schemas/Message"
+				}
+			},
+			"TypingStarted": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"required": ["userId", "roomId", "timestamp"],
+					"properties": {
+						"userId": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"roomId": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"timestamp": {
+							"type": "string",
+							"format": "date-time"
+						}
+					}
+				}
+			},
+			"TypingStopped": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"required": ["userId", "roomId", "timestamp"],
+					"properties": {
+						"userId": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"roomId": {
+							"type": "string",
+							"format": "uuid"
+						},
+						"timestamp": {
+							"type": "string",
+							"format": "date-time"
+						}
+					}
+				}
+			},
+			"Notification": {
+				"contentType": "application/json",
+				"payload": {
+					"$ref": "#/components/schemas/Notification"
+				}
+			},
+			"PresenceUpdate": {
+				"contentType": "application/json",
+				"payload": {
+					"$ref": "#/components/schemas/PresenceUpdate"
+				}
+			}
+		}
+	}
 }

@@ -25,7 +25,7 @@ def graphql_app() -> Spikard:
                     "hello": "world",
                 }
             }
-        elif "error" in str(query).lower():
+        if "error" in str(query).lower():
             return {
                 "errors": [
                     {
@@ -34,12 +34,11 @@ def graphql_app() -> Spikard:
                     }
                 ]
             }
-        else:
-            return {
-                "data": {
-                    "query": query,
-                }
+        return {
+            "data": {
+                "query": query,
             }
+        }
 
     return app
 

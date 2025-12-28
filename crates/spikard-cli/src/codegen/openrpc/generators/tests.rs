@@ -515,10 +515,7 @@ fn test_ruby_generator_module_definition() {
     let generator = RubyOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    assert!(
-        output.contains("class HandleUserGet"),
-        "Should define handler class"
-    );
+    assert!(output.contains("class HandleUserGet"), "Should define handler class");
 }
 
 #[test]

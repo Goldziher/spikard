@@ -54,9 +54,7 @@ impl TypeScriptFormatter {
 
     /// Escape JSDoc delimiters in content.
     fn escape_jsdoc_content(content: &str) -> String {
-        content
-            .replace("*/", "*&#47;")
-            .replace("/*", "&#47;*")
+        content.replace("*/", "*&#47;").replace("/*", "&#47;*")
     }
 }
 
@@ -124,18 +122,16 @@ impl Formatter for TypeScriptFormatter {
                         .or_insert_with(Vec::new)
                         .extend(import.items.iter().cloned());
                 }
+            } else if is_external {
+                external_imports
+                    .entry(import.module.clone())
+                    .or_insert_with(Vec::new)
+                    .extend(import.items.iter().cloned());
             } else {
-                if is_external {
-                    external_imports
-                        .entry(import.module.clone())
-                        .or_insert_with(Vec::new)
-                        .extend(import.items.iter().cloned());
-                } else {
-                    internal_imports
-                        .entry(import.module.clone())
-                        .or_insert_with(Vec::new)
-                        .extend(import.items.iter().cloned());
-                }
+                internal_imports
+                    .entry(import.module.clone())
+                    .or_insert_with(Vec::new)
+                    .extend(import.items.iter().cloned());
             }
         }
 
@@ -146,7 +142,7 @@ impl Formatter for TypeScriptFormatter {
             if items.is_empty() {
                 result.push_str(&format!("import type '{}';", module));
             } else {
-                let sorted_items: Vec<_> = items.iter().cloned().collect();
+                let sorted_items: Vec<_> = items.to_vec();
                 let joined = sorted_items.join(", ");
                 result.push_str(&format!("import type {{ {} }} from '{}';", joined, module));
             }
@@ -157,7 +153,7 @@ impl Formatter for TypeScriptFormatter {
             if items.is_empty() {
                 result.push_str(&format!("import type '{}';", module));
             } else {
-                let sorted_items: Vec<_> = items.iter().cloned().collect();
+                let sorted_items: Vec<_> = items.to_vec();
                 let joined = sorted_items.join(", ");
                 result.push_str(&format!("import type {{ {} }} from '{}';", joined, module));
             }
@@ -179,7 +175,7 @@ impl Formatter for TypeScriptFormatter {
             if items.is_empty() {
                 result.push_str(&format!("import '{}';", module));
             } else {
-                let sorted_items: Vec<_> = items.iter().cloned().collect();
+                let sorted_items: Vec<_> = items.to_vec();
                 let joined = sorted_items.join(", ");
                 result.push_str(&format!("import {{ {} }} from '{}';", joined, module));
             }
@@ -190,7 +186,7 @@ impl Formatter for TypeScriptFormatter {
             if items.is_empty() {
                 result.push_str(&format!("import '{}';", module));
             } else {
-                let sorted_items: Vec<_> = items.iter().cloned().collect();
+                let sorted_items: Vec<_> = items.to_vec();
                 let joined = sorted_items.join(", ");
                 result.push_str(&format!("import {{ {} }} from '{}';", joined, module));
             }

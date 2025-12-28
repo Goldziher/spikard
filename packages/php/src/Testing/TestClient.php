@@ -42,17 +42,11 @@ final class TestClient
     {
         if ($this->useNative()) {
             $nativeResponse = $this->nativeClient()->request($method, $path, $options);
-            $headers = \method_exists($nativeResponse, 'getHeaders')
-                ? $nativeResponse->getHeaders()
-                : ($nativeResponse->headers ?? []);
-            $cookies = \method_exists($nativeResponse, 'getCookies')
-                ? $nativeResponse->getCookies()
-                : ($nativeResponse->cookies ?? []);
-            $statusCode = \method_exists($nativeResponse, 'getStatusCode')
-                ? $nativeResponse->getStatusCode()
-                : ($nativeResponse->statusCode ?? 200);
-            $body = null;
-            if (\method_exists($nativeResponse, 'getBody')) {
+            if ($nativeResponse instanceof \Spikard\Http\Response) {
+                $headers = $nativeResponse->getHeaders();
+                $cookies = $nativeResponse->getCookies();
+                $statusCode = $nativeResponse->getStatusCode();
+                $body = null;
                 $bodyString = $nativeResponse->getBody();
                 if ($bodyString !== '') {
                     if ($this->isJsonResponse($headers)) {
@@ -65,6 +59,9 @@ final class TestClient
                     }
                 }
             } else {
+                $headers = [];
+                $cookies = [];
+                $statusCode = 200;
                 $body = $nativeResponse->body ?? null;
             }
 

@@ -5,10 +5,10 @@
 //! and imports GraphQLResolveInfo from the 'graphql' package for introspection support.
 
 use super::{GraphQLGenerator, sanitize_typescript_identifier};
-use crate::codegen::graphql::spec_parser::{GraphQLField, GraphQLSchema, TypeKind};
-use crate::codegen::graphql::sdl::{SdlBuilder, TargetLanguage, TypeMapper};
 use crate::codegen::common::escaping::{EscapeContext, escape_template_literal};
 use crate::codegen::formatters::{Formatter, HeaderMetadata, Import, Section, TypeScriptFormatter};
+use crate::codegen::graphql::sdl::{SdlBuilder, TargetLanguage, TypeMapper};
+use crate::codegen::graphql::spec_parser::{GraphQLField, GraphQLSchema, TypeKind};
 use anyhow::Result;
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -21,6 +21,7 @@ impl TypeScriptGenerator {
     }
 
     /// Map GraphQL type to TypeScript type with proper nullability and list handling
+    #[allow(dead_code)]
     fn map_type(&self, field_type: &str, is_nullable: bool, is_list: bool) -> String {
         self.map_type_with_list_item_nullability(field_type, is_nullable, is_list, true)
     }
@@ -472,9 +473,10 @@ impl GraphQLGenerator for TypeScriptGenerator {
         sections.push(Section::Header(header));
 
         // Imports
-        let imports = vec![
-            Import::with_items("@graphql-tools/schema", vec!["makeExecutableSchema"]),
-        ];
+        let imports = vec![Import::with_items(
+            "@graphql-tools/schema",
+            vec!["makeExecutableSchema"],
+        )];
         let imports_str = formatter.format_imports(&imports);
         sections.push(Section::Imports(imports_str));
 
@@ -499,7 +501,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
         for line in sdl.lines() {
             body.push_str("  ");
             body.push_str(&escape_template_literal(line, EscapeContext::JavaScript));
-            body.push_str("\n");
+            body.push('\n');
         }
 
         body.push_str("`;\n\n");
@@ -545,21 +547,21 @@ mod tests {
 
     #[test]
     fn test_map_type_non_nullable() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         assert_eq!(generator.map_type("String", false, false), "string");
         assert_eq!(generator.map_type("Int", false, false), "number");
     }
 
     #[test]
     fn test_map_type_nullable() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         assert_eq!(generator.map_type("String", true, false), "string | null");
         assert_eq!(generator.map_type("Int", true, false), "number | null");
     }
 
     #[test]
     fn test_map_type_list() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         // Default map_type assumes nullable list items
         assert_eq!(generator.map_type("String", false, true), "(string | null)[]");
         assert_eq!(generator.map_type("Int", false, true), "(number | null)[]");
@@ -567,7 +569,7 @@ mod tests {
 
     #[test]
     fn test_map_type_nullable_list() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         // Default map_type assumes nullable list items
         assert_eq!(generator.map_type("String", true, true), "(string | null)[] | null");
         assert_eq!(generator.map_type("Int", true, true), "(number | null)[] | null");
@@ -575,7 +577,7 @@ mod tests {
 
     #[test]
     fn test_map_type_non_nullable_list_items() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         assert_eq!(
             generator.map_type_with_list_item_nullability("String", false, true, false),
             "string[]"
@@ -588,14 +590,14 @@ mod tests {
 
     #[test]
     fn test_map_type_custom_type() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         assert_eq!(generator.map_type("User", false, false), "User");
         assert_eq!(generator.map_type("User", true, false), "User | null");
     }
 
     #[test]
     fn test_gen_args_type_empty() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         let field = GraphQLField {
             name: "hello".to_string(),
             type_name: "String".to_string(),
@@ -611,7 +613,7 @@ mod tests {
 
     #[test]
     fn test_gen_args_type_with_arguments() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         let field = GraphQLField {
             name: "user".to_string(),
             type_name: "User".to_string(),
@@ -635,7 +637,7 @@ mod tests {
 
     #[test]
     fn test_gen_args_type_with_nullable_arguments() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         let field = GraphQLField {
             name: "users".to_string(),
             type_name: "User".to_string(),
@@ -673,7 +675,7 @@ mod tests {
 
     #[test]
     fn test_generate_resolvers_empty_schema() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![],
@@ -690,7 +692,7 @@ mod tests {
 
     #[test]
     fn test_generate_resolvers_with_query() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![GraphQLField {
@@ -720,7 +722,7 @@ mod tests {
 
     #[test]
     fn test_generate_resolvers_with_mutation() {
-        let generator = TypeScriptGenerator::default();
+        let generator = TypeScriptGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![],

@@ -1,54 +1,50 @@
 {
-  "name": "type_error",
-  "description": "Argument type mismatch - passing string instead of required integer ID",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  post(id: ID!): Post!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  content: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query GetPost($id: ID!) {\n  post(id: $id) {\n    id\n    title\n    content\n  }\n}",
-    "variables": {
-      "id": true
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query GetPost($id: ID!) {\n  post(id: $id) {\n    id\n    title\n    content\n  }\n}",
-      "variables": {
-        "id": true
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 400,
-    "data": null,
-    "errors": [
-      {
-        "message": "Variable \"$id\" of type \"ID!\" was provided invalid value.",
-        "locations": [
-          {
-            "line": 1,
-            "column": 24
-          }
-        ],
-        "extensions": {
-          "value": true,
-          "problems": [
-            {
-              "path": [],
-              "explanation": "Expected value to be a string, but received: true"
-            }
-          ]
-        }
-      }
-    ]
-  },
-  "resolvers": {},
-  "tags": [
-    "errors",
-    "type-validation",
-    "variables"
-  ]
+	"name": "type_error",
+	"description": "Argument type mismatch - passing string instead of required integer ID",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  post(id: ID!): Post!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  content: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query GetPost($id: ID!) {\n  post(id: $id) {\n    id\n    title\n    content\n  }\n}",
+		"variables": {
+			"id": true
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query GetPost($id: ID!) {\n  post(id: $id) {\n    id\n    title\n    content\n  }\n}",
+			"variables": {
+				"id": true
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"data": null,
+		"errors": [
+			{
+				"message": "Variable \"$id\" of type \"ID!\" was provided invalid value.",
+				"locations": [
+					{
+						"line": 1,
+						"column": 24
+					}
+				],
+				"extensions": {
+					"value": true,
+					"problems": [
+						{
+							"path": [],
+							"explanation": "Expected value to be a string, but received: true"
+						}
+					]
+				}
+			}
+		]
+	},
+	"resolvers": {},
+	"tags": ["errors", "type-validation", "variables"]
 }

@@ -1,146 +1,137 @@
 {
-  "name": "dataloader_priming",
-  "description": "DataLoader cache priming where initial batch load primes cache for subsequent individual lookups",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  userList: [User!]!\n  user(id: ID!): User\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n  role: String!\n  lastLoginAt: String\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  userList {\n    id\n    name\n    email\n    role\n  }\n}",
-    "variables": null,
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  userList {\n    id\n    name\n    email\n    role\n  }\n}",
-      "variables": null
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "userList": [
-        {
-          "id": "user-1",
-          "name": "Alice Johnson",
-          "email": "alice@example.com",
-          "role": "admin"
-        },
-        {
-          "id": "user-2",
-          "name": "Bob Smith",
-          "email": "bob@example.com",
-          "role": "user"
-        },
-        {
-          "id": "user-3",
-          "name": "Carol Davis",
-          "email": "carol@example.com",
-          "role": "moderator"
-        }
-      ]
-    }
-  },
-  "resolvers": {
-    "Query.userList": {
-      "type": "async_factory",
-      "factory_fn": "load_all_users"
-    },
-    "Query.user": {
-      "type": "async_factory",
-      "factory_fn": "load_user_by_id_batched"
-    }
-  },
-  "cache_priming_workflow": {
-    "phase_1_initial_load": {
-      "operation": "Query userList",
-      "action": "Fetch all users from database",
-      "db_queries": 1,
-      "result_count": 3,
-      "cache_state": "Empty before, filled after with user-1, user-2, user-3"
-    },
-    "phase_2_subsequent_lookups": {
-      "operation": "Query individual users by ID",
-      "examples": [
-        {
-          "query": "user(id: \"user-1\")",
-          "source": "Cache (primed in phase 1)",
-          "db_query": false
-        },
-        {
-          "query": "user(id: \"user-2\")",
-          "source": "Cache (primed in phase 1)",
-          "db_query": false
-        },
-        {
-          "query": "user(id: \"user-3\")",
-          "source": "Cache (primed in phase 1)",
-          "db_query": false
-        }
-      ],
-      "total_db_queries": 0,
-      "description": "All individual lookups served from primed cache"
-    }
-  },
-  "priming_scenarios": [
-    {
-      "name": "Two-step query with cache priming",
-      "step_1": {
-        "operation": "userList",
-        "description": "Load and display all users",
-        "db_queries": 1
-      },
-      "step_2": {
-        "operation": "user(id: \"user-1\")",
-        "description": "User clicks to view details of user-1",
-        "db_queries": 0,
-        "source": "primed_cache",
-        "latency_ms": 1
-      },
-      "total_db_queries_for_workflow": 1
-    },
-    {
-      "name": "Priming with new user not in list",
-      "step_1": {
-        "db_queries": 1,
-        "primed_users": [
-          "user-1",
-          "user-2",
-          "user-3"
-        ]
-      },
-      "step_2": {
-        "operation": "user(id: \"user-999\")",
-        "source": "database",
-        "db_queries": 1,
-        "description": "Cache miss triggers new database query"
-      }
-    }
-  ],
-  "performance_impact": {
-    "without_priming": {
-      "workflow": "userList -> user(1) -> user(2) -> user(3)",
-      "db_queries": 4,
-      "latency_ms": 120
-    },
-    "with_priming": {
-      "workflow": "userList (primes cache) -> user(1) -> user(2) -> user(3)",
-      "db_queries": 1,
-      "latency_ms": 25,
-      "improvement": "75% reduction in database queries and latency"
-    }
-  },
-  "priming_best_practices": [
-    "Prime DataLoader cache from bulk operations before individual lookups",
-    "Ideal for pagination workflows where initial list is fetched then individual items viewed",
-    "Works well with UI patterns like 'list then detail' views",
-    "Consider memory overhead of keeping all loaded items in cache"
-  ],
-  "tags": [
-    "dataloader",
-    "cache-priming",
-    "performance",
-    "bulk-to-individual"
-  ]
+	"name": "dataloader_priming",
+	"description": "DataLoader cache priming where initial batch load primes cache for subsequent individual lookups",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  userList: [User!]!\n  user(id: ID!): User\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n  role: String!\n  lastLoginAt: String\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  userList {\n    id\n    name\n    email\n    role\n  }\n}",
+		"variables": null,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  userList {\n    id\n    name\n    email\n    role\n  }\n}",
+			"variables": null
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"userList": [
+				{
+					"id": "user-1",
+					"name": "Alice Johnson",
+					"email": "alice@example.com",
+					"role": "admin"
+				},
+				{
+					"id": "user-2",
+					"name": "Bob Smith",
+					"email": "bob@example.com",
+					"role": "user"
+				},
+				{
+					"id": "user-3",
+					"name": "Carol Davis",
+					"email": "carol@example.com",
+					"role": "moderator"
+				}
+			]
+		}
+	},
+	"resolvers": {
+		"Query.userList": {
+			"type": "async_factory",
+			"factory_fn": "load_all_users"
+		},
+		"Query.user": {
+			"type": "async_factory",
+			"factory_fn": "load_user_by_id_batched"
+		}
+	},
+	"cache_priming_workflow": {
+		"phase_1_initial_load": {
+			"operation": "Query userList",
+			"action": "Fetch all users from database",
+			"db_queries": 1,
+			"result_count": 3,
+			"cache_state": "Empty before, filled after with user-1, user-2, user-3"
+		},
+		"phase_2_subsequent_lookups": {
+			"operation": "Query individual users by ID",
+			"examples": [
+				{
+					"query": "user(id: \"user-1\")",
+					"source": "Cache (primed in phase 1)",
+					"db_query": false
+				},
+				{
+					"query": "user(id: \"user-2\")",
+					"source": "Cache (primed in phase 1)",
+					"db_query": false
+				},
+				{
+					"query": "user(id: \"user-3\")",
+					"source": "Cache (primed in phase 1)",
+					"db_query": false
+				}
+			],
+			"total_db_queries": 0,
+			"description": "All individual lookups served from primed cache"
+		}
+	},
+	"priming_scenarios": [
+		{
+			"name": "Two-step query with cache priming",
+			"step_1": {
+				"operation": "userList",
+				"description": "Load and display all users",
+				"db_queries": 1
+			},
+			"step_2": {
+				"operation": "user(id: \"user-1\")",
+				"description": "User clicks to view details of user-1",
+				"db_queries": 0,
+				"source": "primed_cache",
+				"latency_ms": 1
+			},
+			"total_db_queries_for_workflow": 1
+		},
+		{
+			"name": "Priming with new user not in list",
+			"step_1": {
+				"db_queries": 1,
+				"primed_users": ["user-1", "user-2", "user-3"]
+			},
+			"step_2": {
+				"operation": "user(id: \"user-999\")",
+				"source": "database",
+				"db_queries": 1,
+				"description": "Cache miss triggers new database query"
+			}
+		}
+	],
+	"performance_impact": {
+		"without_priming": {
+			"workflow": "userList -> user(1) -> user(2) -> user(3)",
+			"db_queries": 4,
+			"latency_ms": 120
+		},
+		"with_priming": {
+			"workflow": "userList (primes cache) -> user(1) -> user(2) -> user(3)",
+			"db_queries": 1,
+			"latency_ms": 25,
+			"improvement": "75% reduction in database queries and latency"
+		}
+	},
+	"priming_best_practices": [
+		"Prime DataLoader cache from bulk operations before individual lookups",
+		"Ideal for pagination workflows where initial list is fetched then individual items viewed",
+		"Works well with UI patterns like 'list then detail' views",
+		"Consider memory overhead of keeping all loaded items in cache"
+	],
+	"tags": ["dataloader", "cache-priming", "performance", "bulk-to-individual"]
 }

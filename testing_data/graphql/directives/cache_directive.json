@@ -1,86 +1,82 @@
 {
-  "name": "cache_directive",
-  "description": "Custom @cacheControl directive setting HTTP caching headers on GraphQL field resolution",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "directive @cacheControl(maxAge: Int!, scope: String) on FIELD_DEFINITION\n\ntype Query {\n  user(id: ID!): User\n  publicPage: String!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String! @cacheControl(maxAge: 86400, scope: \"PRIVATE\")\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n    email\n  }\n}",
-    "variables": {
-      "id": "1"
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n    email\n  }\n}",
-      "variables": {
-        "id": "1"
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "user": {
-        "id": "1",
-        "name": "Alice Smith",
-        "email": "alice@example.com"
-      }
-    }
-  },
-  "response_headers": {
-    "cache-control": "max-age=300, public",
-    "vary": "Authorization"
-  },
-  "resolvers": {
-    "Query.user": {
-      "type": "mock_with_args",
-      "return_value": {
-        "id": "1",
-        "name": "Alice Smith",
-        "email": "alice@example.com"
-      }
-    },
-    "User.id": {
-      "type": "mock",
-      "return_value": "1"
-    },
-    "User.name": {
-      "type": "mock",
-      "return_value": "Alice Smith"
-    },
-    "User.email": {
-      "type": "mock",
-      "return_value": "alice@example.com"
-    }
-  },
-  "cache_scenarios": [
-    {
-      "name": "Field with maxAge 300s",
-      "field": "user",
-      "max_age": 300,
-      "scope": "PUBLIC",
-      "expected_header": "max-age=300, public"
-    },
-    {
-      "name": "Field with maxAge 86400s and PRIVATE scope",
-      "field": "email",
-      "max_age": 86400,
-      "scope": "PRIVATE",
-      "expected_header": "max-age=86400, private"
-    },
-    {
-      "name": "Field without cache directive",
-      "field": "name",
-      "expected_header": "no-cache"
-    }
-  ],
-  "tags": [
-    "directives",
-    "caching",
-    "http-headers"
-  ]
+	"name": "cache_directive",
+	"description": "Custom @cacheControl directive setting HTTP caching headers on GraphQL field resolution",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "directive @cacheControl(maxAge: Int!, scope: String) on FIELD_DEFINITION\n\ntype Query {\n  user(id: ID!): User\n  publicPage: String!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String! @cacheControl(maxAge: 86400, scope: \"PRIVATE\")\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n    email\n  }\n}",
+		"variables": {
+			"id": "1"
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n    email\n  }\n}",
+			"variables": {
+				"id": "1"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"user": {
+				"id": "1",
+				"name": "Alice Smith",
+				"email": "alice@example.com"
+			}
+		}
+	},
+	"response_headers": {
+		"cache-control": "max-age=300, public",
+		"vary": "Authorization"
+	},
+	"resolvers": {
+		"Query.user": {
+			"type": "mock_with_args",
+			"return_value": {
+				"id": "1",
+				"name": "Alice Smith",
+				"email": "alice@example.com"
+			}
+		},
+		"User.id": {
+			"type": "mock",
+			"return_value": "1"
+		},
+		"User.name": {
+			"type": "mock",
+			"return_value": "Alice Smith"
+		},
+		"User.email": {
+			"type": "mock",
+			"return_value": "alice@example.com"
+		}
+	},
+	"cache_scenarios": [
+		{
+			"name": "Field with maxAge 300s",
+			"field": "user",
+			"max_age": 300,
+			"scope": "PUBLIC",
+			"expected_header": "max-age=300, public"
+		},
+		{
+			"name": "Field with maxAge 86400s and PRIVATE scope",
+			"field": "email",
+			"max_age": 86400,
+			"scope": "PRIVATE",
+			"expected_header": "max-age=86400, private"
+		},
+		{
+			"name": "Field without cache directive",
+			"field": "name",
+			"expected_header": "no-cache"
+		}
+	],
+	"tags": ["directives", "caching", "http-headers"]
 }

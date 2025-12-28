@@ -1,110 +1,102 @@
 {
-  "name": "subscription_with_filtering",
-  "description": "Advanced subscription with complex multi-field filtering on post updates, returning only posts matching multiple criteria",
-  "operation_type": "subscription",
-  "endpoint": "/graphql",
-  "schema": "enum PostStatus {\n  PUBLISHED\n  DRAFT\n  ARCHIVED\n  PENDING_REVIEW\n}\n\ninput PostFilter {\n  authorId: ID!\n  status: [PostStatus!]!\n  tags_contains: String\n  minScore: Int\n}\n\ntype Subscription {\n  postUpdated(filter: PostFilter!): Post!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  authorId: ID!\n  content: String!\n  status: PostStatus!\n  tags: [String!]!\n  score: Int!\n  updatedAt: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "subscription OnPostUpdated($authorId: ID!, $statuses: [PostStatus!]!, $tagFilter: String, $scoreThreshold: Int) {\n  postUpdated(filter: {\n    authorId: $authorId\n    status: $statuses\n    tags_contains: $tagFilter\n    minScore: $scoreThreshold\n  }) {\n    id\n    title\n    authorId\n    content\n    status\n    tags\n    score\n    updatedAt\n  }\n}",
-    "variables": {
-      "authorId": "123",
-      "statuses": ["PUBLISHED", "DRAFT"],
-      "tagFilter": "graphql",
-      "scoreThreshold": 50
-    },
-    "operationName": "OnPostUpdated",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "subscription OnPostUpdated($authorId: ID!, $statuses: [PostStatus!]!, $tagFilter: String, $scoreThreshold: Int) {\n  postUpdated(filter: {\n    authorId: $authorId\n    status: $statuses\n    tags_contains: $tagFilter\n    minScore: $scoreThreshold\n  }) {\n    id\n    title\n    authorId\n    content\n    status\n    tags\n    score\n    updatedAt\n  }\n}",
-      "variables": {
-        "authorId": "123",
-        "statuses": ["PUBLISHED", "DRAFT"],
-        "tagFilter": "graphql",
-        "scoreThreshold": 50
-      },
-      "operationName": "OnPostUpdated"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "postUpdated": {
-        "id": "post-789",
-        "title": "Advanced GraphQL Patterns",
-        "authorId": "123",
-        "content": "A comprehensive guide to GraphQL subscriptions with advanced filtering techniques...",
-        "status": "PUBLISHED",
-        "tags": ["graphql", "subscriptions", "real-time"],
-        "score": 95,
-        "updatedAt": "2025-12-27T15:45:00Z"
-      }
-    }
-  },
-  "resolvers": {
-    "Subscription.postUpdated": {
-      "type": "mock_with_filter",
-      "filter_criteria": {
-        "authorId_equals": "123",
-        "status_in": ["PUBLISHED", "DRAFT"],
-        "tags_includes": "graphql",
-        "score_gte": 50
-      },
-      "return_value": {
-        "id": "post-789",
-        "title": "Advanced GraphQL Patterns",
-        "authorId": "123",
-        "content": "A comprehensive guide to GraphQL subscriptions with advanced filtering techniques...",
-        "status": "PUBLISHED",
-        "tags": ["graphql", "subscriptions", "real-time"],
-        "score": 95,
-        "updatedAt": "2025-12-27T15:45:00Z"
-      },
-      "filtered_out_values": [
-        {
-          "id": "post-790",
-          "title": "REST API Basics",
-          "authorId": "456",
-          "status": "PUBLISHED",
-          "reason": "authorId mismatch"
-        },
-        {
-          "id": "post-791",
-          "title": "GraphQL Mutations",
-          "authorId": "123",
-          "status": "ARCHIVED",
-          "reason": "status not in filter"
-        },
-        {
-          "id": "post-792",
-          "title": "Database Design",
-          "authorId": "123",
-          "status": "PUBLISHED",
-          "tags": ["database", "sql"],
-          "reason": "tags_contains filter not matched"
-        },
-        {
-          "id": "post-793",
-          "title": "Low Score Post",
-          "authorId": "123",
-          "status": "DRAFT",
-          "tags": ["graphql"],
-          "score": 25,
-          "reason": "score below threshold"
-        }
-      ]
-    }
-  },
-  "tags": [
-    "subscriptions",
-    "websocket",
-    "advanced-filtering",
-    "complex-input",
-    "multi-criteria",
-    "enums",
-    "arrays"
-  ]
+	"name": "subscription_with_filtering",
+	"description": "Advanced subscription with complex multi-field filtering on post updates, returning only posts matching multiple criteria",
+	"operation_type": "subscription",
+	"endpoint": "/graphql",
+	"schema": "enum PostStatus {\n  PUBLISHED\n  DRAFT\n  ARCHIVED\n  PENDING_REVIEW\n}\n\ninput PostFilter {\n  authorId: ID!\n  status: [PostStatus!]!\n  tags_contains: String\n  minScore: Int\n}\n\ntype Subscription {\n  postUpdated(filter: PostFilter!): Post!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  authorId: ID!\n  content: String!\n  status: PostStatus!\n  tags: [String!]!\n  score: Int!\n  updatedAt: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "subscription OnPostUpdated($authorId: ID!, $statuses: [PostStatus!]!, $tagFilter: String, $scoreThreshold: Int) {\n  postUpdated(filter: {\n    authorId: $authorId\n    status: $statuses\n    tags_contains: $tagFilter\n    minScore: $scoreThreshold\n  }) {\n    id\n    title\n    authorId\n    content\n    status\n    tags\n    score\n    updatedAt\n  }\n}",
+		"variables": {
+			"authorId": "123",
+			"statuses": ["PUBLISHED", "DRAFT"],
+			"tagFilter": "graphql",
+			"scoreThreshold": 50
+		},
+		"operationName": "OnPostUpdated",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "subscription OnPostUpdated($authorId: ID!, $statuses: [PostStatus!]!, $tagFilter: String, $scoreThreshold: Int) {\n  postUpdated(filter: {\n    authorId: $authorId\n    status: $statuses\n    tags_contains: $tagFilter\n    minScore: $scoreThreshold\n  }) {\n    id\n    title\n    authorId\n    content\n    status\n    tags\n    score\n    updatedAt\n  }\n}",
+			"variables": {
+				"authorId": "123",
+				"statuses": ["PUBLISHED", "DRAFT"],
+				"tagFilter": "graphql",
+				"scoreThreshold": 50
+			},
+			"operationName": "OnPostUpdated"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"postUpdated": {
+				"id": "post-789",
+				"title": "Advanced GraphQL Patterns",
+				"authorId": "123",
+				"content": "A comprehensive guide to GraphQL subscriptions with advanced filtering techniques...",
+				"status": "PUBLISHED",
+				"tags": ["graphql", "subscriptions", "real-time"],
+				"score": 95,
+				"updatedAt": "2025-12-27T15:45:00Z"
+			}
+		}
+	},
+	"resolvers": {
+		"Subscription.postUpdated": {
+			"type": "mock_with_filter",
+			"filter_criteria": {
+				"authorId_equals": "123",
+				"status_in": ["PUBLISHED", "DRAFT"],
+				"tags_includes": "graphql",
+				"score_gte": 50
+			},
+			"return_value": {
+				"id": "post-789",
+				"title": "Advanced GraphQL Patterns",
+				"authorId": "123",
+				"content": "A comprehensive guide to GraphQL subscriptions with advanced filtering techniques...",
+				"status": "PUBLISHED",
+				"tags": ["graphql", "subscriptions", "real-time"],
+				"score": 95,
+				"updatedAt": "2025-12-27T15:45:00Z"
+			},
+			"filtered_out_values": [
+				{
+					"id": "post-790",
+					"title": "REST API Basics",
+					"authorId": "456",
+					"status": "PUBLISHED",
+					"reason": "authorId mismatch"
+				},
+				{
+					"id": "post-791",
+					"title": "GraphQL Mutations",
+					"authorId": "123",
+					"status": "ARCHIVED",
+					"reason": "status not in filter"
+				},
+				{
+					"id": "post-792",
+					"title": "Database Design",
+					"authorId": "123",
+					"status": "PUBLISHED",
+					"tags": ["database", "sql"],
+					"reason": "tags_contains filter not matched"
+				},
+				{
+					"id": "post-793",
+					"title": "Low Score Post",
+					"authorId": "123",
+					"status": "DRAFT",
+					"tags": ["graphql"],
+					"score": 25,
+					"reason": "score below threshold"
+				}
+			]
+		}
+	},
+	"tags": ["subscriptions", "websocket", "advanced-filtering", "complex-input", "multi-criteria", "enums", "arrays"]
 }

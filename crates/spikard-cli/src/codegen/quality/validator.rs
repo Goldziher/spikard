@@ -182,8 +182,12 @@ impl QualityValidator {
             }
             TargetLanguage::Rust => {
                 let file = self.write_temp_file(code, "rs")?;
-                self.run_tool("cargo", &["check", "--manifest-path", file.path().to_str().unwrap()], code)
-                    .map(|_| ())
+                self.run_tool(
+                    "cargo",
+                    &["check", "--manifest-path", file.path().to_str().unwrap()],
+                    code,
+                )
+                .map(|_| ())
             }
             TargetLanguage::Ruby => {
                 let file = self.write_temp_file(code, "rb")?;
@@ -245,8 +249,12 @@ impl QualityValidator {
             }
             TargetLanguage::Rust => {
                 let file = self.write_temp_file(code, "rs")?;
-                self.run_tool("cargo", &["check", "--manifest-path", file.path().to_str().unwrap()], code)
-                    .map(|_| ())
+                self.run_tool(
+                    "cargo",
+                    &["check", "--manifest-path", file.path().to_str().unwrap()],
+                    code,
+                )
+                .map(|_| ())
             }
             TargetLanguage::Php => {
                 // PHP doesn't have a separate type checker; covered by lint
@@ -300,14 +308,25 @@ impl QualityValidator {
             }
             TargetLanguage::Php => {
                 let file = self.write_temp_file(code, "php")?;
-                self.run_tool("phpstan", &["analyse", "--level=max", file.path().to_str().unwrap()], code)
-                    .map(|_| ())
+                self.run_tool(
+                    "phpstan",
+                    &["analyse", "--level=max", file.path().to_str().unwrap()],
+                    code,
+                )
+                .map(|_| ())
             }
             TargetLanguage::Rust => {
                 let file = self.write_temp_file(code, "rs")?;
                 self.run_tool(
                     "cargo",
-                    &["clippy", "--manifest-path", file.path().to_str().unwrap(), "--", "-D", "warnings"],
+                    &[
+                        "clippy",
+                        "--manifest-path",
+                        file.path().to_str().unwrap(),
+                        "--",
+                        "-D",
+                        "warnings",
+                    ],
                     code,
                 )
                 .map(|_| ())
@@ -387,8 +406,7 @@ impl QualityValidator {
     /// - `Ok(file)` - A named temporary file handle
     /// - `Err(QualityError::IoError)` - If the file cannot be created or written
     fn write_temp_file(&self, code: &str, _ext: &str) -> Result<NamedTempFile, QualityError> {
-        let mut file = NamedTempFile::new()
-            .map_err(|e: std::io::Error| QualityError::IoError(e.to_string()))?;
+        let mut file = NamedTempFile::new().map_err(|e: std::io::Error| QualityError::IoError(e.to_string()))?;
         file.write_all(code.as_bytes())
             .map_err(|e: std::io::Error| QualityError::IoError(e.to_string()))?;
         file.flush()
@@ -415,16 +433,13 @@ impl QualityValidator {
     /// - `Err(QualityError::ValidationFailed)` - If the tool exits with non-zero status
     /// - `Err(QualityError::IoError)` - If execution fails
     fn run_tool(&self, tool: &str, args: &[&str], _code: &str) -> Result<String, QualityError> {
-        let output = Command::new(tool)
-            .args(args)
-            .output()
-            .map_err(|e| {
-                if e.kind() == std::io::ErrorKind::NotFound {
-                    QualityError::ToolNotFound(tool.to_string())
-                } else {
-                    QualityError::IoError(e.to_string())
-                }
-            })?;
+        let output = Command::new(tool).args(args).output().map_err(|e| {
+            if e.kind() == std::io::ErrorKind::NotFound {
+                QualityError::ToolNotFound(tool.to_string())
+            } else {
+                QualityError::IoError(e.to_string())
+            }
+        })?;
 
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stdout).to_string())
@@ -481,10 +496,7 @@ mod tests {
     #[test]
     fn test_quality_error_display() {
         let err = QualityError::ToolNotFound("mypy".to_string());
-        assert_eq!(
-            err.to_string(),
-            "Required validation tool not found: mypy"
-        );
+        assert_eq!(err.to_string(), "Required validation tool not found: mypy");
 
         let err = QualityError::ValidationFailed("syntax error".to_string());
         assert!(err.to_string().contains("Validation failed"));

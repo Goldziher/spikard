@@ -20,9 +20,7 @@ impl PythonScaffolder {
     /// Convert a project name to a valid Python package name (snake_case)
     fn to_package_name(project_name: &str) -> String {
         // Replace hyphens with underscores and convert to lowercase
-        project_name
-            .replace('-', "_")
-            .to_lowercase()
+        project_name.replace('-', "_").to_lowercase()
     }
 
     /// Generate pyproject.toml content
@@ -275,6 +273,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::cmp_owned)]
     fn test_scaffold_creates_files() {
         let files = PythonScaffolder.scaffold(Path::new("."), "test_app").unwrap();
 

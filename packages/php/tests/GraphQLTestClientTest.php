@@ -21,10 +21,14 @@ class GraphQLTestClientTest extends TestCase
             [
                 'path' => '/graphql',
                 'method' => 'POST',
-                'handler' => function ($request) {
+                'handler' => function (\Spikard\Http\Request $request) {
                     // Parse GraphQL query from request body
+                    $bodyStr = $request->body;
+                    if (!is_string($bodyStr)) {
+                        $bodyStr = '';
+                    }
                     /** @var array<string, mixed> $body */
-                    $body = json_decode($request->getBody(), true) ?? [];
+                    $body = json_decode($bodyStr, true) ?? [];
                     /** @var string $query */
                     $query = $body['query'] ?? '';
                     /** @var array<string, mixed>|null $variables */
@@ -87,13 +91,19 @@ class GraphQLTestClientTest extends TestCase
             [
                 'path' => '/graphql',
                 'method' => 'POST',
-                'handler' => function ($request) {
+                'handler' => function (\Spikard\Http\Request $request) {
+                    $bodyStr = $request->body;
+                    if (!is_string($bodyStr)) {
+                        $bodyStr = '';
+                    }
                     /** @var array<string, mixed> $body */
-                    $body = json_decode($request->getBody(), true) ?? [];
+                    $body = json_decode($bodyStr, true) ?? [];
                     /** @var array<string, mixed>|null $variables */
                     $variables = $body['variables'] ?? null;
+                    /** @var mixed $idValue */
+                    $idValue = is_array($variables) && isset($variables['id']) ? $variables['id'] : 1;
                     /** @var int $userId */
-                    $userId = ($variables['id'] ?? 1);
+                    $userId = (int)$idValue;
 
                     $response = [
                         'data' => [
@@ -257,15 +267,23 @@ class GraphQLTestClientTest extends TestCase
             [
                 'path' => '/graphql',
                 'method' => 'POST',
-                'handler' => function ($request) {
+                'handler' => function (\Spikard\Http\Request $request) {
+                    $bodyStr = $request->body;
+                    if (!is_string($bodyStr)) {
+                        $bodyStr = '';
+                    }
                     /** @var array<string, mixed> $body */
-                    $body = json_decode($request->getBody(), true) ?? [];
+                    $body = json_decode($bodyStr, true) ?? [];
                     /** @var array<string, mixed>|null $variables */
                     $variables = $body['variables'] ?? null;
+                    /** @var mixed $nameValue */
+                    $nameValue = is_array($variables) && isset($variables['name']) ? $variables['name'] : 'New User';
+                    /** @var mixed $emailValue */
+                    $emailValue = is_array($variables) && isset($variables['email']) ? $variables['email'] : 'user@example.com';
                     /** @var string $userName */
-                    $userName = ($variables['name'] ?? 'New User');
+                    $userName = (string)$nameValue;
                     /** @var string $userEmail */
-                    $userEmail = ($variables['email'] ?? 'user@example.com');
+                    $userEmail = (string)$emailValue;
 
                     $response = [
                         'data' => [

@@ -6,7 +6,7 @@
 
 use super::GraphQLGenerator;
 use crate::codegen::common::case_conversion::to_snake_case;
-use crate::codegen::common::escaping::{escape_for_docstring, EscapeContext};
+use crate::codegen::common::escaping::{EscapeContext, escape_for_docstring};
 use crate::codegen::graphql::sdl::{SdlBuilder, TargetLanguage, TypeMapper};
 use crate::codegen::graphql::spec_parser::GraphQLSchema;
 use anyhow::Result;
@@ -51,13 +51,13 @@ impl GraphQLGenerator for PythonGenerator {
             code.push_str("from typing import TypeAlias\n");
         }
 
-        code.push_str("\n");
+        code.push('\n');
 
         // Create type mapper for Python
         let mapper = TypeMapper::new(TargetLanguage::Python, Some(schema));
 
         // Generate enums first
-        for (_, type_def) in &schema.types {
+        for type_def in schema.types.values() {
             if type_def.kind == TypeKind::Enum {
                 code.push_str(&format!("class {}(str, Enum):\n", type_def.name));
                 if let Some(desc) = &type_def.description {
@@ -77,7 +77,7 @@ impl GraphQLGenerator for PythonGenerator {
         }
 
         // Generate input objects and types
-        for (_, type_def) in &schema.types {
+        for type_def in schema.types.values() {
             if type_def.kind == TypeKind::InputObject {
                 code.push_str(&format!(
                     "class {}(Struct, frozen=True, kw_only=True):\n",
@@ -89,10 +89,7 @@ impl GraphQLGenerator for PythonGenerator {
                         escape_for_docstring(desc, EscapeContext::Python)
                     ));
                 } else {
-                    code.push_str(&format!(
-                        "    \"\"\"GraphQL input type {}.\"\"\"\n",
-                        type_def.name
-                    ));
+                    code.push_str(&format!("    \"\"\"GraphQL input type {}.\"\"\"\n", type_def.name));
                 }
                 if type_def.input_fields.is_empty() {
                     code.push_str("    pass\n");
@@ -126,10 +123,7 @@ impl GraphQLGenerator for PythonGenerator {
                         escape_for_docstring(desc, EscapeContext::Python)
                     ));
                 } else {
-                    code.push_str(&format!(
-                        "    \"\"\"GraphQL object type {}.\"\"\"\n",
-                        type_def.name
-                    ));
+                    code.push_str(&format!("    \"\"\"GraphQL object type {}.\"\"\"\n", type_def.name));
                 }
                 if type_def.fields.is_empty() {
                     code.push_str("    pass\n");
@@ -154,7 +148,7 @@ impl GraphQLGenerator for PythonGenerator {
                 // The TypeAlias annotation tells mypy this is a type alias, not a string variable
                 let members = type_def.possible_types.join(" | ");
                 code.push_str(&format!("{}: TypeAlias = \"{}\"\n", type_def.name, members));
-                code.push_str("\n");
+                code.push('\n');
             }
         }
 
@@ -174,39 +168,38 @@ impl GraphQLGenerator for PythonGenerator {
         code.push_str("from graphql import GraphQLResolveInfo\n");
 
         // Collect all type names used in resolver return types and arguments
-        let mut used_types: std::collections::HashSet<String> =
-            std::collections::HashSet::new();
+        let mut used_types: std::collections::HashSet<String> = std::collections::HashSet::new();
 
         for query in &schema.queries {
             // Add return type
-            if let Some(type_name) = extract_base_type_name(&query.type_name) {
-                if is_custom_type(&type_name, schema) {
-                    used_types.insert(type_name);
-                }
+            if let Some(type_name) = extract_base_type_name(&query.type_name)
+                && is_custom_type(&type_name, schema)
+            {
+                used_types.insert(type_name);
             }
             // Add argument types
             for arg in &query.arguments {
-                if let Some(type_name) = extract_base_type_name(&arg.type_name) {
-                    if is_custom_type(&type_name, schema) {
-                        used_types.insert(type_name);
-                    }
+                if let Some(type_name) = extract_base_type_name(&arg.type_name)
+                    && is_custom_type(&type_name, schema)
+                {
+                    used_types.insert(type_name);
                 }
             }
         }
 
         for mutation in &schema.mutations {
             // Add return type
-            if let Some(type_name) = extract_base_type_name(&mutation.type_name) {
-                if is_custom_type(&type_name, schema) {
-                    used_types.insert(type_name);
-                }
+            if let Some(type_name) = extract_base_type_name(&mutation.type_name)
+                && is_custom_type(&type_name, schema)
+            {
+                used_types.insert(type_name);
             }
             // Add argument types
             for arg in &mutation.arguments {
-                if let Some(type_name) = extract_base_type_name(&arg.type_name) {
-                    if is_custom_type(&type_name, schema) {
-                        used_types.insert(type_name);
-                    }
+                if let Some(type_name) = extract_base_type_name(&arg.type_name)
+                    && is_custom_type(&type_name, schema)
+                {
+                    used_types.insert(type_name);
                 }
             }
         }
@@ -215,62 +208,57 @@ impl GraphQLGenerator for PythonGenerator {
         if !used_types.is_empty() {
             let mut sorted_types: Vec<_> = used_types.iter().collect();
             sorted_types.sort();
-            let types_list = sorted_types
-                .iter()
-                .map(|s| s.as_str())
-                .collect::<Vec<_>>()
-                .join(", ");
+            let types_list = sorted_types.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ");
             code.push_str(&format!("from .types import {}\n", types_list));
         }
 
-        code.push_str("\n");
+        code.push('\n');
 
         // Create type mapper for Python
-        let mapper = TypeMapper::new(TargetLanguage::Python, Some(schema));
+        let _mapper = TypeMapper::new(TargetLanguage::Python, Some(schema));
 
         // Helper closure to format resolver signature
-        let format_resolver = |name: &str,
-                               field: &crate::codegen::graphql::spec_parser::GraphQLField,
-                               schema: &GraphQLSchema| {
-            let mut sig = format!(
-                "async def resolve_{}(parent: dict[str, object], info: GraphQLResolveInfo",
-                to_snake_case(name)
-            );
-
-            let mapper = TypeMapper::new(TargetLanguage::Python, Some(schema));
-            for arg in &field.arguments {
-                let arg_type = mapper.map_type_with_list_nullability(
-                    &arg.type_name,
-                    arg.is_nullable,
-                    arg.is_list,
-                    arg.list_item_nullable,
+        let format_resolver =
+            |name: &str, field: &crate::codegen::graphql::spec_parser::GraphQLField, schema: &GraphQLSchema| {
+                let mut sig = format!(
+                    "async def resolve_{}(parent: dict[str, object], info: GraphQLResolveInfo",
+                    to_snake_case(name)
                 );
-                sig.push_str(&format!(", {}: {}", arg.name, arg_type));
-            }
 
-            let py_type = mapper.map_type_with_list_nullability(
-                &field.type_name,
-                field.is_nullable,
-                field.is_list,
-                field.list_item_nullable,
-            );
-            sig.push_str(&format!(") -> {}:", py_type));
-            sig
-        };
+                let mapper = TypeMapper::new(TargetLanguage::Python, Some(schema));
+                for arg in &field.arguments {
+                    let arg_type = mapper.map_type_with_list_nullability(
+                        &arg.type_name,
+                        arg.is_nullable,
+                        arg.is_list,
+                        arg.list_item_nullable,
+                    );
+                    sig.push_str(&format!(", {}: {}", arg.name, arg_type));
+                }
+
+                let py_type = mapper.map_type_with_list_nullability(
+                    &field.type_name,
+                    field.is_nullable,
+                    field.is_list,
+                    field.list_item_nullable,
+                );
+                sig.push_str(&format!(") -> {}:", py_type));
+                sig
+            };
 
         // Query resolvers
         if !schema.queries.is_empty() {
             code.push_str("# Query resolvers\n\n");
             for field in &schema.queries {
                 code.push_str(&format_resolver(&field.name, field, schema));
-                code.push_str("\n");
+                code.push('\n');
                 code.push_str("    \"\"\"Resolve query field.\"\"\"\n");
                 code.push_str(&format!(
                     "    raise NotImplementedError(\"TODO: Implement resolve_{}\")\n\n",
                     to_snake_case(&field.name)
                 ));
             }
-            code.push_str("\n");
+            code.push('\n');
         }
 
         // Mutation resolvers
@@ -278,7 +266,7 @@ impl GraphQLGenerator for PythonGenerator {
             code.push_str("# Mutation resolvers\n\n");
             for field in &schema.mutations {
                 code.push_str(&format_resolver(&field.name, field, schema));
-                code.push_str("\n");
+                code.push('\n');
                 code.push_str("    \"\"\"Resolve mutation field.\"\"\"\n");
                 code.push_str(&format!(
                     "    raise NotImplementedError(\"TODO: Implement resolve_{}\")\n\n",
@@ -320,7 +308,7 @@ impl GraphQLGenerator for PythonGenerator {
         for line in sdl.lines() {
             code.push_str("    ");
             code.push_str(line);
-            code.push_str("\n");
+            code.push('\n');
         }
 
         code.push_str("\"\"\"\n\n");
@@ -336,10 +324,7 @@ impl GraphQLGenerator for PythonGenerator {
                     "# async def resolve_{}(obj, info, **args):\n",
                     to_snake_case(&field.name)
                 ));
-                code.push_str(&format!(
-                    "#     \"\"\"Resolver for Query.{}\"\"\"\n",
-                    field.name
-                ));
+                code.push_str(&format!("#     \"\"\"Resolver for Query.{}\"\"\"\n", field.name));
                 code.push_str(&format!(
                     "#     raise NotImplementedError(\"Query.{} not implemented\")\n\n",
                     field.name
@@ -358,10 +343,7 @@ impl GraphQLGenerator for PythonGenerator {
                     "# async def resolve_{}(obj, info, **args):\n",
                     to_snake_case(&field.name)
                 ));
-                code.push_str(&format!(
-                    "#     \"\"\"Resolver for Mutation.{}\"\"\"\n",
-                    field.name
-                ));
+                code.push_str(&format!("#     \"\"\"Resolver for Mutation.{}\"\"\"\n", field.name));
                 code.push_str(&format!(
                     "#     raise NotImplementedError(\"Mutation.{} not implemented\")\n\n",
                     field.name
@@ -528,19 +510,13 @@ impl GraphQLGenerator for PythonGenerator {
             (header_lines, imports, code)
         }
 
-        let (types_header, types_imports, types_code) =
-            extract_header_imports_and_code(&types);
-        let (_resolvers_header, resolvers_imports, resolvers_code) =
-            extract_header_imports_and_code(&resolvers);
-        let (_schema_def_header, schema_def_imports, schema_def_code) =
-            extract_header_imports_and_code(&schema_def);
+        let (types_header, types_imports, types_code) = extract_header_imports_and_code(&types);
+        let (_resolvers_header, resolvers_imports, resolvers_code) = extract_header_imports_and_code(&resolvers);
+        let (_schema_def_header, schema_def_imports, schema_def_code) = extract_header_imports_and_code(&schema_def);
 
         // Collect all external imports (skip "from .types" imports)
         let mut all_imports: Vec<String> = types_imports;
-        for imp in resolvers_imports
-            .iter()
-            .chain(schema_def_imports.iter())
-        {
+        for imp in resolvers_imports.iter().chain(schema_def_imports.iter()) {
             let trimmed = imp.trim();
             // Skip imports from .types (relative imports from types module)
             if trimmed.starts_with("from .types") {
@@ -622,8 +598,7 @@ fn extract_base_type_name(type_name: &str) -> Option<String> {
 /// Built-in scalars: String, Int, Float, Boolean, ID, DateTime, Date, Time, JSON, Upload
 fn is_custom_type(type_name: &str, schema: &GraphQLSchema) -> bool {
     let built_ins = [
-        "String", "Int", "Float", "Boolean", "ID", "DateTime", "Date", "Time", "JSON",
-        "Upload",
+        "String", "Int", "Float", "Boolean", "ID", "DateTime", "Date", "Time", "JSON", "Upload",
     ];
 
     if built_ins.contains(&type_name) {

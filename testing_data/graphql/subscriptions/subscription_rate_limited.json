@@ -1,217 +1,217 @@
 {
-  "name": "subscription_rate_limited",
-  "description": "Subscription with rate limiting middleware enforcing maximum message throughput per subscription, returns 429 when threshold exceeded",
-  "operation_type": "subscription",
-  "endpoint": "/graphql",
-  "schema": "type Subscription {\n  stockTicker(symbol: String!): StockPrice!\n}\n\ntype StockPrice {\n  id: ID!\n  symbol: String!\n  price: Float!\n  change: Float!\n  changePercent: Float!\n  timestamp: String!\n  volume: Int!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "subscription OnStockUpdate($symbol: String!) {\n  stockTicker(symbol: $symbol) {\n    id\n    symbol\n    price\n    change\n    changePercent\n    timestamp\n    volume\n  }\n}",
-    "variables": {
-      "symbol": "AAPL"
-    },
-    "operationName": "OnStockUpdate",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "subscription OnStockUpdate($symbol: String!) {\n  stockTicker(symbol: $symbol) {\n    id\n    symbol\n    price\n    change\n    changePercent\n    timestamp\n    volume\n  }\n}",
-      "variables": {
-        "symbol": "AAPL"
-      },
-      "operationName": "OnStockUpdate"
-    }
-  },
-  "rate_limit": {
-    "enabled": true,
-    "max_messages_per_minute": 100,
-    "max_messages_per_second": 2,
-    "window_size_ms": 60000,
-    "strategy": "token_bucket",
-    "headers_returned": {
-      "X-RateLimit-Limit": "100",
-      "X-RateLimit-Remaining": "remaining_count",
-      "X-RateLimit-Reset": "reset_timestamp"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "headers": {
-      "X-RateLimit-Limit": "100",
-      "X-RateLimit-Remaining": "99"
-    },
-    "data": {
-      "stockTicker": {
-        "id": "stock-aapl-1",
-        "symbol": "AAPL",
-        "price": 238.45,
-        "change": 2.15,
-        "changePercent": 0.91,
-        "timestamp": "2025-12-27T17:00:00Z",
-        "volume": 52345678
-      }
-    }
-  },
-  "error_scenarios": [
-    {
-      "name": "rate_limit_exceeded",
-      "description": "Subscription message rejected due to exceeding rate limit of 100 messages per minute",
-      "context": {
-        "previous_messages_in_window": 100,
-        "current_message_number": 101
-      },
-      "expected_response": {
-        "status_code": 429,
-        "headers": {
-          "X-RateLimit-Limit": "100",
-          "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": "2025-12-27T17:01:00Z",
-          "Retry-After": "60"
-        },
-        "graphql": {
-          "errors": [
-            {
-              "message": "Too many subscription messages",
-              "extensions": {
-                "code": "RATE_LIMITED",
-                "details": "Rate limit exceeded: 100 messages per minute",
-                "retry_after_seconds": 60,
-                "limit": 100,
-                "remaining": 0,
-                "reset_at": "2025-12-27T17:01:00Z"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "name": "per_second_rate_limit_exceeded",
-      "description": "Subscription message rejected due to exceeding per-second rate limit of 2 messages",
-      "context": {
-        "messages_in_current_second": 2,
-        "attempted_third_message": true
-      },
-      "expected_response": {
-        "status_code": 429,
-        "headers": {
-          "X-RateLimit-Limit": "100",
-          "X-RateLimit-Remaining": "98",
-          "Retry-After": "1"
-        },
-        "graphql": {
-          "errors": [
-            {
-              "message": "Too many subscription messages",
-              "extensions": {
-                "code": "RATE_LIMITED",
-                "details": "Rate limit exceeded: 2 messages per second",
-                "retry_after_seconds": 1
-              }
-            }
-          ]
-        }
-      }
-    }
-  ],
-  "message_stream_simulation": {
-    "description": "Simulates rapid message arrival to demonstrate rate limiting behavior",
-    "messages": [
-      {
-        "sequence": 1,
-        "timestamp": "2025-12-27T17:00:00.000Z",
-        "data": {
-          "stockTicker": {
-            "id": "stock-aapl-1",
-            "symbol": "AAPL",
-            "price": 238.45,
-            "change": 2.15,
-            "changePercent": 0.91,
-            "timestamp": "2025-12-27T17:00:00Z",
-            "volume": 52345678
-          }
-        },
-        "status_code": 200,
-        "rate_limit_remaining": 99
-      },
-      {
-        "sequence": 2,
-        "timestamp": "2025-12-27T17:00:00.050Z",
-        "data": {
-          "stockTicker": {
-            "id": "stock-aapl-2",
-            "symbol": "AAPL",
-            "price": 238.50,
-            "change": 2.20,
-            "changePercent": 0.93,
-            "timestamp": "2025-12-27T17:00:00.050Z",
-            "volume": 52345700
-          }
-        },
-        "status_code": 200,
-        "rate_limit_remaining": 98
-      },
-      {
-        "sequence": 3,
-        "timestamp": "2025-12-27T17:00:00.100Z",
-        "status_code": 429,
-        "error": "Per-second rate limit exceeded",
-        "rate_limit_remaining": 98,
-        "retry_after_seconds": 1
-      },
-      {
-        "sequence": 4,
-        "timestamp": "2025-12-27T17:00:01.100Z",
-        "data": {
-          "stockTicker": {
-            "id": "stock-aapl-3",
-            "symbol": "AAPL",
-            "price": 238.55,
-            "change": 2.25,
-            "changePercent": 0.95,
-            "timestamp": "2025-12-27T17:00:01.100Z",
-            "volume": 52345750
-          }
-        },
-        "status_code": 200,
-        "rate_limit_remaining": 97,
-        "note": "Allowed after per-second window reset"
-      }
-    ]
-  },
-  "resolvers": {
-    "Subscription.stockTicker": {
-      "type": "mock_with_rate_limit",
-      "rate_limit_config": {
-        "max_per_minute": 100,
-        "max_per_second": 2,
-        "burst_allowed": false
-      },
-      "return_value": {
-        "id": "stock-aapl-1",
-        "symbol": "AAPL",
-        "price": 238.45,
-        "change": 2.15,
-        "changePercent": 0.91,
-        "timestamp": "2025-12-27T17:00:00Z",
-        "volume": 52345678
-      },
-      "error_on_limit_exceeded": {
-        "type": "rate_limit_error",
-        "status_code": 429,
-        "error_message": "Too many subscription messages"
-      }
-    }
-  },
-  "tags": [
-    "subscriptions",
-    "websocket",
-    "rate-limiting",
-    "middleware",
-    "performance",
-    "throughput-control",
-    "token-bucket",
-    "error-handling"
-  ]
+	"name": "subscription_rate_limited",
+	"description": "Subscription with rate limiting middleware enforcing maximum message throughput per subscription, returns 429 when threshold exceeded",
+	"operation_type": "subscription",
+	"endpoint": "/graphql",
+	"schema": "type Subscription {\n  stockTicker(symbol: String!): StockPrice!\n}\n\ntype StockPrice {\n  id: ID!\n  symbol: String!\n  price: Float!\n  change: Float!\n  changePercent: Float!\n  timestamp: String!\n  volume: Int!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "subscription OnStockUpdate($symbol: String!) {\n  stockTicker(symbol: $symbol) {\n    id\n    symbol\n    price\n    change\n    changePercent\n    timestamp\n    volume\n  }\n}",
+		"variables": {
+			"symbol": "AAPL"
+		},
+		"operationName": "OnStockUpdate",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "subscription OnStockUpdate($symbol: String!) {\n  stockTicker(symbol: $symbol) {\n    id\n    symbol\n    price\n    change\n    changePercent\n    timestamp\n    volume\n  }\n}",
+			"variables": {
+				"symbol": "AAPL"
+			},
+			"operationName": "OnStockUpdate"
+		}
+	},
+	"rate_limit": {
+		"enabled": true,
+		"max_messages_per_minute": 100,
+		"max_messages_per_second": 2,
+		"window_size_ms": 60000,
+		"strategy": "token_bucket",
+		"headers_returned": {
+			"X-RateLimit-Limit": "100",
+			"X-RateLimit-Remaining": "remaining_count",
+			"X-RateLimit-Reset": "reset_timestamp"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"X-RateLimit-Limit": "100",
+			"X-RateLimit-Remaining": "99"
+		},
+		"data": {
+			"stockTicker": {
+				"id": "stock-aapl-1",
+				"symbol": "AAPL",
+				"price": 238.45,
+				"change": 2.15,
+				"changePercent": 0.91,
+				"timestamp": "2025-12-27T17:00:00Z",
+				"volume": 52345678
+			}
+		}
+	},
+	"error_scenarios": [
+		{
+			"name": "rate_limit_exceeded",
+			"description": "Subscription message rejected due to exceeding rate limit of 100 messages per minute",
+			"context": {
+				"previous_messages_in_window": 100,
+				"current_message_number": 101
+			},
+			"expected_response": {
+				"status_code": 429,
+				"headers": {
+					"X-RateLimit-Limit": "100",
+					"X-RateLimit-Remaining": "0",
+					"X-RateLimit-Reset": "2025-12-27T17:01:00Z",
+					"Retry-After": "60"
+				},
+				"graphql": {
+					"errors": [
+						{
+							"message": "Too many subscription messages",
+							"extensions": {
+								"code": "RATE_LIMITED",
+								"details": "Rate limit exceeded: 100 messages per minute",
+								"retry_after_seconds": 60,
+								"limit": 100,
+								"remaining": 0,
+								"reset_at": "2025-12-27T17:01:00Z"
+							}
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "per_second_rate_limit_exceeded",
+			"description": "Subscription message rejected due to exceeding per-second rate limit of 2 messages",
+			"context": {
+				"messages_in_current_second": 2,
+				"attempted_third_message": true
+			},
+			"expected_response": {
+				"status_code": 429,
+				"headers": {
+					"X-RateLimit-Limit": "100",
+					"X-RateLimit-Remaining": "98",
+					"Retry-After": "1"
+				},
+				"graphql": {
+					"errors": [
+						{
+							"message": "Too many subscription messages",
+							"extensions": {
+								"code": "RATE_LIMITED",
+								"details": "Rate limit exceeded: 2 messages per second",
+								"retry_after_seconds": 1
+							}
+						}
+					]
+				}
+			}
+		}
+	],
+	"message_stream_simulation": {
+		"description": "Simulates rapid message arrival to demonstrate rate limiting behavior",
+		"messages": [
+			{
+				"sequence": 1,
+				"timestamp": "2025-12-27T17:00:00.000Z",
+				"data": {
+					"stockTicker": {
+						"id": "stock-aapl-1",
+						"symbol": "AAPL",
+						"price": 238.45,
+						"change": 2.15,
+						"changePercent": 0.91,
+						"timestamp": "2025-12-27T17:00:00Z",
+						"volume": 52345678
+					}
+				},
+				"status_code": 200,
+				"rate_limit_remaining": 99
+			},
+			{
+				"sequence": 2,
+				"timestamp": "2025-12-27T17:00:00.050Z",
+				"data": {
+					"stockTicker": {
+						"id": "stock-aapl-2",
+						"symbol": "AAPL",
+						"price": 238.5,
+						"change": 2.2,
+						"changePercent": 0.93,
+						"timestamp": "2025-12-27T17:00:00.050Z",
+						"volume": 52345700
+					}
+				},
+				"status_code": 200,
+				"rate_limit_remaining": 98
+			},
+			{
+				"sequence": 3,
+				"timestamp": "2025-12-27T17:00:00.100Z",
+				"status_code": 429,
+				"error": "Per-second rate limit exceeded",
+				"rate_limit_remaining": 98,
+				"retry_after_seconds": 1
+			},
+			{
+				"sequence": 4,
+				"timestamp": "2025-12-27T17:00:01.100Z",
+				"data": {
+					"stockTicker": {
+						"id": "stock-aapl-3",
+						"symbol": "AAPL",
+						"price": 238.55,
+						"change": 2.25,
+						"changePercent": 0.95,
+						"timestamp": "2025-12-27T17:00:01.100Z",
+						"volume": 52345750
+					}
+				},
+				"status_code": 200,
+				"rate_limit_remaining": 97,
+				"note": "Allowed after per-second window reset"
+			}
+		]
+	},
+	"resolvers": {
+		"Subscription.stockTicker": {
+			"type": "mock_with_rate_limit",
+			"rate_limit_config": {
+				"max_per_minute": 100,
+				"max_per_second": 2,
+				"burst_allowed": false
+			},
+			"return_value": {
+				"id": "stock-aapl-1",
+				"symbol": "AAPL",
+				"price": 238.45,
+				"change": 2.15,
+				"changePercent": 0.91,
+				"timestamp": "2025-12-27T17:00:00Z",
+				"volume": 52345678
+			},
+			"error_on_limit_exceeded": {
+				"type": "rate_limit_error",
+				"status_code": 429,
+				"error_message": "Too many subscription messages"
+			}
+		}
+	},
+	"tags": [
+		"subscriptions",
+		"websocket",
+		"rate-limiting",
+		"middleware",
+		"performance",
+		"throughput-control",
+		"token-bucket",
+		"error-handling"
+	]
 }

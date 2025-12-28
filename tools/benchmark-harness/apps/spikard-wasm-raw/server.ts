@@ -492,9 +492,7 @@ get("/path/simple/{id}")(async function pathSimple(params: PathParams): Promise<
 	return { id: params.id ?? "" };
 });
 
-get("/path/multiple/{user_id}/{post_id}")(async function pathMultiple(
-	params: PathParams,
-): Promise<PathResponse> {
+get("/path/multiple/{user_id}/{post_id}")(async function pathMultiple(params: PathParams): Promise<PathResponse> {
 	return { user_id: params.user_id ?? "", post_id: params.post_id ?? "" };
 });
 

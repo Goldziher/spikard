@@ -4,8 +4,8 @@
 //! projects in all supported languages (Python, TypeScript, Rust, Ruby, PHP) with
 //! proper file structure, content validation, and error handling.
 
-use spikard_cli::init::{InitEngine, InitRequest};
 use spikard_cli::codegen::TargetLanguage;
+use spikard_cli::init::{InitEngine, InitRequest};
 use tempfile::TempDir;
 
 // ============================================================================

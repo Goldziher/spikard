@@ -30,10 +30,10 @@ async def echo(body: dict) -> dict:
     return {"received": body, "method": "POST"}
 
 
-@get("/users/{id}")
-def user(id: str = Path()) -> dict[str, str]:
+@get("/users/{user_id}")
+def user(user_id: str = Path("id")) -> dict[str, str]:
     """Path parameter endpoint - tests path extraction."""
-    return {"userId": id, "type": "string"}
+    return {"userId": user_id, "type": "string"}
 
 
 def create_app() -> Spikard:
@@ -50,5 +50,4 @@ if __name__ == "__main__":
         port=port,
         workers=1,
     )
-    print(f"Starting Spikard test server on http://127.0.0.1:{port}", flush=True)
     app.run(config=config)

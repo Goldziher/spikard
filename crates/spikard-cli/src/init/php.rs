@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 pub struct PhpScaffolder;
 
 impl ProjectScaffolder for PhpScaffolder {
+    #[allow(clippy::vec_init_then_push)]
     fn scaffold(&self, _project_dir: &Path, project_name: &str) -> Result<Vec<ScaffoldedFile>> {
         let mut files = Vec::new();
 
@@ -21,10 +22,7 @@ impl ProjectScaffolder for PhpScaffolder {
         ));
 
         // Create composer.lock (empty placeholder)
-        files.push(ScaffoldedFile::new(
-            PathBuf::from("composer.lock"),
-            "".to_string(),
-        ));
+        files.push(ScaffoldedFile::new(PathBuf::from("composer.lock"), "".to_string()));
 
         // Create phpstan.neon
         files.push(ScaffoldedFile::new(

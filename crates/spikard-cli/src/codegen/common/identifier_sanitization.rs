@@ -80,10 +80,9 @@ impl TargetLanguage {
 /// Python 3.10+ reserved keywords.
 /// https://docs.python.org/3/reference/lexical_analysis.html#keywords
 const PYTHON_KEYWORDS: &[&str] = &[
-    "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue",
-    "def", "del", "elif", "else", "except", "finally", "for", "from", "global", "if", "import",
-    "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try", "while",
-    "with", "yield",
+    "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue", "def", "del",
+    "elif", "else", "except", "finally", "for", "from", "global", "if", "import", "in", "is", "lambda", "nonlocal",
+    "not", "or", "pass", "raise", "return", "try", "while", "with", "yield",
 ];
 
 /// Python soft keywords (contextual).
@@ -92,14 +91,75 @@ const PYTHON_SOFT_KEYWORDS: &[&str] = &["match", "case", "type"];
 /// TypeScript/JavaScript reserved keywords and common built-ins.
 /// https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes-func.html
 const TYPESCRIPT_KEYWORDS: &[&str] = &[
-    "abstract", "any", "as", "async", "await", "boolean", "break", "case", "catch", "class",
-    "const", "continue", "debugger", "declare", "default", "delete", "do", "else", "enum",
-    "export", "extends", "false", "finally", "for", "from", "function", "get", "global", "if",
-    "implements", "import", "in", "instanceof", "interface", "is", "keyof", "let", "module",
-    "namespace", "never", "new", "null", "number", "of", "package", "private", "protected",
-    "public", "readonly", "require", "return", "set", "static", "string", "super", "switch",
-    "symbol", "this", "throw", "true", "try", "type", "typeof", "unique", "var", "void",
-    "while", "with", "yield",
+    "abstract",
+    "any",
+    "as",
+    "async",
+    "await",
+    "boolean",
+    "break",
+    "case",
+    "catch",
+    "class",
+    "const",
+    "continue",
+    "debugger",
+    "declare",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "enum",
+    "export",
+    "extends",
+    "false",
+    "finally",
+    "for",
+    "from",
+    "function",
+    "get",
+    "global",
+    "if",
+    "implements",
+    "import",
+    "in",
+    "instanceof",
+    "interface",
+    "is",
+    "keyof",
+    "let",
+    "module",
+    "namespace",
+    "never",
+    "new",
+    "null",
+    "number",
+    "of",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "readonly",
+    "require",
+    "return",
+    "set",
+    "static",
+    "string",
+    "super",
+    "switch",
+    "symbol",
+    "this",
+    "throw",
+    "true",
+    "try",
+    "type",
+    "typeof",
+    "unique",
+    "var",
+    "void",
+    "while",
+    "with",
+    "yield",
 ];
 
 /// TypeScript soft keywords.
@@ -108,22 +168,60 @@ const TYPESCRIPT_SOFT_KEYWORDS: &[&str] = &["as", "require", "get", "set", "acce
 /// Rust 2024 reserved keywords.
 /// https://doc.rust-lang.org/reference/keywords.html
 const RUST_KEYWORDS: &[&str] = &[
-    "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum",
-    "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move",
-    "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true",
-    "type", "unsafe", "use", "where", "while",
+    "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern", "false", "fn",
+    "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self",
+    "static", "struct", "super", "trait", "true", "type", "unsafe", "use", "where", "while",
 ];
 
 /// Rust reserved but unused keywords (for future use).
-const RUST_SOFT_KEYWORDS: &[&str] = &["abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof", "unsized", "virtual", "yield"];
+const RUST_SOFT_KEYWORDS: &[&str] = &[
+    "abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof", "unsized", "virtual", "yield",
+];
 
 /// Ruby 3.2+ reserved keywords.
 /// https://ruby-doc.org/docs/ruby-doc-bundle/FAQ/FAQ.html#label-Keywords
 const RUBY_KEYWORDS: &[&str] = &[
-    "BEGIN", "END", "__ENCODING__", "__FILE__", "__LINE__", "alias", "and", "begin", "break",
-    "case", "class", "def", "defined?", "do", "else", "elsif", "end", "ensure", "false", "for",
-    "if", "in", "module", "next", "nil", "not", "or", "redo", "rescue", "retry", "return",
-    "self", "super", "then", "true", "undef", "unless", "until", "when", "while", "yield",
+    "BEGIN",
+    "END",
+    "__ENCODING__",
+    "__FILE__",
+    "__LINE__",
+    "alias",
+    "and",
+    "begin",
+    "break",
+    "case",
+    "class",
+    "def",
+    "defined?",
+    "do",
+    "else",
+    "elsif",
+    "end",
+    "ensure",
+    "false",
+    "for",
+    "if",
+    "in",
+    "module",
+    "next",
+    "nil",
+    "not",
+    "or",
+    "redo",
+    "rescue",
+    "retry",
+    "return",
+    "self",
+    "super",
+    "then",
+    "true",
+    "undef",
+    "unless",
+    "until",
+    "when",
+    "while",
+    "yield",
 ];
 
 /// Ruby soft keywords.
@@ -132,14 +230,80 @@ const RUBY_SOFT_KEYWORDS: &[&str] = &[];
 /// PHP 8.2+ reserved keywords.
 /// https://www.php.net/manual/en/reserved.keywords.php
 const PHP_KEYWORDS: &[&str] = &[
-    "abstract", "and", "array", "as", "break", "callable", "case", "catch", "class", "clone",
-    "const", "continue", "declare", "default", "die", "do", "echo", "else", "elseif", "empty",
-    "enddeclare", "endfor", "endforeach", "endif", "endswitch", "endwhile", "eval", "exit",
-    "extends", "false", "final", "finally", "fn", "for", "foreach", "from", "function", "global",
-    "goto", "if", "implements", "include", "include_once", "instanceof", "insteadof", "interface",
-    "isset", "list", "match", "namespace", "new", "never", "null", "or", "print", "private",
-    "protected", "public", "readonly", "require", "require_once", "return", "static", "switch",
-    "throw", "trait", "true", "try", "unset", "use", "var", "while", "xor", "yield",
+    "abstract",
+    "and",
+    "array",
+    "as",
+    "break",
+    "callable",
+    "case",
+    "catch",
+    "class",
+    "clone",
+    "const",
+    "continue",
+    "declare",
+    "default",
+    "die",
+    "do",
+    "echo",
+    "else",
+    "elseif",
+    "empty",
+    "enddeclare",
+    "endfor",
+    "endforeach",
+    "endif",
+    "endswitch",
+    "endwhile",
+    "eval",
+    "exit",
+    "extends",
+    "false",
+    "final",
+    "finally",
+    "fn",
+    "for",
+    "foreach",
+    "from",
+    "function",
+    "global",
+    "goto",
+    "if",
+    "implements",
+    "include",
+    "include_once",
+    "instanceof",
+    "insteadof",
+    "interface",
+    "isset",
+    "list",
+    "match",
+    "namespace",
+    "new",
+    "never",
+    "null",
+    "or",
+    "print",
+    "private",
+    "protected",
+    "public",
+    "readonly",
+    "require",
+    "require_once",
+    "return",
+    "static",
+    "switch",
+    "throw",
+    "trait",
+    "true",
+    "try",
+    "unset",
+    "use",
+    "var",
+    "while",
+    "xor",
+    "yield",
 ];
 
 /// PHP soft keywords.
@@ -194,13 +358,7 @@ pub fn sanitize_identifier(name: &str, language: TargetLanguage) -> String {
     // Step 1: Replace invalid characters with underscores
     let mut ident: String = name
         .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() || c == '_' {
-                c
-            } else {
-                '_'
-            }
-        })
+        .map(|c| if c.is_ascii_alphanumeric() || c == '_' { c } else { '_' })
         .collect();
 
     // Step 2: Clean up multiple consecutive underscores
@@ -225,11 +383,14 @@ pub fn sanitize_identifier(name: &str, language: TargetLanguage) -> String {
     let lower_ident = ident.to_lowercase();
 
     // Step 7: Handle reserved keywords
-    let is_reserved = language.reserved_keywords().iter().any(|kw| {
-        kw.to_lowercase() == lower_ident
-    }) || language.soft_keywords().iter().any(|kw| {
-        kw.to_lowercase() == lower_ident
-    });
+    let is_reserved = language
+        .reserved_keywords()
+        .iter()
+        .any(|kw| kw.to_lowercase() == lower_ident)
+        || language
+            .soft_keywords()
+            .iter()
+            .any(|kw| kw.to_lowercase() == lower_ident);
 
     if is_reserved {
         let prefix = language.keyword_prefix();
@@ -362,9 +523,7 @@ pub fn sanitize_identifier_pascal_case(name: &str, language: TargetLanguage) -> 
             let mut chars = part.chars();
             match chars.next() {
                 None => String::new(),
-                Some(first) => {
-                    first.to_uppercase().collect::<String>() + chars.as_str()
-                }
+                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
             }
         })
         .collect()
@@ -411,7 +570,10 @@ mod tests {
         assert_eq!(sanitize_identifier("var", TargetLanguage::TypeScript), "_var");
         assert_eq!(sanitize_identifier("function", TargetLanguage::TypeScript), "_function");
         assert_eq!(sanitize_identifier("class", TargetLanguage::TypeScript), "_class");
-        assert_eq!(sanitize_identifier("interface", TargetLanguage::TypeScript), "_interface");
+        assert_eq!(
+            sanitize_identifier("interface", TargetLanguage::TypeScript),
+            "_interface"
+        );
         assert_eq!(sanitize_identifier("type", TargetLanguage::TypeScript), "_type");
     }
 
@@ -420,7 +582,10 @@ mod tests {
         assert_eq!(sanitize_identifier("name", TargetLanguage::TypeScript), "name");
         // sanitize_identifier lowercases everything - use sanitize_identifier_camel_case for camelCase
         assert_eq!(sanitize_identifier("userId", TargetLanguage::TypeScript), "userid");
-        assert_eq!(sanitize_identifier_camel_case("user_id", TargetLanguage::TypeScript), "userId");
+        assert_eq!(
+            sanitize_identifier_camel_case("user_id", TargetLanguage::TypeScript),
+            "userId"
+        );
     }
 
     // Rust tests
@@ -483,10 +648,22 @@ mod tests {
     // Generic tests
     #[test]
     fn test_sanitize_invalid_characters() {
-        assert_eq!(sanitize_identifier("hello-world", TargetLanguage::Python), "hello_world");
-        assert_eq!(sanitize_identifier("hello world", TargetLanguage::Python), "hello_world");
-        assert_eq!(sanitize_identifier("hello@world#test", TargetLanguage::Python), "hello_world_test");
-        assert_eq!(sanitize_identifier("hello.world", TargetLanguage::Python), "hello_world");
+        assert_eq!(
+            sanitize_identifier("hello-world", TargetLanguage::Python),
+            "hello_world"
+        );
+        assert_eq!(
+            sanitize_identifier("hello world", TargetLanguage::Python),
+            "hello_world"
+        );
+        assert_eq!(
+            sanitize_identifier("hello@world#test", TargetLanguage::Python),
+            "hello_world_test"
+        );
+        assert_eq!(
+            sanitize_identifier("hello.world", TargetLanguage::Python),
+            "hello_world"
+        );
     }
 
     #[test]
@@ -498,7 +675,10 @@ mod tests {
 
     #[test]
     fn test_sanitize_multiple_underscores() {
-        assert_eq!(sanitize_identifier("hello__world", TargetLanguage::Python), "hello_world");
+        assert_eq!(
+            sanitize_identifier("hello__world", TargetLanguage::Python),
+            "hello_world"
+        );
         assert_eq!(sanitize_identifier("__double__", TargetLanguage::TypeScript), "double");
         assert_eq!(sanitize_identifier("___triple___", TargetLanguage::Ruby), "triple");
     }
@@ -561,10 +741,7 @@ mod tests {
             sanitize_identifier_snake_case("MyFunctionName", TargetLanguage::Python),
             "my_function_name"
         );
-        assert_eq!(
-            sanitize_identifier_snake_case("hello", TargetLanguage::Python),
-            "hello"
-        );
+        assert_eq!(sanitize_identifier_snake_case("hello", TargetLanguage::Python), "hello");
     }
 
     #[test]

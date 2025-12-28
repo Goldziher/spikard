@@ -24,7 +24,7 @@
 //! ```
 
 use napi_derive::napi;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::fmt;
 
 /// Configuration for GraphQL schema building
@@ -40,11 +40,11 @@ pub struct SchemaConfig {
 
     /// Maximum query complexity (0 = unlimited)
     #[napi(js_name = "complexityLimit")]
-    pub complexity_limit: Option<usize>,
+    pub complexity_limit: Option<u32>,
 
     /// Maximum query depth (0 = unlimited)
     #[napi(js_name = "depthLimit")]
-    pub depth_limit: Option<usize>,
+    pub depth_limit: Option<u32>,
 }
 
 impl fmt::Display for SchemaConfig {
@@ -64,8 +64,8 @@ impl fmt::Display for SchemaConfig {
 #[napi]
 pub struct GraphQLSchemaBuilder {
     introspection_enabled: bool,
-    complexity_limit: Option<usize>,
-    depth_limit: Option<usize>,
+    complexity_limit: Option<u32>,
+    depth_limit: Option<u32>,
 }
 
 #[napi]
@@ -102,7 +102,7 @@ impl GraphQLSchemaBuilder {
     ///
     /// * `limit` - The maximum complexity allowed (0 = unlimited)
     #[napi(js_name = "complexityLimit")]
-    pub fn complexity_limit(&mut self, limit: usize) {
+    pub fn complexity_limit(&mut self, limit: u32) {
         self.complexity_limit = if limit > 0 { Some(limit) } else { None };
     }
 
@@ -115,7 +115,7 @@ impl GraphQLSchemaBuilder {
     ///
     /// * `limit` - The maximum depth allowed (0 = unlimited)
     #[napi(js_name = "depthLimit")]
-    pub fn depth_limit(&mut self, limit: usize) {
+    pub fn depth_limit(&mut self, limit: u32) {
         self.depth_limit = if limit > 0 { Some(limit) } else { None };
     }
 
@@ -127,13 +127,13 @@ impl GraphQLSchemaBuilder {
 
     /// Get the current complexity limit if set
     #[napi(js_name = "getComplexityLimit")]
-    pub fn get_complexity_limit(&self) -> Option<usize> {
+    pub fn get_complexity_limit(&self) -> Option<u32> {
         self.complexity_limit
     }
 
     /// Get the current depth limit if set
     #[napi(js_name = "getDepthLimit")]
-    pub fn get_depth_limit(&self) -> Option<usize> {
+    pub fn get_depth_limit(&self) -> Option<u32> {
         self.depth_limit
     }
 

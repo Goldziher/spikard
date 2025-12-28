@@ -711,12 +711,24 @@ impl NativeTestClient {
         testing::sse::sse_stream_from_response(ruby, &snapshot)
     }
 
-    fn graphql(ruby: &Ruby, this: &Self, query: String, variables: Value, operation_name: Value) -> Result<Value, Error> {
+    fn graphql(
+        ruby: &Ruby,
+        this: &Self,
+        query: String,
+        variables: Value,
+        operation_name: Value,
+    ) -> Result<Value, Error> {
         let (_status, response) = Self::execute_graphql_impl(ruby, this, query, variables, operation_name)?;
         Ok(response)
     }
 
-    fn graphql_with_status(ruby: &Ruby, this: &Self, query: String, variables: Value, operation_name: Value) -> Result<Value, Error> {
+    fn graphql_with_status(
+        ruby: &Ruby,
+        this: &Self,
+        query: String,
+        variables: Value,
+        operation_name: Value,
+    ) -> Result<Value, Error> {
         let (status, response) = Self::execute_graphql_impl(ruby, this, query, variables, operation_name)?;
 
         let array = ruby.ary_new_capa(2);
@@ -725,7 +737,13 @@ impl NativeTestClient {
         Ok(array.as_value())
     }
 
-    fn execute_graphql_impl(ruby: &Ruby, this: &Self, query: String, variables: Value, operation_name: Value) -> Result<(u16, Value), Error> {
+    fn execute_graphql_impl(
+        ruby: &Ruby,
+        this: &Self,
+        query: String,
+        variables: Value,
+        operation_name: Value,
+    ) -> Result<(u16, Value), Error> {
         let inner_borrow = this.inner.borrow();
         let inner = inner_borrow
             .as_ref()

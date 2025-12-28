@@ -1604,4 +1604,3 @@ fn build_request_call(method: &str, path_with_query: &str, option_fields: &[&str
         format!("await client.{}(\"{}\")", method, path_with_query)
     }
 }
-

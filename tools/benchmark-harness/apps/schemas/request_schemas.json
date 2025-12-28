@@ -1,252 +1,252 @@
 {
-  "json/small": {
-    "type": "object",
-    "required": ["name", "description", "price", "tax"],
-    "properties": {
-      "name": { "type": "string" },
-      "description": { "type": "string" },
-      "price": { "type": "number" },
-      "tax": { "type": "number" }
-    },
-    "additionalProperties": false
-  },
-  "json/medium": {
-    "type": "object",
-    "required": ["name", "price", "image"],
-    "properties": {
-      "name": { "type": "string" },
-      "price": { "type": "number" },
-      "image": {
-        "type": "object",
-        "required": ["url", "name"],
-        "properties": {
-          "url": { "type": "string" },
-          "name": { "type": "string" }
-        },
-        "additionalProperties": false
-      }
-    },
-    "additionalProperties": false
-  },
-  "json/large": {
-    "type": "object",
-    "required": ["name", "price", "seller"],
-    "properties": {
-      "name": { "type": "string" },
-      "price": { "type": "number" },
-      "seller": {
-        "type": "object",
-        "required": ["name", "address"],
-        "properties": {
-          "name": { "type": "string" },
-          "address": {
-            "type": "object",
-            "required": ["street", "city", "country"],
-            "properties": {
-              "street": { "type": "string" },
-              "city": { "type": "string" },
-              "country": {
-                "type": "object",
-                "required": ["name", "code"],
-                "properties": {
-                  "name": { "type": "string" },
-                  "code": { "type": "string" }
-                },
-                "additionalProperties": false
-              }
-            },
-            "additionalProperties": false
-          }
-        },
-        "additionalProperties": false
-      }
-    },
-    "additionalProperties": false
-  },
-  "json/very-large": {
-    "type": "object",
-    "required": ["name", "tags", "images"],
-    "properties": {
-      "name": { "type": "string" },
-      "tags": { "type": "array", "items": { "type": "string" } },
-      "images": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "required": ["url", "name"],
-          "properties": {
-            "url": { "type": "string" },
-            "name": { "type": "string" }
-          },
-          "additionalProperties": false
-        }
-      }
-    },
-    "additionalProperties": false
-  },
-  "multipart/small": {
-    "type": "object",
-    "required": ["file"],
-    "properties": {
-      "file": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": ["filename", "size", "content", "content_type"],
-            "properties": {
-              "filename": { "type": "string" },
-              "size": { "type": "integer" },
-              "content": { "type": "string" },
-              "content_type": { "type": "string" }
-            },
-            "additionalProperties": false
-          },
-          {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["filename", "size", "content", "content_type"],
-              "properties": {
-                "filename": { "type": "string" },
-                "size": { "type": "integer" },
-                "content": { "type": "string" },
-                "content_type": { "type": "string" }
-              },
-              "additionalProperties": false
-            }
-          }
-        ]
-      }
-    },
-    "additionalProperties": false
-  },
-  "multipart/medium": {
-    "type": "object",
-    "required": ["file"],
-    "properties": {
-      "file": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": ["filename", "size", "content", "content_type"],
-            "properties": {
-              "filename": { "type": "string" },
-              "size": { "type": "integer" },
-              "content": { "type": "string" },
-              "content_type": { "type": "string" }
-            },
-            "additionalProperties": false
-          },
-          {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["filename", "size", "content", "content_type"],
-              "properties": {
-                "filename": { "type": "string" },
-                "size": { "type": "integer" },
-                "content": { "type": "string" },
-                "content_type": { "type": "string" }
-              },
-              "additionalProperties": false
-            }
-          }
-        ]
-      }
-    },
-    "additionalProperties": false
-  },
-  "multipart/large": {
-    "type": "object",
-    "required": ["file"],
-    "properties": {
-      "file": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": ["filename", "size", "content", "content_type"],
-            "properties": {
-              "filename": { "type": "string" },
-              "size": { "type": "integer" },
-              "content": { "type": "string" },
-              "content_type": { "type": "string" }
-            },
-            "additionalProperties": false
-          },
-          {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["filename", "size", "content", "content_type"],
-              "properties": {
-                "filename": { "type": "string" },
-                "size": { "type": "integer" },
-                "content": { "type": "string" },
-                "content_type": { "type": "string" }
-              },
-              "additionalProperties": false
-            }
-          }
-        ]
-      }
-    },
-    "additionalProperties": false
-  },
-  "urlencoded/simple": {
-    "type": "object",
-    "required": ["name", "email", "age", "subscribe"],
-    "properties": {
-      "name": { "type": "string" },
-      "email": { "type": "string", "format": "email" },
-      "age": { "type": "integer" },
-      "subscribe": { "type": "boolean" }
-    },
-    "additionalProperties": false
-  },
-  "urlencoded/complex": {
-    "type": "object",
-    "required": [
-      "username",
-      "password",
-      "email",
-      "first_name",
-      "last_name",
-      "age",
-      "country",
-      "state",
-      "city",
-      "zip",
-      "phone",
-      "company",
-      "job_title",
-      "subscribe",
-      "newsletter",
-      "terms_accepted",
-      "privacy_accepted",
-      "marketing_consent",
-      "two_factor_enabled"
-    ],
-    "properties": {
-      "username": { "type": "string" },
-      "password": { "type": "string" },
-      "email": { "type": "string", "format": "email" },
-      "first_name": { "type": "string" },
-      "last_name": { "type": "string" },
-      "age": { "type": "integer" },
-      "country": { "type": "string" },
-      "state": { "type": "string" },
-      "city": { "type": "string" },
-      "zip": { "type": "string" },
-      "phone": { "type": "string" },
-      "company": { "type": "string" },
-      "job_title": { "type": "string" },
-      "subscribe": { "type": "boolean" },
-      "newsletter": { "type": "boolean" },
-      "terms_accepted": { "type": "boolean" },
-      "privacy_accepted": { "type": "boolean" },
-      "marketing_consent": { "type": "boolean" },
-      "two_factor_enabled": { "type": "boolean" }
-    },
-    "additionalProperties": false
-  }
+	"json/small": {
+		"type": "object",
+		"required": ["name", "description", "price", "tax"],
+		"properties": {
+			"name": { "type": "string" },
+			"description": { "type": "string" },
+			"price": { "type": "number" },
+			"tax": { "type": "number" }
+		},
+		"additionalProperties": false
+	},
+	"json/medium": {
+		"type": "object",
+		"required": ["name", "price", "image"],
+		"properties": {
+			"name": { "type": "string" },
+			"price": { "type": "number" },
+			"image": {
+				"type": "object",
+				"required": ["url", "name"],
+				"properties": {
+					"url": { "type": "string" },
+					"name": { "type": "string" }
+				},
+				"additionalProperties": false
+			}
+		},
+		"additionalProperties": false
+	},
+	"json/large": {
+		"type": "object",
+		"required": ["name", "price", "seller"],
+		"properties": {
+			"name": { "type": "string" },
+			"price": { "type": "number" },
+			"seller": {
+				"type": "object",
+				"required": ["name", "address"],
+				"properties": {
+					"name": { "type": "string" },
+					"address": {
+						"type": "object",
+						"required": ["street", "city", "country"],
+						"properties": {
+							"street": { "type": "string" },
+							"city": { "type": "string" },
+							"country": {
+								"type": "object",
+								"required": ["name", "code"],
+								"properties": {
+									"name": { "type": "string" },
+									"code": { "type": "string" }
+								},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"additionalProperties": false
+			}
+		},
+		"additionalProperties": false
+	},
+	"json/very-large": {
+		"type": "object",
+		"required": ["name", "tags", "images"],
+		"properties": {
+			"name": { "type": "string" },
+			"tags": { "type": "array", "items": { "type": "string" } },
+			"images": {
+				"type": "array",
+				"items": {
+					"type": "object",
+					"required": ["url", "name"],
+					"properties": {
+						"url": { "type": "string" },
+						"name": { "type": "string" }
+					},
+					"additionalProperties": false
+				}
+			}
+		},
+		"additionalProperties": false
+	},
+	"multipart/small": {
+		"type": "object",
+		"required": ["file"],
+		"properties": {
+			"file": {
+				"oneOf": [
+					{
+						"type": "object",
+						"required": ["filename", "size", "content", "content_type"],
+						"properties": {
+							"filename": { "type": "string" },
+							"size": { "type": "integer" },
+							"content": { "type": "string" },
+							"content_type": { "type": "string" }
+						},
+						"additionalProperties": false
+					},
+					{
+						"type": "array",
+						"items": {
+							"type": "object",
+							"required": ["filename", "size", "content", "content_type"],
+							"properties": {
+								"filename": { "type": "string" },
+								"size": { "type": "integer" },
+								"content": { "type": "string" },
+								"content_type": { "type": "string" }
+							},
+							"additionalProperties": false
+						}
+					}
+				]
+			}
+		},
+		"additionalProperties": false
+	},
+	"multipart/medium": {
+		"type": "object",
+		"required": ["file"],
+		"properties": {
+			"file": {
+				"oneOf": [
+					{
+						"type": "object",
+						"required": ["filename", "size", "content", "content_type"],
+						"properties": {
+							"filename": { "type": "string" },
+							"size": { "type": "integer" },
+							"content": { "type": "string" },
+							"content_type": { "type": "string" }
+						},
+						"additionalProperties": false
+					},
+					{
+						"type": "array",
+						"items": {
+							"type": "object",
+							"required": ["filename", "size", "content", "content_type"],
+							"properties": {
+								"filename": { "type": "string" },
+								"size": { "type": "integer" },
+								"content": { "type": "string" },
+								"content_type": { "type": "string" }
+							},
+							"additionalProperties": false
+						}
+					}
+				]
+			}
+		},
+		"additionalProperties": false
+	},
+	"multipart/large": {
+		"type": "object",
+		"required": ["file"],
+		"properties": {
+			"file": {
+				"oneOf": [
+					{
+						"type": "object",
+						"required": ["filename", "size", "content", "content_type"],
+						"properties": {
+							"filename": { "type": "string" },
+							"size": { "type": "integer" },
+							"content": { "type": "string" },
+							"content_type": { "type": "string" }
+						},
+						"additionalProperties": false
+					},
+					{
+						"type": "array",
+						"items": {
+							"type": "object",
+							"required": ["filename", "size", "content", "content_type"],
+							"properties": {
+								"filename": { "type": "string" },
+								"size": { "type": "integer" },
+								"content": { "type": "string" },
+								"content_type": { "type": "string" }
+							},
+							"additionalProperties": false
+						}
+					}
+				]
+			}
+		},
+		"additionalProperties": false
+	},
+	"urlencoded/simple": {
+		"type": "object",
+		"required": ["name", "email", "age", "subscribe"],
+		"properties": {
+			"name": { "type": "string" },
+			"email": { "type": "string", "format": "email" },
+			"age": { "type": "integer" },
+			"subscribe": { "type": "boolean" }
+		},
+		"additionalProperties": false
+	},
+	"urlencoded/complex": {
+		"type": "object",
+		"required": [
+			"username",
+			"password",
+			"email",
+			"first_name",
+			"last_name",
+			"age",
+			"country",
+			"state",
+			"city",
+			"zip",
+			"phone",
+			"company",
+			"job_title",
+			"subscribe",
+			"newsletter",
+			"terms_accepted",
+			"privacy_accepted",
+			"marketing_consent",
+			"two_factor_enabled"
+		],
+		"properties": {
+			"username": { "type": "string" },
+			"password": { "type": "string" },
+			"email": { "type": "string", "format": "email" },
+			"first_name": { "type": "string" },
+			"last_name": { "type": "string" },
+			"age": { "type": "integer" },
+			"country": { "type": "string" },
+			"state": { "type": "string" },
+			"city": { "type": "string" },
+			"zip": { "type": "string" },
+			"phone": { "type": "string" },
+			"company": { "type": "string" },
+			"job_title": { "type": "string" },
+			"subscribe": { "type": "boolean" },
+			"newsletter": { "type": "boolean" },
+			"terms_accepted": { "type": "boolean" },
+			"privacy_accepted": { "type": "boolean" },
+			"marketing_consent": { "type": "boolean" },
+			"two_factor_enabled": { "type": "boolean" }
+		},
+		"additionalProperties": false
+	}
 }

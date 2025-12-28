@@ -2,15 +2,17 @@
 //! Verifies that schemas are generated in topologically sorted order
 //! to avoid "variable used before declaration" errors
 
-use spikard_cli::codegen::{TypeScriptGenerator, NodeDtoStyle};
+use spikard_cli::codegen::{NodeDtoStyle, TypeScriptGenerator};
 use std::fs;
 
 #[test]
 fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
-    let schema_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../testing_data/openapi_schemas/complex_nested.json");
+    let schema_path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../testing_data/openapi_schemas/complex_nested.json"
+    );
     let schema_content = fs::read_to_string(schema_path).expect("Failed to read schema file");
-    let spec: openapiv3::OpenAPI = serde_json::from_str(&schema_content)
-        .expect("Failed to parse OpenAPI schema");
+    let spec: openapiv3::OpenAPI = serde_json::from_str(&schema_content).expect("Failed to parse OpenAPI schema");
 
     let generator = TypeScriptGenerator::new(spec, NodeDtoStyle::Zod);
     let output = generator.generate().expect("Failed to generate TypeScript");
@@ -47,9 +49,7 @@ fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
     let organization_pos = output
         .find("export const OrganizationSchema")
         .expect("Organization schema not found");
-    let task_pos = output
-        .find("export const TaskSchema")
-        .expect("Task schema not found");
+    let task_pos = output.find("export const TaskSchema").expect("Task schema not found");
     let project_pos = output
         .find("export const ProjectSchema")
         .expect("Project schema not found");
@@ -110,22 +110,10 @@ fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
     );
 
     // Verify schema definitions use correct Zod syntax
-    assert!(
-        output.contains("z.object"),
-        "Should generate Zod objects"
-    );
-    assert!(
-        output.contains("z.array"),
-        "Should generate Zod arrays"
-    );
-    assert!(
-        output.contains("z.string"),
-        "Should generate Zod strings"
-    );
-    assert!(
-        output.contains("export type"),
-        "Should generate type exports"
-    );
+    assert!(output.contains("z.object"), "Should generate Zod objects");
+    assert!(output.contains("z.array"), "Should generate Zod arrays");
+    assert!(output.contains("z.string"), "Should generate Zod strings");
+    assert!(output.contains("export type"), "Should generate type exports");
 
     // Note: Forward reference check is complex due to line number tracking
     // The topological sort implementation ensures dependencies come before their usage
@@ -152,8 +140,7 @@ fn typescript_generation_handles_simple_schema_without_cycles() {
         }
     });
 
-    let spec: openapiv3::OpenAPI = serde_json::from_value(simple_spec)
-        .expect("Failed to create spec");
+    let spec: openapiv3::OpenAPI = serde_json::from_value(simple_spec).expect("Failed to create spec");
 
     let generator = TypeScriptGenerator::new(spec, NodeDtoStyle::Zod);
     let output = generator.generate().expect("Failed to generate TypeScript");
@@ -162,16 +149,7 @@ fn typescript_generation_handles_simple_schema_without_cycles() {
         output.contains("export const UserSchema"),
         "Should generate User schema"
     );
-    assert!(
-        output.contains("z.object"),
-        "Should use Zod z.object"
-    );
-    assert!(
-        output.contains("id: z.string()"),
-        "Should have id as string"
-    );
-    assert!(
-        output.contains("name: z.string()"),
-        "Should have name as string"
-    );
+    assert!(output.contains("z.object"), "Should use Zod z.object");
+    assert!(output.contains("id: z.string()"), "Should have id as string");
+    assert!(output.contains("name: z.string()"), "Should have name as string");
 }

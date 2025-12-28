@@ -70,11 +70,7 @@ impl TestClient {
 
         let fut = async move {
             client
-                .get(
-                    &path,
-                    Some(query_params_vec),
-                    wrap_optional_vec(headers_vec),
-                )
+                .get(&path, Some(query_params_vec), wrap_optional_vec(headers_vec))
                 .await
                 .map(|snapshot| TestResponse { snapshot })
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
@@ -242,11 +238,7 @@ impl TestClient {
 
         let fut = async move {
             client
-                .delete(
-                    &path,
-                    Some(query_params_vec),
-                    wrap_optional_vec(headers_vec),
-                )
+                .delete(&path, Some(query_params_vec), wrap_optional_vec(headers_vec))
                 .await
                 .map(|snapshot| TestResponse { snapshot })
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
@@ -271,11 +263,7 @@ impl TestClient {
 
         let fut = async move {
             client
-                .options(
-                    &path,
-                    Some(query_params_vec),
-                    wrap_optional_vec(headers_vec),
-                )
+                .options(&path, Some(query_params_vec), wrap_optional_vec(headers_vec))
                 .await
                 .map(|snapshot| TestResponse { snapshot })
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
@@ -300,11 +288,7 @@ impl TestClient {
 
         let fut = async move {
             client
-                .head(
-                    &path,
-                    Some(query_params_vec),
-                    wrap_optional_vec(headers_vec),
-                )
+                .head(&path, Some(query_params_vec), wrap_optional_vec(headers_vec))
                 .await
                 .map(|snapshot| TestResponse { snapshot })
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
@@ -329,11 +313,7 @@ impl TestClient {
 
         let fut = async move {
             client
-                .trace(
-                    &path,
-                    Some(query_params_vec),
-                    wrap_optional_vec(headers_vec),
-                )
+                .trace(&path, Some(query_params_vec), wrap_optional_vec(headers_vec))
                 .await
                 .map(|snapshot| TestResponse { snapshot })
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
@@ -558,11 +538,7 @@ impl TestResponse {
 /// This wraps header and query param vectors into the format expected by the test client
 #[inline]
 fn wrap_optional_vec(vec: Vec<(String, String)>) -> Option<Vec<(String, String)>> {
-    if vec.is_empty() {
-        None
-    } else {
-        Some(vec)
-    }
+    if vec.is_empty() { None } else { Some(vec) }
 }
 
 /// Convert optional Python value to JSON, handling None case

@@ -41,7 +41,9 @@
 //! - **Complete coverage**: Handles Objects, InputObjects, Enums, Scalars, Unions, Interfaces
 //! - **Field arguments**: Properly formats field arguments with default values
 
-use crate::codegen::graphql::spec_parser::{GraphQLArgument, GraphQLEnumValue, GraphQLField, GraphQLInputField, GraphQLSchema, TypeKind};
+use crate::codegen::graphql::spec_parser::{
+    GraphQLEnumValue, GraphQLField, GraphQLInputField, GraphQLSchema, TypeKind,
+};
 
 /// Builds GraphQL Schema Definition Language (SDL) from a parsed schema.
 ///
@@ -254,6 +256,7 @@ impl<'a> SdlBuilder<'a> {
     }
 
     /// Format all enum types.
+    #[allow(dead_code)]
     fn format_enums(&self) -> String {
         let mut result = String::new();
 
@@ -301,7 +304,7 @@ impl<'a> SdlBuilder<'a> {
                 }
             }
 
-            result.push_str("\n");
+            result.push('\n');
         }
 
         result.push_str("}\n\n");
@@ -309,6 +312,7 @@ impl<'a> SdlBuilder<'a> {
     }
 
     /// Format all input object types.
+    #[allow(dead_code)]
     fn format_input_objects(&self) -> String {
         let mut result = String::new();
 
@@ -358,7 +362,7 @@ impl<'a> SdlBuilder<'a> {
                 result.push_str(default);
             }
 
-            result.push_str("\n");
+            result.push('\n');
         }
 
         result.push_str("}\n\n");
@@ -366,6 +370,7 @@ impl<'a> SdlBuilder<'a> {
     }
 
     /// Format all union types.
+    #[allow(dead_code)]
     fn format_unions(&self) -> String {
         let mut result = String::new();
 
@@ -457,7 +462,7 @@ impl<'a> SdlBuilder<'a> {
             result.push_str("\")");
         }
 
-        result.push_str("\n");
+        result.push('\n');
         result
     }
 

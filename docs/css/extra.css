@@ -18,7 +18,7 @@ html {
 	--md-primary-fg-color--dark: #1a1926;
 
 	--md-accent-fg-color: #2abfa1;
-	--md-accent-fg-color-opposite: #8B1A8B;
+	--md-accent-fg-color-opposite: #8b1a8b;
 
 	--md-default-fg-color: #323040;
 	--md-default-fg-color--light: #323040;
@@ -38,7 +38,7 @@ html {
 	--md-primary-fg-color--dark: #1a1926;
 
 	--md-accent-fg-color: #2abfa1;
-	--md-accent-fg-color-opposite: #8B1A8B;
+	--md-accent-fg-color-opposite: #8b1a8b;
 
 	--md-default-fg-color: #ffffff;
 	--md-default-fg-color--light: #ffffff;
@@ -212,7 +212,7 @@ html {
 [data-md-color-scheme="slate"] .highlight .k,
 [data-md-color-scheme="slate"] .highlight .kn,
 [data-md-color-scheme="slate"] .highlight .kd {
-	color: #8B1A8B;
+	color: #8b1a8b;
 }
 
 [data-md-color-scheme="slate"] .highlight .c,
@@ -227,11 +227,11 @@ html {
 [data-md-color-scheme="slate"] .highlight .ni,
 [data-md-color-scheme="slate"] .highlight .nn,
 [data-md-color-scheme="slate"] .highlight .no {
-	color: #99A8B8;
+	color: #99a8b8;
 }
 
 [data-md-color-scheme="slate"] .highlight .o {
-	color: #99A8B8;
+	color: #99a8b8;
 }
 
 [data-md-color-scheme="slate"] .highlight .s,

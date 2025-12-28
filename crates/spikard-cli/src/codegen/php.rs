@@ -103,11 +103,7 @@ impl PhpGenerator {
     }
 
     /// Append constructor method with typed properties
-    fn append_constructor(
-        &self,
-        output: &mut String,
-        obj: &openapiv3::ObjectType,
-    ) -> Result<()> {
+    fn append_constructor(&self, output: &mut String, obj: &openapiv3::ObjectType) -> Result<()> {
         output.push_str("    public function __construct(\n");
 
         let property_lines = self.build_constructor_params(obj)?;
@@ -121,10 +117,7 @@ impl PhpGenerator {
 
     /// Build constructor parameter declarations for object properties
     /// Partitions properties so required parameters come first (PHP 8.1+ requirement)
-    fn build_constructor_params(
-        &self,
-        obj: &openapiv3::ObjectType,
-    ) -> Result<Vec<String>> {
+    fn build_constructor_params(&self, obj: &openapiv3::ObjectType) -> Result<Vec<String>> {
         let mut required_props = Vec::new();
         let mut optional_props = Vec::new();
 
@@ -134,9 +127,7 @@ impl PhpGenerator {
             let field_name = Self::to_camel_case(prop_name);
 
             let (type_hint, nullable) = match prop_schema_ref {
-                ReferenceOr::Item(prop_schema) => {
-                    Self::schema_to_php_type(prop_schema, !is_required)
-                }
+                ReferenceOr::Item(prop_schema) => Self::schema_to_php_type(prop_schema, !is_required),
                 ReferenceOr::Reference { reference } => {
                     let ref_name = self.extract_ref_name(reference);
                     let ref_type = ref_name.to_pascal_case();
@@ -165,13 +156,7 @@ impl PhpGenerator {
     }
 
     /// Build a single property parameter line for constructor
-    fn build_property_line(
-        &self,
-        type_hint: &str,
-        field_name: &str,
-        is_required: bool,
-        nullable: bool,
-    ) -> String {
+    fn build_property_line(&self, type_hint: &str, field_name: &str, is_required: bool, nullable: bool) -> String {
         if is_required {
             format!("        public {} ${},\n", type_hint, field_name)
         } else if nullable {
@@ -198,11 +183,7 @@ impl PhpGenerator {
 
     /// Extract the last component of a JSON reference path
     fn extract_ref_name(&self, reference: &str) -> String {
-        reference
-            .split('/')
-            .next_back()
-            .unwrap_or("UnknownType")
-            .to_string()
+        reference.split('/').next_back().unwrap_or("UnknownType").to_string()
     }
 
     /// Convert snake_case or kebab-case to camelCase
@@ -246,7 +227,9 @@ impl PhpGenerator {
     /// Extract request body type from operation if present
     fn extract_request_body_type(&self, operation: &Operation) -> Option<String> {
         operation.request_body.as_ref().and_then(|body_ref| match body_ref {
-            ReferenceOr::Item(request_body) => self.extract_json_schema_type(request_body.content.get("application/json")),
+            ReferenceOr::Item(request_body) => {
+                self.extract_json_schema_type(request_body.content.get("application/json"))
+            }
             ReferenceOr::Reference { reference } => {
                 let ref_name = self.extract_ref_name(reference);
                 Some(ref_name.to_pascal_case())
@@ -255,10 +238,7 @@ impl PhpGenerator {
     }
 
     /// Extract JSON schema type from media type content
-    fn extract_json_schema_type(
-        &self,
-        media_type: Option<&openapiv3::MediaType>,
-    ) -> Option<String> {
+    fn extract_json_schema_type(&self, media_type: Option<&openapiv3::MediaType>) -> Option<String> {
         media_type.and_then(|mt| {
             mt.schema
                 .as_ref()
@@ -367,9 +347,7 @@ impl PhpGenerator {
     }
 
     /// Group operations by controller name based on API path
-    fn group_operations_by_controller(
-        &self,
-    ) -> std::collections::HashMap<String, Vec<(String, String, Operation)>> {
+    fn group_operations_by_controller(&self) -> std::collections::HashMap<String, Vec<(String, String, Operation)>> {
         let mut controllers: std::collections::HashMap<String, Vec<(String, String, Operation)>> =
             std::collections::HashMap::new();
 
@@ -404,10 +382,11 @@ impl PhpGenerator {
 
         for (method, op_opt) in methods {
             if let Some(op) = op_opt {
-                controllers
-                    .entry(controller_name.to_string())
-                    .or_default()
-                    .push((path.to_string(), method.to_string(), op.clone()));
+                controllers.entry(controller_name.to_string()).or_default().push((
+                    path.to_string(),
+                    method.to_string(),
+                    op.clone(),
+                ));
             }
         }
     }
@@ -463,7 +442,14 @@ impl PhpGenerator {
             method.to_uppercase()
         ));
 
-        self.append_function_signature(&mut output, &method_name, &path_params, &query_params, &body_type, &return_type);
+        self.append_function_signature(
+            &mut output,
+            &method_name,
+            &path_params,
+            &query_params,
+            &body_type,
+            &return_type,
+        );
         self.append_function_body(&mut output);
 
         Ok(output)
@@ -485,11 +471,17 @@ impl PhpGenerator {
     }
 
     /// Extract and document handler parameters from operation
+    #[allow(clippy::type_complexity)]
     fn extract_handler_parameters(
         &self,
         operation: &Operation,
         output: &mut String,
-    ) -> Result<(Vec<(String, String)>, Vec<(String, String, bool)>, Option<String>, String)> {
+    ) -> Result<(
+        Vec<(String, String)>,
+        Vec<(String, String, bool)>,
+        Option<String>,
+        String,
+    )> {
         output.push_str("    /**\n");
         self.append_operation_description(output, operation);
 
@@ -514,6 +506,7 @@ impl PhpGenerator {
     }
 
     /// Extract path and query parameters from operation
+    #[allow(clippy::type_complexity)]
     fn extract_path_and_query_params(
         &self,
         operation: &Operation,

@@ -46,8 +46,10 @@ pub enum TargetLanguage {
     /// Ruby 3.2+ with RBS type signatures
     Ruby,
     /// PHP 8.2+ with type declarations
+    #[allow(dead_code)]
     Php,
     /// Rust 2024 edition
+    #[allow(dead_code)]
     Rust,
 }
 
@@ -122,12 +124,11 @@ impl<'a> TypeMapper<'a> {
                 "Boolean" => "bool".to_string(),
                 "ID" => "str".to_string(),
                 custom => {
-                    if let Some(schema) = self.schema {
-                        if let Some(type_def) = schema.types.get(custom) {
-                            if type_def.kind == crate::codegen::graphql::spec_parser::TypeKind::Scalar {
-                                return "str".to_string();
-                            }
-                        }
+                    if let Some(schema) = self.schema
+                        && let Some(type_def) = schema.types.get(custom)
+                        && type_def.kind == crate::codegen::graphql::spec_parser::TypeKind::Scalar
+                    {
+                        return "str".to_string();
                     }
                     custom.to_string()
                 }
@@ -139,12 +140,11 @@ impl<'a> TypeMapper<'a> {
                 "Boolean" => "boolean".to_string(),
                 "ID" => "string".to_string(),
                 custom => {
-                    if let Some(schema) = self.schema {
-                        if let Some(type_def) = schema.types.get(custom) {
-                            if type_def.kind == crate::codegen::graphql::spec_parser::TypeKind::Scalar {
-                                return "string".to_string();
-                            }
-                        }
+                    if let Some(schema) = self.schema
+                        && let Some(type_def) = schema.types.get(custom)
+                        && type_def.kind == crate::codegen::graphql::spec_parser::TypeKind::Scalar
+                    {
+                        return "string".to_string();
                     }
                     custom.to_string()
                 }
@@ -156,12 +156,11 @@ impl<'a> TypeMapper<'a> {
                 "Boolean" => "true | false".to_string(),
                 "ID" => "String".to_string(),
                 custom => {
-                    if let Some(schema) = self.schema {
-                        if let Some(type_def) = schema.types.get(custom) {
-                            if type_def.kind == crate::codegen::graphql::spec_parser::TypeKind::Scalar {
-                                return "String".to_string();
-                            }
-                        }
+                    if let Some(schema) = self.schema
+                        && let Some(type_def) = schema.types.get(custom)
+                        && type_def.kind == crate::codegen::graphql::spec_parser::TypeKind::Scalar
+                    {
+                        return "String".to_string();
                     }
                     custom.to_string()
                 }
@@ -173,12 +172,11 @@ impl<'a> TypeMapper<'a> {
                 "Boolean" => "bool".to_string(),
                 "ID" => "string".to_string(),
                 custom => {
-                    if let Some(schema) = self.schema {
-                        if let Some(type_def) = schema.types.get(custom) {
-                            if type_def.kind == crate::codegen::graphql::spec_parser::TypeKind::Scalar {
-                                return "string".to_string();
-                            }
-                        }
+                    if let Some(schema) = self.schema
+                        && let Some(type_def) = schema.types.get(custom)
+                        && type_def.kind == crate::codegen::graphql::spec_parser::TypeKind::Scalar
+                    {
+                        return "string".to_string();
                     }
                     custom.to_string()
                 }
@@ -191,7 +189,8 @@ impl<'a> TypeMapper<'a> {
                 "ID" => "String".to_string(),
                 custom => {
                     // Rust uses PascalCase for custom types
-                    let pascal_case = custom
+
+                    custom
                         .split('_')
                         .map(|part| {
                             let mut chars = part.chars();
@@ -200,8 +199,7 @@ impl<'a> TypeMapper<'a> {
                                 Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
                             }
                         })
-                        .collect::<String>();
-                    pascal_case
+                        .collect::<String>()
                 }
             },
         }
@@ -231,6 +229,7 @@ impl<'a> TypeMapper<'a> {
     /// assert_eq!(mapper.map_type("String", false, true), "list[str | None]");
     /// assert_eq!(mapper.map_type("String", true, true), "list[str | None] | None");
     /// ```
+    #[allow(dead_code)]
     pub fn map_type(&self, field_type: &str, is_nullable: bool, is_list: bool) -> String {
         self.map_type_with_list_nullability(field_type, is_nullable, is_list, true)
     }
@@ -336,11 +335,7 @@ impl<'a> TypeMapper<'a> {
             TargetLanguage::Php => {
                 // PHP doesn't have proper generic list syntax in all versions
                 // We use simple array type without generics
-                let with_list = if is_list {
-                    "array".to_string()
-                } else {
-                    base
-                };
+                let with_list = if is_list { "array".to_string() } else { base };
 
                 if is_nullable {
                     format!("?{}", with_list)
@@ -394,6 +389,7 @@ impl<'a> TypeMapper<'a> {
     /// assert_eq!(mapper.format_gql_type("String", false, true, false), "[String!]!");
     /// assert_eq!(mapper.format_gql_type("String", true, true, true), "[String]");
     /// ```
+    #[allow(dead_code)]
     pub fn format_gql_type(
         &self,
         type_name: &str,

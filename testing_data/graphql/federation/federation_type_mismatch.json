@@ -1,52 +1,48 @@
 {
-  "name": "federation_type_mismatch",
-  "description": "Wrong __typename in entity representation - returns 400 error",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n}\n\nunion _Entity = Article\n\ntype Article @key(fields: \"id\") {\n  id: ID!\n  title: String!\n  content: String!\n  author: String!\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  _entities(representations: [{__typename: \"InvalidType\", id: \"1\"}]) {\n    ... on Article {\n      id\n      title\n      content\n      author\n    }\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  _entities(representations: [{__typename: \"InvalidType\", id: \"1\"}]) {\n    ... on Article {\n      id\n      title\n      content\n      author\n    }\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 400,
-    "data": null,
-    "errors": [
-      {
-        "message": "Unknown type 'InvalidType' in entity representation",
-        "extensions": {
-          "code": "FEDERATION_ERROR"
-        }
-      }
-    ]
-  },
-  "resolvers": {
-    "Query._entities": {
-      "type": "error",
-      "error_message": "Unknown type 'InvalidType' in entity representation",
-      "error_extensions": {
-        "code": "FEDERATION_ERROR"
-      }
-    },
-    "Query._service": {
-      "type": "mock",
-      "return_value": {
-        "sdl": "type Article @key(fields: \"id\") {\n  id: ID!\n  title: String!\n  content: String!\n  author: String!\n}"
-      }
-    }
-  },
-  "tags": [
-    "federation",
-    "error-handling",
-    "validation"
-  ],
-  "complexity_limit": 50,
-  "depth_limit": 3
+	"name": "federation_type_mismatch",
+	"description": "Wrong __typename in entity representation - returns 400 error",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n}\n\nunion _Entity = Article\n\ntype Article @key(fields: \"id\") {\n  id: ID!\n  title: String!\n  content: String!\n  author: String!\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  _entities(representations: [{__typename: \"InvalidType\", id: \"1\"}]) {\n    ... on Article {\n      id\n      title\n      content\n      author\n    }\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  _entities(representations: [{__typename: \"InvalidType\", id: \"1\"}]) {\n    ... on Article {\n      id\n      title\n      content\n      author\n    }\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"data": null,
+		"errors": [
+			{
+				"message": "Unknown type 'InvalidType' in entity representation",
+				"extensions": {
+					"code": "FEDERATION_ERROR"
+				}
+			}
+		]
+	},
+	"resolvers": {
+		"Query._entities": {
+			"type": "error",
+			"error_message": "Unknown type 'InvalidType' in entity representation",
+			"error_extensions": {
+				"code": "FEDERATION_ERROR"
+			}
+		},
+		"Query._service": {
+			"type": "mock",
+			"return_value": {
+				"sdl": "type Article @key(fields: \"id\") {\n  id: ID!\n  title: String!\n  content: String!\n  author: String!\n}"
+			}
+		}
+	},
+	"tags": ["federation", "error-handling", "validation"],
+	"complexity_limit": 50,
+	"depth_limit": 3
 }

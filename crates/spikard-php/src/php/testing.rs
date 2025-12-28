@@ -145,7 +145,9 @@ impl PhpTestResponse {
 
         let mut table = super::php_table_with_capacity(errors.len());
         for error in errors {
-            table.push(super::json_to_php_table(&error)?).map_err(super::map_ext_php_err)?;
+            table
+                .push(super::json_to_php_table(&error)?)
+                .map_err(super::map_ext_php_err)?;
         }
 
         Ok(table)
@@ -367,7 +369,7 @@ impl PhpNativeTestClient {
         let variables_json = match variables {
             Some(v) => {
                 // Convert PHP Zval to serde_json::Value
-                let json_val = zval_to_json(v).map_err(|e| PhpException::default(e))?;
+                let json_val = zval_to_json(v).map_err(PhpException::default)?;
                 Some(json_val)
             }
             None => None,
@@ -409,7 +411,7 @@ impl PhpNativeTestClient {
         operation_name: Option<String>,
     ) -> PhpResult<Vec<Zval>> {
         let response = self.graphql(query, variables, operation_name)?;
-        let status_zval = (response.status as i64).into_zval(false).map_err(super::map_ext_php_err)?;
+        let status_zval = response.status.into_zval(false).map_err(super::map_ext_php_err)?;
         let body_zval = response.body.clone().into_zval(false).map_err(super::map_ext_php_err)?;
 
         Ok(vec![status_zval, body_zval])

@@ -3,29 +3,19 @@
 	"title": "Spikard Test Fixture Schema",
 	"description": "Unified schema for all Spikard test fixtures across parameter types, bodies, and validation scenarios",
 	"type": "object",
-	"required": [
-		"name",
-		"description",
-		"handler",
-		"request",
-		"expected_response"
-	],
+	"required": ["name", "description", "handler", "request", "expected_response"],
 	"properties": {
 		"name": {
 			"type": "string",
 			"description": "Human-readable test case name",
 			"minLength": 1,
-			"examples": [
-				"Required string query parameter - success"
-			]
+			"examples": ["Required string query parameter - success"]
 		},
 		"description": {
 			"type": "string",
 			"description": "What this test validates and why it matters",
 			"minLength": 1,
-			"examples": [
-				"Validates that required query parameters are properly extracted and validated"
-			]
+			"examples": ["Validates that required query parameters are properly extracted and validated"]
 		},
 		"category": {
 			"type": "string",
@@ -61,15 +51,7 @@
 			"properties": {
 				"framework": {
 					"type": "string",
-					"enum": [
-						"spikard",
-						"litestar",
-						"fastapi",
-						"fastify",
-						"nestjs",
-						"express",
-						"robyn"
-					],
+					"enum": ["spikard", "litestar", "fastapi", "fastify", "nestjs", "express", "robyn"],
 					"description": "Source framework (spikard = native test)"
 				},
 				"test_file": {
@@ -91,32 +73,17 @@
 		"handler": {
 			"type": "object",
 			"description": "Handler definition - describes the route and parameter schema",
-			"required": [
-				"route",
-				"method"
-			],
+			"required": ["route", "method"],
 			"properties": {
 				"route": {
 					"type": "string",
 					"description": "Route pattern with parameter placeholders (e.g., '/users/{user_id:int}')",
 					"minLength": 1,
-					"examples": [
-						"/users/{user_id:int}",
-						"/items",
-						"/search"
-					]
+					"examples": ["/users/{user_id:int}", "/items", "/search"]
 				},
 				"method": {
 					"type": "string",
-					"enum": [
-						"GET",
-						"POST",
-						"PUT",
-						"PATCH",
-						"DELETE",
-						"HEAD",
-						"OPTIONS"
-					],
+					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
 					"description": "HTTP method"
 				},
 				"parameters": {
@@ -174,10 +141,7 @@
 									"format": "email"
 								}
 							},
-							"required": [
-								"name",
-								"email"
-							]
+							"required": ["name", "email"]
 						}
 					]
 				},
@@ -191,17 +155,11 @@
 					"additionalProperties": {
 						"type": "object",
 						"description": "Dependency definition",
-						"required": [
-							"type"
-						],
+						"required": ["type"],
 						"properties": {
 							"type": {
 								"type": "string",
-								"enum": [
-									"value",
-									"factory",
-									"async_factory"
-								],
+								"enum": ["value", "factory", "async_factory"],
 								"description": "Dependency type: value (static), factory (sync creation), async_factory (async creation)"
 							},
 							"value": {
@@ -209,15 +167,7 @@
 							},
 							"value_type": {
 								"type": "string",
-								"enum": [
-									"string",
-									"number",
-									"integer",
-									"boolean",
-									"object",
-									"array",
-									"null"
-								],
+								"enum": ["string", "number", "integer", "boolean", "object", "array", "null"],
 								"description": "Type of the value for type='value' dependencies"
 							},
 							"factory": {
@@ -249,10 +199,7 @@
 							},
 							"scope": {
 								"type": "string",
-								"enum": [
-									"app",
-									"route"
-								],
+								"enum": ["app", "route"],
 								"description": "Scope of the dependency: app-level (default) or route-level override",
 								"default": "app"
 							},
@@ -281,12 +228,7 @@
 				},
 				"injection_strategy": {
 					"type": "string",
-					"enum": [
-						"name",
-						"type",
-						"destructure",
-						"keyword_args"
-					],
+					"enum": ["name", "type", "destructure", "keyword_args"],
 					"description": "Language-specific injection strategy: name (Python param names), type (Python type hints), destructure (Node/TS), keyword_args (Ruby)"
 				},
 				"expected_types": {
@@ -329,10 +271,7 @@
 						"rate_limit": {
 							"type": "object",
 							"description": "Rate limiting configuration using tower-governor. Optional warmup directives instruct the generated tests to issue multiple requests before asserting the final status.",
-							"required": [
-								"per_second",
-								"burst"
-							],
+							"required": ["per_second", "burst"],
 							"properties": {
 								"per_second": {
 									"type": "integer",
@@ -368,9 +307,7 @@
 						"request_timeout": {
 							"type": "object",
 							"description": "Request timeout configuration and simulated handler delay.",
-							"required": [
-								"seconds"
-							],
+							"required": ["seconds"],
 							"properties": {
 								"seconds": {
 									"type": "integer",
@@ -413,10 +350,7 @@
 							"description": "Static directories to serve via tower-http ServeDir. The generator will create these files under the e2e apps.",
 							"items": {
 								"type": "object",
-								"required": [
-									"route_prefix",
-									"files"
-								],
+								"required": ["route_prefix", "files"],
 								"properties": {
 									"route_prefix": {
 										"type": "string",
@@ -439,10 +373,7 @@
 										"minItems": 1,
 										"items": {
 											"type": "object",
-											"required": [
-												"path",
-												"content"
-											],
+											"required": ["path", "content"],
 											"properties": {
 												"path": {
 													"type": "string",
@@ -505,12 +436,7 @@
 								"properties": {
 									"type": {
 										"type": "string",
-										"enum": [
-											"mock",
-											"factory",
-											"async_factory",
-											"error"
-										],
+										"enum": ["mock", "factory", "async_factory", "error"],
 										"description": "Resolver type: mock (static), factory (sync creation), async_factory (async creation), error (throws error)"
 									},
 									"return_value": {
@@ -552,9 +478,7 @@
 		"streaming": {
 			"type": "object",
 			"description": "Streaming response metadata. When present, handlers should return a streaming response using these chunks.",
-			"required": [
-				"chunks"
-			],
+			"required": ["chunks"],
 			"properties": {
 				"content_type": {
 					"type": "string",
@@ -566,16 +490,11 @@
 					"description": "Ordered list of chunks yielded by the stream",
 					"items": {
 						"type": "object",
-						"required": [
-							"type"
-						],
+						"required": ["type"],
 						"properties": {
 							"type": {
 								"type": "string",
-								"enum": [
-									"text",
-									"bytes"
-								],
+								"enum": ["text", "bytes"],
 								"description": "Chunk payload type"
 							},
 							"value": {
@@ -598,9 +517,7 @@
 									}
 								},
 								"then": {
-									"required": [
-										"value"
-									]
+									"required": ["value"]
 								}
 							},
 							{
@@ -612,9 +529,7 @@
 									}
 								},
 								"then": {
-									"required": [
-										"base64"
-									]
+									"required": ["base64"]
 								}
 							}
 						]
@@ -625,12 +540,7 @@
 		"background": {
 			"type": "object",
 			"description": "Background task metadata. When present, handlers enqueue fire-and-forget work and tests assert against a state endpoint.",
-			"required": [
-				"state_path",
-				"state_key",
-				"value_field",
-				"expected_state"
-			],
+			"required": ["state_path", "state_key", "value_field", "expected_state"],
 			"properties": {
 				"state_path": {
 					"type": "string",
@@ -654,33 +564,18 @@
 		"request": {
 			"type": "object",
 			"description": "HTTP request details",
-			"required": [
-				"method",
-				"path"
-			],
+			"required": ["method", "path"],
 			"properties": {
 				"method": {
 					"type": "string",
-					"enum": [
-						"GET",
-						"POST",
-						"PUT",
-						"PATCH",
-						"DELETE",
-						"HEAD",
-						"OPTIONS"
-					],
+					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
 					"description": "HTTP method"
 				},
 				"path": {
 					"type": "string",
 					"description": "Request path without query string",
 					"minLength": 1,
-					"examples": [
-						"/users/123",
-						"/items",
-						"/search"
-					]
+					"examples": ["/users/123", "/items", "/search"]
 				},
 				"query_params": {
 					"type": "object",
@@ -721,10 +616,7 @@
 						{
 							"page": 1,
 							"limit": 10,
-							"tags": [
-								"rust",
-								"web"
-							]
+							"tags": ["rust", "web"]
 						}
 					]
 				},
@@ -765,10 +657,7 @@
 							"name": "Alice",
 							"email": "alice@example.com"
 						},
-						[
-							"item1",
-							"item2"
-						],
+						["item1", "item2"],
 						"plain string"
 					]
 				},
@@ -779,11 +668,7 @@
 				"content_type": {
 					"type": "string",
 					"description": "Content-Type header (convenience field, also in headers)",
-					"examples": [
-						"application/json",
-						"multipart/form-data",
-						"application/x-www-form-urlencoded"
-					]
+					"examples": ["application/json", "multipart/form-data", "application/x-www-form-urlencoded"]
 				},
 				"graphql": {
 					"type": "object",
@@ -806,9 +691,7 @@
 							"description": "GraphQL extensions object"
 						}
 					},
-					"required": [
-						"query"
-					],
+					"required": ["query"],
 					"additionalProperties": false
 				}
 			},
@@ -817,22 +700,14 @@
 		"expected_response": {
 			"type": "object",
 			"description": "Expected HTTP response",
-			"required": [
-				"status_code"
-			],
+			"required": ["status_code"],
 			"properties": {
 				"status_code": {
 					"type": "integer",
 					"description": "Expected HTTP status code",
 					"minimum": 100,
 					"maximum": 599,
-					"examples": [
-						200,
-						201,
-						400,
-						422,
-						500
-					]
+					"examples": [200, 201, 400, 422, 500]
 				},
 				"body": {
 					"description": "Expected response body (any JSON type)"
@@ -854,11 +729,7 @@
 					"description": "Expected validation errors for 422 responses (Spikard format)",
 					"items": {
 						"type": "object",
-						"required": [
-							"loc",
-							"msg",
-							"type"
-						],
+						"required": ["loc", "msg", "type"],
 						"properties": {
 							"loc": {
 								"type": "array",
@@ -900,20 +771,7 @@
 							"type": "string"
 						}
 					},
-					"examples": [
-						[
-							[
-								"config"
-							],
-							[
-								"db_pool",
-								"cache"
-							],
-							[
-								"auth_service"
-							]
-						]
-					]
+					"examples": [[["config"], ["db_pool", "cache"], ["auth_service"]]]
 				},
 				"graphql": {
 					"type": "object",
@@ -944,8 +802,8 @@
 											"type": "object",
 											"required": ["line", "column"],
 											"properties": {
-												"line": {"type": "integer", "minimum": 1},
-												"column": {"type": "integer", "minimum": 1}
+												"line": { "type": "integer", "minimum": 1 },
+												"column": { "type": "integer", "minimum": 1 }
 											}
 										}
 									},
@@ -953,10 +811,7 @@
 										"type": "array",
 										"description": "Path to field that caused error",
 										"items": {
-											"oneOf": [
-												{"type": "string"},
-												{"type": "integer"}
-											]
+											"oneOf": [{ "type": "string" }, { "type": "integer" }]
 										}
 									},
 									"extensions": {
@@ -982,19 +837,7 @@
 			"items": {
 				"type": "string"
 			},
-			"examples": [
-				[
-					"validation",
-					"required"
-				],
-				[
-					"edge-case",
-					"unicode"
-				],
-				[
-					"performance"
-				]
-			]
+			"examples": [["validation", "required"], ["edge-case", "unicode"], ["performance"]]
 		},
 		"skip": {
 			"type": "boolean",
@@ -1045,11 +888,7 @@
 					"query": "rust web framework"
 				}
 			},
-			"tags": [
-				"validation",
-				"required",
-				"string"
-			]
+			"tags": ["validation", "required", "string"]
 		}
 	]
 }

@@ -1,49 +1,44 @@
 {
-  "name": "role_admin_allowed",
-  "description": "Admin-only query accessed with admin role - allowed",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  adminPanel: AdminPanel\n}\n\ntype AdminPanel {\n  stats: AdminStats!\n  users: [User!]!\n}\n\ntype AdminStats {\n  totalUsers: Int!\n  activeUsers: Int!\n  totalRevenue: Float!\n}\n\ntype User {\n  id: String!\n  email: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  adminPanel {\n    stats {\n      totalUsers\n      activeUsers\n      totalRevenue\n    }\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  adminPanel {\n    stats {\n      totalUsers\n      activeUsers\n      totalRevenue\n    }\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "adminPanel": {
-        "stats": {
-          "totalUsers": 1250,
-          "activeUsers": 856,
-          "totalRevenue": 125000.5
-        }
-      }
-    }
-  },
-  "resolvers": {
-    "Query.adminPanel": {
-      "type": "mock",
-      "return_value": {
-        "stats": {
-          "totalUsers": 1250,
-          "activeUsers": 856,
-          "totalRevenue": 125000.5
-        },
-        "users": []
-      }
-    }
-  },
-  "tags": [
-    "authorization",
-    "role-based",
-    "admin-role",
-    "allowed"
-  ]
+	"name": "role_admin_allowed",
+	"description": "Admin-only query accessed with admin role - allowed",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  adminPanel: AdminPanel\n}\n\ntype AdminPanel {\n  stats: AdminStats!\n  users: [User!]!\n}\n\ntype AdminStats {\n  totalUsers: Int!\n  activeUsers: Int!\n  totalRevenue: Float!\n}\n\ntype User {\n  id: String!\n  email: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  adminPanel {\n    stats {\n      totalUsers\n      activeUsers\n      totalRevenue\n    }\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  adminPanel {\n    stats {\n      totalUsers\n      activeUsers\n      totalRevenue\n    }\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"adminPanel": {
+				"stats": {
+					"totalUsers": 1250,
+					"activeUsers": 856,
+					"totalRevenue": 125000.5
+				}
+			}
+		}
+	},
+	"resolvers": {
+		"Query.adminPanel": {
+			"type": "mock",
+			"return_value": {
+				"stats": {
+					"totalUsers": 1250,
+					"activeUsers": 856,
+					"totalRevenue": 125000.5
+				},
+				"users": []
+			}
+		}
+	},
+	"tags": ["authorization", "role-based", "admin-role", "allowed"]
 }

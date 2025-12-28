@@ -1,918 +1,918 @@
 {
-  "asyncapi": "3.0.0",
-  "info": {
-    "title": "Kafka Pub/Sub Event System",
-    "description": "Event streaming system using Apache Kafka for distributed messaging across multiple topics",
-    "version": "1.0.0",
-    "contact": {
-      "name": "Platform Team",
-      "email": "platform@example.com"
-    }
-  },
-  "servers": {
-    "production": {
-      "host": "kafka-prod.example.com:9092",
-      "protocol": "kafka",
-      "description": "Production Kafka cluster",
-      "variables": {
-        "brokers": {
-          "description": "Comma-separated list of broker addresses",
-          "default": "kafka1:9092,kafka2:9092,kafka3:9092"
-        }
-      }
-    },
-    "development": {
-      "host": "localhost:9092",
-      "protocol": "kafka",
-      "description": "Development Kafka broker"
-    }
-  },
-  "channels": {
-    "user.events": {
-      "address": "user.events",
-      "description": "User lifecycle events (signup, profile update, deletion)",
-      "messages": {
-        "userCreated": {
-          "$ref": "#/components/messages/UserCreatedEvent"
-        },
-        "userUpdated": {
-          "$ref": "#/components/messages/UserUpdatedEvent"
-        },
-        "userDeleted": {
-          "$ref": "#/components/messages/UserDeletedEvent"
-        }
-      }
-    },
-    "order.events": {
-      "address": "order.events",
-      "description": "Order processing events",
-      "messages": {
-        "orderCreated": {
-          "$ref": "#/components/messages/OrderCreatedEvent"
-        },
-        "orderPaid": {
-          "$ref": "#/components/messages/OrderPaidEvent"
-        },
-        "orderShipped": {
-          "$ref": "#/components/messages/OrderShippedEvent"
-        },
-        "orderDelivered": {
-          "$ref": "#/components/messages/OrderDeliveredEvent"
-        },
-        "orderCancelled": {
-          "$ref": "#/components/messages/OrderCancelledEvent"
-        }
-      }
-    },
-    "payment.events": {
-      "address": "payment.events",
-      "description": "Payment transaction events",
-      "messages": {
-        "paymentInitiated": {
-          "$ref": "#/components/messages/PaymentInitiatedEvent"
-        },
-        "paymentCompleted": {
-          "$ref": "#/components/messages/PaymentCompletedEvent"
-        },
-        "paymentFailed": {
-          "$ref": "#/components/messages/PaymentFailedEvent"
-        },
-        "paymentRefunded": {
-          "$ref": "#/components/messages/PaymentRefundedEvent"
-        }
-      }
-    },
-    "inventory.events": {
-      "address": "inventory.events",
-      "description": "Inventory and stock management events",
-      "messages": {
-        "stockUpdated": {
-          "$ref": "#/components/messages/StockUpdatedEvent"
-        },
-        "itemRestocked": {
-          "$ref": "#/components/messages/ItemRestockedEvent"
-        },
-        "itemLowStock": {
-          "$ref": "#/components/messages/ItemLowStockEvent"
-        }
-      }
-    },
-    "notification.events": {
-      "address": "notification.events",
-      "description": "Notification dispatch events",
-      "messages": {
-        "notificationSent": {
-          "$ref": "#/components/messages/NotificationSentEvent"
-        },
-        "emailDelivered": {
-          "$ref": "#/components/messages/EmailDeliveredEvent"
-        },
-        "smsSent": {
-          "$ref": "#/components/messages/SmsSentEvent"
-        }
-      }
-    },
-    "analytics.events": {
-      "address": "analytics.events",
-      "description": "Analytics and telemetry events",
-      "messages": {
-        "pageView": {
-          "$ref": "#/components/messages/PageViewEvent"
-        },
-        "userAction": {
-          "$ref": "#/components/messages/UserActionEvent"
-        },
-        "errorOccurred": {
-          "$ref": "#/components/messages/ErrorOccurredEvent"
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "BaseEvent": {
-        "type": "object",
-        "required": ["eventId", "eventType", "timestamp", "version"],
-        "properties": {
-          "eventId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Unique event identifier"
-          },
-          "eventType": {
-            "type": "string",
-            "description": "Type of event"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Event occurrence time"
-          },
-          "version": {
-            "type": "string",
-            "description": "Event schema version"
-          },
-          "source": {
-            "type": "string",
-            "description": "Service that generated the event"
-          },
-          "correlationId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true,
-            "description": "Correlation ID for tracing"
-          }
-        }
-      },
-      "User": {
-        "type": "object",
-        "required": ["id", "email", "name"],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string",
-            "format": "email"
-          },
-          "name": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": ["active", "inactive", "suspended"]
-          }
-        }
-      },
-      "Order": {
-        "type": "object",
-        "required": ["id", "customerId", "total", "currency"],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "customerId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "productId": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "quantity": {
-                  "type": "integer"
-                },
-                "unitPrice": {
-                  "type": "number"
-                }
-              }
-            }
-          },
-          "total": {
-            "type": "number"
-          },
-          "currency": {
-            "type": "string",
-            "enum": ["USD", "EUR", "GBP", "JPY"]
-          },
-          "status": {
-            "type": "string",
-            "enum": ["pending", "confirmed", "processing", "shipped", "delivered"]
-          }
-        }
-      },
-      "Payment": {
-        "type": "object",
-        "required": ["id", "orderId", "amount", "currency"],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "orderId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "amount": {
-            "type": "number"
-          },
-          "currency": {
-            "type": "string"
-          },
-          "method": {
-            "type": "string",
-            "enum": ["credit_card", "debit_card", "paypal", "bank_transfer"]
-          },
-          "status": {
-            "type": "string",
-            "enum": ["pending", "processing", "completed", "failed"]
-          },
-          "transactionId": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      }
-    },
-    "messages": {
-      "UserCreatedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "user": {
-                      "$ref": "#/components/schemas/User"
-                    },
-                    "signupSource": {
-                      "type": "string"
-                    },
-                    "referralCode": {
-                      "type": "string",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "UserUpdatedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "userId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "changes": {
-                      "type": "object",
-                      "additionalProperties": true
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "UserDeletedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "userId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "reason": {
-                      "type": "string",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "OrderCreatedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "order": {
-                      "$ref": "#/components/schemas/Order"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "OrderPaidEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "orderId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "paymentId": {
-                      "type": "string",
-                      "format": "uuid"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "OrderShippedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "orderId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "trackingNumber": {
-                      "type": "string"
-                    },
-                    "carrier": {
-                      "type": "string"
-                    },
-                    "estimatedDelivery": {
-                      "type": "string",
-                      "format": "date"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "OrderDeliveredEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "orderId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "deliveredAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "OrderCancelledEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "orderId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "reason": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "PaymentInitiatedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "payment": {
-                      "$ref": "#/components/schemas/Payment"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "PaymentCompletedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "paymentId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "transactionId": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "PaymentFailedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "paymentId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "reason": {
-                      "type": "string"
-                    },
-                    "errorCode": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "PaymentRefundedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "paymentId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "refundAmount": {
-                      "type": "number"
-                    },
-                    "refundReason": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "StockUpdatedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "productId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "previousQuantity": {
-                      "type": "integer"
-                    },
-                    "newQuantity": {
-                      "type": "integer"
-                    },
-                    "warehouse": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "ItemRestockedEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "productId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "quantity": {
-                      "type": "integer"
-                    },
-                    "supplier": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "ItemLowStockEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "productId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "currentQuantity": {
-                      "type": "integer"
-                    },
-                    "threshold": {
-                      "type": "integer"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "NotificationSentEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "notificationId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "userId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "channel": {
-                      "type": "string",
-                      "enum": ["email", "sms", "push"]
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "EmailDeliveredEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "emailId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "recipient": {
-                      "type": "string",
-                      "format": "email"
-                    },
-                    "subject": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "SmsSentEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "smsId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "phoneNumber": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "PageViewEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "userId": {
-                      "type": "string",
-                      "format": "uuid",
-                      "nullable": true
-                    },
-                    "sessionId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "url": {
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "referrer": {
-                      "type": "string",
-                      "format": "uri",
-                      "nullable": true
-                    },
-                    "userAgent": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "UserActionEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "userId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "action": {
-                      "type": "string"
-                    },
-                    "properties": {
-                      "type": "object",
-                      "additionalProperties": true,
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "ErrorOccurredEvent": {
-        "contentType": "application/json",
-        "payload": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/BaseEvent"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "errorId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "stack": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "severity": {
-                      "type": "string",
-                      "enum": ["warning", "error", "critical"]
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      }
-    }
-  }
+	"asyncapi": "3.0.0",
+	"info": {
+		"title": "Kafka Pub/Sub Event System",
+		"description": "Event streaming system using Apache Kafka for distributed messaging across multiple topics",
+		"version": "1.0.0",
+		"contact": {
+			"name": "Platform Team",
+			"email": "platform@example.com"
+		}
+	},
+	"servers": {
+		"production": {
+			"host": "kafka-prod.example.com:9092",
+			"protocol": "kafka",
+			"description": "Production Kafka cluster",
+			"variables": {
+				"brokers": {
+					"description": "Comma-separated list of broker addresses",
+					"default": "kafka1:9092,kafka2:9092,kafka3:9092"
+				}
+			}
+		},
+		"development": {
+			"host": "localhost:9092",
+			"protocol": "kafka",
+			"description": "Development Kafka broker"
+		}
+	},
+	"channels": {
+		"user.events": {
+			"address": "user.events",
+			"description": "User lifecycle events (signup, profile update, deletion)",
+			"messages": {
+				"userCreated": {
+					"$ref": "#/components/messages/UserCreatedEvent"
+				},
+				"userUpdated": {
+					"$ref": "#/components/messages/UserUpdatedEvent"
+				},
+				"userDeleted": {
+					"$ref": "#/components/messages/UserDeletedEvent"
+				}
+			}
+		},
+		"order.events": {
+			"address": "order.events",
+			"description": "Order processing events",
+			"messages": {
+				"orderCreated": {
+					"$ref": "#/components/messages/OrderCreatedEvent"
+				},
+				"orderPaid": {
+					"$ref": "#/components/messages/OrderPaidEvent"
+				},
+				"orderShipped": {
+					"$ref": "#/components/messages/OrderShippedEvent"
+				},
+				"orderDelivered": {
+					"$ref": "#/components/messages/OrderDeliveredEvent"
+				},
+				"orderCancelled": {
+					"$ref": "#/components/messages/OrderCancelledEvent"
+				}
+			}
+		},
+		"payment.events": {
+			"address": "payment.events",
+			"description": "Payment transaction events",
+			"messages": {
+				"paymentInitiated": {
+					"$ref": "#/components/messages/PaymentInitiatedEvent"
+				},
+				"paymentCompleted": {
+					"$ref": "#/components/messages/PaymentCompletedEvent"
+				},
+				"paymentFailed": {
+					"$ref": "#/components/messages/PaymentFailedEvent"
+				},
+				"paymentRefunded": {
+					"$ref": "#/components/messages/PaymentRefundedEvent"
+				}
+			}
+		},
+		"inventory.events": {
+			"address": "inventory.events",
+			"description": "Inventory and stock management events",
+			"messages": {
+				"stockUpdated": {
+					"$ref": "#/components/messages/StockUpdatedEvent"
+				},
+				"itemRestocked": {
+					"$ref": "#/components/messages/ItemRestockedEvent"
+				},
+				"itemLowStock": {
+					"$ref": "#/components/messages/ItemLowStockEvent"
+				}
+			}
+		},
+		"notification.events": {
+			"address": "notification.events",
+			"description": "Notification dispatch events",
+			"messages": {
+				"notificationSent": {
+					"$ref": "#/components/messages/NotificationSentEvent"
+				},
+				"emailDelivered": {
+					"$ref": "#/components/messages/EmailDeliveredEvent"
+				},
+				"smsSent": {
+					"$ref": "#/components/messages/SmsSentEvent"
+				}
+			}
+		},
+		"analytics.events": {
+			"address": "analytics.events",
+			"description": "Analytics and telemetry events",
+			"messages": {
+				"pageView": {
+					"$ref": "#/components/messages/PageViewEvent"
+				},
+				"userAction": {
+					"$ref": "#/components/messages/UserActionEvent"
+				},
+				"errorOccurred": {
+					"$ref": "#/components/messages/ErrorOccurredEvent"
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"BaseEvent": {
+				"type": "object",
+				"required": ["eventId", "eventType", "timestamp", "version"],
+				"properties": {
+					"eventId": {
+						"type": "string",
+						"format": "uuid",
+						"description": "Unique event identifier"
+					},
+					"eventType": {
+						"type": "string",
+						"description": "Type of event"
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time",
+						"description": "Event occurrence time"
+					},
+					"version": {
+						"type": "string",
+						"description": "Event schema version"
+					},
+					"source": {
+						"type": "string",
+						"description": "Service that generated the event"
+					},
+					"correlationId": {
+						"type": "string",
+						"format": "uuid",
+						"nullable": true,
+						"description": "Correlation ID for tracing"
+					}
+				}
+			},
+			"User": {
+				"type": "object",
+				"required": ["id", "email", "name"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"email": {
+						"type": "string",
+						"format": "email"
+					},
+					"name": {
+						"type": "string"
+					},
+					"status": {
+						"type": "string",
+						"enum": ["active", "inactive", "suspended"]
+					}
+				}
+			},
+			"Order": {
+				"type": "object",
+				"required": ["id", "customerId", "total", "currency"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"customerId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"items": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"productId": {
+									"type": "string",
+									"format": "uuid"
+								},
+								"quantity": {
+									"type": "integer"
+								},
+								"unitPrice": {
+									"type": "number"
+								}
+							}
+						}
+					},
+					"total": {
+						"type": "number"
+					},
+					"currency": {
+						"type": "string",
+						"enum": ["USD", "EUR", "GBP", "JPY"]
+					},
+					"status": {
+						"type": "string",
+						"enum": ["pending", "confirmed", "processing", "shipped", "delivered"]
+					}
+				}
+			},
+			"Payment": {
+				"type": "object",
+				"required": ["id", "orderId", "amount", "currency"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"orderId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"amount": {
+						"type": "number"
+					},
+					"currency": {
+						"type": "string"
+					},
+					"method": {
+						"type": "string",
+						"enum": ["credit_card", "debit_card", "paypal", "bank_transfer"]
+					},
+					"status": {
+						"type": "string",
+						"enum": ["pending", "processing", "completed", "failed"]
+					},
+					"transactionId": {
+						"type": "string",
+						"nullable": true
+					}
+				}
+			}
+		},
+		"messages": {
+			"UserCreatedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"user": {
+											"$ref": "#/components/schemas/User"
+										},
+										"signupSource": {
+											"type": "string"
+										},
+										"referralCode": {
+											"type": "string",
+											"nullable": true
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"UserUpdatedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"userId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"changes": {
+											"type": "object",
+											"additionalProperties": true
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"UserDeletedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"userId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"reason": {
+											"type": "string",
+											"nullable": true
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"OrderCreatedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"order": {
+											"$ref": "#/components/schemas/Order"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"OrderPaidEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"orderId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"paymentId": {
+											"type": "string",
+											"format": "uuid"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"OrderShippedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"orderId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"trackingNumber": {
+											"type": "string"
+										},
+										"carrier": {
+											"type": "string"
+										},
+										"estimatedDelivery": {
+											"type": "string",
+											"format": "date"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"OrderDeliveredEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"orderId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"deliveredAt": {
+											"type": "string",
+											"format": "date-time"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"OrderCancelledEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"orderId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"reason": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"PaymentInitiatedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"payment": {
+											"$ref": "#/components/schemas/Payment"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"PaymentCompletedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"paymentId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"transactionId": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"PaymentFailedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"paymentId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"reason": {
+											"type": "string"
+										},
+										"errorCode": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"PaymentRefundedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"paymentId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"refundAmount": {
+											"type": "number"
+										},
+										"refundReason": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"StockUpdatedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"productId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"previousQuantity": {
+											"type": "integer"
+										},
+										"newQuantity": {
+											"type": "integer"
+										},
+										"warehouse": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"ItemRestockedEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"productId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"quantity": {
+											"type": "integer"
+										},
+										"supplier": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"ItemLowStockEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"productId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"currentQuantity": {
+											"type": "integer"
+										},
+										"threshold": {
+											"type": "integer"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"NotificationSentEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"notificationId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"userId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"channel": {
+											"type": "string",
+											"enum": ["email", "sms", "push"]
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"EmailDeliveredEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"emailId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"recipient": {
+											"type": "string",
+											"format": "email"
+										},
+										"subject": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"SmsSentEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"smsId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"PageViewEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"userId": {
+											"type": "string",
+											"format": "uuid",
+											"nullable": true
+										},
+										"sessionId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"url": {
+											"type": "string",
+											"format": "uri"
+										},
+										"referrer": {
+											"type": "string",
+											"format": "uri",
+											"nullable": true
+										},
+										"userAgent": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"UserActionEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"userId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"action": {
+											"type": "string"
+										},
+										"properties": {
+											"type": "object",
+											"additionalProperties": true,
+											"nullable": true
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"ErrorOccurredEvent": {
+				"contentType": "application/json",
+				"payload": {
+					"type": "object",
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/BaseEvent"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"errorId": {
+											"type": "string",
+											"format": "uuid"
+										},
+										"message": {
+											"type": "string"
+										},
+										"stack": {
+											"type": "string",
+											"nullable": true
+										},
+										"severity": {
+											"type": "string",
+											"enum": ["warning", "error", "critical"]
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		}
+	}
 }

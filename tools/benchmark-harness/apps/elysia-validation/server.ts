@@ -120,25 +120,17 @@ app.get(
 	},
 );
 
-app.get(
-	"/path/uuid/:uuid",
-	({ params: { uuid } }) => ({ uuid }),
-	{
-		params: t.Object({
-			uuid: t.String({ format: "uuid" }),
-		}),
-	},
-);
+app.get("/path/uuid/:uuid", ({ params: { uuid } }) => ({ uuid }), {
+	params: t.Object({
+		uuid: t.String({ format: "uuid" }),
+	}),
+});
 
-app.get(
-	"/path/date/:date",
-	({ params: { date } }) => ({ date }),
-	{
-		params: t.Object({
-			date: t.String({ format: "date" }),
-		}),
-	},
-);
+app.get("/path/date/:date", ({ params: { date } }) => ({ date }), {
+	params: t.Object({
+		date: t.String({ format: "date" }),
+	}),
+});
 
 app.get("/query/few", ({ query }) => query ?? {});
 

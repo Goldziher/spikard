@@ -1,133 +1,122 @@
 {
-  "name": "dataloader_nested_batching",
-  "description": "Multi-level DataLoader batching with three nested queries optimized independently",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  posts: [Post!]!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  comments: [Comment!]!\n}\n\ntype Comment {\n  id: ID!\n  text: String!\n  author: User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  posts {\n    id\n    title\n    comments {\n      id\n      text\n      author {\n        id\n        name\n        email\n      }\n    }\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  posts {\n    id\n    title\n    comments {\n      id\n      text\n      author {\n        id\n        name\n        email\n      }\n    }\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "posts": [
-        {
-          "id": "post-1",
-          "title": "GraphQL Introduction",
-          "comments": [
-            {
-              "id": "comment-1",
-              "text": "Great article!",
-              "author": {
-                "id": "user-1",
-                "name": "Alice Johnson",
-                "email": "alice@example.com"
-              }
-            },
-            {
-              "id": "comment-2",
-              "text": "Very helpful",
-              "author": {
-                "id": "user-2",
-                "name": "Bob Smith",
-                "email": "bob@example.com"
-              }
-            }
-          ]
-        },
-        {
-          "id": "post-2",
-          "title": "Advanced Patterns",
-          "comments": [
-            {
-              "id": "comment-3",
-              "text": "Excellent explanation",
-              "author": {
-                "id": "user-1",
-                "name": "Alice Johnson",
-                "email": "alice@example.com"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "resolvers": {
-    "Query.posts": {
-      "type": "async_factory",
-      "factory_fn": "load_all_posts"
-    },
-    "Post.comments": {
-      "type": "async_factory",
-      "factory_fn": "batch_load_comments_by_post_id"
-    },
-    "Comment.author": {
-      "type": "async_factory",
-      "factory_fn": "batch_load_users_by_id"
-    }
-  },
-  "nested_batching_analysis": {
-    "levels": 3,
-    "level_1_posts": {
-      "description": "Load all posts",
-      "batch_calls": 1,
-      "db_queries": 1,
-      "results": 2
-    },
-    "level_2_comments": {
-      "description": "Batch load comments for all posts",
-      "post_ids": [
-        "post-1",
-        "post-2"
-      ],
-      "batch_calls": 1,
-      "db_queries": 1,
-      "results": 3
-    },
-    "level_3_authors": {
-      "description": "Batch load authors for all comments",
-      "user_ids": [
-        "user-1",
-        "user-2"
-      ],
-      "batch_calls": 1,
-      "db_queries": 1,
-      "unique_users": 2,
-      "cache_hits": 1,
-      "results": 3
-    },
-    "total_db_queries_with_dataloader": 3,
-    "total_db_queries_without_dataloader": 7,
-    "queries_prevented": 4
-  },
-  "batching_breakdown": {
-    "without_dataloader": {
-      "posts_query": 1,
-      "per_post_comments_queries": 2,
-      "per_comment_author_queries": 3,
-      "total": 6
-    },
-    "with_dataloader": {
-      "posts_batch": 1,
-      "comments_batch": 1,
-      "authors_batch": 1,
-      "total": 3,
-      "optimization": "50% reduction in database queries"
-    }
-  },
-  "tags": [
-    "dataloader",
-    "nested-batching",
-    "multi-level",
-    "complex-optimization"
-  ]
+	"name": "dataloader_nested_batching",
+	"description": "Multi-level DataLoader batching with three nested queries optimized independently",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  posts: [Post!]!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  comments: [Comment!]!\n}\n\ntype Comment {\n  id: ID!\n  text: String!\n  author: User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  posts {\n    id\n    title\n    comments {\n      id\n      text\n      author {\n        id\n        name\n        email\n      }\n    }\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  posts {\n    id\n    title\n    comments {\n      id\n      text\n      author {\n        id\n        name\n        email\n      }\n    }\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"posts": [
+				{
+					"id": "post-1",
+					"title": "GraphQL Introduction",
+					"comments": [
+						{
+							"id": "comment-1",
+							"text": "Great article!",
+							"author": {
+								"id": "user-1",
+								"name": "Alice Johnson",
+								"email": "alice@example.com"
+							}
+						},
+						{
+							"id": "comment-2",
+							"text": "Very helpful",
+							"author": {
+								"id": "user-2",
+								"name": "Bob Smith",
+								"email": "bob@example.com"
+							}
+						}
+					]
+				},
+				{
+					"id": "post-2",
+					"title": "Advanced Patterns",
+					"comments": [
+						{
+							"id": "comment-3",
+							"text": "Excellent explanation",
+							"author": {
+								"id": "user-1",
+								"name": "Alice Johnson",
+								"email": "alice@example.com"
+							}
+						}
+					]
+				}
+			]
+		}
+	},
+	"resolvers": {
+		"Query.posts": {
+			"type": "async_factory",
+			"factory_fn": "load_all_posts"
+		},
+		"Post.comments": {
+			"type": "async_factory",
+			"factory_fn": "batch_load_comments_by_post_id"
+		},
+		"Comment.author": {
+			"type": "async_factory",
+			"factory_fn": "batch_load_users_by_id"
+		}
+	},
+	"nested_batching_analysis": {
+		"levels": 3,
+		"level_1_posts": {
+			"description": "Load all posts",
+			"batch_calls": 1,
+			"db_queries": 1,
+			"results": 2
+		},
+		"level_2_comments": {
+			"description": "Batch load comments for all posts",
+			"post_ids": ["post-1", "post-2"],
+			"batch_calls": 1,
+			"db_queries": 1,
+			"results": 3
+		},
+		"level_3_authors": {
+			"description": "Batch load authors for all comments",
+			"user_ids": ["user-1", "user-2"],
+			"batch_calls": 1,
+			"db_queries": 1,
+			"unique_users": 2,
+			"cache_hits": 1,
+			"results": 3
+		},
+		"total_db_queries_with_dataloader": 3,
+		"total_db_queries_without_dataloader": 7,
+		"queries_prevented": 4
+	},
+	"batching_breakdown": {
+		"without_dataloader": {
+			"posts_query": 1,
+			"per_post_comments_queries": 2,
+			"per_comment_author_queries": 3,
+			"total": 6
+		},
+		"with_dataloader": {
+			"posts_batch": 1,
+			"comments_batch": 1,
+			"authors_batch": 1,
+			"total": 3,
+			"optimization": "50% reduction in database queries"
+		}
+	},
+	"tags": ["dataloader", "nested-batching", "multi-level", "complex-optimization"]
 }

@@ -4,14 +4,14 @@
 //! implementing the `Handler` trait for integration with Spikard's HTTP server
 //! and tower-http middleware stack.
 
-use crate::error::GraphQLError;
 use crate::GraphQLExecutor;
+use crate::error::GraphQLError;
 use axum::{
     body::Body,
     http::{Request, Response, StatusCode},
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use spikard_http::{Handler, HandlerResult, RequestData};
 use std::future::Future;
 use std::pin::Pin;
@@ -92,9 +92,8 @@ fn parse_graphql_request(raw_body: &[u8]) -> Result<GraphQLRequestPayload, Graph
             "Request body exceeds maximum size of {MAX_QUERY_SIZE} bytes"
         )));
     }
-    serde_json::from_slice(raw_body).map_err(|e| {
-        GraphQLError::RequestHandlingError(format!("Failed to parse GraphQL request: {e}"))
-    })
+    serde_json::from_slice(raw_body)
+        .map_err(|e| GraphQLError::RequestHandlingError(format!("Failed to parse GraphQL request: {e}")))
 }
 
 /// GraphQL HTTP handler
@@ -138,7 +137,7 @@ where
     /// # Returns
     ///
     /// A new `GraphQLHandler` instance
-    #[must_use] 
+    #[must_use]
     pub const fn new(executor: Arc<GraphQLExecutor<Query, Mutation, Subscription>>) -> Self {
         Self { executor }
     }
@@ -158,13 +157,10 @@ where
     /// Returns `GraphQLError` if the request body cannot be parsed or execution fails.
     pub fn handle_graphql(&self, request_data: &RequestData) -> Result<Value, GraphQLError> {
         // Extract raw body
-        let body_bytes = request_data
-            .raw_body
-            .as_ref()
-            .map_or_else(
-                || serde_json::to_vec(&request_data.body).unwrap_or_default(),
-                |raw_body| raw_body.to_vec(),
-            );
+        let body_bytes = request_data.raw_body.as_ref().map_or_else(
+            || serde_json::to_vec(&request_data.body).unwrap_or_default(),
+            |raw_body| raw_body.to_vec(),
+        );
 
         // Parse the request payload
         let payload = parse_graphql_request(&body_bytes)?;
@@ -294,17 +290,15 @@ mod tests {
         let json = r#"{"query":"query GetUser($id: ID!) { user(id: $id) { name } }","variables":{"id":"123"}}"#;
         let payload: GraphQLRequestPayload = serde_json::from_str(json).unwrap();
 
-        assert_eq!(
-            payload.query,
-            "query GetUser($id: ID!) { user(id: $id) { name } }"
-        );
+        assert_eq!(payload.query, "query GetUser($id: ID!) { user(id: $id) { name } }");
         assert!(payload.variables.is_some());
         assert_eq!(payload.variables.as_ref().unwrap()["id"], "123");
     }
 
     #[test]
     fn test_graphql_request_payload_parsing_with_operation_name() {
-        let json = r#"{"query":"query GetUser { user { name } } query ListUsers { users { id } }","operationName":"GetUser"}"#;
+        let json =
+            r#"{"query":"query GetUser { user { name } } query ListUsers { users { id } }","operationName":"GetUser"}"#;
         let payload: GraphQLRequestPayload = serde_json::from_str(json).unwrap();
 
         assert_eq!(payload.operation_name, Some("GetUser".to_string()));

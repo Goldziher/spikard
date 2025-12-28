@@ -252,8 +252,7 @@ impl TestClient {
         operation_name: Option<&str>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let body = build_graphql_body(query, variables, operation_name);
-        self.post(endpoint, Some(body), None, None, None, None)
-            .await
+        self.post(endpoint, Some(body), None, None, None, None).await
     }
 
     /// Send a GraphQL query/mutation
@@ -263,8 +262,7 @@ impl TestClient {
         variables: Option<Value>,
         operation_name: Option<&str>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
-        self.graphql_at("/graphql", query, variables, operation_name)
-            .await
+        self.graphql_at("/graphql", query, variables, operation_name).await
     }
 
     /// Send a GraphQL query and return HTTP status code separately
@@ -324,11 +322,7 @@ impl TestClient {
 }
 
 /// Build a GraphQL request body from query, variables, and operation name
-pub fn build_graphql_body(
-    query: &str,
-    variables: Option<Value>,
-    operation_name: Option<&str>,
-) -> Value {
+pub fn build_graphql_body(query: &str, variables: Option<Value>, operation_name: Option<&str>) -> Value {
     let mut body = serde_json::json!({ "query": query });
     if let Some(vars) = variables {
         body["variables"] = vars;

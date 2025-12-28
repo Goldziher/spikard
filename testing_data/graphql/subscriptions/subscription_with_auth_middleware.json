@@ -1,173 +1,173 @@
 {
-  "name": "subscription_with_auth_middleware",
-  "description": "Subscription requiring JWT authentication in connection params via graphql-ws protocol, validates auth during WebSocket handshake with middleware",
-  "operation_type": "subscription",
-  "endpoint": "/graphql",
-  "schema": "type Subscription {\n  privateNotifications: Notification!\n}\n\ntype Notification {\n  id: ID!\n  userId: ID!\n  type: String!\n  message: String!\n  priority: String!\n  createdAt: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}",
-    "connection_init": {
-      "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsInN1YiI6InVzZXIxMjMiLCJpYXQiOjE3MzU0MjAwMDB9"
-    },
-    "headers": {
-      "Content-Type": "application/json",
-      "Sec-WebSocket-Protocol": "graphql-ws"
-    },
-    "body": {
-      "query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 101,
-    "headers": {
-      "upgrade": "websocket",
-      "connection": "upgrade",
-      "sec-websocket-protocol": "graphql-ws"
-    },
-    "data": {
-      "privateNotifications": {
-        "id": "notif-456",
-        "userId": "user123",
-        "type": "ALERT",
-        "message": "Your subscription is about to expire",
-        "priority": "HIGH",
-        "createdAt": "2025-12-27T16:20:00Z"
-      }
-    }
-  },
-  "middleware": {
-    "auth": {
-      "type": "jwt_validation",
-      "required": true,
-      "location": "connection_init.authorization",
-      "token_format": "Bearer <jwt>",
-      "claims_required": ["sub", "iat"],
-      "algorithm": "HS256"
-    }
-  },
-  "error_scenarios": [
-    {
-      "name": "missing_auth",
-      "description": "Connection attempt without authorization in connection_init",
-      "request": {
-        "method": "POST",
-        "path": "/graphql",
-        "query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}",
-        "connection_init": {},
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}"
-        }
-      },
-      "expected_response": {
-        "status_code": 401,
-        "headers": {},
-        "graphql": {
-          "errors": [
-            {
-              "message": "Unauthorized: Missing authentication token in connection params",
-              "extensions": {
-                "code": "UNAUTHENTICATED",
-                "details": "Token required for private notifications subscription"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "name": "invalid_token",
-      "description": "Connection attempt with malformed JWT token",
-      "request": {
-        "method": "POST",
-        "path": "/graphql",
-        "query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}",
-        "connection_init": {
-          "authorization": "Bearer invalid.token.format"
-        },
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}"
-        }
-      },
-      "expected_response": {
-        "status_code": 401,
-        "headers": {},
-        "graphql": {
-          "errors": [
-            {
-              "message": "Unauthorized: Invalid or expired token",
-              "extensions": {
-                "code": "UNAUTHENTICATED",
-                "details": "Token validation failed"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "name": "expired_token",
-      "description": "Connection attempt with expired JWT token",
-      "request": {
-        "method": "POST",
-        "path": "/graphql",
-        "query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}",
-        "connection_init": {
-          "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsInN1YiI6InVzZXIxMjMiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAxMDAwMH0"
-        },
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}"
-        }
-      },
-      "expected_response": {
-        "status_code": 401,
-        "headers": {},
-        "graphql": {
-          "errors": [
-            {
-              "message": "Unauthorized: Token has expired",
-              "extensions": {
-                "code": "UNAUTHENTICATED",
-                "details": "Please provide a fresh token"
-              }
-            }
-          ]
-        }
-      }
-    }
-  ],
-  "resolvers": {
-    "Subscription.privateNotifications": {
-      "type": "mock_with_auth",
-      "auth_required": true,
-      "return_value": {
-        "id": "notif-456",
-        "userId": "user123",
-        "type": "ALERT",
-        "message": "Your subscription is about to expire",
-        "priority": "HIGH",
-        "createdAt": "2025-12-27T16:20:00Z"
-      }
-    }
-  },
-  "tags": [
-    "subscriptions",
-    "websocket",
-    "authentication",
-    "security",
-    "jwt",
-    "middleware",
-    "connection-params",
-    "private-data"
-  ]
+	"name": "subscription_with_auth_middleware",
+	"description": "Subscription requiring JWT authentication in connection params via graphql-ws protocol, validates auth during WebSocket handshake with middleware",
+	"operation_type": "subscription",
+	"endpoint": "/graphql",
+	"schema": "type Subscription {\n  privateNotifications: Notification!\n}\n\ntype Notification {\n  id: ID!\n  userId: ID!\n  type: String!\n  message: String!\n  priority: String!\n  createdAt: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}",
+		"connection_init": {
+			"authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsInN1YiI6InVzZXIxMjMiLCJpYXQiOjE3MzU0MjAwMDB9"
+		},
+		"headers": {
+			"Content-Type": "application/json",
+			"Sec-WebSocket-Protocol": "graphql-ws"
+		},
+		"body": {
+			"query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 101,
+		"headers": {
+			"upgrade": "websocket",
+			"connection": "upgrade",
+			"sec-websocket-protocol": "graphql-ws"
+		},
+		"data": {
+			"privateNotifications": {
+				"id": "notif-456",
+				"userId": "user123",
+				"type": "ALERT",
+				"message": "Your subscription is about to expire",
+				"priority": "HIGH",
+				"createdAt": "2025-12-27T16:20:00Z"
+			}
+		}
+	},
+	"middleware": {
+		"auth": {
+			"type": "jwt_validation",
+			"required": true,
+			"location": "connection_init.authorization",
+			"token_format": "Bearer <jwt>",
+			"claims_required": ["sub", "iat"],
+			"algorithm": "HS256"
+		}
+	},
+	"error_scenarios": [
+		{
+			"name": "missing_auth",
+			"description": "Connection attempt without authorization in connection_init",
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}",
+				"connection_init": {},
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}"
+				}
+			},
+			"expected_response": {
+				"status_code": 401,
+				"headers": {},
+				"graphql": {
+					"errors": [
+						{
+							"message": "Unauthorized: Missing authentication token in connection params",
+							"extensions": {
+								"code": "UNAUTHENTICATED",
+								"details": "Token required for private notifications subscription"
+							}
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "invalid_token",
+			"description": "Connection attempt with malformed JWT token",
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}",
+				"connection_init": {
+					"authorization": "Bearer invalid.token.format"
+				},
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}"
+				}
+			},
+			"expected_response": {
+				"status_code": 401,
+				"headers": {},
+				"graphql": {
+					"errors": [
+						{
+							"message": "Unauthorized: Invalid or expired token",
+							"extensions": {
+								"code": "UNAUTHENTICATED",
+								"details": "Token validation failed"
+							}
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "expired_token",
+			"description": "Connection attempt with expired JWT token",
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}",
+				"connection_init": {
+					"authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsInN1YiI6InVzZXIxMjMiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAxMDAwMH0"
+				},
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}"
+				}
+			},
+			"expected_response": {
+				"status_code": 401,
+				"headers": {},
+				"graphql": {
+					"errors": [
+						{
+							"message": "Unauthorized: Token has expired",
+							"extensions": {
+								"code": "UNAUTHENTICATED",
+								"details": "Please provide a fresh token"
+							}
+						}
+					]
+				}
+			}
+		}
+	],
+	"resolvers": {
+		"Subscription.privateNotifications": {
+			"type": "mock_with_auth",
+			"auth_required": true,
+			"return_value": {
+				"id": "notif-456",
+				"userId": "user123",
+				"type": "ALERT",
+				"message": "Your subscription is about to expire",
+				"priority": "HIGH",
+				"createdAt": "2025-12-27T16:20:00Z"
+			}
+		}
+	},
+	"tags": [
+		"subscriptions",
+		"websocket",
+		"authentication",
+		"security",
+		"jwt",
+		"middleware",
+		"connection-params",
+		"private-data"
+	]
 }

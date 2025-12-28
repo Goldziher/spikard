@@ -1,79 +1,69 @@
 {
-  "name": "json_scalar",
-  "description": "Custom JSON scalar type for arbitrary JSON data structures",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "scalar JSON\n\ntype Query {\n  configuration: Configuration!\n}\n\ntype Configuration {\n  id: ID!\n  name: String!\n  settings: JSON!\n  metadata: JSON\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query GetConfig {\n  configuration {\n    id\n    name\n    settings\n    metadata\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query GetConfig {\n  configuration {\n    id\n    name\n    settings\n    metadata\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "configuration": {
-        "id": "config-1",
-        "name": "Production Config",
-        "settings": {
-          "timeout": 30000,
-          "retries": 3,
-          "features": {
-            "caching": true,
-            "compression": true,
-            "tracing": false
-          },
-          "endpoints": [
-            "https://api.example.com",
-            "https://api-backup.example.com"
-          ]
-        },
-        "metadata": {
-          "version": "1.0.0",
-          "environment": "production",
-          "lastUpdated": "2025-12-27T10:00:00Z",
-          "author": "DevOps Team"
-        }
-      }
-    }
-  },
-  "resolvers": {
-    "Query.configuration": {
-      "type": "mock",
-      "return_value": {
-        "id": "config-1",
-        "name": "Production Config",
-        "settings": {
-          "timeout": 30000,
-          "retries": 3,
-          "features": {
-            "caching": true,
-            "compression": true,
-            "tracing": false
-          },
-          "endpoints": [
-            "https://api.example.com",
-            "https://api-backup.example.com"
-          ]
-        },
-        "metadata": {
-          "version": "1.0.0",
-          "environment": "production",
-          "lastUpdated": "2025-12-27T10:00:00Z",
-          "author": "DevOps Team"
-        }
-      }
-    }
-  },
-  "tags": [
-    "scalars",
-    "json",
-    "custom-types"
-  ]
+	"name": "json_scalar",
+	"description": "Custom JSON scalar type for arbitrary JSON data structures",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "scalar JSON\n\ntype Query {\n  configuration: Configuration!\n}\n\ntype Configuration {\n  id: ID!\n  name: String!\n  settings: JSON!\n  metadata: JSON\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query GetConfig {\n  configuration {\n    id\n    name\n    settings\n    metadata\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query GetConfig {\n  configuration {\n    id\n    name\n    settings\n    metadata\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"configuration": {
+				"id": "config-1",
+				"name": "Production Config",
+				"settings": {
+					"timeout": 30000,
+					"retries": 3,
+					"features": {
+						"caching": true,
+						"compression": true,
+						"tracing": false
+					},
+					"endpoints": ["https://api.example.com", "https://api-backup.example.com"]
+				},
+				"metadata": {
+					"version": "1.0.0",
+					"environment": "production",
+					"lastUpdated": "2025-12-27T10:00:00Z",
+					"author": "DevOps Team"
+				}
+			}
+		}
+	},
+	"resolvers": {
+		"Query.configuration": {
+			"type": "mock",
+			"return_value": {
+				"id": "config-1",
+				"name": "Production Config",
+				"settings": {
+					"timeout": 30000,
+					"retries": 3,
+					"features": {
+						"caching": true,
+						"compression": true,
+						"tracing": false
+					},
+					"endpoints": ["https://api.example.com", "https://api-backup.example.com"]
+				},
+				"metadata": {
+					"version": "1.0.0",
+					"environment": "production",
+					"lastUpdated": "2025-12-27T10:00:00Z",
+					"author": "DevOps Team"
+				}
+			}
+		}
+	},
+	"tags": ["scalars", "json", "custom-types"]
 }

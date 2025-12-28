@@ -1,69 +1,64 @@
 {
-  "name": "persisted_query_allowlist",
-  "description": "Persisted query allowlist enforcement - server rejects unknown persisted queries",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  secureData: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "variables": {},
-    "extensions": {
-      "persistedQuery": {
-        "version": 1,
-        "sha256Hash": "999999999999999999999999999999999999999999999999999999999999999999"
-      }
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "variables": {},
-      "extensions": {
-        "persistedQuery": {
-          "version": 1,
-          "sha256Hash": "999999999999999999999999999999999999999999999999999999999999999999"
-        }
-      }
-    }
-  },
-  "request_notes": "Server configured with allowlist mode - only known persisted query hashes are allowed. Unknown hash is rejected with 403.",
-  "server_config": {
-    "persisted_queries": {
-      "enforce_allowlist": true,
-      "allowed_hashes": [
-        "ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38",
-        "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-        "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
-      ]
-    }
-  },
-  "expected_response": {
-    "status_code": 403,
-    "errors": [
-      {
-        "message": "Query not in allowlist",
-        "extensions": {
-          "code": "QUERY_NOT_WHITELISTED",
-          "hash": "999999999999999999999999999999999999999999999999999999999999999999"
-        }
-      }
-    ]
-  },
-  "resolvers": {
-    "Query.secureData": {
-      "type": "error",
-      "error_message": "Query not in allowlist",
-      "error_extensions": {
-        "code": "QUERY_NOT_WHITELISTED",
-        "hash": "999999999999999999999999999999999999999999999999999999999999999999"
-      }
-    }
-  },
-  "tags": [
-    "queries",
-    "persisted-queries",
-    "allowlist",
-    "security"
-  ]
+	"name": "persisted_query_allowlist",
+	"description": "Persisted query allowlist enforcement - server rejects unknown persisted queries",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  secureData: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"variables": {},
+		"extensions": {
+			"persistedQuery": {
+				"version": 1,
+				"sha256Hash": "999999999999999999999999999999999999999999999999999999999999999999"
+			}
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"variables": {},
+			"extensions": {
+				"persistedQuery": {
+					"version": 1,
+					"sha256Hash": "999999999999999999999999999999999999999999999999999999999999999999"
+				}
+			}
+		}
+	},
+	"request_notes": "Server configured with allowlist mode - only known persisted query hashes are allowed. Unknown hash is rejected with 403.",
+	"server_config": {
+		"persisted_queries": {
+			"enforce_allowlist": true,
+			"allowed_hashes": [
+				"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38",
+				"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+				"fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+			]
+		}
+	},
+	"expected_response": {
+		"status_code": 403,
+		"errors": [
+			{
+				"message": "Query not in allowlist",
+				"extensions": {
+					"code": "QUERY_NOT_WHITELISTED",
+					"hash": "999999999999999999999999999999999999999999999999999999999999999999"
+				}
+			}
+		]
+	},
+	"resolvers": {
+		"Query.secureData": {
+			"type": "error",
+			"error_message": "Query not in allowlist",
+			"error_extensions": {
+				"code": "QUERY_NOT_WHITELISTED",
+				"hash": "999999999999999999999999999999999999999999999999999999999999999999"
+			}
+		}
+	},
+	"tags": ["queries", "persisted-queries", "allowlist", "security"]
 }

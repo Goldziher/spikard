@@ -38,7 +38,7 @@ jobs:
           else
             VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
           fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Testing published packages for version: $VERSION"
 
       - name: Wait for registry indexing
@@ -102,11 +102,11 @@ jobs:
             MISSING+=("crates.io")
           fi
 
-          if [ ${#MISSING[@]} -eq 0 ]; then
-            echo "ready=true" >> $GITHUB_OUTPUT
+          if [ "${#MISSING[@]}" -eq 0 ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
             echo "All registries have version $VERSION available"
           else
-            echo "ready=false" >> $GITHUB_OUTPUT
+            echo "ready=false" >> "$GITHUB_OUTPUT"
             echo "Missing from registries: ${MISSING[*]}"
             echo "::warning::Not all registries have version $VERSION yet. Tests may fail."
           fi

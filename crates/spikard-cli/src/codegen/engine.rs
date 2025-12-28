@@ -280,25 +280,29 @@ impl CodegenEngine {
         };
 
         // For Ruby, also generate RBS type signatures when appropriate
-        let mut assets = vec![Self::write_asset(output, format!("{} GraphQL code", language_name(language)), &code)?];
+        let mut assets = vec![Self::write_asset(
+            output,
+            format!("{} GraphQL code", language_name(language)),
+            &code,
+        )?];
 
         if language == TargetLanguage::Ruby && (target == "all" || target == "types" || target == "schema") {
-            use super::graphql::parse_graphql_sdl_string;
-            use super::graphql::generators::ruby::RubyGenerator;
             use super::graphql::generators::GraphQLGenerator;
+            use super::graphql::generators::ruby::RubyGenerator;
+            use super::graphql::parse_graphql_sdl_string;
 
             let parsed_schema = parse_graphql_sdl_string(&schema_content)?;
-            let generator = RubyGenerator::default();
+            let generator = RubyGenerator;
             let rbs_code = generator.generate_type_signatures(&parsed_schema)?;
 
             // Determine RBS output path (replace .rb extension with .rbs)
-            let rbs_output = if output.extension().map_or(false, |ext| ext == "rb") {
-                output.with_extension("rbs")
-            } else {
-                output.with_extension("rbs")
-            };
+            let rbs_output = output.with_extension("rbs");
 
-            assets.push(Self::write_asset(&rbs_output, format!("{} GraphQL RBS types", language_name(language)), &rbs_code)?);
+            assets.push(Self::write_asset(
+                &rbs_output,
+                format!("{} GraphQL RBS types", language_name(language)),
+                &rbs_code,
+            )?);
         }
 
         Ok(assets)

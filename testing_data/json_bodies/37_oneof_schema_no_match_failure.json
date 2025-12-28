@@ -1,77 +1,65 @@
 {
-  "name": "37_oneof_schema_no_match_failure",
-  "description": "oneOf schema composition - fails when no schemas match",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "oneOf schema composition failure - no matches"
-  },
-  "handler": {
-    "route": "/payment",
-    "method": "POST",
-    "body_schema": {
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "credit_card"
-          ],
-          "properties": {
-            "credit_card": {
-              "type": "string",
-              "pattern": "^[0-9]{16}$"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "paypal_email"
-          ],
-          "properties": {
-            "paypal_email": {
-              "type": "string",
-              "format": "email"
-            }
-          }
-        }
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/payment",
-    "body": {
-      "bitcoin_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "body"
-          ],
-          "msg": "{\"bitcoin_address\":\"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa\"} is not valid under any of the schemas listed in the 'oneOf' keyword",
-          "input": {
-            "bitcoin_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "json_bodies",
-    "oneOf",
-    "composition",
-    "validation",
-    "error"
-  ]
+	"name": "37_oneof_schema_no_match_failure",
+	"description": "oneOf schema composition - fails when no schemas match",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "oneOf schema composition failure - no matches"
+	},
+	"handler": {
+		"route": "/payment",
+		"method": "POST",
+		"body_schema": {
+			"oneOf": [
+				{
+					"type": "object",
+					"required": ["credit_card"],
+					"properties": {
+						"credit_card": {
+							"type": "string",
+							"pattern": "^[0-9]{16}$"
+						}
+					}
+				},
+				{
+					"type": "object",
+					"required": ["paypal_email"],
+					"properties": {
+						"paypal_email": {
+							"type": "string",
+							"format": "email"
+						}
+					}
+				}
+			]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/payment",
+		"body": {
+			"bitcoin_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["body"],
+					"msg": "{\"bitcoin_address\":\"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa\"} is not valid under any of the schemas listed in the 'oneOf' keyword",
+					"input": {
+						"bitcoin_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["json_bodies", "oneOf", "composition", "validation", "error"]
 }

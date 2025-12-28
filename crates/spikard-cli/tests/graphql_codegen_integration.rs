@@ -560,11 +560,16 @@ fn test_python_generate_msgspec_struct() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    assert!(result.contains("class User(Struct, frozen=True, kw_only=True):"),
-        "msgspec Struct with frozen and kw_only not generated");
+    assert!(
+        result.contains("class User(Struct, frozen=True, kw_only=True):"),
+        "msgspec Struct with frozen and kw_only not generated"
+    );
     assert!(result.contains("id: str"), "id field not generated");
     assert!(result.contains("name: str"), "name field not generated");
-    assert!(result.contains("email: str | None"), "nullable email field not generated");
+    assert!(
+        result.contains("email: str | None"),
+        "nullable email field not generated"
+    );
     assert!(result.contains("from msgspec import Struct"), "msgspec import missing");
 
     Ok(())
@@ -605,8 +610,10 @@ fn test_python_generate_input_struct() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    assert!(result.contains("class CreateUserInput(Struct, frozen=True, kw_only=True):"),
-        "CreateUserInput Struct not generated");
+    assert!(
+        result.contains("class CreateUserInput(Struct, frozen=True, kw_only=True):"),
+        "CreateUserInput Struct not generated"
+    );
     assert!(result.contains("name: str"), "name field missing");
     assert!(result.contains("email: str"), "email field missing");
     assert!(result.contains("age: int | None"), "nullable age field incorrect");
@@ -626,9 +633,15 @@ fn test_python_generate_union_type() -> Result<()> {
     let result = generate_python_graphql(schema, "types")?;
 
     // Union types are generated with TypeAlias annotation for mypy --strict compliance
-    assert!(result.contains("SearchResult: TypeAlias = \"User | Post\""), "SearchResult union not generated");
+    assert!(
+        result.contains("SearchResult: TypeAlias = \"User | Post\""),
+        "SearchResult union not generated"
+    );
     // Ensure we don't have the non-strict version
-    assert!(!result.contains("| Any"), "SearchResult should not include | Any for mypy compliance");
+    assert!(
+        !result.contains("| Any"),
+        "SearchResult should not include | Any for mypy compliance"
+    );
 
     Ok(())
 }
@@ -645,7 +658,10 @@ fn test_python_nullable_field() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    assert!(result.contains("email: str | None"), "nullable field should use | None syntax");
+    assert!(
+        result.contains("email: str | None"),
+        "nullable field should use | None syntax"
+    );
     assert!(!result.contains("Optional[str]"), "should use | None, not Optional");
 
     Ok(())
@@ -663,8 +679,14 @@ fn test_python_non_null_field() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    assert!(result.contains("name: str"), "non-null string field should be plain str");
-    assert!(!result.contains("name: str | None"), "non-null field should not have | None");
+    assert!(
+        result.contains("name: str"),
+        "non-null string field should be plain str"
+    );
+    assert!(
+        !result.contains("name: str | None"),
+        "non-null field should not have | None"
+    );
 
     Ok(())
 }
@@ -682,7 +704,10 @@ fn test_python_list_field() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    assert!(result.contains("posts: list[Post]"), "list field not generated correctly");
+    assert!(
+        result.contains("posts: list[Post]"),
+        "list field not generated correctly"
+    );
     assert!(!result.contains("List[Post]"), "should use list[...], not List[...]");
 
     Ok(())
@@ -701,8 +726,10 @@ fn test_python_nullable_list_elements() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    assert!(result.contains("comments: list[Comment | None]"),
-        "list with nullable elements not generated correctly");
+    assert!(
+        result.contains("comments: list[Comment | None]"),
+        "list with nullable elements not generated correctly"
+    );
 
     Ok(())
 }
@@ -716,7 +743,10 @@ fn test_python_async_resolver() -> Result<()> {
 
     let result = generate_python_graphql(schema, "resolvers")?;
 
-    assert!(result.contains("async def resolve_user"), "async resolver not generated");
+    assert!(
+        result.contains("async def resolve_user"),
+        "async resolver not generated"
+    );
     assert!(result.contains("id: str"), "resolver parameter type hint missing");
 
     Ok(())
@@ -772,8 +802,14 @@ fn test_python_deprecated_field() -> Result<()> {
 
     let result = generate_python_graphql(schema, "schema")?;
 
-    assert!(result.contains("@deprecated"), "deprecation directive not preserved in schema");
-    assert!(result.contains("Use fullName instead"), "deprecation reason not preserved");
+    assert!(
+        result.contains("@deprecated"),
+        "deprecation directive not preserved in schema"
+    );
+    assert!(
+        result.contains("Use fullName instead"),
+        "deprecation reason not preserved"
+    );
 
     Ok(())
 }
@@ -793,8 +829,14 @@ fn test_python_docstring() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    assert!(result.contains("\"\"\"User account type\"\"\""), "class docstring missing");
-    assert!(result.contains("# User unique identifier"), "field description comment missing");
+    assert!(
+        result.contains("\"\"\"User account type\"\"\""),
+        "class docstring missing"
+    );
+    assert!(
+        result.contains("# User unique identifier"),
+        "field description comment missing"
+    );
     assert!(result.contains("# User full name"), "field description comment missing");
 
     Ok(())
@@ -809,14 +851,24 @@ fn test_python_complete_schema() -> Result<()> {
 
     let result = generate_python_graphql(schema, "schema")?;
 
-    assert!(result.contains("from ariadne import make_executable_schema, QueryType, MutationType"),
-        "Ariadne imports missing");
+    assert!(
+        result.contains("from ariadne import make_executable_schema, QueryType, MutationType"),
+        "Ariadne imports missing"
+    );
     assert!(result.contains("type_defs = \"\"\""), "SDL string not embedded");
     assert!(result.contains("query = QueryType()"), "Query type not created");
-    assert!(result.contains("mutation = MutationType()"), "Mutation type not created");
-    assert!(result.contains("schema = make_executable_schema(type_defs, [query, mutation])"),
-        "executable schema not created");
-    assert!(result.contains("__all__ = ['schema', 'type_defs']"), "exports not defined");
+    assert!(
+        result.contains("mutation = MutationType()"),
+        "Mutation type not created"
+    );
+    assert!(
+        result.contains("schema = make_executable_schema(type_defs, [query, mutation])"),
+        "executable schema not created"
+    );
+    assert!(
+        result.contains("__all__ = ['schema', 'type_defs']"),
+        "exports not defined"
+    );
 
     Ok(())
 }
@@ -832,7 +884,10 @@ fn test_python_mutation_resolver() -> Result<()> {
 
     let result = generate_python_graphql(schema, "resolvers")?;
 
-    assert!(result.contains("async def resolve_create_user"), "mutation resolver not generated");
+    assert!(
+        result.contains("async def resolve_create_user"),
+        "mutation resolver not generated"
+    );
     assert!(result.contains("name: str"), "mutation parameter type hint missing");
     assert!(result.contains("email: str"), "mutation parameter type hint missing");
     assert!(result.contains("-> str"), "mutation return type hint missing");
@@ -1236,10 +1291,11 @@ fn test_typescript_schema_definition_no_broken_imports() -> Result<()> {
 
     // Extract just the imports section (first 1000 chars usually)
     let imports_section = &result[..std::cmp::min(1000, result.len())];
-    let has_broken_import = imports_section.lines()
-        .any(|line| !line.trim_start().starts_with("*") &&  // Not a comment
+    let has_broken_import = imports_section.lines().any(|line| {
+        !line.trim_start().starts_with("*") &&  // Not a comment
              !line.trim_start().starts_with("//") &&  // Not a comment
-             line.contains("import { resolvers } from './resolvers'"));
+             line.contains("import { resolvers } from './resolvers'")
+    });
 
     assert!(
         !has_broken_import,
@@ -1259,10 +1315,7 @@ fn test_typescript_schema_definition_no_broken_imports() -> Result<()> {
     );
 
     // Verify it exports typeDefs
-    assert!(
-        result.contains("export { typeDefs }"),
-        "ERROR: Missing typeDefs export"
-    );
+    assert!(result.contains("export { typeDefs }"), "ERROR: Missing typeDefs export");
 
     // Note: createSchema factory function removed - users implement resolvers separately
     // The schema is exported directly via makeExecutableSchema
@@ -1304,10 +1357,22 @@ fn test_ruby_generate_object_class() -> Result<()> {
 
     let result = generate_ruby_graphql(schema, "types")?;
 
-    assert!(result.contains("class User < GraphQL::Schema::Object"), "User class not generated");
-    assert!(result.contains("field :id") && result.contains("null: false"), "id field missing");
-    assert!(result.contains("field :name") && result.contains("null: false"), "name field missing");
-    assert!(result.contains("field :email") && result.contains("null: true"), "nullable email field missing");
+    assert!(
+        result.contains("class User < GraphQL::Schema::Object"),
+        "User class not generated"
+    );
+    assert!(
+        result.contains("field :id") && result.contains("null: false"),
+        "id field missing"
+    );
+    assert!(
+        result.contains("field :name") && result.contains("null: false"),
+        "name field missing"
+    );
+    assert!(
+        result.contains("field :email") && result.contains("null: true"),
+        "nullable email field missing"
+    );
     assert!(result.contains("module Types"), "Types module missing");
 
     Ok(())
@@ -1326,10 +1391,22 @@ fn test_ruby_generate_enum_class() -> Result<()> {
 
     let result = generate_ruby_graphql(schema, "types")?;
 
-    assert!(result.contains("class Status < GraphQL::Schema::Enum"), "Status enum class not generated");
-    assert!(result.contains("value :ACTIVE") || result.contains("ACTIVE"), "ACTIVE value missing");
-    assert!(result.contains("value :INACTIVE") || result.contains("INACTIVE"), "INACTIVE value missing");
-    assert!(result.contains("value :PENDING") || result.contains("PENDING"), "PENDING value missing");
+    assert!(
+        result.contains("class Status < GraphQL::Schema::Enum"),
+        "Status enum class not generated"
+    );
+    assert!(
+        result.contains("value :ACTIVE") || result.contains("ACTIVE"),
+        "ACTIVE value missing"
+    );
+    assert!(
+        result.contains("value :INACTIVE") || result.contains("INACTIVE"),
+        "INACTIVE value missing"
+    );
+    assert!(
+        result.contains("value :PENDING") || result.contains("PENDING"),
+        "PENDING value missing"
+    );
 
     Ok(())
 }
@@ -1351,8 +1428,15 @@ fn test_ruby_generate_input_class() -> Result<()> {
         result.contains("class CreateUserInput < GraphQL::Schema::InputObject"),
         "InputObject class not generated"
     );
-    assert!(result.contains("argument :name") && (result.contains("required: true") || !result.contains("required: false")), "name argument missing");
-    assert!(result.contains("argument :email") && (result.contains("required: true") || !result.contains("required: false")), "email argument missing");
+    assert!(
+        result.contains("argument :name") && (result.contains("required: true") || !result.contains("required: false")),
+        "name argument missing"
+    );
+    assert!(
+        result.contains("argument :email")
+            && (result.contains("required: true") || !result.contains("required: false")),
+        "email argument missing"
+    );
     assert!(result.contains("argument :age"), "age argument missing");
 
     Ok(())
@@ -1373,8 +1457,14 @@ fn test_ruby_generate_union_class() -> Result<()> {
         result.contains("class SearchResult < GraphQL::Schema::Union"),
         "Union class not generated"
     );
-    assert!(result.contains("possible_type") && (result.contains("User") || result.contains("user")), "User possible type missing");
-    assert!(result.contains("possible_type") && (result.contains("Post") || result.contains("post")), "Post possible type missing");
+    assert!(
+        result.contains("possible_type") && (result.contains("User") || result.contains("user")),
+        "User possible type missing"
+    );
+    assert!(
+        result.contains("possible_type") && (result.contains("Post") || result.contains("post")),
+        "Post possible type missing"
+    );
 
     Ok(())
 }
@@ -1393,10 +1483,19 @@ fn test_ruby_field_nullability() -> Result<()> {
     let result = generate_ruby_graphql(schema, "types")?;
 
     // Required fields should have null: false
-    assert!(result.contains("field :id") && result.contains("null: false"), "id should not be nullable");
-    assert!(result.contains("field :name") && result.contains("null: false"), "name should not be nullable");
+    assert!(
+        result.contains("field :id") && result.contains("null: false"),
+        "id should not be nullable"
+    );
+    assert!(
+        result.contains("field :name") && result.contains("null: false"),
+        "name should not be nullable"
+    );
     // Optional fields should have null: true
-    assert!(result.contains("field :bio") && result.contains("null: true"), "bio should be nullable");
+    assert!(
+        result.contains("field :bio") && result.contains("null: true"),
+        "bio should be nullable"
+    );
 
     Ok(())
 }
@@ -1416,11 +1515,26 @@ fn test_ruby_field_types() -> Result<()> {
 
     let result = generate_ruby_graphql(schema, "types")?;
 
-    assert!(result.contains("field :id") && result.contains("Types::ID"), "ID type mapping missing");
-    assert!(result.contains("field :name") && result.contains("Types::String"), "String type mapping missing");
-    assert!(result.contains("field :age") && result.contains("Types::Int"), "Int type mapping missing");
-    assert!(result.contains("field :score") && result.contains("Types::Float"), "Float type mapping missing");
-    assert!(result.contains("field :active") && result.contains("Types::Boolean"), "Boolean type mapping missing");
+    assert!(
+        result.contains("field :id") && result.contains("Types::ID"),
+        "ID type mapping missing"
+    );
+    assert!(
+        result.contains("field :name") && result.contains("Types::String"),
+        "String type mapping missing"
+    );
+    assert!(
+        result.contains("field :age") && result.contains("Types::Int"),
+        "Int type mapping missing"
+    );
+    assert!(
+        result.contains("field :score") && result.contains("Types::Float"),
+        "Float type mapping missing"
+    );
+    assert!(
+        result.contains("field :active") && result.contains("Types::Boolean"),
+        "Boolean type mapping missing"
+    );
 
     Ok(())
 }
@@ -1438,7 +1552,10 @@ fn test_ruby_list_fields() -> Result<()> {
 
     let result = generate_ruby_graphql(schema, "types")?;
 
-    assert!(result.contains("field :posts") && (result.contains("Types::Post") || result.contains("post")), "list field syntax incorrect");
+    assert!(
+        result.contains("field :posts") && (result.contains("Types::Post") || result.contains("post")),
+        "list field syntax incorrect"
+    );
 
     Ok(())
 }
@@ -1459,7 +1576,10 @@ fn test_ruby_resolver_method() -> Result<()> {
     let result = generate_ruby_graphql(schema, "resolvers")?;
 
     assert!(result.contains("class QueryType"), "QueryType class missing");
-    assert!(result.contains("def user(id:") || result.contains("def user"), "user method with keyword argument missing");
+    assert!(
+        result.contains("def user(id:") || result.contains("def user"),
+        "user method with keyword argument missing"
+    );
     assert!(result.contains("def users"), "users method missing");
 
     Ok(())
@@ -1477,8 +1597,14 @@ fn test_ruby_deprecation_reason() -> Result<()> {
     let result = generate_ruby_graphql(schema, "resolvers")?;
 
     // Just verify it doesn't panic and generates resolvers
-    assert!(result.contains("def old_field") || result.contains("oldField"), "deprecated field method missing");
-    assert!(result.contains("def new_field") || result.contains("newField"), "new field method missing");
+    assert!(
+        result.contains("def old_field") || result.contains("oldField"),
+        "deprecated field method missing"
+    );
+    assert!(
+        result.contains("def new_field") || result.contains("newField"),
+        "new field method missing"
+    );
 
     Ok(())
 }
@@ -1496,7 +1622,10 @@ fn test_ruby_custom_scalar() -> Result<()> {
 
     let result = generate_ruby_graphql(schema, "types")?;
 
-    assert!(result.contains("field :createdAt") && result.contains("Types::DateTime"), "custom scalar handling missing");
+    assert!(
+        result.contains("field :createdAt") && result.contains("Types::DateTime"),
+        "custom scalar handling missing"
+    );
 
     Ok(())
 }
@@ -1514,9 +1643,18 @@ fn test_ruby_complete_schema() -> Result<()> {
 
     let result = generate_ruby_graphql(schema, "schema")?;
 
-    assert!(result.contains("class AppSchema < GraphQL::Schema") || result.contains("class MySchema"), "Schema class missing");
-    assert!(result.contains("query QueryType") || result.contains("QueryType"), "query type declaration missing");
-    assert!(result.contains("mutation MutationType") || result.contains("MutationType"), "mutation type declaration missing");
+    assert!(
+        result.contains("class AppSchema < GraphQL::Schema") || result.contains("class MySchema"),
+        "Schema class missing"
+    );
+    assert!(
+        result.contains("query QueryType") || result.contains("QueryType"),
+        "query type declaration missing"
+    );
+    assert!(
+        result.contains("mutation MutationType") || result.contains("MutationType"),
+        "mutation type declaration missing"
+    );
 
     Ok(())
 }
@@ -1535,8 +1673,14 @@ fn test_ruby_mutation_resolver() -> Result<()> {
     let result = generate_ruby_graphql(schema, "resolvers")?;
 
     assert!(result.contains("class MutationType"), "MutationType class missing");
-    assert!(result.contains("def create_user") || result.contains("def createUser"), "createUser resolver missing");
-    assert!(result.contains("def update_user") || result.contains("def updateUser"), "updateUser resolver missing");
+    assert!(
+        result.contains("def create_user") || result.contains("def createUser"),
+        "createUser resolver missing"
+    );
+    assert!(
+        result.contains("def update_user") || result.contains("def updateUser"),
+        "updateUser resolver missing"
+    );
 
     Ok(())
 }
@@ -1582,10 +1726,7 @@ fn test_php_generate_enum() -> Result<()> {
 
     let result = generate_php_graphql(schema, "types")?;
 
-    assert!(
-        result.contains("enum UserStatus"),
-        "enum declaration missing"
-    );
+    assert!(result.contains("enum UserStatus"), "enum declaration missing");
     assert!(result.contains("ACTIVE"), "ACTIVE case missing");
     assert!(result.contains("INACTIVE"), "INACTIVE case missing");
     assert!(result.contains("PENDING"), "PENDING case missing");
@@ -1606,10 +1747,7 @@ fn test_php_generate_input_class() -> Result<()> {
 
     let result = generate_php_graphql(schema, "types")?;
 
-    assert!(
-        result.contains("class CreateUserInput"),
-        "input class missing"
-    );
+    assert!(result.contains("class CreateUserInput"), "input class missing");
     assert!(result.contains("name"), "name field missing");
     assert!(result.contains("email"), "email field missing");
     assert!(result.contains("age"), "age field missing");
@@ -1629,7 +1767,10 @@ fn test_php_generate_union_class() -> Result<()> {
     let result = generate_php_graphql(schema, "types")?;
 
     assert!(result.contains("SearchResult"), "union type missing");
-    assert!(result.contains("User") || result.contains("Post"), "union members missing");
+    assert!(
+        result.contains("User") || result.contains("Post"),
+        "union members missing"
+    );
 
     Ok(())
 }
@@ -1685,10 +1826,7 @@ fn test_php_field_types() -> Result<()> {
         result.contains("string") || result.contains("?string"),
         "string type missing"
     );
-    assert!(
-        result.contains("int") || result.contains("?int"),
-        "int type missing"
-    );
+    assert!(result.contains("int") || result.contains("?int"), "int type missing");
 
     Ok(())
 }
@@ -1777,8 +1915,14 @@ fn test_php_mutation_resolver() -> Result<()> {
 
     let result = generate_php_graphql(schema, "resolvers")?;
 
-    assert!(result.contains("createUser") || result.contains("create"), "createUser resolver missing");
-    assert!(result.contains("updateUser") || result.contains("update"), "updateUser resolver missing");
+    assert!(
+        result.contains("createUser") || result.contains("create"),
+        "createUser resolver missing"
+    );
+    assert!(
+        result.contains("updateUser") || result.contains("update"),
+        "updateUser resolver missing"
+    );
 
     Ok(())
 }

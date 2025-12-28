@@ -92,19 +92,23 @@ const DateParamSchema = z.object({
 	date: z.string().date(),
 });
 
-app.post("/json/small")
+app
+	.post("/json/small")
 	.body(SmallPayloadSchema)
 	.handler((req, res) => res.json(req.body));
 
-app.post("/json/medium")
+app
+	.post("/json/medium")
 	.body(MediumPayloadSchema)
 	.handler((req, res) => res.json(req.body));
 
-app.post("/json/large")
+app
+	.post("/json/large")
 	.body(LargePayloadSchema)
 	.handler((req, res) => res.json(req.body));
 
-app.post("/json/very-large")
+app
+	.post("/json/very-large")
 	.body(VeryLargePayloadSchema)
 	.handler((req, res) => res.json(req.body));
 
@@ -117,9 +121,9 @@ app.post("/urlencoded/complex").handler((req, res) => res.json(req.body));
 
 app.get("/path/simple/:id").handler((req, res) => res.json({ id: req.params.id }));
 
-app.get("/path/multiple/:user_id/:post_id").handler((req, res) =>
-	res.json({ user_id: req.params.user_id, post_id: req.params.post_id }),
-);
+app
+	.get("/path/multiple/:user_id/:post_id")
+	.handler((req, res) => res.json({ user_id: req.params.user_id, post_id: req.params.post_id }));
 
 app.get("/path/deep/:org/:team/:project/:resource/:id").handler((req, res) =>
 	res.json({

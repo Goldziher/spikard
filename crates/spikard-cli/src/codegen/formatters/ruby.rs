@@ -130,7 +130,7 @@ impl Formatter for RubyFormatter {
         let mut result = String::new();
 
         // Write stdlib requires first
-        for (module, _items) in &stdlib_requires {
+        for module in stdlib_requires.keys() {
             result.push_str(&format!("require '{}'\n", module));
         }
 
@@ -140,7 +140,7 @@ impl Formatter for RubyFormatter {
         }
 
         // Write gem requires
-        for (module, _items) in &gem_requires {
+        for module in gem_requires.keys() {
             result.push_str(&format!("require '{}'\n", module));
         }
 

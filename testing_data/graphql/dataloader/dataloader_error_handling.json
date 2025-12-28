@@ -1,128 +1,89 @@
 {
-  "name": "dataloader_error_handling",
-  "description": "DataLoader handling partial errors in batch loads where some items don't exist",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  users(ids: [ID!]!): [User!]!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n  }\n}",
-    "variables": {
-      "ids": [
-        "1",
-        "999",
-        "2"
-      ]
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n  }\n}",
-      "variables": {
-        "ids": [
-          "1",
-          "999",
-          "2"
-        ]
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "users": [
-        {
-          "id": "1",
-          "name": "Alice Johnson",
-          "email": "alice@example.com"
-        },
-        null,
-        {
-          "id": "2",
-          "name": "Bob Smith",
-          "email": "bob@example.com"
-        }
-      ]
-    },
-    "errors": [
-      {
-        "message": "User not found with id '999'",
-        "path": [
-          "users",
-          1
-        ],
-        "extensions": {
-          "code": "NOT_FOUND",
-          "id": "999"
-        }
-      }
-    ]
-  },
-  "resolvers": {
-    "Query.users": {
-      "type": "async_factory",
-      "factory_fn": "batch_load_users_with_error_handling"
-    }
-  },
-  "error_scenarios": [
-    {
-      "name": "Missing user in batch",
-      "ids": [
-        "1",
-        "999",
-        "2"
-      ],
-      "missing_ids": [
-        "999"
-      ],
-      "expected_nulls_at_indices": [
-        1
-      ],
-      "expected_error_count": 1
-    },
-    {
-      "name": "Multiple missing users",
-      "ids": [
-        "1",
-        "999",
-        "2",
-        "888"
-      ],
-      "missing_ids": [
-        "999",
-        "888"
-      ],
-      "expected_nulls_at_indices": [
-        1,
-        3
-      ],
-      "expected_error_count": 2
-    },
-    {
-      "name": "All users found",
-      "ids": [
-        "1",
-        "2",
-        "3"
-      ],
-      "missing_ids": [],
-      "expected_nulls_at_indices": [],
-      "expected_error_count": 0
-    }
-  ],
-  "dataloader_error_handling_strategy": {
-    "approach": "per_item_error_tracking",
-    "behavior": "Return null for missing items and include errors in response errors array",
-    "batching_on_error": true,
-    "cache_errors": false,
-    "description": "Errors don't stop processing of other batch items; partial results returned with error details"
-  },
-  "tags": [
-    "dataloader",
-    "error-handling",
-    "partial-failures",
-    "resilience"
-  ]
+	"name": "dataloader_error_handling",
+	"description": "DataLoader handling partial errors in batch loads where some items don't exist",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  users(ids: [ID!]!): [User!]!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n  }\n}",
+		"variables": {
+			"ids": ["1", "999", "2"]
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n  }\n}",
+			"variables": {
+				"ids": ["1", "999", "2"]
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"users": [
+				{
+					"id": "1",
+					"name": "Alice Johnson",
+					"email": "alice@example.com"
+				},
+				null,
+				{
+					"id": "2",
+					"name": "Bob Smith",
+					"email": "bob@example.com"
+				}
+			]
+		},
+		"errors": [
+			{
+				"message": "User not found with id '999'",
+				"path": ["users", 1],
+				"extensions": {
+					"code": "NOT_FOUND",
+					"id": "999"
+				}
+			}
+		]
+	},
+	"resolvers": {
+		"Query.users": {
+			"type": "async_factory",
+			"factory_fn": "batch_load_users_with_error_handling"
+		}
+	},
+	"error_scenarios": [
+		{
+			"name": "Missing user in batch",
+			"ids": ["1", "999", "2"],
+			"missing_ids": ["999"],
+			"expected_nulls_at_indices": [1],
+			"expected_error_count": 1
+		},
+		{
+			"name": "Multiple missing users",
+			"ids": ["1", "999", "2", "888"],
+			"missing_ids": ["999", "888"],
+			"expected_nulls_at_indices": [1, 3],
+			"expected_error_count": 2
+		},
+		{
+			"name": "All users found",
+			"ids": ["1", "2", "3"],
+			"missing_ids": [],
+			"expected_nulls_at_indices": [],
+			"expected_error_count": 0
+		}
+	],
+	"dataloader_error_handling_strategy": {
+		"approach": "per_item_error_tracking",
+		"behavior": "Return null for missing items and include errors in response errors array",
+		"batching_on_error": true,
+		"cache_errors": false,
+		"description": "Errors don't stop processing of other batch items; partial results returned with error details"
+	},
+	"tags": ["dataloader", "error-handling", "partial-failures", "resilience"]
 }

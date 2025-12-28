@@ -4,43 +4,24 @@
 	"title": "Spikard GraphQL Test Fixture Schema",
 	"description": "Schema for GraphQL query, mutation, subscription, and directive test fixtures used to generate e2e test apps and test suites. Fixtures are organized into categories: queries (field selection and nesting), mutations (data modification), validation (input and schema constraints), scalars (custom scalar types), errors (error handling), and edge_cases (protocol boundaries).",
 	"type": "object",
-	"required": [
-		"name",
-		"description",
-		"operation_type",
-		"endpoint",
-		"schema",
-		"request",
-		"expected_response"
-	],
+	"required": ["name", "description", "operation_type", "endpoint", "schema", "request", "expected_response"],
 	"properties": {
 		"name": {
 			"type": "string",
 			"description": "Fixture name (snake_case)",
 			"pattern": "^[a-z][a-z0-9_]*$",
 			"minLength": 1,
-			"examples": [
-				"simple_field",
-				"with_arguments",
-				"nested_objects"
-			]
+			"examples": ["simple_field", "with_arguments", "nested_objects"]
 		},
 		"description": {
 			"type": "string",
 			"description": "Human-readable description of the operation",
 			"minLength": 1,
-			"examples": [
-				"Query a single field",
-				"Query with arguments and filtering"
-			]
+			"examples": ["Query a single field", "Query with arguments and filtering"]
 		},
 		"operation_type": {
 			"type": "string",
-			"enum": [
-				"query",
-				"mutation",
-				"subscription"
-			],
+			"enum": ["query", "mutation", "subscription"],
 			"description": "GraphQL operation type"
 		},
 		"endpoint": {
@@ -48,26 +29,18 @@
 			"description": "HTTP endpoint path for GraphQL requests",
 			"pattern": "^/.*",
 			"default": "/graphql",
-			"examples": [
-				"/graphql",
-				"/api/graphql",
-				"/gql"
-			]
+			"examples": ["/graphql", "/api/graphql", "/gql"]
 		},
 		"schema": {
 			"type": "string",
 			"description": "GraphQL Schema Definition Language (SDL) string for schema definition",
 			"minLength": 1,
-			"examples": [
-				"type Query { hello: String! }"
-			]
+			"examples": ["type Query { hello: String! }"]
 		},
 		"request": {
 			"type": "object",
 			"description": "GraphQL request details",
-			"required": [
-				"query"
-			],
+			"required": ["query"],
 			"properties": {
 				"query": {
 					"type": "string",
@@ -88,20 +61,14 @@
 		"expected_response": {
 			"type": "object",
 			"description": "Expected response from GraphQL server",
-			"required": [
-				"status_code"
-			],
+			"required": ["status_code"],
 			"properties": {
 				"status_code": {
 					"type": "integer",
 					"description": "HTTP status code",
 					"minimum": 200,
 					"maximum": 599,
-					"examples": [
-						200,
-						400,
-						422
-					]
+					"examples": [200, 400, 422]
 				},
 				"data": {
 					"description": "GraphQL response data (null if errors present)",
@@ -112,9 +79,7 @@
 					"description": "GraphQL errors array (per GraphQL spec October 2021)",
 					"items": {
 						"type": "object",
-						"required": [
-							"message"
-						],
+						"required": ["message"],
 						"properties": {
 							"message": {
 								"type": "string",
@@ -125,10 +90,7 @@
 								"description": "Source locations where error occurred",
 								"items": {
 									"type": "object",
-									"required": [
-										"line",
-										"column"
-									],
+									"required": ["line", "column"],
 									"properties": {
 										"line": {
 											"type": "integer",
@@ -169,18 +131,10 @@
 			"description": "Mock resolver configuration for each GraphQL field (Type.field format)",
 			"additionalProperties": {
 				"type": "object",
-				"required": [
-					"type"
-				],
+				"required": ["type"],
 				"properties": {
 					"type": {
-						"enum": [
-							"mock",
-							"mock_with_args",
-							"factory",
-							"async_factory",
-							"error"
-						],
+						"enum": ["mock", "mock_with_args", "factory", "async_factory", "error"],
 						"description": "Resolver execution strategy"
 					},
 					"return_value": {
@@ -228,21 +182,7 @@
 			"items": {
 				"type": "string"
 			},
-			"examples": [
-				[
-					"queries"
-				],
-				[
-					"mutations",
-					"users"
-				],
-				[
-					"validation"
-				],
-				[
-					"edge-cases"
-				]
-			]
+			"examples": [["queries"], ["mutations", "users"], ["validation"], ["edge-cases"]]
 		}
 	},
 	"fixture_directories": {
@@ -390,11 +330,7 @@
 					"description": "Tests deeply nested field selection",
 					"purpose": "Verify depth limit enforcement",
 					"test_cases": 3,
-					"scenarios": [
-						"Valid nested query",
-						"Query exceeds depth limit",
-						"Maximum allowed nesting"
-					]
+					"scenarios": ["Valid nested query", "Query exceeds depth limit", "Maximum allowed nesting"]
 				},
 				"large_payload.json": {
 					"description": "Tests handling of large result sets",

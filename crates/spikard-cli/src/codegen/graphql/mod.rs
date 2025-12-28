@@ -4,8 +4,8 @@
 //! SDL (Schema Definition Language) and JSON introspection formats.
 
 pub mod generators;
-pub mod spec_parser;
 pub mod sdl;
+pub mod spec_parser;
 
 // Re-export parser types and functions for public use
 pub use spec_parser::{
@@ -17,11 +17,11 @@ pub use spec_parser::{
 pub use generators::{GraphQLGenerator, RustGenerator};
 
 // Re-export SDL utilities
-pub use sdl::{SdlBuilder, TargetLanguage, TypeMapper};
 
 use anyhow::Result;
 
 /// Configuration for placeholder GraphQL code generation
+#[allow(dead_code)]
 struct PlaceholderConfig {
     language: &'static str,
     comment_marker: &'static str,
@@ -32,6 +32,7 @@ struct PlaceholderConfig {
 
 impl PlaceholderConfig {
     /// Create configuration for Python
+    #[allow(dead_code)]
     fn python() -> Self {
         Self {
             language: "Python",
@@ -43,6 +44,7 @@ impl PlaceholderConfig {
     }
 
     /// Create configuration for TypeScript
+    #[allow(dead_code)]
     fn typescript() -> Self {
         Self {
             language: "TypeScript",
@@ -54,6 +56,7 @@ impl PlaceholderConfig {
     }
 
     /// Create configuration for Ruby
+    #[allow(dead_code)]
     fn ruby() -> Self {
         Self {
             language: "Ruby",
@@ -65,6 +68,7 @@ impl PlaceholderConfig {
     }
 
     /// Create configuration for PHP
+    #[allow(dead_code)]
     fn php() -> Self {
         Self {
             language: "PHP",
@@ -77,6 +81,7 @@ impl PlaceholderConfig {
 }
 
 /// Generate placeholder GraphQL code from a schema using language-specific configuration
+#[allow(dead_code)]
 fn generate_placeholder_graphql(schema: &str, target: &str, config: &PlaceholderConfig) -> Result<String> {
     let mut code = String::new();
 
@@ -215,7 +220,7 @@ pub fn generate_python_graphql(schema: &str, target: &str) -> Result<String> {
     let parsed_schema = parse_graphql_sdl_string(schema)?;
 
     // Create the Python generator
-    let generator = PythonGenerator::default();
+    let generator = PythonGenerator;
 
     // Generate code based on target
     match target {
@@ -239,7 +244,7 @@ pub fn generate_python_graphql(schema: &str, target: &str) -> Result<String> {
 ///
 /// * `schema` - GraphQL schema as a string (SDL format)
 /// * `target` - Generation target: "all" (complete), "types" (types only),
-///              "resolvers" (resolvers), or "schema" (schema definition)
+///   "resolvers" (resolvers), or "schema" (schema definition)
 ///
 /// # Returns
 ///
@@ -252,7 +257,7 @@ pub fn generate_typescript_graphql(schema: &str, target: &str) -> Result<String>
     let parsed_schema = parse_graphql_sdl_string(schema)?;
 
     // Create the TypeScript generator
-    let generator = TypeScriptGenerator::default();
+    let generator = TypeScriptGenerator;
 
     // Generate code based on target
     match target {
@@ -276,7 +281,7 @@ pub fn generate_typescript_graphql(schema: &str, target: &str) -> Result<String>
 ///
 /// * `schema` - GraphQL schema as a string (SDL format)
 /// * `target` - Generation target: "all" (complete), "types" (types only),
-///              "resolvers" (Query/Mutation/Subscription), or "schema" (schema builder)
+///   "resolvers" (Query/Mutation/Subscription), or "schema" (schema builder)
 ///
 /// # Returns
 ///
@@ -312,8 +317,8 @@ pub fn generate_rust_graphql(schema: &str, target: &str) -> Result<String> {
 ///
 /// * `schema` - GraphQL schema as a string (SDL format)
 /// * `target` - Generation target: "all" (complete), "types" (types only),
-///              "resolvers" (resolver classes), "schema" (schema definition),
-///              or "rbs" (RBS type signatures for Steep)
+///   "resolvers" (resolver classes), "schema" (schema definition),
+///   or "rbs" (RBS type signatures for Steep)
 ///
 /// # Returns
 ///
@@ -338,11 +343,11 @@ pub fn generate_rust_graphql(schema: &str, target: &str) -> Result<String> {
 /// // Output is RBS syntax compatible with Steep type checker
 /// ```
 pub fn generate_ruby_graphql(schema: &str, target: &str) -> Result<String> {
-    use generators::ruby::RubyGenerator;
     use generators::GraphQLGenerator;
+    use generators::ruby::RubyGenerator;
 
     let parsed_schema = parse_graphql_sdl_string(schema)?;
-    let generator = RubyGenerator::default();
+    let generator = RubyGenerator;
 
     match target {
         "types" => generator.generate_types(&parsed_schema),
@@ -365,7 +370,7 @@ pub fn generate_ruby_graphql(schema: &str, target: &str) -> Result<String> {
 ///
 /// * `schema` - GraphQL schema as a string (SDL format)
 /// * `target` - Generation target: "all" (complete), "types" (types only),
-///              "resolvers" (resolver classes), or "schema" (schema definition)
+///   "resolvers" (resolver classes), or "schema" (schema definition)
 ///
 /// # Returns
 ///
@@ -393,14 +398,14 @@ pub fn generate_ruby_graphql(schema: &str, target: &str) -> Result<String> {
 /// println!("{}", code);
 /// ```
 pub fn generate_php_graphql(schema: &str, target: &str) -> Result<String> {
-    use generators::php::PhpGenerator;
     use generators::GraphQLGenerator;
+    use generators::php::PhpGenerator;
 
     // Parse the GraphQL schema string
     let parsed_schema = parse_graphql_sdl_string(schema)?;
 
     // Create the PHP generator
-    let generator = PhpGenerator::default();
+    let generator = PhpGenerator;
 
     // Generate code based on target
     match target {

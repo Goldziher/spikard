@@ -1,34 +1,31 @@
 {
-  "name": "simple_field",
-  "description": "Basic single-field query with scalar return type",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  hello: String!\n  version: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  hello\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  hello\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "hello": "Hello, World!"
-    }
-  },
-  "resolvers": {
-    "Query.hello": {
-      "type": "mock",
-      "return_value": "Hello, World!"
-    }
-  },
-  "tags": [
-    "queries",
-    "scalar-fields"
-  ]
+	"name": "simple_field",
+	"description": "Basic single-field query with scalar return type",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  hello: String!\n  version: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  hello\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  hello\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"hello": "Hello, World!"
+		}
+	},
+	"resolvers": {
+		"Query.hello": {
+			"type": "mock",
+			"return_value": "Hello, World!"
+		}
+	},
+	"tags": ["queries", "scalar-fields"]
 }

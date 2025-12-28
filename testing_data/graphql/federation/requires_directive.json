@@ -1,54 +1,50 @@
 {
-  "name": "requires_directive",
-  "description": "Field with @requires directive for dependent field resolution",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n}\n\nunion _Entity = Shipment\n\ntype Shipment @key(fields: \"id\") {\n  id: ID!\n  weight: Float!\n  destination: String!\n  shippingEstimate: Float! @requires(fields: \"weight destination\")\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  _entities(representations: [{__typename: \"Shipment\", id: \"ship-001\", weight: 5.5, destination: \"NYC\"}]) {\n    ... on Shipment {\n      id\n      weight\n      destination\n      shippingEstimate\n    }\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  _entities(representations: [{__typename: \"Shipment\", id: \"ship-001\", weight: 5.5, destination: \"NYC\"}]) {\n    ... on Shipment {\n      id\n      weight\n      destination\n      shippingEstimate\n    }\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "_entities": [
-        {
-          "id": "ship-001",
-          "weight": 5.5,
-          "destination": "NYC",
-          "shippingEstimate": 24.75
-        }
-      ]
-    }
-  },
-  "resolvers": {
-    "Query._entities": {
-      "type": "factory",
-      "factory_fn": "resolve_shipment_entities_with_requires"
-    },
-    "Query._service": {
-      "type": "mock",
-      "return_value": {
-        "sdl": "type Shipment @key(fields: \"id\") {\n  id: ID!\n  weight: Float!\n  destination: String!\n  shippingEstimate: Float! @requires(fields: \"weight destination\")\n}"
-      }
-    },
-    "Shipment.shippingEstimate": {
-      "type": "factory",
-      "factory_fn": "calculate_shipping_estimate"
-    }
-  },
-  "tags": [
-    "federation",
-    "requires-directive",
-    "dependent-fields"
-  ],
-  "complexity_limit": 50,
-  "depth_limit": 3
+	"name": "requires_directive",
+	"description": "Field with @requires directive for dependent field resolution",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n}\n\nunion _Entity = Shipment\n\ntype Shipment @key(fields: \"id\") {\n  id: ID!\n  weight: Float!\n  destination: String!\n  shippingEstimate: Float! @requires(fields: \"weight destination\")\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  _entities(representations: [{__typename: \"Shipment\", id: \"ship-001\", weight: 5.5, destination: \"NYC\"}]) {\n    ... on Shipment {\n      id\n      weight\n      destination\n      shippingEstimate\n    }\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  _entities(representations: [{__typename: \"Shipment\", id: \"ship-001\", weight: 5.5, destination: \"NYC\"}]) {\n    ... on Shipment {\n      id\n      weight\n      destination\n      shippingEstimate\n    }\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"_entities": [
+				{
+					"id": "ship-001",
+					"weight": 5.5,
+					"destination": "NYC",
+					"shippingEstimate": 24.75
+				}
+			]
+		}
+	},
+	"resolvers": {
+		"Query._entities": {
+			"type": "factory",
+			"factory_fn": "resolve_shipment_entities_with_requires"
+		},
+		"Query._service": {
+			"type": "mock",
+			"return_value": {
+				"sdl": "type Shipment @key(fields: \"id\") {\n  id: ID!\n  weight: Float!\n  destination: String!\n  shippingEstimate: Float! @requires(fields: \"weight destination\")\n}"
+			}
+		},
+		"Shipment.shippingEstimate": {
+			"type": "factory",
+			"factory_fn": "calculate_shipping_estimate"
+		}
+	},
+	"tags": ["federation", "requires-directive", "dependent-fields"],
+	"complexity_limit": 50,
+	"depth_limit": 3
 }

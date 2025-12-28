@@ -12,6 +12,7 @@ use std::path::PathBuf;
 pub struct TypeScriptScaffolder;
 
 impl ProjectScaffolder for TypeScriptScaffolder {
+    #[allow(clippy::vec_init_then_push)]
     fn scaffold(&self, _project_dir: &Path, project_name: &str) -> Result<Vec<ScaffoldedFile>> {
         let kebab_name = project_name.replace('_', "-").to_lowercase();
 
@@ -24,10 +25,7 @@ impl ProjectScaffolder for TypeScriptScaffolder {
         ));
 
         // pnpm-lock.yaml (empty placeholder)
-        files.push(ScaffoldedFile::new(
-            PathBuf::from("pnpm-lock.yaml"),
-            String::new(),
-        ));
+        files.push(ScaffoldedFile::new(PathBuf::from("pnpm-lock.yaml"), String::new()));
 
         // tsconfig.json
         files.push(ScaffoldedFile::new(
@@ -54,10 +52,7 @@ impl ProjectScaffolder for TypeScriptScaffolder {
         ));
 
         // src/app.ts
-        files.push(ScaffoldedFile::new(
-            PathBuf::from("src/app.ts"),
-            self.generate_app_ts(),
-        ));
+        files.push(ScaffoldedFile::new(PathBuf::from("src/app.ts"), self.generate_app_ts()));
 
         // tests/app.spec.ts
         files.push(ScaffoldedFile::new(
@@ -421,7 +416,10 @@ mod tests {
         let scaffolder = TypeScriptScaffolder;
         let files = scaffolder.scaffold(temp_dir.path(), "my-app")?;
 
-        let pkg_json = files.iter().find(|f| f.path.file_name().unwrap() == "package.json").unwrap();
+        let pkg_json = files
+            .iter()
+            .find(|f| f.path.file_name().unwrap() == "package.json")
+            .unwrap();
 
         assert!(pkg_json.content.contains("\"type\": \"module\""));
         assert!(pkg_json.content.contains("@spikard/node"));
@@ -437,7 +435,10 @@ mod tests {
         let scaffolder = TypeScriptScaffolder;
         let files = scaffolder.scaffold(temp_dir.path(), "test-app")?;
 
-        let tsconfig = files.iter().find(|f| f.path.file_name().unwrap() == "tsconfig.json").unwrap();
+        let tsconfig = files
+            .iter()
+            .find(|f| f.path.file_name().unwrap() == "tsconfig.json")
+            .unwrap();
 
         assert!(tsconfig.content.contains("\"strict\": true"));
         assert!(tsconfig.content.contains("\"noImplicitAny\": true"));
@@ -459,6 +460,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::cmp_owned)]
     fn test_typescript_app_ts_has_handlers() -> Result<()> {
         let temp_dir = TempDir::new()?;
         let scaffolder = TypeScriptScaffolder;

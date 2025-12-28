@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 use tokio::process::Command;
 
@@ -15,17 +16,6 @@ pub enum ChartType {
 }
 
 impl ChartType {
-    pub fn from_str(s: &str) -> Option<Self> {
-        match s.to_lowercase().as_str() {
-            "throughput" => Some(Self::Throughput),
-            "latency" => Some(Self::Latency),
-            "validation" | "validation-overhead" => Some(Self::ValidationOverhead),
-            "resources" => Some(Self::Resources),
-            "all" => Some(Self::All),
-            _ => None,
-        }
-    }
-
     pub fn as_str(&self) -> &str {
         match self {
             Self::Throughput => "throughput",
@@ -33,6 +23,21 @@ impl ChartType {
             Self::ValidationOverhead => "validation",
             Self::Resources => "resources",
             Self::All => "all",
+        }
+    }
+}
+
+impl FromStr for ChartType {
+    type Err = String;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "throughput" => Ok(Self::Throughput),
+            "latency" => Ok(Self::Latency),
+            "validation" | "validation-overhead" => Ok(Self::ValidationOverhead),
+            "resources" => Ok(Self::Resources),
+            "all" => Ok(Self::All),
+            _ => Err(format!("Unknown chart type: '{}'", s)),
         }
     }
 }
@@ -69,10 +74,7 @@ impl VisualizeRunner {
 
         println!("📖 Validating input file...");
         let aggregated = self.validate_input()?;
-        println!(
-            "✅ Valid input with {} frameworks",
-            aggregated.frameworks.len()
-        );
+        println!("✅ Valid input with {} frameworks", aggregated.frameworks.len());
 
         println!("📁 Creating output directory...");
         tokio::fs::create_dir_all(&self.output_dir)
@@ -121,11 +123,7 @@ impl VisualizeRunner {
     }
 
     async fn run_visualizer(&self, script_path: &Path) -> Result<()> {
-        let python = self
-            .python_path
-            .as_ref()
-            .and_then(|p| p.to_str())
-            .unwrap_or("python3");
+        let python = self.python_path.as_ref().and_then(|p| p.to_str()).unwrap_or("python3");
 
         let mut cmd = Command::new(python);
         cmd.arg(script_path)
@@ -162,30 +160,26 @@ impl VisualizeRunner {
     }
 
     fn charts_arg(&self) -> String {
-        self.charts
-            .iter()
-            .map(|c| c.as_str())
-            .collect::<Vec<_>>()
-            .join(",")
+        self.charts.iter().map(|c| c.as_str()).collect::<Vec<_>>().join(",")
     }
 }
 
 pub fn parse_chart_types(charts_str: &str) -> Result<Vec<ChartType>> {
     let chart_names: Vec<&str> = charts_str.split(',').map(|s| s.trim()).collect();
 
-    if chart_names.iter().any(|&name| name == "all") {
+    if chart_names.contains(&"all") {
         return Ok(vec![ChartType::All]);
     }
 
     let mut types = Vec::new();
     for name in chart_names {
-        match ChartType::from_str(name) {
-            Some(chart_type) => types.push(chart_type),
-            None => {
+        match name.parse::<ChartType>() {
+            Ok(chart_type) => types.push(chart_type),
+            Err(_) => {
                 return Err(Error::BenchmarkFailed(format!(
                     "Unknown chart type: '{}'. Valid types: throughput, latency, validation, resources, all",
                     name
-                )))
+                )));
             }
         }
     }

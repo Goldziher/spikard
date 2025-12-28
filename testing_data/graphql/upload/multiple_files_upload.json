@@ -1,112 +1,103 @@
 {
-  "name": "multiple_files_upload",
-  "description": "Upload multiple files in a single GraphQL multipart request",
-  "operation_type": "mutation",
-  "endpoint": "/graphql",
-  "schema": "scalar Upload\n\ntype Mutation {\n  multipleUpload(files: [Upload!]!): [File!]!\n}\n\ntype File {\n  id: ID!\n  filename: String!\n  mimetype: String!\n  size: Int!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "mutation MultipleUpload($files: [Upload!]!) {\n  multipleUpload(files: $files) {\n    id\n    filename\n    mimetype\n    size\n  }\n}",
-    "variables": {
-      "files": [
-        null,
-        null,
-        null
-      ]
-    },
-    "operationName": "MultipleUpload"
-  },
-  "multipart_request": {
-    "description": "Multiple files in single multipart request",
-    "parts": {
-      "operations": {
-        "type": "form-data",
-        "name": "operations",
-        "content": "{\"query\": \"mutation MultipleUpload($files: [Upload!]!) { multipleUpload(files: $files) { id filename mimetype size } }\", \"variables\": {\"files\": [null, null, null]}}"
-      },
-      "map": {
-        "type": "form-data",
-        "name": "map",
-        "content": "{\"0\": [\"variables.files.0\"], \"1\": [\"variables.files.1\"], \"2\": [\"variables.files.2\"]}"
-      },
-      "file1": {
-        "type": "file",
-        "name": "0",
-        "filename": "document.pdf",
-        "mimetype": "application/pdf",
-        "content": "%PDF-1.4\n%Mock PDF content for testing"
-      },
-      "file2": {
-        "type": "file",
-        "name": "1",
-        "filename": "image.png",
-        "mimetype": "image/png",
-        "content": "\u0089PNG\r\n\u001a\n... mock PNG data ..."
-      },
-      "file3": {
-        "type": "file",
-        "name": "2",
-        "filename": "data.csv",
-        "mimetype": "text/csv",
-        "content": "name,email,role\nAlice,alice@example.com,admin\nBob,bob@example.com,user"
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "multipleUpload": [
-        {
-          "id": "file-002",
-          "filename": "document.pdf",
-          "mimetype": "application/pdf",
-          "size": 32
-        },
-        {
-          "id": "file-003",
-          "filename": "image.png",
-          "mimetype": "image/png",
-          "size": 24
-        },
-        {
-          "id": "file-004",
-          "filename": "data.csv",
-          "mimetype": "text/csv",
-          "size": 68
-        }
-      ]
-    }
-  },
-  "resolvers": {
-    "Mutation.multipleUpload": {
-      "type": "mock",
-      "return_value": [
-        {
-          "id": "file-002",
-          "filename": "document.pdf",
-          "mimetype": "application/pdf",
-          "size": 32
-        },
-        {
-          "id": "file-003",
-          "filename": "image.png",
-          "mimetype": "image/png",
-          "size": 24
-        },
-        {
-          "id": "file-004",
-          "filename": "data.csv",
-          "mimetype": "text/csv",
-          "size": 68
-        }
-      ]
-    }
-  },
-  "tags": [
-    "mutations",
-    "file-upload",
-    "multipart",
-    "batch"
-  ]
+	"name": "multiple_files_upload",
+	"description": "Upload multiple files in a single GraphQL multipart request",
+	"operation_type": "mutation",
+	"endpoint": "/graphql",
+	"schema": "scalar Upload\n\ntype Mutation {\n  multipleUpload(files: [Upload!]!): [File!]!\n}\n\ntype File {\n  id: ID!\n  filename: String!\n  mimetype: String!\n  size: Int!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "mutation MultipleUpload($files: [Upload!]!) {\n  multipleUpload(files: $files) {\n    id\n    filename\n    mimetype\n    size\n  }\n}",
+		"variables": {
+			"files": [null, null, null]
+		},
+		"operationName": "MultipleUpload"
+	},
+	"multipart_request": {
+		"description": "Multiple files in single multipart request",
+		"parts": {
+			"operations": {
+				"type": "form-data",
+				"name": "operations",
+				"content": "{\"query\": \"mutation MultipleUpload($files: [Upload!]!) { multipleUpload(files: $files) { id filename mimetype size } }\", \"variables\": {\"files\": [null, null, null]}}"
+			},
+			"map": {
+				"type": "form-data",
+				"name": "map",
+				"content": "{\"0\": [\"variables.files.0\"], \"1\": [\"variables.files.1\"], \"2\": [\"variables.files.2\"]}"
+			},
+			"file1": {
+				"type": "file",
+				"name": "0",
+				"filename": "document.pdf",
+				"mimetype": "application/pdf",
+				"content": "%PDF-1.4\n%Mock PDF content for testing"
+			},
+			"file2": {
+				"type": "file",
+				"name": "1",
+				"filename": "image.png",
+				"mimetype": "image/png",
+				"content": "\u0089PNG\r\n\u001a\n... mock PNG data ..."
+			},
+			"file3": {
+				"type": "file",
+				"name": "2",
+				"filename": "data.csv",
+				"mimetype": "text/csv",
+				"content": "name,email,role\nAlice,alice@example.com,admin\nBob,bob@example.com,user"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"multipleUpload": [
+				{
+					"id": "file-002",
+					"filename": "document.pdf",
+					"mimetype": "application/pdf",
+					"size": 32
+				},
+				{
+					"id": "file-003",
+					"filename": "image.png",
+					"mimetype": "image/png",
+					"size": 24
+				},
+				{
+					"id": "file-004",
+					"filename": "data.csv",
+					"mimetype": "text/csv",
+					"size": 68
+				}
+			]
+		}
+	},
+	"resolvers": {
+		"Mutation.multipleUpload": {
+			"type": "mock",
+			"return_value": [
+				{
+					"id": "file-002",
+					"filename": "document.pdf",
+					"mimetype": "application/pdf",
+					"size": 32
+				},
+				{
+					"id": "file-003",
+					"filename": "image.png",
+					"mimetype": "image/png",
+					"size": 24
+				},
+				{
+					"id": "file-004",
+					"filename": "data.csv",
+					"mimetype": "text/csv",
+					"size": 68
+				}
+			]
+		}
+	},
+	"tags": ["mutations", "file-upload", "multipart", "batch"]
 }

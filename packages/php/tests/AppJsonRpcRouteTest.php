@@ -40,13 +40,16 @@ final class AppJsonRpcRouteTest extends TestCase
         self::assertIsArray($routes);
 
         self::assertCount(1, $routes);
-        /**  */
+        /** @var array<string, mixed> $route */
         $route = $routes[0];
         self::assertIsArray($route);
         self::assertSame('POST', $route['method']);
         self::assertSame('/rpc', $route['path']);
         self::assertArrayHasKey('handler', $route);
         self::assertArrayHasKey('jsonrpc_method', $route);
-        self::assertSame('math.add', $route['jsonrpc_method']->methodName);
+        self::assertIsObject($route['jsonrpc_method']);
+        /** @var object{methodName: string} $jsonRpcMethod */
+        $jsonRpcMethod = $route['jsonrpc_method'];
+        self::assertSame('math.add', $jsonRpcMethod->methodName);
     }
 }

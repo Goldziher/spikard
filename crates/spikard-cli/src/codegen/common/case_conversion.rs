@@ -212,9 +212,7 @@ pub fn to_kebab_case(s: &str) -> String {
     for (i, &ch) in chars.iter().enumerate() {
         if ch.is_uppercase() {
             // Check if we should add a hyphen before this uppercase letter
-            let should_add_hyphen = if i == 0 {
-                false
-            } else if result.ends_with('-') {
+            let should_add_hyphen = if i == 0 || result.ends_with('-') {
                 false
             } else {
                 let prev_is_lower = chars[i - 1].is_lowercase();

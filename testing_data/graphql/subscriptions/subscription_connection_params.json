@@ -1,54 +1,47 @@
 {
-  "name": "subscription_connection_params",
-  "description": "Subscription with connection initialization parameters containing auth token for WebSocket subprotocol graphql-ws",
-  "operation_type": "subscription",
-  "endpoint": "/graphql",
-  "schema": "type Subscription {\n  secureStream: StreamEvent!\n}\n\ntype StreamEvent {\n  id: ID!\n  data: String!\n  timestamp: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "subscription {\n  secureStream {\n    id\n    data\n    timestamp\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "connection_init": {
-      "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-    },
-    "body": {
-      "query": "subscription {\n  secureStream {\n    id\n    data\n    timestamp\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 101,
-    "headers": {
-      "upgrade": "websocket",
-      "connection": "upgrade",
-      "sec-websocket-protocol": "graphql-ws"
-    },
-    "data": {
-      "secureStream": {
-        "id": "stream-1",
-        "data": "Connection established",
-        "timestamp": "2025-12-27T14:00:00Z"
-      }
-    }
-  },
-  "resolvers": {
-    "Subscription.secureStream": {
-      "type": "mock",
-      "return_value": {
-        "id": "stream-1",
-        "data": "Connection established",
-        "timestamp": "2025-12-27T14:00:00Z"
-      }
-    }
-  },
-  "tags": [
-    "subscriptions",
-    "websocket",
-    "connection-params",
-    "authentication",
-    "graphql-ws",
-    "protocol"
-  ]
+	"name": "subscription_connection_params",
+	"description": "Subscription with connection initialization parameters containing auth token for WebSocket subprotocol graphql-ws",
+	"operation_type": "subscription",
+	"endpoint": "/graphql",
+	"schema": "type Subscription {\n  secureStream: StreamEvent!\n}\n\ntype StreamEvent {\n  id: ID!\n  data: String!\n  timestamp: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "subscription {\n  secureStream {\n    id\n    data\n    timestamp\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"connection_init": {
+			"authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+		},
+		"body": {
+			"query": "subscription {\n  secureStream {\n    id\n    data\n    timestamp\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 101,
+		"headers": {
+			"upgrade": "websocket",
+			"connection": "upgrade",
+			"sec-websocket-protocol": "graphql-ws"
+		},
+		"data": {
+			"secureStream": {
+				"id": "stream-1",
+				"data": "Connection established",
+				"timestamp": "2025-12-27T14:00:00Z"
+			}
+		}
+	},
+	"resolvers": {
+		"Subscription.secureStream": {
+			"type": "mock",
+			"return_value": {
+				"id": "stream-1",
+				"data": "Connection established",
+				"timestamp": "2025-12-27T14:00:00Z"
+			}
+		}
+	},
+	"tags": ["subscriptions", "websocket", "connection-params", "authentication", "graphql-ws", "protocol"]
 }

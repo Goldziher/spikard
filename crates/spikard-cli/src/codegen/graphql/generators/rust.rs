@@ -5,7 +5,7 @@
 //! includes comprehensive error handling, and respects async/await patterns.
 
 use super::GraphQLGenerator;
-use crate::codegen::graphql::spec_parser::{GraphQLField, GraphQLSchema, GraphQLType, TypeKind};
+use crate::codegen::graphql::spec_parser::{GraphQLSchema, GraphQLType, TypeKind};
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
 
@@ -34,18 +34,21 @@ impl RustGenerator {
     }
 
     /// Builder method to disable serde derives
+    #[allow(dead_code)]
     pub fn without_serde(mut self) -> Self {
         self.include_serde = false;
         self
     }
 
     /// Builder method to disable debug derives
+    #[allow(dead_code)]
     pub fn without_debug(mut self) -> Self {
         self.include_debug = false;
         self
     }
 
     /// Builder method to use bare types instead of Result
+    #[allow(dead_code)]
     pub fn with_bare_types(mut self) -> Self {
         self.use_result_types = false;
         self
@@ -295,7 +298,7 @@ impl GraphQLGenerator for RustGenerator {
         if self.include_serde {
             code.push_str("use serde::{Deserialize, Serialize};\n");
         }
-        code.push_str("\n");
+        code.push('\n');
 
         // Generate all type definitions (skip built-in scalars)
         for (type_name, type_def) in &schema.types {
@@ -304,7 +307,7 @@ impl GraphQLGenerator for RustGenerator {
             }
 
             code.push_str(&self.gen_type_definition(type_def));
-            code.push_str("\n");
+            code.push('\n');
         }
 
         Ok(code)

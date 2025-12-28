@@ -12,22 +12,16 @@ use std::path::PathBuf;
 pub struct RubyScaffolder;
 
 impl ProjectScaffolder for RubyScaffolder {
-    fn scaffold(&self, project_dir: &Path, project_name: &str) -> Result<Vec<ScaffoldedFile>> {
+    fn scaffold(&self, _project_dir: &Path, project_name: &str) -> Result<Vec<ScaffoldedFile>> {
         let snake_name = project_name.replace('-', "_").to_lowercase();
 
         let mut files = vec![];
 
         // Gemfile
-        files.push(ScaffoldedFile::new(
-            PathBuf::from("Gemfile"),
-            self.generate_gemfile(),
-        ));
+        files.push(ScaffoldedFile::new(PathBuf::from("Gemfile"), self.generate_gemfile()));
 
         // Gemfile.lock (empty placeholder)
-        files.push(ScaffoldedFile::new(
-            PathBuf::from("Gemfile.lock"),
-            String::new(),
-        ));
+        files.push(ScaffoldedFile::new(PathBuf::from("Gemfile.lock"), String::new()));
 
         // .ruby-version
         files.push(ScaffoldedFile::new(
@@ -66,16 +60,10 @@ impl ProjectScaffolder for RubyScaffolder {
         ));
 
         // .rspec
-        files.push(ScaffoldedFile::new(
-            PathBuf::from(".rspec"),
-            self.generate_rspec(),
-        ));
+        files.push(ScaffoldedFile::new(PathBuf::from(".rspec"), self.generate_rspec()));
 
         // Rakefile (optional, for task automation)
-        files.push(ScaffoldedFile::new(
-            PathBuf::from("Rakefile"),
-            self.generate_rakefile(),
-        ));
+        files.push(ScaffoldedFile::new(PathBuf::from("Rakefile"), self.generate_rakefile()));
 
         Ok(files)
     }
@@ -499,7 +487,10 @@ mod tests {
         let scaffolder = RubyScaffolder;
         let files = scaffolder.scaffold(temp_dir.path(), "test_app")?;
 
-        let ruby_version = files.iter().find(|f| f.path.file_name().unwrap() == ".ruby-version").unwrap();
+        let ruby_version = files
+            .iter()
+            .find(|f| f.path.file_name().unwrap() == ".ruby-version")
+            .unwrap();
 
         assert_eq!(ruby_version.content.trim(), "3.2.0");
 

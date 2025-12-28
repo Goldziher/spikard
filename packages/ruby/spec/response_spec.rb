@@ -90,7 +90,8 @@ RSpec.describe Spikard::Testing::Response do
       graphql_response = '{"errors":[{"message":"Field error","extensions":{"code":"FIELD_ERROR"}}]}'
       response = described_class.new(status_code: 200, headers: {}, body: graphql_response)
 
-      expect(response.graphql_errors).to eq([{ 'message' => 'Field error', 'extensions' => { 'code' => 'FIELD_ERROR' } }])
+      expect(response.graphql_errors).to eq([{ 'message' => 'Field error',
+                                               'extensions' => { 'code' => 'FIELD_ERROR' } }])
     end
 
     it 'returns empty array when errors field is missing' do

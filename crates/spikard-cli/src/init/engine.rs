@@ -204,15 +204,14 @@ impl InitEngine {
 
         // Generate files via scaffolder
         let files = scaffolder
-            .scaffold(
-                &request.project_dir,
-                &request.project_name,
-            )
+            .scaffold(&request.project_dir, &request.project_name)
             .context("Failed to scaffold project files")?;
 
         // Create project directory
-        std::fs::create_dir_all(&request.project_dir)
-            .context(format!("Failed to create project directory: {}", request.project_dir.display()))?;
+        std::fs::create_dir_all(&request.project_dir).context(format!(
+            "Failed to create project directory: {}",
+            request.project_dir.display()
+        ))?;
 
         // Write files to disk and collect paths
         let mut files_created = Vec::new();
@@ -221,8 +220,7 @@ impl InitEngine {
 
             // Create parent directories if needed
             if let Some(parent) = full_path.parent() {
-                std::fs::create_dir_all(parent)
-                    .context(format!("Failed to create directory: {}", parent.display()))?;
+                std::fs::create_dir_all(parent).context(format!("Failed to create directory: {}", parent.display()))?;
             }
 
             // Write file content
@@ -286,12 +284,12 @@ impl InitEngine {
         }
 
         // Validate schema path if provided
-        if let Some(schema_path) = &request.schema_path {
-            if !schema_path.exists() {
-                bail!(InitError::SchemaPathNotFound {
-                    path: schema_path.clone(),
-                });
-            }
+        if let Some(schema_path) = &request.schema_path
+            && !schema_path.exists()
+        {
+            bail!(InitError::SchemaPathNotFound {
+                path: schema_path.clone(),
+            });
         }
 
         Ok(())
@@ -396,10 +394,7 @@ impl InitEngine {
             }
             TargetLanguage::Php => {
                 // PHP: alphanumeric + underscores, no leading digit
-                if !project_name
-                    .chars()
-                    .all(|c| c.is_ascii_alphanumeric() || c == '_')
-                {
+                if !project_name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
                     bail!(InitError::InvalidProjectName {
                         name: project_name.to_string(),
                         reason: "PHP project names must contain only alphanumeric characters and underscores"
@@ -437,8 +432,7 @@ impl InitEngine {
     /// Returns an error if directory creation or file writing fails.
     #[allow(dead_code)]
     fn write_files(project_dir: &std::path::Path, files: Vec<ScaffoldedFile>) -> Result<Vec<PathBuf>> {
-        std::fs::create_dir_all(project_dir)
-            .context("Failed to create project directory")?;
+        std::fs::create_dir_all(project_dir).context("Failed to create project directory")?;
 
         let mut created_files = Vec::new();
 
@@ -446,11 +440,10 @@ impl InitEngine {
             let full_path = project_dir.join(&file.path);
 
             // Create parent directories if needed
-            if let Some(parent) = full_path.parent() {
-                if !parent.exists() {
-                    std::fs::create_dir_all(parent)
-                        .context(format!("Failed to create directory: {}", parent.display()))?;
-                }
+            if let Some(parent) = full_path.parent()
+                && !parent.exists()
+            {
+                std::fs::create_dir_all(parent).context(format!("Failed to create directory: {}", parent.display()))?;
             }
 
             // Write file

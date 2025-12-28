@@ -9,8 +9,8 @@ These tests validate that:
 import importlib.metadata
 
 import pytest
-
 from app import app
+
 from spikard import TestClient
 
 

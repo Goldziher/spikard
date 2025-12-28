@@ -1,62 +1,56 @@
 {
-  "name": "422 Unprocessable Entity - Validation error",
-  "description": "Tests 422 for validation errors (Pydantic)",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
-    "test_function": "test_validation_error"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "price": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "price",
-        "name"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "price": "not a number"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "missing",
-          "loc": [
-            "body",
-            "name"
-          ],
-          "msg": "Field required",
-          "input": {
-            "price": "not a number"
-          }
-        }
-      ]
-    }
-  },
-  "notes": "422 Unprocessable Entity - validation/type errors"
+	"name": "422 Unprocessable Entity - Validation error",
+	"description": "Tests 422 for validation errors (Pydantic)",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+		"test_function": "test_validation_error"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"price": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["price", "name"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"price": "not a number"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "missing",
+					"loc": ["body", "name"],
+					"msg": "Field required",
+					"input": {
+						"price": "not a number"
+					}
+				}
+			]
+		}
+	},
+	"notes": "422 Unprocessable Entity - validation/type errors"
 }

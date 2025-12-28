@@ -1,64 +1,60 @@
 {
-  "name": "persisted_query_miss",
-  "description": "Persisted query cache miss - server does not have cached query for given hash",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  user(id: ID!): User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": null,
-    "variables": {
-      "id": "user-456"
-    },
-    "extensions": {
-      "persistedQuery": {
-        "version": 1,
-        "sha256Hash": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
-      }
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": null,
-      "variables": {
-        "id": "user-456"
-      },
-      "extensions": {
-        "persistedQuery": {
-          "version": 1,
-          "sha256Hash": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
-        }
-      }
-    }
-  },
-  "request_notes": "Client sends hash for query not in server cache",
-  "expected_response": {
-    "status_code": 400,
-    "errors": [
-      {
-        "message": "PersistedQueryNotFound",
-        "extensions": {
-          "code": "PERSISTED_QUERY_NOT_FOUND",
-          "hash": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
-        }
-      }
-    ]
-  },
-  "resolvers": {
-    "Query.user": {
-      "type": "error",
-      "error_message": "PersistedQueryNotFound",
-      "error_extensions": {
-        "code": "PERSISTED_QUERY_NOT_FOUND",
-        "hash": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
-      }
-    }
-  },
-  "tags": [
-    "queries",
-    "persisted-queries",
-    "cache-miss"
-  ]
+	"name": "persisted_query_miss",
+	"description": "Persisted query cache miss - server does not have cached query for given hash",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  user(id: ID!): User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": null,
+		"variables": {
+			"id": "user-456"
+		},
+		"extensions": {
+			"persistedQuery": {
+				"version": 1,
+				"sha256Hash": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+			}
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": null,
+			"variables": {
+				"id": "user-456"
+			},
+			"extensions": {
+				"persistedQuery": {
+					"version": 1,
+					"sha256Hash": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+				}
+			}
+		}
+	},
+	"request_notes": "Client sends hash for query not in server cache",
+	"expected_response": {
+		"status_code": 400,
+		"errors": [
+			{
+				"message": "PersistedQueryNotFound",
+				"extensions": {
+					"code": "PERSISTED_QUERY_NOT_FOUND",
+					"hash": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+				}
+			}
+		]
+	},
+	"resolvers": {
+		"Query.user": {
+			"type": "error",
+			"error_message": "PersistedQueryNotFound",
+			"error_extensions": {
+				"code": "PERSISTED_QUERY_NOT_FOUND",
+				"hash": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+			}
+		}
+	},
+	"tags": ["queries", "persisted-queries", "cache-miss"]
 }

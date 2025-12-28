@@ -1,79 +1,63 @@
 {
-  "name": "30_nested_object_missing_field",
-  "description": "Nested object missing required field should fail validation",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "Nested object validation failure"
-  },
-  "handler": {
-    "route": "/users",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "profile"
-      ],
-      "properties": {
-        "profile": {
-          "type": "object",
-          "required": [
-            "name",
-            "email"
-          ],
-          "properties": {
-            "name": {
-              "type": "string",
-              "minLength": 1
-            },
-            "email": {
-              "type": "string",
-              "format": "email"
-            }
-          }
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/users",
-    "body": {
-      "profile": {
-        "name": "John Doe"
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "missing",
-          "loc": [
-            "body",
-            "profile",
-            "email"
-          ],
-          "msg": "Field required",
-          "input": {
-            "name": "John Doe"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "json_bodies",
-    "nested",
-    "object",
-    "validation",
-    "error",
-    "required"
-  ]
+	"name": "30_nested_object_missing_field",
+	"description": "Nested object missing required field should fail validation",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "Nested object validation failure"
+	},
+	"handler": {
+		"route": "/users",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["profile"],
+			"properties": {
+				"profile": {
+					"type": "object",
+					"required": ["name", "email"],
+					"properties": {
+						"name": {
+							"type": "string",
+							"minLength": 1
+						},
+						"email": {
+							"type": "string",
+							"format": "email"
+						}
+					}
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/users",
+		"body": {
+			"profile": {
+				"name": "John Doe"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "missing",
+					"loc": ["body", "profile", "email"],
+					"msg": "Field required",
+					"input": {
+						"name": "John Doe"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["json_bodies", "nested", "object", "validation", "error", "required"]
 }

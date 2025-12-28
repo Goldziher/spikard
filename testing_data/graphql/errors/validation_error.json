@@ -1,60 +1,54 @@
 {
-  "name": "validation_error",
-  "description": "Constraint violation - required input field is missing",
-  "operation_type": "mutation",
-  "endpoint": "/graphql",
-  "schema": "type Mutation {\n  createPost(input: CreatePostInput!): Post!\n}\n\ninput CreatePostInput {\n  title: String!\n  content: String!\n  tags: [String!]!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  content: String!\n  tags: [String!]!\n  createdAt: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "mutation CreatePost($input: CreatePostInput!) {\n  createPost(input: $input) {\n    id\n    title\n    content\n    tags\n    createdAt\n  }\n}",
-    "variables": {
-      "input": {
-        "title": "My Post",
-        "content": "This is a post"
-      }
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "mutation CreatePost($input: CreatePostInput!) {\n  createPost(input: $input) {\n    id\n    title\n    content\n    tags\n    createdAt\n  }\n}",
-      "variables": {
-        "input": {
-          "title": "My Post",
-          "content": "This is a post"
-        }
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 400,
-    "data": null,
-    "errors": [
-      {
-        "message": "Field \"CreatePostInput.tags\" of required type \"[String!]!\" was not provided.",
-        "locations": [
-          {
-            "line": 1,
-            "column": 30
-          }
-        ],
-        "extensions": {
-          "provided": {
-            "title": "My Post",
-            "content": "This is a post"
-          },
-          "missing_fields": [
-            "tags"
-          ]
-        }
-      }
-    ]
-  },
-  "resolvers": {},
-  "tags": [
-    "errors",
-    "validation",
-    "input-types"
-  ]
+	"name": "validation_error",
+	"description": "Constraint violation - required input field is missing",
+	"operation_type": "mutation",
+	"endpoint": "/graphql",
+	"schema": "type Mutation {\n  createPost(input: CreatePostInput!): Post!\n}\n\ninput CreatePostInput {\n  title: String!\n  content: String!\n  tags: [String!]!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  content: String!\n  tags: [String!]!\n  createdAt: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "mutation CreatePost($input: CreatePostInput!) {\n  createPost(input: $input) {\n    id\n    title\n    content\n    tags\n    createdAt\n  }\n}",
+		"variables": {
+			"input": {
+				"title": "My Post",
+				"content": "This is a post"
+			}
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "mutation CreatePost($input: CreatePostInput!) {\n  createPost(input: $input) {\n    id\n    title\n    content\n    tags\n    createdAt\n  }\n}",
+			"variables": {
+				"input": {
+					"title": "My Post",
+					"content": "This is a post"
+				}
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"data": null,
+		"errors": [
+			{
+				"message": "Field \"CreatePostInput.tags\" of required type \"[String!]!\" was not provided.",
+				"locations": [
+					{
+						"line": 1,
+						"column": 30
+					}
+				],
+				"extensions": {
+					"provided": {
+						"title": "My Post",
+						"content": "This is a post"
+					},
+					"missing_fields": ["tags"]
+				}
+			}
+		]
+	},
+	"resolvers": {},
+	"tags": ["errors", "validation", "input-types"]
 }

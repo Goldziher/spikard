@@ -2,13 +2,7 @@ import type { ServerConfig } from "./config";
 import type { SpikardApp } from "./index";
 import { type MultipartFile, TestClient, type TestResponse } from "./testing";
 import { isStreamingResponse } from "./streaming";
-import type {
-	BinaryLike,
-	JsonValue,
-	WebSocketHandler,
-	WebSocketHandlerLike,
-	WebSocketServerSocket,
-} from "./types";
+import type { BinaryLike, JsonValue, WebSocketHandler, WebSocketHandlerLike, WebSocketServerSocket } from "./types";
 import type { RouteMetadata } from "./index";
 
 export interface ServerOptions {
@@ -366,9 +360,7 @@ async function handleWebSocketMessage(
 	data: unknown,
 ): Promise<void> {
 	const payload = decodeWebSocketMessage(data);
-	const result = isWebSocketHandler(handler)
-		? await handler.onMessage?.(socket, payload)
-		: await handler(payload);
+	const result = isWebSocketHandler(handler) ? await handler.onMessage?.(socket, payload) : await handler(payload);
 
 	if (result === undefined) {
 		return;
@@ -522,7 +514,10 @@ function maybeUpgradeBunWebSocket(request: Request, server: BunServer | undefine
 
 function createBunWebSocketHandlers() {
 	return {
-		open(ws: { data?: { handler?: WebSocketHandlerLike; socket?: WebSocketServerSocket }; send: (data: unknown) => void }) {
+		open(ws: {
+			data?: { handler?: WebSocketHandlerLike; socket?: WebSocketServerSocket };
+			send: (data: unknown) => void;
+		}) {
 			const handler = ws.data?.handler;
 			if (!handler) {
 				return;
@@ -565,7 +560,10 @@ function createBunWebSocketHandlers() {
 	} satisfies Record<string, unknown>;
 }
 
-function createBunRuntimeSocket(ws: { send: (data: unknown) => void; close?: (code?: number, reason?: string) => void }): WebSocketServerSocket {
+function createBunRuntimeSocket(ws: {
+	send: (data: unknown) => void;
+	close?: (code?: number, reason?: string) => void;
+}): WebSocketServerSocket {
 	let closed = false;
 	return {
 		sendText(message: string) {

@@ -11,4 +11,4 @@
 pub mod schema;
 
 #[cfg(feature = "graphql")]
-pub use schema::{PySchemaConfig, PySchemaBuilder};
+pub use schema::{PySchemaBuilder, PySchemaConfig};

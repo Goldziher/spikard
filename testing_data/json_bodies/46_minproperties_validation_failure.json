@@ -1,52 +1,45 @@
 {
-  "name": "46_minproperties_validation_failure",
-  "description": "Object with fewer properties than minProperties should fail",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "minProperties constraint validation failure"
-  },
-  "handler": {
-    "route": "/config",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "minProperties": 2
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/config",
-    "body": {
-      "host": "localhost"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "body"
-          ],
-          "msg": "{\"host\":\"localhost\"} has less than 2 properties",
-          "input": {
-            "host": "localhost"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "json_bodies",
-    "minProperties",
-    "validation",
-    "error"
-  ]
+	"name": "46_minproperties_validation_failure",
+	"description": "Object with fewer properties than minProperties should fail",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "minProperties constraint validation failure"
+	},
+	"handler": {
+		"route": "/config",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"minProperties": 2
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/config",
+		"body": {
+			"host": "localhost"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["body"],
+					"msg": "{\"host\":\"localhost\"} has less than 2 properties",
+					"input": {
+						"host": "localhost"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["json_bodies", "minProperties", "validation", "error"]
 }

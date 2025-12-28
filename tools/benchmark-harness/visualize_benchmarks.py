@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -82,20 +81,16 @@ def get_color_scheme() -> list[str]:
     ]
 
 
-def generate_throughput_chart(
-    data: dict[str, Any], output_dir: Path, title: str
-) -> Path:
+def generate_throughput_chart(data: dict[str, Any], output_dir: Path, title: str) -> Path:
     """Generate throughput comparison chart."""
     df = extract_framework_data(data)
 
     if df.empty:
-        print("No data available for throughput chart")
         return output_dir / "throughput-by-framework.html"
 
     json_workloads = df[df["suite"] == "json-bodies"]
 
     if json_workloads.empty:
-        print("Warning: No json-bodies workload data found")
         json_workloads = df
 
     pivot = json_workloads.pivot_table(
@@ -141,26 +136,19 @@ def generate_throughput_chart(
 
     output_path = output_dir / "throughput-by-framework.html"
     fig.write_html(str(output_path))
-    print(f"✅ Generated: {output_path.name}")
     return output_path
 
 
-def generate_latency_chart(
-    data: dict[str, Any], output_dir: Path, title: str
-) -> Path:
+def generate_latency_chart(data: dict[str, Any], output_dir: Path, title: str) -> Path:
     """Generate latency percentile comparison (2x2 subplot)."""
     df = extract_framework_data(data)
 
     if df.empty:
-        print("No data available for latency chart")
         return output_dir / "latency-percentiles.html"
 
-    small_json = df[
-        (df["suite"] == "json-bodies") & (df["workload"].str.contains("small"))
-    ]
+    small_json = df[(df["suite"] == "json-bodies") & (df["workload"].str.contains("small"))]
 
     if small_json.empty:
-        print("Warning: No small JSON workload found, using all data")
         small_json = df.groupby("framework", as_index=False).mean(numeric_only=True)
 
     fig = make_subplots(
@@ -208,28 +196,20 @@ def generate_latency_chart(
 
     output_path = output_dir / "latency-percentiles.html"
     fig.write_html(str(output_path))
-    print(f"✅ Generated: {output_path.name}")
     return output_path
 
 
-def generate_validation_overhead_chart(
-    data: dict[str, Any], output_dir: Path, title: str
-) -> Path:
+def generate_validation_overhead_chart(data: dict[str, Any], output_dir: Path, title: str) -> Path:
     """Generate validation vs raw comparison chart."""
     df = extract_framework_data(data)
 
     if df.empty:
-        print("No data available for validation overhead chart")
         return output_dir / "validation-overhead.html"
 
-    df["base_framework"] = df["framework"].str.replace(
-        "-validation|-raw", "", regex=True
-    )
+    df["base_framework"] = df["framework"].str.replace("-validation|-raw", "", regex=True)
     df["variant"] = df["framework"].str.extract(r"(validation|raw)$")[0]
 
-    json_small = df[
-        (df["suite"] == "json-bodies") & (df["workload"].str.contains("small"))
-    ]
+    json_small = df[(df["suite"] == "json-bodies") & (df["workload"].str.contains("small"))]
 
     if json_small.empty:
         json_small = df
@@ -244,7 +224,6 @@ def generate_validation_overhead_chart(
     ).dropna()
 
     if "validation" not in pivot.columns or "raw" not in pivot.columns:
-        print("Warning: Not enough validation/raw pairs found")
         fig = go.Figure()
         fig.add_annotation(
             text="Insufficient validation/raw pairs for comparison",
@@ -256,9 +235,7 @@ def generate_validation_overhead_chart(
             font={"size": 16},
         )
     else:
-        pivot["overhead_pct"] = (
-            (pivot["raw"] - pivot["validation"]) / pivot["raw"]
-        ) * 100
+        pivot["overhead_pct"] = ((pivot["raw"] - pivot["validation"]) / pivot["raw"]) * 100
 
         fig = go.Figure()
 
@@ -315,24 +292,18 @@ def generate_validation_overhead_chart(
 
     output_path = output_dir / "validation-overhead.html"
     fig.write_html(str(output_path))
-    print(f"✅ Generated: {output_path.name}")
     return output_path
 
 
-def generate_resource_chart(
-    data: dict[str, Any], output_dir: Path, title: str
-) -> Path:
+def generate_resource_chart(data: dict[str, Any], output_dir: Path, title: str) -> Path:
     """Generate resource utilization chart (dual-axis: memory bars + CPU line)."""
     df = extract_framework_data(data)
 
     if df.empty:
-        print("No data available for resource chart")
         return output_dir / "resources.html"
 
     resources = (
-        df.groupby("framework", as_index=False)[
-            ["memory_peak_mb", "cpu_avg_percent"]
-        ]
+        df.groupby("framework", as_index=False)[["memory_peak_mb", "cpu_avg_percent"]]
         .mean()
         .sort_values("memory_peak_mb", ascending=False)
     )
@@ -378,7 +349,6 @@ def generate_resource_chart(
 
     output_path = output_dir / "resources.html"
     fig.write_html(str(output_path))
-    print(f"✅ Generated: {output_path.name}")
     return output_path
 
 
@@ -407,44 +377,27 @@ def generate_metadata(data: dict[str, Any], output_dir: Path) -> None:
     with output_path.open("w") as f:
         json.dump(metadata, f, indent=2)
 
-    print(f"✅ Generated: {output_path.name}")
-
 
 def main() -> None:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Generate Plotly HTML charts from aggregated benchmark results"
-    )
-    parser.add_argument(
-        "--input", type=Path, required=True, help="Path to aggregated.json"
-    )
-    parser.add_argument(
-        "--output", type=Path, required=True, help="Output directory for charts"
-    )
+    parser = argparse.ArgumentParser(description="Generate Plotly HTML charts from aggregated benchmark results")
+    parser.add_argument("--input", type=Path, required=True, help="Path to aggregated.json")
+    parser.add_argument("--output", type=Path, required=True, help="Output directory for charts")
     parser.add_argument(
         "--charts",
         default="all",
         help="Comma-separated chart types: throughput,latency,validation,resources,all",
     )
-    parser.add_argument(
-        "--title", default="Benchmark Results", help="Title prefix for charts"
-    )
+    parser.add_argument("--title", default="Benchmark Results", help="Title prefix for charts")
     args = parser.parse_args()
 
-    print(f"📖 Loading aggregated results from {args.input}...")
     data = load_aggregated_results(args.input)
-    print(
-        f"✅ Loaded {data['summary']['total_frameworks']} frameworks "
-        f"({data['summary']['completed']} completed)"
-    )
 
     args.output.mkdir(parents=True, exist_ok=True)
 
     chart_types = [c.strip() for c in args.charts.split(",")]
     if "all" in chart_types:
         chart_types = ["throughput", "latency", "validation", "resources"]
-
-    print(f"\n📊 Generating {len(chart_types)} chart(s)...")
 
     for chart_type in chart_types:
         if chart_type == "throughput":
@@ -456,12 +409,9 @@ def main() -> None:
         elif chart_type == "resources":
             generate_resource_chart(data, args.output, args.title)
         else:
-            print(f"⚠️  Unknown chart type: {chart_type}")
+            pass
 
-    print("\n📝 Generating metadata...")
     generate_metadata(data, args.output)
-
-    print(f"\n✅ All charts generated in {args.output}")
 
 
 if __name__ == "__main__":

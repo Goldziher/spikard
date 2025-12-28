@@ -5,10 +5,7 @@ use tokio::process::Command;
 use crate::error::{Error, Result};
 
 use crate::schema::{
-    aggregate::{
-        AggregatedBenchmarkResults, AggregationMetadata, AggregationSummary, ArtifactInfo,
-        FrameworkResult,
-    },
+    aggregate::{AggregatedBenchmarkResults, AggregationMetadata, AggregationSummary, ArtifactInfo, FrameworkResult},
     profile::ProfileResult,
 };
 
@@ -20,12 +17,7 @@ pub struct AggregateRunner {
 }
 
 impl AggregateRunner {
-    pub fn new(
-        run_id: Option<String>,
-        workflow: String,
-        download_dir: PathBuf,
-        keep_artifacts: bool,
-    ) -> Self {
+    pub fn new(run_id: Option<String>, workflow: String, download_dir: PathBuf, keep_artifacts: bool) -> Self {
         Self {
             run_id,
             workflow,
@@ -76,10 +68,7 @@ impl AggregateRunner {
         println!("  Completed: {}", aggregated.summary.completed);
         println!("  Failed: {}", aggregated.summary.failed);
         println!("  Total requests: {}", aggregated.summary.total_requests);
-        println!(
-            "  Total duration: {:.1}s",
-            aggregated.summary.total_duration_secs
-        );
+        println!("  Total duration: {:.1}s", aggregated.summary.total_duration_secs);
 
         Ok(())
     }
@@ -137,7 +126,12 @@ impl AggregateRunner {
 
         let output = Command::new("gh")
             .args([
-                "run", "view", run_id, "--json", "artifacts", "--jq",
+                "run",
+                "view",
+                run_id,
+                "--json",
+                "artifacts",
+                "--jq",
                 ".artifacts[] | select(.name | startswith(\"benchmark-results-\")) | .name",
             ])
             .output()
@@ -193,10 +187,7 @@ impl AggregateRunner {
         Ok(artifacts)
     }
 
-    fn parse_artifacts(
-        &self,
-        artifact_dirs: &[PathBuf],
-    ) -> Result<(Vec<FrameworkResult>, Vec<ArtifactInfo>)> {
+    fn parse_artifacts(&self, artifact_dirs: &[PathBuf]) -> Result<(Vec<FrameworkResult>, Vec<ArtifactInfo>)> {
         let mut frameworks = Vec::new();
         let mut artifact_infos = Vec::new();
 
@@ -210,9 +201,7 @@ impl AggregateRunner {
 
             let profile_path = dir.join("profile.json");
 
-            let size_bytes = std::fs::metadata(&profile_path)
-                .map(|m| m.len())
-                .unwrap_or(0);
+            let size_bytes = std::fs::metadata(&profile_path).map(|m| m.len()).unwrap_or(0);
 
             match std::fs::read_to_string(&profile_path) {
                 Ok(content) => match serde_json::from_str::<ProfileResult>(&content) {
@@ -243,10 +232,7 @@ impl AggregateRunner {
                     }
                 },
                 Err(e) => {
-                    eprintln!(
-                        "⚠️  Failed to read profile.json for {}: {}",
-                        framework_name, e
-                    );
+                    eprintln!("⚠️  Failed to read profile.json for {}: {}", framework_name, e);
                     artifact_infos.push(ArtifactInfo {
                         name: format!("benchmark-results-{}", framework_name),
                         framework: framework_name,
@@ -275,10 +261,7 @@ impl AggregateRunner {
 
         let git_info = self.get_git_info(run_id).await;
 
-        let total_requests: u64 = frameworks
-            .iter()
-            .map(|f| f.profile.summary.total_requests)
-            .sum();
+        let total_requests: u64 = frameworks.iter().map(|f| f.profile.summary.total_requests).sum();
 
         let total_duration_secs: f64 = frameworks
             .iter()
@@ -297,11 +280,7 @@ impl AggregateRunner {
         };
 
         let completed = frameworks.len();
-        let failed = metadata
-            .artifacts
-            .iter()
-            .filter(|a| !a.downloaded)
-            .count();
+        let failed = metadata.artifacts.iter().filter(|a| !a.downloaded).count();
 
         let summary = AggregationSummary {
             total_frameworks: completed + failed,

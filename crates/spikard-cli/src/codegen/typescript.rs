@@ -408,7 +408,7 @@ fn extract_dependencies_recursive(schema: &Schema, deps: &mut HashSet<String>) {
             for (_prop_name, prop_schema_ref) in &obj.properties {
                 match prop_schema_ref {
                     ReferenceOr::Reference { reference } => {
-                        if let Some(ref_name) = reference.split('/').last() {
+                        if let Some(ref_name) = reference.split('/').next_back() {
                             deps.insert(ref_name.to_string());
                         }
                     }
@@ -423,7 +423,7 @@ fn extract_dependencies_recursive(schema: &Schema, deps: &mut HashSet<String>) {
             if let Some(items) = &arr.items {
                 match items {
                     ReferenceOr::Reference { reference } => {
-                        if let Some(ref_name) = reference.split('/').last() {
+                        if let Some(ref_name) = reference.split('/').next_back() {
                             deps.insert(ref_name.to_string());
                         }
                     }
@@ -438,9 +438,7 @@ fn extract_dependencies_recursive(schema: &Schema, deps: &mut HashSet<String>) {
 }
 
 /// Topologically sort schemas by their dependencies using Kahn's algorithm
-fn topological_sort_schemas(
-    schemas: &HashMap<String, Schema>,
-) -> Vec<String> {
+fn topological_sort_schemas(schemas: &HashMap<String, Schema>) -> Vec<String> {
     let mut in_degree: HashMap<String, usize> = HashMap::new();
     let mut graph: HashMap<String, Vec<String>> = HashMap::new();
 

@@ -1,82 +1,77 @@
 {
-  "name": "deeply_nested_query",
-  "description": "Query with 5+ levels of nesting to test query depth limits and resolver chain performance",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  user(id: String!): User\n}\n\ntype User {\n  id: String!\n  name: String!\n  profile: Profile!\n}\n\ntype Profile {\n  bio: String\n  settings: Settings!\n}\n\ntype Settings {\n  preferences: Preferences!\n  notifications: NotificationSettings!\n}\n\ntype Preferences {\n  theme: String!\n  language: String!\n  timezone: Timezone!\n}\n\ntype Timezone {\n  name: String!\n  offset: Int!\n}\n\ntype NotificationSettings {\n  email: Boolean!\n  push: Boolean!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query GetUserDeepNested($userId: String!) {\n  user(id: $userId) {\n    id\n    name\n    profile {\n      bio\n      settings {\n        preferences {\n          theme\n          language\n          timezone {\n            name\n            offset\n          }\n        }\n        notifications {\n          email\n          push\n        }\n      }\n    }\n  }\n}",
-    "variables": {
-      "userId": "user-deep-001"
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query GetUserDeepNested($userId: String!) {\n  user(id: $userId) {\n    id\n    name\n    profile {\n      bio\n      settings {\n        preferences {\n          theme\n          language\n          timezone {\n            name\n            offset\n          }\n        }\n        notifications {\n          email\n          push\n        }\n      }\n    }\n  }\n}",
-      "variables": {
-        "userId": "user-deep-001"
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "user": {
-        "id": "user-deep-001",
-        "name": "Alice Cooper",
-        "profile": {
-          "bio": "DevOps engineer passionate about scalability",
-          "settings": {
-            "preferences": {
-              "theme": "dark",
-              "language": "en-US",
-              "timezone": {
-                "name": "America/Los_Angeles",
-                "offset": -480
-              }
-            },
-            "notifications": {
-              "email": true,
-              "push": false
-            }
-          }
-        }
-      }
-    }
-  },
-  "resolvers": {
-    "Query.user": {
-      "type": "mock",
-      "return_value": {
-        "id": "user-deep-001",
-        "name": "Alice Cooper",
-        "profile": {
-          "bio": "DevOps engineer passionate about scalability",
-          "settings": {
-            "preferences": {
-              "theme": "dark",
-              "language": "en-US",
-              "timezone": {
-                "name": "America/Los_Angeles",
-                "offset": -480
-              }
-            },
-            "notifications": {
-              "email": true,
-              "push": false
-            }
-          }
-        }
-      }
-    }
-  },
-  "tags": [
-    "edge-cases",
-    "deep-nesting",
-    "resolver-chains",
-    "performance"
-  ]
+	"name": "deeply_nested_query",
+	"description": "Query with 5+ levels of nesting to test query depth limits and resolver chain performance",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  user(id: String!): User\n}\n\ntype User {\n  id: String!\n  name: String!\n  profile: Profile!\n}\n\ntype Profile {\n  bio: String\n  settings: Settings!\n}\n\ntype Settings {\n  preferences: Preferences!\n  notifications: NotificationSettings!\n}\n\ntype Preferences {\n  theme: String!\n  language: String!\n  timezone: Timezone!\n}\n\ntype Timezone {\n  name: String!\n  offset: Int!\n}\n\ntype NotificationSettings {\n  email: Boolean!\n  push: Boolean!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query GetUserDeepNested($userId: String!) {\n  user(id: $userId) {\n    id\n    name\n    profile {\n      bio\n      settings {\n        preferences {\n          theme\n          language\n          timezone {\n            name\n            offset\n          }\n        }\n        notifications {\n          email\n          push\n        }\n      }\n    }\n  }\n}",
+		"variables": {
+			"userId": "user-deep-001"
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query GetUserDeepNested($userId: String!) {\n  user(id: $userId) {\n    id\n    name\n    profile {\n      bio\n      settings {\n        preferences {\n          theme\n          language\n          timezone {\n            name\n            offset\n          }\n        }\n        notifications {\n          email\n          push\n        }\n      }\n    }\n  }\n}",
+			"variables": {
+				"userId": "user-deep-001"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"user": {
+				"id": "user-deep-001",
+				"name": "Alice Cooper",
+				"profile": {
+					"bio": "DevOps engineer passionate about scalability",
+					"settings": {
+						"preferences": {
+							"theme": "dark",
+							"language": "en-US",
+							"timezone": {
+								"name": "America/Los_Angeles",
+								"offset": -480
+							}
+						},
+						"notifications": {
+							"email": true,
+							"push": false
+						}
+					}
+				}
+			}
+		}
+	},
+	"resolvers": {
+		"Query.user": {
+			"type": "mock",
+			"return_value": {
+				"id": "user-deep-001",
+				"name": "Alice Cooper",
+				"profile": {
+					"bio": "DevOps engineer passionate about scalability",
+					"settings": {
+						"preferences": {
+							"theme": "dark",
+							"language": "en-US",
+							"timezone": {
+								"name": "America/Los_Angeles",
+								"offset": -480
+							}
+						},
+						"notifications": {
+							"email": true,
+							"push": false
+						}
+					}
+				}
+			}
+		}
+	},
+	"tags": ["edge-cases", "deep-nesting", "resolver-chains", "performance"]
 }

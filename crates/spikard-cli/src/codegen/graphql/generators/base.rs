@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 pub fn map_graphql_type_to_language(graphql_type: &str, language: &str, is_nullable: bool) -> String {
     let base_type = match (graphql_type, language) {
         ("String", "python") => "str",
@@ -35,6 +36,7 @@ pub fn map_graphql_type_to_language(graphql_type: &str, language: &str, is_nulla
     }
 }
 
+#[allow(dead_code)]
 pub fn generate_field_docs(field_description: &str, comment_style: &str) -> String {
     match comment_style {
         "python" => format!("    \"\"\"{}\"\"\"", field_description),
@@ -46,6 +48,7 @@ pub fn generate_field_docs(field_description: &str, comment_style: &str) -> Stri
     }
 }
 
+#[allow(dead_code)]
 pub fn to_camel_case(s: &str) -> String {
     let parts: Vec<&str> = s.split('_').collect();
     if parts.is_empty() {
@@ -63,6 +66,7 @@ pub fn to_camel_case(s: &str) -> String {
     result
 }
 
+#[allow(dead_code)]
 pub fn to_pascal_case(s: &str) -> String {
     let parts: Vec<&str> = s.split(|c: char| !c.is_alphanumeric()).collect();
     parts
@@ -78,6 +82,7 @@ pub fn to_pascal_case(s: &str) -> String {
         .collect()
 }
 
+#[allow(dead_code)]
 pub fn indent(code: &str, spaces: usize) -> String {
     let indent_str = " ".repeat(spaces);
     code.lines()
@@ -134,6 +139,7 @@ pub fn sanitize_typescript_identifier(name: &str) -> String {
     result
 }
 
+#[allow(dead_code)]
 pub fn format_description(description: &str, max_width: usize) -> String {
     let words: Vec<&str> = description.split_whitespace().collect();
     let mut lines = Vec::new();
@@ -155,6 +161,7 @@ pub fn format_description(description: &str, max_width: usize) -> String {
     lines.join("\n")
 }
 
+#[allow(dead_code)]
 pub fn escape_string(s: &str, for_language: &str) -> String {
     match for_language {
         "php" => s
@@ -172,16 +179,19 @@ pub fn escape_string(s: &str, for_language: &str) -> String {
     }
 }
 
+#[allow(dead_code)]
 pub struct TypeNameCache {
     cache: HashMap<String, String>,
 }
 
 impl TypeNameCache {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self { cache: HashMap::new() }
     }
 
-    pub fn get_or_create(&mut self, graphql_name: &str, language: &str) -> String {
+    #[allow(dead_code)]
+    pub fn get_or_create(&mut self, graphql_name: &str, _language: &str) -> String {
         if let Some(cached) = self.cache.get(graphql_name) {
             return cached.clone();
         }

@@ -356,8 +356,7 @@ type NodeMetricsSnapshot = {
 	gc_time_ms: number | null;
 };
 
-const profilingEnabled =
-	process.env.SPIKARD_PROFILE_ENABLED === "1" || Boolean(process.env.SPIKARD_NODE_METRICS_FILE);
+const profilingEnabled = process.env.SPIKARD_PROFILE_ENABLED === "1" || Boolean(process.env.SPIKARD_NODE_METRICS_FILE);
 
 function resolveNodeMetricsPath(): string {
 	const envPath = process.env.SPIKARD_NODE_METRICS_FILE;

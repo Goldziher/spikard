@@ -41,9 +41,9 @@ app.post("/urlencoded/complex").handler((req, res) => res.json(req.body));
 // Path parameter routes
 app.get("/path/simple/:id").handler((req, res) => res.json({ id: req.params.id }));
 
-app.get("/path/multiple/:user_id/:post_id").handler((req, res) =>
-	res.json({ user_id: req.params.user_id, post_id: req.params.post_id }),
-);
+app
+	.get("/path/multiple/:user_id/:post_id")
+	.handler((req, res) => res.json({ user_id: req.params.user_id, post_id: req.params.post_id }));
 
 app.get("/path/deep/:org/:team/:project/:resource/:id").handler((req, res) =>
 	res.json({

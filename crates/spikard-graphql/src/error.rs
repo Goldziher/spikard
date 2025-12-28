@@ -4,7 +4,7 @@
 //! All errors follow the GraphQL specification error format with extensions for
 //! HTTP integration.
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use thiserror::Error;
 
 /// Result type alias for GraphQL operations
@@ -141,7 +141,10 @@ impl GraphQLError {
     pub const fn status_code(&self) -> u16 {
         match self {
             Self::ParseError(_) | Self::JsonError(_) => 400,
-            Self::ValidationError(_) | Self::InvalidInput { .. } | Self::ComplexityLimitExceeded | Self::DepthLimitExceeded => 422,
+            Self::ValidationError(_)
+            | Self::InvalidInput { .. }
+            | Self::ComplexityLimitExceeded
+            | Self::DepthLimitExceeded => 422,
             Self::AuthenticationError(_) => 401,
             Self::AuthorizationError(_) => 403,
             Self::NotFound(_) => 404,
@@ -235,15 +238,16 @@ impl GraphQLError {
         let status = self.status_code();
         let title = match self {
             Self::ParseError(_) | Self::JsonError(_) => "Bad Request",
-            Self::ValidationError(_) | Self::InvalidInput { .. } | Self::ComplexityLimitExceeded | Self::DepthLimitExceeded => "Validation Failed",
+            Self::ValidationError(_)
+            | Self::InvalidInput { .. }
+            | Self::ComplexityLimitExceeded
+            | Self::DepthLimitExceeded => "Validation Failed",
             Self::AuthenticationError(_) => "Unauthorized",
             Self::AuthorizationError(_) => "Forbidden",
             Self::NotFound(_) => "Not Found",
             Self::RateLimitExceeded(_) => "Too Many Requests",
             Self::ExecutionError(_) | Self::InternalError(_) => "Internal Server Error",
-            Self::SchemaBuildError(_) | Self::RequestHandlingError(_) | Self::SerializationError(_) => {
-                "Server Error"
-            }
+            Self::SchemaBuildError(_) | Self::RequestHandlingError(_) | Self::SerializationError(_) => "Server Error",
         };
 
         json!({
@@ -360,10 +364,7 @@ mod tests {
         assert_eq!(response["errors"].as_array().unwrap().len(), 1);
         assert!(response["errors"][0]["message"].is_string());
         assert!(response["errors"][0]["extensions"]["code"].is_string());
-        assert_eq!(
-            response["errors"][0]["extensions"]["code"],
-            "GRAPHQL_VALIDATION_FAILED"
-        );
+        assert_eq!(response["errors"][0]["extensions"]["code"], "GRAPHQL_VALIDATION_FAILED");
         assert_eq!(response["errors"][0]["extensions"]["status"], 422);
     }
 
@@ -391,10 +392,7 @@ mod tests {
     #[test]
     fn test_error_type_uri_parse_error() {
         let error = GraphQLError::ParseError("Invalid".to_string());
-        assert_eq!(
-            error.error_type_uri(),
-            "https://spikard.dev/errors/graphql-parse-error"
-        );
+        assert_eq!(error.error_type_uri(), "https://spikard.dev/errors/graphql-parse-error");
     }
 
     #[test]
@@ -445,7 +443,10 @@ mod tests {
         let error = GraphQLError::SchemaBuildError("Duplicate type definition".to_string());
         assert_eq!(error.status_code(), 200);
         let response = error.to_graphql_response();
-        assert_eq!(response["errors"][0]["extensions"]["code"], "GRAPHQL_SCHEMA_BUILD_ERROR");
+        assert_eq!(
+            response["errors"][0]["extensions"]["code"],
+            "GRAPHQL_SCHEMA_BUILD_ERROR"
+        );
     }
 
     #[test]
@@ -466,7 +467,10 @@ mod tests {
     fn test_complexity_limit_exceeded_response() {
         let error = GraphQLError::ComplexityLimitExceeded;
         let response = error.to_graphql_response();
-        assert_eq!(response["errors"][0]["extensions"]["code"], "GRAPHQL_COMPLEXITY_LIMIT_EXCEEDED");
+        assert_eq!(
+            response["errors"][0]["extensions"]["code"],
+            "GRAPHQL_COMPLEXITY_LIMIT_EXCEEDED"
+        );
         assert_eq!(response["errors"][0]["extensions"]["status"], 422);
     }
 
@@ -474,20 +478,29 @@ mod tests {
     fn test_depth_limit_exceeded_response() {
         let error = GraphQLError::DepthLimitExceeded;
         let response = error.to_graphql_response();
-        assert_eq!(response["errors"][0]["extensions"]["code"], "GRAPHQL_DEPTH_LIMIT_EXCEEDED");
+        assert_eq!(
+            response["errors"][0]["extensions"]["code"],
+            "GRAPHQL_DEPTH_LIMIT_EXCEEDED"
+        );
         assert_eq!(response["errors"][0]["extensions"]["status"], 422);
     }
 
     #[test]
     fn test_complexity_limit_exceeded_error_type_uri() {
         let error = GraphQLError::ComplexityLimitExceeded;
-        assert_eq!(error.error_type_uri(), "https://spikard.dev/errors/complexity-limit-exceeded");
+        assert_eq!(
+            error.error_type_uri(),
+            "https://spikard.dev/errors/complexity-limit-exceeded"
+        );
     }
 
     #[test]
     fn test_depth_limit_exceeded_error_type_uri() {
         let error = GraphQLError::DepthLimitExceeded;
-        assert_eq!(error.error_type_uri(), "https://spikard.dev/errors/depth-limit-exceeded");
+        assert_eq!(
+            error.error_type_uri(),
+            "https://spikard.dev/errors/depth-limit-exceeded"
+        );
     }
 
     #[test]

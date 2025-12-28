@@ -209,174 +209,171 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
 
     // Extract type definitions
     for definition in &doc.definitions {
-        match definition {
-            graphql_parser::schema::Definition::TypeDefinition(type_def) => {
-                match type_def {
-                    TypeDefinition::Object(obj) => {
-                        let fields = extract_fields_from_object(obj);
-                        let gql_type = GraphQLType {
-                            name: obj.name.clone(),
-                            kind: TypeKind::Object,
-                            fields: fields.clone(),
-                            description: obj.description.clone(),
+        if let graphql_parser::schema::Definition::TypeDefinition(type_def) = definition {
+            match type_def {
+                TypeDefinition::Object(obj) => {
+                    let fields = extract_fields_from_object(obj);
+                    let gql_type = GraphQLType {
+                        name: obj.name.clone(),
+                        kind: TypeKind::Object,
+                        fields: fields.clone(),
+                        description: obj.description.clone(),
+                        possible_types: Vec::new(),
+                        enum_values: Vec::new(),
+                        input_fields: Vec::new(),
+                    };
+
+                    // Check if this is the Query type
+                    if obj.name == "Query" {
+                        schema.queries = fields;
+                    } else if obj.name == "Mutation" {
+                        schema.mutations = fields;
+                    } else if obj.name == "Subscription" {
+                        schema.subscriptions = fields;
+                    } else {
+                        // Detect duplicate type definitions
+                        if schema.types.contains_key(&obj.name) {
+                            return Err(anyhow!(
+                                "Duplicate type definition: '{}' is defined more than once in the schema",
+                                obj.name
+                            ));
+                        }
+                        schema.types.insert(obj.name.clone(), gql_type);
+                    }
+                }
+                TypeDefinition::Interface(interface) => {
+                    // Detect duplicate type definitions
+                    if schema.types.contains_key(&interface.name) {
+                        return Err(anyhow!(
+                            "Duplicate type definition: '{}' is defined more than once in the schema",
+                            interface.name
+                        ));
+                    }
+                    let fields = extract_fields_from_interface(interface);
+                    schema.types.insert(
+                        interface.name.clone(),
+                        GraphQLType {
+                            name: interface.name.clone(),
+                            kind: TypeKind::Interface,
+                            fields,
+                            description: interface.description.clone(),
                             possible_types: Vec::new(),
                             enum_values: Vec::new(),
                             input_fields: Vec::new(),
-                        };
+                        },
+                    );
+                }
+                TypeDefinition::Union(union) => {
+                    // Detect duplicate type definitions
+                    if schema.types.contains_key(&union.name) {
+                        return Err(anyhow!(
+                            "Duplicate type definition: '{}' is defined more than once in the schema",
+                            union.name
+                        ));
+                    }
+                    let possible_types = union.types.to_vec();
+                    schema.types.insert(
+                        union.name.clone(),
+                        GraphQLType {
+                            name: union.name.clone(),
+                            kind: TypeKind::Union,
+                            fields: Vec::new(),
+                            description: union.description.clone(),
+                            possible_types,
+                            enum_values: Vec::new(),
+                            input_fields: Vec::new(),
+                        },
+                    );
+                }
+                TypeDefinition::Enum(enum_type) => {
+                    // Detect duplicate type definitions
+                    if schema.types.contains_key(&enum_type.name) {
+                        return Err(anyhow!(
+                            "Duplicate type definition: '{}' is defined more than once in the schema",
+                            enum_type.name
+                        ));
+                    }
+                    let enum_values = enum_type
+                        .values
+                        .iter()
+                        .map(|v| GraphQLEnumValue {
+                            name: v.name.clone(),
+                            description: v.description.clone(),
+                            is_deprecated: v.directives.iter().any(|d| d.name == "deprecated"),
+                            deprecation_reason: extract_deprecation_reason(&v.directives),
+                        })
+                        .collect();
 
-                        // Check if this is the Query type
-                        if obj.name == "Query" {
-                            schema.queries = fields;
-                        } else if obj.name == "Mutation" {
-                            schema.mutations = fields;
-                        } else if obj.name == "Subscription" {
-                            schema.subscriptions = fields;
-                        } else {
-                            // Detect duplicate type definitions
-                            if schema.types.contains_key(&obj.name) {
-                                return Err(anyhow!(
-                                    "Duplicate type definition: '{}' is defined more than once in the schema",
-                                    obj.name
-                                ));
-                            }
-                            schema.types.insert(obj.name.clone(), gql_type);
-                        }
+                    schema.types.insert(
+                        enum_type.name.clone(),
+                        GraphQLType {
+                            name: enum_type.name.clone(),
+                            kind: TypeKind::Enum,
+                            fields: Vec::new(),
+                            description: enum_type.description.clone(),
+                            possible_types: Vec::new(),
+                            enum_values,
+                            input_fields: Vec::new(),
+                        },
+                    );
+                }
+                TypeDefinition::InputObject(input_obj) => {
+                    // Detect duplicate type definitions
+                    if schema.types.contains_key(&input_obj.name) {
+                        return Err(anyhow!(
+                            "Duplicate type definition: '{}' is defined more than once in the schema",
+                            input_obj.name
+                        ));
                     }
-                    TypeDefinition::Interface(interface) => {
-                        // Detect duplicate type definitions
-                        if schema.types.contains_key(&interface.name) {
-                            return Err(anyhow!(
-                                "Duplicate type definition: '{}' is defined more than once in the schema",
-                                interface.name
-                            ));
-                        }
-                        let fields = extract_fields_from_interface(interface);
-                        schema.types.insert(
-                            interface.name.clone(),
-                            GraphQLType {
-                                name: interface.name.clone(),
-                                kind: TypeKind::Interface,
-                                fields,
-                                description: interface.description.clone(),
-                                possible_types: Vec::new(),
-                                enum_values: Vec::new(),
-                                input_fields: Vec::new(),
-                            },
-                        );
-                    }
-                    TypeDefinition::Union(union) => {
-                        // Detect duplicate type definitions
-                        if schema.types.contains_key(&union.name) {
-                            return Err(anyhow!(
-                                "Duplicate type definition: '{}' is defined more than once in the schema",
-                                union.name
-                            ));
-                        }
-                        let possible_types = union.types.iter().map(|t| t.clone()).collect();
-                        schema.types.insert(
-                            union.name.clone(),
-                            GraphQLType {
-                                name: union.name.clone(),
-                                kind: TypeKind::Union,
-                                fields: Vec::new(),
-                                description: union.description.clone(),
-                                possible_types,
-                                enum_values: Vec::new(),
-                                input_fields: Vec::new(),
-                            },
-                        );
-                    }
-                    TypeDefinition::Enum(enum_type) => {
-                        // Detect duplicate type definitions
-                        if schema.types.contains_key(&enum_type.name) {
-                            return Err(anyhow!(
-                                "Duplicate type definition: '{}' is defined more than once in the schema",
-                                enum_type.name
-                            ));
-                        }
-                        let enum_values = enum_type
-                            .values
-                            .iter()
-                            .map(|v| GraphQLEnumValue {
-                                name: v.name.clone(),
-                                description: v.description.clone(),
-                                is_deprecated: v.directives.iter().any(|d| d.name == "deprecated"),
-                                deprecation_reason: extract_deprecation_reason(&v.directives),
-                            })
-                            .collect();
+                    let input_fields = input_obj
+                        .fields
+                        .iter()
+                        .map(|f| GraphQLInputField {
+                            name: f.name.clone(),
+                            type_name: extract_bare_type_name(&f.value_type),
+                            is_nullable: is_nullable_type(&f.value_type),
+                            is_list: is_list_type(&f.value_type),
+                            list_item_nullable: extract_list_item_nullability(&f.value_type),
+                            default_value: f.default_value.as_ref().map(|v| format_default_value(v)),
+                            description: f.description.clone(),
+                        })
+                        .collect();
 
-                        schema.types.insert(
-                            enum_type.name.clone(),
-                            GraphQLType {
-                                name: enum_type.name.clone(),
-                                kind: TypeKind::Enum,
-                                fields: Vec::new(),
-                                description: enum_type.description.clone(),
-                                possible_types: Vec::new(),
-                                enum_values,
-                                input_fields: Vec::new(),
-                            },
-                        );
+                    schema.types.insert(
+                        input_obj.name.clone(),
+                        GraphQLType {
+                            name: input_obj.name.clone(),
+                            kind: TypeKind::InputObject,
+                            fields: Vec::new(),
+                            description: input_obj.description.clone(),
+                            possible_types: Vec::new(),
+                            enum_values: Vec::new(),
+                            input_fields,
+                        },
+                    );
+                }
+                TypeDefinition::Scalar(scalar) => {
+                    // Detect duplicate type definitions
+                    if schema.types.contains_key(&scalar.name) {
+                        return Err(anyhow!(
+                            "Duplicate type definition: '{}' is defined more than once in the schema",
+                            scalar.name
+                        ));
                     }
-                    TypeDefinition::InputObject(input_obj) => {
-                        // Detect duplicate type definitions
-                        if schema.types.contains_key(&input_obj.name) {
-                            return Err(anyhow!(
-                                "Duplicate type definition: '{}' is defined more than once in the schema",
-                                input_obj.name
-                            ));
-                        }
-                        let input_fields = input_obj
-                            .fields
-                            .iter()
-                            .map(|f| GraphQLInputField {
-                                name: f.name.clone(),
-                                type_name: extract_bare_type_name(&f.value_type),
-                                is_nullable: is_nullable_type(&f.value_type),
-                                is_list: is_list_type(&f.value_type),
-                                list_item_nullable: extract_list_item_nullability(&f.value_type),
-                                default_value: f.default_value.as_ref().map(|v| format_default_value(v)),
-                                description: f.description.clone(),
-                            })
-                            .collect();
-
-                        schema.types.insert(
-                            input_obj.name.clone(),
-                            GraphQLType {
-                                name: input_obj.name.clone(),
-                                kind: TypeKind::InputObject,
-                                fields: Vec::new(),
-                                description: input_obj.description.clone(),
-                                possible_types: Vec::new(),
-                                enum_values: Vec::new(),
-                                input_fields,
-                            },
-                        );
-                    }
-                    TypeDefinition::Scalar(scalar) => {
-                        // Detect duplicate type definitions
-                        if schema.types.contains_key(&scalar.name) {
-                            return Err(anyhow!(
-                                "Duplicate type definition: '{}' is defined more than once in the schema",
-                                scalar.name
-                            ));
-                        }
-                        schema.types.insert(
-                            scalar.name.clone(),
-                            GraphQLType {
-                                name: scalar.name.clone(),
-                                kind: TypeKind::Scalar,
-                                fields: Vec::new(),
-                                description: scalar.description.clone(),
-                                possible_types: Vec::new(),
-                                enum_values: Vec::new(),
-                                input_fields: Vec::new(),
-                            },
-                        );
-                    }
+                    schema.types.insert(
+                        scalar.name.clone(),
+                        GraphQLType {
+                            name: scalar.name.clone(),
+                            kind: TypeKind::Scalar,
+                            fields: Vec::new(),
+                            description: scalar.description.clone(),
+                            possible_types: Vec::new(),
+                            enum_values: Vec::new(),
+                            input_fields: Vec::new(),
+                        },
+                    );
                 }
             }
-            _ => {}
         }
     }
 
@@ -411,10 +408,10 @@ pub fn parse_graphql_schema(path: &Path) -> Result<GraphQLSchema> {
         Some("json") => {
             // Try to parse as introspection, fall back to SDL
             let content = fs::read_to_string(path)?;
-            if let Ok(value) = serde_json::from_str::<Value>(&content) {
-                if value.get("__schema").is_some() || value.get("data").is_some() {
-                    return parse_graphql_introspection_value(&value);
-                }
+            if let Ok(value) = serde_json::from_str::<Value>(&content)
+                && (value.get("__schema").is_some() || value.get("data").is_some())
+            {
+                return parse_graphql_introspection_value(&value);
             }
             // Fall back to treating as SDL
             parse_graphql_sdl_string(&content)
@@ -579,6 +576,7 @@ fn extract_fields_from_interface(interface: &graphql_parser::schema::InterfaceTy
 }
 
 /// Format a GraphQL type for display
+#[allow(dead_code)]
 fn format_type(type_def: &graphql_parser::schema::Type<String>) -> String {
     match type_def {
         graphql_parser::schema::Type::NamedType(name) => name.clone(),

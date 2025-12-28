@@ -1,41 +1,37 @@
 {
-  "name": "subgraph_introspection",
-  "description": "Federation _service query returning subgraph Schema Definition Language",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  _service: _Service!\n  _entities(representations: [_Any!]!): [_Entity]!\n}\n\ntype _Service {\n  sdl: String!\n}\n\nunion _Entity = Account\n\ntype Account @key(fields: \"accountId\") {\n  accountId: ID!\n  accountName: String!\n  tier: String!\n  createdAt: String!\n}\n\nscalar _Any",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  _service {\n    sdl\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  _service {\n    sdl\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "_service": {
-        "sdl": "type Account @key(fields: \"accountId\") {\n  accountId: ID!\n  accountName: String!\n  tier: String!\n  createdAt: String!\n}\n\ntype Query {\n  account(accountId: ID!): Account\n}"
-      }
-    }
-  },
-  "resolvers": {
-    "Query._service": {
-      "type": "mock",
-      "return_value": {
-        "sdl": "type Account @key(fields: \"accountId\") {\n  accountId: ID!\n  accountName: String!\n  tier: String!\n  createdAt: String!\n}\n\ntype Query {\n  account(accountId: ID!): Account\n}"
-      }
-    }
-  },
-  "tags": [
-    "federation",
-    "introspection",
-    "sdl"
-  ],
-  "complexity_limit": 10,
-  "depth_limit": 2
+	"name": "subgraph_introspection",
+	"description": "Federation _service query returning subgraph Schema Definition Language",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  _service: _Service!\n  _entities(representations: [_Any!]!): [_Entity]!\n}\n\ntype _Service {\n  sdl: String!\n}\n\nunion _Entity = Account\n\ntype Account @key(fields: \"accountId\") {\n  accountId: ID!\n  accountName: String!\n  tier: String!\n  createdAt: String!\n}\n\nscalar _Any",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  _service {\n    sdl\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  _service {\n    sdl\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"_service": {
+				"sdl": "type Account @key(fields: \"accountId\") {\n  accountId: ID!\n  accountName: String!\n  tier: String!\n  createdAt: String!\n}\n\ntype Query {\n  account(accountId: ID!): Account\n}"
+			}
+		}
+	},
+	"resolvers": {
+		"Query._service": {
+			"type": "mock",
+			"return_value": {
+				"sdl": "type Account @key(fields: \"accountId\") {\n  accountId: ID!\n  accountName: String!\n  tier: String!\n  createdAt: String!\n}\n\ntype Query {\n  account(accountId: ID!): Account\n}"
+			}
+		}
+	},
+	"tags": ["federation", "introspection", "sdl"],
+	"complexity_limit": 10,
+	"depth_limit": 2
 }

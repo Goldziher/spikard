@@ -4,6 +4,7 @@ members = [
     "crates/spikard",
     "crates/spikard-bindings-shared",
     "crates/spikard-cli",
+    "crates/spikard-codegen",
     "crates/spikard-core",
     "crates/spikard-graphql",
     "crates/spikard-http",

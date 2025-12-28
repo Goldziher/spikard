@@ -1,54 +1,50 @@
 {
-  "name": "external_field",
-  "description": "Reference to @external field used by @requires in another subgraph",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n}\n\nunion _Entity = Parcel\n\ntype Parcel @key(fields: \"id\") {\n  id: ID!\n  weight: Float! @external\n  dimensions: String! @external\n  label: String! @requires(fields: \"weight dimensions\")\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  _entities(representations: [{__typename: \"Parcel\", id: \"parcel-x1\", weight: 2.5, dimensions: \"10x8x6\"}]) {\n    ... on Parcel {\n      id\n      weight\n      dimensions\n      label\n    }\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  _entities(representations: [{__typename: \"Parcel\", id: \"parcel-x1\", weight: 2.5, dimensions: \"10x8x6\"}]) {\n    ... on Parcel {\n      id\n      weight\n      dimensions\n      label\n    }\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "_entities": [
-        {
-          "id": "parcel-x1",
-          "weight": 2.5,
-          "dimensions": "10x8x6",
-          "label": "SMALL_PACKAGE_2.5KG"
-        }
-      ]
-    }
-  },
-  "resolvers": {
-    "Query._entities": {
-      "type": "factory",
-      "factory_fn": "resolve_parcel_entities_with_external"
-    },
-    "Query._service": {
-      "type": "mock",
-      "return_value": {
-        "sdl": "type Parcel @key(fields: \"id\") {\n  id: ID!\n  weight: Float! @external\n  dimensions: String! @external\n  label: String! @requires(fields: \"weight dimensions\")\n}"
-      }
-    },
-    "Parcel.label": {
-      "type": "factory",
-      "factory_fn": "generate_parcel_label"
-    }
-  },
-  "tags": [
-    "federation",
-    "external-field",
-    "field-reference"
-  ],
-  "complexity_limit": 60,
-  "depth_limit": 3
+	"name": "external_field",
+	"description": "Reference to @external field used by @requires in another subgraph",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  _entities(representations: [_Any!]!): [_Entity]!\n  _service: _Service!\n}\n\nunion _Entity = Parcel\n\ntype Parcel @key(fields: \"id\") {\n  id: ID!\n  weight: Float! @external\n  dimensions: String! @external\n  label: String! @requires(fields: \"weight dimensions\")\n}\n\nscalar _Any\n\ntype _Service {\n  sdl: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  _entities(representations: [{__typename: \"Parcel\", id: \"parcel-x1\", weight: 2.5, dimensions: \"10x8x6\"}]) {\n    ... on Parcel {\n      id\n      weight\n      dimensions\n      label\n    }\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  _entities(representations: [{__typename: \"Parcel\", id: \"parcel-x1\", weight: 2.5, dimensions: \"10x8x6\"}]) {\n    ... on Parcel {\n      id\n      weight\n      dimensions\n      label\n    }\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"_entities": [
+				{
+					"id": "parcel-x1",
+					"weight": 2.5,
+					"dimensions": "10x8x6",
+					"label": "SMALL_PACKAGE_2.5KG"
+				}
+			]
+		}
+	},
+	"resolvers": {
+		"Query._entities": {
+			"type": "factory",
+			"factory_fn": "resolve_parcel_entities_with_external"
+		},
+		"Query._service": {
+			"type": "mock",
+			"return_value": {
+				"sdl": "type Parcel @key(fields: \"id\") {\n  id: ID!\n  weight: Float! @external\n  dimensions: String! @external\n  label: String! @requires(fields: \"weight dimensions\")\n}"
+			}
+		},
+		"Parcel.label": {
+			"type": "factory",
+			"factory_fn": "generate_parcel_label"
+		}
+	},
+	"tags": ["federation", "external-field", "field-reference"],
+	"complexity_limit": 60,
+	"depth_limit": 3
 }

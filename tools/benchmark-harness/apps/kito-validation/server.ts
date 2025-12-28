@@ -226,9 +226,7 @@ function resolvePort(defaultPort = 8000): number {
 		}
 	}
 
-	const envPort = process.env.PORT
-		? Number.parseInt(process.env.PORT, 10)
-		: Number.NaN;
+	const envPort = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : Number.NaN;
 	if (Number.isFinite(envPort) && envPort >= 0 && envPort < 65536) {
 		return envPort;
 	}

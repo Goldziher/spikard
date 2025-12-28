@@ -49,5 +49,5 @@ pub use php::PhpScaffolder;
 pub use python::PythonScaffolder;
 pub use ruby::RubyScaffolder;
 pub use rust_lang::RustScaffolder;
-pub use typescript::TypeScriptScaffolder;
 pub use scaffolder::{ProjectScaffolder, ScaffoldedFile};
+pub use typescript::TypeScriptScaffolder;

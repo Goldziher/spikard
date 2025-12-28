@@ -186,28 +186,28 @@ jobs:
           exit_code=$?
           set -e  # Re-enable for safety
 
-          case $exit_code in
+          case "$exit_code" in
             0)
-              echo "exists=true" >> $GITHUB_OUTPUT
-              echo "check_status=success" >> $GITHUB_OUTPUT
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              echo "check_status=success" >> "$GITHUB_OUTPUT"
               echo "Ruby gem version already exists on RubyGems"
               exit 0
               ;;
             1)
-              echo "exists=false" >> $GITHUB_OUTPUT
-              echo "check_status=success" >> $GITHUB_OUTPUT
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              echo "check_status=success" >> "$GITHUB_OUTPUT"
               echo "Ruby gem version not found on RubyGems, will publish"
               exit 0
               ;;
             2)
-              echo "exists=false" >> $GITHUB_OUTPUT
-              echo "check_status=transient_failure" >> $GITHUB_OUTPUT
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              echo "check_status=transient_failure" >> "$GITHUB_OUTPUT"
               echo "RubyGems check encountered transient error"
               exit 2
               ;;
             *)
-              echo "exists=false" >> $GITHUB_OUTPUT
-              echo "check_status=unexpected_failure" >> $GITHUB_OUTPUT
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              echo "check_status=unexpected_failure" >> "$GITHUB_OUTPUT"
               echo "Error checking RubyGems: exit code $exit_code"
               exit 2
               ;;
@@ -231,7 +231,7 @@ jobs:
               exit 1
               ;;
             *)
-              echo "✗ Unknown check status: $status"
+              echo "✗ Unknown check status: \"$status\""
               exit 1
               ;;
           esac

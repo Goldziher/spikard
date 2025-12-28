@@ -1,79 +1,67 @@
 {
-  "name": "36_oneof_schema_multiple_match_failure",
-  "description": "oneOf schema composition - fails when multiple schemas match",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "oneOf schema composition failure - multiple matches"
-  },
-  "handler": {
-    "route": "/payment",
-    "method": "POST",
-    "body_schema": {
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "credit_card"
-          ],
-          "properties": {
-            "credit_card": {
-              "type": "string",
-              "pattern": "^[0-9]{16}$"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "paypal_email"
-          ],
-          "properties": {
-            "paypal_email": {
-              "type": "string",
-              "format": "email"
-            }
-          }
-        }
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/payment",
-    "body": {
-      "credit_card": "1234567812345678",
-      "paypal_email": "user@example.com"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "body"
-          ],
-          "msg": "{\"credit_card\":\"1234567812345678\",\"paypal_email\":\"user@example.com\"} is valid under more than one of the schemas listed in the 'oneOf' keyword",
-          "input": {
-            "credit_card": "1234567812345678",
-            "paypal_email": "user@example.com"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "json_bodies",
-    "oneOf",
-    "composition",
-    "validation",
-    "error"
-  ]
+	"name": "36_oneof_schema_multiple_match_failure",
+	"description": "oneOf schema composition - fails when multiple schemas match",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "oneOf schema composition failure - multiple matches"
+	},
+	"handler": {
+		"route": "/payment",
+		"method": "POST",
+		"body_schema": {
+			"oneOf": [
+				{
+					"type": "object",
+					"required": ["credit_card"],
+					"properties": {
+						"credit_card": {
+							"type": "string",
+							"pattern": "^[0-9]{16}$"
+						}
+					}
+				},
+				{
+					"type": "object",
+					"required": ["paypal_email"],
+					"properties": {
+						"paypal_email": {
+							"type": "string",
+							"format": "email"
+						}
+					}
+				}
+			]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/payment",
+		"body": {
+			"credit_card": "1234567812345678",
+			"paypal_email": "user@example.com"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["body"],
+					"msg": "{\"credit_card\":\"1234567812345678\",\"paypal_email\":\"user@example.com\"} is valid under more than one of the schemas listed in the 'oneOf' keyword",
+					"input": {
+						"credit_card": "1234567812345678",
+						"paypal_email": "user@example.com"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["json_bodies", "oneOf", "composition", "validation", "error"]
 }

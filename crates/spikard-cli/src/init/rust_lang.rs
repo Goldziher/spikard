@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 pub struct RustScaffolder;
 
 impl ProjectScaffolder for RustScaffolder {
+    #[allow(clippy::vec_init_then_push)]
     fn scaffold(&self, _project_dir: &Path, project_name: &str) -> Result<Vec<ScaffoldedFile>> {
         let kebab_name = Self::to_kebab_case(project_name);
         let mut files = Vec::new();
@@ -22,10 +23,7 @@ impl ProjectScaffolder for RustScaffolder {
         ));
 
         // Create Cargo.lock (empty placeholder)
-        files.push(ScaffoldedFile::new(
-            PathBuf::from("Cargo.lock"),
-            "".to_string(),
-        ));
+        files.push(ScaffoldedFile::new(PathBuf::from("Cargo.lock"), "".to_string()));
 
         // Create src/main.rs
         files.push(ScaffoldedFile::new(
@@ -34,10 +32,7 @@ impl ProjectScaffolder for RustScaffolder {
         ));
 
         // Create src/lib.rs
-        files.push(ScaffoldedFile::new(
-            PathBuf::from("src/lib.rs"),
-            self.generate_lib_rs(),
-        ));
+        files.push(ScaffoldedFile::new(PathBuf::from("src/lib.rs"), self.generate_lib_rs()));
 
         // Create tests/integration_test.rs
         files.push(ScaffoldedFile::new(

@@ -181,16 +181,19 @@ final class App
             $schemaRefs = $method->getAttributes(SchemaRef::class);
             $schemaRef = \count($schemaRefs) > 0 ? $schemaRefs[0]->newInstance() : null;
 
+            /** @var array<string, mixed>|null $requestSchema */
             $requestSchema = $routeAttr->requestSchema ?? $this->resolveSchemaRef(
                 $schemaRef?->request,
                 $this->requestSchemas,
                 'request'
             );
+            /** @var array<string, mixed>|null $responseSchema */
             $responseSchema = $routeAttr->responseSchema ?? $this->resolveSchemaRef(
                 $schemaRef?->response,
                 $this->responseSchemas,
                 'response'
             );
+            /** @var array<string, mixed>|null $parameterSchema */
             $parameterSchema = $routeAttr->parameterSchema ?? $this->resolveSchemaRef(
                 $schemaRef?->parameters,
                 $this->parameterSchemas,
@@ -199,10 +202,14 @@ final class App
             if ($requestSchema === null || $parameterSchema === null) {
                 $extracted = $this->extractMethodSchemas($method, $routeAttr->path);
                 if ($requestSchema === null) {
-                    $requestSchema = $extracted['request'];
+                    /** @var array<string, mixed>|null $extracted_request */
+                    $extracted_request = $extracted['request'] ?? null;
+                    $requestSchema = $extracted_request;
                 }
                 if ($parameterSchema === null) {
-                    $parameterSchema = $extracted['parameter'];
+                    /** @var array<string, mixed>|null $extracted_parameter */
+                    $extracted_parameter = $extracted['parameter'] ?? null;
+                    $parameterSchema = $extracted_parameter;
                 }
             }
 
@@ -375,7 +382,8 @@ final class App
 
         $configPayload = $this->configToNative($configToUse);
         $lifecyclePayload = $this->hooks ? $this->hooksToNative($this->hooks) : [];
-        $dependenciesPayload = (object) [
+        /** @var array<string, mixed> $dependenciesPayload */
+        $dependenciesPayload = [
             'dependencies' => $this->dependencies ? $this->dependencies->getDependencies() : [],
         ];
 
@@ -608,7 +616,7 @@ final class App
     }
 
     /**
-     * @return array{request: array<mixed>|null, parameter: array<mixed>|null}
+     * @return array{request: array<string, mixed>|null, parameter: array<string, mixed>|null}
      */
     private function extractMethodSchemas(ReflectionMethod $method, string $path): array
     {
@@ -698,6 +706,9 @@ final class App
             }
         }
 
+        /**
+         * @var array{request: array<string, mixed>|null, parameter: array<string, mixed>|null}
+         */
         $result = [
             'request' => $requestSchema,
             'parameter' => $parameterSchema,

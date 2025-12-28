@@ -5,7 +5,8 @@
 //! strict types, full type hints, and PHPDoc annotations compliant with PSR-12.
 
 use super::GraphQLGenerator;
-use crate::codegen::common::{to_snake_case, escape_quotes, EscapeContext};
+#[allow(unused_imports)]
+use crate::codegen::common::{EscapeContext, escape_quotes, to_snake_case};
 use crate::codegen::graphql::spec_parser::{GraphQLSchema, TypeKind};
 use anyhow::Result;
 
@@ -26,12 +27,11 @@ impl PhpGenerator {
             "Boolean" => "Type::boolean()".to_string(),
             "ID" => "Type::id()".to_string(),
             custom => {
-                if let Some(schema) = schema {
-                    if let Some(type_def) = schema.types.get(custom) {
-                        if type_def.kind == TypeKind::Scalar {
-                            return "Type::string()".to_string();
-                        }
-                    }
+                if let Some(schema) = schema
+                    && let Some(type_def) = schema.types.get(custom)
+                    && type_def.kind == TypeKind::Scalar
+                {
+                    return "Type::string()".to_string();
                 }
                 format!("{}Type::class", custom)
             }
@@ -68,6 +68,7 @@ impl PhpGenerator {
     }
 
     /// Format a GraphQL type with proper null/list notation
+    #[allow(dead_code)]
     fn format_gql_type(&self, type_name: &str, is_nullable: bool, is_list: bool, list_item_nullable: bool) -> String {
         // Strip any existing GraphQL notation from type_name to prevent double notation
         let clean_type = type_name.trim_matches(|c| c == '!' || c == '[' || c == ']');
@@ -154,8 +155,17 @@ impl GraphQLGenerator for PhpGenerator {
                     code.push_str("            'fields' => [\n");
 
                     for field in &type_def.fields {
-                        code.push_str(&format!("                '{}' => ['type' => {}],\n", field.name,
-                            self.map_type_with_nullability(&field.type_name, field.is_nullable, field.is_list, field.list_item_nullable, Some(schema))));
+                        code.push_str(&format!(
+                            "                '{}' => ['type' => {}],\n",
+                            field.name,
+                            self.map_type_with_nullability(
+                                &field.type_name,
+                                field.is_nullable,
+                                field.is_list,
+                                field.list_item_nullable,
+                                Some(schema)
+                            )
+                        ));
                     }
 
                     code.push_str("            ],\n");
@@ -185,8 +195,17 @@ impl GraphQLGenerator for PhpGenerator {
                     code.push_str("            'fields' => [\n");
 
                     for field in &type_def.input_fields {
-                        code.push_str(&format!("                '{}' => ['type' => {}],\n", field.name,
-                            self.map_type_with_nullability(&field.type_name, field.is_nullable, field.is_list, field.list_item_nullable, Some(schema))));
+                        code.push_str(&format!(
+                            "                '{}' => ['type' => {}],\n",
+                            field.name,
+                            self.map_type_with_nullability(
+                                &field.type_name,
+                                field.is_nullable,
+                                field.is_list,
+                                field.list_item_nullable,
+                                Some(schema)
+                            )
+                        ));
                     }
 
                     code.push_str("            ],\n");
@@ -215,7 +234,10 @@ impl GraphQLGenerator for PhpGenerator {
                 }
                 TypeKind::Scalar => {
                     code.push_str(&format!("/**\n * Custom scalar type: {}\n */\n", type_name));
-                    code.push_str(&format!("const {} = 'DateTime'; // Custom scalar placeholder\n\n", type_name));
+                    code.push_str(&format!(
+                        "const {} = 'DateTime'; // Custom scalar placeholder\n\n",
+                        type_name
+                    ));
                 }
                 _ => {}
             }
@@ -232,8 +254,17 @@ impl GraphQLGenerator for PhpGenerator {
             code.push_str("            'name' => 'Query',\n");
             code.push_str("            'fields' => [\n");
             for query in &schema.queries {
-                code.push_str(&format!("                '{}' => ['type' => {}],\n", query.name,
-                    self.map_type_with_nullability(&query.type_name, query.is_nullable, query.is_list, query.list_item_nullable, Some(schema))));
+                code.push_str(&format!(
+                    "                '{}' => ['type' => {}],\n",
+                    query.name,
+                    self.map_type_with_nullability(
+                        &query.type_name,
+                        query.is_nullable,
+                        query.is_list,
+                        query.list_item_nullable,
+                        Some(schema)
+                    )
+                ));
             }
             code.push_str("            ],\n");
             code.push_str("        ]);\n");
@@ -252,8 +283,17 @@ impl GraphQLGenerator for PhpGenerator {
             code.push_str("            'name' => 'Mutation',\n");
             code.push_str("            'fields' => [\n");
             for mutation in &schema.mutations {
-                code.push_str(&format!("                '{}' => ['type' => {}],\n", mutation.name,
-                    self.map_type_with_nullability(&mutation.type_name, mutation.is_nullable, mutation.is_list, mutation.list_item_nullable, Some(schema))));
+                code.push_str(&format!(
+                    "                '{}' => ['type' => {}],\n",
+                    mutation.name,
+                    self.map_type_with_nullability(
+                        &mutation.type_name,
+                        mutation.is_nullable,
+                        mutation.is_list,
+                        mutation.list_item_nullable,
+                        Some(schema)
+                    )
+                ));
             }
             code.push_str("            ],\n");
             code.push_str("        ]);\n");
@@ -272,8 +312,17 @@ impl GraphQLGenerator for PhpGenerator {
             code.push_str("            'name' => 'Subscription',\n");
             code.push_str("            'fields' => [\n");
             for subscription in &schema.subscriptions {
-                code.push_str(&format!("                '{}' => ['type' => {}],\n", subscription.name,
-                    self.map_type_with_nullability(&subscription.type_name, subscription.is_nullable, subscription.is_list, subscription.list_item_nullable, Some(schema))));
+                code.push_str(&format!(
+                    "                '{}' => ['type' => {}],\n",
+                    subscription.name,
+                    self.map_type_with_nullability(
+                        &subscription.type_name,
+                        subscription.is_nullable,
+                        subscription.is_list,
+                        subscription.list_item_nullable,
+                        Some(schema)
+                    )
+                ));
             }
             code.push_str("            ],\n");
             code.push_str("        ]);\n");
@@ -301,10 +350,16 @@ impl GraphQLGenerator for PhpGenerator {
             code.push_str("{\n");
 
             for field in &schema.queries {
-                code.push_str(&format!("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n"));
-                code.push_str(&format!("    public function {}(mixed $root, array $args): mixed\n", to_snake_case(&field.name)));
+                code.push_str("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n");
+                code.push_str(&format!(
+                    "    public function {}(mixed $root, array $args): mixed\n",
+                    to_snake_case(&field.name)
+                ));
                 code.push_str("    {\n");
-                code.push_str(&format!("        throw new \\RuntimeException('Not implemented: Query.{}');\n", field.name));
+                code.push_str(&format!(
+                    "        throw new \\RuntimeException('Not implemented: Query.{}');\n",
+                    field.name
+                ));
                 code.push_str("    }\n\n");
             }
 
@@ -317,10 +372,16 @@ impl GraphQLGenerator for PhpGenerator {
             code.push_str("{\n");
 
             for field in &schema.mutations {
-                code.push_str(&format!("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n"));
-                code.push_str(&format!("    public function {}(mixed $root, array $args): mixed\n", to_snake_case(&field.name)));
+                code.push_str("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n");
+                code.push_str(&format!(
+                    "    public function {}(mixed $root, array $args): mixed\n",
+                    to_snake_case(&field.name)
+                ));
                 code.push_str("    {\n");
-                code.push_str(&format!("        throw new \\RuntimeException('Not implemented: Mutation.{}');\n", field.name));
+                code.push_str(&format!(
+                    "        throw new \\RuntimeException('Not implemented: Mutation.{}');\n",
+                    field.name
+                ));
                 code.push_str("    }\n\n");
             }
 
@@ -333,10 +394,16 @@ impl GraphQLGenerator for PhpGenerator {
             code.push_str("{\n");
 
             for field in &schema.subscriptions {
-                code.push_str(&format!("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n"));
-                code.push_str(&format!("    public function {}(mixed $root, array $args): mixed\n", to_snake_case(&field.name)));
+                code.push_str("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n");
+                code.push_str(&format!(
+                    "    public function {}(mixed $root, array $args): mixed\n",
+                    to_snake_case(&field.name)
+                ));
                 code.push_str("    {\n");
-                code.push_str(&format!("        throw new \\RuntimeException('Not implemented: Subscription.{}');\n", field.name));
+                code.push_str(&format!(
+                    "        throw new \\RuntimeException('Not implemented: Subscription.{}');\n",
+                    field.name
+                ));
                 code.push_str("    }\n\n");
             }
 
@@ -402,7 +469,7 @@ mod tests {
 
     #[test]
     fn test_map_scalar_types() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         assert_eq!(generator.map_scalar_type("String", None), "Type::string()");
         assert_eq!(generator.map_scalar_type("Int", None), "Type::int()");
         assert_eq!(generator.map_scalar_type("Float", None), "Type::float()");
@@ -412,28 +479,28 @@ mod tests {
 
     #[test]
     fn test_map_type_non_nullable() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         let result = generator.map_type_with_nullability("String", false, false, false, None);
         assert_eq!(result, "Type::nonNull(Type::string())");
     }
 
     #[test]
     fn test_map_type_nullable() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         let result = generator.map_type_with_nullability("String", true, false, false, None);
         assert_eq!(result, "Type::string()");
     }
 
     #[test]
     fn test_map_type_list() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         let result = generator.map_type_with_nullability("String", false, true, false, None);
         assert_eq!(result, "Type::nonNull(Type::listOf(Type::nonNull(Type::string())))");
     }
 
     #[test]
     fn test_map_type_nullable_list_nullable_items() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         let result = generator.map_type_with_nullability("Int", true, true, true, None);
         assert_eq!(result, "Type::listOf(Type::int())");
     }
@@ -450,33 +517,36 @@ mod tests {
     fn test_escape_php_string() {
         assert_eq!(escape_quotes("hello", EscapeContext::Php), "hello");
         assert_eq!(escape_quotes("hello'world", EscapeContext::Php), "hello\\'world");
-        assert_eq!(escape_quotes("path\\to\\file", EscapeContext::Php), "path\\\\to\\\\file");
+        assert_eq!(
+            escape_quotes("path\\to\\file", EscapeContext::Php),
+            "path\\\\to\\\\file"
+        );
     }
 
     #[test]
     fn test_format_gql_type_non_nullable() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         assert_eq!(generator.format_gql_type("String", false, false, false), "String!");
         assert_eq!(generator.format_gql_type("User", false, false, false), "User!");
     }
 
     #[test]
     fn test_format_gql_type_nullable() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         assert_eq!(generator.format_gql_type("String", true, false, false), "String");
         assert_eq!(generator.format_gql_type("User", true, false, false), "User");
     }
 
     #[test]
     fn test_format_gql_type_list() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         assert_eq!(generator.format_gql_type("String", false, true, false), "[String!]!");
         assert_eq!(generator.format_gql_type("String", true, true, true), "[String]");
     }
 
     #[test]
     fn test_generate_types_empty_schema() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![],
@@ -494,7 +564,7 @@ mod tests {
 
     #[test]
     fn test_generate_resolvers_with_query() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![GraphQLField {
@@ -523,7 +593,7 @@ mod tests {
 
     #[test]
     fn test_generate_schema_definition_with_query() {
-        let generator = PhpGenerator::default();
+        let generator = PhpGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![GraphQLField {

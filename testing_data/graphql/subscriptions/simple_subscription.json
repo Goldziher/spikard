@@ -1,44 +1,39 @@
 {
-  "name": "simple_subscription",
-  "description": "Basic subscription to a single event stream returning scalar and timestamp fields",
-  "operation_type": "subscription",
-  "endpoint": "/graphql",
-  "schema": "type Subscription {\n  messageAdded: Message!\n}\n\ntype Message {\n  id: ID!\n  text: String!\n  timestamp: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "subscription {\n  messageAdded {\n    id\n    text\n    timestamp\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "subscription {\n  messageAdded {\n    id\n    text\n    timestamp\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "messageAdded": {
-        "id": "msg-1",
-        "text": "Hello, WebSocket!",
-        "timestamp": "2025-12-27T10:00:00Z"
-      }
-    }
-  },
-  "resolvers": {
-    "Subscription.messageAdded": {
-      "type": "mock",
-      "return_value": {
-        "id": "msg-1",
-        "text": "Hello, WebSocket!",
-        "timestamp": "2025-12-27T10:00:00Z"
-      }
-    }
-  },
-  "tags": [
-    "subscriptions",
-    "websocket",
-    "basic",
-    "streaming"
-  ]
+	"name": "simple_subscription",
+	"description": "Basic subscription to a single event stream returning scalar and timestamp fields",
+	"operation_type": "subscription",
+	"endpoint": "/graphql",
+	"schema": "type Subscription {\n  messageAdded: Message!\n}\n\ntype Message {\n  id: ID!\n  text: String!\n  timestamp: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "subscription {\n  messageAdded {\n    id\n    text\n    timestamp\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "subscription {\n  messageAdded {\n    id\n    text\n    timestamp\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"messageAdded": {
+				"id": "msg-1",
+				"text": "Hello, WebSocket!",
+				"timestamp": "2025-12-27T10:00:00Z"
+			}
+		}
+	},
+	"resolvers": {
+		"Subscription.messageAdded": {
+			"type": "mock",
+			"return_value": {
+				"id": "msg-1",
+				"text": "Hello, WebSocket!",
+				"timestamp": "2025-12-27T10:00:00Z"
+			}
+		}
+	},
+	"tags": ["subscriptions", "websocket", "basic", "streaming"]
 }

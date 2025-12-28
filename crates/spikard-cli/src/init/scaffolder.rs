@@ -158,20 +158,14 @@ mod tests {
 
     #[test]
     fn test_scaffolded_file_creation() {
-        let file = ScaffoldedFile::new(
-            PathBuf::from("src/main.py"),
-            "print('hello')".to_string(),
-        );
+        let file = ScaffoldedFile::new(PathBuf::from("src/main.py"), "print('hello')".to_string());
         assert_eq!(file.path, PathBuf::from("src/main.py"));
         assert_eq!(file.content, "print('hello')");
     }
 
     #[test]
     fn test_scaffolded_file_clone() {
-        let file1 = ScaffoldedFile::new(
-            PathBuf::from("test.txt"),
-            "content".to_string(),
-        );
+        let file1 = ScaffoldedFile::new(PathBuf::from("test.txt"), "content".to_string());
         let file2 = file1.clone();
         assert_eq!(file1.path, file2.path);
         assert_eq!(file1.content, file2.content);

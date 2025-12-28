@@ -3,7 +3,8 @@ name = "test-generator"
 version = "0.6.2"
 edition.workspace = true
 license.workspace = true
-publish = false  # Internal tooling only
+publish = false
+workspace = false
 
 [[bin]]
 name = "gen-tests"

@@ -1,43 +1,37 @@
 {
-  "name": "subscription_error",
-  "description": "Subscription to non-existent subscription field returns GraphQL error with proper error format",
-  "operation_type": "subscription",
-  "endpoint": "/graphql",
-  "schema": "type Subscription {\n  validEvent: Event!\n}\n\ntype Event {\n  id: ID!\n  type: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "subscription {\n  invalidSubscription {\n    id\n    data\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "subscription {\n  invalidSubscription {\n    id\n    data\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 400,
-    "data": null,
-    "graphql": {
-      "errors": [
-        {
-          "message": "Cannot query field \"invalidSubscription\" on type \"Subscription\".",
-          "locations": [
-            {
-              "line": 2,
-              "column": 3
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "resolvers": {},
-  "tags": [
-    "subscriptions",
-    "websocket",
-    "error-handling",
-    "validation",
-    "field-not-found"
-  ]
+	"name": "subscription_error",
+	"description": "Subscription to non-existent subscription field returns GraphQL error with proper error format",
+	"operation_type": "subscription",
+	"endpoint": "/graphql",
+	"schema": "type Subscription {\n  validEvent: Event!\n}\n\ntype Event {\n  id: ID!\n  type: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "subscription {\n  invalidSubscription {\n    id\n    data\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "subscription {\n  invalidSubscription {\n    id\n    data\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"data": null,
+		"graphql": {
+			"errors": [
+				{
+					"message": "Cannot query field \"invalidSubscription\" on type \"Subscription\".",
+					"locations": [
+						{
+							"line": 2,
+							"column": 3
+						}
+					]
+				}
+			]
+		}
+	},
+	"resolvers": {},
+	"tags": ["subscriptions", "websocket", "error-handling", "validation", "field-not-found"]
 }

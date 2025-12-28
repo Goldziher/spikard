@@ -1,61 +1,50 @@
 {
-  "name": "21_integer_type_coercion_failure",
-  "description": "URL-encoded form with non-numeric value for integer field should fail",
-  "category": "url_encoded",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "Type coercion failure for integer fields"
-  },
-  "handler": {
-    "route": "/products",
-    "method": "POST",
-    "content_type": "application/x-www-form-urlencoded",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "price"
-      ],
-      "properties": {
-        "price": {
-          "type": "integer"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/products",
-    "headers": {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    "body": "price=not-a-number"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "int_parsing",
-          "loc": [
-            "body",
-            "price"
-          ],
-          "msg": "Input should be a valid integer, unable to parse string as an integer",
-          "input": "not-a-number"
-        }
-      ]
-    }
-  },
-  "tags": [
-    "url_encoded",
-    "type",
-    "integer",
-    "validation",
-    "error"
-  ]
+	"name": "21_integer_type_coercion_failure",
+	"description": "URL-encoded form with non-numeric value for integer field should fail",
+	"category": "url_encoded",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "Type coercion failure for integer fields"
+	},
+	"handler": {
+		"route": "/products",
+		"method": "POST",
+		"content_type": "application/x-www-form-urlencoded",
+		"body_schema": {
+			"type": "object",
+			"required": ["price"],
+			"properties": {
+				"price": {
+					"type": "integer"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/products",
+		"headers": {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		"body": "price=not-a-number"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "int_parsing",
+					"loc": ["body", "price"],
+					"msg": "Input should be a valid integer, unable to parse string as an integer",
+					"input": "not-a-number"
+				}
+			]
+		}
+	},
+	"tags": ["url_encoded", "type", "integer", "validation", "error"]
 }

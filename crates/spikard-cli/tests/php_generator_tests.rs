@@ -302,7 +302,9 @@ fn php_generator_handles_path_and_query_parameters() {
     let generator = PhpGenerator::new(spec, PhpDtoStyle::ReadonlyClass);
     let output = generator.generate().expect("generate");
 
-    assert!(output.contains("public function getPost(string $userId, string $postId, ?string $includeComments = null)"));
+    assert!(
+        output.contains("public function getPost(string $userId, string $postId, ?string $includeComments = null)")
+    );
 }
 
 #[test]

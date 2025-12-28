@@ -1,45 +1,39 @@
 {
-  "name": "resource_owner_denied",
-  "description": "User accessing another user's resource - denied",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  user(id: String!): User\n}\n\ntype User {\n  id: String!\n  profile: UserProfile!\n}\n\ntype UserProfile {\n  bio: String\n  website: String\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query GetUserProfile($userId: String!) {\n  user(id: $userId) {\n    id\n    profile {\n      bio\n      website\n    }\n  }\n}",
-    "variables": {
-      "userId": "user456"
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query GetUserProfile($userId: String!) {\n  user(id: $userId) {\n    id\n    profile {\n      bio\n      website\n    }\n  }\n}",
-      "variables": {
-        "userId": "user456"
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 403,
-    "errors": [
-      {
-        "message": "Not authorized to access this resource"
-      }
-    ]
-  },
-  "resolvers": {
-    "Query.user": {
-      "type": "error",
-      "error_message": "Not authorized to access this resource"
-    }
-  },
-  "tags": [
-    "authorization",
-    "resource-ownership",
-    "denied",
-    "error",
-    "ownership-check"
-  ]
+	"name": "resource_owner_denied",
+	"description": "User accessing another user's resource - denied",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  user(id: String!): User\n}\n\ntype User {\n  id: String!\n  profile: UserProfile!\n}\n\ntype UserProfile {\n  bio: String\n  website: String\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query GetUserProfile($userId: String!) {\n  user(id: $userId) {\n    id\n    profile {\n      bio\n      website\n    }\n  }\n}",
+		"variables": {
+			"userId": "user456"
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query GetUserProfile($userId: String!) {\n  user(id: $userId) {\n    id\n    profile {\n      bio\n      website\n    }\n  }\n}",
+			"variables": {
+				"userId": "user456"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 403,
+		"errors": [
+			{
+				"message": "Not authorized to access this resource"
+			}
+		]
+	},
+	"resolvers": {
+		"Query.user": {
+			"type": "error",
+			"error_message": "Not authorized to access this resource"
+		}
+	},
+	"tags": ["authorization", "resource-ownership", "denied", "error", "ownership-check"]
 }

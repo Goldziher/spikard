@@ -23,7 +23,6 @@ use crate::codegen::graphql::spec_parser::GraphQLField;
 pub struct RubyGenerator;
 
 impl RubyGenerator {
-
     /// Generate RBS (Ruby Signature) type definitions for Steep type checking
     ///
     /// Produces `.rbs` files with type signatures for all GraphQL types, enabling
@@ -73,10 +72,7 @@ impl RubyGenerator {
                             field.list_item_nullable,
                         );
 
-                        rbs.push_str(&format!(
-                            "    def {}: () -> {}\n",
-                            field.name, field_type
-                        ));
+                        rbs.push_str(&format!("    def {}: () -> {}\n", field.name, field_type));
                     }
 
                     rbs.push_str("  end\n\n");
@@ -97,10 +93,7 @@ impl RubyGenerator {
                             field.list_item_nullable,
                         );
 
-                        rbs.push_str(&format!(
-                            "    def {}: () -> {}\n",
-                            field.name, field_type
-                        ));
+                        rbs.push_str(&format!("    def {}: () -> {}\n", field.name, field_type));
                     }
 
                     rbs.push_str("  end\n\n");
@@ -125,9 +118,7 @@ impl RubyGenerator {
                     rbs.push_str("    < GraphQL::Schema::Union\n\n");
 
                     if !type_def.possible_types.is_empty() {
-                        rbs.push_str(
-                            "    def self.resolve_type(obj: untyped, ctx: untyped): String\n"
-                        );
+                        rbs.push_str("    def self.resolve_type(obj: untyped, ctx: untyped): String\n");
                     }
 
                     rbs.push_str("  end\n\n");
@@ -148,10 +139,7 @@ impl RubyGenerator {
                             field.list_item_nullable,
                         );
 
-                        rbs.push_str(&format!(
-                            "    def {}: () -> {}\n",
-                            field.name, field_type
-                        ));
+                        rbs.push_str(&format!("    def {}: () -> {}\n", field.name, field_type));
                     }
 
                     rbs.push_str("  end\n\n");
@@ -424,10 +412,10 @@ impl GraphQLGenerator for RubyGenerator {
 
                         code.push_str(&format!("    value :{}\n", value.name));
 
-                        if value.is_deprecated {
-                            if let Some(reason) = &value.deprecation_reason {
-                                code.push_str(&format!("    deprecation_reason \"{}\"\n", reason.replace('"', "\\\"")));
-                            }
+                        if value.is_deprecated
+                            && let Some(reason) = &value.deprecation_reason
+                        {
+                            code.push_str(&format!("    deprecation_reason \"{}\"\n", reason.replace('"', "\\\"")));
                         }
                     }
 
@@ -506,7 +494,10 @@ impl GraphQLGenerator for RubyGenerator {
                 let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
                     code.push_str(&format!("  def {}\n", method_name));
-                    code.push_str(&format!("    raise NotImplementedError, \"TODO: Implement QueryType#{}\"\n", method_name));
+                    code.push_str(&format!(
+                        "    raise NotImplementedError, \"TODO: Implement QueryType#{}\"\n",
+                        method_name
+                    ));
                     code.push_str("  end\n\n");
                 } else {
                     let mut args = String::new();
@@ -518,7 +509,10 @@ impl GraphQLGenerator for RubyGenerator {
                         args.push_str(&format!("{}:", arg_name));
                     }
                     code.push_str(&format!("  def {}({})\n", method_name, args));
-                    code.push_str(&format!("    raise NotImplementedError, \"TODO: Implement QueryType#{}\"\n", method_name));
+                    code.push_str(&format!(
+                        "    raise NotImplementedError, \"TODO: Implement QueryType#{}\"\n",
+                        method_name
+                    ));
                     code.push_str("  end\n\n");
                 }
             }
@@ -538,7 +532,10 @@ impl GraphQLGenerator for RubyGenerator {
                 let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
                     code.push_str(&format!("  def {}\n", method_name));
-                    code.push_str(&format!("    raise NotImplementedError, \"TODO: Implement MutationType#{}\"\n", method_name));
+                    code.push_str(&format!(
+                        "    raise NotImplementedError, \"TODO: Implement MutationType#{}\"\n",
+                        method_name
+                    ));
                     code.push_str("  end\n\n");
                 } else {
                     let mut args = String::new();
@@ -550,7 +547,10 @@ impl GraphQLGenerator for RubyGenerator {
                         args.push_str(&format!("{}:", arg_name));
                     }
                     code.push_str(&format!("  def {}({})\n", method_name, args));
-                    code.push_str(&format!("    raise NotImplementedError, \"TODO: Implement MutationType#{}\"\n", method_name));
+                    code.push_str(&format!(
+                        "    raise NotImplementedError, \"TODO: Implement MutationType#{}\"\n",
+                        method_name
+                    ));
                     code.push_str("  end\n\n");
                 }
             }
@@ -568,7 +568,10 @@ impl GraphQLGenerator for RubyGenerator {
                 let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
                     code.push_str(&format!("  def {}\n", method_name));
-                    code.push_str(&format!("    raise NotImplementedError, \"TODO: Implement SubscriptionType#{}\"\n", method_name));
+                    code.push_str(&format!(
+                        "    raise NotImplementedError, \"TODO: Implement SubscriptionType#{}\"\n",
+                        method_name
+                    ));
                     code.push_str("  end\n\n");
                 } else {
                     let mut args = String::new();
@@ -580,7 +583,10 @@ impl GraphQLGenerator for RubyGenerator {
                         args.push_str(&format!("{}:", arg_name));
                     }
                     code.push_str(&format!("  def {}({})\n", method_name, args));
-                    code.push_str(&format!("    raise NotImplementedError, \"TODO: Implement SubscriptionType#{}\"\n", method_name));
+                    code.push_str(&format!(
+                        "    raise NotImplementedError, \"TODO: Implement SubscriptionType#{}\"\n",
+                        method_name
+                    ));
                     code.push_str("  end\n\n");
                 }
             }
@@ -620,7 +626,7 @@ impl GraphQLGenerator for RubyGenerator {
         for line in sdl.lines() {
             code.push_str("  ");
             code.push_str(line);
-            code.push_str("\n");
+            code.push('\n');
         }
         code.push_str("SDL\n");
 
@@ -703,7 +709,7 @@ mod tests {
 
     #[test]
     fn test_generate_types_empty_schema() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![],
@@ -721,7 +727,7 @@ mod tests {
 
     #[test]
     fn test_generate_resolvers_with_query() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![GraphQLField {
@@ -749,7 +755,7 @@ mod tests {
 
     #[test]
     fn test_generate_resolvers_with_arguments() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![GraphQLField {
@@ -783,7 +789,7 @@ mod tests {
 
     #[test]
     fn test_generate_schema_definition() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![GraphQLField {
@@ -810,7 +816,7 @@ mod tests {
 
     #[test]
     fn test_generate_rbs_signatures_empty_schema() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![],
@@ -832,7 +838,7 @@ mod tests {
 
     #[test]
     fn test_generate_rbs_signatures_with_query() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![GraphQLField {
@@ -857,7 +863,7 @@ mod tests {
 
     #[test]
     fn test_generate_rbs_signatures_with_arguments() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![GraphQLField {
@@ -890,7 +896,7 @@ mod tests {
 
     #[test]
     fn test_generate_rbs_signatures_with_mutation() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![],
@@ -925,7 +931,7 @@ mod tests {
 
     #[test]
     fn test_generate_rbs_signatures_with_subscription() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![],
@@ -952,7 +958,7 @@ mod tests {
 
     #[test]
     fn test_generate_rbs_signatures_with_list_type() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![GraphQLField {
@@ -977,7 +983,7 @@ mod tests {
 
     #[test]
     fn test_generate_type_signatures_trait_method() {
-        let generator = RubyGenerator::default();
+        let generator = RubyGenerator;
         let schema = GraphQLSchema {
             types: HashMap::new(),
             queries: vec![GraphQLField {

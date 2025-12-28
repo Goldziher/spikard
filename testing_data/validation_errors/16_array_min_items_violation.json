@@ -1,71 +1,64 @@
 {
-  "name": "Array min_items constraint violation",
-  "description": "Tests validation error when array has fewer items than min_items",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body_multiple_params/test_tutorial001.py",
-    "test_function": "test_array_min_items"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number"
-        },
-        "tags": {
-          "type": "array",
-          "items": {},
-          "minItems": 1
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "price",
-        "tags"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Item",
-      "price": 10.0,
-      "tags": []
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "too_short",
-          "loc": [
-            "body",
-            "tags"
-          ],
-          "msg": "List should have at least 1 item after validation",
-          "input": [],
-          "ctx": {
-            "min_length": 1
-          }
-        }
-      ]
-    }
-  },
-  "notes": "min_items constraint ensures array has minimum number of elements"
+	"name": "Array min_items constraint violation",
+	"description": "Tests validation error when array has fewer items than min_items",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body_multiple_params/test_tutorial001.py",
+		"test_function": "test_array_min_items"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number"
+				},
+				"tags": {
+					"type": "array",
+					"items": {},
+					"minItems": 1
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "price", "tags"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Item",
+			"price": 10.0,
+			"tags": []
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "too_short",
+					"loc": ["body", "tags"],
+					"msg": "List should have at least 1 item after validation",
+					"input": [],
+					"ctx": {
+						"min_length": 1
+					}
+				}
+			]
+		}
+	},
+	"notes": "min_items constraint ensures array has minimum number of elements"
 }

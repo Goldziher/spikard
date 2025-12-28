@@ -1,137 +1,94 @@
 {
-  "name": "dataloader_with_variables",
-  "description": "DataLoader batch loading with GraphQL query variables and parameterized IDs",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  posts(ids: [ID!]!): [Post!]!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  slug: String!\n  publishedAt: String\n  tags: [String!]!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query GetPosts($ids: [ID!]!) {\n  posts(ids: $ids) {\n    id\n    title\n    slug\n    publishedAt\n    tags\n  }\n}",
-    "variables": {
-      "ids": [
-        "1",
-        "2",
-        "3"
-      ]
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query GetPosts($ids: [ID!]!) {\n  posts(ids: $ids) {\n    id\n    title\n    slug\n    publishedAt\n    tags\n  }\n}",
-      "variables": {
-        "ids": [
-          "1",
-          "2",
-          "3"
-        ]
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "posts": [
-        {
-          "id": "1",
-          "title": "Getting Started with GraphQL",
-          "slug": "getting-started-graphql",
-          "publishedAt": "2025-01-10T08:00:00Z",
-          "tags": [
-            "graphql",
-            "tutorial"
-          ]
-        },
-        {
-          "id": "2",
-          "title": "Mastering DataLoader",
-          "slug": "mastering-dataloader",
-          "publishedAt": "2025-01-15T10:30:00Z",
-          "tags": [
-            "dataloader",
-            "performance",
-            "optimization"
-          ]
-        },
-        {
-          "id": "3",
-          "title": "GraphQL Best Practices",
-          "slug": "graphql-best-practices",
-          "publishedAt": "2025-01-20T14:45:00Z",
-          "tags": [
-            "graphql",
-            "best-practices",
-            "patterns"
-          ]
-        }
-      ]
-    }
-  },
-  "resolvers": {
-    "Query.posts": {
-      "type": "async_factory",
-      "factory_fn": "batch_load_posts_by_ids"
-    }
-  },
-  "dataloader_behavior": {
-    "input_source": "query_variables",
-    "batching_enabled": true,
-    "variables_passed": [
-      "ids"
-    ],
-    "batch_size": 3,
-    "cache_enabled": true,
-    "db_queries_expected": 1,
-    "batching_strategy": "group_by_variable_set"
-  },
-  "variable_binding_scenarios": [
-    {
-      "name": "Standard batch request",
-      "variables": {
-        "ids": [
-          "1",
-          "2",
-          "3"
-        ]
-      },
-      "expected_batch_calls": 1,
-      "expected_db_queries": 1
-    },
-    {
-      "name": "Single item request",
-      "variables": {
-        "ids": [
-          "1"
-        ]
-      },
-      "expected_batch_calls": 1,
-      "expected_db_queries": 1
-    },
-    {
-      "name": "Large batch request",
-      "variables": {
-        "ids": [
-          "1",
-          "2",
-          "3",
-          "4",
-          "5",
-          "6",
-          "7",
-          "8",
-          "9",
-          "10"
-        ]
-      },
-      "expected_batch_calls": 1,
-      "expected_db_queries": 1
-    }
-  ],
-  "tags": [
-    "dataloader",
-    "variables",
-    "batching",
-    "parametrized-queries"
-  ]
+	"name": "dataloader_with_variables",
+	"description": "DataLoader batch loading with GraphQL query variables and parameterized IDs",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  posts(ids: [ID!]!): [Post!]!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  slug: String!\n  publishedAt: String\n  tags: [String!]!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query GetPosts($ids: [ID!]!) {\n  posts(ids: $ids) {\n    id\n    title\n    slug\n    publishedAt\n    tags\n  }\n}",
+		"variables": {
+			"ids": ["1", "2", "3"]
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query GetPosts($ids: [ID!]!) {\n  posts(ids: $ids) {\n    id\n    title\n    slug\n    publishedAt\n    tags\n  }\n}",
+			"variables": {
+				"ids": ["1", "2", "3"]
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"posts": [
+				{
+					"id": "1",
+					"title": "Getting Started with GraphQL",
+					"slug": "getting-started-graphql",
+					"publishedAt": "2025-01-10T08:00:00Z",
+					"tags": ["graphql", "tutorial"]
+				},
+				{
+					"id": "2",
+					"title": "Mastering DataLoader",
+					"slug": "mastering-dataloader",
+					"publishedAt": "2025-01-15T10:30:00Z",
+					"tags": ["dataloader", "performance", "optimization"]
+				},
+				{
+					"id": "3",
+					"title": "GraphQL Best Practices",
+					"slug": "graphql-best-practices",
+					"publishedAt": "2025-01-20T14:45:00Z",
+					"tags": ["graphql", "best-practices", "patterns"]
+				}
+			]
+		}
+	},
+	"resolvers": {
+		"Query.posts": {
+			"type": "async_factory",
+			"factory_fn": "batch_load_posts_by_ids"
+		}
+	},
+	"dataloader_behavior": {
+		"input_source": "query_variables",
+		"batching_enabled": true,
+		"variables_passed": ["ids"],
+		"batch_size": 3,
+		"cache_enabled": true,
+		"db_queries_expected": 1,
+		"batching_strategy": "group_by_variable_set"
+	},
+	"variable_binding_scenarios": [
+		{
+			"name": "Standard batch request",
+			"variables": {
+				"ids": ["1", "2", "3"]
+			},
+			"expected_batch_calls": 1,
+			"expected_db_queries": 1
+		},
+		{
+			"name": "Single item request",
+			"variables": {
+				"ids": ["1"]
+			},
+			"expected_batch_calls": 1,
+			"expected_db_queries": 1
+		},
+		{
+			"name": "Large batch request",
+			"variables": {
+				"ids": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+			},
+			"expected_batch_calls": 1,
+			"expected_db_queries": 1
+		}
+	],
+	"tags": ["dataloader", "variables", "batching", "parametrized-queries"]
 }

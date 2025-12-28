@@ -1,80 +1,74 @@
 {
-  "name": "override_directive",
-  "description": "Field with @override directive for progressive field ownership migration between subgraphs",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  user(id: ID!): User\n  _service: _Service!\n}\n\ntype User @key(fields: \"id\") {\n  id: ID!\n  username: String!\n  email: String! @override(from: \"legacy-subgraph\")\n  profile: UserProfile!\n}\n\ntype UserProfile {\n  bio: String\n  joinDate: String!\n  location: String\n}\n\ntype _Service {\n  sdl: String!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  user(id: \"user-789\") {\n    id\n    username\n    email\n    profile {\n      bio\n      joinDate\n      location\n    }\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  user(id: \"user-789\") {\n    id\n    username\n    email\n    profile {\n      bio\n      joinDate\n      location\n    }\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data": {
-      "user": {
-        "id": "user-789",
-        "username": "johndoe",
-        "email": "john.doe@example.com",
-        "profile": {
-          "bio": "Software developer and tech enthusiast",
-          "joinDate": "2021-06-12",
-          "location": "San Francisco, CA"
-        }
-      }
-    },
-    "extensions": {
-      "federation_metadata": {
-        "overridden_fields": {
-          "email": {
-            "old_subgraph": "legacy-subgraph",
-            "new_subgraph": "users-subgraph",
-            "migration_status": "in_progress"
-          }
-        }
-      }
-    }
-  },
-  "resolvers": {
-    "Query.user": {
-      "type": "factory",
-      "factory_fn": "resolve_user_with_override"
-    },
-    "Query._service": {
-      "type": "mock",
-      "return_value": {
-        "sdl": "type User @key(fields: \"id\") {\n  id: ID!\n  username: String!\n  email: String! @override(from: \"legacy-subgraph\")\n  profile: UserProfile!\n}\n\ntype UserProfile {\n  bio: String\n  joinDate: String!\n  location: String\n}"
-      }
-    }
-  },
-  "metadata": {
-    "federation_v2_feature": "@override",
-    "migration_scenario": "progressive_field_migration",
-    "old_subgraph": "legacy-subgraph",
-    "new_subgraph": "users-subgraph",
-    "overridden_field": "email",
-    "use_case": "Gradually migrate field resolution from legacy to new subgraph without downtime"
-  },
-  "federation_composition_notes": "The @override directive enables safe, zero-downtime field migrations. The gateway will route requests to the new subgraph (users-subgraph) for the email field while the legacy subgraph still has the field defined. Once all consumers and dependent systems migrate, the @override directive and legacy implementation can be removed.",
-  "timeline": {
-    "phase_1": "Add @override directive to new subgraph and deploy",
-    "phase_2": "Gateway automatically routes to new subgraph",
-    "phase_3": "Monitor metrics and verify correctness",
-    "phase_4": "Remove @override and legacy implementation once safe"
-  },
-  "tags": [
-    "federation",
-    "directives",
-    "v2",
-    "override",
-    "migration"
-  ],
-  "complexity_limit": 150,
-    "depth_limit": 4
+	"name": "override_directive",
+	"description": "Field with @override directive for progressive field ownership migration between subgraphs",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  user(id: ID!): User\n  _service: _Service!\n}\n\ntype User @key(fields: \"id\") {\n  id: ID!\n  username: String!\n  email: String! @override(from: \"legacy-subgraph\")\n  profile: UserProfile!\n}\n\ntype UserProfile {\n  bio: String\n  joinDate: String!\n  location: String\n}\n\ntype _Service {\n  sdl: String!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  user(id: \"user-789\") {\n    id\n    username\n    email\n    profile {\n      bio\n      joinDate\n      location\n    }\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  user(id: \"user-789\") {\n    id\n    username\n    email\n    profile {\n      bio\n      joinDate\n      location\n    }\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data": {
+			"user": {
+				"id": "user-789",
+				"username": "johndoe",
+				"email": "john.doe@example.com",
+				"profile": {
+					"bio": "Software developer and tech enthusiast",
+					"joinDate": "2021-06-12",
+					"location": "San Francisco, CA"
+				}
+			}
+		},
+		"extensions": {
+			"federation_metadata": {
+				"overridden_fields": {
+					"email": {
+						"old_subgraph": "legacy-subgraph",
+						"new_subgraph": "users-subgraph",
+						"migration_status": "in_progress"
+					}
+				}
+			}
+		}
+	},
+	"resolvers": {
+		"Query.user": {
+			"type": "factory",
+			"factory_fn": "resolve_user_with_override"
+		},
+		"Query._service": {
+			"type": "mock",
+			"return_value": {
+				"sdl": "type User @key(fields: \"id\") {\n  id: ID!\n  username: String!\n  email: String! @override(from: \"legacy-subgraph\")\n  profile: UserProfile!\n}\n\ntype UserProfile {\n  bio: String\n  joinDate: String!\n  location: String\n}"
+			}
+		}
+	},
+	"metadata": {
+		"federation_v2_feature": "@override",
+		"migration_scenario": "progressive_field_migration",
+		"old_subgraph": "legacy-subgraph",
+		"new_subgraph": "users-subgraph",
+		"overridden_field": "email",
+		"use_case": "Gradually migrate field resolution from legacy to new subgraph without downtime"
+	},
+	"federation_composition_notes": "The @override directive enables safe, zero-downtime field migrations. The gateway will route requests to the new subgraph (users-subgraph) for the email field while the legacy subgraph still has the field defined. Once all consumers and dependent systems migrate, the @override directive and legacy implementation can be removed.",
+	"timeline": {
+		"phase_1": "Add @override directive to new subgraph and deploy",
+		"phase_2": "Gateway automatically routes to new subgraph",
+		"phase_3": "Monitor metrics and verify correctness",
+		"phase_4": "Remove @override and legacy implementation once safe"
+	},
+	"tags": ["federation", "directives", "v2", "override", "migration"],
+	"complexity_limit": 150,
+	"depth_limit": 4
 }

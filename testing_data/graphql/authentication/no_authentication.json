@@ -1,37 +1,33 @@
 {
-  "name": "no_authentication",
-  "description": "Query requiring authentication without any credentials",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  protectedQuery: String!\n}\n",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  protectedQuery\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  protectedQuery\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 401,
-    "errors": [
-      {
-        "message": "Authentication required"
-      }
-    ]
-  },
-  "resolvers": {
-    "Query.protectedQuery": {
-      "type": "error",
-      "error_message": "Authentication required"
-    }
-  },
-  "tags": [
-    "authentication",
-    "missing-credentials",
-    "error"
-  ]
+	"name": "no_authentication",
+	"description": "Query requiring authentication without any credentials",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  protectedQuery: String!\n}\n",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  protectedQuery\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  protectedQuery\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 401,
+		"errors": [
+			{
+				"message": "Authentication required"
+			}
+		]
+	},
+	"resolvers": {
+		"Query.protectedQuery": {
+			"type": "error",
+			"error_message": "Authentication required"
+		}
+	},
+	"tags": ["authentication", "missing-credentials", "error"]
 }

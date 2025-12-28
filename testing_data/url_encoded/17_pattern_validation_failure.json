@@ -1,64 +1,54 @@
 {
-  "name": "17_pattern_validation_failure",
-  "description": "URL-encoded form field violating regex pattern should fail",
-  "category": "url_encoded",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Regex pattern validation in forms"
-  },
-  "handler": {
-    "route": "/accounts",
-    "method": "POST",
-    "content_type": "application/x-www-form-urlencoded",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "account_id"
-      ],
-      "properties": {
-        "account_id": {
-          "type": "string",
-          "pattern": "^ACC-[0-9]{6}$"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/accounts",
-    "headers": {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    "body": "account_id=INVALID123"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "string_pattern_mismatch",
-          "loc": [
-            "body",
-            "account_id"
-          ],
-          "msg": "String should match pattern '^ACC-[0-9]{6}$'",
-          "input": "INVALID123",
-          "ctx": {
-            "pattern": "^ACC-[0-9]{6}$"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "url_encoded",
-    "pattern",
-    "validation",
-    "error"
-  ]
+	"name": "17_pattern_validation_failure",
+	"description": "URL-encoded form field violating regex pattern should fail",
+	"category": "url_encoded",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Regex pattern validation in forms"
+	},
+	"handler": {
+		"route": "/accounts",
+		"method": "POST",
+		"content_type": "application/x-www-form-urlencoded",
+		"body_schema": {
+			"type": "object",
+			"required": ["account_id"],
+			"properties": {
+				"account_id": {
+					"type": "string",
+					"pattern": "^ACC-[0-9]{6}$"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/accounts",
+		"headers": {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		"body": "account_id=INVALID123"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "string_pattern_mismatch",
+					"loc": ["body", "account_id"],
+					"msg": "String should match pattern '^ACC-[0-9]{6}$'",
+					"input": "INVALID123",
+					"ctx": {
+						"pattern": "^ACC-[0-9]{6}$"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["url_encoded", "pattern", "validation", "error"]
 }

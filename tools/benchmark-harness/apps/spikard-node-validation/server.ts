@@ -55,15 +55,18 @@ const routes: RouteMetadata[] = [];
 const handlers: Record<string, HandlerFunction> = {};
 
 const schemaDir = join(dirname(fileURLToPath(import.meta.url)), "..", "schemas");
-const requestSchemas = JSON.parse(
-	readFileSync(join(schemaDir, "request_schemas.json"), "utf8"),
-) as Record<string, unknown>;
-const parameterSchemas = JSON.parse(
-	readFileSync(join(schemaDir, "parameter_schemas.json"), "utf8"),
-) as Record<string, unknown>;
-const responseSchemas = JSON.parse(
-	readFileSync(join(schemaDir, "response_schemas.json"), "utf8"),
-) as Record<string, unknown>;
+const requestSchemas = JSON.parse(readFileSync(join(schemaDir, "request_schemas.json"), "utf8")) as Record<
+	string,
+	unknown
+>;
+const parameterSchemas = JSON.parse(readFileSync(join(schemaDir, "parameter_schemas.json"), "utf8")) as Record<
+	string,
+	unknown
+>;
+const responseSchemas = JSON.parse(readFileSync(join(schemaDir, "response_schemas.json"), "utf8")) as Record<
+	string,
+	unknown
+>;
 
 function requestSchema(key: string): unknown {
 	return requestSchemas[key];
@@ -84,8 +87,7 @@ type NodeMetricsSnapshot = {
 	gc_time_ms: number | null;
 };
 
-const profilingEnabled =
-	process.env.SPIKARD_PROFILE_ENABLED === "1" || Boolean(process.env.SPIKARD_NODE_METRICS_FILE);
+const profilingEnabled = process.env.SPIKARD_PROFILE_ENABLED === "1" || Boolean(process.env.SPIKARD_NODE_METRICS_FILE);
 
 function resolveNodeMetricsPath(): string {
 	const envPath = process.env.SPIKARD_NODE_METRICS_FILE;
@@ -178,7 +180,12 @@ function registerRoute(
 	};
 }
 
-function get(path: string, handler: HandlerFunction, responseSchemaValue?: unknown, parameterSchemaValue?: unknown): void {
+function get(
+	path: string,
+	handler: HandlerFunction,
+	responseSchemaValue?: unknown,
+	parameterSchemaValue?: unknown,
+): void {
 	registerRoute("GET", path, handler, undefined, responseSchemaValue, parameterSchemaValue);
 }
 
@@ -294,7 +301,12 @@ post("/multipart/small", post_multipart_small, requestSchema("multipart/small"),
 post("/multipart/medium", post_multipart_medium, requestSchema("multipart/medium"), responseSchema("multipart/medium"));
 post("/multipart/large", post_multipart_large, requestSchema("multipart/large"), responseSchema("multipart/large"));
 
-post("/urlencoded/simple", post_urlencoded_simple, requestSchema("urlencoded/simple"), responseSchema("urlencoded/simple"));
+post(
+	"/urlencoded/simple",
+	post_urlencoded_simple,
+	requestSchema("urlencoded/simple"),
+	responseSchema("urlencoded/simple"),
+);
 post(
 	"/urlencoded/complex",
 	post_urlencoded_complex,
@@ -303,7 +315,12 @@ post(
 );
 
 get("/path/simple/{id}", get_path_simple, responseSchema("path/simple"), parameterSchema("path/simple"));
-get("/path/multiple/{user_id}/{post_id}", get_path_multiple, responseSchema("path/multiple"), parameterSchema("path/multiple"));
+get(
+	"/path/multiple/{user_id}/{post_id}",
+	get_path_multiple,
+	responseSchema("path/multiple"),
+	parameterSchema("path/multiple"),
+);
 get(
 	"/path/deep/{org}/{team}/{project}/{resource}/{id}",
 	get_path_deep,

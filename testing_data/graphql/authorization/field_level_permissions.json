@@ -1,62 +1,54 @@
 {
-  "name": "field_level_permissions",
-  "description": "Field-level authorization - user can access id and email but not privateData",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  user(id: String!): User\n}\n\ntype User {\n  id: String!\n  email: String!\n  privateData: String\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  user(id: \"user123\") {\n    id\n    email\n    privateData\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "variables": {
-      "userId": "user123"
-    },
-    "body": {
-      "query": "query {\n  user(id: \"user123\") {\n    id\n    email\n    privateData\n  }\n}",
-      "variables": {
-        "userId": "user123"
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data_partial": {
-      "user": {
-        "id": "user123",
-        "email": "john@example.com"
-      }
-    },
-    "errors": [
-      {
-        "message": "Field 'privateData' requires elevated permissions",
-        "path": [
-          "user",
-          "privateData"
-        ]
-      }
-    ]
-  },
-  "resolvers": {
-    "Query.user": {
-      "type": "mock",
-      "return_value": {
-        "id": "user123",
-        "email": "john@example.com",
-        "privateData": null
-      }
-    },
-    "User.privateData": {
-      "type": "error",
-      "error_message": "Field 'privateData' requires elevated permissions"
-    }
-  },
-  "tags": [
-    "authorization",
-    "field-level",
-    "partial-data",
-    "mixed-response"
-  ]
+	"name": "field_level_permissions",
+	"description": "Field-level authorization - user can access id and email but not privateData",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  user(id: String!): User\n}\n\ntype User {\n  id: String!\n  email: String!\n  privateData: String\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  user(id: \"user123\") {\n    id\n    email\n    privateData\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"variables": {
+			"userId": "user123"
+		},
+		"body": {
+			"query": "query {\n  user(id: \"user123\") {\n    id\n    email\n    privateData\n  }\n}",
+			"variables": {
+				"userId": "user123"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data_partial": {
+			"user": {
+				"id": "user123",
+				"email": "john@example.com"
+			}
+		},
+		"errors": [
+			{
+				"message": "Field 'privateData' requires elevated permissions",
+				"path": ["user", "privateData"]
+			}
+		]
+	},
+	"resolvers": {
+		"Query.user": {
+			"type": "mock",
+			"return_value": {
+				"id": "user123",
+				"email": "john@example.com",
+				"privateData": null
+			}
+		},
+		"User.privateData": {
+			"type": "error",
+			"error_message": "Field 'privateData' requires elevated permissions"
+		}
+	},
+	"tags": ["authorization", "field-level", "partial-data", "mixed-response"]
 }

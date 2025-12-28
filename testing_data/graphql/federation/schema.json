@@ -23,9 +23,7 @@
 			"name": "entity_resolution_basic.json",
 			"description": "Basic _entities query for Apollo Federation entity resolution",
 			"feature": "Entity Resolution",
-			"federation_directives": [
-				"@key"
-			],
+			"federation_directives": ["@key"],
 			"test_scenario": "Simple entity lookup by ID via _entities query",
 			"expected_status": 200,
 			"apollo_federation_spec_section": "Entity Resolution"
@@ -34,12 +32,8 @@
 			"name": "entity_with_key.json",
 			"description": "Entity with @key directive for federation subgraph key definition",
 			"feature": "Entity Keys",
-			"federation_directives": [
-				"@key"
-			],
-			"key_fields": [
-				"id"
-			],
+			"federation_directives": ["@key"],
+			"key_fields": ["id"],
 			"test_scenario": "Resolve entity with single @key field and nested object",
 			"expected_status": 200,
 			"apollo_federation_spec_section": "Entity Keys"
@@ -48,13 +42,8 @@
 			"name": "entity_with_compound_key.json",
 			"description": "Entity with compound @key directive spanning multiple fields",
 			"feature": "Compound Keys",
-			"federation_directives": [
-				"@key"
-			],
-			"key_fields": [
-				"sku",
-				"category"
-			],
+			"federation_directives": ["@key"],
+			"key_fields": ["sku", "category"],
 			"test_scenario": "Resolve entity using composite key (sku + category)",
 			"expected_status": 200,
 			"apollo_federation_spec_section": "Compound Entity Keys"
@@ -63,14 +52,8 @@
 			"name": "requires_directive.json",
 			"description": "Field with @requires directive for dependent field resolution",
 			"feature": "Field Requirements",
-			"federation_directives": [
-				"@key",
-				"@requires"
-			],
-			"requires_fields": [
-				"weight",
-				"destination"
-			],
+			"federation_directives": ["@key", "@requires"],
+			"requires_fields": ["weight", "destination"],
 			"computed_field": "shippingEstimate",
 			"test_scenario": "Resolve computed field that requires access to other fields",
 			"expected_status": 200,
@@ -80,13 +63,8 @@
 			"name": "provides_directive.json",
 			"description": "Field with @provides directive for optimized nested field resolution",
 			"feature": "Field Provisions",
-			"federation_directives": [
-				"@key",
-				"@provides"
-			],
-			"provides_fields": [
-				"author { id name }"
-			],
+			"federation_directives": ["@key", "@provides"],
+			"provides_fields": ["author { id name }"],
 			"optimized_field": "reviews",
 			"test_scenario": "Resolve field with provided nested data for optimization",
 			"expected_status": 200,
@@ -96,15 +74,8 @@
 			"name": "external_field.json",
 			"description": "Reference to @external field used by @requires in another subgraph",
 			"feature": "External Fields",
-			"federation_directives": [
-				"@key",
-				"@external",
-				"@requires"
-			],
-			"external_fields": [
-				"weight",
-				"dimensions"
-			],
+			"federation_directives": ["@key", "@external", "@requires"],
+			"external_fields": ["weight", "dimensions"],
 			"test_scenario": "Resolve computed field based on external (reference) fields",
 			"expected_status": 200,
 			"apollo_federation_spec_section": "External Fields (@external)"
@@ -123,13 +94,8 @@
 			"name": "cross_subgraph_query.json",
 			"description": "Query spanning multiple subgraphs with federation entity references",
 			"feature": "Cross-Subgraph Queries",
-			"federation_directives": [
-				"@key"
-			],
-			"multiple_entity_types": [
-				"User",
-				"Order"
-			],
+			"federation_directives": ["@key"],
+			"multiple_entity_types": ["User", "Order"],
 			"test_scenario": "Query entities from multiple federated subgraphs with references",
 			"expected_status": 200,
 			"apollo_federation_spec_section": "Entity Resolution Across Subgraphs"
@@ -138,9 +104,7 @@
 			"name": "federation_error_missing_entity.json",
 			"description": "Entity not found - returns null in _entities array per Apollo Federation spec",
 			"feature": "Error Handling",
-			"federation_directives": [
-				"@key"
-			],
+			"federation_directives": ["@key"],
 			"error_scenario": "Missing Entity (404 not returned, null in response)",
 			"test_scenario": "Request entity with non-existent ID returns null",
 			"expected_status": 200,
@@ -162,14 +126,8 @@
 			"name": "shareable_directive.json",
 			"description": "Field with @shareable directive - multiple subgraphs can contribute to the same field",
 			"feature": "Shared Fields",
-			"federation_directives": [
-				"@key",
-				"@shareable"
-			],
-			"shareable_fields": [
-				"name",
-				"description"
-			],
+			"federation_directives": ["@key", "@shareable"],
+			"shareable_fields": ["name", "description"],
 			"test_scenario": "Resolve entity with shared field resolved by multiple subgraphs",
 			"expected_status": 200,
 			"apollo_federation_spec_section": "Shared Fields (@shareable)"
@@ -178,13 +136,8 @@
 			"name": "inaccessible_directive.json",
 			"description": "Field with @inaccessible directive - internal-only fields hidden from public schema",
 			"feature": "Inaccessible Fields",
-			"federation_directives": [
-				"@inaccessible"
-			],
-			"inaccessible_fields": [
-				"internalScore",
-				"internalNotes"
-			],
+			"federation_directives": ["@inaccessible"],
+			"inaccessible_fields": ["internalScore", "internalNotes"],
 			"test_scenario": "Query attempting to access @inaccessible field returns validation error",
 			"expected_status": 400,
 			"error_code": "GRAPHQL_VALIDATION_FAILED",
@@ -194,10 +147,7 @@
 			"name": "override_directive.json",
 			"description": "Field with @override directive for progressive field ownership migration",
 			"feature": "Field Override",
-			"federation_directives": [
-				"@key",
-				"@override"
-			],
+			"federation_directives": ["@key", "@override"],
 			"overridden_field": "email",
 			"test_scenario": "Resolve entity where field ownership migrates from legacy to new subgraph",
 			"expected_status": 200,
@@ -224,45 +174,32 @@
 		"@requires": {
 			"description": "Indicates that a field requires the presence of specific other fields in order to be resolved",
 			"example": "type Shipment { shippingEstimate: Float @requires(fields: \"weight destination\") }",
-			"fixtures_using": [
-				"requires_directive",
-				"external_field"
-			]
+			"fixtures_using": ["requires_directive", "external_field"]
 		},
 		"@provides": {
 			"description": "Indicates that a field in one subgraph may return data that would be available from another subgraph",
 			"example": "type Post { reviews: [Review!] @provides(fields: \"author { id name }\") }",
-			"fixtures_using": [
-				"provides_directive"
-			]
+			"fixtures_using": ["provides_directive"]
 		},
 		"@external": {
 			"description": "Indicates that a field is defined and owned by another subgraph",
 			"example": "type Parcel { weight: Float @external }",
-			"fixtures_using": [
-				"external_field"
-			]
+			"fixtures_using": ["external_field"]
 		},
 		"@shareable": {
 			"description": "Designates a field as shareable across multiple subgraphs - enables independent resolution by multiple subgraphs",
 			"example": "type Product { name: String! @shareable description: String! @shareable }",
-			"fixtures_using": [
-				"shareable_directive"
-			]
+			"fixtures_using": ["shareable_directive"]
 		},
 		"@inaccessible": {
 			"description": "Marks a field as inaccessible to clients - hidden from public schema and filtered by the gateway",
 			"example": "type User { internalScore: Int @inaccessible internalNotes: String @inaccessible }",
-			"fixtures_using": [
-				"inaccessible_directive"
-			]
+			"fixtures_using": ["inaccessible_directive"]
 		},
 		"@override": {
 			"description": "Indicates that a field is being migrated from one subgraph to another - enables progressive field ownership transfers",
 			"example": "type User { email: String! @override(from: \"legacy-subgraph\") }",
-			"fixtures_using": [
-				"override_directive"
-			]
+			"fixtures_using": ["override_directive"]
 		}
 	},
 	"federation_queries_reference": {

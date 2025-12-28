@@ -1,871 +1,871 @@
 {
-  "metadata": {
-    "timestamp": "2025-12-20T16:52:49.781579284+00:00",
-    "git_commit": "25e4fdf13ab4a8fa7728bb0c565fb5e42d39244e",
-    "git_branch": "HEAD",
-    "git_dirty": false,
-    "host": {
-      "os": "linux",
-      "arch": "x86_64",
-      "cpu_model": "AMD EPYC 7763 64-Core Processor",
-      "cpu_cores": 2,
-      "cpu_threads": 4,
-      "memory_gb": 15.620681762695312,
-      "hostname": "runnervmh13bl"
-    }
-  },
-  "framework": {
-    "name": "robyn-raw",
-    "version": "0.1.0",
-    "language": "python",
-    "runtime": "Python 3.13.11",
-    "app_dir": "tools/benchmark-harness/apps/robyn-raw",
-    "variant": null
-  },
-  "configuration": {
-    "duration_secs": 10,
-    "concurrency": 50,
-    "warmup_secs": 2,
-    "load_tool": "oha"
-  },
-  "suites": [
-    {
-      "name": "all",
-      "description": "All workloads",
-      "workloads": [
-        {
-          "name": "json-small",
-          "description": "Small JSON payload (~86 bytes)",
-          "category": "json-bodies",
-          "payload_size_bytes": 86,
-          "endpoint": {
-            "method": "POST",
-            "path": "/json/small"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6094.439644911578,
-              "bytes_per_sec": 450618.5798796752,
-              "total_requests": 60952,
-              "successful_requests": 60952,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 8.202372419280241,
-              "median_ms": 8.718575,
-              "p90_ms": 11.401764,
-              "p95_ms": 11.792774000000001,
-              "p99_ms": 12.064062,
-              "p999_ms": 12.279342,
-              "min_ms": 2.185076,
-              "max_ms": 15.384358,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.88825511932373,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "json-medium",
-          "description": "Medium JSON payload (~1.5 KB)",
-          "category": "json-bodies",
-          "payload_size_bytes": 1536,
-          "endpoint": {
-            "method": "POST",
-            "path": "/json/medium"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6187.976118627221,
-              "bytes_per_sec": 680127.4462675109,
-              "total_requests": 61888,
-              "successful_requests": 61888,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 8.080958694475797,
-              "median_ms": 8.528972,
-              "p90_ms": 11.275988,
-              "p95_ms": 11.665524999999999,
-              "p99_ms": 12.077919,
-              "p999_ms": 14.065411,
-              "min_ms": 2.172512,
-              "max_ms": 32.938793000000004,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "json-large",
-          "description": "Large JSON payload (~15 KB)",
-          "category": "json-bodies",
-          "payload_size_bytes": 15360,
-          "endpoint": {
-            "method": "POST",
-            "path": "/json/large"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6133.571838827127,
-              "bytes_per_sec": 1115400.1678533696,
-              "total_requests": 61342,
-              "successful_requests": 61342,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 8.14990432439802,
-              "median_ms": 8.641602,
-              "p90_ms": 11.401854,
-              "p95_ms": 11.662502,
-              "p99_ms": 11.87504,
-              "p999_ms": 12.120295,
-              "min_ms": 2.192878,
-              "max_ms": 12.506691,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "json-very-large",
-          "description": "Very large JSON payload (~150 KB)",
-          "category": "json-bodies",
-          "payload_size_bytes": 153600,
-          "endpoint": {
-            "method": "POST",
-            "path": "/json/very-large"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6214.854831582682,
-              "bytes_per_sec": 1235761.294792961,
-              "total_requests": 62160,
-              "successful_requests": 62160,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 8.045074753823922,
-              "median_ms": 8.559316,
-              "p90_ms": 11.179205,
-              "p95_ms": 11.590305,
-              "p99_ms": 11.822977999999999,
-              "p999_ms": 12.069561,
-              "min_ms": 2.169787,
-              "max_ms": 12.569735999999999,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "path-simple",
-          "description": "Single path parameter",
-          "category": "path-params",
-          "payload_size_bytes": null,
-          "endpoint": {
-            "method": "GET",
-            "path": "/path/simple/test123"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6708.153252404834,
-              "bytes_per_sec": 107250.4609430381,
-              "total_requests": 67089,
-              "successful_requests": 67089,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 7.453067087307373,
-              "median_ms": 8.084128,
-              "p90_ms": 10.035194,
-              "p95_ms": 10.584829000000001,
-              "p99_ms": 11.173184,
-              "p999_ms": 11.610449000000001,
-              "min_ms": 2.212189,
-              "max_ms": 12.379817,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "path-multiple",
-          "description": "Multiple path parameters",
-          "category": "path-params",
-          "payload_size_bytes": null,
-          "endpoint": {
-            "method": "GET",
-            "path": "/path/multiple/user456/post789"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6594.655898997031,
-              "bytes_per_sec": 270175.93363278755,
-              "total_requests": 65960,
-              "successful_requests": 65960,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 7.580242176756148,
-              "median_ms": 8.169557,
-              "p90_ms": 10.256128,
-              "p95_ms": 10.691296,
-              "p99_ms": 11.234429,
-              "p999_ms": 11.81831,
-              "min_ms": 2.093625,
-              "max_ms": 18.807317,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "path-deep",
-          "description": "Deep path hierarchy (5 levels)",
-          "category": "path-params",
-          "payload_size_bytes": null,
-          "endpoint": {
-            "method": "GET",
-            "path": "/path/deep/acme/engineering/backend/api/item123"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6349.768577349817,
-              "bytes_per_sec": 551994.9574213304,
-              "total_requests": 63511,
-              "successful_requests": 63511,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 7.869990923685333,
-              "median_ms": 8.358351,
-              "p90_ms": 10.781661999999999,
-              "p95_ms": 11.248605,
-              "p99_ms": 11.554337,
-              "p999_ms": 11.959261,
-              "min_ms": 2.0781680000000002,
-              "max_ms": 12.082222999999999,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "path-int",
-          "description": "Integer path parameter",
-          "category": "path-params",
-          "payload_size_bytes": null,
-          "endpoint": {
-            "method": "GET",
-            "path": "/path/int/42"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6702.362405513314,
-              "bytes_per_sec": 60276.270628504906,
-              "total_requests": 67037,
-              "successful_requests": 67037,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 7.456930893889874,
-              "median_ms": 8.022163,
-              "p90_ms": 10.190474,
-              "p95_ms": 10.654031,
-              "p99_ms": 11.112257,
-              "p999_ms": 11.728793,
-              "min_ms": 1.87747,
-              "max_ms": 12.179106,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "path-uuid",
-          "description": "UUID path parameter",
-          "category": "path-params",
-          "payload_size_bytes": null,
-          "endpoint": {
-            "method": "GET",
-            "path": "/path/uuid/550e8400-e29b-41d4-a716-446655440000"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6681.928255322877,
-              "bytes_per_sec": 313815.6727182742,
-              "total_requests": 66832,
-              "successful_requests": 66832,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 7.48061461356358,
-              "median_ms": 8.046405,
-              "p90_ms": 10.136364,
-              "p95_ms": 10.669591,
-              "p99_ms": 11.259875000000001,
-              "p999_ms": 11.837233000000001,
-              "min_ms": 2.0056100000000003,
-              "max_ms": 14.331035,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "path-date",
-          "description": "Date path parameter",
-          "category": "path-params",
-          "payload_size_bytes": null,
-          "endpoint": {
-            "method": "GET",
-            "path": "/path/date/2024-01-15"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6699.880476913911,
-              "bytes_per_sec": 140592.5044239081,
-              "total_requests": 67008,
-              "successful_requests": 67008,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 7.4618595461035175,
-              "median_ms": 8.046427,
-              "p90_ms": 10.150883,
-              "p95_ms": 10.549248,
-              "p99_ms": 11.197640999999999,
-              "p999_ms": 11.663571,
-              "min_ms": 1.993968,
-              "max_ms": 13.203439000000001,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "query-few",
-          "description": "Few query parameters (3)",
-          "category": "query-params",
-          "payload_size_bytes": null,
-          "endpoint": {
-            "method": "GET",
-            "path": "/query/few?q=search&page=1&limit=20"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6466.423555824018,
-              "bytes_per_sec": 12922.848466841357,
-              "total_requests": 64673,
-              "successful_requests": 64673,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 7.729191275103316,
-              "median_ms": 8.327891000000001,
-              "p90_ms": 10.509243,
-              "p95_ms": 11.01759,
-              "p99_ms": 11.55213,
-              "p999_ms": 11.831662,
-              "min_ms": 2.1023690000000004,
-              "max_ms": 12.849598,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "query-medium",
-          "description": "Medium query parameters (8)",
-          "category": "query-params",
-          "payload_size_bytes": null,
-          "endpoint": {
-            "method": "GET",
-            "path": "/query/medium?category=electronics&tags=phone,smart&min_price=100&max_price=1000&sort=price&order=asc&page=1&limit=20"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6020.628442900982,
-              "bytes_per_sec": 12031.258831328383,
-              "total_requests": 60218,
-              "successful_requests": 60218,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 8.302556425342164,
-              "median_ms": 8.746925,
-              "p90_ms": 11.470974,
-              "p95_ms": 11.733307,
-              "p99_ms": 12.060675999999999,
-              "p999_ms": 12.678772,
-              "min_ms": 2.027979,
-              "max_ms": 14.395510999999999,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "query-many",
-          "description": "Many query parameters (15+)",
-          "category": "query-params",
-          "payload_size_bytes": null,
-          "endpoint": {
-            "method": "GET",
-            "path": "/query/many?q=search&page=1&limit=20&sort=date&order=desc&filter=active&category=tech&subcategory=mobile&brand=test&min_price=0&max_price=999&rating=4&verified=true&in_stock=true&shipping=fast&color=blue"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 5775.458499856574,
-              "bytes_per_sec": 11540.918283429335,
-              "total_requests": 57762,
-              "successful_requests": 57762,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 8.654220251091614,
-              "median_ms": 9.25873,
-              "p90_ms": 11.873066,
-              "p95_ms": 12.212613000000001,
-              "p99_ms": 12.557927999999999,
-              "p999_ms": 13.201641,
-              "min_ms": 2.224936,
-              "max_ms": 14.70462,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "urlencoded-simple",
-          "description": "Simple URL-encoded form (4 fields)",
-          "category": "forms",
-          "payload_size_bytes": 60,
-          "endpoint": {
-            "method": "POST",
-            "path": "/urlencoded/simple"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 5587.106266138415,
-              "bytes_per_sec": 424240.1573994822,
-              "total_requests": 55883,
-              "successful_requests": 55883,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 8.949263670051813,
-              "median_ms": 9.653487,
-              "p90_ms": 12.367361,
-              "p95_ms": 12.846635000000001,
-              "p99_ms": 13.184977,
-              "p999_ms": 13.958941000000001,
-              "min_ms": 2.26822,
-              "max_ms": 14.482838,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "urlencoded-complex",
-          "description": "Complex URL-encoded form (18 fields)",
-          "category": "forms",
-          "payload_size_bytes": 300,
-          "endpoint": {
-            "method": "POST",
-            "path": "/urlencoded/complex"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 4853.304511756856,
-              "bytes_per_sec": 1944170.3964938417,
-              "total_requests": 48540,
-              "successful_requests": 48540,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 10.302213660734223,
-              "median_ms": 11.122358,
-              "p90_ms": 13.995702,
-              "p95_ms": 14.243495,
-              "p99_ms": 14.781039,
-              "p999_ms": 15.519016,
-              "min_ms": 2.643331,
-              "max_ms": 16.034504000000002,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "multipart-small",
-          "description": "Small multipart file upload (~1 KB)",
-          "category": "multipart",
-          "payload_size_bytes": 1024,
-          "endpoint": {
-            "method": "POST",
-            "path": "/multipart/small"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 7261.623143242193,
-              "bytes_per_sec": 283008.3395528599,
-              "total_requests": 72630,
-              "successful_requests": 72630,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 6.88211041576194,
-              "median_ms": 6.961925,
-              "p90_ms": 10.220716,
-              "p95_ms": 10.698127,
-              "p99_ms": 11.007867,
-              "p999_ms": 11.352523,
-              "min_ms": 1.887368,
-              "max_ms": 11.646241999999999,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "multipart-medium",
-          "description": "Medium multipart file upload (~10 KB)",
-          "category": "multipart",
-          "payload_size_bytes": 10240,
-          "endpoint": {
-            "method": "POST",
-            "path": "/multipart/medium"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 6693.829349895608,
-              "bytes_per_sec": 267553.20299295953,
-              "total_requests": 66948,
-              "successful_requests": 66948,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 7.467384046428914,
-              "median_ms": 7.76784,
-              "p90_ms": 10.200097999999999,
-              "p95_ms": 10.496501,
-              "p99_ms": 10.907820000000001,
-              "p999_ms": 12.278884,
-              "min_ms": 2.115735,
-              "max_ms": 38.67193,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        },
-        {
-          "name": "multipart-large",
-          "description": "Large multipart file upload (~100 KB)",
-          "category": "multipart",
-          "payload_size_bytes": 102400,
-          "endpoint": {
-            "method": "POST",
-            "path": "/multipart/large"
-          },
-          "results": {
-            "throughput": {
-              "requests_per_sec": 4385.62738485918,
-              "bytes_per_sec": 179605.7495418236,
-              "total_requests": 43862,
-              "successful_requests": 43862,
-              "failed_requests": 0,
-              "success_rate": 1.0
-            },
-            "latency": {
-              "mean_ms": 11.399021463845449,
-              "median_ms": 11.906165999999999,
-              "p90_ms": 15.157869,
-              "p95_ms": 15.518478,
-              "p99_ms": 16.074248,
-              "p999_ms": 16.886008,
-              "min_ms": 3.020476,
-              "max_ms": 17.168625,
-              "stddev_ms": 0.0
-            },
-            "resources": {
-              "cpu": {
-                "avg_percent": 0.0,
-                "peak_percent": 0.0,
-                "p95_percent": 0.0
-              },
-              "memory": {
-                "avg_mb": 45.98046875,
-                "peak_mb": 45.98046875,
-                "p95_mb": 45.98046875
-              }
-            },
-            "profiling": null
-          }
-        }
-      ]
-    }
-  ],
-  "summary": {
-    "total_workloads": 18,
-    "total_requests": 1114295,
-    "overall_success_rate": 1.0,
-    "avg_requests_per_sec": 6189.532914162457,
-    "total_duration_secs": 180,
-    "category_breakdown": [
-      {
-        "category": "path-params",
-        "workload_count": 6,
-        "avg_requests_per_sec": 6622.791477750298,
-        "avg_latency_ms": 7.550450873550972
-      },
-      {
-        "category": "json-bodies",
-        "workload_count": 4,
-        "avg_requests_per_sec": 6157.710608487152,
-        "avg_latency_ms": 8.119577547994496
-      },
-      {
-        "category": "multipart",
-        "workload_count": 3,
-        "avg_requests_per_sec": 6113.69329266566,
-        "avg_latency_ms": 8.582838642012101
-      },
-      {
-        "category": "query-params",
-        "workload_count": 3,
-        "avg_requests_per_sec": 6087.503499527192,
-        "avg_latency_ms": 8.228655983845698
-      },
-      {
-        "category": "forms",
-        "workload_count": 2,
-        "avg_requests_per_sec": 5220.205388947636,
-        "avg_latency_ms": 9.625738665393019
-      }
-    ]
-  },
-  "comparison": null
+	"metadata": {
+		"timestamp": "2025-12-20T16:52:49.781579284+00:00",
+		"git_commit": "25e4fdf13ab4a8fa7728bb0c565fb5e42d39244e",
+		"git_branch": "HEAD",
+		"git_dirty": false,
+		"host": {
+			"os": "linux",
+			"arch": "x86_64",
+			"cpu_model": "AMD EPYC 7763 64-Core Processor",
+			"cpu_cores": 2,
+			"cpu_threads": 4,
+			"memory_gb": 15.620681762695312,
+			"hostname": "runnervmh13bl"
+		}
+	},
+	"framework": {
+		"name": "robyn-raw",
+		"version": "0.1.0",
+		"language": "python",
+		"runtime": "Python 3.13.11",
+		"app_dir": "tools/benchmark-harness/apps/robyn-raw",
+		"variant": null
+	},
+	"configuration": {
+		"duration_secs": 10,
+		"concurrency": 50,
+		"warmup_secs": 2,
+		"load_tool": "oha"
+	},
+	"suites": [
+		{
+			"name": "all",
+			"description": "All workloads",
+			"workloads": [
+				{
+					"name": "json-small",
+					"description": "Small JSON payload (~86 bytes)",
+					"category": "json-bodies",
+					"payload_size_bytes": 86,
+					"endpoint": {
+						"method": "POST",
+						"path": "/json/small"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6094.439644911578,
+							"bytes_per_sec": 450618.5798796752,
+							"total_requests": 60952,
+							"successful_requests": 60952,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 8.202372419280241,
+							"median_ms": 8.718575,
+							"p90_ms": 11.401764,
+							"p95_ms": 11.792774000000001,
+							"p99_ms": 12.064062,
+							"p999_ms": 12.279342,
+							"min_ms": 2.185076,
+							"max_ms": 15.384358,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.88825511932373,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "json-medium",
+					"description": "Medium JSON payload (~1.5 KB)",
+					"category": "json-bodies",
+					"payload_size_bytes": 1536,
+					"endpoint": {
+						"method": "POST",
+						"path": "/json/medium"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6187.976118627221,
+							"bytes_per_sec": 680127.4462675109,
+							"total_requests": 61888,
+							"successful_requests": 61888,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 8.080958694475797,
+							"median_ms": 8.528972,
+							"p90_ms": 11.275988,
+							"p95_ms": 11.665524999999999,
+							"p99_ms": 12.077919,
+							"p999_ms": 14.065411,
+							"min_ms": 2.172512,
+							"max_ms": 32.938793000000004,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "json-large",
+					"description": "Large JSON payload (~15 KB)",
+					"category": "json-bodies",
+					"payload_size_bytes": 15360,
+					"endpoint": {
+						"method": "POST",
+						"path": "/json/large"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6133.571838827127,
+							"bytes_per_sec": 1115400.1678533696,
+							"total_requests": 61342,
+							"successful_requests": 61342,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 8.14990432439802,
+							"median_ms": 8.641602,
+							"p90_ms": 11.401854,
+							"p95_ms": 11.662502,
+							"p99_ms": 11.87504,
+							"p999_ms": 12.120295,
+							"min_ms": 2.192878,
+							"max_ms": 12.506691,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "json-very-large",
+					"description": "Very large JSON payload (~150 KB)",
+					"category": "json-bodies",
+					"payload_size_bytes": 153600,
+					"endpoint": {
+						"method": "POST",
+						"path": "/json/very-large"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6214.854831582682,
+							"bytes_per_sec": 1235761.294792961,
+							"total_requests": 62160,
+							"successful_requests": 62160,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 8.045074753823922,
+							"median_ms": 8.559316,
+							"p90_ms": 11.179205,
+							"p95_ms": 11.590305,
+							"p99_ms": 11.822977999999999,
+							"p999_ms": 12.069561,
+							"min_ms": 2.169787,
+							"max_ms": 12.569735999999999,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "path-simple",
+					"description": "Single path parameter",
+					"category": "path-params",
+					"payload_size_bytes": null,
+					"endpoint": {
+						"method": "GET",
+						"path": "/path/simple/test123"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6708.153252404834,
+							"bytes_per_sec": 107250.4609430381,
+							"total_requests": 67089,
+							"successful_requests": 67089,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 7.453067087307373,
+							"median_ms": 8.084128,
+							"p90_ms": 10.035194,
+							"p95_ms": 10.584829000000001,
+							"p99_ms": 11.173184,
+							"p999_ms": 11.610449000000001,
+							"min_ms": 2.212189,
+							"max_ms": 12.379817,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "path-multiple",
+					"description": "Multiple path parameters",
+					"category": "path-params",
+					"payload_size_bytes": null,
+					"endpoint": {
+						"method": "GET",
+						"path": "/path/multiple/user456/post789"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6594.655898997031,
+							"bytes_per_sec": 270175.93363278755,
+							"total_requests": 65960,
+							"successful_requests": 65960,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 7.580242176756148,
+							"median_ms": 8.169557,
+							"p90_ms": 10.256128,
+							"p95_ms": 10.691296,
+							"p99_ms": 11.234429,
+							"p999_ms": 11.81831,
+							"min_ms": 2.093625,
+							"max_ms": 18.807317,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "path-deep",
+					"description": "Deep path hierarchy (5 levels)",
+					"category": "path-params",
+					"payload_size_bytes": null,
+					"endpoint": {
+						"method": "GET",
+						"path": "/path/deep/acme/engineering/backend/api/item123"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6349.768577349817,
+							"bytes_per_sec": 551994.9574213304,
+							"total_requests": 63511,
+							"successful_requests": 63511,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 7.869990923685333,
+							"median_ms": 8.358351,
+							"p90_ms": 10.781661999999999,
+							"p95_ms": 11.248605,
+							"p99_ms": 11.554337,
+							"p999_ms": 11.959261,
+							"min_ms": 2.0781680000000002,
+							"max_ms": 12.082222999999999,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "path-int",
+					"description": "Integer path parameter",
+					"category": "path-params",
+					"payload_size_bytes": null,
+					"endpoint": {
+						"method": "GET",
+						"path": "/path/int/42"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6702.362405513314,
+							"bytes_per_sec": 60276.270628504906,
+							"total_requests": 67037,
+							"successful_requests": 67037,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 7.456930893889874,
+							"median_ms": 8.022163,
+							"p90_ms": 10.190474,
+							"p95_ms": 10.654031,
+							"p99_ms": 11.112257,
+							"p999_ms": 11.728793,
+							"min_ms": 1.87747,
+							"max_ms": 12.179106,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "path-uuid",
+					"description": "UUID path parameter",
+					"category": "path-params",
+					"payload_size_bytes": null,
+					"endpoint": {
+						"method": "GET",
+						"path": "/path/uuid/550e8400-e29b-41d4-a716-446655440000"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6681.928255322877,
+							"bytes_per_sec": 313815.6727182742,
+							"total_requests": 66832,
+							"successful_requests": 66832,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 7.48061461356358,
+							"median_ms": 8.046405,
+							"p90_ms": 10.136364,
+							"p95_ms": 10.669591,
+							"p99_ms": 11.259875000000001,
+							"p999_ms": 11.837233000000001,
+							"min_ms": 2.0056100000000003,
+							"max_ms": 14.331035,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "path-date",
+					"description": "Date path parameter",
+					"category": "path-params",
+					"payload_size_bytes": null,
+					"endpoint": {
+						"method": "GET",
+						"path": "/path/date/2024-01-15"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6699.880476913911,
+							"bytes_per_sec": 140592.5044239081,
+							"total_requests": 67008,
+							"successful_requests": 67008,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 7.4618595461035175,
+							"median_ms": 8.046427,
+							"p90_ms": 10.150883,
+							"p95_ms": 10.549248,
+							"p99_ms": 11.197640999999999,
+							"p999_ms": 11.663571,
+							"min_ms": 1.993968,
+							"max_ms": 13.203439000000001,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "query-few",
+					"description": "Few query parameters (3)",
+					"category": "query-params",
+					"payload_size_bytes": null,
+					"endpoint": {
+						"method": "GET",
+						"path": "/query/few?q=search&page=1&limit=20"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6466.423555824018,
+							"bytes_per_sec": 12922.848466841357,
+							"total_requests": 64673,
+							"successful_requests": 64673,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 7.729191275103316,
+							"median_ms": 8.327891000000001,
+							"p90_ms": 10.509243,
+							"p95_ms": 11.01759,
+							"p99_ms": 11.55213,
+							"p999_ms": 11.831662,
+							"min_ms": 2.1023690000000004,
+							"max_ms": 12.849598,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "query-medium",
+					"description": "Medium query parameters (8)",
+					"category": "query-params",
+					"payload_size_bytes": null,
+					"endpoint": {
+						"method": "GET",
+						"path": "/query/medium?category=electronics&tags=phone,smart&min_price=100&max_price=1000&sort=price&order=asc&page=1&limit=20"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6020.628442900982,
+							"bytes_per_sec": 12031.258831328383,
+							"total_requests": 60218,
+							"successful_requests": 60218,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 8.302556425342164,
+							"median_ms": 8.746925,
+							"p90_ms": 11.470974,
+							"p95_ms": 11.733307,
+							"p99_ms": 12.060675999999999,
+							"p999_ms": 12.678772,
+							"min_ms": 2.027979,
+							"max_ms": 14.395510999999999,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "query-many",
+					"description": "Many query parameters (15+)",
+					"category": "query-params",
+					"payload_size_bytes": null,
+					"endpoint": {
+						"method": "GET",
+						"path": "/query/many?q=search&page=1&limit=20&sort=date&order=desc&filter=active&category=tech&subcategory=mobile&brand=test&min_price=0&max_price=999&rating=4&verified=true&in_stock=true&shipping=fast&color=blue"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 5775.458499856574,
+							"bytes_per_sec": 11540.918283429335,
+							"total_requests": 57762,
+							"successful_requests": 57762,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 8.654220251091614,
+							"median_ms": 9.25873,
+							"p90_ms": 11.873066,
+							"p95_ms": 12.212613000000001,
+							"p99_ms": 12.557927999999999,
+							"p999_ms": 13.201641,
+							"min_ms": 2.224936,
+							"max_ms": 14.70462,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "urlencoded-simple",
+					"description": "Simple URL-encoded form (4 fields)",
+					"category": "forms",
+					"payload_size_bytes": 60,
+					"endpoint": {
+						"method": "POST",
+						"path": "/urlencoded/simple"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 5587.106266138415,
+							"bytes_per_sec": 424240.1573994822,
+							"total_requests": 55883,
+							"successful_requests": 55883,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 8.949263670051813,
+							"median_ms": 9.653487,
+							"p90_ms": 12.367361,
+							"p95_ms": 12.846635000000001,
+							"p99_ms": 13.184977,
+							"p999_ms": 13.958941000000001,
+							"min_ms": 2.26822,
+							"max_ms": 14.482838,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "urlencoded-complex",
+					"description": "Complex URL-encoded form (18 fields)",
+					"category": "forms",
+					"payload_size_bytes": 300,
+					"endpoint": {
+						"method": "POST",
+						"path": "/urlencoded/complex"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 4853.304511756856,
+							"bytes_per_sec": 1944170.3964938417,
+							"total_requests": 48540,
+							"successful_requests": 48540,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 10.302213660734223,
+							"median_ms": 11.122358,
+							"p90_ms": 13.995702,
+							"p95_ms": 14.243495,
+							"p99_ms": 14.781039,
+							"p999_ms": 15.519016,
+							"min_ms": 2.643331,
+							"max_ms": 16.034504000000002,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "multipart-small",
+					"description": "Small multipart file upload (~1 KB)",
+					"category": "multipart",
+					"payload_size_bytes": 1024,
+					"endpoint": {
+						"method": "POST",
+						"path": "/multipart/small"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 7261.623143242193,
+							"bytes_per_sec": 283008.3395528599,
+							"total_requests": 72630,
+							"successful_requests": 72630,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 6.88211041576194,
+							"median_ms": 6.961925,
+							"p90_ms": 10.220716,
+							"p95_ms": 10.698127,
+							"p99_ms": 11.007867,
+							"p999_ms": 11.352523,
+							"min_ms": 1.887368,
+							"max_ms": 11.646241999999999,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "multipart-medium",
+					"description": "Medium multipart file upload (~10 KB)",
+					"category": "multipart",
+					"payload_size_bytes": 10240,
+					"endpoint": {
+						"method": "POST",
+						"path": "/multipart/medium"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 6693.829349895608,
+							"bytes_per_sec": 267553.20299295953,
+							"total_requests": 66948,
+							"successful_requests": 66948,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 7.467384046428914,
+							"median_ms": 7.76784,
+							"p90_ms": 10.200097999999999,
+							"p95_ms": 10.496501,
+							"p99_ms": 10.907820000000001,
+							"p999_ms": 12.278884,
+							"min_ms": 2.115735,
+							"max_ms": 38.67193,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				},
+				{
+					"name": "multipart-large",
+					"description": "Large multipart file upload (~100 KB)",
+					"category": "multipart",
+					"payload_size_bytes": 102400,
+					"endpoint": {
+						"method": "POST",
+						"path": "/multipart/large"
+					},
+					"results": {
+						"throughput": {
+							"requests_per_sec": 4385.62738485918,
+							"bytes_per_sec": 179605.7495418236,
+							"total_requests": 43862,
+							"successful_requests": 43862,
+							"failed_requests": 0,
+							"success_rate": 1.0
+						},
+						"latency": {
+							"mean_ms": 11.399021463845449,
+							"median_ms": 11.906165999999999,
+							"p90_ms": 15.157869,
+							"p95_ms": 15.518478,
+							"p99_ms": 16.074248,
+							"p999_ms": 16.886008,
+							"min_ms": 3.020476,
+							"max_ms": 17.168625,
+							"stddev_ms": 0.0
+						},
+						"resources": {
+							"cpu": {
+								"avg_percent": 0.0,
+								"peak_percent": 0.0,
+								"p95_percent": 0.0
+							},
+							"memory": {
+								"avg_mb": 45.98046875,
+								"peak_mb": 45.98046875,
+								"p95_mb": 45.98046875
+							}
+						},
+						"profiling": null
+					}
+				}
+			]
+		}
+	],
+	"summary": {
+		"total_workloads": 18,
+		"total_requests": 1114295,
+		"overall_success_rate": 1.0,
+		"avg_requests_per_sec": 6189.532914162457,
+		"total_duration_secs": 180,
+		"category_breakdown": [
+			{
+				"category": "path-params",
+				"workload_count": 6,
+				"avg_requests_per_sec": 6622.791477750298,
+				"avg_latency_ms": 7.550450873550972
+			},
+			{
+				"category": "json-bodies",
+				"workload_count": 4,
+				"avg_requests_per_sec": 6157.710608487152,
+				"avg_latency_ms": 8.119577547994496
+			},
+			{
+				"category": "multipart",
+				"workload_count": 3,
+				"avg_requests_per_sec": 6113.69329266566,
+				"avg_latency_ms": 8.582838642012101
+			},
+			{
+				"category": "query-params",
+				"workload_count": 3,
+				"avg_requests_per_sec": 6087.503499527192,
+				"avg_latency_ms": 8.228655983845698
+			},
+			{
+				"category": "forms",
+				"workload_count": 2,
+				"avg_requests_per_sec": 5220.205388947636,
+				"avg_latency_ms": 9.625738665393019
+			}
+		]
+	},
+	"comparison": null
 }

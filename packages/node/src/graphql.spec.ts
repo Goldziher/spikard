@@ -9,7 +9,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Spikard } from "./app";
 import type { Request, RouteMetadata, SpikardApp } from "./index";
 import { TestClient } from "./testing";
-import { wrapBodyHandler } from "./handler-wrapper";
 
 interface GraphQLRequest {
 	query: string;
@@ -120,9 +119,7 @@ describe("GraphQL Methods", () => {
 									content: "A comprehensive guide...",
 									likes: 234,
 									author: { id: "user-1", name: "GraphQL Expert" },
-									comments: [
-										{ id: "comment-1", text: "Great post!", likes: 45 },
-									],
+									comments: [{ id: "comment-1", text: "Great post!", likes: 45 }],
 								},
 							],
 						},
@@ -526,7 +523,7 @@ describe("GraphQL Methods", () => {
 		});
 
 		it("should handle array variables", async () => {
-			const query = "query { search(term: \"test\") { total } }";
+			const query = 'query { search(term: "test") { total } }';
 			const variables = { ids: ["1", "2", "3"] };
 
 			const response = await client.post("/graphql", {
@@ -560,10 +557,7 @@ describe("GraphQL Methods", () => {
 			};
 
 			// Add default GraphQL endpoint
-			appMulti.addRoute(
-				{ method: "POST", path: "/graphql", handler_name: "graphql1", is_async: true },
-				multiHandlerFn,
-			);
+			appMulti.addRoute({ method: "POST", path: "/graphql", handler_name: "graphql1", is_async: true }, multiHandlerFn);
 
 			// Add alternative GraphQL endpoint
 			appMulti.addRoute(
@@ -784,7 +778,7 @@ describe("GraphQL Methods", () => {
 
 	describe("Performance and Limits", () => {
 		it("should handle high nesting level queries", async () => {
-			let query = "query { search(term: \"test\") { users { id";
+			let query = 'query { search(term: "test") { users { id';
 			for (let i = 0; i < 10; i++) {
 				query += " posts { id";
 			}

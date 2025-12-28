@@ -87,10 +87,14 @@ fn test_python_snake_case_conversion() -> Result<()> {
     let result = generate_python_graphql(schema, "resolvers")?;
 
     // Check snake_case conversion in resolver function names
-    assert!(result.contains("resolve_get_user") || result.contains("get_user"),
-        "getUser should convert to get_user or similar");
-    assert!(result.contains("resolve_create_user_profile") || result.contains("create_user_profile"),
-        "createUserProfile should convert to create_user_profile or similar");
+    assert!(
+        result.contains("resolve_get_user") || result.contains("get_user"),
+        "getUser should convert to get_user or similar"
+    );
+    assert!(
+        result.contains("resolve_create_user_profile") || result.contains("create_user_profile"),
+        "createUserProfile should convert to create_user_profile or similar"
+    );
 
     Ok(())
 }
@@ -117,7 +121,10 @@ fn test_python_reconstruct_sdl() -> Result<()> {
     assert!(result.contains("type_defs"), "SDL should be assigned to type_defs");
     assert!(result.contains("type Query"), "Query type should be in SDL");
     assert!(result.contains("type User"), "User type should be in SDL");
-    assert!(result.contains("make_executable_schema"), "Ariadne schema should be created");
+    assert!(
+        result.contains("make_executable_schema"),
+        "Ariadne schema should be created"
+    );
 
     Ok(())
 }
@@ -141,17 +148,24 @@ fn test_python_generate_object_types() -> Result<()> {
     let result = generate_python_graphql(schema, "types")?;
 
     // msgspec.Struct with frozen=True, kw_only=True (CLAUDE.md requirement)
-    assert!(result.contains("class User(Struct, frozen=True, kw_only=True):"),
-        "User should be msgspec.Struct with frozen=True, kw_only=True");
+    assert!(
+        result.contains("class User(Struct, frozen=True, kw_only=True):"),
+        "User should be msgspec.Struct with frozen=True, kw_only=True"
+    );
 
     // NumPy-style docstrings
-    assert!(result.contains("\"\"\"A user in the system\"\"\"") || result.contains("class User"),
-        "Should have NumPy-style docstring");
+    assert!(
+        result.contains("\"\"\"A user in the system\"\"\"") || result.contains("class User"),
+        "Should have NumPy-style docstring"
+    );
 
     // Type hints with Python 3.10+ syntax
     assert!(result.contains("id: str"), "id field should have str type");
     assert!(result.contains("name: str"), "name field should have str type");
-    assert!(result.contains("email: str | None"), "nullable email should use | None (not Optional)");
+    assert!(
+        result.contains("email: str | None"),
+        "nullable email should use | None (not Optional)"
+    );
 
     // Import statements
     assert!(result.contains("from msgspec import Struct"), "msgspec import required");
@@ -178,15 +192,22 @@ fn test_python_generate_enum_types() -> Result<()> {
     let result = generate_python_graphql(schema, "types")?;
 
     // Enum generation
-    assert!(result.contains("class UserStatus(str, Enum):"),
-        "Should generate enum as (str, Enum)");
+    assert!(
+        result.contains("class UserStatus(str, Enum):"),
+        "Should generate enum as (str, Enum)"
+    );
     assert!(result.contains("ACTIVE = \"ACTIVE\""), "enum value mapping required");
-    assert!(result.contains("INACTIVE = \"INACTIVE\""), "enum value mapping required");
+    assert!(
+        result.contains("INACTIVE = \"INACTIVE\""),
+        "enum value mapping required"
+    );
     assert!(result.contains("PENDING = \"PENDING\""), "enum value mapping required");
 
     // NumPy-style docstrings
-    assert!(result.contains("\"\"\"User status enumeration\"\"\"") || result.contains("class UserStatus"),
-        "Should have NumPy-style docstring");
+    assert!(
+        result.contains("\"\"\"User status enumeration\"\"\"") || result.contains("class UserStatus"),
+        "Should have NumPy-style docstring"
+    );
 
     // Import
     assert!(result.contains("from enum import Enum"), "Enum import required");
@@ -213,8 +234,10 @@ fn test_python_generate_input_types() -> Result<()> {
     let result = generate_python_graphql(schema, "types")?;
 
     // Input types are also msgspec.Struct
-    assert!(result.contains("class CreateUserInput(Struct, frozen=True, kw_only=True):"),
-        "Input should be msgspec.Struct with frozen=True, kw_only=True");
+    assert!(
+        result.contains("class CreateUserInput(Struct, frozen=True, kw_only=True):"),
+        "Input should be msgspec.Struct with frozen=True, kw_only=True"
+    );
 
     // Type annotations
     assert!(result.contains("name: str"), "required field should not be nullable");
@@ -238,14 +261,20 @@ fn test_python_generate_union_types() -> Result<()> {
     let result = generate_python_graphql(schema, "types")?;
 
     // Union as type alias
-    assert!(result.contains("SearchResult =") || result.contains("SearchResult:"),
-        "Union should be represented as type alias");
+    assert!(
+        result.contains("SearchResult =") || result.contains("SearchResult:"),
+        "Union should be represented as type alias"
+    );
 
     // Check for component types
-    assert!(result.contains("class User") || result.contains("User"),
-        "User type should be present");
-    assert!(result.contains("class Post") || result.contains("Post"),
-        "Post type should be present");
+    assert!(
+        result.contains("class User") || result.contains("User"),
+        "User type should be present"
+    );
+    assert!(
+        result.contains("class Post") || result.contains("Post"),
+        "Post type should be present"
+    );
 
     Ok(())
 }
@@ -276,8 +305,10 @@ fn test_python_generate_scalar_aliases() -> Result<()> {
     // Should generate minimal code for custom types
     assert!(result.contains("#!/usr/bin/env python3"), "shebang required");
     // Should import msgspec.Struct for User type
-    assert!(result.contains("from msgspec import Struct"),
-        "should import msgspec.Struct for custom types");
+    assert!(
+        result.contains("from msgspec import Struct"),
+        "should import msgspec.Struct for custom types"
+    );
 
     // User class should be generated
     assert!(result.contains("class User(Struct"), "should generate User class");
@@ -286,7 +317,10 @@ fn test_python_generate_scalar_aliases() -> Result<()> {
     assert!(result.contains("id: str"), "UUID should map to str");
     assert!(result.contains("name: str"), "String should map to str");
     assert!(result.contains("createdAt: str"), "DateTime should map to str");
-    assert!(result.contains("metadata: str | None"), "JSON should map to str | None (nullable)");
+    assert!(
+        result.contains("metadata: str | None"),
+        "JSON should map to str | None (nullable)"
+    );
 
     Ok(())
 }
@@ -307,19 +341,25 @@ fn test_python_generate_query_resolvers() -> Result<()> {
     let result = generate_python_graphql(schema, "resolvers")?;
 
     // Async resolver functions with proper type hints
-    assert!(result.contains("async def resolve_user") || result.contains("async def"),
-        "resolvers should be async");
+    assert!(
+        result.contains("async def resolve_user") || result.contains("async def"),
+        "resolvers should be async"
+    );
 
     // Python 3.10+ type hints (not Optional)
     assert!(!result.contains("Optional["), "should not use Optional (Python 3.10+)");
 
     // Arguments should be included
-    assert!(result.contains("id:") || result.contains("User"),
-        "resolver signature should include arguments and return type");
+    assert!(
+        result.contains("id:") || result.contains("User"),
+        "resolver signature should include arguments and return type"
+    );
 
     // NotImplementedError placeholder
-    assert!(result.contains("NotImplementedError") || result.contains("pass"),
-        "resolver body should have placeholder");
+    assert!(
+        result.contains("NotImplementedError") || result.contains("pass"),
+        "resolver body should have placeholder"
+    );
 
     Ok(())
 }
@@ -345,10 +385,14 @@ fn test_python_generate_mutation_resolvers() -> Result<()> {
     let result = generate_python_graphql(schema, "resolvers")?;
 
     // Mutation resolvers
-    assert!(result.contains("async def resolve_create_user") || result.contains("create_user"),
-        "createUser resolver should exist");
-    assert!(result.contains("async def resolve_update_user") || result.contains("update_user"),
-        "updateUser resolver should exist");
+    assert!(
+        result.contains("async def resolve_create_user") || result.contains("create_user"),
+        "createUser resolver should exist"
+    );
+    assert!(
+        result.contains("async def resolve_update_user") || result.contains("update_user"),
+        "updateUser resolver should exist"
+    );
 
     Ok(())
 }
@@ -373,22 +417,32 @@ fn test_python_generate_ariadne_schema() -> Result<()> {
     let result = generate_python_graphql(schema, "schema")?;
 
     // Ariadne imports
-    assert!(result.contains("from ariadne import make_executable_schema"),
-        "Ariadne imports required");
-    assert!(result.contains("QueryType") || result.contains("query ="),
-        "QueryType setup required");
-    assert!(result.contains("MutationType") || result.contains("mutation ="),
-        "MutationType setup required");
+    assert!(
+        result.contains("from ariadne import make_executable_schema"),
+        "Ariadne imports required"
+    );
+    assert!(
+        result.contains("QueryType") || result.contains("query ="),
+        "QueryType setup required"
+    );
+    assert!(
+        result.contains("MutationType") || result.contains("mutation ="),
+        "MutationType setup required"
+    );
 
     // Schema execution
-    assert!(result.contains("make_executable_schema"),
-        "make_executable_schema call required");
+    assert!(
+        result.contains("make_executable_schema"),
+        "make_executable_schema call required"
+    );
     assert!(result.contains("type_defs"), "type_defs variable required");
     assert!(result.contains("schema ="), "schema variable required");
 
     // Export
-    assert!(result.contains("__all__") || result.contains("schema"),
-        "schema should be accessible");
+    assert!(
+        result.contains("__all__") || result.contains("schema"),
+        "schema should be accessible"
+    );
 
     Ok(())
 }
@@ -424,12 +478,18 @@ fn test_python_complete_output() -> Result<()> {
     let result = generate_python_graphql(schema, "all")?;
 
     // Should include all three components
-    assert!(result.contains("class User") || result.contains("type User"),
-        "types section required");
-    assert!(result.contains("async def") || result.contains("resolve_"),
-        "resolvers section required");
-    assert!(result.contains("make_executable_schema") || result.contains("type_defs"),
-        "schema section required");
+    assert!(
+        result.contains("class User") || result.contains("type User"),
+        "types section required"
+    );
+    assert!(
+        result.contains("async def") || result.contains("resolve_"),
+        "resolvers section required"
+    );
+    assert!(
+        result.contains("make_executable_schema") || result.contains("type_defs"),
+        "schema section required"
+    );
 
     Ok(())
 }
@@ -449,10 +509,14 @@ fn test_python_deprecation_with_docstrings() -> Result<()> {
     let result = generate_python_graphql(schema, "resolvers")?;
 
     // Both old and new resolvers should be present
-    assert!(result.contains("resolve_old_field") || result.contains("old_field"),
-        "deprecated field resolver should exist");
-    assert!(result.contains("resolve_new_field") || result.contains("new_field"),
-        "new field resolver should exist");
+    assert!(
+        result.contains("resolve_old_field") || result.contains("old_field"),
+        "deprecated field resolver should exist"
+    );
+    assert!(
+        result.contains("resolve_new_field") || result.contains("new_field"),
+        "new field resolver should exist"
+    );
 
     Ok(())
 }
@@ -483,16 +547,24 @@ fn test_python_complex_nested_types() -> Result<()> {
     let result = generate_python_graphql(schema, "types")?;
 
     // All types should be generated
-    assert!(result.contains("class User") || result.contains("User"),
-        "User type required");
-    assert!(result.contains("class Post") || result.contains("Post"),
-        "Post type required");
-    assert!(result.contains("class Profile") || result.contains("Profile"),
-        "Profile type required");
+    assert!(
+        result.contains("class User") || result.contains("User"),
+        "User type required"
+    );
+    assert!(
+        result.contains("class Post") || result.contains("Post"),
+        "Post type required"
+    );
+    assert!(
+        result.contains("class Profile") || result.contains("Profile"),
+        "Profile type required"
+    );
 
     // Nested list handling
-    assert!(result.contains("list[") || result.contains("["),
-        "list notation should be Python 3.10+ style (list[T])");
+    assert!(
+        result.contains("list[") || result.contains("["),
+        "list notation should be Python 3.10+ style (list[T])"
+    );
 
     Ok(())
 }
@@ -507,17 +579,23 @@ fn test_python_header_and_imports() -> Result<()> {
 
     let types_result = generate_python_graphql(schema, "types")?;
     assert!(types_result.contains("#!/usr/bin/env python3"), "shebang required");
-    assert!(types_result.contains("\"\"\"GraphQL types generated from schema.\"\"\""),
-        "module docstring required");
+    assert!(
+        types_result.contains("\"\"\"GraphQL types generated from schema.\"\"\""),
+        "module docstring required"
+    );
 
     let resolvers_result = generate_python_graphql(schema, "resolvers")?;
     assert!(resolvers_result.contains("#!/usr/bin/env python3"), "shebang required");
-    assert!(resolvers_result.contains("\"\"\"GraphQL resolver functions.\"\"\""),
-        "module docstring required");
+    assert!(
+        resolvers_result.contains("\"\"\"GraphQL resolver functions.\"\"\""),
+        "module docstring required"
+    );
 
     let schema_result = generate_python_graphql(schema, "schema")?;
-    assert!(schema_result.contains("# GraphQL Schema Definition") || schema_result.contains("type_defs"),
-        "schema definition header required");
+    assert!(
+        schema_result.contains("# GraphQL Schema Definition") || schema_result.contains("type_defs"),
+        "schema definition header required"
+    );
 
     Ok(())
 }
@@ -551,8 +629,10 @@ fn test_python_struct_configuration_per_claude() -> Result<()> {
     let result = generate_python_graphql(schema, "types")?;
 
     // CLAUDE.md requirement: "msgspec.Struct with frozen=True, kw_only=True (MANDATORY)"
-    assert!(result.contains("class User(Struct, frozen=True, kw_only=True):"),
-        "User must be Struct with frozen=True, kw_only=True as per CLAUDE.md");
+    assert!(
+        result.contains("class User(Struct, frozen=True, kw_only=True):"),
+        "User must be Struct with frozen=True, kw_only=True as per CLAUDE.md"
+    );
 
     Ok(())
 }
@@ -582,36 +662,48 @@ fn test_python_no_any_type_usage() -> Result<()> {
     let resolvers = generate_python_graphql(schema, "resolvers")?;
 
     // CRITICAL: No Any import in resolvers
-    assert!(!resolvers.contains("from typing import Any"),
-        "Resolvers MUST NOT import Any type");
+    assert!(
+        !resolvers.contains("from typing import Any"),
+        "Resolvers MUST NOT import Any type"
+    );
 
     // Should import GraphQLResolveInfo instead
-    assert!(resolvers.contains("from graphql import GraphQLResolveInfo"),
-        "Resolvers must import GraphQLResolveInfo");
+    assert!(
+        resolvers.contains("from graphql import GraphQLResolveInfo"),
+        "Resolvers must import GraphQLResolveInfo"
+    );
 
     // Verify resolver signature uses proper types
-    assert!(resolvers.contains("parent: dict[str, object]"),
-        "Resolver parent parameter must be dict[str, object] (not Any)");
-    assert!(resolvers.contains("info: GraphQLResolveInfo"),
-        "Resolver info parameter must be GraphQLResolveInfo (not Any)");
+    assert!(
+        resolvers.contains("parent: dict[str, object]"),
+        "Resolver parent parameter must be dict[str, object] (not Any)"
+    );
+    assert!(
+        resolvers.contains("info: GraphQLResolveInfo"),
+        "Resolver info parameter must be GraphQLResolveInfo (not Any)"
+    );
 
     // Test types
     let types = generate_python_graphql(schema, "types")?;
 
     // CRITICAL: No Any import in types
-    assert!(!types.contains("from typing import Any"),
-        "Types MUST NOT import Any type");
+    assert!(
+        !types.contains("from typing import Any"),
+        "Types MUST NOT import Any type"
+    );
 
     // Union types should NOT have Any appended (with TypeAlias annotation)
     assert!(
-        types.contains("SearchResult: TypeAlias = \"User | Post\"") ||
-        types.contains("SearchResult: TypeAlias = \"Post | User\""),
+        types.contains("SearchResult: TypeAlias = \"User | Post\"")
+            || types.contains("SearchResult: TypeAlias = \"Post | User\""),
         "Union must be 'SearchResult: TypeAlias = \"User | Post\"' (NOT with Any)"
     );
 
     // No Optional usage (Python 3.10+ uses | None)
-    assert!(!types.contains("Optional["),
-        "Must use | None syntax (Python 3.10+), NOT Optional");
+    assert!(
+        !types.contains("Optional["),
+        "Must use | None syntax (Python 3.10+), NOT Optional"
+    );
 
     Ok(())
 }

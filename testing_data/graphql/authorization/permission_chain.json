@@ -1,75 +1,63 @@
 {
-  "name": "permission_chain",
-  "description": "Multiple permission checks in nested resolvers - partial data with errors",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  dashboard: Dashboard\n}\n\ntype Dashboard {\n  id: String!\n  publicMetrics: Metrics!\n  privateMetrics: Metrics\n  adminSettings: AdminSettings\n}\n\ntype Metrics {\n  pageViews: Int!\n  uniqueVisitors: Int!\n}\n\ntype AdminSettings {\n  apiKey: String\n  webhookUrl: String\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "query {\n  dashboard {\n    id\n    publicMetrics {\n      pageViews\n      uniqueVisitors\n    }\n    privateMetrics {\n      pageViews\n      uniqueVisitors\n    }\n    adminSettings {\n      apiKey\n      webhookUrl\n    }\n  }\n}",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "query {\n  dashboard {\n    id\n    publicMetrics {\n      pageViews\n      uniqueVisitors\n    }\n    privateMetrics {\n      pageViews\n      uniqueVisitors\n    }\n    adminSettings {\n      apiKey\n      webhookUrl\n    }\n  }\n}"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "data_partial": {
-      "dashboard": {
-        "id": "dashboard_main",
-        "publicMetrics": {
-          "pageViews": 15000,
-          "uniqueVisitors": 8500
-        }
-      }
-    },
-    "errors": [
-      {
-        "message": "Insufficient permissions to access privateMetrics",
-        "path": [
-          "dashboard",
-          "privateMetrics"
-        ]
-      },
-      {
-        "message": "Insufficient permissions to access adminSettings",
-        "path": [
-          "dashboard",
-          "adminSettings"
-        ]
-      }
-    ]
-  },
-  "resolvers": {
-    "Query.dashboard": {
-      "type": "mock",
-      "return_value": {
-        "id": "dashboard_main",
-        "publicMetrics": {
-          "pageViews": 15000,
-          "uniqueVisitors": 8500
-        },
-        "privateMetrics": null,
-        "adminSettings": null
-      }
-    },
-    "Dashboard.privateMetrics": {
-      "type": "error",
-      "error_message": "Insufficient permissions to access privateMetrics"
-    },
-    "Dashboard.adminSettings": {
-      "type": "error",
-      "error_message": "Insufficient permissions to access adminSettings"
-    }
-  },
-  "tags": [
-    "authorization",
-    "nested-fields",
-    "permission-chain",
-    "partial-errors",
-    "mixed-response"
-  ]
+	"name": "permission_chain",
+	"description": "Multiple permission checks in nested resolvers - partial data with errors",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  dashboard: Dashboard\n}\n\ntype Dashboard {\n  id: String!\n  publicMetrics: Metrics!\n  privateMetrics: Metrics\n  adminSettings: AdminSettings\n}\n\ntype Metrics {\n  pageViews: Int!\n  uniqueVisitors: Int!\n}\n\ntype AdminSettings {\n  apiKey: String\n  webhookUrl: String\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "query {\n  dashboard {\n    id\n    publicMetrics {\n      pageViews\n      uniqueVisitors\n    }\n    privateMetrics {\n      pageViews\n      uniqueVisitors\n    }\n    adminSettings {\n      apiKey\n      webhookUrl\n    }\n  }\n}",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "query {\n  dashboard {\n    id\n    publicMetrics {\n      pageViews\n      uniqueVisitors\n    }\n    privateMetrics {\n      pageViews\n      uniqueVisitors\n    }\n    adminSettings {\n      apiKey\n      webhookUrl\n    }\n  }\n}"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"data_partial": {
+			"dashboard": {
+				"id": "dashboard_main",
+				"publicMetrics": {
+					"pageViews": 15000,
+					"uniqueVisitors": 8500
+				}
+			}
+		},
+		"errors": [
+			{
+				"message": "Insufficient permissions to access privateMetrics",
+				"path": ["dashboard", "privateMetrics"]
+			},
+			{
+				"message": "Insufficient permissions to access adminSettings",
+				"path": ["dashboard", "adminSettings"]
+			}
+		]
+	},
+	"resolvers": {
+		"Query.dashboard": {
+			"type": "mock",
+			"return_value": {
+				"id": "dashboard_main",
+				"publicMetrics": {
+					"pageViews": 15000,
+					"uniqueVisitors": 8500
+				},
+				"privateMetrics": null,
+				"adminSettings": null
+			}
+		},
+		"Dashboard.privateMetrics": {
+			"type": "error",
+			"error_message": "Insufficient permissions to access privateMetrics"
+		},
+		"Dashboard.adminSettings": {
+			"type": "error",
+			"error_message": "Insufficient permissions to access adminSettings"
+		}
+	},
+	"tags": ["authorization", "nested-fields", "permission-chain", "partial-errors", "mixed-response"]
 }

@@ -1,90 +1,84 @@
 {
-  "name": "persisted_query_automatic_persisted",
-  "description": "Automatic Persisted Queries (APQ) - Step 1 of 3: Client sends hash only, receives miss, must retry with full query",
-  "operation_type": "query",
-  "endpoint": "/graphql",
-  "schema": "type Query {\n  search(q: String!): [Result!]!\n}\n\ntype Result {\n  id: ID!\n  title: String!\n  relevance: Float!\n}",
-  "request_notes": "This is Step 1 of the full APQ flow. Complete flow: (1) hash-only request → miss, (2) retry with query+hash → registration, (3) hash-only request → cache hit. Documented in apq_flow_sequence below for sequence-based test generation.",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "variables": {
-      "q": "GraphQL"
-    },
-    "extensions": {
-      "persistedQuery": {
-        "version": 1,
-        "sha256Hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
-      }
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "variables": {
-        "q": "GraphQL"
-      },
-      "extensions": {
-        "persistedQuery": {
-          "version": 1,
-          "sha256Hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
-        }
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 400,
-    "errors": [
-      {
-        "message": "PersistedQueryNotFound",
-        "extensions": {
-          "code": "PERSISTED_QUERY_NOT_FOUND"
-        }
-      }
-    ]
-  },
-  "apq_flow_sequence": [
-    {
-      "step": 1,
-      "description": "Client sends hash only (APQ optimization)",
-      "status_code": 400,
-      "response_type": "miss"
-    },
-    {
-      "step": 2,
-      "description": "Client retries with full query string + hash (automatic registration)",
-      "status_code": 200,
-      "response_type": "success_with_registration"
-    },
-    {
-      "step": 3,
-      "description": "Subsequent request with hash only (cache hit)",
-      "status_code": 200,
-      "response_type": "cache_hit"
-    }
-  ],
-  "resolvers": {
-    "Query.search": {
-      "type": "mock",
-      "return_value": [
-        {
-          "id": "result-1",
-          "title": "GraphQL Official Website",
-          "relevance": 0.98
-        },
-        {
-          "id": "result-2",
-          "title": "GraphQL Best Practices",
-          "relevance": 0.95
-        }
-      ]
-    }
-  },
-  "tags": [
-    "queries",
-    "persisted-queries",
-    "apq",
-    "automatic",
-    "cache"
-  ]
+	"name": "persisted_query_automatic_persisted",
+	"description": "Automatic Persisted Queries (APQ) - Step 1 of 3: Client sends hash only, receives miss, must retry with full query",
+	"operation_type": "query",
+	"endpoint": "/graphql",
+	"schema": "type Query {\n  search(q: String!): [Result!]!\n}\n\ntype Result {\n  id: ID!\n  title: String!\n  relevance: Float!\n}",
+	"request_notes": "This is Step 1 of the full APQ flow. Complete flow: (1) hash-only request → miss, (2) retry with query+hash → registration, (3) hash-only request → cache hit. Documented in apq_flow_sequence below for sequence-based test generation.",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"variables": {
+			"q": "GraphQL"
+		},
+		"extensions": {
+			"persistedQuery": {
+				"version": 1,
+				"sha256Hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+			}
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"variables": {
+				"q": "GraphQL"
+			},
+			"extensions": {
+				"persistedQuery": {
+					"version": 1,
+					"sha256Hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+				}
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"errors": [
+			{
+				"message": "PersistedQueryNotFound",
+				"extensions": {
+					"code": "PERSISTED_QUERY_NOT_FOUND"
+				}
+			}
+		]
+	},
+	"apq_flow_sequence": [
+		{
+			"step": 1,
+			"description": "Client sends hash only (APQ optimization)",
+			"status_code": 400,
+			"response_type": "miss"
+		},
+		{
+			"step": 2,
+			"description": "Client retries with full query string + hash (automatic registration)",
+			"status_code": 200,
+			"response_type": "success_with_registration"
+		},
+		{
+			"step": 3,
+			"description": "Subsequent request with hash only (cache hit)",
+			"status_code": 200,
+			"response_type": "cache_hit"
+		}
+	],
+	"resolvers": {
+		"Query.search": {
+			"type": "mock",
+			"return_value": [
+				{
+					"id": "result-1",
+					"title": "GraphQL Official Website",
+					"relevance": 0.98
+				},
+				{
+					"id": "result-2",
+					"title": "GraphQL Best Practices",
+					"relevance": 0.95
+				}
+			]
+		}
+	},
+	"tags": ["queries", "persisted-queries", "apq", "automatic", "cache"]
 }

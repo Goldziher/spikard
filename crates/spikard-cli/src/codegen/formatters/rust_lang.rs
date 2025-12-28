@@ -96,9 +96,7 @@ impl Formatter for RustFormatter {
         for import in imports {
             if import.module.starts_with("std::") || import.module == "std" {
                 stdlib.push(import.clone());
-            } else if import.module.starts_with("crate::") {
-                internal.push(import.clone());
-            } else if import.module.starts_with("super::") {
+            } else if import.module.starts_with("crate::") || import.module.starts_with("super::") {
                 internal.push(import.clone());
             } else {
                 external.push(import.clone());

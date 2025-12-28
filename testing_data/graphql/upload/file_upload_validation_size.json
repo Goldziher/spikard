@@ -1,69 +1,64 @@
 {
-  "name": "file_upload_validation_size",
-  "description": "File upload that exceeds maximum file size limit",
-  "operation_type": "mutation",
-  "endpoint": "/graphql",
-  "schema": "scalar Upload\n\ntype Mutation {\n  singleUpload(file: Upload!): File!\n}\n\ntype File {\n  id: ID!\n  filename: String!\n  mimetype: String!\n  size: Int!\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "mutation Upload($file: Upload!) {\n  singleUpload(file: $file) {\n    id\n    filename\n    mimetype\n    size\n  }\n}",
-    "variables": {
-      "file": null
-    },
-    "operationName": "Upload"
-  },
-  "multipart_request": {
-    "description": "File exceeds 10MB size limit",
-    "parts": {
-      "operations": {
-        "type": "form-data",
-        "name": "operations",
-        "content": "{\"query\": \"mutation Upload($file: Upload!) { singleUpload(file: $file) { id filename mimetype size } }\", \"variables\": {\"file\": null}}"
-      },
-      "map": {
-        "type": "form-data",
-        "name": "map",
-        "content": "{\"0\": [\"variables.file\"]}"
-      },
-      "file": {
-        "type": "file",
-        "name": "0",
-        "filename": "large_file.bin",
-        "mimetype": "application/octet-stream",
-        "content": "... 15MB of binary data ... (exceeds 10MB limit)",
-        "size": 15728640
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 400,
-    "errors": [
-      {
-        "message": "File too large",
-        "extensions": {
-          "code": "FILE_TOO_LARGE",
-          "maxSize": 10485760,
-          "uploadedSize": 15728640
-        }
-      }
-    ]
-  },
-  "resolvers": {
-    "Mutation.singleUpload": {
-      "type": "error",
-      "error_message": "File too large",
-      "error_extensions": {
-        "code": "FILE_TOO_LARGE",
-        "maxSize": 10485760,
-        "uploadedSize": 15728640
-      }
-    }
-  },
-  "tags": [
-    "mutations",
-    "file-upload",
-    "validation",
-    "size-limit"
-  ]
+	"name": "file_upload_validation_size",
+	"description": "File upload that exceeds maximum file size limit",
+	"operation_type": "mutation",
+	"endpoint": "/graphql",
+	"schema": "scalar Upload\n\ntype Mutation {\n  singleUpload(file: Upload!): File!\n}\n\ntype File {\n  id: ID!\n  filename: String!\n  mimetype: String!\n  size: Int!\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "mutation Upload($file: Upload!) {\n  singleUpload(file: $file) {\n    id\n    filename\n    mimetype\n    size\n  }\n}",
+		"variables": {
+			"file": null
+		},
+		"operationName": "Upload"
+	},
+	"multipart_request": {
+		"description": "File exceeds 10MB size limit",
+		"parts": {
+			"operations": {
+				"type": "form-data",
+				"name": "operations",
+				"content": "{\"query\": \"mutation Upload($file: Upload!) { singleUpload(file: $file) { id filename mimetype size } }\", \"variables\": {\"file\": null}}"
+			},
+			"map": {
+				"type": "form-data",
+				"name": "map",
+				"content": "{\"0\": [\"variables.file\"]}"
+			},
+			"file": {
+				"type": "file",
+				"name": "0",
+				"filename": "large_file.bin",
+				"mimetype": "application/octet-stream",
+				"content": "... 15MB of binary data ... (exceeds 10MB limit)",
+				"size": 15728640
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"errors": [
+			{
+				"message": "File too large",
+				"extensions": {
+					"code": "FILE_TOO_LARGE",
+					"maxSize": 10485760,
+					"uploadedSize": 15728640
+				}
+			}
+		]
+	},
+	"resolvers": {
+		"Mutation.singleUpload": {
+			"type": "error",
+			"error_message": "File too large",
+			"error_extensions": {
+				"code": "FILE_TOO_LARGE",
+				"maxSize": 10485760,
+				"uploadedSize": 15728640
+			}
+		}
+	},
+	"tags": ["mutations", "file-upload", "validation", "size-limit"]
 }

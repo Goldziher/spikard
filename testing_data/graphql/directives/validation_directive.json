@@ -1,101 +1,95 @@
 {
-  "name": "validation_directive",
-  "description": "Custom @length directive validating string field length constraints at execution time",
-  "operation_type": "mutation",
-  "endpoint": "/graphql",
-  "schema": "directive @length(min: Int, max: Int) on INPUT_FIELD_DEFINITION\n\ninput CreateUserInput {\n  name: String! @length(min: 3, max: 50)\n  bio: String @length(min: 0, max: 500)\n}\n\ntype Mutation {\n  createUser(input: CreateUserInput!): User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  bio: String\n}",
-  "request": {
-    "method": "POST",
-    "path": "/graphql",
-    "query": "mutation CreateUser($input: CreateUserInput!) {\n  createUser(input: $input) {\n    id\n    name\n    bio\n  }\n}",
-    "variables": {
-      "input": {
-        "name": "a",
-        "bio": null
-      }
-    },
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "query": "mutation CreateUser($input: CreateUserInput!) {\n  createUser(input: $input) {\n    id\n    name\n    bio\n  }\n}",
-      "variables": {
-        "input": {
-          "name": "a",
-          "bio": null
-        }
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "data": null,
-    "errors": [
-      {
-        "message": "Validation error on input field 'name': String length must be between 3 and 50 characters (provided: 1)",
-        "path": [
-          "createUser"
-        ],
-        "extensions": {
-          "code": "BAD_USER_INPUT",
-          "field": "name",
-          "constraint": "length",
-          "min": 3,
-          "max": 50,
-          "value_length": 1
-        }
-      }
-    ]
-  },
-  "resolvers": {
-    "Mutation.createUser": {
-      "type": "mock_with_args",
-      "return_value": {
-        "id": "user-1",
-        "name": "John Doe",
-        "bio": null
-      }
-    }
-  },
-  "validation_scenarios": [
-    {
-      "name": "Name too short (1 char)",
-      "input": {
-        "name": "a",
-        "bio": null
-      },
-      "expected_error": "String length must be between 3 and 50 characters"
-    },
-    {
-      "name": "Name too long (51 chars)",
-      "input": {
-        "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "bio": null
-      },
-      "expected_error": "String length must be between 3 and 50 characters",
-      "note": "51 'a' characters exceed max of 50"
-    },
-    {
-      "name": "Bio too long (501 chars)",
-      "input": {
-        "name": "John",
-        "bio": "x"
-      },
-      "expected_error": "String length must be between 0 and 500 characters",
-      "note": "501 'x' characters exceed max of 500"
-    },
-    {
-      "name": "Valid input",
-      "input": {
-        "name": "Jane Doe",
-        "bio": "Software engineer"
-      },
-      "expected_status": 200
-    }
-  ],
-  "tags": [
-    "directives",
-    "validation",
-    "input-constraints"
-  ]
+	"name": "validation_directive",
+	"description": "Custom @length directive validating string field length constraints at execution time",
+	"operation_type": "mutation",
+	"endpoint": "/graphql",
+	"schema": "directive @length(min: Int, max: Int) on INPUT_FIELD_DEFINITION\n\ninput CreateUserInput {\n  name: String! @length(min: 3, max: 50)\n  bio: String @length(min: 0, max: 500)\n}\n\ntype Mutation {\n  createUser(input: CreateUserInput!): User!\n}\n\ntype User {\n  id: ID!\n  name: String!\n  bio: String\n}",
+	"request": {
+		"method": "POST",
+		"path": "/graphql",
+		"query": "mutation CreateUser($input: CreateUserInput!) {\n  createUser(input: $input) {\n    id\n    name\n    bio\n  }\n}",
+		"variables": {
+			"input": {
+				"name": "a",
+				"bio": null
+			}
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"query": "mutation CreateUser($input: CreateUserInput!) {\n  createUser(input: $input) {\n    id\n    name\n    bio\n  }\n}",
+			"variables": {
+				"input": {
+					"name": "a",
+					"bio": null
+				}
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"data": null,
+		"errors": [
+			{
+				"message": "Validation error on input field 'name': String length must be between 3 and 50 characters (provided: 1)",
+				"path": ["createUser"],
+				"extensions": {
+					"code": "BAD_USER_INPUT",
+					"field": "name",
+					"constraint": "length",
+					"min": 3,
+					"max": 50,
+					"value_length": 1
+				}
+			}
+		]
+	},
+	"resolvers": {
+		"Mutation.createUser": {
+			"type": "mock_with_args",
+			"return_value": {
+				"id": "user-1",
+				"name": "John Doe",
+				"bio": null
+			}
+		}
+	},
+	"validation_scenarios": [
+		{
+			"name": "Name too short (1 char)",
+			"input": {
+				"name": "a",
+				"bio": null
+			},
+			"expected_error": "String length must be between 3 and 50 characters"
+		},
+		{
+			"name": "Name too long (51 chars)",
+			"input": {
+				"name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"bio": null
+			},
+			"expected_error": "String length must be between 3 and 50 characters",
+			"note": "51 'a' characters exceed max of 50"
+		},
+		{
+			"name": "Bio too long (501 chars)",
+			"input": {
+				"name": "John",
+				"bio": "x"
+			},
+			"expected_error": "String length must be between 0 and 500 characters",
+			"note": "501 'x' characters exceed max of 500"
+		},
+		{
+			"name": "Valid input",
+			"input": {
+				"name": "Jane Doe",
+				"bio": "Software engineer"
+			},
+			"expected_status": 200
+		}
+	],
+	"tags": ["directives", "validation", "input-constraints"]
 }

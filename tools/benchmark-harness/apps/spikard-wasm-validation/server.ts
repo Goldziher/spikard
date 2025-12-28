@@ -482,8 +482,13 @@ function get(
 		registerRoute("GET", path, handler, undefined, responseSchemaValue, parameterSchemaValue);
 }
 
-function post(path: string, requestSchemaValue?: unknown, responseSchemaValue?: unknown): (handler: HandlerFunction) => void {
-	return (handler: HandlerFunction): void => registerRoute("POST", path, handler, requestSchemaValue, responseSchemaValue);
+function post(
+	path: string,
+	requestSchemaValue?: unknown,
+	responseSchemaValue?: unknown,
+): (handler: HandlerFunction) => void {
+	return (handler: HandlerFunction): void =>
+		registerRoute("POST", path, handler, requestSchemaValue, responseSchemaValue);
 }
 
 function unwrapBody(value: unknown): unknown {
@@ -493,57 +498,83 @@ function unwrapBody(value: unknown): unknown {
 	return value;
 }
 
-post("/json/small", requestSchema("json/small"), responseSchema("json/small"))(async function jsonSmall(
-	body: unknown,
-): Promise<unknown> {
+post(
+	"/json/small",
+	requestSchema("json/small"),
+	responseSchema("json/small"),
+)(async function jsonSmall(body: unknown): Promise<unknown> {
 	return unwrapBody(body);
 });
 
-post("/json/medium", requestSchema("json/medium"), responseSchema("json/medium"))(async function jsonMedium(
-	body: unknown,
-): Promise<unknown> {
+post(
+	"/json/medium",
+	requestSchema("json/medium"),
+	responseSchema("json/medium"),
+)(async function jsonMedium(body: unknown): Promise<unknown> {
 	return unwrapBody(body);
 });
 
-post("/json/large", requestSchema("json/large"), responseSchema("json/large"))(async function jsonLarge(
-	body: unknown,
-): Promise<unknown> {
+post(
+	"/json/large",
+	requestSchema("json/large"),
+	responseSchema("json/large"),
+)(async function jsonLarge(body: unknown): Promise<unknown> {
 	return unwrapBody(body);
 });
 
-post("/json/very-large", requestSchema("json/very-large"), responseSchema("json/very-large"))(
-	async function jsonVeryLarge(body: unknown): Promise<unknown> {
+post(
+	"/json/very-large",
+	requestSchema("json/very-large"),
+	responseSchema("json/very-large"),
+)(async function jsonVeryLarge(body: unknown): Promise<unknown> {
 	return unwrapBody(body);
 });
 
-post("/multipart/small", requestSchema("multipart/small"), responseSchema("multipart/small"))(
-	async function multipartSmall(_body: unknown): Promise<MultipartResponse> {
+post(
+	"/multipart/small",
+	requestSchema("multipart/small"),
+	responseSchema("multipart/small"),
+)(async function multipartSmall(_body: unknown): Promise<MultipartResponse> {
 	return { files_received: 1, total_bytes: 1024 };
 });
 
-post("/multipart/medium", requestSchema("multipart/medium"), responseSchema("multipart/medium"))(
-	async function multipartMedium(_body: unknown): Promise<MultipartResponse> {
+post(
+	"/multipart/medium",
+	requestSchema("multipart/medium"),
+	responseSchema("multipart/medium"),
+)(async function multipartMedium(_body: unknown): Promise<MultipartResponse> {
 	return { files_received: 2, total_bytes: 10240 };
 });
 
-post("/multipart/large", requestSchema("multipart/large"), responseSchema("multipart/large"))(
-	async function multipartLarge(_body: unknown): Promise<MultipartResponse> {
+post(
+	"/multipart/large",
+	requestSchema("multipart/large"),
+	responseSchema("multipart/large"),
+)(async function multipartLarge(_body: unknown): Promise<MultipartResponse> {
 	return { files_received: 5, total_bytes: 102400 };
 });
 
-post("/urlencoded/simple", requestSchema("urlencoded/simple"), responseSchema("urlencoded/simple"))(
-	async function urlencodedSimple(body: unknown): Promise<unknown> {
+post(
+	"/urlencoded/simple",
+	requestSchema("urlencoded/simple"),
+	responseSchema("urlencoded/simple"),
+)(async function urlencodedSimple(body: unknown): Promise<unknown> {
 	return unwrapBody(body);
 });
 
-post("/urlencoded/complex", requestSchema("urlencoded/complex"), responseSchema("urlencoded/complex"))(
-	async function urlencodedComplex(body: unknown): Promise<unknown> {
+post(
+	"/urlencoded/complex",
+	requestSchema("urlencoded/complex"),
+	responseSchema("urlencoded/complex"),
+)(async function urlencodedComplex(body: unknown): Promise<unknown> {
 	return unwrapBody(body);
 });
 
-get("/path/simple/{id}", responseSchema("path/simple"), parameterSchema("path/simple"))(async function pathSimple(
-	params: PathParams,
-): Promise<PathResponse> {
+get(
+	"/path/simple/{id}",
+	responseSchema("path/simple"),
+	parameterSchema("path/simple"),
+)(async function pathSimple(params: PathParams): Promise<PathResponse> {
 	return { id: params.id ?? "" };
 });
 
@@ -551,9 +582,7 @@ get(
 	"/path/multiple/{user_id}/{post_id}",
 	responseSchema("path/multiple"),
 	parameterSchema("path/multiple"),
-)(async function pathMultiple(
-	params: PathParams,
-): Promise<PathResponse> {
+)(async function pathMultiple(params: PathParams): Promise<PathResponse> {
 	return { user_id: params.user_id ?? "", post_id: params.post_id ?? "" };
 });
 
@@ -561,9 +590,7 @@ get(
 	"/path/deep/{org}/{team}/{project}/{resource}/{id}",
 	responseSchema("path/deep"),
 	parameterSchema("path/deep"),
-)(async function pathDeep(
-	params: PathParams,
-): Promise<PathResponse> {
+)(async function pathDeep(params: PathParams): Promise<PathResponse> {
 	return {
 		org: params.org ?? "",
 		team: params.team ?? "",
@@ -573,39 +600,51 @@ get(
 	};
 });
 
-get("/path/int/{id}", responseSchema("path/int"), parameterSchema("path/int"))(async function pathInt(
-	params: PathParams,
-): Promise<PathResponse> {
+get(
+	"/path/int/{id}",
+	responseSchema("path/int"),
+	parameterSchema("path/int"),
+)(async function pathInt(params: PathParams): Promise<PathResponse> {
 	return { id: Number.parseInt(params.id ?? "0", 10) };
 });
 
-get("/path/uuid/{uuid}", responseSchema("path/uuid"), parameterSchema("path/uuid"))(async function pathUuid(
-	params: PathParams,
-): Promise<PathResponse> {
+get(
+	"/path/uuid/{uuid}",
+	responseSchema("path/uuid"),
+	parameterSchema("path/uuid"),
+)(async function pathUuid(params: PathParams): Promise<PathResponse> {
 	return { uuid: params.uuid ?? "" };
 });
 
-get("/path/date/{date}", responseSchema("path/date"), parameterSchema("path/date"))(async function pathDate(
-	params: PathParams,
-): Promise<PathResponse> {
+get(
+	"/path/date/{date}",
+	responseSchema("path/date"),
+	parameterSchema("path/date"),
+)(async function pathDate(params: PathParams): Promise<PathResponse> {
 	return { date: params.date ?? "" };
 });
 
-get("/query/few", responseSchema("query/few"), parameterSchema("query/few"))(async function queryFew(
-	query: unknown,
-): Promise<unknown> {
+get(
+	"/query/few",
+	responseSchema("query/few"),
+	parameterSchema("query/few"),
+)(async function queryFew(query: unknown): Promise<unknown> {
 	return query;
 });
 
-get("/query/medium", responseSchema("query/medium"), parameterSchema("query/medium"))(async function queryMedium(
-	query: unknown,
-): Promise<unknown> {
+get(
+	"/query/medium",
+	responseSchema("query/medium"),
+	parameterSchema("query/medium"),
+)(async function queryMedium(query: unknown): Promise<unknown> {
 	return query;
 });
 
-get("/query/many", responseSchema("query/many"), parameterSchema("query/many"))(async function queryMany(
-	query: unknown,
-): Promise<unknown> {
+get(
+	"/query/many",
+	responseSchema("query/many"),
+	parameterSchema("query/many"),
+)(async function queryMany(query: unknown): Promise<unknown> {
 	return query;
 });
 
@@ -613,11 +652,17 @@ interface HealthResponse {
 	readonly status: "ok";
 }
 
-get("/health", responseSchema("health"))(async function health(): Promise<HealthResponse> {
+get(
+	"/health",
+	responseSchema("health"),
+)(async function health(): Promise<HealthResponse> {
 	return { status: "ok" };
 });
 
-get("/", responseSchema("root"))(async function root(): Promise<HealthResponse> {
+get(
+	"/",
+	responseSchema("root"),
+)(async function root(): Promise<HealthResponse> {
 	return { status: "ok" };
 });
 
