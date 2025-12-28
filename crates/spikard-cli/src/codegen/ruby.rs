@@ -86,7 +86,9 @@ end
         let mut output = String::new();
 
         if let Some(description) = &schema.schema_data.description {
-            output.push_str(&format!("# {}\n", description));
+            for line in description.lines() {
+                output.push_str(&format!("# {}\n", line));
+            }
         } else {
             output.push_str(&format!("# {} model\n", class_name));
         }
@@ -284,7 +286,9 @@ end
         }
 
         if let Some(description) = &operation.description {
-            output.push_str(&format!("  # {}\n", description));
+            for line in description.lines() {
+                output.push_str(&format!("  # {}\n", line));
+            }
         }
 
         let mut has_path_params = false;

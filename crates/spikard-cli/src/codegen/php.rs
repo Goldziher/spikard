@@ -120,12 +120,15 @@ impl PhpGenerator {
     }
 
     /// Build constructor parameter declarations for object properties
+    /// Partitions properties so required parameters come first (PHP 8.1+ requirement)
     fn build_constructor_params(
         &self,
         obj: &openapiv3::ObjectType,
     ) -> Result<Vec<String>> {
-        let mut property_lines = Vec::new();
+        let mut required_props = Vec::new();
+        let mut optional_props = Vec::new();
 
+        // First pass: partition properties into required and optional
         for (prop_name, prop_schema_ref) in &obj.properties {
             let is_required = obj.required.contains(prop_name);
             let field_name = Self::to_camel_case(prop_name);
@@ -146,8 +149,17 @@ impl PhpGenerator {
             };
 
             let prop_line = self.build_property_line(&type_hint, &field_name, is_required, nullable);
-            property_lines.push(prop_line);
+
+            if is_required {
+                required_props.push(prop_line);
+            } else {
+                optional_props.push(prop_line);
+            }
         }
+
+        // Combine: required first, then optional
+        let mut property_lines = required_props;
+        property_lines.extend(optional_props);
 
         Ok(property_lines)
     }
@@ -287,34 +299,25 @@ impl PhpGenerator {
 
     /// Convert OpenAPI schema to PHP type hint
     /// Returns (type_hint, is_already_nullable)
+    /// Uses native PHP type syntax for type hints (valid in PHP 7.4+)
     fn schema_to_php_type(schema: &Schema, optional: bool) -> (String, bool) {
         let base_type = match &schema.schema_kind {
-            SchemaKind::Type(Type::String(_)) => "string",
-            SchemaKind::Type(Type::Number(_)) => "float",
-            SchemaKind::Type(Type::Integer(_)) => "int",
-            SchemaKind::Type(Type::Boolean(_)) => "bool",
-            SchemaKind::Type(Type::Array(arr)) => {
-                let _item_type = match &arr.items {
-                    Some(ReferenceOr::Item(item_schema)) => {
-                        let (item_type, _) = Self::schema_to_php_type(item_schema, false);
-                        item_type
-                    }
-                    Some(ReferenceOr::Reference { reference }) => {
-                        let ref_name = reference.split('/').next_back().unwrap();
-                        ref_name.to_pascal_case()
-                    }
-                    None => "mixed".to_string(),
-                };
-                "array"
+            SchemaKind::Type(Type::String(_)) => "string".to_string(),
+            SchemaKind::Type(Type::Number(_)) => "float".to_string(),
+            SchemaKind::Type(Type::Integer(_)) => "int".to_string(),
+            SchemaKind::Type(Type::Boolean(_)) => "bool".to_string(),
+            SchemaKind::Type(Type::Array(_)) => {
+                // Use plain 'array' for native type hints; generic syntax is only for PHPDoc
+                "array".to_string()
             }
-            SchemaKind::Type(Type::Object(_)) => "array",
-            _ => "mixed",
+            SchemaKind::Type(Type::Object(_)) => "array".to_string(),
+            _ => "mixed".to_string(),
         };
 
         if optional {
             (format!("?{}", base_type), true)
         } else {
-            (base_type.to_string(), false)
+            (base_type, false)
         }
     }
 

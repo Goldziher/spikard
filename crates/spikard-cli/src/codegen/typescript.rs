@@ -4,6 +4,7 @@ use super::NodeDtoStyle;
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
 use openapiv3::{OpenAPI, Operation, Parameter, ReferenceOr, Schema, SchemaKind, Type};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 pub struct TypeScriptGenerator {
     spec: OpenAPI,
@@ -52,15 +53,25 @@ import {{ z }} from "zod";
         output.push_str("// Zod Schemas\n\n");
 
         if let Some(components) = &self.spec.components {
+            // Convert ReferenceOr::Item into a plain HashMap for sorting
+            let mut schemas_map: HashMap<String, Schema> = HashMap::new();
+            let mut schema_refs: HashMap<String, ReferenceOr<Schema>> = HashMap::new();
+
             for (name, schema_ref) in &components.schemas {
-                match schema_ref {
-                    ReferenceOr::Item(schema) => {
-                        output.push_str(&self.generate_zod_schema(name, schema)?);
-                        output.push('\n');
-                    }
-                    ReferenceOr::Reference { .. } => {
-                        continue;
-                    }
+                schema_refs.insert(name.clone(), schema_ref.clone());
+                if let ReferenceOr::Item(schema) = schema_ref {
+                    schemas_map.insert(name.clone(), schema.clone());
+                }
+            }
+
+            // Topologically sort the schemas
+            let sorted_names = topological_sort_schemas(&schemas_map);
+
+            // Generate schemas in topologically sorted order
+            for name in sorted_names {
+                if let Some(ReferenceOr::Item(schema)) = schema_refs.get(&name) {
+                    output.push_str(&self.generate_zod_schema(&name, schema)?);
+                    output.push('\n');
                 }
             }
         }
@@ -380,4 +391,103 @@ import {{ z }} from "zod";
 "#
         .to_string()
     }
+}
+
+/// Extract all schema names that are referenced in a given schema
+fn extract_schema_dependencies(schema: &Schema) -> HashSet<String> {
+    let mut dependencies = HashSet::new();
+    extract_dependencies_recursive(schema, &mut dependencies);
+    dependencies
+}
+
+/// Recursively extract all $ref schema names from a schema
+fn extract_dependencies_recursive(schema: &Schema, deps: &mut HashSet<String>) {
+    match &schema.schema_kind {
+        SchemaKind::Type(Type::Object(obj)) => {
+            // Extract dependencies from properties
+            for (_prop_name, prop_schema_ref) in &obj.properties {
+                match prop_schema_ref {
+                    ReferenceOr::Reference { reference } => {
+                        if let Some(ref_name) = reference.split('/').last() {
+                            deps.insert(ref_name.to_string());
+                        }
+                    }
+                    ReferenceOr::Item(prop_schema) => {
+                        extract_dependencies_recursive(prop_schema, deps);
+                    }
+                }
+            }
+        }
+        SchemaKind::Type(Type::Array(arr)) => {
+            // Extract dependencies from array items
+            if let Some(items) = &arr.items {
+                match items {
+                    ReferenceOr::Reference { reference } => {
+                        if let Some(ref_name) = reference.split('/').last() {
+                            deps.insert(ref_name.to_string());
+                        }
+                    }
+                    ReferenceOr::Item(item_schema) => {
+                        extract_dependencies_recursive(item_schema, deps);
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Topologically sort schemas by their dependencies using Kahn's algorithm
+fn topological_sort_schemas(
+    schemas: &HashMap<String, Schema>,
+) -> Vec<String> {
+    let mut in_degree: HashMap<String, usize> = HashMap::new();
+    let mut graph: HashMap<String, Vec<String>> = HashMap::new();
+
+    // Initialize all schemas with zero in-degree
+    for schema_name in schemas.keys() {
+        in_degree.insert(schema_name.clone(), 0);
+        graph.insert(schema_name.clone(), Vec::new());
+    }
+
+    // Build dependency graph
+    for (schema_name, schema) in schemas {
+        let deps = extract_schema_dependencies(schema);
+        for dep in deps {
+            // Only track dependencies that are defined in the schema set
+            if schemas.contains_key(&dep) {
+                // Add edge from dependency to current schema
+                graph.entry(dep).or_default().push(schema_name.clone());
+                // Increment in-degree for current schema
+                *in_degree.get_mut(schema_name).unwrap() += 1;
+            }
+        }
+    }
+
+    // Find all schemas with no incoming edges
+    let mut queue: VecDeque<String> = in_degree
+        .iter()
+        .filter(|(_, deg)| **deg == 0)
+        .map(|(name, _)| name.clone())
+        .collect();
+
+    let mut result = Vec::new();
+
+    // Process schemas in topological order
+    while let Some(node) = queue.pop_front() {
+        result.push(node.clone());
+
+        // For each neighbor of the current node
+        if let Some(neighbors) = graph.get(&node) {
+            for neighbor in neighbors {
+                let deg = in_degree.get_mut(neighbor).unwrap();
+                *deg -= 1;
+                if *deg == 0 {
+                    queue.push_back(neighbor.clone());
+                }
+            }
+        }
+    }
+
+    result
 }
