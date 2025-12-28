@@ -10,6 +10,7 @@ mod openapi;
 mod openrpc;
 mod php;
 mod php_dto;
+pub mod quality;
 mod python;
 mod ruby;
 mod rust;

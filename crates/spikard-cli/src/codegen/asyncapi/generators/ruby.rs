@@ -8,6 +8,23 @@ use super::{AsyncApiGenerator, ChannelInfo};
 /// Ruby AsyncAPI code generator
 pub struct RubyAsyncApiGenerator;
 
+/// Convert identifier to PascalCase for Ruby class names
+fn to_pascal_case(name: &str) -> String {
+    let identifier = sanitize_identifier(name);
+    let parts: Vec<&str> = identifier.split('_').collect();
+    parts
+        .iter()
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+            }
+        })
+        .collect::<String>()
+}
+
 impl AsyncApiGenerator for RubyAsyncApiGenerator {
     fn generate_test_app(&self, channels: &[ChannelInfo], protocol: &str) -> Result<String> {
         let mut code = String::new();
@@ -74,7 +91,7 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
         code.push_str("app = Spikard::App.new\n\n");
 
         for channel in channels {
-            let handler_name = sanitize_identifier(&channel.name);
+            let handler_name = to_pascal_case(&channel.name);
             let message_description = if channel.messages.is_empty() {
                 "messages".to_string()
             } else {

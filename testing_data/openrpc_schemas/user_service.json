@@ -1,0 +1,804 @@
+{
+  "openrpc": "1.3.2",
+  "info": {
+    "title": "User Management RPC API",
+    "description": "Comprehensive user CRUD operations via JSON-RPC with nested objects, arrays, and complex types",
+    "version": "2.0.0",
+    "contact": {
+      "name": "API Support",
+      "email": "support@example.com"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "name": "Production",
+      "url": "https://rpc.example.com/v2"
+    },
+    {
+      "name": "Development",
+      "url": "http://localhost:8080/v2"
+    }
+  ],
+  "methods": [
+    {
+      "name": "users.list",
+      "description": "Retrieve a paginated list of all users",
+      "tags": [
+        {
+          "name": "users"
+        }
+      ],
+      "params": [
+        {
+          "name": "page",
+          "description": "Page number (starting from 1)",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "description": "Number of items per page",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          }
+        },
+        {
+          "name": "role",
+          "description": "Filter by user role",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": ["admin", "moderator", "user"]
+          }
+        },
+        {
+          "name": "status",
+          "description": "Filter by user status",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": ["active", "inactive", "suspended"]
+          }
+        }
+      ],
+      "result": {
+        "name": "userList",
+        "description": "Paginated list of users",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/User"
+              }
+            },
+            "pagination": {
+              "$ref": "#/components/schemas/Pagination"
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "name": "List first page of users",
+          "params": [
+            {
+              "name": "page",
+              "value": 1
+            },
+            {
+              "name": "pageSize",
+              "value": 10
+            }
+          ],
+          "result": {
+            "name": "userList",
+            "value": {
+              "data": [
+                {
+                  "id": "550e8400-e29b-41d4-a716-446655440000",
+                  "email": "john@example.com",
+                  "name": "John Doe",
+                  "role": "user",
+                  "status": "active",
+                  "emailVerified": true,
+                  "createdAt": "2024-01-15T10:30:00Z",
+                  "profile": {
+                    "bio": "Software engineer",
+                    "location": "San Francisco, CA"
+                  }
+                }
+              ],
+              "pagination": {
+                "page": 1,
+                "pageSize": 10,
+                "total": 45,
+                "totalPages": 5
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "users.getById",
+      "description": "Retrieve a specific user by their unique identifier",
+      "tags": [
+        {
+          "name": "users"
+        }
+      ],
+      "params": [
+        {
+          "name": "userId",
+          "description": "Unique user identifier (UUID)",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "result": {
+        "name": "user",
+        "description": "User details",
+        "schema": {
+          "$ref": "#/components/schemas/User"
+        }
+      },
+      "errors": [
+        {
+          "code": -32001,
+          "message": "User not found",
+          "description": "The specified user does not exist"
+        }
+      ],
+      "examples": [
+        {
+          "name": "Get existing user",
+          "params": [
+            {
+              "name": "userId",
+              "value": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          ],
+          "result": {
+            "name": "user",
+            "value": {
+              "id": "550e8400-e29b-41d4-a716-446655440000",
+              "email": "john@example.com",
+              "name": "John Doe",
+              "role": "user",
+              "status": "active",
+              "phone": "+1-555-0123",
+              "emailVerified": true,
+              "lastLoginAt": "2024-01-20T14:22:00Z",
+              "createdAt": "2024-01-15T10:30:00Z",
+              "metadata": {
+                "preferences": {
+                  "theme": "dark",
+                  "notifications": true
+                }
+              },
+              "profile": {
+                "bio": "Software engineer",
+                "avatar": "https://example.com/avatars/john.jpg",
+                "location": "San Francisco, CA",
+                "website": "https://johndoe.com",
+                "birthDate": "1990-05-15",
+                "socialLinks": {
+                  "twitter": "johndoe",
+                  "linkedin": "johndoe",
+                  "github": "johndoe"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "users.create",
+      "description": "Create a new user account",
+      "tags": [
+        {
+          "name": "users"
+        }
+      ],
+      "params": [
+        {
+          "name": "user",
+          "description": "User data to create",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/CreateUserInput"
+          }
+        }
+      ],
+      "result": {
+        "name": "user",
+        "description": "Created user",
+        "schema": {
+          "$ref": "#/components/schemas/User"
+        }
+      },
+      "errors": [
+        {
+          "code": -32002,
+          "message": "Email already exists",
+          "description": "A user with this email address already exists"
+        },
+        {
+          "code": -32003,
+          "message": "Validation error",
+          "description": "The provided user data is invalid"
+        }
+      ],
+      "examples": [
+        {
+          "name": "Create new user",
+          "params": [
+            {
+              "name": "user",
+              "value": {
+                "email": "jane@example.com",
+                "name": "Jane Smith",
+                "password": "SecurePassword123!",
+                "role": "user"
+              }
+            }
+          ],
+          "result": {
+            "name": "user",
+            "value": {
+              "id": "660e8400-e29b-41d4-a716-446655440001",
+              "email": "jane@example.com",
+              "name": "Jane Smith",
+              "role": "user",
+              "status": "active",
+              "emailVerified": false,
+              "createdAt": "2024-01-21T09:15:00Z",
+              "profile": {
+                "bio": null,
+                "location": null
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "users.update",
+      "description": "Update an existing user's details",
+      "tags": [
+        {
+          "name": "users"
+        }
+      ],
+      "params": [
+        {
+          "name": "userId",
+          "description": "User ID to update",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "updates",
+          "description": "Fields to update",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UpdateUserInput"
+          }
+        }
+      ],
+      "result": {
+        "name": "user",
+        "description": "Updated user",
+        "schema": {
+          "$ref": "#/components/schemas/User"
+        }
+      },
+      "errors": [
+        {
+          "code": -32001,
+          "message": "User not found",
+          "description": "The user to update does not exist"
+        }
+      ],
+      "examples": [
+        {
+          "name": "Update user profile",
+          "params": [
+            {
+              "name": "userId",
+              "value": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            {
+              "name": "updates",
+              "value": {
+                "name": "John Updated Doe",
+                "phone": "+1-555-9876"
+              }
+            }
+          ],
+          "result": {
+            "name": "user",
+            "value": {
+              "id": "550e8400-e29b-41d4-a716-446655440000",
+              "email": "john@example.com",
+              "name": "John Updated Doe",
+              "role": "user",
+              "status": "active",
+              "phone": "+1-555-9876",
+              "emailVerified": true,
+              "createdAt": "2024-01-15T10:30:00Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "users.delete",
+      "description": "Delete a user account",
+      "tags": [
+        {
+          "name": "users"
+        }
+      ],
+      "params": [
+        {
+          "name": "userId",
+          "description": "User ID to delete",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "reason",
+          "description": "Reason for deletion",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": ["user_requested", "admin_action", "inactive", "violation"]
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "description": "Deletion result",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "code": -32001,
+          "message": "User not found",
+          "description": "The user to delete does not exist"
+        }
+      ]
+    },
+    {
+      "name": "users.updateProfile",
+      "description": "Update user's profile information",
+      "tags": [
+        {
+          "name": "profiles"
+        }
+      ],
+      "params": [
+        {
+          "name": "userId",
+          "description": "User ID",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "profile",
+          "description": "Profile data to update",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UpdateProfileInput"
+          }
+        }
+      ],
+      "result": {
+        "name": "profile",
+        "description": "Updated profile",
+        "schema": {
+          "$ref": "#/components/schemas/UserProfile"
+        }
+      }
+    },
+    {
+      "name": "users.changePassword",
+      "description": "Change user's password",
+      "tags": [
+        {
+          "name": "auth"
+        }
+      ],
+      "params": [
+        {
+          "name": "userId",
+          "description": "User ID",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "currentPassword",
+          "description": "Current password",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "newPassword",
+          "description": "New password",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 8
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "description": "Password change result",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "code": -32004,
+          "message": "Invalid current password",
+          "description": "The current password provided is incorrect"
+        }
+      ]
+    },
+    {
+      "name": "users.sendVerificationEmail",
+      "description": "Send email verification to user",
+      "tags": [
+        {
+          "name": "auth"
+        }
+      ],
+      "params": [
+        {
+          "name": "userId",
+          "description": "User ID",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "description": "Sending result",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "sent": {
+              "type": "boolean"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "required": ["id", "email", "name", "role", "status"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique user identifier"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User email address"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "User full name"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["admin", "moderator", "user"],
+            "description": "User role"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "suspended"],
+            "default": "active",
+            "description": "Account status"
+          },
+          "phone": {
+            "type": "string",
+            "pattern": "^\\+?[0-9\\-\\s()]{10,}$",
+            "description": "Phone number"
+          },
+          "emailVerified": {
+            "type": "boolean",
+            "default": false,
+            "description": "Email verification status"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of last login"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Additional user metadata",
+            "additionalProperties": true
+          },
+          "profile": {
+            "$ref": "#/components/schemas/UserProfile"
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "User biography"
+          },
+          "avatar": {
+            "type": "string",
+            "format": "uri",
+            "description": "Avatar image URL"
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "User location"
+          },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "description": "Personal website URL"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of birth"
+          },
+          "socialLinks": {
+            "type": "object",
+            "properties": {
+              "twitter": {
+                "type": "string"
+              },
+              "linkedin": {
+                "type": "string"
+              },
+              "github": {
+                "type": "string"
+              }
+            },
+            "description": "Social media profiles"
+          },
+          "preferences": {
+            "type": "object",
+            "properties": {
+              "emailNotifications": {
+                "type": "boolean",
+                "default": true
+              },
+              "privacyLevel": {
+                "type": "string",
+                "enum": ["public", "friends", "private"],
+                "default": "private"
+              },
+              "theme": {
+                "type": "string",
+                "enum": ["light", "dark", "auto"],
+                "default": "auto"
+              }
+            },
+            "description": "User preferences"
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "required": ["page", "pageSize", "total", "totalPages"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "CreateUserInput": {
+        "type": "object",
+        "required": ["email", "name", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Password (minimum 8 characters)"
+          },
+          "phone": {
+            "type": "string",
+            "pattern": "^\\+?[0-9\\-\\s()]{10,}$"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["admin", "moderator", "user"],
+            "default": "user"
+          }
+        }
+      },
+      "UpdateUserInput": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "phone": {
+            "type": "string",
+            "pattern": "^\\+?[0-9\\-\\s()]{10,}$"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["admin", "moderator", "user"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "suspended"]
+          }
+        }
+      },
+      "UpdateProfileInput": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "avatar": {
+            "type": "string",
+            "format": "uri"
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "website": {
+            "type": "string",
+            "format": "uri"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "socialLinks": {
+            "type": "object",
+            "properties": {
+              "twitter": {
+                "type": "string"
+              },
+              "linkedin": {
+                "type": "string"
+              },
+              "github": {
+                "type": "string"
+              }
+            }
+          },
+          "preferences": {
+            "type": "object",
+            "properties": {
+              "emailNotifications": {
+                "type": "boolean"
+              },
+              "privacyLevel": {
+                "type": "string",
+                "enum": ["public", "friends", "private"]
+              },
+              "theme": {
+                "type": "string",
+                "enum": ["light", "dark", "auto"]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

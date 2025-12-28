@@ -1,0 +1,511 @@
+openapi: 3.0.3
+info:
+  title: User Management API
+  description: Comprehensive user management API with authentication, authorization, and audit logging
+  version: 2.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: Apache 2.0
+servers:
+  - url: https://api.example.com/v2
+    description: Production server
+  - url: http://localhost:8080/v2
+    description: Development server
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+tags:
+  - name: users
+    description: User management operations
+  - name: profiles
+    description: User profile operations
+  - name: auth
+    description: Authentication and authorization
+paths:
+  /users:
+    get:
+      operationId: listUsers
+      tags:
+        - users
+      summary: List all users
+      description: Retrieve a paginated list of all users with optional filtering
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: role
+          in: query
+          description: Filter by user role
+          schema:
+            type: string
+            enum: [admin, moderator, user]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, suspended]
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [createdAt, name, email]
+            default: createdAt
+      responses:
+        '200':
+          description: Users list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    post:
+      operationId: createUser
+      tags:
+        - users
+      summary: Create a new user
+      description: Register a new user account with validation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserInput'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '409':
+          description: Email already exists
+  /users/{userId}:
+    get:
+      operationId: getUserById
+      tags:
+        - users
+      summary: Get user by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    put:
+      operationId: updateUser
+      tags:
+        - users
+      summary: Update user details
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserInput'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid update data
+        '404':
+          description: User not found
+    delete:
+      operationId: deleteUser
+      tags:
+        - users
+      summary: Delete user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: User deleted successfully
+        '404':
+          description: User not found
+  /users/{userId}/profile:
+    get:
+      operationId: getUserProfile
+      tags:
+        - profiles
+      summary: Get user profile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+    patch:
+      operationId: updateUserProfile
+      tags:
+        - profiles
+      summary: Update user profile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileInput'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+  /auth/login:
+    post:
+      operationId: login
+      tags:
+        - auth
+      summary: User login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                rememberMe:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '401':
+          description: Invalid credentials
+  /auth/logout:
+    post:
+      operationId: logout
+      tags:
+        - auth
+      summary: User logout
+      responses:
+        '204':
+          description: Logout successful
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for server-to-server authentication
+  schemas:
+    User:
+      type: object
+      required: [id, email, name, role, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+        email:
+          type: string
+          format: email
+          description: User email address
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User full name
+        role:
+          type: string
+          enum: [admin, moderator, user]
+          description: User role
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+          default: active
+          description: Account status
+        phone:
+          type: string
+          pattern: '^\+?[0-9\-\s()]{10,}$'
+          nullable: true
+          description: Phone number
+        emailVerified:
+          type: boolean
+          default: false
+          description: Email verification status
+        lastLoginAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Additional user metadata
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        bio:
+          type: string
+          maxLength: 500
+          nullable: true
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        location:
+          type: string
+          maxLength: 255
+          nullable: true
+        website:
+          type: string
+          format: uri
+          nullable: true
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+        socialLinks:
+          type: object
+          properties:
+            twitter:
+              type: string
+              nullable: true
+            linkedin:
+              type: string
+              nullable: true
+            github:
+              type: string
+              nullable: true
+        preferences:
+          type: object
+          properties:
+            emailNotifications:
+              type: boolean
+              default: true
+            privacyLevel:
+              type: string
+              enum: [public, friends, private]
+              default: private
+            theme:
+              type: string
+              enum: [light, dark, auto]
+              default: auto
+    CreateUserInput:
+      type: object
+      required: [email, name, password]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 8
+        phone:
+          type: string
+          pattern: '^\+?[0-9\-\s()]{10,}$'
+          nullable: true
+        role:
+          type: string
+          enum: [admin, moderator, user]
+          default: user
+    UpdateUserInput:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        phone:
+          type: string
+          pattern: '^\+?[0-9\-\s()]{10,}$'
+          nullable: true
+        role:
+          type: string
+          enum: [admin, moderator, user]
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+    UpdateProfileInput:
+      type: object
+      properties:
+        bio:
+          type: string
+          maxLength: 500
+          nullable: true
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        location:
+          type: string
+          maxLength: 255
+          nullable: true
+        website:
+          type: string
+          format: uri
+          nullable: true
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+        socialLinks:
+          type: object
+          properties:
+            twitter:
+              type: string
+              nullable: true
+            linkedin:
+              type: string
+              nullable: true
+            github:
+              type: string
+              nullable: true
+        preferences:
+          type: object
+          properties:
+            emailNotifications:
+              type: boolean
+            privacyLevel:
+              type: string
+              enum: [public, friends, private]
+            theme:
+              type: string
+              enum: [light, dark, auto]
+    AuthToken:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+        tokenType:
+          type: string
+          enum: [Bearer]
+          default: Bearer
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+        refreshToken:
+          type: string
+          nullable: true
+          description: Refresh token for obtaining new access tokens
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        fields:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string

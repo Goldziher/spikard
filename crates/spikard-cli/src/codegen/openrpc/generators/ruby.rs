@@ -157,11 +157,10 @@ fn generate_ruby_handler(
         code.push_str("\n  private\n\n");
         code.push_str("  def validate_params(params)\n");
         for param in &method.params {
-            let safe_name = param.name.replace('"', "\\\"");
             if param.required {
                 code.push_str(&format!(
-                    "    raise JsonRpcError.invalid_params(\"Missing required parameter: {}\") unless params[\\\"{}\\\"]\n",
-                    safe_name, safe_name
+                    "    raise JsonRpcError.invalid_params(\"Missing required parameter: {}\") unless params[\"{}\"]\n",
+                    param.name, param.name
                 ));
             }
         }

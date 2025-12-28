@@ -1,0 +1,279 @@
+asyncapi: 3.0.0
+info:
+  title: Server-Sent Events Notification API
+  description: Real-time event streaming using Server-Sent Events for notifications, analytics, and system events
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+servers:
+  production:
+    host: api.example.com
+    protocol: https
+    pathname: /v1/events
+    description: Production SSE server
+  development:
+    host: localhost:8080
+    protocol: http
+    pathname: /v1/events
+    description: Development SSE server
+channels:
+  userNotifications:
+    address: /user/{userId}/notifications
+    description: Real-time notifications for a specific user
+    parameters:
+      userId:
+        description: Unique user identifier
+        schema:
+          type: string
+          format: uuid
+    messages:
+      notificationEvent:
+        $ref: '#/components/messages/NotificationEvent'
+  systemEvents:
+    address: /system/events
+    description: System-wide events like deployments, maintenance, alerts
+    messages:
+      systemEvent:
+        $ref: '#/components/messages/SystemEvent'
+  analyticsEvents:
+    address: /analytics/{accountId}/events
+    description: Real-time analytics and usage events
+    parameters:
+      accountId:
+        description: Account identifier
+        schema:
+          type: string
+          format: uuid
+    messages:
+      analyticsEvent:
+        $ref: '#/components/messages/AnalyticsEvent'
+  orderUpdates:
+    address: /orders/{orderId}/status
+    description: Real-time order status updates
+    parameters:
+      orderId:
+        description: Order identifier
+        schema:
+          type: string
+          format: uuid
+    messages:
+      orderStatusEvent:
+        $ref: '#/components/messages/OrderStatusEvent'
+  statusPage:
+    address: /status/feed
+    description: Service status and health feed
+    messages:
+      statusUpdate:
+        $ref: '#/components/messages/StatusUpdate'
+components:
+  schemas:
+    User:
+      type: object
+      required: [id, email, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+    Event:
+      type: object
+      required: [id, type, timestamp]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        source:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+    Notification:
+      type: object
+      required: [id, title, type, timestamp]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        message:
+          type: string
+          maxLength: 1000
+          nullable: true
+        type:
+          type: string
+          enum: [info, warning, error, success]
+        category:
+          type: string
+          enum: [account, security, billing, system, message]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          default: medium
+        actionUrl:
+          type: string
+          format: uri
+          nullable: true
+        isRead:
+          type: boolean
+          default: false
+        timestamp:
+          type: string
+          format: date-time
+    SystemStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [operational, degraded, partial_outage, major_outage]
+        component:
+          type: string
+        message:
+          type: string
+          nullable: true
+        affectedServices:
+          type: array
+          items:
+            type: string
+        estimatedDuration:
+          type: integer
+          description: Duration in minutes
+          nullable: true
+    Order:
+      type: object
+      required: [id, status, timestamp]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, confirmed, processing, shipped, delivered, cancelled]
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              quantity:
+                type: integer
+              price:
+                type: number
+        estimatedDelivery:
+          type: string
+          format: date
+          nullable: true
+        trackingNumber:
+          type: string
+          nullable: true
+        carrier:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+    AnalyticsData:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        event:
+          type: string
+        properties:
+          type: object
+          additionalProperties: true
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        sessionId:
+          type: string
+          format: uuid
+  messages:
+    NotificationEvent:
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: notification
+          data:
+            $ref: '#/components/schemas/Notification'
+          user:
+            $ref: '#/components/schemas/User'
+    SystemEvent:
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: system_event
+          eventId:
+            type: string
+            format: uuid
+          severity:
+            type: string
+            enum: [info, warning, critical]
+          status:
+            $ref: '#/components/schemas/SystemStatus'
+          timestamp:
+            type: string
+            format: date-time
+    AnalyticsEvent:
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: analytics_event
+          data:
+            $ref: '#/components/schemas/AnalyticsData'
+    OrderStatusEvent:
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: order_status
+          order:
+            $ref: '#/components/schemas/Order'
+          previousStatus:
+            type: string
+          timestamp:
+            type: string
+            format: date-time
+    StatusUpdate:
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: status_update
+          updates:
+            type: array
+            items:
+              $ref: '#/components/schemas/SystemStatus'
+          timestamp:
+            type: string
+            format: date-time

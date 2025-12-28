@@ -196,7 +196,7 @@ fn generate_typescript_handler(
     let result_type_name = get_result_class_name(&method.name);
 
     code.push_str(&format!(
-        "async function {}: (params: unknown): Promise<{}> {{\n",
+        "async function {}(params: unknown): Promise<{}> {{\n",
         handler_name, result_type_name
     ));
     code.push_str("  /**\n");
