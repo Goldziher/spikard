@@ -461,11 +461,6 @@ impl GraphQLGenerator for PythonGenerator {
         code.push_str("# This file was automatically generated from your GraphQL schema.\n");
         code.push_str("# Any manual changes will be overwritten on the next generation.\n");
         code.push_str("\"\"\"GraphQL types generated from schema.\"\"\"\n\n");
-        // Only import Any if there are unions (which may need it for compatibility)
-        let has_unions = schema.types.values().any(|t| t.kind == TypeKind::Union);
-        if has_unions {
-            code.push_str("from typing import Any\n");
-        }
         code.push_str("from enum import Enum\n");
         code.push_str("from msgspec import Struct\n\n");
 
@@ -544,12 +539,12 @@ impl GraphQLGenerator for PythonGenerator {
         code.push_str("# This file was automatically generated from your GraphQL schema.\n");
         code.push_str("# Any manual changes will be overwritten on the next generation.\n");
         code.push_str("\"\"\"GraphQL resolver functions.\"\"\"\n\n");
-        code.push_str("from typing import Any\n");
+        code.push_str("from graphql import GraphQLResolveInfo\n");
         code.push_str("import asyncio\n\n");
 
         // Helper closure to format resolver signature
         let format_resolver = |name: &str, field: &crate::codegen::graphql::spec_parser::GraphQLField, schema: &GraphQLSchema| -> String {
-            let mut sig = format!("async def resolve_{}(obj: Any, info: Any", Self::to_snake_case(name));
+            let mut sig = format!("async def resolve_{}(parent: dict[str, object], info: GraphQLResolveInfo", Self::to_snake_case(name));
 
             for arg in &field.arguments {
                 let arg_type = self.map_type_with_schema(&arg.type_name, arg.is_nullable, arg.is_list, arg.list_item_nullable, Some(schema));

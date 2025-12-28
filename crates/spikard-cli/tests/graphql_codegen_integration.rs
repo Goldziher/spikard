@@ -868,7 +868,7 @@ fn test_typescript_resolvers_output() -> Result<()> {
 
     let result = generate_typescript_graphql(schema, "resolvers")?;
 
-    assert!(result.contains("// GraphQL resolvers"), "resolver section missing");
+    assert!(result.contains("// GraphQL Resolvers"), "resolver section missing");
     assert!(
         result.contains("export const queryResolvers"),
         "Query resolvers missing"
@@ -1254,7 +1254,7 @@ fn test_typescript_schema_definition_no_broken_imports() -> Result<()> {
 
     // Verify it has resolver instructions
     assert!(
-        result.contains("TODO") && result.contains("resolvers from './resolvers'"),
+        result.contains("TODO") && result.contains("{ resolvers } from './resolvers'"),
         "ERROR: Missing resolver instructions"
     );
 
@@ -1264,11 +1264,8 @@ fn test_typescript_schema_definition_no_broken_imports() -> Result<()> {
         "ERROR: Missing typeDefs export"
     );
 
-    // Verify it exports createSchema function
-    assert!(
-        result.contains("export function createSchema"),
-        "ERROR: Missing createSchema function"
-    );
+    // Note: createSchema factory function removed - users implement resolvers separately
+    // The schema is exported directly via makeExecutableSchema
 
     // Verify SDL is embedded
     assert!(

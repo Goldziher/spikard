@@ -268,7 +268,10 @@ fn test_python_generate_scalar_aliases() -> Result<()> {
 
     // Should generate minimal code for query type
     assert!(result.contains("#!/usr/bin/env python3"), "shebang required");
-    assert!(result.contains("from typing import"), "typing imports required");
+    // Python 3.10+ uses built-in list[T], dict[T], and | for unions
+    // No typing import needed for basic scalar types
+    assert!(result.contains("from enum import Enum") || result.contains("from msgspec import Struct"),
+        "should import enum or msgspec");
 
     Ok(())
 }
@@ -535,6 +538,62 @@ fn test_python_struct_configuration_per_claude() -> Result<()> {
     // CLAUDE.md requirement: "msgspec.Struct with frozen=True, kw_only=True (MANDATORY)"
     assert!(result.contains("class User(Struct, frozen=True, kw_only=True):"),
         "User must be Struct with frozen=True, kw_only=True as per CLAUDE.md");
+
+    Ok(())
+}
+
+/// Test 19: Fix for Any type removal - CRITICAL requirement
+/// Ensures generated Python code has NO Any type usage
+#[test]
+fn test_python_no_any_type_usage() -> Result<()> {
+    let schema = r#"
+        type Query {
+            user(id: ID!, name: String): User
+            users(limit: Int, offset: Int): [User!]!
+        }
+        type User {
+            id: ID!
+            name: String!
+            email: String
+        }
+        type Post {
+            id: ID!
+            title: String!
+        }
+        union SearchResult = User | Post
+    "#;
+
+    // Test resolvers
+    let resolvers = generate_python_graphql(schema, "resolvers")?;
+
+    // CRITICAL: No Any import in resolvers
+    assert!(!resolvers.contains("from typing import Any"),
+        "Resolvers MUST NOT import Any type");
+
+    // Should import GraphQLResolveInfo instead
+    assert!(resolvers.contains("from graphql import GraphQLResolveInfo"),
+        "Resolvers must import GraphQLResolveInfo");
+
+    // Verify resolver signature uses proper types
+    assert!(resolvers.contains("parent: dict[str, object]"),
+        "Resolver parent parameter must be dict[str, object] (not Any)");
+    assert!(resolvers.contains("info: GraphQLResolveInfo"),
+        "Resolver info parameter must be GraphQLResolveInfo (not Any)");
+
+    // Test types
+    let types = generate_python_graphql(schema, "types")?;
+
+    // CRITICAL: No Any import in types
+    assert!(!types.contains("from typing import Any"),
+        "Types MUST NOT import Any type");
+
+    // Union types should NOT have Any appended
+    assert!(types.contains("SearchResult = User | Post") || types.contains("SearchResult = Post | User"),
+        "Union must be User | Post or Post | User (NOT with Any)");
+
+    // No Optional usage (Python 3.10+ uses | None)
+    assert!(!types.contains("Optional["),
+        "Must use | None syntax (Python 3.10+), NOT Optional");
 
     Ok(())
 }
