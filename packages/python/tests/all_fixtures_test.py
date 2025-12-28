@@ -69,9 +69,7 @@ FIXTURE_CATEGORIES = [
 ]
 
 
-def _validate_fixture_structure(
-    category: str, fixture: dict[str, object], fixture_validator: FixtureValidator
-) -> None:
+def _validate_fixture_structure(category: str, fixture: dict[str, object], fixture_validator: FixtureValidator) -> None:
     """Validate a single fixture's structure and content.
 
     Args:
@@ -101,12 +99,8 @@ def _validate_fixture_structure(
 
     request_value: object = fixture["request"]
     if isinstance(request_value, dict):
-        assert "method" in request_value, (
-            f"Request in fixture '{fixture_name}' ({category}) must have a 'method' field"
-        )
-        assert "path" in request_value, (
-            f"Request in fixture '{fixture_name}' ({category}) must have a 'path' field"
-        )
+        assert "method" in request_value, f"Request in fixture '{fixture_name}' ({category}) must have a 'method' field"
+        assert "path" in request_value, f"Request in fixture '{fixture_name}' ({category}) must have a 'path' field"
 
     response_value: object = fixture["expected_response"]
     if isinstance(response_value, dict):
@@ -114,9 +108,7 @@ def _validate_fixture_structure(
             f"Response in fixture '{fixture_name}' ({category}) must have a 'status_code' field"
         )
         status_code = response_value.get("status_code")
-        assert isinstance(status_code, int), (
-            f"Status code in fixture '{fixture_name}' ({category}) must be an integer"
-        )
+        assert isinstance(status_code, int), f"Status code in fixture '{fixture_name}' ({category}) must be an integer"
         assert 100 <= status_code <= 599, (
             f"Status code in fixture '{fixture_name}' ({category}) must be between 100 and 599"
         )

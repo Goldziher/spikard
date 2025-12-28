@@ -6,8 +6,9 @@ namespace Spikard\Tests;
 
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Spikard\Http\Request;
+use Spikard\Http\Response;
 use Spikard\Native\TestClient;
-use Spikard\Response;
 
 /**
  * FFI Type Safety Tests for ext-php-rs Boundary Validation.
@@ -46,7 +47,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'GET',
                 'path' => '/null-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         // Return response with optional header that would be None in Rust
                         return Response::json(['status' => 'ok'], 200);
@@ -80,7 +81,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/int-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = $request->body ?? [];
@@ -130,10 +131,11 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/keys-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
+                        /** @var array<int|string> $keys */
                         $keys = \array_keys($body);
                         $intKeys = [];
                         $stringKeys = [];
@@ -142,7 +144,7 @@ final class FfiTypeSafetyTest extends TestCase
                             if (\is_int($k)) {
                                 $intKeys[] = $k;
                             } else {
-                                $stringKeys[] = $k;
+                                $stringKeys[] = (string) $k;
                             }
                         }
 
@@ -170,7 +172,9 @@ final class FfiTypeSafetyTest extends TestCase
             $data = $response->body;
 
             // "0" as string key should be preserved as string
-            $this->assertContains('name', $data['string_keys']);
+            /** @var array<int|string, mixed> $stringKeys */
+            $stringKeys = $data['string_keys'] ?? [];
+            $this->assertContains('name', $stringKeys);
             $this->assertGreaterThan(0, $data['string_key_count']);
         } finally {
             $client->close();
@@ -188,7 +192,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/bool-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
@@ -258,16 +262,30 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/large-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<int, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
                         $count = \count($body);
 
+                        /** @var mixed $firstId */
+                        $firstId = null;
+                        /** @var mixed $lastId */
+                        $lastId = null;
+                        if ($count > 0) {
+                            $first = $body[0] ?? null;
+                            if (\is_array($first)) {
+                                $firstId = $first['id'] ?? null;
+                            }
+                            $last = $body[$count - 1] ?? null;
+                            if (\is_array($last)) {
+                                $lastId = $last['id'] ?? null;
+                            }
+                        }
                         return Response::json([
                             'received_count' => $count,
-                            'first_id' => $count > 0 ? ($body[0]['id'] ?? null) : null,
-                            'last_id' => $count > 0 ? ($body[$count - 1]['id'] ?? null) : null,
+                            'first_id' => $firstId,
+                            'last_id' => $lastId,
                         ]);
                     }
                 },
@@ -302,16 +320,18 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/unicode-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
                         $input = $body['text'] ?? '';
 
+                        /** @var string $inputStr */
+                        $inputStr = \is_string($input) ? $input : '';
                         return Response::json([
-                            'received' => $input,
-                            'length' => \strlen($input),
-                            'char_count' => \mb_strlen($input, 'UTF-8'),
+                            'received' => $inputStr,
+                            'length' => \strlen($inputStr),
+                            'char_count' => \mb_strlen($inputStr, 'UTF-8'),
                         ]);
                     }
                 },
@@ -348,7 +368,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/circular-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
@@ -401,7 +421,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/cleanup-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         // Attempt to process body that may be invalid
                         try {
@@ -451,7 +471,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/type-mismatch-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
@@ -494,7 +514,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/float-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
@@ -546,12 +566,13 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/empty-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
                         $empty = $body['empty_array'] ?? 'missing';
-                        $null = $body['null_value'] ?? 'missing';
+                        /** @var mixed $null */
+                        $null = \array_key_exists('null_value', $body) ? $body['null_value'] : 'missing';
 
                         return Response::json([
                             'empty_is_array' => \is_array($empty),
@@ -596,7 +617,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/nested-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
@@ -662,7 +683,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/exception-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
@@ -715,7 +736,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/mixed-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
@@ -777,7 +798,7 @@ final class FfiTypeSafetyTest extends TestCase
                 'method' => 'POST',
                 'path' => '/boundary-test',
                 'handler' => new class {
-                    public function handle(mixed $request): Response
+                    public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];

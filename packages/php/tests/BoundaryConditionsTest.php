@@ -854,13 +854,15 @@ final class BoundaryConditionsTest extends TestClientTestCase
             $response = $client->request('POST', '/test', ['body' => $mixedBody]);
             $data = $response->parseJson();
 
-            $this->assertSame('string', $data['types']['string_val']);
-            $this->assertSame('integer', $data['types']['int_val']);
-            $this->assertSame('double', $data['types']['float_val']);
-            $this->assertSame('boolean', $data['types']['bool_val']);
-            $this->assertSame('NULL', $data['types']['null_val']);
-            $this->assertSame('array', $data['types']['array_val']);
-            $this->assertSame('array', $data['types']['nested_obj']);
+            /** @var array<string, mixed> $types */
+            $types = $data['types'] ?? [];
+            $this->assertSame('string', $types['string_val']);
+            $this->assertSame('integer', $types['int_val']);
+            $this->assertSame('double', $types['float_val']);
+            $this->assertSame('boolean', $types['bool_val']);
+            $this->assertSame('NULL', $types['null_val']);
+            $this->assertSame('array', $types['array_val']);
+            $this->assertSame('array', $types['nested_obj']);
         } finally {
             $client->close();
         }
