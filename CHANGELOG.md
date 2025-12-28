@@ -71,12 +71,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **TypeScript OpenAPI**: Forward reference errors in type definitions
 - **OpenRPC generators**: Serialization issues causing double JSON encoding
 - **AsyncAPI generators**: Critical type mapping issues across all languages
+- **Python GraphQL generator**: Fixed scalar type mapping tests to reflect actual implementation
+- **Python GraphQL generator**: Corrected union type assertion to use `TypeAlias` annotation format
 
 #### Quality Issues
 - Eliminated duplicate code generation logic across language-specific modules
 - Resolved type system inconsistencies in generated code
 - Fixed identifier sanitization edge cases
 - Corrected escape sequence handling in docstrings and comments
+- Fixed doctest import paths in shared utilities to use full crate paths
+
+#### Dependency Issues
+- **Node.js examples**: Fixed incorrect workspace dependency reference in `examples/graphql-node`
+  - Changed from `"spikard": "workspace:*"` to correct `"@spikard/node": "workspace:*"`
+  - Resolved `task update` failures caused by missing workspace package
+
+### Documentation
+
+#### User-Facing
+- **ADR-0004**: Updated architecture decision record to reflect current implementation
+  - Documented DRY architecture with shared utilities
+  - Added quality validation framework details
+  - Included init command scaffolding patterns
+- **CLI Usage Guide**: Enhanced with comprehensive command examples
+  - Added `spikard init` usage and options
+  - Documented all `spikard generate` subcommands (GraphQL, OpenAPI, AsyncAPI, OpenRPC)
+  - Included schema integration examples
+- **Init Command Guide**: Cleaned up implementation details, focused on user-facing features
+  - Removed Rust implementation architecture section
+  - Retained usage examples and language-specific scaffolds
 
 ## [0.6.2] - 2025-12-28
 

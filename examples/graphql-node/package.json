@@ -9,10 +9,10 @@
     "dev": "tsc --watch & node --watch dist/main.js"
   },
   "dependencies": {
-    "spikard": "workspace:*"
+    "@spikard/node": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.3.0"
+    "@types/node": "^25.0.3",
+    "typescript": "^5.9.3"
   }
 }

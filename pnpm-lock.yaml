@@ -53,10 +53,10 @@ importers:
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.11.1
-        version: 0.11.1(@cloudflare/workers-types@4.20251225.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))
+        version: 0.11.1(@cloudflare/workers-types@4.20251228.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))
       '@cloudflare/workers-types':
-        specifier: ^4.20251225.0
-        version: 4.20251225.0
+        specifier: ^4.20251228.0
+        version: 4.20251228.0
       '@spikard/wasm':
         specifier: workspace:*
         version: link:../../packages/wasm
@@ -71,7 +71,7 @@ importers:
         version: 4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0)
       wrangler:
         specifier: ^4.56.0
-        version: 4.56.0(@cloudflare/workers-types@4.20251225.0)
+        version: 4.56.0(@cloudflare/workers-types@4.20251228.0)
 
   e2e/deno: {}
 
@@ -110,6 +110,19 @@ importers:
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0)
+
+  examples/graphql-node:
+    dependencies:
+      '@spikard/node':
+        specifier: workspace:*
+        version: link:../../packages/node
+    devDependencies:
+      '@types/node':
+        specifier: ^25.0.3
+        version: 25.0.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   examples/node:
     dependencies:
@@ -150,8 +163,8 @@ importers:
         version: link:../../packages/wasm
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20251225.0
-        version: 4.20251225.0
+        specifier: ^4.20251228.0
+        version: 4.20251228.0
       '@types/node':
         specifier: ^25.0.3
         version: 25.0.3
@@ -160,7 +173,7 @@ importers:
         version: 5.9.3
       wrangler:
         specifier: ^4.56.0
-        version: 4.56.0(@cloudflare/workers-types@4.20251225.0)
+        version: 4.56.0(@cloudflare/workers-types@4.20251228.0)
 
   examples/wasm-deno:
     dependencies:
@@ -423,8 +436,8 @@ importers:
   tools/benchmark-harness/apps/morojs-raw:
     dependencies:
       '@morojs/moro':
-        specifier: ^1.7.3
-        version: 1.7.3(ws@8.18.3)
+        specifier: ^1.7.5
+        version: 1.7.5(ws@8.18.3)
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -439,8 +452,8 @@ importers:
   tools/benchmark-harness/apps/morojs-validation:
     dependencies:
       '@morojs/moro':
-        specifier: ^1.7.3
-        version: 1.7.3(ws@8.18.3)
+        specifier: ^1.7.5
+        version: 1.7.5(ws@8.18.3)
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -643,8 +656,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@4.20251225.0':
-    resolution: {integrity: sha512-ZZl0cNLFcsBRFKtMftKWOsfAybUYSeiTMzpQV1NlTVlByHAs1rGQt45Jw/qz8LrfHoq9PGTieSj9W350Gi4Pvg==}
+  '@cloudflare/workers-types@4.20251228.0':
+    resolution: {integrity: sha512-lzE1IjLn5TiStPD5+sGZsPSY9sSFSSIujOWb5f6JMnDWkyNzdZOaEVFvx0sw5ztaWWQjK22hjYW7rgb+OFscjg==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -1275,40 +1288,40 @@ packages:
     resolution: {integrity: sha512-OWV6DnaMd+kRikdQLZHzIiVYT1usFg/yw9Ey+qeWrll0GwkWpS6TS6mvYbNCqPzeG8Yq70ux3kP2ApiVhO7WoA==}
     engines: {node: '>= 10'}
 
-  '@morojs/moro@1.7.3':
-    resolution: {integrity: sha512-INojdX2pjblTj+PYYWCbE1zcBy1gN/vJzz8OQSS/2cbponkd9RlpF839RUlhETvxq6/hKVXh7FdSiDNZ+okOZA==}
+  '@morojs/moro@1.7.5':
+    resolution: {integrity: sha512-hSW2os6qGYNswiiPcxjQp/RyhNqckYOLFls5Hrm3fzE5PB9SYeer2E0wnfphM5aGRFw4hDNk7NPEVxcHbNNXxA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      '@aws-sdk/client-ses': ^3.927.0
-      '@aws-sdk/client-sqs': ^3.927.0
-      '@grpc/grpc-js': ^1.14.1
-      '@grpc/proto-loader': ^0.8.0
-      '@pothos/core': ^4.10.0
-      '@sendgrid/mail': ^8.1.6
-      amqplib: ^0.10.9
-      better-auth: ^1.3.34
-      better-sqlite3: ^12.2.0
-      bullmq: ^5.63.0
-      class-validator: ^0.14.0
-      dataloader: ^2.2.3
-      drizzle-orm: ^0.44.5
-      ejs: ^3.1.10
-      graphql: ^16.12.0
-      graphql-jit: ^0.8.7
-      handlebars: ^4.7.8
-      ioredis: ^5.7.0
-      joi: ^17.0.0
-      kafkajs: ^2.2.4
-      mongodb: ^6.19.0
-      mysql2: ^3.14.5
-      nodemailer: ^7.0.10
-      pg: ^8.16.3
-      resend: ^6.4.2
-      socket.io: ^4.8.1
-      swagger-ui-dist: ^5.28.1
-      uWebSockets.js: github:uNetworking/uWebSockets.js#v20.52.0
-      ws: ^8.18.0
-      yup: ^1.7.1
+      '@aws-sdk/client-ses': '>=3.927.0'
+      '@aws-sdk/client-sqs': '>=3.927.0'
+      '@grpc/grpc-js': '>=1.14.1'
+      '@grpc/proto-loader': '>=0.8.0'
+      '@pothos/core': '>=4.10.0'
+      '@sendgrid/mail': '>=8.1.6'
+      amqplib: '>=0.10.9'
+      better-auth: '>=1.3.34'
+      better-sqlite3: '>=12.2.0'
+      bullmq: '>=5.63.0'
+      class-validator: '>=0.14.0'
+      dataloader: '>=2.2.3'
+      drizzle-orm: '>=0.44.5'
+      ejs: '>=3.1.10'
+      graphql: '>=16.12.0'
+      graphql-jit: '>=0.8.7'
+      handlebars: '>=4.7.8'
+      ioredis: '>=5.7.0'
+      joi: '>=17.0.0'
+      kafkajs: '>=2.2.4'
+      mongodb: '>=6.19.0'
+      mysql2: '>=3.14.5'
+      nodemailer: '>=7.0.10'
+      pg: '>=8.16.3'
+      resend: '>=6.4.2'
+      socket.io: '>=4.8.1'
+      swagger-ui-dist: '>=5.28.1'
+      uWebSockets.js: github:uNetworking/uWebSockets.js#v20.56.0
+      ws: '>=8.18.0'
+      yup: '>=1.7.1'
     peerDependenciesMeta:
       '@aws-sdk/client-ses':
         optional: true
@@ -1961,8 +1974,8 @@ packages:
   '@sinclair/typebox@0.34.41':
     resolution: {integrity: sha512-6gS8pZzSXdyRHTIqoqSVknxolr1kzfy4/CeDnrzsVz8TTIWUbOBr6gnzOmTYJ3eXQNh4IYHIGi5aIL7sOZ2G/g==}
 
-  '@sindresorhus/is@7.1.1':
-    resolution: {integrity: sha512-rO92VvpgMc3kfiTjGT52LEtJ8Yc5kCWhZjLQ3LwlA4pSgPpQO7bVpYXParOD8Jwf+cVQECJo3yP/4I8aZtUQTQ==}
+  '@sindresorhus/is@7.2.0':
+    resolution: {integrity: sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw==}
     engines: {node: '>=18'}
 
   '@speed-highlight/core@1.2.12':
@@ -2121,8 +2134,8 @@ packages:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
     engines: {node: '>=12'}
 
-  ast-v8-to-istanbul@0.3.9:
-    resolution: {integrity: sha512-dSC6tJeOJxbZrPzPbv5mMd6CMiQ1ugaVXXPRad2fXUSsy1kstFn9XQWemV9VW7Y7kpxgQ/4WMoZfwdH8XSU48w==}
+  ast-v8-to-istanbul@0.3.10:
+    resolution: {integrity: sha512-p4K7vMz2ZSk3wN8l5o3y2bJAoZXT3VuJI5OLTATY/01CYWumWvwkUw0SqDBnNq6IiTO3qDa1eSQDibAV8g7XOQ==}
 
   atomic-sleep@1.0.0:
     resolution: {integrity: sha512-kNOjDqAh7px0XWNI+4QbzoiR/nTkHAWNud2uvnJquD1/x5a7EQZMJT0AczqK0Qn67oY/TTQ1LbUKajZpp3I9tQ==}
@@ -3356,7 +3369,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20251217.0
 
-  '@cloudflare/vitest-pool-workers@0.11.1(@cloudflare/workers-types@4.20251225.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))':
+  '@cloudflare/vitest-pool-workers@0.11.1(@cloudflare/workers-types@4.20251228.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))':
     dependencies:
       '@vitest/runner': 4.0.16
       '@vitest/snapshot': 4.0.16
@@ -3367,7 +3380,7 @@ snapshots:
       miniflare: 4.20251217.0
       semver: 7.7.3
       vitest: 4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0)
-      wrangler: 4.56.0(@cloudflare/workers-types@4.20251225.0)
+      wrangler: 4.56.0(@cloudflare/workers-types@4.20251228.0)
       zod: 3.25.76
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
@@ -3389,7 +3402,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20251217.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20251225.0': {}
+  '@cloudflare/workers-types@4.20251228.0': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -3836,7 +3849,7 @@ snapshots:
 
   '@kitojs/kito-core@1.0.0-alpha.8': {}
 
-  '@morojs/moro@1.7.3(ws@8.18.3)':
+  '@morojs/moro@1.7.5(ws@8.18.3)':
     optionalDependencies:
       ws: 8.18.3
 
@@ -4180,7 +4193,7 @@ snapshots:
   '@poppinss/dumper@0.6.5':
     dependencies:
       '@poppinss/colors': 4.1.6
-      '@sindresorhus/is': 7.1.1
+      '@sindresorhus/is': 7.2.0
       supports-color: 10.2.2
 
   '@poppinss/exception@1.2.3': {}
@@ -4288,7 +4301,7 @@ snapshots:
 
   '@sinclair/typebox@0.34.41': {}
 
-  '@sindresorhus/is@7.1.1': {}
+  '@sindresorhus/is@7.2.0': {}
 
   '@speed-highlight/core@1.2.12': {}
 
@@ -4372,7 +4385,7 @@ snapshots:
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.0.16
-      ast-v8-to-istanbul: 0.3.9
+      ast-v8-to-istanbul: 0.3.10
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-report: 3.0.1
       istanbul-lib-source-maps: 5.0.6
@@ -4462,7 +4475,7 @@ snapshots:
 
   assertion-error@2.0.1: {}
 
-  ast-v8-to-istanbul@0.3.9:
+  ast-v8-to-istanbul@0.3.10:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       estree-walker: 3.0.3
@@ -5623,7 +5636,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20251217.0
       '@cloudflare/workerd-windows-64': 1.20251217.0
 
-  wrangler@4.56.0(@cloudflare/workers-types@4.20251225.0):
+  wrangler@4.56.0(@cloudflare/workers-types@4.20251228.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.1
       '@cloudflare/unenv-preset': 2.7.13(unenv@2.0.0-rc.24)(workerd@1.20251217.0)
@@ -5634,7 +5647,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20251217.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20251225.0
+      '@cloudflare/workers-types': 4.20251228.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
