@@ -1,10 +1,7 @@
 """Simple test of the Spikard test client."""
 
 import asyncio
-import sys
 from typing import Any
-
-sys.path.insert(0, "/Users/naamanhirschfeld/workspace/spikard/packages/python")
 
 from spikard import Spikard
 from spikard.testing import TestClient

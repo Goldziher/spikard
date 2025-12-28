@@ -1,6 +1,6 @@
 [package]
 name = "rust-lifecycle-hooks-example"
-version = "0.6.2"
+version = "0.7.0"
 edition = "2024"
 
 # This is a standalone example, not part of the workspace

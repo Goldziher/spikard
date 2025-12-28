@@ -3,7 +3,9 @@
 
 set -e
 
-WORKSPACE_ROOT="/Users/naamanhirschfeld/workspace/spikard"
+# Detect workspace root from script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SPIKARD_RUST_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/spikard-rust-validation/target/release/spikard-rust-bench"
 PYTHON_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/spikard-python-workloads/server.py"
 

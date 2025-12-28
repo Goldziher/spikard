@@ -176,6 +176,6 @@ For questions about specific test cases, see the detailed descriptions in:
 
 ---
 
-**Location**: `/Users/naamanhirschfeld/workspace/spikard/testing_data/jsonrpc/validation/`
+**Location**: `testing_data/jsonrpc/validation/`
 
 All fixtures are ready for immediate use in Spikard test suites.

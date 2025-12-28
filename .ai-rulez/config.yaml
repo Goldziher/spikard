@@ -1,0 +1,16 @@
+$schema: https://raw.githubusercontent.com/Goldziher/ai-rulez/main/schema/ai-rules-v3.schema.json
+description: |
+    Spikard is a Rust-centric multi-language toolkit that provides a core library,
+    command-line interface, and HTTP runtime with tower-http middleware surfaced
+    through Python (PyO3), Node.js (napi-rs), Ruby (magnus), PHP (ext-php-rs), and
+    WebAssembly bindings to build and validate typed web services. The monorepo couples
+    Rust 2024 workspace crates with Python/uv, Node.js/pnpm, Ruby, PHP/Composer, and
+    taskfile automation, backed by extensive fixture-driven tests to ensure consistent
+    request handling across platforms.
+gitignore: true
+name: spikard
+presets:
+    - claude
+    - gemini
+    - codex
+version: "3.0"
