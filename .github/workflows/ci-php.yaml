@@ -49,13 +49,14 @@ defaults:
 
 jobs:
   build-php-extension:
-    name: Build PHP Extension (${{ matrix.os }})
+    name: Build PHP Extension (${{ matrix.os }} | PHP ${{ matrix.php }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        php: ["8.2", "8.3"]
     steps:
       - uses: actions/checkout@v6
 
@@ -63,14 +64,14 @@ jobs:
         if: runner.os == 'Windows'
         uses: ./.github/actions/setup-rust
         with:
-          cache-key-prefix: build-php-${{ matrix.os }}
+          cache-key-prefix: build-php-${{ matrix.os }}-${{ matrix.php }}
           toolchain: nightly
 
       - name: Setup Rust (Stable for Unix)
         if: runner.os != 'Windows'
         uses: ./.github/actions/setup-rust
         with:
-          cache-key-prefix: build-php-${{ matrix.os }}
+          cache-key-prefix: build-php-${{ matrix.os }}-${{ matrix.php }}
 
       - name: Setup LLVM/Clang
         uses: ./.github/actions/setup-llvm-clang
@@ -81,7 +82,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: ${{ matrix.php }}
           tools: composer
           coverage: none
           extensions: fileinfo
@@ -111,7 +112,7 @@ jobs:
       - name: Upload PHP extension artifact
         uses: actions/upload-artifact@v6
         with:
-          name: php-extension-${{ matrix.os }}
+          name: php-extension-${{ matrix.os }}-${{ matrix.php }}
           path: |
             target/release/*.so
             target/release/*.dylib
@@ -171,7 +172,7 @@ jobs:
       - name: Download PHP extension artifact
         uses: actions/download-artifact@v7
         with:
-          name: php-extension-${{ matrix.os }}
+          name: php-extension-${{ matrix.os }}-${{ matrix.php }}
           path: target/release
 
       - name: Install PHP extension (Linux)
@@ -213,9 +214,18 @@ jobs:
           # Enable the extension
           PHP_INI_DIR=$(php-config --ini-dir)
           echo "PHP INI directory: $PHP_INI_DIR"
-          mkdir -p "$PHP_INI_DIR/conf.d"
-          echo "extension=spikard.dylib" >> "$PHP_INI_DIR/conf.d/20-spikard.ini"
-          echo "Added extension to $PHP_INI_DIR/conf.d/20-spikard.ini"
+          # Note: On Homebrew macOS, php-config --ini-dir already returns the conf.d directory
+          # so we don't need to append conf.d again
+          if [ -d "$PHP_INI_DIR" ]; then
+            # If it already points to conf.d, use it directly
+            INI_PATH="$PHP_INI_DIR/20-spikard.ini"
+          else
+            # Otherwise create conf.d subdirectory
+            mkdir -p "$PHP_INI_DIR/conf.d"
+            INI_PATH="$PHP_INI_DIR/conf.d/20-spikard.ini"
+          fi
+          echo "extension=spikard.dylib" >> "$INI_PATH"
+          echo "Added extension to $INI_PATH"
           # Verify extension is loaded
           php -r "if (extension_loaded('spikard')) { echo 'Extension loaded successfully'; } else { echo 'Failed to load extension'; exit(1); }"
 
@@ -288,7 +298,7 @@ jobs:
         uses: ./.github/actions/setup-llvm-clang
 
       - name: Build PHP extension
-        run: cargo build --release -p spikard-php
+        run: cargo build --release -p spikard-php --features extension-module
 
       - name: Install PHP extension
         run: |
