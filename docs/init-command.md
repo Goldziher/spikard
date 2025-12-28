@@ -782,50 +782,6 @@ jobs:
 
 ---
 
-## Architecture Reference
-
-### InitEngine Flow
-
-```
-1. Parse CLI Arguments
-   ├── Validate project name
-   ├── Validate language
-   └── Validate paths
-
-2. Select Scaffolder
-   ├── Python → PythonScaffolder
-   ├── TypeScript → TypeScriptScaffolder
-   ├── Ruby → RubyScaffolder
-   ├── PHP → PhpScaffolder
-   └── Rust → RustScaffolder
-
-3. Generate Files
-   ├── Create directory structure
-   ├── Generate manifests (pyproject.toml, package.json, etc.)
-   ├── Generate source code (app.rs, handlers.py, etc.)
-   ├── Generate tests
-   └── Generate documentation (README.md)
-
-4. Return Response
-   ├── List of created files
-   └── Next steps for user
-```
-
-### ProjectScaffolder Trait
-
-```rust
-pub trait ProjectScaffolder {
-    fn scaffold(&self, request: &InitRequest) -> Result<Vec<ScaffoldedFile>>;
-
-    fn validate_name(&self, name: &str) -> Result<()>;
-}
-
-pub struct ScaffoldedFile {
-    pub path: PathBuf,
-    pub content: String,
-}
-```
-
 ---
 
 ## Related Documentation
@@ -858,7 +814,7 @@ A: The scaffolded structure is ready for development. You'll need to add busines
 A: The init command is for initial scaffolding. For code generation from schemas, use `spikard codegen`.
 
 **Q: Can I contribute custom scaffolders?**
-A: Yes! See the Architecture Reference section for implementing custom scaffolders. Submit PR to the repository.
+A: Yes! Custom scaffolders should implement the ProjectScaffolder trait. See ADR-0004 for architecture details. Submit PR to the repository.
 
 ---
 
