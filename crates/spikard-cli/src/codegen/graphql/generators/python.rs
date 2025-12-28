@@ -467,6 +467,8 @@ impl GraphQLGenerator for PythonGenerator {
         let has_enums = schema.types.values().any(|t| t.kind == TypeKind::Enum);
         // Check if we need to import Struct
         let has_structs = schema.types.values().any(|t| matches!(t.kind, TypeKind::InputObject | TypeKind::Object) && t.name != "Query" && t.name != "Mutation" && t.name != "Subscription");
+        // Check if we need to import TypeAlias
+        let has_unions = schema.types.values().any(|t| t.kind == TypeKind::Union);
 
         code.push_str("from __future__ import annotations\n");
 
@@ -475,6 +477,9 @@ impl GraphQLGenerator for PythonGenerator {
         }
         if has_structs {
             code.push_str("from msgspec import Struct\n");
+        }
+        if has_unions {
+            code.push_str("from typing import TypeAlias\n");
         }
 
         code.push_str("\n");
@@ -540,10 +545,11 @@ impl GraphQLGenerator for PythonGenerator {
                 }
                 code.push_str("\n\n");
             } else if type_def.kind == TypeKind::Union {
-                // Union types: use quoted string syntax for forward compatibility with mypy --strict
-                // This ensures the union can reference types defined later in the file
+                // Union types: use TypeAlias with quoted string for forward references
+                // Quote the value to avoid "used before definition" errors in mypy --strict
+                // The TypeAlias annotation tells mypy this is a type alias, not a string variable
                 let members = type_def.possible_types.join(" | ");
-                code.push_str(&format!("{} = \"{}\"\n", type_def.name, members));
+                code.push_str(&format!("{}: TypeAlias = \"{}\"\n", type_def.name, members));
                 code.push_str("\n");
             }
         }
@@ -804,6 +810,169 @@ impl GraphQLGenerator for PythonGenerator {
         code.push_str("__all__ = ['schema', 'type_defs']\n");
 
         Ok(code)
+    }
+
+    /// Override generate_complete to merge sections without duplicate headers
+    ///
+    /// When generating a complete file, each section has its own header (shebang,
+    /// comments, docstrings). This reorganizes the code to have:
+    /// 1. types header + imports from types section
+    /// 2. external imports from resolvers/schema
+    /// 3. all code from all sections
+    fn generate_complete(&self, schema: &GraphQLSchema) -> Result<String> {
+        let types = self.generate_types(schema)?;
+        let resolvers = self.generate_resolvers(schema)?;
+        let schema_def = self.generate_schema_definition(schema)?;
+
+        // Extract imports and code, separately tracking what was in types section
+        fn extract_header_imports_and_code(s: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
+            let mut header_lines: Vec<String> = Vec::new();  // shebang, comments, docstring
+            let mut imports: Vec<String> = Vec::new();
+            let mut code: Vec<String> = Vec::new();
+            let mut in_header_docstring = false;
+            let mut past_header = false;
+            let mut found_import_section = false;
+
+            for line in s.lines() {
+                let trimmed = line.trim();
+
+                // Skip header section before code starts
+                if !past_header {
+                    // Handle header docstrings (module-level docstrings at top)
+                    if trimmed.starts_with("\"\"\"") {
+                        // One-line docstring: starts and ends with """
+                        if trimmed.len() >= 6 && trimmed.ends_with("\"\"\"") && !trimmed.starts_with("\"\"\"\"") {
+                            // Skip one-line docstring entirely
+                            header_lines.push(line.to_string());
+                            continue;
+                        } else {
+                            // Multi-line docstring: toggle state
+                            header_lines.push(line.to_string());
+                            in_header_docstring = !in_header_docstring;
+                            continue;
+                        }
+                    }
+
+                    // Lines inside multi-line docstring
+                    if in_header_docstring {
+                        header_lines.push(line.to_string());
+                        continue;
+                    }
+
+                    // Lines in preamble (shebang, DO NOT EDIT, etc.)
+                    if trimmed.starts_with("#!/")
+                        || trimmed.starts_with("# ruff:")
+                        || trimmed.starts_with("# DO NOT EDIT")
+                        || trimmed == "#"
+                        || (trimmed.starts_with("# This file") && trimmed.contains("generated"))
+                        || (trimmed.starts_with("# Any manual"))
+                    {
+                        header_lines.push(line.to_string());
+                        continue;
+                    }
+
+                    // Skip empty lines in header
+                    if trimmed.is_empty() {
+                        continue;
+                    }
+
+                    // We've hit actual content; mark header as passed
+                    past_header = true;
+                }
+
+                // Now past header - categorize the rest
+                // Skip __future__ imports - only keep in types section
+                if trimmed.starts_with("from __future__") {
+                    if !found_import_section {
+                        imports.push(line.to_string());
+                        found_import_section = true;
+                    }
+                    continue;
+                }
+
+                // Categorize: imports vs. code
+                if trimmed.starts_with("import ") || trimmed.starts_with("from ") {
+                    imports.push(line.to_string());
+                    found_import_section = true;
+                } else {
+                    if trimmed.is_empty() && !found_import_section && imports.is_empty() {
+                        // Skip empty lines before imports start
+                        continue;
+                    }
+                    code.push(line.to_string());
+                }
+            }
+
+            (header_lines, imports, code)
+        }
+
+        let (types_header, types_imports, types_code) = extract_header_imports_and_code(&types);
+        let (_resolvers_header, resolvers_imports, resolvers_code) = extract_header_imports_and_code(&resolvers);
+        let (_schema_def_header, schema_def_imports, schema_def_code) = extract_header_imports_and_code(&schema_def);
+
+        // Collect all external imports (skip "from .types" imports)
+        let mut all_imports: Vec<String> = types_imports;
+        for imp in resolvers_imports.iter().chain(schema_def_imports.iter()) {
+            let trimmed = imp.trim();
+            // Skip imports from .types (relative imports from types module)
+            if trimmed.starts_with("from .types") {
+                continue;
+            }
+            if !all_imports.contains(imp) {
+                all_imports.push(imp.clone());
+            }
+        }
+
+        // Build final result with proper Python import structure:
+        // 1. Header (shebang, comments)
+        // 2. All imports
+        // 3. All code (type definitions + resolvers + schema)
+        let mut result = String::new();
+
+        // Add header
+        for header_line in types_header {
+            result.push_str(&header_line);
+            result.push('\n');
+        }
+
+        // Add all imports
+        for imp in &all_imports {
+            result.push_str(imp);
+            result.push('\n');
+        }
+
+        // Add types code
+        if !types_code.is_empty() {
+            result.push('\n');
+            for line in types_code {
+                result.push_str(&line);
+                result.push('\n');
+            }
+        }
+
+        // Add resolvers code
+        if !resolvers_code.is_empty() {
+            result.push('\n');
+            for line in resolvers_code {
+                result.push_str(&line);
+                result.push('\n');
+            }
+        }
+
+        // Add schema definition code
+        if !schema_def_code.is_empty() {
+            result.push('\n');
+            for line in schema_def_code {
+                result.push_str(&line);
+                result.push('\n');
+            }
+        }
+
+        // Trim excess trailing newlines and add single newline
+        result = result.trim_end().to_string();
+        result.push('\n');
+
+        Ok(result)
     }
 }
 
