@@ -75,6 +75,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
+          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.14/site-packages
         shell: bash
         run: bash scripts/ci/rust/run-workspace-tests.sh
 
@@ -116,6 +117,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
+          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.14/site-packages
         shell: bash
         run: bash scripts/ci/rust/run-workspace-tests.sh
 
@@ -124,6 +126,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
+          PYTHONPATH: ${{ github.workspace }}/.venv/Lib/site-packages
         shell: pwsh
         run: scripts/ci/rust/run-workspace-tests-windows.ps1 -ExcludeRuby
 
@@ -164,6 +167,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
+          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.14/site-packages
         run: >
           cargo tarpaulin
           -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared
@@ -207,10 +211,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Python for PyO3
-        uses: actions/setup-python@v6
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
         with:
           python-version: "3.14"
+          cache-prefix: coverage-rust-php-linux-py3.14
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -235,6 +240,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
+          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.14/site-packages
         run: |
           cargo tarpaulin \
             -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared \
