@@ -1790,9 +1790,10 @@ import { createAppGraphqlQuery } from "../app/main.ts";
 		const data = responseBody.data;
 		assert(data.hasOwnProperty("_service"));
 		assert(data._service.hasOwnProperty("sdl"));
-		assertEquals(data._service.sdl, "type Account @key(fields: \""accountId\") {\ n  accountId: ID!\ n  accountName: String!\tn  tier: String!\rn  createdAt: String!\nn}\en\untype Query {\nn  account(accountId: ID!): Account\on}")errors = responseBody.errors;
-		assertEquals(errors?.length ?? 0, 0);
-	});
+		assertEquals(data._service.sdl, "type Account @key(fields: \"accountId\") {\n  accountId: ID!\n  accountName: String!\n  tier: String!\n  createdAt: String!\n}\n\ntype Query {\n  account(accountId: ID!): Account\n}");
+	const errors = responseBody.errors;
+	assertEquals(errors?.length ?? 0, 0);
+});
 
 	Deno.test("GraphQL query: shareable_directive", async () => {
 		const app = createAppGraphqlQuery();
@@ -2005,7 +2006,8 @@ import { createAppGraphqlQuery } from "../app/main.ts";
 		const errors = responseBody.errors;
 		assert(errors !== undefined);
 		assertEquals(errors?.length, 1);
-		assert(errors?.[0]?.message.includes("Cannot query field \""invalidField\" on type \U"User\". Did you mean \d"id\", \m"name\", or \i"email\"?"));
+		assert(errors?.[0]?.message.includes("Cannot query field \"invalidField\" on type \"User\". Did you mean \"id\", \"name\", or \"email\"?"));
+});
 
 	Deno.test("GraphQL query: syntax_error", async () => {
 		const app = createAppGraphqlQuery();
@@ -2052,7 +2054,8 @@ import { createAppGraphqlQuery } from "../app/main.ts";
 		const errors = responseBody.errors;
 		assert(errors !== undefined);
 		assertEquals(errors?.length, 1);
-		assert(errors?.[0]?.message.includes("Variable \""$id\" of type \I"ID!\" was provided invalid value."))	});
+		assert(errors?.[0]?.message.includes("Variable \"$id\" of type \"ID!\" was provided invalid value."));
+});
 
 	Deno.test("GraphQL query: query_batching", async () => {
 		const app = createAppGraphqlQuery();
@@ -2514,7 +2517,8 @@ import { createAppGraphqlQuery } from "../app/main.ts";
 		const errors = responseBody.errors;
 		assert(errors !== undefined);
 		assertEquals(errors?.length, 1);
-		assert(errors?.[0]?.message.includes("Variable \""$limit\" of type \I"Int!\" was provided invalid value."))	});
+		assert(errors?.[0]?.message.includes("Variable \"$limit\" of type \"Int!\" was provided invalid value."));
+});
 
 	Deno.test("GraphQL query: dataloader_cache_hit", async () => {
 		const app = createAppGraphqlQuery();

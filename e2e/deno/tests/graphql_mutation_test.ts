@@ -208,7 +208,8 @@ import { createAppGraphqlMutation } from "../app/main.ts";
 		const errors = responseBody.errors;
 		assert(errors !== undefined);
 		assertEquals(errors?.length, 1);
-		assert(errors?.[0]?.message.includes("Field \""CreatePostInput.tags\" of required type \["[String!]!\" was not provided."))	});
+		assert(errors?.[0]?.message.includes("Field \"CreatePostInput.tags\" of required type [\"[String!]!\" was not provided."));
+});
 
 	Deno.test("GraphQL mutation: mutation_permission_check", async () => {
 		const app = createAppGraphqlMutation();
@@ -279,7 +280,8 @@ import { createAppGraphqlMutation } from "../app/main.ts";
 		const errors = responseBody.errors;
 		assert(errors !== undefined);
 		assertEquals(errors?.length, 1);
-		assert(errors?.[0]?.message.includes("Field \""UserRegistrationInput.password\" of required type \S"String!\" was not provided."))	});
+		assert(errors?.[0]?.message.includes("Field \"UserRegistrationInput.password\" of required type \"String!\" was not provided."));
+});
 
 	Deno.test("GraphQL mutation: file_upload_validation_type", async () => {
 		const app = createAppGraphqlMutation();

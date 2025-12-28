@@ -183,11 +183,15 @@ jobs:
             echo "Error: Could not find PHP extension (.so file)"
             exit 1
           fi
+          echo "Found extension: $EXT_FILE"
           # Copy to PHP extension directory
           PHP_EXTENSIONS_DIR=$(php-config --extension-dir)
+          echo "PHP extension directory: $PHP_EXTENSIONS_DIR"
           sudo cp "$EXT_FILE" "$PHP_EXTENSIONS_DIR/spikard.so"
+          echo "Copied extension to $PHP_EXTENSIONS_DIR/spikard.so"
           # Enable the extension
           echo "extension=spikard.so" | sudo tee /etc/php/${{ matrix.php }}/cli/conf.d/20-spikard.ini > /dev/null
+          echo "Added extension to /etc/php/${{ matrix.php }}/cli/conf.d/20-spikard.ini"
           # Verify extension is loaded
           php -r "if (extension_loaded('spikard')) { echo 'Extension loaded successfully'; } else { echo 'Failed to load extension'; exit(1); }"
 
@@ -200,11 +204,18 @@ jobs:
             echo "Error: Could not find PHP extension (.dylib file)"
             exit 1
           fi
+          echo "Found extension: $EXT_FILE"
           # Copy to PHP extension directory
           PHP_EXTENSIONS_DIR=$(php-config --extension-dir)
+          echo "PHP extension directory: $PHP_EXTENSIONS_DIR"
           cp "$EXT_FILE" "$PHP_EXTENSIONS_DIR/spikard.dylib"
+          echo "Copied extension to $PHP_EXTENSIONS_DIR/spikard.dylib"
           # Enable the extension
-          echo "extension=spikard.dylib" >> "$(php-config --ini-dir)/conf.d/20-spikard.ini"
+          PHP_INI_DIR=$(php-config --ini-dir)
+          echo "PHP INI directory: $PHP_INI_DIR"
+          mkdir -p "$PHP_INI_DIR/conf.d"
+          echo "extension=spikard.dylib" >> "$PHP_INI_DIR/conf.d/20-spikard.ini"
+          echo "Added extension to $PHP_INI_DIR/conf.d/20-spikard.ini"
           # Verify extension is loaded
           php -r "if (extension_loaded('spikard')) { echo 'Extension loaded successfully'; } else { echo 'Failed to load extension'; exit(1); }"
 
@@ -213,19 +224,23 @@ jobs:
         shell: pwsh
         run: |
           # Find the extension file
-          $EXT_FILE = Get-ChildItem -Path target/release -Name *.dll | Select-Object -First 1
+          $EXT_FILE = Get-ChildItem -Path target/release -Filter *.dll | Select-Object -ExpandProperty Name | Select-Object -First 1
           if (-not $EXT_FILE) {
             Write-Error "Error: Could not find PHP extension (.dll file)"
             exit 1
           }
+          Write-Host "Found extension: $EXT_FILE"
           # Get PHP directory
           $PHP_PATH = (php -r "echo dirname(PHP_EXECUTABLE);")
+          Write-Host "PHP path: $PHP_PATH"
           $EXT_DIR = "$PHP_PATH\ext"
           # Copy to extension directory
-          Copy-Item "target/release/$EXT_FILE" "$EXT_DIR\spikard.dll"
+          Copy-Item -Path "target/release/$EXT_FILE" -Destination "$EXT_DIR\spikard.dll" -Force
+          Write-Host "Copied extension to $EXT_DIR\spikard.dll"
           # Add to php.ini
           $PHP_INI = "$PHP_PATH\php.ini"
           Add-Content -Path $PHP_INI -Value "extension=spikard"
+          Write-Host "Added extension to php.ini"
           # Verify extension is loaded
           php -r "if (extension_loaded('spikard')) { echo 'Extension loaded successfully'; } else { echo 'Failed to load extension'; exit(1); }"
 
