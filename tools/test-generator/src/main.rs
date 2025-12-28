@@ -9,6 +9,7 @@ mod asyncapi;
 mod background;
 mod codegen_utils;
 mod dependencies;
+mod graphql;
 mod graphql_tests;
 mod jsonrpc;
 mod middleware;

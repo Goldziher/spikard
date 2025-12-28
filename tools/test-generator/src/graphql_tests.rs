@@ -5,13 +5,13 @@
 use crate::codegen_utils::{
     escape_string, format_property_access, json_to_typescript, json_to_typescript_string,
 };
+use crate::graphql::{GraphQLFixture, load_graphql_fixtures};
 use crate::ts_target::TypeScriptTarget;
 use anyhow::Result;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use spikard_codegen::{GraphQLFixture, load_graphql_fixtures};
 
 /// Generate Node.js GraphQL test suite from fixtures
 pub fn generate_graphql_tests(fixtures_dir: &Path, output_dir: &Path, target: &TypeScriptTarget) -> Result<()> {
@@ -114,24 +114,17 @@ fn generate_graphql_test_function(fixture: &GraphQLFixture) -> Result<String> {
     code.push_str("\t\t\t{\n");
     code.push_str(&format!("\t\t\t\tjson: {{\n"));
 
-    // Use request from fixture (single-step) or first step in sequence
-    let request = fixture.request.as_ref().or_else(|| {
-        fixture.request_sequence.as_ref().and_then(|seq| seq.first().map(|step| &step.request))
-    });
-
-    if let Some(req) = request {
+    // Use request from fixture
+    let request = &fixture.request;
+    {
         // GraphQL query (optional for persisted queries)
-        if let Some(ref query) = req.query {
-            code.push_str(&format!(
-                "\t\t\t\t\tquery: {},\n",
-                json_to_typescript_string(query)
-            ));
-        } else {
-            code.push_str("\t\t\t\t\tquery: null,\n");
-        }
+        code.push_str(&format!(
+            "\t\t\t\t\tquery: {},\n",
+            json_to_typescript_string(&request.query)
+        ));
 
         // Variables (if present)
-        if let Some(ref variables) = req.variables {
+        if let Some(ref variables) = request.variables {
             code.push_str(&format!(
                 "\t\t\t\t\tvariables: {},\n",
                 json_to_typescript(variables)
@@ -141,7 +134,7 @@ fn generate_graphql_test_function(fixture: &GraphQLFixture) -> Result<String> {
         }
 
         // Operation name (if present)
-        if let Some(ref op_name) = req.operation_name {
+        if let Some(ref op_name) = request.operation_name {
             code.push_str(&format!(
                 "\t\t\t\t\toperationName: \"{}\",\n",
                 escape_string(op_name)
@@ -149,43 +142,32 @@ fn generate_graphql_test_function(fixture: &GraphQLFixture) -> Result<String> {
         } else {
             code.push_str("\t\t\t\t\toperationName: null,\n");
         }
-
-        // Extensions (if present, e.g., for persisted queries)
-        if let Some(ref extensions) = req.extensions {
-            code.push_str(&format!(
-                "\t\t\t\t\textensions: {},\n",
-                json_to_typescript(extensions)
-            ));
-        }
     }
 
     code.push_str("\t\t\t\t},\n");
     code.push_str("\t\t\t},\n");
     code.push_str("\t\t);\n\n");
 
-    // Get expected response (from single fixture or sequence)
-    let expected_response = fixture.expected_response.as_ref().or_else(|| {
-        fixture.request_sequence.as_ref().and_then(|seq| seq.first().map(|step| &step.expected_response))
-    });
-
-    if let Some(resp) = expected_response {
+    // Get expected response
+    let expected_response = &fixture.expected_response;
+    {
         // Status code assertion
         code.push_str(&format!(
             "\t\texpect(response.statusCode).toBe({});\n",
-            resp.status_code
+            expected_response.status_code
         ));
 
         // Parse response as JSON
         code.push_str("\t\tconst responseBody = response.json();\n\n");
 
         // GraphQL data assertions
-        if let Some(ref expected_data) = resp.data {
+        if let Some(ref expected_data) = expected_response.data {
             code.push_str("\t\tconst data = responseBody.data;\n");
             generate_graphql_data_assertions(&mut code, expected_data, "data", 2);
         }
 
         // GraphQL errors assertions
-        if let Some(ref expected_errors) = resp.errors {
+        if let Some(ref expected_errors) = expected_response.errors {
             code.push_str("\t\tconst errors = responseBody.errors;\n");
             code.push_str("\t\texpect(errors).toBeDefined();\n");
             code.push_str(&format!(

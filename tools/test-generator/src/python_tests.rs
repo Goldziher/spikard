@@ -6,12 +6,12 @@ use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
 use crate::codegen_utils::json_to_python;
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
+use crate::graphql::{GraphQLFixture, load_graphql_fixtures};
 use crate::jsonrpc::JsonRpcFixture;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
-use spikard_codegen::{GraphQLFixture, load_graphql_fixtures};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -1209,60 +1209,45 @@ fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
 
         code.push_str(&format!("    async with TestClient({}()) as client:\n", factory_name));
 
-        // Use request from fixture (single-step) or first step in sequence
-        let request = fixture.request.as_ref().or_else(|| {
-            fixture.request_sequence.as_ref().and_then(|seq| seq.first().map(|step| &step.request))
-        });
-
-        if let Some(req) = request {
+        // Use request from fixture
+        let request = &fixture.request;
+        {
             // Escape GraphQL query for Python string (optional for persisted queries)
             code.push_str("        response = await client.graphql(\n");
-            if let Some(ref query) = req.query {
-                let escaped_query = query
-                    .replace('\\', "\\\\")
-                    .replace('"', "\\\"")
-                    .replace('\n', "\\n")
-                    .replace('\r', "\\r")
-                    .replace('\t', "\\t");
-                code.push_str(&format!("            query=\"{}\",\n", escaped_query));
-            } else {
-                code.push_str("            query=None,\n");
-            }
+            code.push_str(&format!("            query=\"{}\",\n", request.query
+                .replace('\\', "\\\\")
+                .replace('"', "\\\"")
+                .replace('\n', "\\n")
+                .replace('\r', "\\r")
+                .replace('\t', "\\t")));
 
-            if let Some(variables) = &req.variables {
+            if let Some(variables) = &request.variables {
                 code.push_str(&format!("            variables={},\n", json_to_python(variables)));
             } else {
                 code.push_str("            variables=None,\n");
             }
 
-            if let Some(op_name) = &req.operation_name {
+            if let Some(op_name) = &request.operation_name {
                 code.push_str(&format!("            operation_name=\"{}\",\n", op_name));
             } else {
                 code.push_str("            operation_name=None,\n");
-            }
-
-            if let Some(extensions) = &req.extensions {
-                code.push_str(&format!("            extensions={},\n", json_to_python(extensions)));
             }
 
             code.push_str(&format!("            path=\"{}\"\n", fixture.endpoint));
             code.push_str("        )\n\n");
         }
 
-        // Get expected response (from single fixture or sequence)
-        let expected_response = fixture.expected_response.as_ref().or_else(|| {
-            fixture.request_sequence.as_ref().and_then(|seq| seq.first().map(|step| &step.expected_response))
-        });
-
-        if let Some(resp) = expected_response {
+        // Get expected response
+        let expected_response = &fixture.expected_response;
+        {
             // Assert status code
             code.push_str(&format!(
                 "        assert response.status_code == {}\n",
-                resp.status_code
+                expected_response.status_code
             ));
 
             // Handle successful responses with data
-            if let Some(ref expected_data) = resp.data {
+            if let Some(ref expected_data) = expected_response.data {
                 code.push_str("        response_data = response.json()\n");
                 code.push_str("        assert \"data\" in response_data\n");
 
@@ -1270,40 +1255,38 @@ fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
             }
         }
 
-        if let Some(resp) = expected_response {
+        if let Some(ref errors) = expected_response.errors {
             // Handle error responses
-            if let Some(ref errors) = resp.errors {
-                code.push_str("        response_data = response.json()\n");
-                code.push_str("        assert \"errors\" in response_data\n");
-                code.push_str(&format!("        assert len(response_data[\"errors\"]) == {}\n", errors.len()));
+            code.push_str("        response_data = response.json()\n");
+            code.push_str("        assert \"errors\" in response_data\n");
+            code.push_str(&format!("        assert len(response_data[\"errors\"]) == {}\n", errors.len()));
 
-                for (idx, error) in errors.iter().enumerate() {
-                    code.push_str(&format!("        error_{} = response_data[\"errors\"][{}]\n", idx, idx));
-                    code.push_str(&format!(
-                        "        assert error_{}[\"message\"] == \"{}\"\n",
-                        idx,
-                        error.message.replace('"', "\\\"")
-                    ));
+            for (idx, error) in errors.iter().enumerate() {
+                code.push_str(&format!("        error_{} = response_data[\"errors\"][{}]\n", idx, idx));
+                code.push_str(&format!(
+                    "        assert error_{}[\"message\"] == \"{}\"\n",
+                    idx,
+                    error.message.replace('"', "\\\"")
+                ));
 
-                    if let Some(ref path) = error.path {
-                        if !path.is_empty() {
-                            let path_literal = json_to_python(&serde_json::Value::Array(path.clone()));
-                            code.push_str(&format!("        assert error_{}[\"path\"] == {}\n", idx, path_literal));
-                        }
-                    }
-
-                    if let Some(ref locations) = error.locations {
-                        if !locations.is_empty() {
-                            code.push_str(&format!("        assert \"locations\" in error_{}\n", idx));
-                            code.push_str(&format!("        assert len(error_{}[\"locations\"]) >= 1\n", idx));
-                        }
+                if let Some(ref path) = error.path {
+                    if !path.is_empty() {
+                        let path_literal = json_to_python(&serde_json::Value::Array(path.clone()));
+                        code.push_str(&format!("        assert error_{}[\"path\"] == {}\n", idx, path_literal));
                     }
                 }
-            } else {
-                // No errors expected
-                code.push_str("        response_data = response.json()\n");
-                code.push_str("        assert response_data.get(\"errors\") is None or response_data.get(\"errors\") == []\n");
+
+                if let Some(ref locations) = error.locations {
+                    if !locations.is_empty() {
+                        code.push_str(&format!("        assert \"locations\" in error_{}\n", idx));
+                        code.push_str(&format!("        assert len(error_{}[\"locations\"]) >= 1\n", idx));
+                    }
+                }
             }
+        } else {
+            // No errors expected
+            code.push_str("        response_data = response.json()\n");
+            code.push_str("        assert response_data.get(\"errors\") is None or response_data.get(\"errors\") == []\n");
         }
 
         code.push_str("\n\n");

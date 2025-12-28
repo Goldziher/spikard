@@ -2,10 +2,10 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
+use crate::graphql::{GraphQLFixture, load_graphql_fixtures};
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::Fixture;
-use spikard_codegen::{GraphQLFixture, load_graphql_fixtures};
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
@@ -817,66 +817,46 @@ fn generate_graphql_tests(fixtures: &[GraphQLFixture]) -> Result<String> {
         code.push_str(&format!("        // Operation type: {}\n", fixture.operation_type));
         code.push_str(&format!("        // Endpoint: {}\n\n", fixture.endpoint));
 
-        // Use request from fixture (single-step) or first step in sequence
-        let request = fixture.request.as_ref().or_else(|| {
-            fixture.request_sequence.as_ref().and_then(|seq| seq.first().map(|step| &step.request))
-        });
-
-        if let Some(req) = request {
-            // Build GraphQL query payload (optional for persisted queries)
-            if let Some(ref query) = req.query {
-                code.push_str("        let query = r#\"\n");
-                code.push_str(query);
-                code.push_str("\n        \"#;\n\n");
-            } else {
-                code.push_str("        let query: Option<&str> = None;\n\n");
-            }
+        // Use request from fixture
+        let request = &fixture.request;
+        {
+            // Build GraphQL query payload
+            code.push_str("        let query = r#\"\n");
+            code.push_str(&request.query);
+            code.push_str("\n        \"#;\n\n");
 
             // Build request payload
             code.push_str("        let mut payload = serde_json::json!({\n");
-            if req.query.is_some() {
-                code.push_str("            \"query\": query,\n");
-            } else {
-                code.push_str("            \"query\": null,\n");
-            }
+            code.push_str("            \"query\": query,\n");
 
-            if let Some(variables) = &req.variables {
+            if let Some(variables) = &request.variables {
                 code.push_str("            \"variables\": ");
                 code.push_str(&serde_json::to_string(variables)?);
                 code.push_str(",\n");
             }
 
-            if let Some(op_name) = &req.operation_name {
+            if let Some(op_name) = &request.operation_name {
                 code.push_str(&format!("            \"operationName\": \"{}\",\n", escape_rust_string(op_name)));
-            }
-
-            if let Some(extensions) = &req.extensions {
-                code.push_str("            \"extensions\": ");
-                code.push_str(&serde_json::to_string(extensions)?);
-                code.push_str(",\n");
             }
 
             code.push_str("        });\n\n");
         }
 
-        // Get expected response (from single fixture or sequence)
-        let expected_response = fixture.expected_response.as_ref().or_else(|| {
-            fixture.request_sequence.as_ref().and_then(|seq| seq.first().map(|step| &step.expected_response))
-        });
-
-        if let Some(resp) = expected_response {
+        // Get expected response
+        let expected_response = &fixture.expected_response;
+        {
             // Expected status code
             code.push_str(&format!(
                 "        // Expected status code: {}\n",
-                resp.status_code
+                expected_response.status_code
             ));
 
             // Validate expected response structure
-            if resp.data.is_some() {
+            if expected_response.data.is_some() {
                 code.push_str("        // Response should contain data field\n");
             }
 
-            if resp.errors.is_some() {
+            if expected_response.errors.is_some() {
                 code.push_str("        // Response should contain errors field\n");
             }
         }
