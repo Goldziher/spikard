@@ -34,8 +34,8 @@ describe("lifecycle_hooks", () => {
 		const responseHeaders = response.headers();
 		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
 		expect(responseHeaders["x-xss-protection"]).toBe("1; mode=block");
-		expect(responseHeaders["x-frame-options"]).toBe("DENY");
 		expect(responseHeaders["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");
+		expect(responseHeaders["x-frame-options"]).toBe("DENY");
 	});
 
 	test("preHandler - Authentication Failed Short Circuit", async () => {

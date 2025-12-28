@@ -822,7 +822,7 @@ fn generate_graphql_tests(fixtures: &[GraphQLFixture]) -> Result<String> {
         {
             // Build GraphQL query payload
             code.push_str("        let query = r#\"\n");
-            code.push_str(&request.query);
+            code.push_str(request.query.as_deref().unwrap_or(""));
             code.push_str("\n        \"#;\n\n");
 
             // Build request payload

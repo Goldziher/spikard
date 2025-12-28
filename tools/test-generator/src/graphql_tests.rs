@@ -120,7 +120,7 @@ fn generate_graphql_test_function(fixture: &GraphQLFixture) -> Result<String> {
         // GraphQL query (optional for persisted queries)
         code.push_str(&format!(
             "\t\t\t\t\tquery: {},\n",
-            json_to_typescript_string(&request.query)
+            json_to_typescript_string(request.query.as_deref().unwrap_or(""))
         ));
 
         // Variables (if present)

@@ -21,10 +21,21 @@ pub struct ResolverConfig {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GraphQLRequest {
-    pub query: String,
+    pub method: String,
+    pub path: String,
+    #[serde(default)]
+    pub query: Option<String>,
+    #[serde(default)]
     pub variables: Option<Value>,
     #[serde(rename = "operationName")]
+    #[serde(default)]
     pub operation_name: Option<String>,
+    #[serde(default)]
+    pub extensions: Option<Value>,
+    #[serde(default)]
+    pub headers: Option<HashMap<String, String>>,
+    #[serde(default)]
+    pub body: Option<Value>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

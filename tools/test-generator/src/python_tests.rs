@@ -1214,7 +1214,8 @@ fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
         {
             // Escape GraphQL query for Python string (optional for persisted queries)
             code.push_str("        response = await client.graphql(\n");
-            code.push_str(&format!("            query=\"{}\",\n", request.query
+            let query_str = request.query.as_deref().unwrap_or("");
+            code.push_str(&format!("            query=\"{}\",\n", query_str
                 .replace('\\', "\\\\")
                 .replace('"', "\\\"")
                 .replace('\n', "\\n")
