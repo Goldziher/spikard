@@ -14,7 +14,7 @@ axum = { version = "0.8", features = ["multipart", "ws"] }
 tokio = { version = "1", features = ["full"] }
 thiserror = "2.0"
 spikard-core = { path = "../spikard-core" }
-spikard-http = "1.4"
+spikard-http = { path = "../spikard-http" }
 tracing = "0.1"
 http = "1.4"
 http-body-util = "0.1"

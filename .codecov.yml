@@ -1,0 +1,134 @@
+# Codecov Configuration for Spikard Multi-Language Monorepo
+# Documentation: https://docs.codecov.com/docs/codecov-yaml
+
+codecov:
+  require_ci_to_pass: yes
+  notify:
+    wait_for_ci: yes
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 2%
+        if_ci_failed: error
+
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+
+flags:
+  rust-core:
+    paths:
+      - crates/spikard/
+      - crates/spikard-core/
+      - crates/spikard-http/
+      - crates/spikard-bindings-shared/
+    target: 80%
+    threshold: 2%
+
+  rust-cli:
+    paths:
+      - crates/spikard-cli/
+    target: 75%
+    threshold: 3%
+
+  rust-graphql:
+    paths:
+      - crates/spikard-graphql/
+    target: 80%
+    threshold: 2%
+
+  python:
+    paths:
+      - packages/python/spikard/
+    target: 80%
+    threshold: 2%
+
+  node:
+    paths:
+      - packages/node/src/
+    target: 80%
+    threshold: 2%
+
+  ruby:
+    paths:
+      - packages/ruby/lib/
+    target: 80%
+    threshold: 2%
+
+  php:
+    paths:
+      - packages/php/src/
+    target: 80%
+    threshold: 2%
+
+  wasm:
+    paths:
+      - packages/wasm/src/
+    target: 75%
+    threshold: 3%
+
+ignore:
+  # Test files
+  - "**/*_test.rs"
+  - "**/*_spec.rs"
+  - "**/tests/**"
+  - "**/*.spec.ts"
+  - "**/*.test.ts"
+  - "**/spec/**"
+
+  # FFI bindings (tested via language-specific tests)
+  - "crates/spikard-py/src/**"
+  - "crates/spikard-node/src/**"
+  - "crates/spikard-rb/src/**"
+  - "crates/spikard-php/src/**"
+  - "crates/spikard-wasm/src/**"
+
+  # Generated code
+  - "**/generated/**"
+  - "**/target/**"
+  - "**/dist/**"
+  - "**/build/**"
+
+  # Development & CI
+  - "**/examples/**"
+  - "**/tools/**"
+  - "**/.github/**"
+  - "**/scripts/**"
+  - "**/benches/**"
+
+  # Vendored dependencies
+  - "**/vendor/**"
+  - "**/node_modules/**"
+  - "**/.gems/**"
+
+  # Binary entry points
+  - "**/src/main.rs"
+  - "**/src/bin/**"
+
+  # Version files
+  - "**/version.rb"
+  - "**/version.py"
+
+  # Internal implementation files explicitly omitted per pyproject.toml
+  - "packages/python/spikard/_internal.py"
+  - "packages/python/spikard/background.py"
+  - "packages/python/spikard/routing.py"
+  - "packages/python/spikard/schema.py"
+  - "packages/python/spikard/sse.py"
+  - "packages/python/spikard/testing.py"
+  - "packages/python/spikard/websocket.py"
+
+comment:
+  layout: "header, diff, flags, components"
+  behavior: default
+  require_changes: false
+  require_base: no
+  require_head: yes

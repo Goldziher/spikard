@@ -1,6 +1,6 @@
 RB_SYS_BUILD_DIR ?= /Users/naamanhirschfeld/workspace/spikard/packages/ruby/ext/spikard_rb/.rb-sys
 CARGO ?= cargo
-CARGO_BUILD_TARGET ?=
+CARGO_BUILD_TARGET ?= 
 SOEXT ?= dylib
 
 
@@ -10,9 +10,9 @@ ifneq ($(SOEXT),dll)
 endif
 
 RB_SYS_CARGO_PROFILE ?= release
-RB_SYS_CARGO_FEATURES ?=
-RB_SYS_GLOBAL_RUSTFLAGS ?=
-RB_SYS_EXTRA_RUSTFLAGS ?=
+RB_SYS_CARGO_FEATURES ?= 
+RB_SYS_GLOBAL_RUSTFLAGS ?= 
+RB_SYS_EXTRA_RUSTFLAGS ?= 
 RB_SYS_EXTRA_CARGO_ARGS ?= --locked
 RB_SYS_CARGO_MANIFEST_DIR ?= .
 
@@ -34,7 +34,7 @@ else
 	RB_SYS_FULL_TARGET_DIR = $(RB_SYS_CARGO_TARGET_DIR)
 endif
 
-target_prefix =
+target_prefix = 
 TARGET_NAME = spikard_rb
 TARGET_ENTRY = Init_$(TARGET_NAME)
 RUBYARCHDIR = $(sitearchdir)$(target_prefix)
@@ -64,13 +64,13 @@ NULLCMD = :
 #### Start of system configuration section. ####
 
 srcdir = .
-topdir = /opt/homebrew/Cellar/ruby/3.4.8/include/ruby-3.4.0
+topdir = /opt/homebrew/Cellar/ruby@3.4/3.4.8/include/ruby-3.4.0
 hdrdir = $(topdir)
-arch_hdrdir = /opt/homebrew/Cellar/ruby/3.4.8/include/ruby-3.4.0/arm64-darwin25
+arch_hdrdir = /opt/homebrew/Cellar/ruby@3.4/3.4.8/include/ruby-3.4.0/arm64-darwin25
 PATH_SEPARATOR = :
 VPATH = $(srcdir):$(arch_hdrdir)/ruby:$(hdrdir)/ruby
 
-prefix = $(DESTDIR)/opt/homebrew/Cellar/ruby/3.4.8
+prefix = $(DESTDIR)/opt/homebrew/Cellar/ruby@3.4/3.4.8
 
 rubysitearchprefix = $(rubylibprefix)/$(sitearch)
 
@@ -164,7 +164,7 @@ archdir = $(rubyarchdir)
 
 
 
-CC_WRAPPER =
+CC_WRAPPER = 
 CC = clang
 CXX = clang++
 LIBRUBY = $(LIBRUBY_SO)
@@ -176,21 +176,21 @@ OUTFLAG = -o $(empty)
 COUTFLAG = -o $(empty)
 CSRCFLAG = $(empty)
 
-RUBY_EXTCONF_H =
+RUBY_EXTCONF_H = 
 cflags   = $(hardenflags) -fdeclspec  $(optflags) $(debugflags) $(warnflags)
-cxxflags =
+cxxflags = 
 optflags = -O3 -fno-fast-math
 debugflags = -ggdb3
 warnflags = -Wall -Wextra -Wextra-tokens -Wdeprecated-declarations -Wdivision-by-zero -Wdiv-by-zero -Wimplicit-function-declaration -Wimplicit-int -Wpointer-arith -Wshorten-64-to-32 -Wwrite-strings -Wold-style-definition -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wunused-variable -Wmisleading-indentation -Wundef
-cppflags =
+cppflags = 
 CCDLFLAGS = -fno-common
 CFLAGS   = $(CCDLFLAGS) $(cflags) -fno-common -pipe $(ARCH_FLAG)
 INCFLAGS = -I. -I$(arch_hdrdir) -I$(hdrdir)/ruby/backward -I$(hdrdir) -I$(srcdir)
-DEFS     =
+DEFS     = 
 CPPFLAGS =  -I/opt/homebrew/opt/libyaml/include -I/opt/homebrew/opt/openssl@3/include -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT $(DEFS) $(cppflags)
 CXXFLAGS = $(CCDLFLAGS) -fdeclspec $(ARCH_FLAG)
 ldflags  = -L. -fstack-protector-strong -L/opt/homebrew/Cellar/libyaml/0.2.5/lib -L/opt/homebrew/Cellar/openssl@3/3.6.0/lib
-dldflags = -L/opt/homebrew/Cellar/libyaml/0.2.5/lib -L/opt/homebrew/Cellar/openssl@3/3.6.0/lib -Wl,-undefined,dynamic_lookup
+dldflags = -L/opt/homebrew/Cellar/libyaml/0.2.5/lib -L/opt/homebrew/Cellar/openssl@3/3.6.0/lib -Wl,-undefined,dynamic_lookup 
 ARCH_FLAG = -arch arm64
 DLDFLAGS = $(ldflags) $(dldflags) $(ARCH_FLAG)
 LDSHARED = $(CC) -dynamic -bundle
@@ -198,14 +198,14 @@ LDSHAREDXX = $(CXX) -dynamic -bundle
 POSTLINK = dsymutil $@ 2>/dev/null; { test -z '$(RUBY_CODESIGN)' || codesign -s '$(RUBY_CODESIGN)' $@; }
 AR = ar
 LD = ld
-EXEEXT =
+EXEEXT = 
 
 
 RUBY_INSTALL_NAME = $(RUBY_BASE_NAME)
 
 RUBY_SO_NAME = ruby.3.4
 
-RUBYW_INSTALL_NAME =
+RUBYW_INSTALL_NAME = 
 
 RUBY_VERSION_NAME = $(RUBY_BASE_NAME)-$(ruby_version)
 
@@ -234,10 +234,10 @@ TOUCH = exit >
 
 #### End of system configuration section. ####
 
-preload =
+preload = 
 
 CLEANFILES = mkmf.log
-DISTCLEANFILES =
+DISTCLEANFILES = 
 
 all static install-rb: Makefile
 	@$(NULLCMD)
@@ -274,34 +274,34 @@ endif
 CC = clang
 CXX = clang++
 AR = ar
-export RBCONFIG_DESTDIR :=
+export RBCONFIG_DESTDIR := 
 export RBCONFIG_MAJOR := 3
 export RBCONFIG_MINOR := 4
 export RBCONFIG_TEENY := 8
 export RBCONFIG_PATCHLEVEL := 72
 export RBCONFIG_INSTALL := /usr/bin/install -c
-export RBCONFIG_EXEEXT :=
-export RBCONFIG_prefix := /opt/homebrew/Cellar/ruby/3.4.8
+export RBCONFIG_EXEEXT := 
+export RBCONFIG_prefix := /opt/homebrew/Cellar/ruby@3.4/3.4.8
 export RBCONFIG_ruby_install_name := ruby
 export RBCONFIG_RUBY_INSTALL_NAME := ruby
 export RBCONFIG_RUBY_SO_NAME := ruby.3.4
 export RBCONFIG_exec := exec
 export RBCONFIG_ruby_pc := ruby-3.4.pc
-export RBCONFIG_CC_WRAPPER :=
+export RBCONFIG_CC_WRAPPER := 
 export RBCONFIG_PACKAGE := ruby
 export RBCONFIG_BUILTIN_TRANSSRCS := enc/trans/newline.c
 export RBCONFIG_MKMF_VERBOSE := 0
 export RBCONFIG_MANTYPE := doc
-export RBCONFIG_vendorarchhdrdir := /opt/homebrew/Cellar/ruby/3.4.8/include/ruby-3.4.0/vendor_ruby/arm64-darwin25
-export RBCONFIG_sitearchhdrdir := /opt/homebrew/Cellar/ruby/3.4.8/include/ruby-3.4.0/site_ruby/arm64-darwin25
-export RBCONFIG_rubyarchhdrdir := /opt/homebrew/Cellar/ruby/3.4.8/include/ruby-3.4.0/arm64-darwin25
-export RBCONFIG_vendorhdrdir := /opt/homebrew/Cellar/ruby/3.4.8/include/ruby-3.4.0/vendor_ruby
-export RBCONFIG_sitehdrdir := /opt/homebrew/Cellar/ruby/3.4.8/include/ruby-3.4.0/site_ruby
-export RBCONFIG_rubyhdrdir := /opt/homebrew/Cellar/ruby/3.4.8/include/ruby-3.4.0
-export RBCONFIG_RUBY_SEARCH_PATH :=
-export RBCONFIG_UNIVERSAL_INTS :=
-export RBCONFIG_UNIVERSAL_ARCHNAMES :=
-export RBCONFIG_configure_args := '--prefix=/opt/homebrew/Cellar/ruby/3.4.8' '--enable-shared' '--disable-silent-rules' '--with-sitedir=/opt/homebrew/lib/ruby/site_ruby' '--with-vendordir=/opt/homebrew/lib/ruby/vendor_ruby' '--with-opt-dir=/opt/homebrew/opt/libyaml:/opt/homebrew/opt/openssl@3' '--without-gmp' 'MJIT_CC=/usr/bin/clang' 'CC=clang' 'CXX=clang++'
+export RBCONFIG_vendorarchhdrdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/include/ruby-3.4.0/vendor_ruby/arm64-darwin25
+export RBCONFIG_sitearchhdrdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/include/ruby-3.4.0/site_ruby/arm64-darwin25
+export RBCONFIG_rubyarchhdrdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/include/ruby-3.4.0/arm64-darwin25
+export RBCONFIG_vendorhdrdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/include/ruby-3.4.0/vendor_ruby
+export RBCONFIG_sitehdrdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/include/ruby-3.4.0/site_ruby
+export RBCONFIG_rubyhdrdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/include/ruby-3.4.0
+export RBCONFIG_RUBY_SEARCH_PATH := 
+export RBCONFIG_UNIVERSAL_INTS := 
+export RBCONFIG_UNIVERSAL_ARCHNAMES := 
+export RBCONFIG_configure_args := '--prefix=/opt/homebrew/Cellar/ruby@3.4/3.4.8' '--enable-shared' '--disable-silent-rules' '--with-sitedir=/opt/homebrew/lib/ruby/site_ruby' '--with-vendordir=/opt/homebrew/lib/ruby/vendor_ruby' '--with-opt-dir=/opt/homebrew/opt/libyaml:/opt/homebrew/opt/openssl@3' '--without-gmp' 'MJIT_CC=/usr/bin/clang' 'CC=clang' 'CXX=clang++'
 export RBCONFIG_CONFIGURE := configure
 export RBCONFIG_vendorarchdir := /opt/homebrew/lib/ruby/vendor_ruby/3.4.0/arm64-darwin25
 export RBCONFIG_vendorlibdir := /opt/homebrew/lib/ruby/vendor_ruby/3.4.0
@@ -309,37 +309,37 @@ export RBCONFIG_vendordir := /opt/homebrew/lib/ruby/vendor_ruby
 export RBCONFIG_sitearchdir := /opt/homebrew/lib/ruby/site_ruby/3.4.0/arm64-darwin25
 export RBCONFIG_sitelibdir := /opt/homebrew/lib/ruby/site_ruby/3.4.0
 export RBCONFIG_sitedir := /opt/homebrew/lib/ruby/site_ruby
-export RBCONFIG_rubyarchdir := /opt/homebrew/Cellar/ruby/3.4.8/lib/ruby/3.4.0/arm64-darwin25
-export RBCONFIG_rubylibdir := /opt/homebrew/Cellar/ruby/3.4.8/lib/ruby/3.4.0
+export RBCONFIG_rubyarchdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/lib/ruby/3.4.0/arm64-darwin25
+export RBCONFIG_rubylibdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/lib/ruby/3.4.0
 export RBCONFIG_ruby_version := 3.4.0
 export RBCONFIG_sitearch := arm64-darwin25
 export RBCONFIG_arch := arm64-darwin25
-export RBCONFIG_sitearchincludedir := /opt/homebrew/Cellar/ruby/3.4.8/include/arm64-darwin25
-export RBCONFIG_archincludedir := /opt/homebrew/Cellar/ruby/3.4.8/include/arm64-darwin25
-export RBCONFIG_sitearchlibdir := /opt/homebrew/Cellar/ruby/3.4.8/lib/arm64-darwin25
-export RBCONFIG_archlibdir := /opt/homebrew/Cellar/ruby/3.4.8/lib/arm64-darwin25
+export RBCONFIG_sitearchincludedir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/include/arm64-darwin25
+export RBCONFIG_archincludedir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/include/arm64-darwin25
+export RBCONFIG_sitearchlibdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/lib/arm64-darwin25
+export RBCONFIG_archlibdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/lib/arm64-darwin25
 export RBCONFIG_libdirname := libdir
-export RBCONFIG_RUBY_EXEC_PREFIX := /opt/homebrew/Cellar/ruby/3.4.8
-export RBCONFIG_RUBY_LIB_VERSION :=
+export RBCONFIG_RUBY_EXEC_PREFIX := /opt/homebrew/Cellar/ruby@3.4/3.4.8
+export RBCONFIG_RUBY_LIB_VERSION := 
 export RBCONFIG_RUBY_LIB_VERSION_STYLE := 3	/* full */
 export RBCONFIG_RI_BASE_NAME := ri
-export RBCONFIG_ridir := /opt/homebrew/Cellar/ruby/3.4.8/share/ri
-export RBCONFIG_rubysitearchprefix := /opt/homebrew/Cellar/ruby/3.4.8/lib/ruby/arm64-darwin25
-export RBCONFIG_rubyarchprefix := /opt/homebrew/Cellar/ruby/3.4.8/lib/ruby/arm64-darwin25
+export RBCONFIG_ridir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share/ri
+export RBCONFIG_rubysitearchprefix := /opt/homebrew/Cellar/ruby@3.4/3.4.8/lib/ruby/arm64-darwin25
+export RBCONFIG_rubyarchprefix := /opt/homebrew/Cellar/ruby@3.4/3.4.8/lib/ruby/arm64-darwin25
 export RBCONFIG_MAKEFILES := Makefile GNUmakefile
-export RBCONFIG_USE_LLVM_WINDRES :=
-export RBCONFIG_PLATFORM_DIR :=
+export RBCONFIG_USE_LLVM_WINDRES := 
+export RBCONFIG_PLATFORM_DIR := 
 export RBCONFIG_COROUTINE_TYPE := arm64
 export RBCONFIG_THREAD_MODEL := pthread
 export RBCONFIG_SYMBOL_PREFIX := _
-export RBCONFIG_EXPORT_PREFIX :=
-export RBCONFIG_COMMON_HEADERS :=
-export RBCONFIG_COMMON_MACROS :=
-export RBCONFIG_COMMON_LIBS :=
+export RBCONFIG_EXPORT_PREFIX := 
+export RBCONFIG_COMMON_HEADERS := 
+export RBCONFIG_COMMON_MACROS := 
+export RBCONFIG_COMMON_LIBS := 
 export RBCONFIG_MAINLIBS := -ldl -lobjc -lpthread
 export RBCONFIG_ENABLE_SHARED := yes
 export RBCONFIG_DLDSHARED := clang -dynamiclib
-export RBCONFIG_DLDLIBS :=
+export RBCONFIG_DLDLIBS := 
 export RBCONFIG_SOLIBS := -ldl -lobjc -lpthread
 export RBCONFIG_LIBRUBYARG_SHARED := -lruby.3.4
 export RBCONFIG_LIBRUBYARG_STATIC := -lruby.3.4-static -framework CoreFoundation -ldl -lobjc -lpthread
@@ -349,56 +349,56 @@ export RBCONFIG_LIBRUBY_ALIASES := libruby.dylib
 export RBCONFIG_LIBRUBY_SONAME := libruby.3.4.dylib
 export RBCONFIG_LIBRUBY_SO := libruby.3.4.dylib
 export RBCONFIG_LIBRUBY_A := libruby.3.4-static.a
-export RBCONFIG_RUBYW_INSTALL_NAME :=
-export RBCONFIG_rubyw_install_name :=
-export RBCONFIG_EXTDLDFLAGS :=
-export RBCONFIG_EXTLDFLAGS :=
+export RBCONFIG_RUBYW_INSTALL_NAME := 
+export RBCONFIG_rubyw_install_name := 
+export RBCONFIG_EXTDLDFLAGS := 
+export RBCONFIG_EXTLDFLAGS := 
 export RBCONFIG_hardenflags := -fstack-protector-strong -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
-export RBCONFIG_strict_warnflags :=
+export RBCONFIG_strict_warnflags := 
 export RBCONFIG_warnflags := -Wall -Wextra -Wextra-tokens -Wdeprecated-declarations -Wdivision-by-zero -Wdiv-by-zero -Wimplicit-function-declaration -Wimplicit-int -Wpointer-arith -Wshorten-64-to-32 -Wwrite-strings -Wold-style-definition -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wunused-variable -Wmisleading-indentation -Wundef
 export RBCONFIG_debugflags := -ggdb3
 export RBCONFIG_optflags := -O3 -fno-fast-math
 export RBCONFIG_NULLCMD := :
-export RBCONFIG_ENABLE_DEBUG_ENV :=
+export RBCONFIG_ENABLE_DEBUG_ENV := 
 export RBCONFIG_DLNOBJ := dln.o
 export RBCONFIG_RJIT_SUPPORT := yes
 export RBCONFIG_YJIT_OBJ := yjit.o
 export RBCONFIG_YJIT_LIBS := yjit/target/release/libyjit.a
-export RBCONFIG_CARGO_BUILD_ARGS :=
+export RBCONFIG_CARGO_BUILD_ARGS := 
 export RBCONFIG_YJIT_SUPPORT := yes
-export RBCONFIG_CARGO :=
+export RBCONFIG_CARGO := 
 export RBCONFIG_RUSTC := rustc
 export RBCONFIG_INSTALL_STATIC_LIBRARY := no
-export RBCONFIG_modular_gc_dir :=
-export RBCONFIG_EXECUTABLE_EXTS :=
-export RBCONFIG_ARCHFILE :=
+export RBCONFIG_modular_gc_dir := 
+export RBCONFIG_EXECUTABLE_EXTS := 
+export RBCONFIG_ARCHFILE := 
 export RBCONFIG_LIBRUBY_RELATIVE := no
 export RBCONFIG_EXTOUT := .ext
 export RBCONFIG_PREP := miniruby
 export RBCONFIG_CROSS_COMPILING := no
 export RBCONFIG_TEST_RUNNABLE := yes
-export RBCONFIG_rubylibprefix := /opt/homebrew/Cellar/ruby/3.4.8/lib/ruby
+export RBCONFIG_rubylibprefix := /opt/homebrew/Cellar/ruby@3.4/3.4.8/lib/ruby
 export RBCONFIG_setup := Setup
 export RBCONFIG_SOEXT := dylib
-export RBCONFIG_TRY_LINK :=
+export RBCONFIG_TRY_LINK := 
 export RBCONFIG_PRELOADENV := DYLD_INSERT_LIBRARIES
 export RBCONFIG_LIBPATHENV := DYLD_LIBRARY_PATH
-export RBCONFIG_RPATHFLAG :=
+export RBCONFIG_RPATHFLAG := 
 export RBCONFIG_LIBPATHFLAG := -L%s
 export RBCONFIG_LINK_SO := \ndsymutil $@ 2>/dev/null; { test -z '$(RUBY_CODESIGN)' || codesign -s '$(RUBY_CODESIGN)' $@; }
-export RBCONFIG_ADDITIONAL_DLDFLAGS :=
-export RBCONFIG_ENCSTATIC :=
-export RBCONFIG_EXTSTATIC :=
+export RBCONFIG_ADDITIONAL_DLDFLAGS := 
+export RBCONFIG_ENCSTATIC := 
+export RBCONFIG_EXTSTATIC := 
 export RBCONFIG_ASMEXT := S
 export RBCONFIG_LIBEXT := a
 export RBCONFIG_DLEXT := bundle
 export RBCONFIG_LDSHAREDXX := clang++ -dynamic -bundle
 export RBCONFIG_LDSHARED := clang -dynamic -bundle
 export RBCONFIG_CCDLFLAGS := -fno-common
-export RBCONFIG_STATIC :=
+export RBCONFIG_STATIC := 
 export RBCONFIG_ARCH_FLAG := -arch arm64
 export RBCONFIG_DLDFLAGS := -L/opt/homebrew/Cellar/libyaml/0.2.5/lib -L/opt/homebrew/Cellar/openssl@3/3.6.0/lib -Wl,-undefined,dynamic_lookup
-export RBCONFIG_ALLOCA :=
+export RBCONFIG_ALLOCA := 
 export RBCONFIG_EGREP := /usr/bin/grep -E
 export RBCONFIG_GREP := /usr/bin/grep
 export RBCONFIG_dsymutil := dsymutil
@@ -407,7 +407,7 @@ export RBCONFIG_cleanlibs := $(TARGET_SO:=.dSYM)
 export RBCONFIG_POSTLINK := dsymutil $@ 2>/dev/null; { test -z '$(RUBY_CODESIGN)' || codesign -s '$(RUBY_CODESIGN)' $@; }
 export RBCONFIG_incflags := -I/opt/homebrew/Cellar/libyaml/0.2.5/include -I/opt/homebrew/Cellar/openssl@3/3.6.0/include
 export RBCONFIG_WERRORFLAG := -Werror
-export RBCONFIG_RUBY_DEVEL :=
+export RBCONFIG_RUBY_DEVEL := 
 export RBCONFIG_CHDIR := cd -P
 export RBCONFIG_RMALL := rm -fr
 export RBCONFIG_RMDIRS := rmdir -p
@@ -415,21 +415,21 @@ export RBCONFIG_RMDIR := rmdir
 export RBCONFIG_CP := cp
 export RBCONFIG_RM := rm -f
 export RBCONFIG_PKG_CONFIG := pkg-config
-export RBCONFIG_DOXYGEN :=
-export RBCONFIG_DOT :=
+export RBCONFIG_DOXYGEN := 
+export RBCONFIG_DOT := 
 export RBCONFIG_MKDIR_P := mkdir -p
 export RBCONFIG_INSTALL_DATA := /usr/bin/install -c -m 644
 export RBCONFIG_INSTALL_SCRIPT := /usr/bin/install -c
 export RBCONFIG_INSTALL_PROGRAM := /usr/bin/install -c
-export RBCONFIG_SET_MAKE :=
+export RBCONFIG_SET_MAKE := 
 export RBCONFIG_LN_S := ln -s
-export RBCONFIG_DLLWRAP :=
-export RBCONFIG_WINDRES :=
+export RBCONFIG_DLLWRAP := 
+export RBCONFIG_WINDRES := 
 export RBCONFIG_ARFLAGS := rcu
-export RBCONFIG_try_header :=
-export RBCONFIG_CC_VERSION_MESSAGE := Apple clang version 17.0.0 (clang-1700.4.4.1)\nTarget: arm64-apple-darwin25.1.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+export RBCONFIG_try_header := 
+export RBCONFIG_CC_VERSION_MESSAGE := Apple clang version 17.0.0 (clang-1700.6.3.2)\nTarget: arm64-apple-darwin25.2.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
 export RBCONFIG_CC_VERSION := clang --version
-export RBCONFIG_CSRCFLAG :=
+export RBCONFIG_CSRCFLAG := 
 export RBCONFIG_COUTFLAG := -o
 export RBCONFIG_OUTFLAG := -o
 export RBCONFIG_CPPOUTFILE := -o conftest.i
@@ -451,9 +451,9 @@ export RBCONFIG_CXX := clang++
 export RBCONFIG_AS := as
 export RBCONFIG_AR := ar
 export RBCONFIG_CC := clang
-export RBCONFIG_wasmoptflags :=
-export RBCONFIG_WASMOPT :=
-export RBCONFIG_config_target := aarch64-apple-darwin25.1.0
+export RBCONFIG_wasmoptflags := 
+export RBCONFIG_WASMOPT := 
+export RBCONFIG_config_target := aarch64-apple-darwin25.2.0
 export RBCONFIG_target_os := darwin25
 export RBCONFIG_target_vendor := apple
 export RBCONFIG_target_cpu := arm64
@@ -462,10 +462,10 @@ export RBCONFIG_host_os := darwin25
 export RBCONFIG_host_vendor := apple
 export RBCONFIG_host_cpu := arm64
 export RBCONFIG_host := arm64-apple-darwin25
-export RBCONFIG_build_os := darwin25.1.0
+export RBCONFIG_build_os := darwin25.2.0
 export RBCONFIG_build_vendor := apple
 export RBCONFIG_build_cpu := aarch64
-export RBCONFIG_build := aarch64-apple-darwin25.1.0
+export RBCONFIG_build := aarch64-apple-darwin25.2.0
 export RBCONFIG_RUBY_VERSION_NAME := ruby-3.4.0
 export RBCONFIG_RUBYW_BASE_NAME := rubyw
 export RBCONFIG_RUBY_BASE_NAME := ruby
@@ -473,52 +473,52 @@ export RBCONFIG_RUBY_PROGRAM_VERSION := 3.4.8
 export RBCONFIG_RUBY_API_VERSION := 3.4
 export RBCONFIG_HAVE_GIT := yes
 export RBCONFIG_GIT := git
-export RBCONFIG_cxxflags :=
-export RBCONFIG_cppflags :=
+export RBCONFIG_cxxflags := 
+export RBCONFIG_cppflags := 
 export RBCONFIG_cflags := -fstack-protector-strong -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fdeclspec  -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wextra-tokens -Wdeprecated-declarations -Wdivision-by-zero -Wdiv-by-zero -Wimplicit-function-declaration -Wimplicit-int -Wpointer-arith -Wshorten-64-to-32 -Wwrite-strings -Wold-style-definition -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wunused-variable -Wmisleading-indentation -Wundef
 export RBCONFIG_MAKEDIRS := mkdir -p
-export RBCONFIG_target_alias :=
-export RBCONFIG_host_alias :=
-export RBCONFIG_build_alias :=
+export RBCONFIG_target_alias := 
+export RBCONFIG_host_alias := 
+export RBCONFIG_build_alias := 
 export RBCONFIG_LIBS := -lpthread
-export RBCONFIG_ECHO_T :=
-export RBCONFIG_ECHO_N :=
+export RBCONFIG_ECHO_T := 
+export RBCONFIG_ECHO_N := 
 export RBCONFIG_ECHO_C := \\c
-export RBCONFIG_DEFS :=
-export RBCONFIG_mandir := /opt/homebrew/Cellar/ruby/3.4.8/share/man
-export RBCONFIG_localedir := /opt/homebrew/Cellar/ruby/3.4.8/share/locale
-export RBCONFIG_libdir := /opt/homebrew/Cellar/ruby/3.4.8/lib
-export RBCONFIG_psdir := /opt/homebrew/Cellar/ruby/3.4.8/share/doc/ruby
-export RBCONFIG_pdfdir := /opt/homebrew/Cellar/ruby/3.4.8/share/doc/ruby
-export RBCONFIG_dvidir := /opt/homebrew/Cellar/ruby/3.4.8/share/doc/ruby
-export RBCONFIG_htmldir := /opt/homebrew/Cellar/ruby/3.4.8/share/doc/ruby
-export RBCONFIG_infodir := /opt/homebrew/Cellar/ruby/3.4.8/share/info
-export RBCONFIG_docdir := /opt/homebrew/Cellar/ruby/3.4.8/share/doc/ruby
+export RBCONFIG_DEFS := 
+export RBCONFIG_mandir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share/man
+export RBCONFIG_localedir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share/locale
+export RBCONFIG_libdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/lib
+export RBCONFIG_psdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share/doc/ruby
+export RBCONFIG_pdfdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share/doc/ruby
+export RBCONFIG_dvidir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share/doc/ruby
+export RBCONFIG_htmldir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share/doc/ruby
+export RBCONFIG_infodir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share/info
+export RBCONFIG_docdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share/doc/ruby
 export RBCONFIG_oldincludedir := /usr/include
-export RBCONFIG_includedir := /opt/homebrew/Cellar/ruby/3.4.8/include
-export RBCONFIG_runstatedir := /opt/homebrew/Cellar/ruby/3.4.8/var/run
-export RBCONFIG_localstatedir := /opt/homebrew/Cellar/ruby/3.4.8/var
-export RBCONFIG_sharedstatedir := /opt/homebrew/Cellar/ruby/3.4.8/com
-export RBCONFIG_sysconfdir := /opt/homebrew/Cellar/ruby/3.4.8/etc
-export RBCONFIG_datadir := /opt/homebrew/Cellar/ruby/3.4.8/share
-export RBCONFIG_datarootdir := /opt/homebrew/Cellar/ruby/3.4.8/share
-export RBCONFIG_libexecdir := /opt/homebrew/Cellar/ruby/3.4.8/libexec
-export RBCONFIG_sbindir := /opt/homebrew/Cellar/ruby/3.4.8/sbin
-export RBCONFIG_bindir := /opt/homebrew/Cellar/ruby/3.4.8/bin
-export RBCONFIG_exec_prefix := /opt/homebrew/Cellar/ruby/3.4.8
-export RBCONFIG_PACKAGE_URL :=
-export RBCONFIG_PACKAGE_BUGREPORT :=
-export RBCONFIG_PACKAGE_STRING :=
-export RBCONFIG_PACKAGE_VERSION :=
-export RBCONFIG_PACKAGE_TARNAME :=
-export RBCONFIG_PACKAGE_NAME :=
+export RBCONFIG_includedir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/include
+export RBCONFIG_runstatedir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/var/run
+export RBCONFIG_localstatedir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/var
+export RBCONFIG_sharedstatedir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/com
+export RBCONFIG_sysconfdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/etc
+export RBCONFIG_datadir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share
+export RBCONFIG_datarootdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/share
+export RBCONFIG_libexecdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/libexec
+export RBCONFIG_sbindir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/sbin
+export RBCONFIG_bindir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/bin
+export RBCONFIG_exec_prefix := /opt/homebrew/Cellar/ruby@3.4/3.4.8
+export RBCONFIG_PACKAGE_URL := 
+export RBCONFIG_PACKAGE_BUGREPORT := 
+export RBCONFIG_PACKAGE_STRING := 
+export RBCONFIG_PACKAGE_VERSION := 
+export RBCONFIG_PACKAGE_TARNAME := 
+export RBCONFIG_PACKAGE_NAME := 
 export RBCONFIG_PATH_SEPARATOR := :
 export RBCONFIG_SHELL := /bin/sh
 export RBCONFIG_UNICODE_VERSION := 15.0.0
 export RBCONFIG_UNICODE_EMOJI_VERSION := 15.0
-export RBCONFIG_SDKROOT :=
+export RBCONFIG_SDKROOT := 
 export RBCONFIG_platform := arm64-darwin25
-export RBCONFIG_archdir := /opt/homebrew/Cellar/ruby/3.4.8/lib/ruby/3.4.0/arm64-darwin25
+export RBCONFIG_archdir := /opt/homebrew/Cellar/ruby@3.4/3.4.8/lib/ruby/3.4.0/arm64-darwin25
 export RBCONFIG_topdir := .
 export RBCONFIG_srcdir := .
 export RUSTFLAGS := $(RB_SYS_GLOBAL_RUSTFLAGS) $(RB_SYS_EXTRA_RUSTFLAGS) $(RUSTFLAGS)
@@ -571,7 +571,7 @@ $(TIMESTAMP_DIR)/.sitearchdir.time:
 
 $(RUSTLIB): FORCE
 	$(ECHO) generating $(@) \("$(RB_SYS_CARGO_PROFILE)"\)
-	$(CARGO) rustc $(RB_SYS_EXTRA_CARGO_ARGS) --manifest-path $(RB_SYS_CARGO_MANIFEST_DIR)/Cargo.toml --target-dir $(RB_SYS_CARGO_TARGET_DIR) --lib $(RB_SYS_CARGO_PROFILE_FLAG) -- -C linker=clang -L native=/opt/homebrew/Cellar/ruby/3.4.8/lib -L native=/opt/homebrew/Cellar/libyaml/0.2.5/lib -L native=/opt/homebrew/Cellar/openssl@3/3.6.0/lib -C link-arg=-Wl,-undefined,dynamic_lookup -l pthread
+	$(CARGO) rustc $(RB_SYS_EXTRA_CARGO_ARGS) --manifest-path $(RB_SYS_CARGO_MANIFEST_DIR)/Cargo.toml --target-dir $(RB_SYS_CARGO_TARGET_DIR) --lib $(RB_SYS_CARGO_PROFILE_FLAG) -- -C linker=clang -L native=/opt/homebrew/Cellar/ruby@3.4/3.4.8/lib -L native=/opt/homebrew/Cellar/libyaml/0.2.5/lib -L native=/opt/homebrew/Cellar/openssl@3/3.6.0/lib -C link-arg=-Wl,-undefined,dynamic_lookup -l pthread
 
 $(DLLIB): $(RUSTLIB)
 	$(Q) $(COPY) "$(RUSTLIB)" $@
