@@ -831,7 +831,6 @@ pub struct ScaffoldedFile {
 ## Related Documentation
 
 - [Code Generation Guide](../guides/code-generation.md)
-- [Codegen Modernization](./codegen-modernization.md)
 - [ADR-0004: Code Generation](../adr/0004-code-generation.md)
 - [API Documentation](../reference/api.md)
 
