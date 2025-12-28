@@ -65,8 +65,11 @@ namespace Spikard {
 namespace Spikard\Native {
     class TestClient
     {
-        /** @param array<int, array{method: string, path: string, handler?: object, websocket?: bool, sse?: bool}> $routes */
-        public function __construct(array $routes) {}
+        /**
+         * @param array<int, array{method: string, path: string, handler?: object, websocket?: bool, sse?: bool}>|null $routes
+         * @param array<string, mixed>|null $config
+         */
+        public function __construct(?array $routes = null, ?array $config = null) {}
         /** @param array<string, mixed> $options */
         public function request(string $method, string $path, array $options = []): \Spikard\Response {}
         /** @param array<string, mixed>|null $variables */

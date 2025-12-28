@@ -42,27 +42,22 @@ final class TestClient
     {
         if ($this->useNative()) {
             $nativeResponse = $this->nativeClient()->request($method, $path, $options);
-            if ($nativeResponse instanceof \Spikard\Http\Response) {
-                $headers = $nativeResponse->getHeaders();
-                $cookies = $nativeResponse->getCookies();
-                $statusCode = $nativeResponse->getStatusCode();
-                $body = null;
-                $bodyString = $nativeResponse->getBody();
-                if ($bodyString !== '') {
-                    if ($this->isJsonResponse($headers)) {
-                        $decoded = \json_decode($bodyString, true);
-                        $body = $decoded !== null || \json_last_error() === \JSON_ERROR_NONE
-                            ? $decoded
-                            : $bodyString;
-                    } else {
-                        $body = $bodyString;
-                    }
+            $headers = $nativeResponse->getHeaders();
+            $cookies = $nativeResponse->getCookies();
+            $statusCode = $nativeResponse->getStatusCode();
+            $body = null;
+            $bodyString = $nativeResponse->getBody();
+            if ($bodyString !== '') {
+                if ($this->isJsonResponse($headers)) {
+                    $decoded = \json_decode($bodyString, true);
+                    $body = $decoded !== null || \json_last_error() === \JSON_ERROR_NONE
+                        ? $decoded
+                        : $bodyString;
+                } else {
+                    $body = $bodyString;
                 }
             } else {
-                $headers = [];
-                $cookies = [];
-                $statusCode = 200;
-                $body = $nativeResponse->body ?? null;
+                $body = null;
             }
 
             return new Response(

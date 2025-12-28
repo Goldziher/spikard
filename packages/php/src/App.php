@@ -381,6 +381,7 @@ final class App
         }
 
         $configPayload = $this->configToNative($configToUse);
+        /** @var array<string, callable> $lifecyclePayload */
         $lifecyclePayload = $this->hooks ? $this->hooksToNative($this->hooks) : [];
         /** @var array<string, mixed> $dependenciesPayload */
         $dependenciesPayload = [

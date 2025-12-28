@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Spikard\Tests;
 
@@ -24,11 +26,11 @@ class GraphQLTestClientTest extends TestCase
                 'handler' => function (\Spikard\Http\Request $request) {
                     // Parse GraphQL query from request body
                     $bodyStr = $request->body;
-                    if (!is_string($bodyStr)) {
+                    if (!\is_string($bodyStr)) {
                         $bodyStr = '';
                     }
                     /** @var array<string, mixed> $body */
-                    $body = json_decode($bodyStr, true) ?? [];
+                    $body = \json_decode($bodyStr, true) ?? [];
                     /** @var string $query */
                     $query = $body['query'] ?? '';
                     /** @var array<string, mixed>|null $variables */
@@ -45,7 +47,7 @@ class GraphQLTestClientTest extends TestCase
                     ];
 
                     return new \Spikard\Response(
-                        json_encode($response) ?: '{}',
+                        \json_encode($response) ?: '{}',
                         200,
                         ['content-type' => 'application/json']
                     );
@@ -93,16 +95,15 @@ class GraphQLTestClientTest extends TestCase
                 'method' => 'POST',
                 'handler' => function (\Spikard\Http\Request $request) {
                     $bodyStr = $request->body;
-                    if (!is_string($bodyStr)) {
+                    if (!\is_string($bodyStr)) {
                         $bodyStr = '';
                     }
                     /** @var array<string, mixed> $body */
-                    $body = json_decode($bodyStr, true) ?? [];
+                    $body = \json_decode($bodyStr, true) ?? [];
                     /** @var array<string, mixed>|null $variables */
                     $variables = $body['variables'] ?? null;
-                    /** @var mixed $idValue */
-                    $idValue = is_array($variables) && isset($variables['id']) ? $variables['id'] : 1;
-                    /** @var int $userId */
+                    $idValue = \is_array($variables) && isset($variables['id']) ? $variables['id'] : 1;
+                    \assert(\is_int($idValue) || \is_scalar($idValue), 'idValue must be int or scalar');
                     $userId = (int)$idValue;
 
                     $response = [
@@ -115,7 +116,7 @@ class GraphQLTestClientTest extends TestCase
                     ];
 
                     return new \Spikard\Response(
-                        json_encode($response) ?: '{}',
+                        \json_encode($response) ?: '{}',
                         200,
                         ['content-type' => 'application/json']
                     );
@@ -191,7 +192,7 @@ class GraphQLTestClientTest extends TestCase
                     ];
 
                     return new \Spikard\Response(
-                        json_encode($response) ?: '{}',
+                        \json_encode($response) ?: '{}',
                         200,
                         ['content-type' => 'application/json']
                     );
@@ -238,7 +239,7 @@ class GraphQLTestClientTest extends TestCase
                     ];
 
                     return new \Spikard\Response(
-                        json_encode($response) ?: '{}',
+                        \json_encode($response) ?: '{}',
                         200,
                         ['content-type' => 'application/json']
                     );
@@ -269,20 +270,18 @@ class GraphQLTestClientTest extends TestCase
                 'method' => 'POST',
                 'handler' => function (\Spikard\Http\Request $request) {
                     $bodyStr = $request->body;
-                    if (!is_string($bodyStr)) {
+                    if (!\is_string($bodyStr)) {
                         $bodyStr = '';
                     }
                     /** @var array<string, mixed> $body */
-                    $body = json_decode($bodyStr, true) ?? [];
+                    $body = \json_decode($bodyStr, true) ?? [];
                     /** @var array<string, mixed>|null $variables */
                     $variables = $body['variables'] ?? null;
-                    /** @var mixed $nameValue */
-                    $nameValue = is_array($variables) && isset($variables['name']) ? $variables['name'] : 'New User';
-                    /** @var mixed $emailValue */
-                    $emailValue = is_array($variables) && isset($variables['email']) ? $variables['email'] : 'user@example.com';
-                    /** @var string $userName */
+                    $nameValue = \is_array($variables) && isset($variables['name']) ? $variables['name'] : 'New User';
+                    $emailValue = \is_array($variables) && isset($variables['email']) ? $variables['email'] : 'user@example.com';
+                    \assert(\is_string($nameValue) || \is_scalar($nameValue), 'nameValue must be string or scalar');
+                    \assert(\is_string($emailValue) || \is_scalar($emailValue), 'emailValue must be string or scalar');
                     $userName = (string)$nameValue;
-                    /** @var string $userEmail */
                     $userEmail = (string)$emailValue;
 
                     $response = [
@@ -296,7 +295,7 @@ class GraphQLTestClientTest extends TestCase
                     ];
 
                     return new \Spikard\Response(
-                        json_encode($response) ?: '{}',
+                        \json_encode($response) ?: '{}',
                         200,
                         ['content-type' => 'application/json']
                     );
@@ -348,7 +347,7 @@ class GraphQLTestClientTest extends TestCase
                     $response = ['errors' => [['message' => 'Some error']]];
 
                     return new \Spikard\Response(
-                        json_encode($response) ?: '{}',
+                        \json_encode($response) ?: '{}',
                         400,
                         ['content-type' => 'application/json']
                     );
@@ -387,7 +386,7 @@ class GraphQLTestClientTest extends TestCase
                     ];
 
                     return new \Spikard\Response(
-                        json_encode($response) ?: '{}',
+                        \json_encode($response) ?: '{}',
                         401,
                         ['content-type' => 'application/json']
                     );
@@ -426,7 +425,7 @@ class GraphQLTestClientTest extends TestCase
                     ];
 
                     return new \Spikard\Response(
-                        json_encode($response) ?: '{}',
+                        \json_encode($response) ?: '{}',
                         200,
                         ['content-type' => 'application/json']
                     );
@@ -462,7 +461,7 @@ class GraphQLTestClientTest extends TestCase
                     ];
 
                     return new \Spikard\Response(
-                        json_encode($response) ?: '{}',
+                        \json_encode($response) ?: '{}',
                         200,
                         ['content-type' => 'application/json']
                     );
@@ -498,7 +497,7 @@ class GraphQLTestClientTest extends TestCase
                     ];
 
                     return new \Spikard\Response(
-                        json_encode($response) ?: '{}',
+                        \json_encode($response) ?: '{}',
                         200,
                         ['content-type' => 'application/json']
                     );
