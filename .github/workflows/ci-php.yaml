@@ -81,7 +81,23 @@ jobs:
         shell: bash
         run: bash scripts/ci/php/detect-php-config.sh
 
+      - name: Verify PHP configuration matches expected version
+        shell: bash
+        run: |
+          echo "=== Verifying PHP 8.2 configuration ==="
+          php -v
+          php-config --version
+          php-config --phpapi
+          PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')
+          echo "Active PHP version: ${PHP_VERSION}"
+          if [[ "${PHP_VERSION}" != "8.2" ]]; then
+            echo "ERROR: Expected PHP 8.2 but found ${PHP_VERSION}"
+            exit 1
+          fi
+
       - name: Build PHP extension
+        env:
+          PHP_CONFIG: /usr/bin/php-config8.2
         run: cargo build --release -p spikard-php --features extension-module
 
       - name: Upload PHP extension artifact
@@ -191,7 +207,30 @@ jobs:
       - name: Install LLVM/Clang (for ext-php-rs bindgen)
         uses: ./.github/actions/setup-llvm-clang
 
+      - name: Install PHP development headers
+        run: bash scripts/ci/php/install-dev-headers-linux.sh
+
+      - name: Detect PHP configuration
+        shell: bash
+        run: bash scripts/ci/php/detect-php-config.sh
+
+      - name: Verify PHP configuration matches expected version
+        shell: bash
+        run: |
+          echo "=== Verifying PHP 8.2 configuration ==="
+          php -v
+          php-config --version
+          php-config --phpapi
+          PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')
+          echo "Active PHP version: ${PHP_VERSION}"
+          if [[ "${PHP_VERSION}" != "8.2" ]]; then
+            echo "ERROR: Expected PHP 8.2 but found ${PHP_VERSION}"
+            exit 1
+          fi
+
       - name: Build PHP extension
+        env:
+          PHP_CONFIG: /usr/bin/php-config8.2
         run: cargo build --release -p spikard-php --features extension-module
 
       - name: Install PHP extension

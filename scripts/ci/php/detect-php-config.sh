@@ -84,6 +84,27 @@ else
 		echo "php-config not found; skipping PHP extension build on this platform"
 		exit 0
 	fi
+
+	# Verify that php-config matches the active php version
+	php_version="$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')"
+	php_config_version="$("${php_config}" --version | grep -oP 'PHP \K[^.]*\.[^.]*' || echo 'unknown')"
+
+	echo "Active PHP version: ${php_version}"
+	echo "PHP config version: ${php_config_version}"
+
+	if [[ "${php_version}" != "${php_config_version}" ]]; then
+		echo "Warning: PHP version mismatch between php (${php_version}) and php-config (${php_config_version})"
+		echo "Attempting to find correct php-config${php_version}..."
+
+		versioned_config="/usr/bin/php-config${php_version}"
+		if [[ -f "${versioned_config}" ]]; then
+			php_config="${versioned_config}"
+			echo "Using versioned php-config: ${php_config}"
+		else
+			echo "Error: Could not find php-config${php_version}"
+			exit 1
+		fi
+	fi
 fi
 
 echo "PHP_CONFIG=${php_config}" >>"${GITHUB_ENV}"
