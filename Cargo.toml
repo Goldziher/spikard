@@ -4,7 +4,6 @@ members = [
     "crates/spikard",
     "crates/spikard-bindings-shared",
     "crates/spikard-cli",
-    "crates/spikard-codegen",
     "crates/spikard-core",
     "crates/spikard-graphql",
     "crates/spikard-http",
@@ -14,7 +13,6 @@ members = [
     "crates/spikard-wasm",
     "crates/spikard-rb",
     "crates/spikard-rb-macros",
-    "tools/test-generator",
     "tools/benchmark-harness",
 ]
 exclude = [

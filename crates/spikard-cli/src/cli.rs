@@ -2,8 +2,9 @@
 
 use crate::codegen::{
     self, CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, DtoConfig, NodeDtoStyle, PhpDtoGenerator,
-    PythonDtoStyle, RubyDtoStyle, SchemaKind,
+    PythonDtoStyle, RubyDtoStyle, SchemaKind, TargetLanguage,
 };
+use crate::init::{InitEngine, InitRequest};
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::ffi::OsString;
@@ -20,6 +21,8 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
+    /// Initialize a new Spikard project
+    Init(InitArgs),
     /// User-facing code generation entrypoints
     Generate {
         #[command(subcommand)]
@@ -37,6 +40,46 @@ enum Commands {
     },
     /// Show information about Spikard
     Features,
+}
+
+#[derive(Args, Debug)]
+struct InitArgs {
+    /// Name of the project to create
+    name: String,
+
+    /// Target programming language
+    #[arg(long, short = 'l', default_value = "python")]
+    lang: InitLanguage,
+
+    /// Directory where the project will be created (default: current directory)
+    #[arg(long, short = 'd', default_value = ".")]
+    dir: PathBuf,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum InitLanguage {
+    #[value(name = "python")]
+    Python,
+    #[value(name = "typescript")]
+    TypeScript,
+    #[value(name = "rust")]
+    Rust,
+    #[value(name = "ruby")]
+    Ruby,
+    #[value(name = "php")]
+    Php,
+}
+
+impl From<InitLanguage> for TargetLanguage {
+    fn from(lang: InitLanguage) -> Self {
+        match lang {
+            InitLanguage::Python => TargetLanguage::Python,
+            InitLanguage::TypeScript => TargetLanguage::TypeScript,
+            InitLanguage::Rust => TargetLanguage::Rust,
+            InitLanguage::Ruby => TargetLanguage::Ruby,
+            InitLanguage::Php => TargetLanguage::Php,
+        }
+    }
 }
 
 #[derive(Subcommand, Debug)]
@@ -254,6 +297,40 @@ where
 
 fn run(cli: Cli) -> Result<()> {
     match cli.command {
+        Commands::Init(args) => {
+            println!("Creating new Spikard project...");
+            println!("  Project name: {}", args.name);
+            println!("  Language: {:?}", args.lang);
+            println!("  Directory: {}", args.dir.display());
+            println!();
+
+            let request = InitRequest {
+                project_name: args.name.clone(),
+                language: args.lang.into(),
+                project_dir: args.dir.join(&args.name),
+                schema_path: None,
+            };
+
+            match InitEngine::execute(request) {
+                Ok(response) => {
+                    println!("✓ Project created successfully!");
+                    println!();
+                    println!("Created {} files:", response.files_created.len());
+                    for file in response.files_created {
+                        println!("  - {}", file.display());
+                    }
+                    println!();
+                    println!("Next steps:");
+                    for (i, step) in response.next_steps.iter().enumerate() {
+                        println!("  {}. {}", i + 1, step);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("✗ Failed to create project: {}", e);
+                    return Err(e);
+                }
+            }
+        }
         Commands::Generate { target } => match target {
             GenerateCommand::PhpDto(args) => {
                 println!("Generating PHP DTO classes for Spikard...");

@@ -27,6 +27,7 @@ clap.workspace = true
 clap_complete.workspace = true
 clap_mangen.workspace = true
 anyhow = "1.0"
+thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 axum.workspace = true
