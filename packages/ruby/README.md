@@ -7,20 +7,18 @@
 [![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-High-performance Ruby web framework with a Rust core. Build REST APIs with Sinatra-style routing and zero-overhead async handlers backed by Axum and Tower-HTTP.
+Ruby bindings for Spikard: a Rust-centric web framework with type-safe code generation from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specifications. Leverage Sinatra-style routing with zero-copy FFI performance.
 
-## Features
+## Key Features
 
-- **Rust-powered performance**: High-throughput HTTP server backed by Tokio and Axum
-- **Sinatra-style routing**: Familiar `get`, `post`, `put`, `patch`, `delete` DSL
 - **Type-safe with RBS**: Full RBS type definitions for Steep type checking
-- **Zero-copy serialization**: Direct Rust-to-Ruby object conversion via Magnus
-- **Async-first**: Non-blocking handlers with full async/await support
-- **Middleware stack**: Compression, rate limiting, request IDs, authentication
-- **WebSockets & SSE**: Native real-time communication primitives
-- **Request validation**: JSON Schema and dry-schema support
-- **Lifecycle hooks**: onRequest, preValidation, preHandler, onResponse, onError
-- **Dependency injection**: Built-in container for services and factories
+- **Zero-copy FFI**: Magnus/rb-sys bindings eliminate serialization overhead
+- **Sinatra-style routing**: Familiar `get`, `post`, `put`, `patch`, `delete` DSL
+- **Code generation**: Generate type-safe handlers from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specs
+- **Full async support**: Non-blocking handlers with complete async/await integration
+- **Tower-HTTP middleware**: Compression, rate limiting, authentication, CORS, request IDs
+- **Real-time**: WebSockets and Server-Sent Events (SSE)
+- **Production-ready**: Dependency injection, validation schemas, lifecycle hooks
 
 ## Installation
 
@@ -30,576 +28,203 @@ High-performance Ruby web framework with a Rust core. Build REST APIs with Sinat
 gem install spikard
 ```
 
-**From source (development):**
+**From source:**
 
 ```bash
-cd packages/ruby
 bundle install
 bundle exec rake ext:build
 ```
 
-**Requirements:**
-- Ruby 3.2 or later
-- Bundler
-- Rust toolchain (for building from source)
-
-## Windows Development
-
-On Windows, Spikard uses the GNU toolchain (not MSVC) to match Ruby's official RubyInstaller distribution.
-
-### Prerequisites
-
-1. **Install RubyInstaller with DevKit:**
-   - Download from [RubyInstaller.org](https://rubyinstaller.org/downloads/)
-   - Choose Ruby+Devkit 3.2.x (x64)
-   - During installation, select "MSYS2 development toolchain"
-
-2. **Install Rust with GNU target:**
-   ```powershell
-   rustup toolchain install stable-x86_64-pc-windows-gnu
-   rustup default stable-x86_64-pc-windows-gnu
-   ```
-
-3. **Verify setup:**
-   ```powershell
-   ruby --version  # Should show 3.2.x
-   rustup show     # Should show *-pc-windows-gnu
-   ```
-
-### Building on Windows
-
-```bash
-cd packages/ruby
-bundle install
-bundle exec rake compile
-```
-
-The build uses the GNU toolchain automatically via RubyInstaller's MSYS2 DevKit. No MSVC configuration needed.
+**Requirements:** Ruby 3.2+, Bundler, and Rust toolchain (for building from source). On Windows, use RubyInstaller with MSYS2 DevKit and the GNU Rust toolchain.
 
 ## Quick Start
 
 ```ruby
 require "spikard"
-require "dry-schema"
-
-UserSchema = Dry::Schema.JSON do
-  required(:name).filled(:str?)
-  required(:email).filled(:str?)
-end
 
 app = Spikard::App.new
 
+app.get "/hello" do |request|
+  { message: "Hello, World!" }
+end
+
 app.get "/users/:id" do |request|
-  user_id = request[:path_params]["id"].to_i
+  user_id = request[:path_params]["id"]
   { id: user_id, name: "Alice" }
 end
 
-app.post "/users", request_schema: UserSchema do |request|
-  body = request[:body]
-  { id: 1, name: body["name"], email: body["email"] }
+app.post "/users" do |request|
+  { id: 1, name: request[:body]["name"] }
 end
 
 app.run(port: 8000)
 ```
 
-## Request Hash Structure
-
-Handlers receive a single `request` hash argument with the following keys:
-
-- `:method` - HTTP method (String): `"GET"`, `"POST"`, etc.
-- `:path` - URL path (String): `"/users/123"`
-- `:path_params` - Path parameters (Hash): `{"id" => "123"}`
-- `:query` - Query parameters (Hash): `{"search" => "ruby"}`
-- `:raw_query` - Raw query multimap (Hash of Arrays)
-- `:headers` - Request headers (Hash): `{"Authorization" => "Bearer..."}`
-- `:cookies` - Request cookies (Hash): `{"session_id" => "..."}`
-- `:body` - Parsed request body (Hash or nil)
-- `:params` - Merged params from path, query, headers, and cookies
-
-**Example:**
-
-```ruby
-app.get "/users/:id" do |request|
-  user_id = request[:path_params]["id"]
-  search = request[:query]["search"]
-  auth = request[:headers]["Authorization"]
-
-  { id: user_id, search: search }
-end
-```
-
-## Route Registration
-
-### HTTP Methods
-
-```ruby
-app.get "/path" do |request|
-  # Handler code
-  { method: request[:method] }
-end
-
-app.post "/path" do |request|
-  { created: true }
-end
-
-app.put "/path" do |request|
-  { updated: true }
-end
-
-app.patch "/path" do |request|
-  { patched: true }
-end
-
-app.delete "/path" do |request|
-  { deleted: true }
-end
-
-app.options "/path" do |request|
-  { options: [] }
-end
-
-app.head "/path" do |request|
-  # HEAD request
-end
-
-app.trace "/path" do |request|
-  # TRACE request
-end
-```
-
-### Path Parameters
-
-```ruby
-app.get "/users/:user_id" do |request|
-  { user_id: request[:path_params]["user_id"].to_i }
-end
-
-app.get "/posts/:post_id/comments/:comment_id" do |request|
-  {
-    post_id: request[:path_params]["post_id"].to_i,
-    comment_id: request[:path_params]["comment_id"].to_i
-  }
-end
-```
-
-### Query Parameters
-
-```ruby
-app.get "/search" do |request|
-  q = request[:query]["q"]
-  limit = (request[:query]["limit"] || "10").to_i
-  { query: q, limit: limit }
-end
-```
+The `request` hash provides access to:
+- `request[:method]` - HTTP method
+- `request[:path]` - URL path
+- `request[:path_params]` - Path parameters
+- `request[:query]` - Query parameters
+- `request[:headers]` - Request headers
+- `request[:cookies]` - Request cookies
+- `request[:body]` - Parsed request body
 
 ## Validation
 
-Spikard supports **dry-schema** and **raw JSON Schema objects**.
-
-### With dry-schema
+Pass a `request_schema` to validate incoming JSON:
 
 ```ruby
 require "dry-schema"
-Dry::Schema.load_extensions(:json_schema)
 
 UserSchema = Dry::Schema.JSON do
   required(:name).filled(:str?)
   required(:email).filled(:str?)
-  required(:age).filled(:int?)
 end
 
 app.post "/users", request_schema: UserSchema do |request|
-  # request[:body] is validated against schema
   { id: 1, name: request[:body]["name"] }
 end
 ```
 
-### With raw JSON Schema
-
-```ruby
-user_schema = {
-  "type" => "object",
-  "properties" => {
-    "name" => { "type" => "string" },
-    "email" => { "type" => "string", "format" => "email" }
-  },
-  "required" => ["name", "email"]
-}
-
-app.post "/users", request_schema: user_schema do |request|
-  { id: 1, name: request[:body]["name"], email: request[:body]["email"] }
-end
-```
+Also supports raw JSON Schema objects and dry-struct schemas.
 
 ## Dependency Injection
 
-Register values or factories and inject them as keyword parameters:
+Inject dependencies as keyword parameters:
 
 ```ruby
-app.provide("config", { "db_url" => "postgresql://localhost/app" })
-app.provide("db_pool", depends_on: ["config"], singleton: true) do |config:|
-  { url: config["db_url"], driver: "pool" }
-end
+app.provide("config", { "db_url" => "postgresql://localhost" })
+app.provide("db", depends_on: ["config"], singleton: true) { |config:| Pool.new(config) }
 
-app.get "/stats" do |request, config:, db_pool:|
-  { db: db_pool[:url], env: config["db_url"] }
+app.get "/data" do |request, config:, db:|
+  { url: config["db_url"] }
 end
 ```
 
-### With dry-struct
+## Responses
+
+Return a Hash, String, or Response object:
 
 ```ruby
-require "dry-struct"
-require "dry-types"
-
-module Types
-  include Dry.Types()
-end
-
-class User < Dry::Struct
-  attribute :name, Types::String
-  attribute :email, Types::String
-  attribute :age, Types::Integer
-end
-
-app.post "/users", request_schema: User do |request|
-  # request[:body] validated as User
-  { id: 1, name: request[:body]["name"] }
-end
-```
-
-## Response Types
-
-### Simple Hash Response
-
-```ruby
+# Simple hash (auto-serialized to JSON)
 app.get "/hello" do
   { message: "Hello, World!" }
 end
-```
 
-### String Response
-
-```ruby
-app.get "/text" do
-  "Plain text response"
-end
-```
-
-### Full Response Object
-
-```ruby
+# Custom status and headers
 app.post "/users" do |request|
   Spikard::Response.new(
-    content: { id: 1, name: request[:body]["name"] },
+    content: { id: 1 },
     status_code: 201,
     headers: { "X-Custom" => "value" }
   )
 end
-```
 
-### Streaming Response
-
-```ruby
+# Streaming response
 app.get "/stream" do
-  stream = Enumerator.new do |yielder|
-    10.times do |i|
-      yielder << "Chunk #{i}\n"
-      sleep 0.1
-    end
-  end
-
-  Spikard::StreamingResponse.new(
-    stream,
-    status_code: 200,
-    headers: { "Content-Type" => "text/plain" }
-  )
+  stream = Enumerator.new { |y| y << "data" }
+  Spikard::StreamingResponse.new(stream)
 end
-```
 
-## File Uploads
-
-```ruby
+# File uploads
 app.post "/upload", file_params: true do |request|
-  file = request[:body]["file"]  # UploadFile instance
-
-  {
-    filename: file.filename,
-    size: file.size,
-    content_type: file.content_type,
-    content: file.read
-  }
+  file = request[:body]["file"]
+  { filename: file.filename, size: file.size }
 end
 ```
 
 ## Configuration
+
+Configure the server with middleware options:
 
 ```ruby
 config = Spikard::ServerConfig.new(
   host: "0.0.0.0",
   port: 8080,
   workers: 4,
-  enable_request_id: true,
-  max_body_size: 10 * 1024 * 1024,  # 10 MB
-  request_timeout: 30,
-  compression: Spikard::CompressionConfig.new(
-    gzip: true,
-    brotli: true,
-    quality: 6
-  ),
-  rate_limit: Spikard::RateLimitConfig.new(
-    per_second: 100,
-    burst: 200
-  )
+  compression: Spikard::CompressionConfig.new(gzip: true, brotli: true),
+  rate_limit: Spikard::RateLimitConfig.new(per_second: 100),
+  jwt: Spikard::JwtConfig.new(secret: "key", algorithm: "HS256"),
+  static_files: Spikard::StaticFilesConfig.new(directory: "./public"),
+  max_body_size: 10 * 1024 * 1024,
+  request_timeout: 30
 )
 
 app.run(config: config)
 ```
 
-### Middleware Configuration
-
-**Compression:**
-
-```ruby
-compression = Spikard::CompressionConfig.new(
-  gzip: true,
-  brotli: true,
-  min_size: 1024,
-  quality: 6
-)
-```
-
-**Rate Limiting:**
-
-```ruby
-rate_limit = Spikard::RateLimitConfig.new(
-  per_second: 100,
-  burst: 200,
-  ip_based: true
-)
-```
-
-**JWT Authentication:**
-
-```ruby
-jwt = Spikard::JwtConfig.new(
-  secret: "your-secret-key",
-  algorithm: "HS256",
-  audience: ["api.example.com"],
-  issuer: "auth.example.com",
-  leeway: 30
-)
-```
-
-**Static Files:**
-
-```ruby
-static = Spikard::StaticFilesConfig.new(
-  directory: "./public",
-  route_prefix: "/static",
-  index_file: true,
-  cache_control: "public, max-age=3600"
-)
-```
-
-**OpenAPI Documentation:**
-
-```ruby
-openapi = Spikard::OpenApiConfig.new(
-  enabled: true,
-  title: "My API",
-  version: "1.0.0",
-  description: "API docs",
-  swagger_ui_path: "/docs",
-  redoc_path: "/redoc"
-)
-```
+See [Configuration Reference](lib/spikard/config.rb) for full options.
 
 ## Lifecycle Hooks
 
+Execute logic at key points in the request lifecycle:
+
 ```ruby
-app.on_request do |request|
-  puts "#{request[:method]} #{request[:path]}"
-  request
-end
-
-app.pre_validation do |request|
-  if too_many_requests?
-    Spikard::Response.new(
-      content: { error: "Rate limit exceeded" },
-      status_code: 429
-    )
-  else
-    request
-  end
-end
-
-app.pre_handler do |request|
-  if invalid_token?(request[:headers]["Authorization"])
-    Spikard::Response.new(
-      content: { error: "Unauthorized" },
-      status_code: 401
-    )
-  else
-    request
-  end
-end
-
-app.on_response do |response|
-  response.headers["X-Frame-Options"] = "DENY"
-  response
-end
-
-app.on_error do |response|
-  puts "Error: #{response.status_code}"
-  response
-end
+app.on_request { |req| puts "#{req[:method]} #{req[:path]}" }
+app.pre_validation { |req| req }
+app.pre_handler { |req| req }
+app.on_response { |res| res }
+app.on_error { |res| res }
 ```
 
-## WebSockets
+Return a Request/Response object to continue, or a Response to short-circuit.
+
+## Real-Time Communication
+
+**WebSockets:**
 
 ```ruby
 class ChatHandler < Spikard::WebSocketHandler
-  def on_connect
-    puts "Client connected"
-  end
-
-  def handle_message(message)
-    # message is a Hash (parsed JSON)
-    { echo: message, timestamp: Time.now.to_i }
-  end
-
-  def on_disconnect
-    puts "Client disconnected"
-  end
+  def handle_message(message) = { echo: message }
 end
 
 app.websocket("/chat") { ChatHandler.new }
 ```
 
-## Server-Sent Events (SSE)
+**Server-Sent Events:**
 
 ```ruby
-class NotificationProducer < Spikard::SseEventProducer
-  def initialize
-    @count = 0
-  end
-
-  def on_connect
-    puts "Client connected to SSE stream"
-  end
-
-  def next_event
-    sleep 1
-
-    return nil if @count >= 10  # End stream
-
-    event = Spikard::SseEvent.new(
-      data: { message: "Notification #{@count}" },
-      event_type: "notification",
-      id: @count.to_s,
-      retry_ms: 3000
-    )
-    @count += 1
-    event
-  end
-
-  def on_disconnect
-    puts "Client disconnected from SSE"
-  end
+class Events < Spikard::SseEventProducer
+  def next_event = Spikard::SseEvent.new(data: { msg: "Hello" })
 end
 
-app.sse("/notifications") { NotificationProducer.new }
+app.sse("/events") { Events.new }
 ```
 
 ## Background Tasks
 
-```ruby
-app.post "/process" do |request|
-  Spikard::Background.run do
-    # Heavy processing after response
-    ProcessData.perform(request[:path_params]["id"])
-  end
+Offload work after sending response:
 
+```ruby
+app.post "/process" do
+  Spikard::Background.run { perform_long_task }
   { status: "processing" }
 end
 ```
 
 ## Testing
 
+Use the TestClient for integration tests:
+
 ```ruby
-require "spikard"
-
-app = Spikard::App.new
-app.get "/hello" do
-  { message: "Hello, World!" }
-end
-
 client = Spikard::TestClient.new(app)
 
 # HTTP requests
 response = client.get("/hello", query: { name: "Alice" })
-puts response.status_code  # => 200
-puts response.json         # => { "message" => "Hello, World!" }
+puts response.status_code  # 200
+puts response.json         # { "message" => "Hello, World!" }
 
-# POST with JSON
+# POST, WebSocket, SSE all supported
 response = client.post("/users", json: { name: "Bob" })
-
-# File upload
-response = client.post("/upload", files: {
-  file: ["test.txt", "content", "text/plain"]
-})
-
-# WebSocket
 ws = client.websocket("/chat")
-ws.send_json({ message: "hello" })
-message = ws.receive_json
-ws.close
-
-# SSE
 sse = client.sse("/events")
-events = sse.events_as_json
-puts events.length
 
-# Cleanup
 client.close
 ```
 
-## Running the Server
+## Type Safety with RBS & Steep
 
-```ruby
-# Development
-app.run(port: 8000)
-
-# Production
-config = Spikard::ServerConfig.new(
-  host: "0.0.0.0",
-  port: 8080,
-  workers: 4
-)
-app.run(config: config)
-```
-
-## Type Safety with RBS
-
-RBS type signatures are provided in `sig/spikard.rbs`:
-
-```ruby
-module Spikard
-  class App
-    def initialize: () -> void
-    def get: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def post: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def run: (?config: ServerConfig | Hash[Symbol, untyped]?) -> void
-  end
-
-  class ServerConfig
-    def initialize: (?host: String, ?port: Integer, **untyped) -> void
-  end
-end
-```
-
-Use with Steep for type checking:
+Full RBS type definitions are included in `sig/spikard.rbs`. Use Steep for type checking:
 
 ```bash
 bundle exec steep check
@@ -607,67 +232,24 @@ bundle exec steep check
 
 ## Performance
 
-Ruby bindings use:
-- **Magnus** for zero-overhead FFI
-- **rb-sys** for modern Ruby 3.2+ integration
-- Idiomatic Ruby blocks and procs
-- GC-safe handler storage
+Built with zero-overhead FFI via Magnus and rb-sys. Benchmark results: ~8,000 RPS, ~6.5ms latency at 50 concurrency. See [benchmarks](../../snapshots/benchmarks/) for full results.
 
-### CI Benchmarks (2025-12-20)
+## Learn More
 
-Run: `snapshots/benchmarks/20397054933` (commit `25e4fdf`, oha, 50 concurrency, 10s, Linux x86_64).
+**Examples & Code Generation:**
+- [Runnable Examples](../../examples/) - Ruby, Python, TypeScript, PHP, and WASM
+- [Code Generation Guide](../../examples/README.md) - Generate from OpenAPI, GraphQL, AsyncAPI, OpenRPC
 
-| Metric | Value |
-| --- | --- |
-| Avg RPS (all workloads) | 8,271 |
-| Avg latency (ms) | 6.50 |
+**Documentation:**
+- [Type Definitions (RBS)](sig/spikard.rbs) - Full Steep type signatures
+- [Main README](../../README.md) - Multi-language ecosystem and feature overview
+- [Architecture Decisions](../../docs/adr/) - Design choices and patterns
 
-Category breakdown:
-
-| Category | Avg RPS | Avg latency (ms) |
-| --- | --- | --- |
-| path-params | 9,591 | 5.22 |
-| json-bodies | 8,648 | 5.78 |
-| forms | 7,989 | 6.27 |
-| query-params | 7,984 | 6.33 |
-| multipart | 5,604 | 10.36 |
-
-## Examples
-
-The [examples directory](../../examples/) contains comprehensive demonstrations:
-
-**Ruby-specific examples:**
-- [Basic Ruby Example](../../examples/di/ruby_basic.rb) - Simple server with DI
-- [Database Integration](../../examples/di/ruby_database.rb) - DI with database pools
-- Additional examples in [examples/](../../examples/)
-
-**API Schemas** (language-agnostic, can be used with code generation):
-- [Todo API](../../examples/schemas/todo-api.openapi.yaml) - REST CRUD with validation
-- [File Service](../../examples/schemas/file-service.openapi.yaml) - File uploads/downloads
-- [Auth Service](../../examples/schemas/auth-service.openapi.yaml) - JWT, API keys, OAuth
-- [Chat Service](../../examples/schemas/chat-service.asyncapi.yaml) - WebSocket messaging
-- [Event Streams](../../examples/schemas/events-stream.asyncapi.yaml) - SSE streaming
-
-See [examples/README.md](../../examples/README.md) for code generation instructions.
-
-## Documentation
-
-**API Reference & Guides:**
-- [Type Definitions (RBS)](sig/spikard.rbs) - Full type signatures for Steep
-- [Configuration Reference](lib/spikard/config.rb) - ServerConfig and middleware options
-- [Handler Documentation](lib/spikard/handler_wrapper.rb) - Request/response handling
-
-**Project Resources:**
-- [Main Project README](../../README.md) - Spikard overview and multi-language ecosystem
-- [Contributing Guide](../../CONTRIBUTING.md) - Development guidelines
-- [Architecture Decisions](../../docs/adr/) - ADRs on design choices
-- [Examples](../../examples/ruby/) - Runnable example applications
-
-**Cross-Language:**
+**Other Languages:**
 - [Python (PyPI)](https://pypi.org/project/spikard/)
-- [Node.js (npm)](https://www.npmjs.com/package/spikard)
-- [Rust (Crates.io)](https://crates.io/crates/spikard)
+- [TypeScript (npm)](https://www.npmjs.com/package/spikard)
 - [PHP (Packagist)](https://packagist.org/packages/spikard/spikard)
+- [Rust (Crates.io)](https://crates.io/crates/spikard)
 
 ## License
 
