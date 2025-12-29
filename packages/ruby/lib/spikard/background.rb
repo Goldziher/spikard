@@ -50,5 +50,9 @@ module Spikard
         @worker = nil
       end
     end
+
+    at_exit do
+      shutdown
+    end
   end
 end

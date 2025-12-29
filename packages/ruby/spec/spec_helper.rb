@@ -24,17 +24,6 @@ SimpleCov.start do
   add_group 'Main Logic', '/lib/'
 end
 
-SimpleCov.at_exit do
-  SimpleCov.result.format!
-  Spikard::Background.shutdown if defined?(Spikard::Background)
-  Thread.list.each do |thread|
-    next if thread == Thread.current
-
-    thread.kill
-    thread.join(1)
-  end
-end
-
 require 'bundler/setup'
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 require 'spikard'
