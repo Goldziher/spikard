@@ -61,8 +61,8 @@ impl fmt::Display for SchemaConfig {
 ///
 /// Provides a fluent interface for configuring GraphQL schemas.
 /// This builder follows the same pattern as the Rust SchemaBuilder.
-// codeql[rust/access-invalid-pointer] false positive: napi-rs wraps this in a managed JS object.
 #[napi]
+// codeql[rust/access-invalid-pointer] false positive: napi-rs wraps this in a managed JS object.
 pub struct GraphQLSchemaBuilder {
     introspection_enabled: bool,
     complexity_limit: Option<u32>,
@@ -184,8 +184,8 @@ impl Default for GraphQLSchemaBuilder {
 /// GraphQL utilities and factory functions
 ///
 /// Provides factory methods for creating schema builders and configurations.
-// codeql[rust/access-invalid-pointer] false positive: napi-rs wraps this in a managed JS object.
 #[napi]
+// codeql[rust/access-invalid-pointer] false positive: napi-rs wraps this in a managed JS object.
 pub struct GraphQL;
 
 #[napi]
