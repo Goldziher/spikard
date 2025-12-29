@@ -61,8 +61,8 @@ impl fmt::Display for SchemaConfig {
 ///
 /// Provides a fluent interface for configuring GraphQL schemas.
 /// This builder follows the same pattern as the Rust SchemaBuilder.
+// codeql[rust/access-invalid-pointer]
 #[napi]
-// lgtm[rust/access-invalid-pointer]
 pub struct GraphQLSchemaBuilder {
     introspection_enabled: bool,
     complexity_limit: Option<u32>,
@@ -184,8 +184,8 @@ impl Default for GraphQLSchemaBuilder {
 /// GraphQL utilities and factory functions
 ///
 /// Provides factory methods for creating schema builders and configurations.
+// codeql[rust/access-invalid-pointer]
 #[napi]
-// lgtm[rust/access-invalid-pointer]
 pub struct GraphQL;
 
 #[napi]
