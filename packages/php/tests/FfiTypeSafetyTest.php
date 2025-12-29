@@ -36,6 +36,22 @@ final class FfiTypeSafetyTest extends TestCase
     }
 
     /**
+     * @param array<int, array<string, mixed>> $routes
+     */
+    private function createClient(array $routes): TestClient
+    {
+        $normalized = [];
+        foreach ($routes as $route) {
+            if (isset($route['handler']) && !isset($route['handler_name'])) {
+                $route['handler_name'] = \spl_object_hash($route['handler']);
+            }
+            $normalized[] = $route;
+        }
+
+        return new TestClient($normalized);
+    }
+
+    /**
      * Test null pointer handling - Rust Option<T> converts to PHP null correctly.
      * Verifies that Rust None values cross the FFI boundary as PHP null, not false or 0.
      */
@@ -56,7 +72,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $response = $client->request('GET', '/null-test');
 
@@ -99,7 +115,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $response = $client->request('POST', '/int-test', [
                 'json' => [
@@ -158,7 +174,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $response = $client->request('POST', '/keys-test', [
                 'json' => [
@@ -212,7 +228,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $response = $client->request('POST', '/bool-test', [
                 'json' => [
@@ -292,7 +308,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $response = $client->request('POST', '/large-test', [
                 'json' => $largeData,
@@ -338,7 +354,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $testString = 'Hello 中文 Ñ emoji🚀 Ü special\nchars\t"quotes"';
 
@@ -383,7 +399,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             // Create data with nested structure (but not actual circular refs in JSON)
             $data = [
@@ -440,7 +456,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             // Valid request
             $response = $client->request('POST', '/cleanup-test', [
@@ -490,7 +506,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             // This should succeed - numeric string
             $response = $client->request('POST', '/type-mismatch-test', [
@@ -534,7 +550,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $response = $client->request('POST', '/float-test', [
                 'json' => [
@@ -585,7 +601,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $response = $client->request('POST', '/empty-test', [
                 'json' => [
@@ -642,7 +658,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $response = $client->request('POST', '/nested-test', [
                 'json' => [
@@ -701,7 +717,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             // First request should fail
             $response = $client->request('POST', '/exception-test', [
@@ -758,7 +774,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $response = $client->request('POST', '/mixed-test', [
                 'json' => [
@@ -816,7 +832,7 @@ final class FfiTypeSafetyTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         try {
             $response = $client->request('POST', '/boundary-test', [
                 'json' => [

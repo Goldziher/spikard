@@ -287,8 +287,8 @@ import {
 		const responseData = response.json();
 		assertEquals(responseData, "id,name,price\n1,Item A,10.0\n2,Item B,20.0");
 		const responseHeaders = response.headers();
-		assertEquals(responseHeaders["content-disposition"], "attachment; filename=data.csv");
 		assertEquals(responseHeaders["content-type"], "text/csv; charset=utf-8");
+		assertEquals(responseHeaders["content-disposition"], "attachment; filename=data.csv");
 	});
 
 	Deno.test("content_types: Binary response - application octet-stream", async () => {

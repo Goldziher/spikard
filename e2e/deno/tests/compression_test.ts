@@ -42,6 +42,6 @@ import { createAppCompressionCompressionGzipApplied, createAppCompressionCompres
 		assert(Object.hasOwn(responseData, "payload"));
 		assertEquals(responseData.payload, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		const responseHeaders = response.headers();
-		assertEquals(responseHeaders["content-encoding"], "gzip");
 		assertEquals(responseHeaders.vary, "Accept-Encoding");
+		assertEquals(responseHeaders["content-encoding"], "gzip");
 	});

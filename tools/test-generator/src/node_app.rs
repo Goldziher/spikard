@@ -1506,6 +1506,7 @@ fn append_graphql_factories(
     }
 
     code.push_str("\n\ntype GraphqlFixture = {\n");
+    code.push_str("\tname: string;\n");
     code.push_str("\tquery: string;\n");
     code.push_str("\tvariables: unknown | null;\n");
     code.push_str("\toperationName: string | null;\n");
@@ -1516,7 +1517,22 @@ fn append_graphql_factories(
     code.push_str("function graphqlVariablesKey(value: unknown): string {\n");
     code.push_str("\treturn JSON.stringify(value ?? null);\n");
     code.push_str("}\n\n");
-    code.push_str("function findGraphqlFixture(fixtures: GraphqlFixture[], body: unknown): GraphqlFixture | null {\n");
+    code.push_str("function getHeaderValue(headers: Record<string, string> | undefined, name: string): string | null {\n");
+    code.push_str("\tif (!headers) return null;\n");
+    code.push_str("\tconst target = name.toLowerCase();\n");
+    code.push_str("\tfor (const [key, value] of Object.entries(headers)) {\n");
+    code.push_str("\t\tif (key.toLowerCase() === target) return value;\n");
+    code.push_str("\t}\n");
+    code.push_str("\treturn null;\n");
+    code.push_str("}\n\n");
+    code.push_str(
+        "function findGraphqlFixture(fixtures: GraphqlFixture[], body: unknown, headers: Record<string, string> | undefined): GraphqlFixture | null {\n",
+    );
+    code.push_str("\tconst fixtureName = getHeaderValue(headers, \"x-spikard-fixture\");\n");
+    code.push_str("\tif (fixtureName) {\n");
+    code.push_str("\t\tconst byName = fixtures.find((fixture) => fixture.name === fixtureName);\n");
+    code.push_str("\t\tif (byName) return byName;\n");
+    code.push_str("\t}\n");
     code.push_str("\tif (!body || typeof body !== \"object\") return null;\n");
     code.push_str("\tconst payload = body as { query?: string; variables?: unknown; operationName?: string | null };\n");
     code.push_str("\tconst query = payload.query ?? \"\";\n");
@@ -1580,7 +1596,8 @@ fn append_graphql_factories(
                 None => "null".to_string(),
             };
             code.push_str(&format!(
-                "\t{{ query: {}, variables: {}, operationName: {}, statusCode: {}, data: {}, errors: {} }},\n",
+                "\t{{ name: \"{}\", query: {}, variables: {}, operationName: {}, statusCode: {}, data: {}, errors: {} }},\n",
+                escape_string(&fixture.name),
                 query_literal,
                 variables_literal,
                 operation_literal,
@@ -1592,7 +1609,7 @@ fn append_graphql_factories(
         code.push_str("];\n\n");
 
         code.push_str(&format!(
-            "async function {handler_fn}(requestJson: string): Promise<string> {{\n\tconst request = JSON.parse(requestJson);\n\tconst fixture = findGraphqlFixture({fixtures_name}, request.body ?? null);\n\tconst response: HandlerResponse = {{ status: fixture?.statusCode ?? 500 }};\n\tresponse.body = fixture\n\t\t? {{ data: fixture.data ?? null, errors: fixture.errors ?? null }}\n\t\t: {{ errors: [{{ message: \"GraphQL fixture not found\" }}] }};\n\treturn JSON.stringify(response);\n}}\n\n",
+            "async function {handler_fn}(requestJson: string): Promise<string> {{\n\tconst request = JSON.parse(requestJson);\n\tconst fixture = findGraphqlFixture({fixtures_name}, request.body ?? null, request.headers ?? undefined);\n\tconst response: HandlerResponse = {{ status: fixture?.statusCode ?? 500 }};\n\tresponse.body = fixture\n\t\t? {{ data: fixture.data ?? null, errors: fixture.errors ?? null }}\n\t\t: {{ errors: [{{ message: \"GraphQL fixture not found\" }}] }};\n\treturn JSON.stringify(response);\n}}\n\n",
             handler_fn = handler_fn,
             fixtures_name = fixtures_name
         ));

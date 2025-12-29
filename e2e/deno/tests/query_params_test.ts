@@ -481,7 +481,7 @@ import {
 		const app = createAppQueryParamsQueryParameterWithSpecialCharactersUrlEncoding();
 		const client = new TestClient(app);
 
-		const response = await client.get("/test?special=%26%40A.ac&email=x%40test.com");
+		const response = await client.get("/test?email=x%40test.com&special=%26%40A.ac");
 
 		assertEquals(response.statusCode, 200);
 		const responseData = response.json();
@@ -536,7 +536,7 @@ import {
 		const app = createAppQueryParamsMultipleQueryParametersWithDifferentTypes();
 		const client = new TestClient(app);
 
-		const response = await client.get("/query/multi-type?score=95.5&active=true&name=john&age=30");
+		const response = await client.get("/query/multi-type?age=30&score=95.5&active=true&name=john");
 
 		assertEquals(response.statusCode, 200);
 		const responseData = response.json();

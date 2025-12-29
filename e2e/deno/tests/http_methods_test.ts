@@ -25,17 +25,17 @@ import {
 		const client = new TestClient(app);
 
 		const headers = {
+			"Access-Control-Request-Method": "POST",
 			"Access-Control-Request-Headers": "Content-Type",
 			Origin: "https://example.com",
-			"Access-Control-Request-Method": "POST",
 		};
 		const response = await client.options("/items/", { headers });
 
 		assertEquals(response.statusCode, 200);
 		const responseHeaders = response.headers();
+		assertEquals(responseHeaders["access-control-allow-headers"], "Content-Type");
 		assertEquals(responseHeaders["access-control-allow-origin"], "https://example.com");
 		assertEquals(responseHeaders["access-control-allow-methods"], "GET, POST, PUT, DELETE, OPTIONS");
-		assertEquals(responseHeaders["access-control-allow-headers"], "Content-Type");
 		assertEquals(responseHeaders["access-control-max-age"], "86400");
 	});
 

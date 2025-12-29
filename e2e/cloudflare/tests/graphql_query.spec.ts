@@ -15,6 +15,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "transform_directive" },
 				json: {
 					query: `query {\n  message @uppercase\n  title @uppercase\n}`,
 					variables: null,
@@ -42,6 +43,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "rate_limit_directive" },
 				json: {
 					query: `query {\n  expensiveQuery\n}`,
 					variables: null,
@@ -67,6 +69,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "cache_directive" },
 				json: {
 					query: `query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n    email\n  }\n}`,
 					variables: { id: "1" },
@@ -97,6 +100,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "custom_auth_directive" },
 				json: {
 					query: `query {\n  publicData\n  secretData\n  moderatorData\n}`,
 					variables: null,
@@ -129,6 +133,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "deprecated_field" },
 				json: {
 					query: `query {\n  oldField\n  newField\n}`,
 					variables: null,
@@ -156,6 +161,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "datetime_scalar" },
 				json: {
 					query: `query GetEvents($since: DateTime, $until: DateTime) {\n  events(since: $since, until: $until) {\n    id\n    title\n    scheduledAt\n    completedAt\n  }\n}`,
 					variables: { since: "2025-01-01T00:00:00Z", until: "2025-12-31T23:59:59Z" },
@@ -197,6 +203,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "uuid_scalar" },
 				json: {
 					query: `query GetResource($id: UUID!) {\n  resource(id: $id) {\n    id\n    parentId\n    name\n    ownerId\n    relatedIds\n  }\n}`,
 					variables: { id: "550e8400-e29b-41d4-a716-446655440000" },
@@ -233,6 +240,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "json_scalar" },
 				json: {
 					query: `query GetConfig {\n  configuration {\n    id\n    name\n    settings\n    metadata\n  }\n}`,
 					variables: null,
@@ -286,6 +294,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "complex_query" },
 				json: {
 					query: `query ComplexSearch($searchTerm: String!, $userLimit: Int!, $postLimit: Int!) {\n  search(term: $searchTerm) {\n    total\n    users(limit: $userLimit) {\n      id\n      name\n      email\n      profile {\n        bio\n        avatar\n        joinedAt\n      }\n      recentPosts: posts(limit: 3) {\n        id\n        title\n        likes\n      }\n      followerCount: followers(limit: 100) {\n        id\n      }\n    }\n    posts(limit: $postLimit) {\n      id\n      title\n      content\n      likes\n      author {\n        id\n        name\n        profile {\n          avatar\n        }\n      }\n      topComments: comments(limit: 5) {\n        id\n        text\n        likes\n        author {\n          id\n          name\n        }\n      }\n    }\n  }\n}`,
 					variables: { postLimit: 10, searchTerm: "graphql", userLimit: 5 },
@@ -449,6 +458,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "deeply_nested_query" },
 				json: {
 					query: `query GetUserDeepNested($userId: String!) {\n  user(id: $userId) {\n    id\n    name\n    profile {\n      bio\n      settings {\n        preferences {\n          theme\n          language\n          timezone {\n            name\n            offset\n          }\n        }\n        notifications {\n          email\n          push\n        }\n      }\n    }\n  }\n}`,
 					variables: { userId: "user-deep-001" },
@@ -496,6 +506,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "persisted_query_allowlist" },
 				json: {
 					query: ``,
 					variables: {  },
@@ -520,6 +531,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "persisted_query_hash_mismatch" },
 				json: {
 					query: `query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n    email\n  }\n}`,
 					variables: { id: "user-999" },
@@ -544,6 +556,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "persisted_query_registration" },
 				json: {
 					query: `query GetUserPosts($userId: ID!) {\n  posts(userId: $userId) {\n    id\n    title\n    content\n    author {\n      id\n      name\n    }\n  }\n}`,
 					variables: { userId: "user-789" },
@@ -591,6 +604,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "persisted_query_hit" },
 				json: {
 					query: ``,
 					variables: { id: "user-123" },
@@ -621,6 +635,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "persisted_query_miss" },
 				json: {
 					query: ``,
 					variables: { id: "user-456" },
@@ -645,6 +660,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "persisted_query_automatic_persisted" },
 				json: {
 					query: ``,
 					variables: { q: "GraphQL" },
@@ -669,6 +685,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "with_arguments" },
 				json: {
 					query: `query Greet($name: String!) {\n  greet(name: $name)\n}`,
 					variables: { name: "Alice" },
@@ -694,6 +711,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "nested_objects" },
 				json: {
 					query: `query GetUser($userId: String!) {\n  user(id: $userId) {\n    id\n    name\n    email\n    profile {\n      bio\n      location\n    }\n  }\n}`,
 					variables: { userId: "550e8400-e29b-41d4-a716-446655440000" },
@@ -729,6 +747,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "simple_field" },
 				json: {
 					query: `query {\n  hello\n}`,
 					variables: null,
@@ -754,6 +773,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "introspection_disabled" },
 				json: {
 					query: ``,
 					variables: null,
@@ -778,6 +798,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "full_schema_introspection" },
 				json: {
 					query: ``,
 					variables: null,
@@ -1546,6 +1567,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "entity_with_key" },
 				json: {
 					query: `query {\n  _entities(representations: [{__typename: \"User\", id: \"42\"}]) {\n    ... on User {\n      id\n      name\n      username\n      profile {\n        bio\n        avatar\n        joinDate\n      }\n    }\n  }\n}`,
 					variables: null,
@@ -1584,6 +1606,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "requires_directive" },
 				json: {
 					query: `query {\n  _entities(representations: [{__typename: \"Shipment\", id: \"ship-001\", weight: 5.5, destination: \"NYC\"}]) {\n    ... on Shipment {\n      id\n      weight\n      destination\n      shippingEstimate\n    }\n  }\n}`,
 					variables: null,
@@ -1617,6 +1640,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "cross_subgraph_query" },
 				json: {
 					query: `query {\n  user(id: \"usr-42\") {\n    id\n    name\n    email\n    orders {\n      id\n      orderId\n      total\n      status\n      createdAt\n    }\n  }\n}`,
 					variables: null,
@@ -1669,6 +1693,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "provides_directive" },
 				json: {
 					query: `query {\n  _entities(representations: [{__typename: \"Post\", id: \"post-123\"}]) {\n    ... on Post {\n      id\n      title\n      content\n      reviews {\n        id\n        rating\n        text\n        author {\n          id\n          name\n        }\n      }\n    }\n  }\n}`,
 					variables: null,
@@ -1724,6 +1749,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "external_field" },
 				json: {
 					query: `query {\n  _entities(representations: [{__typename: \"Parcel\", id: \"parcel-x1\", weight: 2.5, dimensions: \"10x8x6\"}]) {\n    ... on Parcel {\n      id\n      weight\n      dimensions\n      label\n    }\n  }\n}`,
 					variables: null,
@@ -1757,6 +1783,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "inaccessible_directive" },
 				json: {
 					query: `query {\n  user(id: \"user-42\") {\n    id\n    name\n    email\n    internalScore\n    publicStatus\n  }\n}`,
 					variables: null,
@@ -1781,6 +1808,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "subgraph_introspection" },
 				json: {
 					query: `query {\n  _service {\n    sdl\n  }\n}`,
 					variables: null,
@@ -1807,6 +1835,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "shareable_directive" },
 				json: {
 					query: `query {\n  _entities(representations: [{__typename: \"Product\", id: \"prod-001\"}]) {\n    ... on Product {\n      id\n      name\n      description\n      category\n      price\n    }\n  }\n}`,
 					variables: null,
@@ -1842,6 +1871,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "entity_resolution_basic" },
 				json: {
 					query: `query {\n  _entities(representations: [{__typename: \"User\", id: \"1\"}]) {\n    ... on User {\n      id\n      name\n      email\n    }\n  }\n}`,
 					variables: null,
@@ -1873,6 +1903,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "override_directive" },
 				json: {
 					query: `query {\n  user(id: \"user-789\") {\n    id\n    username\n    email\n    profile {\n      bio\n      joinDate\n      location\n    }\n  }\n}`,
 					variables: null,
@@ -1910,6 +1941,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "federation_type_mismatch" },
 				json: {
 					query: `query {\n  _entities(representations: [{__typename: \"InvalidType\", id: \"1\"}]) {\n    ... on Article {\n      id\n      title\n      content\n      author\n    }\n  }\n}`,
 					variables: null,
@@ -1934,6 +1966,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "entity_with_compound_key" },
 				json: {
 					query: `query {\n  _entities(representations: [{__typename: \"Product\", sku: \"ABC123\", category: \"electronics\"}]) {\n    ... on Product {\n      sku\n      category\n      name\n      description\n      price\n      stock\n    }\n  }\n}`,
 					variables: null,
@@ -1971,6 +2004,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "federation_error_missing_entity" },
 				json: {
 					query: `query {\n  _entities(representations: [{__typename: \"Customer\", id: \"999999\"}]) {\n    ... on Customer {\n      id\n      firstName\n      lastName\n      email\n    }\n  }\n}`,
 					variables: null,
@@ -1997,6 +2031,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "field_error" },
 				json: {
 					query: `query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n    invalidField\n  }\n}`,
 					variables: { id: "user-123" },
@@ -2021,6 +2056,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "syntax_error" },
 				json: {
 					query: `query {\n  user(id: \"123\n}`,
 					variables: null,
@@ -2045,6 +2081,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "type_error" },
 				json: {
 					query: `query GetPost($id: ID!) {\n  post(id: $id) {\n    id\n    title\n    content\n  }\n}`,
 					variables: { id: true },
@@ -2069,6 +2106,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "query_batching" },
 				json: {
 					query: ``,
 					variables: null,
@@ -2114,6 +2152,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "response_streaming" },
 				json: {
 					query: `query GetUserWithDeferred($userId: String!) {\n  user(id: $userId) {\n    id\n    name\n    email\n    ...DeferredPosts @defer(label: \"userPosts\")\n    ...DeferredFollowers @defer(label: \"userFollowers\")\n  }\n}\n\nfragment DeferredPosts on User {\n  posts @stream(initialCount: 1, label: \"postsStream\") {\n    id\n    title\n    published_at\n  }\n}\n\nfragment DeferredFollowers on User {\n  followers @stream(initialCount: 2, label: \"followersStream\") {\n    id\n    name\n  }\n}`,
 					variables: { userId: "user-123" },
@@ -2136,6 +2175,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "field_level_permissions" },
 				json: {
 					query: `query {\n  user(id: \"user123\") {\n    id\n    email\n    privateData\n  }\n}`,
 					variables: { userId: "user123" },
@@ -2160,6 +2200,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "role_admin_allowed" },
 				json: {
 					query: `query {\n  adminPanel {\n    stats {\n      totalUsers\n      activeUsers\n      totalRevenue\n    }\n  }\n}`,
 					variables: null,
@@ -2191,6 +2232,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "resource_owner_allowed" },
 				json: {
 					query: `query GetUserProfile($userId: String!) {\n  user(id: $userId) {\n    id\n    profile {\n      bio\n      website\n      joinDate\n    }\n  }\n}`,
 					variables: { userId: "user123" },
@@ -2224,6 +2266,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "permission_chain" },
 				json: {
 					query: `query {\n  dashboard {\n    id\n    publicMetrics {\n      pageViews\n      uniqueVisitors\n    }\n    privateMetrics {\n      pageViews\n      uniqueVisitors\n    }\n    adminSettings {\n      apiKey\n      webhookUrl\n    }\n  }\n}`,
 					variables: null,
@@ -2249,6 +2292,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "resource_owner_denied" },
 				json: {
 					query: `query GetUserProfile($userId: String!) {\n  user(id: $userId) {\n    id\n    profile {\n      bio\n      website\n    }\n  }\n}`,
 					variables: { userId: "user456" },
@@ -2273,6 +2317,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "role_user_denied" },
 				json: {
 					query: `query {\n  adminPanel {\n    stats {\n      totalUsers\n      activeUsers\n    }\n  }\n}`,
 					variables: null,
@@ -2297,6 +2342,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "jwt_valid" },
 				json: {
 					query: `query {\n  currentUser {\n    id\n    email\n    name\n  }\n}`,
 					variables: null,
@@ -2327,6 +2373,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "api_key_invalid" },
 				json: {
 					query: `query {\n  secureData\n}`,
 					variables: null,
@@ -2351,6 +2398,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "jwt_expired" },
 				json: {
 					query: `query {\n  currentUser {\n    id\n    email\n  }\n}`,
 					variables: null,
@@ -2375,6 +2423,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "jwt_invalid_signature" },
 				json: {
 					query: `query {\n  currentUser {\n    id\n    email\n  }\n}`,
 					variables: null,
@@ -2399,6 +2448,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "no_authentication" },
 				json: {
 					query: `query {\n  protectedQuery\n}`,
 					variables: null,
@@ -2423,6 +2473,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "session_cookie_valid" },
 				json: {
 					query: `query {\n  userProfile {\n    id\n    username\n    email\n  }\n}`,
 					variables: null,
@@ -2453,6 +2504,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "multiple_auth_methods" },
 				json: {
 					query: `query {\n  currentUser {\n    id\n    email\n    authMethod\n  }\n}`,
 					variables: null,
@@ -2483,6 +2535,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "api_key_valid" },
 				json: {
 					query: `query {\n  secureData\n}`,
 					variables: null,
@@ -2508,6 +2561,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "invalid_types" },
 				json: {
 					query: `query SearchUsers($limit: Int!, $offset: Int) {\n  searchUsers(limit: $limit, offset: $offset) {\n    id\n    name\n    email\n  }\n}`,
 					variables: { limit: "not_an_integer", offset: 10 },
@@ -2532,6 +2586,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "dataloader_cache_hit" },
 				json: {
 					query: `query {\n  user1: user(id: \"1\") {\n    id\n    name\n    email\n  }\n  user2: user(id: \"1\") {\n    id\n    name\n    username\n  }\n  user3: user(id: \"2\") {\n    id\n    name\n    email\n  }\n}`,
 					variables: null,
@@ -2576,6 +2631,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "dataloader_with_variables" },
 				json: {
 					query: `query GetPosts($ids: [ID!]!) {\n  posts(ids: $ids) {\n    id\n    title\n    slug\n    publishedAt\n    tags\n  }\n}`,
 					variables: { ids: ["1", "2", "3"] },
@@ -2639,6 +2695,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "dataloader_batch_users" },
 				json: {
 					query: `query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n    age\n  }\n}`,
 					variables: { ids: ["1", "2", "3"] },
@@ -2688,6 +2745,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "dataloader_error_handling" },
 				json: {
 					query: `query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n  }\n}`,
 					variables: { ids: ["1", "999", "2"] },
@@ -2728,6 +2786,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "dataloader_custom_key" },
 				json: {
 					query: `query GetProduct($slug: String!) {\n  productBySlug(slug: $slug) {\n    id\n    name\n    slug\n    price\n    category\n    description\n  }\n}`,
 					variables: { slug: "laptop-pro-2025" },
@@ -2764,6 +2823,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "dataloader_nested_batching" },
 				json: {
 					query: `query {\n  posts {\n    id\n    title\n    comments {\n      id\n      text\n      author {\n        id\n        name\n        email\n      }\n    }\n  }\n}`,
 					variables: null,
@@ -2834,6 +2894,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "dataloader_priming" },
 				json: {
 					query: `query {\n  userList {\n    id\n    name\n    email\n    role\n  }\n}`,
 					variables: null,
@@ -2883,6 +2944,7 @@ describe("GraphQL query", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "dataloader_n_plus_one_prevention" },
 				json: {
 					query: `query {\n  posts {\n    id\n    title\n    content\n    author {\n      id\n      name\n      email\n    }\n  }\n}`,
 					variables: null,

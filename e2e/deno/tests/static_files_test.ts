@@ -17,8 +17,8 @@ import { createAppStaticFilesStaticFileServerReturnsTextFile, createAppStaticFil
 		const responseText = response.text();
 		assertEquals(responseText.trimEnd(), "Hello from static storage");
 		const responseHeaders = response.headers();
-		assertEquals(responseHeaders["cache-control"], "public, max-age=60");
 		assertEquals(responseHeaders["content-type"], "text/plain");
+		assertEquals(responseHeaders["cache-control"], "public, max-age=60");
 	});
 
 	Deno.test("static_files: Static server returns index html for directory", async () => {

@@ -55,12 +55,28 @@ class GraphQLTestClientTest extends TestCase
             ],
         ];
 
-        $this->client = new TestClient($routes);
+        $this->client = $this->createClient($routes);
     }
 
     protected function tearDown(): void
     {
         $this->client->close();
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $routes
+     */
+    private function createClient(array $routes): TestClient
+    {
+        $normalized = [];
+        foreach ($routes as $route) {
+            if (isset($route['handler']) && !isset($route['handler_name'])) {
+                $route['handler_name'] = \spl_object_hash($route['handler']);
+            }
+            $normalized[] = $route;
+        }
+
+        return new TestClient($normalized);
     }
 
     /**
@@ -124,7 +140,7 @@ class GraphQLTestClientTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
 
         $query = <<<'GQL'
         query GetUser($id: ID!) {
@@ -200,7 +216,7 @@ class GraphQLTestClientTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
 
         $query = <<<'GQL'
         query {
@@ -247,7 +263,7 @@ class GraphQLTestClientTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
 
         $query = 'query { hello }';
         /** @var array<int, mixed> $statusAndResponse */
@@ -303,7 +319,7 @@ class GraphQLTestClientTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
 
         $mutation = <<<'GQL'
         mutation CreateUser($name: String!, $email: String!) {
@@ -355,7 +371,7 @@ class GraphQLTestClientTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
 
         $response = $client->graphql('query { hello }');
 
@@ -394,7 +410,7 @@ class GraphQLTestClientTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         $response = $client->graphql('query { secret }');
 
         $this->assertEquals(401, $response->getStatus());
@@ -433,7 +449,7 @@ class GraphQLTestClientTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         $response = $client->graphql('query { a b c }');
 
         $errors = $response->graphqlErrors();
@@ -469,7 +485,7 @@ class GraphQLTestClientTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         $response = $client->graphql('query { result }');
 
         $errors = $response->graphqlErrors();
@@ -505,7 +521,7 @@ class GraphQLTestClientTest extends TestCase
             ],
         ];
 
-        $client = new TestClient($routes);
+        $client = $this->createClient($routes);
         $response = $client->graphql('query { status timestamp }');
 
         $errors = $response->graphqlErrors();

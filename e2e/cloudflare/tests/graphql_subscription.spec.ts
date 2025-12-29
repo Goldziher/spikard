@@ -15,6 +15,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "subscription_error" },
 				json: {
 					query: `subscription {\n  invalidSubscription {\n    id\n    data\n  }\n}`,
 					variables: null,
@@ -37,6 +38,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "subscription_unsubscribe" },
 				json: {
 					query: `subscription OnTick {\n  ticker {\n    id\n    symbol\n    price\n    timestamp\n  }\n}`,
 					variables: null,
@@ -69,6 +71,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "subscription_connection_params" },
 				json: {
 					query: `subscription {\n  secureStream {\n    id\n    data\n    timestamp\n  }\n}`,
 					variables: null,
@@ -99,6 +102,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "simple_subscription" },
 				json: {
 					query: `subscription {\n  messageAdded {\n    id\n    text\n    timestamp\n  }\n}`,
 					variables: null,
@@ -129,6 +133,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "subscription_multiple_fields" },
 				json: {
 					query: `subscription MultiStream {\n  messageAdded {\n    id\n    text\n    author\n  }\n  userOnline {\n    userId\n    username\n    isOnline\n    lastSeen\n  }\n}`,
 					variables: null,
@@ -168,6 +173,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "subscription_with_variables" },
 				json: {
 					query: `subscription OnUserActivity($userId: ID!) {\n  userActivity(userId: $userId) {\n    id\n    userId\n    action\n    description\n    timestamp\n  }\n}`,
 					variables: { userId: "user123" },
@@ -202,6 +208,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "subscription_with_auth_middleware" },
 				json: {
 					query: `subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}`,
 					variables: null,
@@ -238,6 +245,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "subscription_rate_limited" },
 				json: {
 					query: `subscription OnStockUpdate($symbol: String!) {\n  stockTicker(symbol: $symbol) {\n    id\n    symbol\n    price\n    change\n    changePercent\n    timestamp\n    volume\n  }\n}`,
 					variables: { symbol: "AAPL" },
@@ -276,6 +284,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "subscription_authentication" },
 				json: {
 					query: `subscription {\n  privateMessages {\n    id\n    from\n    content\n    isPrivate\n  }\n}`,
 					variables: null,
@@ -298,6 +307,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "subscription_with_filtering" },
 				json: {
 					query: `subscription OnPostUpdated($authorId: ID!, $statuses: [PostStatus!]!, $tagFilter: String, $scoreThreshold: Int) {\n  postUpdated(filter: {\n    authorId: $authorId\n    status: $statuses\n    tags_contains: $tagFilter\n    minScore: $scoreThreshold\n  }) {\n    id\n    title\n    authorId\n    content\n    status\n    tags\n    score\n    updatedAt\n  }\n}`,
 					variables: { authorId: "123", scoreThreshold: 50, statuses: ["PUBLISHED", "DRAFT"], tagFilter: "graphql" },
@@ -341,6 +351,7 @@ describe("GraphQL subscription", () => {
 		const response = await client.post(
 			"/graphql",
 			{
+				headers: { "x-spikard-fixture": "filtered_subscription" },
 				json: {
 					query: `subscription OnOrderUpdated($status: OrderStatus) {\n  orderUpdated(status: $status) {\n    id\n    orderId\n    status\n    amount\n    updatedAt\n  }\n}`,
 					variables: { status: "SHIPPED" },

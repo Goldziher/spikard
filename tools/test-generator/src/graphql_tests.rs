@@ -110,6 +110,10 @@ fn generate_graphql_test_function(fixture: &GraphQLFixture) -> Result<String> {
     code.push_str("\t\tconst response = await client.post(\n");
     code.push_str(&format!("\t\t\t\"{}\",\n", fixture.endpoint));
     code.push_str("\t\t\t{\n");
+    code.push_str(&format!(
+        "\t\t\t\theaders: {{ \"x-spikard-fixture\": \"{}\" }},\n",
+        escape_string(&fixture.name)
+    ));
     code.push_str(&format!("\t\t\t\tjson: {{\n"));
 
     // Use request from fixture
