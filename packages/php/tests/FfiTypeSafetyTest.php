@@ -171,7 +171,7 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             $options = [
-                'json' => [
+                'body' => [
                     'large_int' => $largeInt,
                     'small_int' => $smallInt,
                 ],
@@ -231,7 +231,7 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             $options = [
-                'json' => [
+                'body' => [
                     '0' => 'numeric_string_key',
                     'name' => 'string_key',
                     'age' => 42,
@@ -286,7 +286,7 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             $options = [
-                'json' => [
+                'body' => [
                     'false_val' => false,
                     'zero_val' => 0,
                     'null_val' => null,
@@ -367,7 +367,7 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             $options = [
-                'json' => $largeData,
+                'body' => $largeData,
             ];
             $response = $client->request('POST', '/large-test', $options);
 
@@ -416,7 +416,7 @@ final class FfiTypeSafetyTest extends TestCase
             $testString = 'Hello 中文 Ñ emoji🚀 Ü special\nchars\t"quotes"';
 
             $options = [
-                'json' => ['text' => $testString],
+                'body' => ['text' => $testString],
             ];
             $response = $client->request('POST', '/unicode-test', $options);
 
@@ -471,7 +471,7 @@ final class FfiTypeSafetyTest extends TestCase
             ];
 
             $options = [
-                'json' => $data,
+                'body' => $data,
             ];
             $response = $client->request('POST', '/circular-test', $options);
 
@@ -519,7 +519,7 @@ final class FfiTypeSafetyTest extends TestCase
         try {
             // Valid request
             $options = [
-                'json' => ['item1', 'item2'],
+                'body' => ['item1', 'item2'],
             ];
             $response = $client->request('POST', '/cleanup-test', $options);
 
@@ -527,7 +527,7 @@ final class FfiTypeSafetyTest extends TestCase
 
             // Subsequent request should work fine (no memory corruption)
             $options = [
-                'json' => ['item3'],
+                'body' => ['item3'],
             ];
             $response = $client->request('POST', '/cleanup-test', $options);
 
@@ -571,7 +571,7 @@ final class FfiTypeSafetyTest extends TestCase
         try {
             // This should succeed - numeric string
             $options = [
-                'json' => ['id' => '123'],
+                'body' => ['id' => '123'],
             ];
             $response = $client->request('POST', '/type-mismatch-test', $options);
 
@@ -615,7 +615,7 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             $options = [
-                'json' => [
+                'body' => [
                     'price' => 19.99,
                     'tax' => 2.50,
                 ],
@@ -667,7 +667,7 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             $options = [
-                'json' => [
+                'body' => [
                     'empty_array' => [],
                     'null_value' => null,
                 ],
@@ -725,7 +725,7 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             $options = [
-                'json' => [
+                'body' => [
                     'user' => [
                         'name' => 'John',
                         'address' => [
@@ -786,7 +786,7 @@ final class FfiTypeSafetyTest extends TestCase
         try {
             // First request should fail
             $options = [
-                'json' => ['should_fail' => true],
+                'body' => ['should_fail' => true],
             ];
             $response = $client->request('POST', '/exception-test', $options);
 
@@ -795,7 +795,7 @@ final class FfiTypeSafetyTest extends TestCase
 
             // Second request should still work (resources cleaned up properly)
             $options = [
-                'json' => ['should_fail' => false],
+                'body' => ['should_fail' => false],
             ];
             $response = $client->request('POST', '/exception-test', $options);
 
@@ -844,7 +844,7 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             $options = [
-                'json' => [
+                'body' => [
                     'mixed' => [
                         'string',
                         42,
@@ -903,7 +903,7 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             $options = [
-                'json' => [
+                'body' => [
                     'max_int' => $maxInt,
                     'min_int' => $minInt,
                 ],
