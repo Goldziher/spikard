@@ -129,17 +129,19 @@ module Spikard
       @sse_producers = {}
       @native_hooks = Spikard::Native::LifecycleRegistry.new
       @native_dependencies = Spikard::Native::DependencyRegistry.new
+      @named_handlers = {}
     end
 
     def register_route(method, path, handler_name: nil, **options, &block)
       method = method.to_s
       path = path.to_s
       handler_name = handler_name&.to_s
-      validate_route_arguments!(block, handler_name, options)
-      metadata = build_route_metadata_for(method, path, handler_name, options, block)
+      handler = block || (handler_name && @named_handlers[handler_name])
+      validate_route_arguments!(handler, handler_name, options)
+      metadata = build_route_metadata_for(method, path, handler_name, options, handler)
 
-      @routes << RouteEntry.new(metadata, block)
-      block
+      @routes << RouteEntry.new(metadata, handler)
+      handler
     end
 
     HTTP_METHODS.each do |verb|
@@ -159,7 +161,27 @@ module Spikard
         # Pass raw handler - DI resolution happens in Rust layer
         map[name] = entry.handler
       end
+      map.merge!(@named_handlers)
       map
+    end
+
+    def handler(name, &block)
+      raise ArgumentError, 'block required for handler' unless block
+
+      handler_name = name.to_s
+      @named_handlers[handler_name] = block
+
+      @routes.each do |entry|
+        next unless entry.metadata[:handler_name] == handler_name
+
+        entry.handler = block
+        next unless entry.metadata.is_a?(Hash)
+
+        deps = extract_handler_dependencies(block)
+        entry.metadata[:handler_dependencies] = deps unless deps.empty?
+      end
+
+      block
     end
 
     def normalized_routes_json
