@@ -137,46 +137,7 @@ module Spikard
       path = path.to_s
       handler_name = handler_name&.to_s
       validate_route_arguments!(block, handler_name, options)
-      metadata = if block && defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_route_metadata)
-                   begin
-                     Spikard::Native.build_route_metadata(
-                       method,
-                       path,
-                       handler_name,
-                       options[:request_schema],
-                       options[:response_schema],
-                       options[:parameter_schema],
-                       options[:file_params],
-                       options.fetch(:is_async, false),
-                       options[:cors],
-                       options[:body_param_name]&.to_s,
-                       options[:jsonrpc_method],
-                       block
-                     )
-                   rescue ArgumentError => e
-                     raise unless e.message.include?('wrong number of arguments')
-
-                     Spikard::Native.build_route_metadata(
-                       method,
-                       path,
-                       handler_name,
-                       options[:request_schema],
-                       options[:response_schema],
-                       options[:parameter_schema],
-                       options[:file_params],
-                       options.fetch(:is_async, false),
-                       options[:cors],
-                       options[:body_param_name]&.to_s,
-                       block
-                     )
-                   end
-                 else
-                   handler_name ||= default_handler_name(method, path)
-
-                   handler_dependencies = block ? extract_handler_dependencies(block) : []
-
-                   build_metadata(method, path, handler_name, options, handler_dependencies)
-                 end
+      metadata = build_route_metadata_for(method, path, handler_name, options, block)
 
       @routes << RouteEntry.new(metadata, block)
       block
@@ -359,6 +320,57 @@ module Spikard
       return if unknown_keys.empty?
 
       raise ArgumentError, "unknown route options: #{unknown_keys.join(', ')}"
+    end
+
+    def build_route_metadata_for(method, path, handler_name, options, block)
+      if block && native_route_metadata_supported?
+        build_native_route_metadata(method, path, handler_name, options, block)
+      else
+        build_fallback_route_metadata(method, path, handler_name, options, block)
+      end
+    end
+
+    def native_route_metadata_supported?
+      defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_route_metadata)
+    end
+
+    def build_native_route_metadata(method, path, handler_name, options, block)
+      Spikard::Native.build_route_metadata(
+        method,
+        path,
+        handler_name,
+        options[:request_schema],
+        options[:response_schema],
+        options[:parameter_schema],
+        options[:file_params],
+        options.fetch(:is_async, false),
+        options[:cors],
+        options[:body_param_name]&.to_s,
+        options[:jsonrpc_method],
+        block
+      )
+    rescue ArgumentError => e
+      raise unless e.message.include?('wrong number of arguments')
+
+      Spikard::Native.build_route_metadata(
+        method,
+        path,
+        handler_name,
+        options[:request_schema],
+        options[:response_schema],
+        options[:parameter_schema],
+        options[:file_params],
+        options.fetch(:is_async, false),
+        options[:cors],
+        options[:body_param_name]&.to_s,
+        block
+      )
+    end
+
+    def build_fallback_route_metadata(method, path, handler_name, options, block)
+      handler_name ||= default_handler_name(method, path)
+      handler_dependencies = block ? extract_handler_dependencies(block) : []
+      build_metadata(method, path, handler_name, options, handler_dependencies)
     end
 
     def extract_handler_dependencies(block)
