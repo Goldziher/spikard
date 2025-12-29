@@ -93,6 +93,24 @@ final class CoverageBoostTest extends TestCase
         self::assertIsArray($payload['static_files']);
     }
 
+    public function testResolveSchemaRefThrowsWhenRegistryMissing(): void
+    {
+        $method = new ReflectionMethod(App::class, 'resolveSchemaRef');
+        $method->setAccessible(true);
+
+        $this->expectException(RuntimeException::class);
+        $method->invoke(new App(), 'missing', null, 'request');
+    }
+
+    public function testResolveSchemaRefThrowsWhenKeyMissing(): void
+    {
+        $method = new ReflectionMethod(App::class, 'resolveSchemaRef');
+        $method->setAccessible(true);
+
+        $this->expectException(RuntimeException::class);
+        $method->invoke(new App(), 'missing', ['present' => ['type' => 'object']], 'request');
+    }
+
     public function testResolvedDependenciesAccessors(): void
     {
         $deps = new ResolvedDependencies(['db' => 'sqlite']);
