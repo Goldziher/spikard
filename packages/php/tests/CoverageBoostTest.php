@@ -111,6 +111,30 @@ final class CoverageBoostTest extends TestCase
         $method->invoke(new App(), 'missing', ['present' => ['type' => 'object']], 'request');
     }
 
+    public function testSchemaForTypeHandlesUnion(): void
+    {
+        $method = new ReflectionMethod(App::class, 'schemaForType');
+        $method->setAccessible(true);
+
+        $holder = new class () {
+            public function demo(int|string|null $value): void
+            {
+            }
+        };
+
+        $reflection = new ReflectionMethod($holder, 'demo');
+        $type = $reflection->getParameters()[0]->getType();
+        $schema = $method->invoke(new App(), $type);
+
+        self::assertIsArray($schema);
+        self::assertArrayHasKey('anyOf', $schema);
+        /** @var array<int, array<string, mixed>> $anyOf */
+        $anyOf = $schema['anyOf'];
+        $types = \array_map(static fn (array $entry) => $entry['type'] ?? null, $anyOf);
+        \sort($types);
+        self::assertSame(['integer', 'string'], $types);
+    }
+
     public function testResolvedDependenciesAccessors(): void
     {
         $deps = new ResolvedDependencies(['db' => 'sqlite']);
