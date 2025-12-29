@@ -47,4 +47,11 @@ RSpec.configure do |config|
   end
 
   config.shared_context_metadata_behavior = :apply_to_host_groups
+
+  config.after(:suite) do
+    next unless ENV['CI'] == 'true' || ENV['GITHUB_ACTIONS'] == 'true'
+
+    SimpleCov.result.format! if defined?(SimpleCov)
+    exit!(RSpec.world.failure_count.positive? ? 1 : 0)
+  end
 end
