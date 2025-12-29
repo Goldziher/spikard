@@ -348,16 +348,9 @@ module Spikard
 
     def native_route_metadata_args(method, path, handler_name, options, block, include_jsonrpc:)
       args = [
-        method,
-        path,
-        handler_name,
-        options[:request_schema],
-        options[:response_schema],
-        options[:parameter_schema],
-        options[:file_params],
-        options.fetch(:is_async, false),
-        options[:cors],
-        options[:body_param_name]&.to_s
+        method, path, handler_name, options[:request_schema], options[:response_schema],
+        options[:parameter_schema], options[:file_params], options.fetch(:is_async, false),
+        options[:cors], options[:body_param_name]&.to_s
       ]
       args << options[:jsonrpc_method] if include_jsonrpc
       args << block
