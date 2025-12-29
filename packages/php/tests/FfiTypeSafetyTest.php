@@ -36,24 +36,36 @@ final class FfiTypeSafetyTest extends TestCase
     }
 
     /**
-     * @param array<int, array{method: string, path: string, handler?: object|callable, websocket?: bool, sse?: bool, handler_name?: string}> $routes
+     * @param array<int, array{method: string, path: string, handler: object, websocket?: bool, sse?: bool, handler_name?: string}> $routes
      */
     private function createClient(array $routes): TestClient
     {
+        /** @var array<int, array{method: string, path: string, handler_name: string, handler: object, websocket?: bool, sse?: bool}> $normalized */
         $normalized = [];
         foreach ($routes as $route) {
-            if (isset($route['handler']) && \is_object($route['handler']) && !\is_callable($route['handler'])) {
-                $handler = $route['handler'];
-                if (\method_exists($handler, 'handle')) {
-                    $route['handler'] = static function (Request $request) use ($handler): Response {
-                        return $handler->handle($request);
-                    };
-                }
+            $handler = $route['handler'];
+            \assert(\is_object($handler), 'Route handlers must be objects.');
+            if (!\is_callable($handler) && \method_exists($handler, 'handle')) {
+                $handler = static function (Request $request) use ($handler): Response {
+                    return $handler->handle($request);
+                };
             }
-            if (isset($route['handler']) && \is_object($route['handler']) && !isset($route['handler_name'])) {
-                $route['handler_name'] = \spl_object_hash($route['handler']);
+            \assert(\is_callable($handler), 'Route handlers must be callable.');
+
+            $normalizedRoute = [
+                'method' => $route['method'],
+                'path' => $route['path'],
+                'handler_name' => $route['handler_name'] ?? \spl_object_hash($handler),
+                'handler' => $handler,
+            ];
+            if (isset($route['websocket'])) {
+                $normalizedRoute['websocket'] = (bool) $route['websocket'];
             }
-            $normalized[] = $route;
+            if (isset($route['sse'])) {
+                $normalizedRoute['sse'] = (bool) $route['sse'];
+            }
+
+            $normalized[] = $normalizedRoute;
         }
 
         return new TestClient($normalized);
