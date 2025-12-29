@@ -19,7 +19,7 @@ final class TestClient
     /**
      * Create a new test client.
      *
-     * @param array<int, array<string, mixed>>|null $routes HTTP routes configuration
+     * @param array<int, array{method: string, path: string, handler_name: string, handler?: object, websocket?: bool, sse?: bool}>|null $routes HTTP routes configuration
      * @param array<string, mixed>|null $config Server configuration options
      *
      * @throws RuntimeException if Spikard PHP extension is not loaded

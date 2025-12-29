@@ -19,7 +19,7 @@ class TestClient
     /**
      * Create a new test client.
      *
-     * @param array<int, array{method: string, path: string, handler?: object, websocket?: bool, sse?: bool}> $routes HTTP routes configuration
+     * @param array<int, array{method: string, path: string, handler_name: string, handler?: object, websocket?: bool, sse?: bool}> $routes HTTP routes configuration
      * @param array<string, mixed> $config Optional server configuration
      *
      * @throws \Exception if routes or config are invalid

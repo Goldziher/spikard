@@ -36,13 +36,21 @@ final class FfiTypeSafetyTest extends TestCase
     }
 
     /**
-     * @param array<int, array<string, mixed>> $routes
+     * @param array<int, array{method: string, path: string, handler?: object|callable, websocket?: bool, sse?: bool, handler_name?: string}> $routes
      */
     private function createClient(array $routes): TestClient
     {
         $normalized = [];
         foreach ($routes as $route) {
-            if (isset($route['handler']) && !isset($route['handler_name'])) {
+            if (isset($route['handler']) && \is_object($route['handler']) && !\is_callable($route['handler'])) {
+                $handler = $route['handler'];
+                if (\method_exists($handler, 'handle')) {
+                    $route['handler'] = static function (Request $request) use ($handler): Response {
+                        return $handler->handle($request);
+                    };
+                }
+            }
+            if (isset($route['handler']) && \is_object($route['handler']) && !isset($route['handler_name'])) {
                 $route['handler_name'] = \spl_object_hash($route['handler']);
             }
             $normalized[] = $route;

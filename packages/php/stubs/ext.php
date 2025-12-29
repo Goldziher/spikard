@@ -66,7 +66,7 @@ namespace Spikard\Native {
     class TestClient
     {
         /**
-         * @param array<int, array{method: string, path: string, handler?: object, websocket?: bool, sse?: bool}>|null $routes
+         * @param array<int, array{method: string, path: string, handler_name: string, handler?: object, websocket?: bool, sse?: bool}>|null $routes
          * @param array<string, mixed>|null $config
          */
         public function __construct(?array $routes = null, ?array $config = null) {}

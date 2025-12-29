@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Spikard\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Spikard\Http\Response;
 use Spikard\Native\TestClient;
 
 /**
@@ -46,11 +47,7 @@ class GraphQLTestClientTest extends TestCase
                         ],
                     ];
 
-                    return new \Spikard\Response(
-                        \json_encode($response) ?: '{}',
-                        200,
-                        ['content-type' => 'application/json']
-                    );
+                    return Response::json($response, 200);
                 },
             ],
         ];
@@ -64,13 +61,21 @@ class GraphQLTestClientTest extends TestCase
     }
 
     /**
-     * @param array<int, array<string, mixed>> $routes
+     * @param array<int, array{method: string, path: string, handler?: object|callable, websocket?: bool, sse?: bool, handler_name?: string}> $routes
      */
     private function createClient(array $routes): TestClient
     {
         $normalized = [];
         foreach ($routes as $route) {
-            if (isset($route['handler']) && !isset($route['handler_name'])) {
+            if (isset($route['handler']) && \is_object($route['handler']) && !\is_callable($route['handler'])) {
+                $handler = $route['handler'];
+                if (\method_exists($handler, 'handle')) {
+                    $route['handler'] = static function (\Spikard\Http\Request $request) use ($handler): \Spikard\Http\Response {
+                        return $handler->handle($request);
+                    };
+                }
+            }
+            if (isset($route['handler']) && \is_object($route['handler']) && !isset($route['handler_name'])) {
                 $route['handler_name'] = \spl_object_hash($route['handler']);
             }
             $normalized[] = $route;
@@ -131,11 +136,7 @@ class GraphQLTestClientTest extends TestCase
                         ],
                     ];
 
-                    return new \Spikard\Response(
-                        \json_encode($response) ?: '{}',
-                        200,
-                        ['content-type' => 'application/json']
-                    );
+                    return Response::json($response, 200);
                 },
             ],
         ];
@@ -180,7 +181,8 @@ class GraphQLTestClientTest extends TestCase
         }
         GQL;
 
-        $response = $this->client->graphql($query, null, 'HelloQuery');
+        $variables = null;
+        $response = $this->client->graphql($query, $variables, 'HelloQuery');
 
         $this->assertEquals(200, $response->getStatus());
         $data = $response->graphqlData();
@@ -207,11 +209,7 @@ class GraphQLTestClientTest extends TestCase
                         ],
                     ];
 
-                    return new \Spikard\Response(
-                        \json_encode($response) ?: '{}',
-                        200,
-                        ['content-type' => 'application/json']
-                    );
+                    return Response::json($response, 200);
                 },
             ],
         ];
@@ -254,11 +252,7 @@ class GraphQLTestClientTest extends TestCase
                         ],
                     ];
 
-                    return new \Spikard\Response(
-                        \json_encode($response) ?: '{}',
-                        200,
-                        ['content-type' => 'application/json']
-                    );
+                    return Response::json($response, 200);
                 },
             ],
         ];
@@ -310,11 +304,7 @@ class GraphQLTestClientTest extends TestCase
                         ],
                     ];
 
-                    return new \Spikard\Response(
-                        \json_encode($response) ?: '{}',
-                        200,
-                        ['content-type' => 'application/json']
-                    );
+                    return Response::json($response, 200);
                 },
             ],
         ];
@@ -362,11 +352,7 @@ class GraphQLTestClientTest extends TestCase
                 'handler' => function ($request) {
                     $response = ['errors' => [['message' => 'Some error']]];
 
-                    return new \Spikard\Response(
-                        \json_encode($response) ?: '{}',
-                        400,
-                        ['content-type' => 'application/json']
-                    );
+                    return Response::json($response, 400);
                 },
             ],
         ];
@@ -401,11 +387,7 @@ class GraphQLTestClientTest extends TestCase
                         ],
                     ];
 
-                    return new \Spikard\Response(
-                        \json_encode($response) ?: '{}',
-                        401,
-                        ['content-type' => 'application/json']
-                    );
+                    return Response::json($response, 401);
                 },
             ],
         ];
@@ -440,11 +422,7 @@ class GraphQLTestClientTest extends TestCase
                         ],
                     ];
 
-                    return new \Spikard\Response(
-                        \json_encode($response) ?: '{}',
-                        200,
-                        ['content-type' => 'application/json']
-                    );
+                    return Response::json($response, 200);
                 },
             ],
         ];
@@ -476,11 +454,7 @@ class GraphQLTestClientTest extends TestCase
                         'errors' => [],
                     ];
 
-                    return new \Spikard\Response(
-                        \json_encode($response) ?: '{}',
-                        200,
-                        ['content-type' => 'application/json']
-                    );
+                    return Response::json($response, 200);
                 },
             ],
         ];
@@ -512,11 +486,7 @@ class GraphQLTestClientTest extends TestCase
                         ],
                     ];
 
-                    return new \Spikard\Response(
-                        \json_encode($response) ?: '{}',
-                        200,
-                        ['content-type' => 'application/json']
-                    );
+                    return Response::json($response, 200);
                 },
             ],
         ];
