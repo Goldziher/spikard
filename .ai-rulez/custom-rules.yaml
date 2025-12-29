@@ -605,10 +605,6 @@ rules:
   # WORKSPACE ORGANIZATION & CODE STRUCTURE
   # =========================================================================
 
-  - name: handler-trait-abstraction
-    priority: critical
-    (see above for full definition)
-
   - name: layered-code-organization
     priority: high
     description: |

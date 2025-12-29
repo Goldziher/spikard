@@ -18,8 +18,7 @@ profiles:
 
   - name: spikard-web-framework
     extends:
-      - base: /Users/naamanhirschfeld/workspace/kreuzberg-dev/ai-rulez/profiles/web-framework.yaml
-        description: "HTTP framework with Rust core and bindings for Python, TypeScript, Ruby, and PHP"
+      - web-framework
 
     description: |
       Spikard HTTP framework profile combining:
