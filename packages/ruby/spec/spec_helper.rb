@@ -28,6 +28,15 @@ require 'bundler/setup'
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 require 'spikard'
 
+at_exit do
+  Thread.list.each do |thread|
+    next if thread == Thread.current
+
+    thread.kill
+    thread.join(1)
+  end
+end
+
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
