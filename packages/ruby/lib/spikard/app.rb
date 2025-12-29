@@ -131,7 +131,6 @@ module Spikard
       @native_dependencies = Spikard::Native::DependencyRegistry.new
     end
 
-    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     def register_route(method, path, handler_name: nil, **options, &block)
       method = method.to_s
       path = path.to_s
@@ -142,7 +141,6 @@ module Spikard
       @routes << RouteEntry.new(metadata, block)
       block
     end
-    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
     HTTP_METHODS.each do |verb|
       define_method(verb.downcase) do |path, handler_name: nil, **options, &block|
