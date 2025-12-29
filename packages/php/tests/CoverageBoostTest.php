@@ -77,9 +77,10 @@ final class CoverageBoostTest extends TestCase
         $properties = $schema['properties'];
         self::assertArrayHasKey('x-custom-header', $properties);
         self::assertSame('header', $properties['x-custom-header']['source']);
-        self::assertSame('string', $properties['x-custom-header']['type']);
         self::assertArrayHasKey('id', $properties);
         self::assertSame('path', $properties['id']['source']);
+        self::assertArrayHasKey('type', $properties['id']);
+        self::assertSame('string', $properties['id']['type']);
     }
 
     public function testNativeConfigReturnsDefaults(): void
