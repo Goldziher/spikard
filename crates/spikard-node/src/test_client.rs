@@ -424,6 +424,7 @@ impl spikard_http::Handler for JsHandler {
 }
 
 /// Test client for making HTTP requests to a Spikard application
+// codeql[rust/access-invalid-pointer] false positive: napi-rs wraps this in a managed JS object.
 #[napi]
 pub struct TestClient {
     server: Arc<TestServer>,
