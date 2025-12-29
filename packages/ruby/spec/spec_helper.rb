@@ -52,6 +52,12 @@ RSpec.configure do |config|
     next unless ENV['CI'] == 'true' || ENV['GITHUB_ACTIONS'] == 'true'
 
     SimpleCov.result.format! if defined?(SimpleCov)
-    exit!(RSpec.world.failure_count.positive? ? 1 : 0)
+
+    Thread.list.each do |thread|
+      next if thread == Thread.current
+
+      thread.kill
+      thread.join(1)
+    end
   end
 end
