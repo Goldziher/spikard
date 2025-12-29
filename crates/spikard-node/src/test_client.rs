@@ -424,8 +424,8 @@ impl spikard_http::Handler for JsHandler {
 }
 
 /// Test client for making HTTP requests to a Spikard application
-// codeql[rust/access-invalid-pointer]
 #[napi]
+// codeql[rust/access-invalid-pointer]
 pub struct TestClient {
     server: Arc<TestServer>,
     #[allow(dead_code)]

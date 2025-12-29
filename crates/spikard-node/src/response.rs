@@ -18,8 +18,8 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 /// HTTP Response wrapper
-// codeql[rust/access-invalid-pointer]
 #[napi]
+// codeql[rust/access-invalid-pointer]
 pub struct TestResponse {
     status: u16,
     headers: serde_json::Map<String, Value>,

@@ -79,6 +79,7 @@ pub struct RouteMetadata {
     pub parameter_schema: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub file_params: Option<Value>,
+    #[serde(default)]
     pub is_async: bool,
     pub cors: Option<CorsConfig>,
     /// Name of the body parameter (defaults to "body" if not specified)

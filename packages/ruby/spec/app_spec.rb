@@ -841,13 +841,13 @@ RSpec.describe Spikard::App do
 
     it 'raises error when block is nil' do
       expect do
-        app.send(:validate_route_arguments!, nil, {})
+        app.send(:validate_route_arguments!, nil, nil, {})
       end.to raise_error(ArgumentError, /block required/)
     end
 
     it 'raises error for unknown options' do
       expect do
-        app.send(:validate_route_arguments!, proc { {} }, { unknown_key: true })
+        app.send(:validate_route_arguments!, proc { {} }, nil, { unknown_key: true })
       end.to raise_error(ArgumentError, /unknown route options/)
     end
 
@@ -863,19 +863,19 @@ RSpec.describe Spikard::App do
       }
 
       expect do
-        app.send(:validate_route_arguments!, proc { {} }, valid_options)
+        app.send(:validate_route_arguments!, proc { {} }, nil, valid_options)
       end.not_to raise_error
     end
 
     it 'allows empty options' do
       expect do
-        app.send(:validate_route_arguments!, proc { {} }, {})
+        app.send(:validate_route_arguments!, proc { {} }, nil, {})
       end.not_to raise_error
     end
 
     it 'includes multiple unknown options in error message' do
       expect do
-        app.send(:validate_route_arguments!, proc { {} }, { bad1: 1, bad2: 2 })
+        app.send(:validate_route_arguments!, proc { {} }, nil, { bad1: 1, bad2: 2 })
       end.to raise_error(ArgumentError, /bad1.*bad2/)
     end
   end

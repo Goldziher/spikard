@@ -6,7 +6,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'Native extension call failures map to typed Ruby exceptions' do
     it 'raises StandardError when native handler returns error result' do
       app = Spikard::App.new
-      app.post('/fail', handler: :failing_handler)
+      app.post('/fail', handler_name: :failing_handler)
       app.handler(:failing_handler) do |_params, _query, _body|
         raise StandardError, 'Native handler failed'
       end
@@ -21,7 +21,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
     it 'preserves error message from native extension' do
       app = Spikard::App.new
       error_message = 'Custom native error context'
-      app.post('/error', handler: :error_handler)
+      app.post('/error', handler_name: :error_handler)
       app.handler(:error_handler) do |_params, _query, _body|
         raise StandardError, error_message
       end
@@ -44,7 +44,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'StandardError wrapping for Rust errors that cross FFI boundary' do
     it 'wraps Rust result errors in StandardError' do
       app = Spikard::App.new
-      app.post('/rust_error', handler: :rust_fail)
+      app.post('/rust_error', handler_name: :rust_fail)
       app.handler(:rust_fail) do |_params, _query, _body|
         raise StandardError, 'Rust operation failed'
       end
@@ -55,7 +55,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'preserves Rust error chain information in message' do
       app = Spikard::App.new
-      app.post('/chain', handler: :chain_error)
+      app.post('/chain', handler_name: :chain_error)
       app.handler(:chain_error) do |_params, _query, _body|
         raise StandardError, 'Caused by: underlying Rust error'
       end
@@ -70,7 +70,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'does not expose raw panic strings in error response' do
       app = Spikard::App.new
-      app.post('/panic', handler: :panic_handler)
+      app.post('/panic', handler_name: :panic_handler)
       app.handler(:panic_handler) do |_params, _query, _body|
         raise StandardError, 'thread panicked'
       end
@@ -87,7 +87,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'Structured error payloads (error, code, details) preserved during translation' do
     it 'returns structured error with error field' do
       app = Spikard::App.new
-      app.post('/structured', handler: :structured_fail)
+      app.post('/structured', handler_name: :structured_fail)
       app.handler(:structured_fail) do |_params, _query, _body|
         raise StandardError, 'Structured error test'
       end
@@ -102,7 +102,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'returns structured error with code field' do
       app = Spikard::App.new
-      app.post('/coded', handler: :coded_fail)
+      app.post('/coded', handler_name: :coded_fail)
       app.handler(:coded_fail) do |_params, _query, _body|
         raise StandardError, 'Coded error'
       end
@@ -117,7 +117,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'returns structured error with details field when available' do
       app = Spikard::App.new
-      app.post('/detailed', handler: :detailed_fail)
+      app.post('/detailed', handler_name: :detailed_fail)
       app.handler(:detailed_fail) do |_params, _query, _body|
         raise StandardError, 'Detailed error'
       end
@@ -131,7 +131,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'preserves error payload structure across multiple calls' do
       app = Spikard::App.new
-      app.post('/repeatable', handler: :repeatable_fail)
+      app.post('/repeatable', handler_name: :repeatable_fail)
       app.handler(:repeatable_fail) do |_params, _query, _body|
         raise StandardError, 'Repeatable error'
       end
@@ -151,7 +151,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'ArgumentError raised for invalid native method arguments' do
     it 'raises ArgumentError for missing required handler parameter' do
       app = Spikard::App.new
-      app.post('/required', handler: :handler_with_defaults)
+      app.post('/required', handler_name: :handler_with_defaults)
       app.handler(:handler_with_defaults) do |params, query, body|
         { params: params, query: query, body: body }
       end
@@ -172,7 +172,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'preserves argument error context in message' do
       app = Spikard::App.new
-      app.post('/args', handler: :args_handler)
+      app.post('/args', handler_name: :args_handler)
       app.handler(:args_handler) do |params, query, body|
         { params: params }
       end
@@ -187,7 +187,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'TypeError for type mismatches between Rust and Ruby values' do
     it 'converts Rust type mismatch to TypeError message' do
       app = Spikard::App.new
-      app.post('/type_error', handler: :type_mismatch)
+      app.post('/type_error', handler_name: :type_mismatch)
       app.handler(:type_mismatch) do |params, _query, _body|
         # Expecting integer but might get string
         params[:id].to_i
@@ -202,7 +202,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'handles JSON value conversion errors' do
       app = Spikard::App.new
-      app.post('/json_type', handler: :json_convert)
+      app.post('/json_type', handler_name: :json_convert)
       app.handler(:json_convert) do |_params, _query, body|
         { value: body[:data] }
       end
@@ -215,7 +215,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'translates hash conversion errors gracefully' do
       app = Spikard::App.new
-      app.post('/hash_type', handler: :hash_convert)
+      app.post('/hash_type', handler_name: :hash_convert)
       app.handler(:hash_convert) do |params, query, body|
         {
           p: params.is_a?(Hash),
@@ -238,7 +238,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'RuntimeError for native Spikard core failures' do
     it 'wraps core validation failures in RuntimeError' do
       app = Spikard::App.new
-      app.post('/validate', handler: :validator_fail)
+      app.post('/validate', handler_name: :validator_fail)
       app.post_schema = { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] }
       app.handler(:validator_fail) do |_params, _query, _body|
         { success: true }
@@ -252,7 +252,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'preserves validation error details in RuntimeError' do
       app = Spikard::App.new
-      app.post('/details', handler: :detail_handler)
+      app.post('/details', handler_name: :detail_handler)
       app.handler(:detail_handler) do |_params, _query, body|
         { received: body }
       end
@@ -271,7 +271,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'propagates core routing errors' do
       app = Spikard::App.new
-      app.post('/exist', handler: :exist_handler)
+      app.post('/exist', handler_name: :exist_handler)
       app.handler(:exist_handler) { |_p, _q, _b| { ok: true } }
 
       client = Spikard::Testing.create_test_client(app)
@@ -284,7 +284,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'Error messages retain Rust context information' do
     it 'includes operation name in error message' do
       app = Spikard::App.new
-      app.post('/context', handler: :context_fail)
+      app.post('/context', handler_name: :context_fail)
       app.handler(:context_fail) do |_params, _query, _body|
         raise StandardError, 'handler: process_request failed'
       end
@@ -298,7 +298,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'preserves function name information across boundaries' do
       app = Spikard::App.new
-      app.post('/func', handler: :func_fail)
+      app.post('/func', handler_name: :func_fail)
       app.handler(:func_fail) do |_params, _query, _body|
         raise StandardError, 'in function validate_schema'
       end
@@ -311,7 +311,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'includes line number information when available' do
       app = Spikard::App.new
-      app.post('/line', handler: :line_fail)
+      app.post('/line', handler_name: :line_fail)
       app.handler(:line_fail) do |_params, _query, _body|
         raise StandardError, 'at line 42'
       end
@@ -325,7 +325,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'maintains error context through multiple layers' do
       app = Spikard::App.new
-      app.post('/layers', handler: :layers_fail)
+      app.post('/layers', handler_name: :layers_fail)
       app.handler(:layers_fail) do |_params, _query, _body|
         raise StandardError, 'Layer 1 -> Layer 2 -> Layer 3'
       end
@@ -342,7 +342,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'Stack traces preserve call origin (native vs Ruby)' do
     it 'includes Ruby backtrace in error object when available' do
       app = Spikard::App.new
-      app.post('/backtrace', handler: :backtrace_fail)
+      app.post('/backtrace', handler_name: :backtrace_fail)
       app.handler(:backtrace_fail) do |_params, _query, _body|
         raise StandardError, 'Backtrace test'
       end
@@ -358,7 +358,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'identifies native extension frames in backtrace' do
       app = Spikard::App.new
-      app.post('/native_frame', handler: :native_frame_fail)
+      app.post('/native_frame', handler_name: :native_frame_fail)
       app.handler(:native_frame_fail) do |_params, _query, _body|
         raise StandardError, 'Native frame test'
       end
@@ -371,7 +371,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'preserves call chain through FFI boundary' do
       app = Spikard::App.new
-      app.post('/chain', handler: :chain_handler)
+      app.post('/chain', handler_name: :chain_handler)
       app.handler(:chain_handler) do |_params, _query, _body|
         { ok: true }
       end
@@ -394,7 +394,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'handles native test client initialization errors' do
       app = Spikard::App.new
-      app.post('/test', handler: :test_handler)
+      app.post('/test', handler_name: :test_handler)
       app.handler(:test_handler) { |_p, _q, _b| { ok: true } }
 
       expect do
@@ -404,7 +404,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'propagates network-level errors from test client' do
       app = Spikard::App.new
-      app.post('/net', handler: :net_handler)
+      app.post('/net', handler_name: :net_handler)
       app.handler(:net_handler) { |_p, _q, _b| { ok: true } }
 
       client = Spikard::Testing.create_test_client(app)
@@ -416,7 +416,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'handles test client shutdown gracefully' do
       app = Spikard::App.new
-      app.post('/shutdown', handler: :shutdown_handler)
+      app.post('/shutdown', handler_name: :shutdown_handler)
       app.handler(:shutdown_handler) { |_p, _q, _b| { ok: true } }
 
       client = Spikard::Testing.create_test_client(app)
@@ -446,7 +446,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'propagates hook execution errors correctly' do
       app = Spikard::App.new
-      app.post('/hook_error', handler: :hook_handler)
+      app.post('/hook_error', handler_name: :hook_handler)
       app.handler(:hook_handler) { |_p, _q, _b| { ok: true } }
 
       app.on_request do |req|
@@ -462,7 +462,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'handles multiple lifecycle hooks gracefully' do
       app = Spikard::App.new
-      app.post('/multi_hook', handler: :multi_handler)
+      app.post('/multi_hook', handler_name: :multi_handler)
       app.handler(:multi_handler) { |_p, _q, _b| { ok: true } }
 
       app.on_request { |req| req }
@@ -486,7 +486,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'handles missing dependency gracefully' do
       app = Spikard::App.new
-      app.post('/missing_dep', handler: :missing_handler)
+      app.post('/missing_dep', handler_name: :missing_handler)
       app.handler(:missing_handler) { |_p, _q, _b| { ok: true } }
 
       client = Spikard::Testing.create_test_client(app)
@@ -498,7 +498,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
     it 'propagates dependency resolution errors' do
       app = Spikard::App.new
       app.register_dependency(:failing_dep) { |_| raise StandardError, 'Dep failed' }
-      app.post('/dep_fail', handler: :dep_fail_handler)
+      app.post('/dep_fail', handler_name: :dep_fail_handler)
       app.handler(:dep_fail_handler) { |_p, _q, _b| { ok: true } }
 
       client = Spikard::Testing.create_test_client(app)
@@ -518,7 +518,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'translates registry errors to typed exceptions' do
       app = Spikard::App.new
-      app.post('/registry', handler: :registry_handler)
+      app.post('/registry', handler_name: :registry_handler)
       app.handler(:registry_handler) { |_p, _q, _b| { ok: true } }
 
       expect do
@@ -530,7 +530,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'Nil return vs exception distinction in error paths' do
     it 'distinguishes between nil response and error' do
       app = Spikard::App.new
-      app.post('/nil_response', handler: :nil_handler)
+      app.post('/nil_response', handler_name: :nil_handler)
       app.handler(:nil_handler) { |_p, _q, _b| nil }
 
       client = Spikard::Testing.create_test_client(app)
@@ -541,7 +541,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'handles false return value differently from nil' do
       app = Spikard::App.new
-      app.post('/false_response', handler: :false_handler)
+      app.post('/false_response', handler_name: :false_handler)
       app.handler(:false_handler) { |_p, _q, _b| false }
 
       client = Spikard::Testing.create_test_client(app)
@@ -552,7 +552,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'treats empty hash as valid response' do
       app = Spikard::App.new
-      app.post('/empty_hash', handler: :empty_handler)
+      app.post('/empty_hash', handler_name: :empty_handler)
       app.handler(:empty_handler) { |_p, _q, _b| {} }
 
       client = Spikard::Testing.create_test_client(app)
@@ -563,7 +563,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'converts exception to error response, not nil' do
       app = Spikard::App.new
-      app.post('/exception_not_nil', handler: :exception_handler)
+      app.post('/exception_not_nil', handler_name: :exception_handler)
       app.handler(:exception_handler) do |_p, _q, _b|
         raise StandardError, 'Error test'
       end
@@ -580,7 +580,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'Recovery from transient native errors' do
     it 'recovers from single transient failure' do
       app = Spikard::App.new
-      app.post('/transient', handler: :transient_handler)
+      app.post('/transient', handler_name: :transient_handler)
 
       call_count = 0
       app.handler(:transient_handler) do |_p, _q, _b|
@@ -599,7 +599,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'handles handler errors without affecting subsequent requests' do
       app = Spikard::App.new
-      app.post('/recovery', handler: :recovery_handler)
+      app.post('/recovery', handler_name: :recovery_handler)
 
       counter = { value: 0 }
       app.handler(:recovery_handler) do |_p, _q, _b|
@@ -620,7 +620,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'does not leak state between error and recovery' do
       app = Spikard::App.new
-      app.post('/stateless', handler: :stateless_handler)
+      app.post('/stateless', handler_name: :stateless_handler)
       app.handler(:stateless_handler) { |_p, _q, _b| { time: Time.now.to_f } }
 
       client = Spikard::Testing.create_test_client(app)
@@ -634,7 +634,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'maintains connection pool health after errors' do
       app = Spikard::App.new
-      app.post('/pool_health', handler: :pool_handler)
+      app.post('/pool_health', handler_name: :pool_handler)
       app.handler(:pool_handler) { |_p, _q, _b| { healthy: true } }
 
       client = Spikard::Testing.create_test_client(app)
@@ -648,7 +648,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'recovers from resource exhaustion gracefully' do
       app = Spikard::App.new
-      app.post('/exhaustion', handler: :exhaust_handler)
+      app.post('/exhaustion', handler_name: :exhaust_handler)
       app.handler(:exhaust_handler) { |_p, _q, _b| { ok: true } }
 
       client = Spikard::Testing.create_test_client(app)
