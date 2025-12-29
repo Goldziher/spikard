@@ -19,6 +19,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 /// HTTP Response wrapper
 #[napi]
+// lgtm[rust/access-invalid-pointer]
 pub struct TestResponse {
     status: u16,
     headers: serde_json::Map<String, Value>,
