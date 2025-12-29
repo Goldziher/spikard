@@ -58,31 +58,7 @@ module Spikard
       end
 
       def request(method, path, headers = nil, body = nil, **options)
-        payload = {}
-        headers = options.delete(:headers) || headers
-        cookies = options.delete(:cookies)
-        query = options.delete(:query) || options.delete(:params)
-
-        payload[:headers] = headers if headers
-        payload[:cookies] = cookies if cookies
-        payload[:query] = query if query
-
-        json = options.delete(:json)
-        data = options.delete(:data)
-        raw_body = options.delete(:raw_body)
-        files = options.delete(:files)
-        body_option = options.delete(:body)
-
-        if json || data || raw_body || files
-          payload[:json] = json if json
-          payload[:data] = data if data
-          payload[:raw_body] = raw_body if raw_body
-          payload[:files] = files if files
-        else
-          body_value = body_option.nil? ? body : body_option
-          payload[:json] = body_value unless body_value.nil?
-        end
-
+        payload = build_request_payload(headers, body, options)
         payload = @native.request(method.to_s.upcase, path, payload)
         Response.new(payload)
       end
@@ -107,6 +83,43 @@ module Spikard
         define_method(verb) do |path, headers = nil, body = nil, **options|
           request(verb.upcase, path, headers, body, **options)
         end
+      end
+
+      private
+
+      def build_request_payload(headers, body, options)
+        payload = {}
+        headers = options.delete(:headers) || headers
+        cookies = options.delete(:cookies)
+        query = options.delete(:query) || options.delete(:params)
+
+        payload[:headers] = headers if headers
+        payload[:cookies] = cookies if cookies
+        payload[:query] = query if query
+        payload.merge!(body_payload_from(options, body))
+        payload
+      end
+
+      def body_payload_from(options, body)
+        json = options.delete(:json)
+        data = options.delete(:data)
+        raw_body = options.delete(:raw_body)
+        files = options.delete(:files)
+        body_option = options.delete(:body)
+
+        return explicit_body_payload(json, data, raw_body, files) if json || data || raw_body || files
+
+        body_value = body_option.nil? ? body : body_option
+        body_value.nil? ? {} : { json: body_value }
+      end
+
+      def explicit_body_payload(json, data, raw_body, files)
+        payload = {}
+        payload[:json] = json if json
+        payload[:data] = data if data
+        payload[:raw_body] = raw_body if raw_body
+        payload[:files] = files if files
+        payload
       end
     end
 
