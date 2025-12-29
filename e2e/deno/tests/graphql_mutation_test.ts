@@ -2,7 +2,7 @@ import { assertEquals, assert } from "jsr:@std/assert@1";
 import { TestClient } from "@spikard/wasm";
 import { createAppGraphqlMutation } from "../app/main.ts";
 
-Deno.test("GraphQL mutation: validation_directive", async () => {
+	Deno.test("GraphQL mutation: validation_directive", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -26,7 +26,7 @@ Deno.test("GraphQL mutation: validation_directive", async () => {
 		assert(errors?.[0]?.message.includes("Validation error on input field 'name': String length must be between 3 and 50 characters (provided: 1)"));
 	});
 
-Deno.test("GraphQL mutation: custom_scalar_invalid", async () => {
+	Deno.test("GraphQL mutation: custom_scalar_invalid", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -52,7 +52,7 @@ Deno.test("GraphQL mutation: custom_scalar_invalid", async () => {
 		assert(errors?.[2]?.message.includes("PhoneNumber must be a valid E.164 format"));
 	});
 
-Deno.test("GraphQL mutation: custom_scalar_validation", async () => {
+	Deno.test("GraphQL mutation: custom_scalar_validation", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -88,7 +88,7 @@ Deno.test("GraphQL mutation: custom_scalar_validation", async () => {
 		assertEquals(errors?.length ?? 0, 0);
 	});
 
-Deno.test("GraphQL mutation: create_resource", async () => {
+	Deno.test("GraphQL mutation: create_resource", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -122,7 +122,7 @@ Deno.test("GraphQL mutation: create_resource", async () => {
 		assertEquals(errors?.length ?? 0, 0);
 	});
 
-Deno.test("GraphQL mutation: delete_resource", async () => {
+	Deno.test("GraphQL mutation: delete_resource", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -152,7 +152,7 @@ Deno.test("GraphQL mutation: delete_resource", async () => {
 		assertEquals(errors?.length ?? 0, 0);
 	});
 
-Deno.test("GraphQL mutation: update_resource", async () => {
+	Deno.test("GraphQL mutation: update_resource", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -186,7 +186,7 @@ Deno.test("GraphQL mutation: update_resource", async () => {
 		assertEquals(errors?.length ?? 0, 0);
 	});
 
-Deno.test("GraphQL mutation: validation_error", async () => {
+	Deno.test("GraphQL mutation: validation_error", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -207,10 +207,10 @@ Deno.test("GraphQL mutation: validation_error", async () => {
 		const errors = responseBody.errors;
 		assert(errors !== undefined);
 		assertEquals(errors?.length, 1);
-		assert(errors?.[0]?.message.includes('Field "CreatePostInput.tags" of required type ["[String!]!"] was not provided.'));
+		assert(errors?.[0]?.message.includes("Field \"CreatePostInput.tags\" of required type \"[String!]!\" was not provided."));
 	});
 
-Deno.test("GraphQL mutation: mutation_permission_check", async () => {
+	Deno.test("GraphQL mutation: mutation_permission_check", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -234,7 +234,7 @@ Deno.test("GraphQL mutation: mutation_permission_check", async () => {
 		assert(errors?.[0]?.message.includes("Missing required permission: DELETE"));
 	});
 
-Deno.test("GraphQL mutation: dynamic_authorization", async () => {
+	Deno.test("GraphQL mutation: dynamic_authorization", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -258,7 +258,7 @@ Deno.test("GraphQL mutation: dynamic_authorization", async () => {
 		assert(errors?.[0]?.message.includes("Only post author or admin can approve posts"));
 	});
 
-Deno.test("GraphQL mutation: required_fields", async () => {
+	Deno.test("GraphQL mutation: required_fields", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -279,10 +279,10 @@ Deno.test("GraphQL mutation: required_fields", async () => {
 		const errors = responseBody.errors;
 		assert(errors !== undefined);
 		assertEquals(errors?.length, 1);
-		assert(errors?.[0]?.message.includes('Field "UserRegistrationInput.password" of required type "String!" was not provided.'));
+		assert(errors?.[0]?.message.includes("Field \"UserRegistrationInput.password\" of required type \"String!\" was not provided."));
 	});
 
-Deno.test("GraphQL mutation: file_upload_validation_type", async () => {
+	Deno.test("GraphQL mutation: file_upload_validation_type", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -306,7 +306,7 @@ Deno.test("GraphQL mutation: file_upload_validation_type", async () => {
 		assert(errors?.[0]?.message.includes("Invalid file type"));
 	});
 
-Deno.test("GraphQL mutation: multiple_files_upload", async () => {
+	Deno.test("GraphQL mutation: multiple_files_upload", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -355,7 +355,7 @@ Deno.test("GraphQL mutation: multiple_files_upload", async () => {
 		assertEquals(errors?.length ?? 0, 0);
 	});
 
-Deno.test("GraphQL mutation: file_upload_multipart_spec", async () => {
+	Deno.test("GraphQL mutation: file_upload_multipart_spec", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -403,7 +403,7 @@ Deno.test("GraphQL mutation: file_upload_multipart_spec", async () => {
 		assertEquals(errors?.length ?? 0, 0);
 	});
 
-Deno.test("GraphQL mutation: file_upload_validation_size", async () => {
+	Deno.test("GraphQL mutation: file_upload_validation_size", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -427,7 +427,7 @@ Deno.test("GraphQL mutation: file_upload_validation_size", async () => {
 		assert(errors?.[0]?.message.includes("File too large"));
 	});
 
-Deno.test("GraphQL mutation: single_file_upload", async () => {
+	Deno.test("GraphQL mutation: single_file_upload", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
@@ -459,7 +459,7 @@ Deno.test("GraphQL mutation: single_file_upload", async () => {
 		assertEquals(errors?.length ?? 0, 0);
 	});
 
-Deno.test("GraphQL mutation: file_upload_with_variables", async () => {
+	Deno.test("GraphQL mutation: file_upload_with_variables", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 

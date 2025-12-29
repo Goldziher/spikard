@@ -66,9 +66,7 @@ fn generate_graphql_test_file(category: &str, fixtures: &[GraphQLFixture], targe
     ));
 
     match target.runtime {
-        crate::ts_target::Runtime::Deno => {
-            code.push_str("import { assertEquals } from \"jsr:@std/assert@1\";\n");
-        }
+        crate::ts_target::Runtime::Deno => {}
         _ => {
             code.push_str("import { describe, expect, test } from \"vitest\";\n");
         }

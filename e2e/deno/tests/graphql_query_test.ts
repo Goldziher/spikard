@@ -1,6 +1,5 @@
 import { assertEquals, assert } from "jsr:@std/assert@1";
 import { TestClient } from "@spikard/wasm";
-import { assertEquals } from "jsr:@std/assert@1";
 import { createAppGraphqlQuery } from "../app/main.ts";
 
 	Deno.test("GraphQL query: transform_directive", async () => {
@@ -1791,9 +1790,9 @@ import { createAppGraphqlQuery } from "../app/main.ts";
 		assert(data.hasOwnProperty("_service"));
 		assert(data._service.hasOwnProperty("sdl"));
 		assertEquals(data._service.sdl, "type Account @key(fields: \"accountId\") {\n  accountId: ID!\n  accountName: String!\n  tier: String!\n  createdAt: String!\n}\n\ntype Query {\n  account(accountId: ID!): Account\n}");
-	const errors = responseBody.errors;
-	assertEquals(errors?.length ?? 0, 0);
-});
+		const errors = responseBody.errors;
+		assertEquals(errors?.length ?? 0, 0);
+	});
 
 	Deno.test("GraphQL query: shareable_directive", async () => {
 		const app = createAppGraphqlQuery();
@@ -2007,7 +2006,7 @@ import { createAppGraphqlQuery } from "../app/main.ts";
 		assert(errors !== undefined);
 		assertEquals(errors?.length, 1);
 		assert(errors?.[0]?.message.includes("Cannot query field \"invalidField\" on type \"User\". Did you mean \"id\", \"name\", or \"email\"?"));
-});
+	});
 
 	Deno.test("GraphQL query: syntax_error", async () => {
 		const app = createAppGraphqlQuery();
@@ -2055,7 +2054,7 @@ import { createAppGraphqlQuery } from "../app/main.ts";
 		assert(errors !== undefined);
 		assertEquals(errors?.length, 1);
 		assert(errors?.[0]?.message.includes("Variable \"$id\" of type \"ID!\" was provided invalid value."));
-});
+	});
 
 	Deno.test("GraphQL query: query_batching", async () => {
 		const app = createAppGraphqlQuery();
@@ -2518,7 +2517,7 @@ import { createAppGraphqlQuery } from "../app/main.ts";
 		assert(errors !== undefined);
 		assertEquals(errors?.length, 1);
 		assert(errors?.[0]?.message.includes("Variable \"$limit\" of type \"Int!\" was provided invalid value."));
-});
+	});
 
 	Deno.test("GraphQL query: dataloader_cache_hit", async () => {
 		const app = createAppGraphqlQuery();

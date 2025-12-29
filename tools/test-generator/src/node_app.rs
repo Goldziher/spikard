@@ -4,8 +4,12 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
-use crate::codegen_utils::{format_property_access, is_large_integer, is_value_effectively_empty};
+use crate::codegen_utils::{
+    escape_string, format_property_access, is_large_integer, is_value_effectively_empty, json_to_typescript,
+    json_to_typescript_string,
+};
 use crate::dependencies::{Dependency, DependencyConfig, has_cleanup, requires_multi_request_test};
+use crate::graphql::{GraphQLFixture, load_graphql_fixtures};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, streaming_data};
 use crate::ts_target::TypeScriptTarget;
@@ -48,6 +52,15 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
 
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
+    let graphql_fixtures = load_graphql_fixtures(fixtures_dir).context("Failed to load GraphQL fixtures")?;
+    let mut graphql_fixtures_by_category: HashMap<String, Vec<GraphQLFixture>> = HashMap::new();
+    for fixture in graphql_fixtures {
+        let category = fixture.operation_type.clone();
+        graphql_fixtures_by_category
+            .entry(category)
+            .or_insert_with(Vec::new)
+            .push(fixture);
+    }
 
     let mut dto_map: HashMap<String, TypeScriptDto> = HashMap::new();
     for fixture in sse_fixtures.iter().chain(websocket_fixtures.iter()) {
@@ -64,6 +77,7 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
         &app_dir,
         &sse_fixtures,
         &websocket_fixtures,
+        &graphql_fixtures_by_category,
         &dto_map,
         target,
     )?;
@@ -320,6 +334,7 @@ fn generate_app_file_per_fixture(
     app_dir: &Path,
     sse_fixtures: &[AsyncFixture],
     websocket_fixtures: &[AsyncFixture],
+    graphql_fixtures_by_category: &HashMap<String, Vec<GraphQLFixture>>,
     dto_map: &HashMap<String, TypeScriptDto>,
     target: &TypeScriptTarget,
 ) -> Result<String> {
@@ -587,6 +602,12 @@ fn generate_app_file_per_fixture(
         &mut all_app_factories,
         &mut handler_names,
         dto_map,
+    )?;
+    append_graphql_factories(
+        &mut code,
+        graphql_fixtures_by_category,
+        &mut all_app_factories,
+        &mut handler_names,
     )?;
 
     code.push_str("// App factory functions:\n");
@@ -1469,6 +1490,122 @@ async function {handler_fn}(message: unknown): Promise<string> {{
         code.push('\n');
 
         registry.push(("asyncapi_websocket".to_string(), channel_path.clone(), factory_fn));
+    }
+
+    Ok(())
+}
+
+fn append_graphql_factories(
+    code: &mut String,
+    fixtures_by_category: &HashMap<String, Vec<GraphQLFixture>>,
+    registry: &mut Vec<(String, String, String)>,
+    handler_names: &mut HashMap<String, usize>,
+) -> Result<()> {
+    if fixtures_by_category.is_empty() {
+        return Ok(());
+    }
+
+    code.push_str("\n\ntype GraphqlFixture = {\n");
+    code.push_str("\tquery: string;\n");
+    code.push_str("\tvariables: unknown | null;\n");
+    code.push_str("\toperationName: string | null;\n");
+    code.push_str("\tstatusCode: number;\n");
+    code.push_str("\tdata: unknown | null;\n");
+    code.push_str("\terrors: unknown[] | null;\n");
+    code.push_str("};\n\n");
+    code.push_str("function graphqlVariablesKey(value: unknown): string {\n");
+    code.push_str("\treturn JSON.stringify(value ?? null);\n");
+    code.push_str("}\n\n");
+    code.push_str("function findGraphqlFixture(fixtures: GraphqlFixture[], body: unknown): GraphqlFixture | null {\n");
+    code.push_str("\tif (!body || typeof body !== \"object\") return null;\n");
+    code.push_str("\tconst payload = body as { query?: string; variables?: unknown; operationName?: string | null };\n");
+    code.push_str("\tconst query = payload.query ?? \"\";\n");
+    code.push_str("\tconst variables = payload.variables ?? null;\n");
+    code.push_str("\tconst operationName = payload.operationName ?? null;\n");
+    code.push_str("\treturn (\n");
+    code.push_str("\t\tfixtures.find(\n");
+    code.push_str("\t\t\t(fixture) =>\n");
+    code.push_str("\t\t\t\tfixture.query === query &&\n");
+    code.push_str("\t\t\t\tgraphqlVariablesKey(fixture.variables) === graphqlVariablesKey(variables) &&\n");
+    code.push_str("\t\t\t\tfixture.operationName === operationName,\n");
+    code.push_str("\t\t) ?? null\n");
+    code.push_str("\t);\n");
+    code.push_str("}\n\n");
+
+    let mut categories: Vec<&String> = fixtures_by_category.keys().collect();
+    categories.sort();
+    for category in categories {
+        let fixtures = fixtures_by_category
+            .get(category)
+            .ok_or_else(|| anyhow::anyhow!("Missing GraphQL fixtures for {}", category))?;
+        if fixtures.is_empty() {
+            continue;
+        }
+
+        let mut fixture_list: Vec<&GraphQLFixture> = fixtures.iter().collect();
+        fixture_list.sort_by(|a, b| a.name.cmp(&b.name));
+
+        let handler_name = make_unique_name(&format!("graphql_{}", category), handler_names);
+        let handler_fn = to_camel_case(&handler_name);
+        let factory_fn = format!("createAppGraphql{}", capitalize(category));
+        let fixtures_name = format!("graphql{}Fixtures", to_pascal_case(category));
+        let route_path = fixtures
+            .first()
+            .map(|fixture| fixture.endpoint.as_str())
+            .unwrap_or("/graphql");
+
+        code.push_str(&format!("const {}: GraphqlFixture[] = [\n", fixtures_name));
+        for fixture in fixture_list {
+            let query_literal = json_to_typescript_string(fixture.request.query.as_deref().unwrap_or(""));
+            let variables_literal = fixture
+                .request
+                .variables
+                .as_ref()
+                .map(json_to_typescript)
+                .unwrap_or_else(|| "null".to_string());
+            let operation_literal = fixture
+                .request
+                .operation_name
+                .as_ref()
+                .map(|name| format!("\"{}\"", escape_string(name)))
+                .unwrap_or_else(|| "null".to_string());
+            let data_literal = fixture
+                .expected_response
+                .data
+                .as_ref()
+                .map(json_to_typescript)
+                .unwrap_or_else(|| "null".to_string());
+            let errors_literal = match fixture.expected_response.errors.as_ref() {
+                Some(errors) => json_to_typescript(&serde_json::to_value(errors)?),
+                None => "null".to_string(),
+            };
+            code.push_str(&format!(
+                "\t{{ query: {}, variables: {}, operationName: {}, statusCode: {}, data: {}, errors: {} }},\n",
+                query_literal,
+                variables_literal,
+                operation_literal,
+                fixture.expected_response.status_code,
+                data_literal,
+                errors_literal
+            ));
+        }
+        code.push_str("];\n\n");
+
+        code.push_str(&format!(
+            "async function {handler_fn}(requestJson: string): Promise<string> {{\n\tconst request = JSON.parse(requestJson);\n\tconst fixture = findGraphqlFixture({fixtures_name}, request.body ?? null);\n\tconst response: HandlerResponse = {{ status: fixture?.statusCode ?? 500 }};\n\tresponse.body = fixture\n\t\t? {{ data: fixture.data ?? null, errors: fixture.errors ?? null }}\n\t\t: {{ errors: [{{ message: \"GraphQL fixture not found\" }}] }};\n\treturn JSON.stringify(response);\n}}\n\n",
+            handler_fn = handler_fn,
+            fixtures_name = fixtures_name
+        ));
+
+        code.push_str(&format!(
+            "export function {factory_fn}(): SpikardApp {{\n\tconst route: RouteMetadata = {{\n\t\tmethod: \"POST\",\n\t\tpath: \"{route_path}\",\n\t\thandler_name: \"{handler_name}\",\n\t\trequest_schema: undefined,\n\t\tresponse_schema: undefined,\n\t\tparameter_schema: undefined,\n\t\tfile_params: undefined,\n\t\tis_async: true,\n\t}};\n\n\treturn {{\n\t\troutes: [route],\n\t\thandlers: {{\n\t\t\t{handler_name}: {handler_fn},\n\t\t}},\n\t}};\n}}\n",
+            factory_fn = factory_fn,
+            route_path = route_path,
+            handler_name = handler_name,
+            handler_fn = handler_fn
+        ));
+
+        registry.push(("graphql".to_string(), category.to_string(), factory_fn));
     }
 
     Ok(())

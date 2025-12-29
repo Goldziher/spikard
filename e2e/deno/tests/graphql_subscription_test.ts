@@ -1,6 +1,5 @@
 import { assertEquals, assert } from "jsr:@std/assert@1";
 import { TestClient } from "@spikard/wasm";
-import { assertEquals } from "jsr:@std/assert@1";
 import { createAppGraphqlSubscription } from "../app/main.ts";
 
 	Deno.test("GraphQL subscription: subscription_error", async () => {

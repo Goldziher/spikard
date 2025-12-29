@@ -31,10 +31,10 @@ import {
 		assert(Object.hasOwn(responseData, "message"));
 		assertEquals(responseData.message, "Response with security headers");
 		const responseHeaders = response.headers();
+		assertEquals(responseHeaders["x-xss-protection"], "1; mode=block");
+		assertEquals(responseHeaders["x-frame-options"], "DENY");
 		assertEquals(responseHeaders["strict-transport-security"], "max-age=31536000; includeSubDomains");
 		assertEquals(responseHeaders["x-content-type-options"], "nosniff");
-		assertEquals(responseHeaders["x-frame-options"], "DENY");
-		assertEquals(responseHeaders["x-xss-protection"], "1; mode=block");
 	});
 
 	Deno.test("lifecycle_hooks: preHandler - Authentication Failed Short Circuit", async () => {
@@ -118,8 +118,8 @@ import {
 		const client = new TestClient(app);
 
 		const headers = {
-			Authorization: "Bearer valid-token-12345",
 			"Content-Type": "application/json",
+			Authorization: "Bearer valid-token-12345",
 		};
 		const json = { action: "update_profile", user_id: "user-123" };
 		const response = await client.post("/api/full-lifecycle", { headers, json });
@@ -136,9 +136,9 @@ import {
 		assertEquals(responseData.user_id, "user-123");
 		const responseHeaders = response.headers();
 		assert(/.*ms/.test(responseHeaders["x-response-time"]));
+		assertEquals(responseHeaders["x-frame-options"], "DENY");
 		assertEquals(responseHeaders["x-content-type-options"], "nosniff");
 		assert(/.*/.test(responseHeaders["x-request-id"]));
-		assertEquals(responseHeaders["x-frame-options"], "DENY");
 	});
 
 	Deno.test("lifecycle_hooks: Hook Execution Order", async () => {

@@ -278,9 +278,9 @@ import {
 		assertEquals(response.statusCode, 429);
 		const responseHeaders = response.headers();
 		assertEquals(responseHeaders["retry-after"], "60");
-		assertEquals(responseHeaders["x-ratelimit-remaining"], "0");
 		assertEquals(responseHeaders["x-ratelimit-limit"], "100");
 		assertEquals(responseHeaders["x-ratelimit-reset"], "1609459200");
+		assertEquals(responseHeaders["x-ratelimit-remaining"], "0");
 	});
 
 	Deno.test("status_codes: 200 OK - Success", async () => {
@@ -313,6 +313,6 @@ import {
 		const responseHeaders = response.headers();
 		assertEquals(responseHeaders["content-length"], "1024");
 		assertEquals(responseHeaders["content-type"], "application/pdf");
-		assertEquals(responseHeaders["accept-ranges"], "bytes");
 		assertEquals(responseHeaders["content-range"], "bytes 0-1023/5000");
+		assertEquals(responseHeaders["accept-ranges"], "bytes");
 	});

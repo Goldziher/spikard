@@ -108,8 +108,8 @@ import {
 		const responseData = response.json();
 		assertEquals(responseData, "pdf_binary_data");
 		const responseHeaders = response.headers();
-		assertEquals(responseHeaders["content-type"], "application/pdf");
 		assertEquals(responseHeaders["content-disposition"], "attachment; filename=document.pdf");
+		assertEquals(responseHeaders["content-type"], "application/pdf");
 	});
 
 	Deno.test({
