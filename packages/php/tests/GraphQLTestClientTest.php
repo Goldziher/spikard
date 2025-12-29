@@ -26,13 +26,7 @@ class GraphQLTestClientTest extends TestCase
                 'method' => 'POST',
                 'handler' => function (\Spikard\Http\Request $request) {
                     // Parse GraphQL query from request body
-                    /** @var array<string, mixed> $body */
-                    $body = [];
-                    if (\is_array($request->body)) {
-                        $body = $request->body;
-                    } elseif (\is_string($request->body)) {
-                        $body = \json_decode($request->body, true) ?? [];
-                    }
+                    $body = $this->decodeBody($request->body);
                     /** @var string $query */
                     $query = $body['query'] ?? '';
                     /** @var array<string, mixed>|null $variables */
@@ -98,6 +92,22 @@ class GraphQLTestClientTest extends TestCase
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function decodeBody(mixed $body): array
+    {
+        if (\is_array($body)) {
+            return $body;
+        }
+        if (\is_string($body)) {
+            $decoded = \json_decode($body, true);
+            return \is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
+    }
+
+    /**
      * Test sending a basic GraphQL query.
      */
     public function testGraphQLQuery(): void
@@ -128,13 +138,7 @@ class GraphQLTestClientTest extends TestCase
                 'path' => '/graphql',
                 'method' => 'POST',
                 'handler' => function (\Spikard\Http\Request $request) {
-                    /** @var array<string, mixed> $body */
-                    $body = [];
-                    if (\is_array($request->body)) {
-                        $body = $request->body;
-                    } elseif (\is_string($request->body)) {
-                        $body = \json_decode($request->body, true) ?? [];
-                    }
+                    $body = $this->decodeBody($request->body);
                     /** @var array<string, mixed>|null $variables */
                     $variables = $body['variables'] ?? null;
                     $idValue = \is_array($variables) && isset($variables['id']) ? $variables['id'] : 1;
@@ -293,13 +297,7 @@ class GraphQLTestClientTest extends TestCase
                 'path' => '/graphql',
                 'method' => 'POST',
                 'handler' => function (\Spikard\Http\Request $request) {
-                    /** @var array<string, mixed> $body */
-                    $body = [];
-                    if (\is_array($request->body)) {
-                        $body = $request->body;
-                    } elseif (\is_string($request->body)) {
-                        $body = \json_decode($request->body, true) ?? [];
-                    }
+                    $body = $this->decodeBody($request->body);
                     /** @var array<string, mixed>|null $variables */
                     $variables = $body['variables'] ?? null;
                     $nameValue = \is_array($variables) && isset($variables['name']) ? $variables['name'] : 'New User';
