@@ -96,7 +96,6 @@ final class FfiTypeSafetyTest extends TestCase
         try {
             $response = $client->request('GET', '/null-test');
 
-            $this->assertInstanceOf(Response::class, $response);
             $this->assertSame(200, $response->getStatus());
         } finally {
             $client->close();
@@ -137,12 +136,13 @@ final class FfiTypeSafetyTest extends TestCase
 
         $client = $this->createClient($routes);
         try {
-            $response = $client->request('POST', '/int-test', [
+            $options = [
                 'json' => [
                     'large_int' => $largeInt,
                     'small_int' => $smallInt,
                 ],
-            ]);
+            ];
+            $response = $client->request('POST', '/int-test', $options);
 
             /** @var array<string, mixed> $data */
             $data = $response->body;
@@ -196,13 +196,14 @@ final class FfiTypeSafetyTest extends TestCase
 
         $client = $this->createClient($routes);
         try {
-            $response = $client->request('POST', '/keys-test', [
+            $options = [
                 'json' => [
                     '0' => 'numeric_string_key',
                     'name' => 'string_key',
                     'age' => 42,
                 ],
-            ]);
+            ];
+            $response = $client->request('POST', '/keys-test', $options);
 
             /** @var array<string, mixed> $data */
             $data = $response->body;
@@ -250,13 +251,14 @@ final class FfiTypeSafetyTest extends TestCase
 
         $client = $this->createClient($routes);
         try {
-            $response = $client->request('POST', '/bool-test', [
+            $options = [
                 'json' => [
                     'false_val' => false,
                     'zero_val' => 0,
                     'null_val' => null,
                 ],
-            ]);
+            ];
+            $response = $client->request('POST', '/bool-test', $options);
 
             /** @var array<string, mixed> $data */
             $data = $response->body;
@@ -330,9 +332,10 @@ final class FfiTypeSafetyTest extends TestCase
 
         $client = $this->createClient($routes);
         try {
-            $response = $client->request('POST', '/large-test', [
+            $options = [
                 'json' => $largeData,
-            ]);
+            ];
+            $response = $client->request('POST', '/large-test', $options);
 
             /** @var array<string, mixed> $data */
             $data = $response->body;
@@ -378,9 +381,10 @@ final class FfiTypeSafetyTest extends TestCase
         try {
             $testString = 'Hello 中文 Ñ emoji🚀 Ü special\nchars\t"quotes"';
 
-            $response = $client->request('POST', '/unicode-test', [
+            $options = [
                 'json' => ['text' => $testString],
-            ]);
+            ];
+            $response = $client->request('POST', '/unicode-test', $options);
 
             /** @var array<string, mixed> $data */
             $data = $response->body;
@@ -432,9 +436,10 @@ final class FfiTypeSafetyTest extends TestCase
                 ],
             ];
 
-            $response = $client->request('POST', '/circular-test', [
+            $options = [
                 'json' => $data,
-            ]);
+            ];
+            $response = $client->request('POST', '/circular-test', $options);
 
             /** @var array<string, mixed> $result */
             $result = $response->body;
@@ -479,16 +484,18 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             // Valid request
-            $response = $client->request('POST', '/cleanup-test', [
+            $options = [
                 'json' => ['item1', 'item2'],
-            ]);
+            ];
+            $response = $client->request('POST', '/cleanup-test', $options);
 
             $this->assertSame(200, $response->getStatus());
 
             // Subsequent request should work fine (no memory corruption)
-            $response = $client->request('POST', '/cleanup-test', [
+            $options = [
                 'json' => ['item3'],
-            ]);
+            ];
+            $response = $client->request('POST', '/cleanup-test', $options);
 
             $this->assertSame(200, $response->getStatus());
         } finally {
@@ -529,9 +536,10 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             // This should succeed - numeric string
-            $response = $client->request('POST', '/type-mismatch-test', [
+            $options = [
                 'json' => ['id' => '123'],
-            ]);
+            ];
+            $response = $client->request('POST', '/type-mismatch-test', $options);
 
             $this->assertSame(200, $response->getStatus());
         } finally {
@@ -572,12 +580,13 @@ final class FfiTypeSafetyTest extends TestCase
 
         $client = $this->createClient($routes);
         try {
-            $response = $client->request('POST', '/float-test', [
+            $options = [
                 'json' => [
                     'price' => 19.99,
                     'tax' => 2.50,
                 ],
-            ]);
+            ];
+            $response = $client->request('POST', '/float-test', $options);
 
             /** @var array<string, mixed> $data */
             $data = $response->body;
@@ -623,12 +632,13 @@ final class FfiTypeSafetyTest extends TestCase
 
         $client = $this->createClient($routes);
         try {
-            $response = $client->request('POST', '/empty-test', [
+            $options = [
                 'json' => [
                     'empty_array' => [],
                     'null_value' => null,
                 ],
-            ]);
+            ];
+            $response = $client->request('POST', '/empty-test', $options);
 
             /** @var array<string, mixed> $data */
             $data = $response->body;
@@ -680,7 +690,7 @@ final class FfiTypeSafetyTest extends TestCase
 
         $client = $this->createClient($routes);
         try {
-            $response = $client->request('POST', '/nested-test', [
+            $options = [
                 'json' => [
                     'user' => [
                         'name' => 'John',
@@ -693,7 +703,8 @@ final class FfiTypeSafetyTest extends TestCase
                         ],
                     ],
                 ],
-            ]);
+            ];
+            $response = $client->request('POST', '/nested-test', $options);
 
             /** @var array<string, mixed> $data */
             $data = $response->body;
@@ -740,17 +751,19 @@ final class FfiTypeSafetyTest extends TestCase
         $client = $this->createClient($routes);
         try {
             // First request should fail
-            $response = $client->request('POST', '/exception-test', [
+            $options = [
                 'json' => ['should_fail' => true],
-            ]);
+            ];
+            $response = $client->request('POST', '/exception-test', $options);
 
             // Should get error response (not crash)
             $this->assertFalse($response->isSuccess());
 
             // Second request should still work (resources cleaned up properly)
-            $response = $client->request('POST', '/exception-test', [
+            $options = [
                 'json' => ['should_fail' => false],
-            ]);
+            ];
+            $response = $client->request('POST', '/exception-test', $options);
 
             $this->assertTrue($response->isSuccess());
             /** @var array<string, mixed> $data */
@@ -796,7 +809,7 @@ final class FfiTypeSafetyTest extends TestCase
 
         $client = $this->createClient($routes);
         try {
-            $response = $client->request('POST', '/mixed-test', [
+            $options = [
                 'json' => [
                     'mixed' => [
                         'string',
@@ -807,7 +820,8 @@ final class FfiTypeSafetyTest extends TestCase
                         null,
                     ],
                 ],
-            ]);
+            ];
+            $response = $client->request('POST', '/mixed-test', $options);
 
             /** @var array<string, mixed> $data */
             $data = $response->body;
@@ -854,12 +868,13 @@ final class FfiTypeSafetyTest extends TestCase
 
         $client = $this->createClient($routes);
         try {
-            $response = $client->request('POST', '/boundary-test', [
+            $options = [
                 'json' => [
                     'max_int' => $maxInt,
                     'min_int' => $minInt,
                 ],
-            ]);
+            ];
+            $response = $client->request('POST', '/boundary-test', $options);
 
             /** @var array<string, mixed> $data */
             $data = $response->body;
