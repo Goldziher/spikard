@@ -336,23 +336,18 @@ module Spikard
 
     def build_native_route_metadata(method, path, handler_name, options, block)
       Spikard::Native.build_route_metadata(
-        method,
-        path,
-        handler_name,
-        options[:request_schema],
-        options[:response_schema],
-        options[:parameter_schema],
-        options[:file_params],
-        options.fetch(:is_async, false),
-        options[:cors],
-        options[:body_param_name]&.to_s,
-        options[:jsonrpc_method],
-        block
+        *native_route_metadata_args(method, path, handler_name, options, block, include_jsonrpc: true)
       )
     rescue ArgumentError => e
       raise unless e.message.include?('wrong number of arguments')
 
       Spikard::Native.build_route_metadata(
+        *native_route_metadata_args(method, path, handler_name, options, block, include_jsonrpc: false)
+      )
+    end
+
+    def native_route_metadata_args(method, path, handler_name, options, block, include_jsonrpc:)
+      args = [
         method,
         path,
         handler_name,
@@ -362,9 +357,11 @@ module Spikard
         options[:file_params],
         options.fetch(:is_async, false),
         options[:cors],
-        options[:body_param_name]&.to_s,
-        block
-      )
+        options[:body_param_name]&.to_s
+      ]
+      args << options[:jsonrpc_method] if include_jsonrpc
+      args << block
+      args
     end
 
     def build_fallback_route_metadata(method, path, handler_name, options, block)
