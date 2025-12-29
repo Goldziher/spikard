@@ -19,8 +19,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 /// HTTP Response wrapper
 #[napi]
-// codeql[rust/access-invalid-pointer] false positive: napi-rs wraps this in a managed JS object.
-pub struct TestResponse {
+pub struct TestResponse { // codeql[rust/access-invalid-pointer] false positive: napi-rs wraps this in a managed JS object.
     status: u16,
     headers: serde_json::Map<String, Value>,
     body: Vec<u8>,
