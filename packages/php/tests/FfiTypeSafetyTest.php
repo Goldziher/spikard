@@ -27,7 +27,7 @@ final class FfiTypeSafetyTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->client = new TestClient();
+        $this->client = new TestClient([]);
     }
 
     protected function tearDown(): void

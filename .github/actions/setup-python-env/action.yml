@@ -12,6 +12,9 @@ outputs:
   python-version:
     description: Resolved Python version
     value: ${{ steps.setup-python.outputs.python-version }}
+  python-path:
+    description: Resolved Python executable path
+    value: ${{ steps.setup-python.outputs.python-path }}
   cache-hit:
     description: Whether the dependency cache was restored
     value: ${{ steps.cache-python.outputs.cache-hit }}

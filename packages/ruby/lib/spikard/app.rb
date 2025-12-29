@@ -136,8 +136,8 @@ module Spikard
       method = method.to_s
       path = path.to_s
       handler_name = handler_name&.to_s
-      validate_route_arguments!(block, options)
-      metadata = if defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_route_metadata)
+      validate_route_arguments!(block, handler_name, options)
+      metadata = if block && defined?(Spikard::Native) && Spikard::Native.respond_to?(:build_route_metadata)
                    begin
                      Spikard::Native.build_route_metadata(
                        method,
@@ -173,8 +173,7 @@ module Spikard
                  else
                    handler_name ||= default_handler_name(method, path)
 
-                   # Extract handler dependencies from block parameters
-                   handler_dependencies = extract_handler_dependencies(block)
+                   handler_dependencies = block ? extract_handler_dependencies(block) : []
 
                    build_metadata(method, path, handler_name, options, handler_dependencies)
                  end
@@ -351,8 +350,10 @@ module Spikard
       has_trailing_slash && !normalized.end_with?('/') ? "#{normalized}/" : normalized
     end
 
-    def validate_route_arguments!(block, options)
-      raise ArgumentError, 'block required for route handler' unless block
+    def validate_route_arguments!(block, handler_name, options)
+      if block.nil? && (handler_name.nil? || handler_name.empty?)
+        raise ArgumentError, 'block required for route handler'
+      end
 
       unknown_keys = options.keys - SUPPORTED_OPTIONS
       return if unknown_keys.empty?

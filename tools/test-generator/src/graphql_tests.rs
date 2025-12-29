@@ -389,12 +389,12 @@ fn extract_expect_expr(input: &str) -> (String, usize) {
     let mut expr = String::new();
     let mut paren_depth = 1; // We're already inside the opening paren
     let mut in_string = false;
-    let mut string_char = ' ';
+    let mut string_char = '\0';
     let mut byte_count = 0;
+    let mut iter = input.char_indices().peekable();
 
-    for ch in input.chars() {
-        byte_count += ch.len_utf8();
-
+    while let Some((idx, ch)) = iter.next() {
+        byte_count = idx + ch.len_utf8();
         match ch {
             '"' | '\'' | '`' if !in_string => {
                 in_string = true;
@@ -407,10 +407,9 @@ fn extract_expect_expr(input: &str) -> (String, usize) {
             }
             '\\' if in_string => {
                 expr.push(ch);
-                // Handle escaped characters - peek ahead
-                if let Some(next_byte_iter) = input[byte_count..].chars().next() {
-                    expr.push(next_byte_iter);
-                    byte_count += next_byte_iter.len_utf8();
+                if let Some((next_idx, next_ch)) = iter.next() {
+                    expr.push(next_ch);
+                    byte_count = next_idx + next_ch.len_utf8();
                 }
             }
             '(' if !in_string => {
@@ -420,7 +419,6 @@ fn extract_expect_expr(input: &str) -> (String, usize) {
             ')' if !in_string => {
                 paren_depth -= 1;
                 if paren_depth == 0 {
-                    // Don't include the closing paren in expr, but account for it in byte_count
                     break;
                 }
                 expr.push(ch);

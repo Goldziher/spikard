@@ -244,6 +244,9 @@ jobs:
         working-directory: e2e/cloudflare
         run: pnpm install --frozen-lockfile
 
+      - name: Build WASM package
+        run: pnpm -C packages/wasm build
+
       - name: Run Cloudflare Workers tests
         working-directory: e2e/cloudflare
         run: pnpm test
@@ -326,6 +329,9 @@ jobs:
       - name: Install dependencies
         working-directory: e2e/cloudflare
         run: pnpm install --frozen-lockfile
+
+      - name: Build WASM package
+        run: pnpm -C packages/wasm build
 
       - name: Run Cloudflare coverage
         working-directory: e2e/cloudflare

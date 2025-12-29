@@ -106,6 +106,7 @@ jobs:
           name: php-extension
           path: |
             target/release/*.so
+            target/release/deps/*.so
           retention-days: 7
 
   test-php:
@@ -154,7 +155,7 @@ jobs:
       - name: Install PHP extension
         run: |
           # Find the extension file
-          EXT_FILE=$(ls target/release/*.so 2>/dev/null | head -1)
+          EXT_FILE=$(ls target/release/*.so target/release/deps/*.so 2>/dev/null | head -1)
           if [ -z "$EXT_FILE" ]; then
             echo "Error: Could not find PHP extension (.so file)"
             exit 1
