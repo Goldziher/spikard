@@ -57,8 +57,33 @@ module Spikard
         Spikard::Testing.create_test_client(app_or_native, config: config)
       end
 
-      def request(method, path, **options)
-        payload = @native.request(method.to_s.upcase, path, options)
+      def request(method, path, headers = nil, body = nil, **options)
+        payload = {}
+        headers = options.delete(:headers) || headers
+        cookies = options.delete(:cookies)
+        query = options.delete(:query) || options.delete(:params)
+
+        payload[:headers] = headers if headers
+        payload[:cookies] = cookies if cookies
+        payload[:query] = query if query
+
+        json = options.delete(:json)
+        data = options.delete(:data)
+        raw_body = options.delete(:raw_body)
+        files = options.delete(:files)
+        body_option = options.delete(:body)
+
+        if json || data || raw_body || files
+          payload[:json] = json if json
+          payload[:data] = data if data
+          payload[:raw_body] = raw_body if raw_body
+          payload[:files] = files if files
+        else
+          body_value = body_option.nil? ? body : body_option
+          payload[:json] = body_value unless body_value.nil?
+        end
+
+        payload = @native.request(method.to_s.upcase, path, payload)
         Response.new(payload)
       end
 
@@ -79,8 +104,8 @@ module Spikard
       end
 
       %w[get post put patch delete head options trace].each do |verb|
-        define_method(verb) do |path, **options|
-          request(verb.upcase, path, **options)
+        define_method(verb) do |path, headers = nil, body = nil, **options|
+          request(verb.upcase, path, headers, body, **options)
         end
       end
     end
