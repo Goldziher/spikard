@@ -72,6 +72,40 @@ final class FfiTypeSafetyTest extends TestCase
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function responseJson(object $response): array
+    {
+        if (\method_exists($response, 'json')) {
+            $json = $response->json();
+            return \is_array($json) ? $json : [];
+        }
+        if (\method_exists($response, 'parseJson')) {
+            return $response->parseJson();
+        }
+        if (\property_exists($response, 'body')) {
+            $body = $response->body;
+            if (\is_array($body)) {
+                return $body;
+            }
+            if (\is_string($body)) {
+                $decoded = \json_decode($body, true);
+                return \is_array($decoded) ? $decoded : [];
+            }
+            return [];
+        }
+        if (\method_exists($response, 'getBody')) {
+            $body = $response->getBody();
+            if (\is_string($body)) {
+                $decoded = \json_decode($body, true);
+                return \is_array($decoded) ? $decoded : [];
+            }
+        }
+
+        return [];
+    }
+
+    /**
      * Test null pointer handling - Rust Option<T> converts to PHP null correctly.
      * Verifies that Rust None values cross the FFI boundary as PHP null, not false or 0.
      */
@@ -145,7 +179,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/int-test', $options);
 
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
 
             $this->assertSame($largeInt, $data['large_int']);
             $this->assertSame($smallInt, $data['small_int']);
@@ -206,7 +240,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/keys-test', $options);
 
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
 
             // "0" as string key should be preserved as string
             /** @var array<int|string, mixed> $stringKeys */
@@ -261,7 +295,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/bool-test', $options);
 
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
 
             $this->assertTrue($data['false_is_bool']);
             $this->assertTrue($data['false_is_false']);
@@ -338,7 +372,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/large-test', $options);
 
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
 
             $this->assertSame(10000, $data['received_count']);
             $this->assertSame(0, $data['first_id']);
@@ -387,7 +421,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/unicode-test', $options);
 
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
 
             $this->assertSame($testString, $data['received']);
             $this->assertSame(\strlen($testString), $data['length']);
@@ -442,7 +476,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/circular-test', $options);
 
             /** @var array<string, mixed> $result */
-            $result = $response->body;
+            $result = $this->responseJson($response);
 
             $this->assertTrue($result['received_valid']);
             $this->assertTrue($result['has_data']);
@@ -589,7 +623,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/float-test', $options);
 
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
 
             $this->assertSame(19.99, $data['price']);
             $this->assertSame(2.50, $data['tax']);
@@ -641,7 +675,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/empty-test', $options);
 
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
 
             $this->assertTrue($data['empty_is_array']);
             $this->assertTrue($data['empty_is_empty']);
@@ -707,7 +741,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/nested-test', $options);
 
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
 
             $this->assertTrue($data['user_is_array']);
             $this->assertTrue($data['address_is_array']);
@@ -767,7 +801,7 @@ final class FfiTypeSafetyTest extends TestCase
 
             $this->assertTrue($response->isSuccess());
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
             $this->assertSame('ok', $data['status']);
         } finally {
             $client->close();
@@ -824,7 +858,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/mixed-test', $options);
 
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
 
             $this->assertSame(6, $data['items_count']);
             $this->assertSame(['string', 'integer', 'double', 'boolean', 'boolean', 'NULL'], $data['types']);
@@ -877,7 +911,7 @@ final class FfiTypeSafetyTest extends TestCase
             $response = $client->request('POST', '/boundary-test', $options);
 
             /** @var array<string, mixed> $data */
-            $data = $response->body;
+            $data = $this->responseJson($response);
 
             $this->assertSame($maxInt, $data['max_int']);
             $this->assertSame($minInt, $data['min_int']);
