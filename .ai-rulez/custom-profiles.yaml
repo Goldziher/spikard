@@ -1,0 +1,560 @@
+# Spikard Custom Profiles
+# Define spikard-web-framework profile extending web-framework.yaml from shared ai-rulez
+#
+# Schema: ai-rules-v3
+# Integration: Profile composition with shared ai-rulez base
+# Last Updated: 2025-12-29
+
+---
+
+# =============================================================================
+# SPIKARD WEB FRAMEWORK PROFILE
+# =============================================================================
+# This profile extends the shared web-framework.yaml with spikard-specific
+# configuration, agents, and rules for HTTP-driven development with fixture
+# validation and cross-language binding support.
+
+profiles:
+
+  - name: spikard-web-framework
+    extends:
+      - base: /Users/naamanhirschfeld/workspace/kreuzberg-dev/ai-rulez/profiles/web-framework.yaml
+        description: "HTTP framework with Rust core and bindings for Python, TypeScript, Ruby, and PHP"
+
+    description: |
+      Spikard HTTP framework profile combining:
+
+      1. Shared web-framework.yaml foundation:
+         - polyglot-architect for strategic architecture
+         - rust-core-engineer for HTTP core (crates/spikard-http)
+         - Language-specific binding engineers (Python, TypeScript, Ruby, PHP)
+         - test-automation-engineer for E2E test generation
+         - code-reviewer for multi-language review
+         - docs-writer and api-doc-writer
+
+      2. Spikard-specific customizations:
+         - middleware-architect (tower-http middleware design)
+         - workspace-architect (crate layering and feature gates)
+         - rust-polyglot-architect (Handler trait and FFI boundary design)
+         - fixture-tester (fixture collection and schema management)
+         - integration-qa (cross-language fixture parity testing)
+         - docs-strategist (ADR and architecture documentation)
+         - docs-scribe (CLAUDE.md and handbook generation)
+         - build-and-ci-ops (Taskfile.yaml and CI workflow coordination)
+         - interop-build-engineer (multi-language build manifest coordination)
+
+      3. Spikard-specific rules:
+         - fixture-driven-testing, fixture-first-testing, fixture-backed-testing
+         - handler-trait-abstraction, http-input-validation, http-error-contracts
+         - cross-language-error-boundaries, thin-binding-pattern-architecture
+         - tower-http-middleware-stack, lifecycle-hooks-implementation
+         - zero-copy-json-to-python-conversion, pyo3-async-performance
+         - pyo3-extension-module-management
+
+      Suitable for: HTTP frameworks like Spikard with fixture-driven development,
+      tower-http middleware, multi-language bindings, and Handler trait abstraction.
+
+    # =========================================================================
+    # INHERITED DOMAINS FROM web-framework.yaml
+    # =========================================================================
+    # Spikard uses the same domain structure as web-framework with customizations
+
+    domains:
+      - rust-core
+      - ffi-bindings
+      - language-bindings
+      - build-distribution
+      - quality-verification
+      - documentation
+      - devops-infrastructure
+      - organizational
+
+    # =========================================================================
+    # SPIKARD AGENTS COMPOSITION
+    # =========================================================================
+    # Combines shared web-framework agents with spikard-specific custom agents
+
+    agents:
+      # From shared web-framework (inherited, no change):
+      - polyglot-architect                # Sonnet: framework architecture
+      - rust-core-engineer                # Haiku: HTTP core (crates/spikard-http)
+      - python-bindings-engineer          # Haiku: Python bindings coordination
+      - typescript-bindings-engineer      # Haiku: TypeScript bindings coordination
+      - ruby-bindings-engineer            # Haiku: Ruby bindings coordination
+      - php-bindings-engineer             # Haiku: PHP bindings coordination
+      - test-automation-engineer          # Haiku: E2E test generation
+      - code-reviewer                     # Haiku: Multi-language review
+      - docs-writer                       # Haiku: Framework guides
+      - api-doc-writer                    # Haiku: API references
+      - tutorial-writer                   # Haiku: Framework tutorials
+
+      # Spikard-specific custom agents (from custom-agents.yaml):
+      - middleware-architect              # Sonnet: tower-http middleware & ServerConfig
+      - workspace-architect               # Sonnet: crate layering & FFI isolation
+      - rust-polyglot-architect           # Sonnet: Handler trait & error contracts
+      - python-engineer                   # Haiku: crates/spikard-py specifics
+      - typescript-engineer               # Haiku: crates/spikard-node specifics
+      - ruby-engineer                     # Haiku: crates/spikard-rb specifics
+      - php-engineer                      # Haiku: crates/spikard-php specifics
+      - wasm-engineer                     # Haiku: crates/spikard-wasm specifics
+      - fixture-tester                    # Haiku: testing_data/ fixture evolution
+      - integration-qa                    # Haiku: cross-language fixture parity
+      - docs-strategist                   # Haiku: docs/adr/ and architecture docs
+      - docs-scribe                       # Haiku: CLAUDE.md and handbooks
+      - build-and-ci-ops                  # Haiku: Taskfile.yaml and CI workflows
+      - interop-build-engineer            # Haiku: multi-language build manifests
+
+    # =========================================================================
+    # SPIKARD PRIORITY RULES
+    # =========================================================================
+    # Inherited from web-framework with spikard-specific fixture-driven rules added
+
+    priority_rules:
+      # From shared web-framework (inherited):
+      - rust-2024-edition-core-conversion-engine
+      - python-310-pyo3-binding-wrappers
+      - typescript-5x-napi-rs-bindings-cli
+      - ruby-32-magnus-native-bindings-with-rbs
+      - php-82-ext-php-rs-extension-composer-package
+      - polyglot-build-system-distribution
+      - dual-testing-strategy-core-bindings
+      - continuous-integration-coverage
+      - code-quality
+
+      # Spikard-specific fixture-driven rules (from custom-rules.yaml):
+      - fixture-driven-testing                    # critical: fixtures first
+      - fixture-first-testing                     # critical: design via fixtures
+      - fixture-backed-testing                    # critical: parametrized from fixtures
+      - fixture-aligned-error-handling            # critical: error serialization contracts
+      - handler-trait-abstraction                 # critical: Handler trait & Arc wrappers
+      - cross-language-error-boundaries           # critical: FFI error conversion
+      - pyo3-async-performance                    # critical: GIL release patterns
+      - pyo3-extension-module-management          # critical: feature flag management
+      - http-input-validation                     # high: schema-driven validation
+      - http-error-contracts                      # high: fixture-based error mapping
+      - header-cookie-security                    # high: security fixture enforcement
+      - request-surface-security                  # high: comprehensive validation layer
+      - tower-http-middleware-stack               # high: middleware ordering & config
+      - lifecycle-hooks-implementation            # high: zero-cost hook design
+      - thin-binding-pattern-architecture         # high: no logic duplication
+      - zero-copy-json-to-python-conversion       # high: performance optimization
+      - ext-php-rs-binding-configuration          # critical: PHP FFI specifics
+      - php-psr-compliance-standards-enforcement  # critical: PSR compliance
+      - layered-code-organization                 # high: crate separation
+      - workspace-separation                      # medium: thin adapters
+      - workspace-organization                    # high: module structure
+      - async-friendly-performance                # medium: spawn_blocking patterns
+      - cross-target-performance                  # medium: edge case stress testing
+      - consistent-tooling                        # medium: formatter enforcement
+      - lint-formatting-discipline                # medium: lint consistency
+      - optimized-serialization-path              # medium: msgspec & buffer reuse
+
+    # =========================================================================
+    # MODEL ROUTING FOR SPIKARD
+    # =========================================================================
+    # Inherited from web-framework with spikard additions
+
+    model_routing:
+      # Strategic decisions
+      architecture_decisions: sonnet
+      http_framework_design: sonnet
+      handler_trait_design: sonnet
+      middleware_stack_design: sonnet
+      ffi_boundary_design: sonnet
+      fixture_schema_design: sonnet
+
+      # Core implementation
+      core_implementation: haiku
+      http_core: haiku
+      handler_implementation: haiku
+
+      # Binding implementation (language-specific)
+      binding_implementation: haiku
+      python_binding: haiku
+      typescript_binding: haiku
+      ruby_binding: haiku
+      php_binding: haiku
+      wasm_binding: haiku
+
+      # Quality assurance
+      testing: haiku
+      fixture_testing: haiku
+      integration_testing: haiku
+      cross_language_testing: haiku
+      code_review: haiku
+
+      # Documentation
+      documentation: haiku
+      api_documentation: haiku
+      architecture_documentation: haiku
+      adr_documentation: haiku
+
+    # =========================================================================
+    # SPIKARD-SPECIFIC CAPABILITIES
+    # =========================================================================
+    # Capabilities this profile provides
+
+    capabilities:
+      # HTTP Framework Capabilities (inherited from web-framework)
+      - http-framework-design
+      - multi-language-bindings
+      - ffi-bridge-architecture
+      - e2e-test-generation
+      - polyglot-code-review
+
+      # Spikard-Specific Capabilities (new in this profile)
+      - fixture-driven-development
+      - tower-http-middleware-stack
+      - handler-trait-abstraction
+      - cross-language-error-contracts
+      - zero-copy-serialization
+      - pyo3-async-patterns
+      - thin-binding-pattern
+      - lifecycle-hooks
+      - serverconfig-design
+      - crate-layering-architecture
+      - workspace-orchestration
+      - multi-language-build-coordination
+      - fixture-parity-testing
+
+    # =========================================================================
+    # SPIKARD LANGUAGE & PLATFORM SUPPORT
+    # =========================================================================
+    # Indicates spikard's language and platform requirements
+
+    languages:
+      required:
+        - rust
+      optional:
+        - python
+        - typescript
+        - ruby
+        - php
+        - wasm
+
+    platforms:
+      required:
+        - linux
+        - macos
+      optional:
+        - windows
+
+    # =========================================================================
+    # SPIKARD TOOLCHAIN & BUILD SYSTEM
+    # =========================================================================
+    # Tools required for spikard development
+
+    toolchain:
+      rust:
+        edition: "2024"
+        version: "1.75+"
+        formatter: rustfmt
+        linter: clippy
+        package_manager: cargo
+
+      python:
+        version: "3.10+"
+        formatter: biome  # Using Biome for consistency
+        linter: biome
+        package_manager: uv
+        extension: pyo3
+
+      typescript:
+        version: "5.0+"
+        formatter: biome
+        linter: biome
+        package_manager: pnpm
+        binding: napi-rs
+
+      ruby:
+        version: "3.2+"
+        formatter: rubocop
+        linter: rubocop
+        package_manager: bundler
+        binding: magnus
+
+      php:
+        version: "8.2+"
+        formatter: phpcs
+        linter: phpstan
+        package_manager: composer
+        binding: ext-php-rs
+
+      wasm:
+        target: wasm32-unknown-unknown
+        bundler: wasm-pack
+        binding: wasm-bindgen
+
+    # =========================================================================
+    # SPIKARD QUALITY GATES
+    # =========================================================================
+    # Quality standards for spikard development
+
+    quality_gates:
+      # Code Coverage
+      rust_coverage:
+        minimum: 95%
+        critical_paths: ["crates/spikard", "crates/spikard-http"]
+        tool: tarpaulin
+
+      python_coverage:
+        minimum: 80%
+        tool: pytest-cov
+
+      typescript_coverage:
+        minimum: 80%
+        tool: c8
+
+      ruby_coverage:
+        minimum: 80%
+        tool: simplecov
+
+      php_coverage:
+        minimum: 80%
+        tool: phpunit
+
+      # Linting & Formatting
+      rust_lint:
+        tool: clippy
+        deny_warnings: true
+
+      rust_fmt:
+        tool: rustfmt
+        check_only: true
+
+      js_ts_lint:
+        tool: biome
+        check_only: true
+
+      # Type Checking
+      typescript_types:
+        tool: tsc
+        strict: true
+
+      ruby_types:
+        tool: steep
+        strict: true
+
+      php_types:
+        tool: phpstan
+        level: max
+
+      # Testing
+      fixture_parity:
+        requirement: "All fixtures must pass across all language bindings"
+        tool: test_all_fixtures.py
+
+      error_handling:
+        requirement: "All errors must serialize to fixture-defined JSON schema"
+        tool: fixture-aligned-error-handling rule
+
+      handler_abstraction:
+        requirement: "All handlers must implement Handler trait via Arc<dyn Handler>"
+        tool: handler-trait-abstraction rule
+
+    # =========================================================================
+    # SPIKARD TASK DEFINITIONS
+    # =========================================================================
+    # Key task groups for spikard development (in Taskfile.yaml)
+
+    tasks:
+      test:
+        - description: "Run all tests (Rust, Python, Node, Ruby, PHP, WASM)"
+        - includes: ["test:rust", "test:python", "test:node", "test:ruby", "test:php", "test:wasm"]
+
+      test:rust:
+        - description: "Run Rust tests with 95% coverage requirement"
+        - command: "cargo test --workspace"
+
+      test:python:
+        - description: "Run Python integration suite with fixture validation"
+        - command: "pytest packages/python/tests/"
+
+      test:node:
+        - description: "Run TypeScript/Node tests with fixture validation"
+        - command: "npm test"
+
+      test:ruby:
+        - description: "Run Ruby tests with fixture validation"
+        - command: "bundle exec rspec"
+
+      test:php:
+        - description: "Run PHP tests with PSR compliance"
+        - command: "composer test"
+
+      test:wasm:
+        - description: "Run WASM tests in browser and Node environments"
+        - command: "wasm-pack test --node"
+
+      lint:
+        - description: "Run all formatters and linters"
+        - includes: ["lint:rust", "lint:python", "lint:typescript", "lint:ruby", "lint:php"]
+
+      build:
+        - description: "Build all language targets (release mode)"
+        - includes: ["build:rust", "build:python", "build:node", "build:ruby", "build:php", "build:wasm"]
+
+      build:rust:
+        - description: "Build Rust core and HTTP runtime"
+        - command: "cargo build --release"
+
+      build:python:
+        - description: "Build Python extension module"
+        - command: "maturin develop"
+
+      build:node:
+        - description: "Build TypeScript/Node native bindings"
+        - command: "npm run build"
+
+      bench:
+        - description: "Run performance benchmarks"
+        - includes: ["bench:rust", "bench:python"]
+
+    # =========================================================================
+    # SPIKARD DOCUMENTATION STRATEGY
+    # =========================================================================
+    # Documentation organization for spikard
+
+    documentation:
+      readme: "Overview and quick start for all language bindings"
+      guides:
+        - "docs/CONTRIBUTING.md - Development guidelines"
+        - "docs/BUILD.md - Build instructions for all platforms"
+        - "docs/TESTING.md - Fixture-driven testing guide"
+        - "docs/FFI.md - FFI boundaries and binding architecture"
+
+      adr_directory: "docs/adr/"
+      adr_topics:
+        - "0001-handler-trait-abstraction.md - Handler trait design"
+        - "0002-runtime-and-middleware.md - tower-http middleware stack"
+        - "0003-validation-and-fixtures.md - Fixture-driven validation"
+        - "0004-error-handling.md - Cross-language error boundaries"
+        - "0005-lifecycle-hooks.md - Zero-cost lifecycle hook design"
+        - "0006-thin-binding-pattern.md - Thin binding architecture"
+
+      api_docs: "Derived from Rust source via rustdoc and binding-specific generators"
+
+      examples: "examples/ - Runnable code for each language binding"
+
+      generated: "CLAUDE.md - AI agent handbook (generated via ai-rulez)"
+
+    # =========================================================================
+    # AGENT COMMUNICATION & COORDINATION
+    # =========================================================================
+    # How agents coordinate in spikard development
+
+    coordination:
+      # Weekly Architecture Sync
+      architecture_sync:
+        frequency: "Weekly (async documentation in CLAUDE.md)"
+        participants: [
+          "polyglot-architect",
+          "middleware-architect",
+          "workspace-architect",
+          "rust-polyglot-architect"
+        ]
+        focus: "Cross-language design decisions, FFI boundaries, Handler trait evolution"
+
+      # Fixture Governance
+      fixture_governance:
+        frequency: "Per feature (before implementation)"
+        participants: [
+          "fixture-tester",
+          "integration-qa",
+          "rust-polyglot-architect"
+        ]
+        focus: "Fixture schema design, parity across languages, coverage expectations"
+
+      # Language Binding Coordination
+      binding_coordination:
+        frequency: "Bi-weekly"
+        participants: [
+          "python-engineer",
+          "typescript-engineer",
+          "ruby-engineer",
+          "php-engineer",
+          "wasm-engineer",
+          "rust-polyglot-architect"
+        ]
+        focus: "Handler implementation parity, error handling, configuration APIs"
+
+      # Build & CI Coordination
+      build_coordination:
+        frequency: "Per PR (automated via CI)"
+        participants: [
+          "build-and-ci-ops",
+          "interop-build-engineer",
+          "workspace-architect"
+        ]
+        focus: "Manifest synchronization, task definitions, CI workflows"
+
+      # Documentation Updates
+      doc_coordination:
+        frequency: "Per feature change"
+        participants: [
+          "docs-strategist",
+          "docs-scribe",
+          "api-doc-writer"
+        ]
+        focus: "ADR updates, example synchronization, generated documentation"
+
+    # =========================================================================
+    # SPIKARD-SPECIFIC SUCCESS CRITERIA
+    # =========================================================================
+    # How to know spikard development is following this profile
+
+    success_criteria:
+      fixture_coverage:
+        - "100% of new behavior backed by fixtures in testing_data/"
+        - "All fixtures include valid and invalid cases"
+        - "Fixture schemas (schema.json) maintained for each domain"
+
+      handler_abstraction:
+        - "All handlers implement Handler trait via Arc<dyn Handler>"
+        - "spikard-http contains zero FFI dependencies"
+        - "Binding crates only provide language-idiomatic translation"
+
+      cross_language_parity:
+        - "All fixtures pass across Rust, Python, Node, Ruby, PHP, WASM"
+        - "Error handling produces identical JSON across all languages"
+        - "ServerConfig configuration APIs available in all bindings"
+
+      code_quality:
+        - "Rust core: 95%+ test coverage"
+        - "Language bindings: 80%+ test coverage"
+        - "All code passes linting and formatting checks"
+        - "No warnings in release builds"
+
+      documentation:
+        - "All public APIs documented in Rust with examples"
+        - "Architecture decisions captured in docs/adr/"
+        - "examples/ demonstrates usage from each language"
+        - "CLAUDE.md kept in sync via ai-rulez"
+
+      performance:
+        - "Handler execution < 100ms (target)"
+        - "Zero-copy serialization for large payloads"
+        - "Middleware overhead < 1% (profiled)"
+        - "Edge cases in testing_data/edge_cases/ all pass"
+
+# =============================================================================
+# PROFILE SELECTION GUIDANCE
+# =============================================================================
+# When to use spikard-web-framework profile:
+#
+# 1. Building HTTP servers/frameworks with:
+#    - Rust core (tower-http middleware)
+#    - Multi-language bindings (Python, Node, Ruby, PHP, WASM)
+#    - Fixture-driven development
+#
+# 2. Maintaining existing Spikard monorepo
+#
+# 3. Developing features that affect:
+#    - Handler traits or middleware
+#    - Cross-language error handling
+#    - Fixture contracts
+#    - Language binding parity
+#
+# For pure Rust library work without HTTP: use rust-library.yaml profile
+# For pure Python package work: use python-focused.yaml profile
+# For other polyglot projects: use full-polyglot.yaml profile

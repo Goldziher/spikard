@@ -1,0 +1,824 @@
+# Spikard Custom Rules
+# Fixture-driven validation rules and HTTP-specific patterns unique to spikard
+#
+# Schema: ai-rules-v3
+# Integration: Extends shared ai-rulez rules for HTTP framework
+# Last Updated: 2025-12-29
+
+---
+
+# =============================================================================
+# FIXTURE-DRIVEN VALIDATION RULES
+# =============================================================================
+# Spikard is built on fixture-first testing with JSON fixtures across multiple
+# domains (validation errors, status codes, headers, cookies, request bodies, CORS).
+# These rules ensure every handler respects documented contracts.
+
+rules:
+
+  # =========================================================================
+  # FIXTURE-FIRST TESTING STRATEGY
+  # =========================================================================
+
+  - name: fixture-driven-testing
+    priority: critical
+    description: |
+      Every feature change must extend the pytest suites in packages/python/tests/
+      by loading fixtures through packages/python/tests/conftest.py and invoking
+      task test before merging. New fixture collections belong in testing_data/ with
+      a runnable illustration under examples/ so automated coverage, demos, and docs
+      stay synchronized.
+
+      Implementation:
+      - Add new fixtures to testing_data/<domain>/*.json
+      - Create or extend parametrized tests in packages/python/tests/test_*.py
+      - Load fixtures via conftest.py fixture loaders
+      - Run `task test` (all) or `task test:python` (Python only)
+      - Verify examples/ demonstrates new behavior
+      - Ensure generated docs include new fixtures
+
+    scope:
+      - testing_data/ fixture creation and evolution
+      - conftest.py fixture loader integration
+      - parametrized test expansion
+      - example code currency
+      - documentation synchronization
+
+  - name: fixture-first-testing
+    priority: critical
+    description: |
+      When adding behavior, introduce or update fixtures under the relevant
+      testing_data/* directory and extend the parametrized suites in
+      packages/python/tests/test_all_fixtures.py and peers. Do not ship without
+      running `task test` plus language targets (`task test:rust`, `task test:python`)
+      so local runs match CI execution.
+
+      Implementation:
+      - Design new behavior as fixture schema (testing_data/<domain>/schema.json)
+      - Create example fixture files (testing_data/<domain>/<example>.json)
+      - Add parametrized test case to test_all_fixtures.py or domain-specific suite
+      - Run full test suite locally (`task test`)
+      - Verify all language targets pass (`task test:rust`, etc.)
+      - Update examples/ with runnable demonstration
+
+    scope:
+      - Fixture schema design
+      - Example fixture creation
+      - parametrized test implementation
+      - Cross-language test parity
+      - Local test execution before merge
+
+  - name: fixture-backed-testing
+    priority: critical
+    description: |
+      Every feature change must expand the Python-driven integration suite in
+      packages/python/tests/ and keep the JSON fixtures under testing_data/ in sync.
+      Prefer validating new scenarios by adding fixture files and asserting them in
+      packages/python/tests/test_all_fixtures.py. Run `task test` locally before
+      merging so the Rust, Python, and JavaScript checks that CI executes stay green.
+
+      Implementation:
+      - Represent new behavior as JSON fixtures (not hardcoded test data)
+      - Load fixtures dynamically in parametrized tests
+      - Share fixture structure across all language bindings
+      - Validate identical behavior across Rust, Python, Node, Ruby, PHP, WASM
+      - Maintain testing_data/ as source of truth for handler contracts
+      - Keep conftest.py fixture loaders up-to-date with schema evolution
+
+    scope:
+      - testing_data/ fixture collections and schemas
+      - fixtures as contract definitions
+      - parametrized test coordination
+      - cross-language fixture validation
+      - Python-driven integration suite leadership
+
+  - name: fixture-aligned-error-handling
+    priority: critical
+    description: |
+      Keep every fallible path in the Rust workspace (crates/spikard,
+      crates/spikard-http, binding crates) returning the structured payload
+      described in testing_data/validation_errors/schema.json. Reuse the shared
+      error constructor so Python, Node, Ruby, and PHP adapters raise translated
+      host-language errors while preserving the same JSON body that
+      packages/python/tests/test_all_fixtures.py asserts on.
+
+      Implementation:
+      - Define error schema in testing_data/validation_errors/schema.json
+      - Create example error fixtures (testing_data/validation_errors/*.json)
+      - Implement error constructors in crates/spikard for consistency
+      - Convert errors in binding crates (spikard-py, spikard-node, etc.)
+      - Verify error payloads match fixtures in test assertions
+      - Maintain cross-language error parity in test_all_fixtures.py
+
+      Error schema must include:
+      - error: human-readable error message
+      - code: machine-readable error code
+      - details: structured details object
+      - timestamp: ISO 8601 timestamp
+      - request_id: optional request identifier
+
+    scope:
+      - Error payload design and fixtures
+      - Rust error constructor implementation
+      - Cross-language error translation
+      - Error serialization consistency
+      - Error test assertion strategy
+
+  # =========================================================================
+  # HTTP HANDLER & VALIDATION CONTRACTS
+  # =========================================================================
+
+  - name: handler-trait-abstraction
+    priority: critical
+    description: |
+      In crates/spikard-http, define language-agnostic Handler trait with
+      `Pin<Box<dyn Future<Output = HandlerResult> + Send>>` return type. Language
+      bindings (spikard-py, spikard-node, spikard-rb, spikard-php) implement this
+      trait with Arc<dyn Handler> wrappers. The HTTP server accepts
+      `Vec<(Route, Arc<dyn Handler>)>` enabling clean separation: spikard-http has
+      zero FFI dependencies, all Python/Node/Ruby/PHP/WASM code lives in binding
+      crates.
+
+      Implementation:
+      - Define Handler trait in crates/spikard-http/src/handler.rs
+      - Implement HandlerResult (success, error, redirect, etc.)
+      - Use Arc<dyn Handler> in ServerConfig
+      - Each binding crate implements Handler for language-specific closures
+      - spikard-http/src/lib.rs exports zero FFI types
+      - Coordinate Handler trait changes with rust-polyglot-architect
+
+      Handler trait signature:
+      ```rust
+      pub trait Handler: Send + Sync {
+          fn call(
+              &self,
+              request: HttpRequest
+          ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send>>;
+      }
+      ```
+
+    scope:
+      - Handler trait definition and evolution
+      - HandlerResult enum variants
+      - Arc<dyn Handler> wrappers in binding crates
+      - Zero FFI dependencies in spikard-http
+      - Cross-binding Handler consistency
+
+  - name: http-input-validation
+    priority: high
+    description: |
+      Handlers under crates/spikard-http/src must validate headers, cookies,
+      and payloads against the schemas in testing_data/headers, testing_data/cookies,
+      and testing_data/json_bodies. Reject unexpected or malformed values with
+      structured errors returned to the caller, and cover each guard with an
+      integration test tied to the corresponding fixture set.
+
+      Implementation:
+      - Define validation schemas in testing_data/{headers,cookies,json_bodies}/schema.json
+      - Create example fixture files (valid and invalid cases)
+      - Implement validators in crates/spikard-http handlers
+      - Return structured errors matching fixture expectations
+      - Add integration tests for each validation rule
+      - Verify error payloads match testing_data/validation_errors fixtures
+
+      Validation domains:
+      - Headers: content-type, authorization, custom headers
+      - Cookies: secure, httponly, samesite, expiration
+      - JSON bodies: schema validation, type checking, required fields
+      - Request format: Content-Length, Transfer-Encoding consistency
+
+    scope:
+      - Input validation schema design
+      - Handler validation implementation
+      - Structured error generation
+      - Fixture-driven validation testing
+      - Cross-language validation parity
+
+  - name: http-error-contracts
+    priority: high
+    description: |
+      When updating handlers in crates/spikard-http, translate domain failures
+      into the JSON payloads maintained under testing_data/status_codes and
+      testing_data/validation_errors. Add the matching fixture files and assertions
+      in packages/python/tests/test_all_fixtures.py or focused integration suites,
+      and keep every testing_data/**/schema.json aligned with new variants.
+
+      Implementation:
+      - Review new error case from domain logic
+      - Add fixture example to testing_data/status_codes/ or testing_data/validation_errors/
+      - Update schema.json if new error type or status code
+      - Implement error translation in handler
+      - Add assertion in test_all_fixtures.py or domain-specific test suite
+      - Verify HTTP status code matches error type
+      - Check error JSON matches fixture example
+
+      Error status code mapping (fixtures):
+      - 400 Bad Request: Validation errors, malformed input
+      - 401 Unauthorized: Missing/invalid authentication
+      - 403 Forbidden: Valid auth but insufficient permissions
+      - 404 Not Found: Resource does not exist
+      - 409 Conflict: State conflicts, duplicates
+      - 422 Unprocessable Entity: Semantic validation failure
+      - 429 Too Many Requests: Rate limit exceeded
+      - 500 Internal Server Error: Unhandled runtime failure
+
+    scope:
+      - Error status code fixtures
+      - Error payload schema evolution
+      - Error translation in handlers
+      - Fixture-driven error testing
+      - HTTP semantics compliance
+
+  - name: header-cookie-security
+    priority: high
+    description: |
+      Authentication, header, and cookie code must enforce the scenarios captured
+      in testing_data/headers and testing_data/cookies—reject deviations from those
+      schemas, add explicit fixtures plus assertions in
+      packages/python/tests/test_integration_query_params.py for new header names
+      or cookie attributes, and keep Secure/HttpOnly/SameSite defaults intact.
+
+      Implementation:
+      - Define header requirements in testing_data/headers/schema.json
+      - Define cookie requirements in testing_data/cookies/schema.json
+      - Create fixture examples for valid/invalid cases
+      - Implement header/cookie validation in crates/spikard-http
+      - Add integration tests in test_integration_query_params.py
+      - Verify Secure/HttpOnly/SameSite defaults on all Set-Cookie headers
+      - Document custom header expectations in testing_data/headers/README.md
+
+      Security defaults:
+      - All cookies: HttpOnly (prevent XSS access) and Secure (HTTPS only)
+      - Session cookies: SameSite=Strict
+      - Cross-site cookies: SameSite=Lax (if needed)
+      - All Set-Cookie must include expires or max-age
+      - Sensitive auth headers: no logging or caching
+
+    scope:
+      - Header security schema and fixtures
+      - Cookie security implementation
+      - Secure defaults for HTTP responses
+      - Integration test coverage
+      - Cross-language security parity
+
+  - name: request-surface-security
+    priority: high
+    description: |
+      Guard every HTTP-facing change with the validation strategy captured in
+      docs/adr/0003-validation-and-fixtures.md: enforce cookie rules via
+      testing_data/cookies/*.json, headers/auth via testing_data/headers/*.json,
+      and CORS expectations via testing_data/cors/*.json. Strip secrets from logs
+      and ensure new handlers never bypass the existing validator layer before
+      reaching business logic.
+
+      Implementation:
+      - Review new HTTP surface (routes, methods, media types)
+      - Identify validation requirements from domain context
+      - Add validation fixtures to testing_data/{cookies,headers,cors}/
+      - Update schema.json if new validation dimension
+      - Implement validation checks in handler middleware
+      - Add "logs must not contain secrets" assertions to test suite
+      - Document request surface validation in docs/adr/
+
+      Validation layers (always in this order):
+      1. Cookie validation (testing_data/cookies/)
+      2. Header validation (testing_data/headers/)
+      3. CORS validation (testing_data/cors/)
+      4. Request body schema validation
+      5. Authorization checks
+      6. Business logic processing
+
+    scope:
+      - HTTP surface security review
+      - Validation fixture creation
+      - Middleware validation implementation
+      - Secrets stripping from logs
+      - ADR documentation
+
+  # =========================================================================
+  # TOWER-HTTP MIDDLEWARE & CONFIGURATION
+  # =========================================================================
+
+  - name: tower-http-middleware-stack
+    priority: high
+    description: |
+      All standard middleware (compression, rate limiting, timeouts, graceful
+      shutdown, static files, request IDs) is implemented in Rust using tower-http
+      and exposed via typed ServerConfig. Configuration structs
+      (CompressionConfig, RateLimitConfig, StaticFilesConfig, etc.) must be
+      forwarded to Python/TypeScript/Ruby bindings with proper type safety. See
+      docs/adr/0002-runtime-and-middleware.md for the complete middleware stack
+      order and configuration options.
+
+      Implementation:
+      - Define middleware configurations as structs in crates/spikard-http
+      - Add ServerConfig fields for each middleware type
+      - Implement middleware ordering with tower layer composition
+      - Expose ServerConfig via FFI-safe types to binding crates
+      - Generate Python/TypeScript/Ruby configuration classes
+      - Document middleware precedence in docs/adr/0002-runtime-and-middleware.md
+      - Test middleware behavior with fixture-driven integration tests
+
+      Middleware stack order (innermost to outermost):
+      1. RequestId extraction
+      2. Authentication
+      3. Rate limiting
+      4. Compression
+      5. Timeout enforcement
+      6. Graceful shutdown
+      7. Static file serving
+      8. Request/response logging
+
+    scope:
+      - tower-http middleware integration
+      - ServerConfig struct design
+      - Configuration struct exposure to bindings
+      - Middleware ordering and composition
+      - Cross-language configuration APIs
+
+  - name: lifecycle-hooks-implementation
+    priority: high
+    description: |
+      Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError)
+      must follow the zero-cost design in docs/adr/0005-lifecycle-hooks.md: use
+      Option<Arc<dyn Fn>> for conditional execution (<1ns when not registered),
+      provide async support via pyo3_async_runtimes for Python and ThreadsafeFunction
+      for TypeScript, and allow hooks to short-circuit with early responses.
+      Implement HookResult enum with Continue/ShortCircuit variants.
+
+      Implementation:
+      - Define hooks as Option<Arc<dyn Fn>> in ServerConfig
+      - Implement HookResult enum (Continue, ShortCircuit(Response))
+      - Use Option.is_none() check for zero-cost when hook not registered
+      - For Python: use pyo3_async_runtimes::tokio::into_future() for coroutine hooks
+      - For TypeScript: use ThreadsafeFunction for callback execution
+      - Add fixture tests for hook behavior (execution order, short-circuiting)
+      - Document hook semantics in docs/adr/0005-lifecycle-hooks.md
+
+      Hooks are executed in this order:
+      1. onRequest (can short-circuit)
+      2. preValidation (can short-circuit)
+      3. Validation
+      4. preHandler (can short-circuit)
+      5. Handler execution
+      6. onResponse (cannot short-circuit)
+      7. onError (if handler returns error)
+
+    scope:
+      - Hook trait design and HookResult enum
+      - ServerConfig hook fields
+      - Zero-cost conditional execution
+      - Async hook support in all bindings
+      - Hook lifecycle documentation
+
+  # =========================================================================
+  # CROSS-LANGUAGE ERROR HANDLING & FFI CONTRACTS
+  # =========================================================================
+
+  - name: cross-language-error-boundaries
+    priority: critical
+    description: |
+      Rust code in crates/spikard, crates/spikard-http, and binding crates must
+      avoid panics; expose fallible APIs as Result<T, E> and propagate with ?.
+      When exporting to Python (crates/spikard-py/src), always return PyResult<T>
+      and convert domain failures with PyErr::new_err(...); for Node
+      (crates/spikard-node/src), return napi::Result<T> and build errors via
+      napi::Error::from_reason; for PHP (crates/spikard-php/src), return
+      ext-php-rs Result and throw exceptions. Never let an unwrap cross the FFI
+      boundary.
+
+      Implementation:
+      - Use Result<T, E> for all fallible Rust functions
+      - Convert errors at FFI boundary (PyResult, napi::Result, ext-php-rs Result)
+      - Provide context via domain-specific error types (not opaque strings)
+      - Test panic prevention via fixtures in testing_data/validation_errors/
+      - Document error mapping in docs/adr/0004-error-handling.md
+      - Verify no panics in release builds via test suite
+
+      Error conversion patterns:
+      - Rust Result → Python: PyResult<T> via PyErr::new_err(domain_error)
+      - Rust Result → Node: napi::Result<T> via napi::Error::from_reason
+      - Rust Result → Ruby: magnus::Result<T> via Exception handling
+      - Rust Result → PHP: ext-php-rs Result via thrown exception
+      - All conversions: preserve error code and message in JSON
+
+    scope:
+      - Panic prevention strategies
+      - Error boundary implementation at FFI
+      - Error type conversion (Rust to host language)
+      - Error propagation via ? operator
+      - Cross-language error parity
+
+  - name: thin-binding-pattern-architecture
+    priority: high
+    description: |
+      All language bindings (Python/PyO3, Node/napi-rs, Ruby/Magnus, PHP/ext-php-rs,
+      WASM/wasm-bindgen) must follow the "thin binding" pattern: expose only
+      language-idiomatic APIs over the Rust core. NEVER duplicate business logic,
+      validation, middleware, or routing across bindings. All heavy lifting lives
+      in crates/spikard and crates/spikard-http; bindings translate to/from
+      language types and forward to Rust via the Handler trait.
+
+      Implementation:
+      - Keep all business logic in crates/spikard and crates/spikard-http
+      - Bindings only translate language-native types to/from Rust types
+      - No validation duplication across language bindings
+      - No middleware duplication across language bindings
+      - All routing decisions in Rust (Handler trait)
+      - Use Handler trait as single source of truth for request processing
+      - Add parity tests across all language bindings using testing_data/ fixtures
+      - Document binding APIs (not implementations) in examples/
+      - Maintain fixture-driven tests validating identical behavior across languages
+
+      Example (correct thin binding):
+      - Python handler receives request, validates, processes → all in Rust
+      - Python binding translates Python types to Rust request
+      - Rust processes, returns response
+      - Python binding translates Rust response to Python types
+      - No Python re-implementation of validation logic
+
+    scope:
+      - Thin binding pattern enforcement
+      - Single source of truth (Rust core)
+      - Cross-binding API parity
+      - Fixture-driven parity testing
+      - Example documentation
+
+  # =========================================================================
+  # PERFORMANCE & SERIALIZATION
+  # =========================================================================
+
+  - name: zero-copy-json-to-python-conversion
+    priority: high
+    description: |
+      Convert serde_json::Value to Python objects using direct PyO3 type
+      construction (PyDict::new, PyList::empty, PyString::new, etc.) instead of
+      serialize-to-JSON-string then json.loads. This zero-copy approach in
+      crates/spikard-py/src/handler.rs::json_to_python() eliminates 30-40%
+      conversion overhead. Match on Value variants and recursively build native
+      Python objects.
+
+      Implementation:
+      - Implement Value → PyObject conversion without intermediate JSON string
+      - Use PyDict::new() for serde_json::Map
+      - Use PyList::new() for serde_json::Array
+      - Use PyString::new() for serde_json::String
+      - Recursively convert nested structures
+      - Benchmark conversion overhead (compare to json.loads approach)
+      - Verify memory efficiency via integration tests
+      - Document zero-copy approach in docs/adr/0003-validation-and-fixtures.md
+
+      Conversion algorithm:
+      ```
+      match value {
+        Value::Null => py.None().into(),
+        Value::Bool(b) => b.into_py(py),
+        Value::Number(n) → number into Python int/float,
+        Value::String(s) => PyString::new(py, s).into(),
+        Value::Array(arr) => {
+          let list = PyList::new(py, []);
+          for item in arr { list.append(json_to_python(item, py))?; }
+          list.into()
+        }
+        Value::Object(map) => {
+          let dict = PyDict::new(py);
+          for (k, v) in map { dict.set_item(k, json_to_python(v, py))?; }
+          dict.into()
+        }
+      }
+      ```
+
+    scope:
+      - JSON to Python conversion implementation
+      - Zero-copy algorithm design
+      - Performance optimization
+      - Memory efficiency validation
+      - Documentation
+
+  - name: optimized-serialization-path
+    priority: medium
+    description: |
+      Follow the conversion patterns captured in
+      docs/adr/0003-validation-and-fixtures.md so data exchanged between Rust
+      and Python leverages msgspec without extra JSON hops. Share zero-copy
+      buffers where possible, and use task build:rust (release mode) when
+      benchmarking or publishing bindings to avoid debug-performance regressions.
+
+      Implementation:
+      - Use msgspec for Python serialization (faster than serde_json)
+      - Avoid serialize-to-JSON-string → deserialize cycles
+      - Reuse buffers for repeated serialization (arena allocation)
+      - Profile performance with release-mode builds
+      - Run benchmarks via task bench (if available)
+      - Document serialization strategy in docs/adr/0003
+
+    scope:
+      - msgspec integration in Python bindings
+      - Serialization path optimization
+      - Buffer reuse and arena allocation
+      - Performance benchmarking
+      - Release-mode build optimization
+
+  - name: pyo3-async-performance
+    priority: critical
+    description: |
+      For async Python handlers in crates/spikard-py/src/handler.rs, use
+      pyo3_async_runtimes::tokio::into_future() to convert Python coroutines
+      directly to Rust futures, eliminating spawn_blocking overhead. Initialize
+      the event loop once with TaskLocals stored in a OnceCell to avoid
+      per-request event loop creation. Ensure GIL is released before awaiting
+      Rust futures: Python::attach(|py| {...}).await not
+      Python::with_gil(|py| {...}).await.
+
+      Implementation:
+      - Import pyo3_async_runtimes::tokio::into_future
+      - Convert Python coroutines to futures without spawn_blocking
+      - Initialize TaskLocals once in OnceCell<TaskLocals>
+      - Use Python::attach(|py| {...}).await (releases GIL)
+      - Avoid Python::with_gil(|py| {...}).await (holds GIL during await)
+      - Add performance benchmarks in packages/python/tests/
+      - Document async patterns in docs/adr/
+
+      Correct pattern:
+      ```rust
+      let result = Python::attach(|py| {
+          into_future(py, handler_coro)
+      })
+      .await?;
+      ```
+
+      Incorrect pattern (do NOT use):
+      ```rust
+      let result = Python::with_gil(|py| {
+          into_future(py, handler_coro)
+      })
+      .await?;  // Holds GIL during await!
+      ```
+
+    scope:
+      - pyo3_async_runtimes integration
+      - Async handler implementation
+      - GIL release strategy
+      - Event loop lifecycle management
+      - Performance optimization
+
+  - name: pyo3-extension-module-management
+    priority: critical
+    description: |
+      The extension-module feature in crates/spikard-py/Cargo.toml must NOT be
+      in default features—it breaks linking for binaries that embed Python (like
+      spikard-cli). Configure maturin in pyproject.toml with
+      features = ["extension-module"] so Python extension modules build correctly.
+      Binaries (CLI, tests) build without extension-module to link libpython;
+      extensions (maturin builds) enable it for manylinux compliance.
+
+      Implementation:
+      - Remove "extension-module" from [features] default in Cargo.toml
+      - Add "extension-module" as an available feature (not default)
+      - Configure maturin in pyproject.toml: features = ["extension-module"]
+      - Test binary builds without feature: cargo build --bin spikard-cli
+      - Test extension builds with feature: maturin develop
+      - Document in docs/adr/
+      - Verify CI builds both (binary and extension module)
+
+      Cargo.toml structure:
+      ```toml
+      [features]
+      default = []  # extension-module NOT here
+      extension-module = [...]
+      ```
+
+      pyproject.toml structure:
+      ```toml
+      [tool.maturin]
+      features = ["extension-module"]
+      ```
+
+    scope:
+      - Feature flag management in Cargo.toml
+      - maturin configuration in pyproject.toml
+      - Binary vs. extension module builds
+      - CI build verification
+      - Documentation
+
+  # =========================================================================
+  # WORKSPACE ORGANIZATION & CODE STRUCTURE
+  # =========================================================================
+
+  - name: handler-trait-abstraction
+    priority: critical
+    (see above for full definition)
+
+  - name: layered-code-organization
+    priority: high
+    description: |
+      Implement cross-cutting logic in crates/spikard/src and expose it through
+      thin adapters in crates/spikard-http, crates/spikard-py, crates/spikard-node,
+      crates/spikard-rb, crates/spikard-php, and crates/spikard-wasm. Keep build
+      metadata confined to each binding's manifest (pyproject.toml,
+      crates/spikard-node/package.json, crates/spikard-wasm/package.json,
+      composer.json) and register new workflows in Taskfile.yaml so
+      task build/task lint continue to orchestrate the monorepo.
+
+      Implementation:
+      - Core types and logic: crates/spikard/src
+      - HTTP-specific types: crates/spikard-http/src
+      - Adapter for Python: crates/spikard-py/src (thin layer only)
+      - Adapter for Node: crates/spikard-node/src (thin layer only)
+      - Adapter for Ruby: crates/spikard-rb/src (thin layer only)
+      - Adapter for PHP: crates/spikard-php/src (thin layer only)
+      - Adapter for WASM: crates/spikard-wasm/src (thin layer only)
+      - Build tasks: register in Taskfile.yaml
+      - Each binding has separate manifest (pyproject.toml, package.json, etc.)
+      - No duplication of domain logic across crates
+
+    scope:
+      - Core vs. adapter separation
+      - Thin adapter pattern
+      - Manifest management
+      - Taskfile.yaml organization
+      - Cross-crate coordination
+
+  - name: workspace-separation
+    priority: medium
+    description: |
+      Keep language-neutral logic inside crates/spikard/src and limit each
+      binding crate (spikard-py, spikard-node, spikard-wasm) to thin adapters
+      over that core. When introducing new modules, register them in the relevant
+      Cargo.toml, mirror usage in examples/, and avoid duplicating business
+      rules across bindings.
+
+      Implementation:
+      - New domain modules: crates/spikard/src (single location)
+      - New HTTP-specific modules: crates/spikard-http/src
+      - Binding adapters: thin translation layers only
+      - Update Cargo.toml: add new module to lib.rs or mod declarations
+      - Update examples/: demonstrate new module from each language
+      - No parallel implementation across binding crates
+      - Document module structure in docs/adr/
+
+    scope:
+      - Module organization
+      - Binding adapter structure
+      - Cross-language example coordination
+      - Documentation
+
+  - name: workspace-organization
+    priority: high
+    description: |
+      Place reusable domain types and logic in crates/spikard/src and keep
+      feature-specific glue isolated within sibling crates (spikard-http,
+      spikard-cli, bindings); mirror module changes across Cargo manifests and
+      refresh the relevant docs/adr/* notes whenever the layering or routing
+      changes.
+
+      Implementation:
+      - Crate structure review before adding features
+      - Place domain logic in crates/spikard/src
+      - Place HTTP-specific logic in crates/spikard-http/src
+      - Document layering decisions in docs/adr/
+      - Update Cargo.toml pub use statements when exposing modules
+      - Keep examples/ synchronized with module structure
+      - Add integration tests for new modules
+
+    scope:
+      - Crate layering and separation
+      - Module structure design
+      - Cargo.toml organization
+      - Documentation updates
+      - Example synchronization
+
+  # =========================================================================
+  # ASYNC & PERFORMANCE PATTERNS
+  # =========================================================================
+
+  - name: async-friendly-performance
+    priority: medium
+    description: |
+      Respect the project's zero-copy serialization choices—keep Rust structs
+      serde-ready so bindings reuse them, lean on the adapters documented in
+      docs/adr/0003-validation-and-fixtures.md, and wrap heavy work in
+      async-safe boundaries (tokio::task::spawn_blocking in Rust,
+      pyo3::Python::allow_threads when calling back into Python). Reuse fixture
+      loaders such as packages/python/tests/fixture_app.py instead of
+      re-parsing schema files per request.
+
+      Implementation:
+      - Design structs with #[derive(serde::Serialize, serde::Deserialize)]
+      - Use tokio::task::spawn_blocking for CPU-intensive work
+      - Use pyo3::Python::allow_threads when calling Python functions
+      - Reuse fixture loaders instead of parsing per-request
+      - Profile async bottlenecks with criterion benchmarks
+      - Document async patterns in docs/adr/
+
+    scope:
+      - Async-safe boundaries
+      - spawn_blocking usage
+      - Python GIL release patterns
+      - Fixture loader reuse
+      - Performance measurement
+
+  - name: cross-target-performance
+    priority: medium
+    description: |
+      Consolidate heavy computation inside the shared Rust core (crates/spikard)
+      and expose thin bindings in crates/spikard-py, packages/python,
+      crates/spikard-node, crates/spikard-rb, crates/spikard-php, and
+      crates/spikard-wasm; stress-test large or deeply nested payloads with
+      testing_data/edge_cases and verify optimized builds via task build:rust,
+      task build:py, task build:node, task build:ruby, and task build:php.
+
+      Implementation:
+      - Keep computation in Rust (crates/spikard, crates/spikard-http)
+      - Bindings provide language-idiomatic interface only
+      - Create testing_data/edge_cases/ for performance testing
+      - Run stress tests with release builds
+      - Profile across all language bindings
+      - Document performance characteristics in docs/
+      - Set performance budgets (e.g., < 100ms per request)
+
+    scope:
+      - Performance testing with edge cases
+      - Optimization across all bindings
+      - Stress testing with large payloads
+      - Release-mode verification
+      - Performance documentation
+
+  # =========================================================================
+  # CODE QUALITY & FORMATTING
+  # =========================================================================
+
+  - name: consistent-tooling
+    priority: medium
+    description: |
+      Honor the repo formatters and linters before committing: run cargo fmt
+      (configured by rustfmt.toml), rely on Biome per biome.json for
+      JavaScript/TypeScript, and manage Python tooling through uv (uv.lock).
+      Invoke them via task lint so local changes match the CI configuration.
+
+      Implementation:
+      - Run `task lint` before git commit
+      - Rust: cargo fmt --all (per rustfmt.toml)
+      - JavaScript/TypeScript: biome format (per biome.json)
+      - Python: ruff format (per pyproject.toml)
+      - Ruby: rubocop (per .rubocop.yml if present)
+      - PHP: phpcs (per phpcs.xml if present)
+      - Git hook: pre-commit runs `task lint`
+      - CI: lint check fails if formatting diverges
+
+    scope:
+      - Code formatter configuration
+      - Linter configuration
+      - task lint implementation
+      - Pre-commit hook setup
+      - CI lint check
+
+  - name: lint-formatting-discipline
+    priority: medium
+    description: |
+      Before committing, run task lint to honor the Biome settings in
+      biome.json for JS/TS, format Rust with cargo fmt --manifest-path
+      Cargo.toml configured by rustfmt.toml, and sync Python dependencies with
+      uv so pyproject.toml and uv.lock stay consistent—avoid introducing
+      divergent toolchains or unchecked formatting drift.
+
+      Implementation:
+      - Run `task lint` locally and in CI
+      - Verify biome.json applies to all .js, .ts files
+      - Verify rustfmt.toml applies to all Rust code
+      - Verify pyproject.toml and uv.lock stay in sync
+      - No mixed formatting across language files
+      - Document formatting rules in CONTRIBUTING.md
+      - Automate with pre-commit hooks or editor integration
+
+    scope:
+      - Biome configuration for JS/TS
+      - rustfmt configuration for Rust
+      - uv lock file management
+      - Formatting consistency across languages
+      - Documentation
+
+# =============================================================================
+# RULE COORDINATION & ENFORCEMENT
+# =============================================================================
+# These rules form a coherent system ensuring fixture-driven development
+# across all layers of the spikard HTTP framework:
+#
+# Entry Point: fixture-first-testing
+#   ↓
+# Create fixtures in testing_data/ and add tests to packages/python/tests/
+#   ↓
+# Use fixture-driven-testing to ensure all changes have fixture coverage
+#   ↓
+# Implement handlers respecting http-input-validation and http-error-contracts
+#   ↓
+# Cross-language parity via thin-binding-pattern-architecture
+#   ↓
+# Verify consistency via fixture-backed-testing across all languages
+#   ↓
+# Error handling respects fixture-aligned-error-handling
+#   ↓
+# Performance verified via cross-target-performance with testing_data/edge_cases
+#
+# This ensures spikard handlers are reliable, testable, and consistent across
+# all language bindings (Python, Node, Ruby, PHP, WASM).

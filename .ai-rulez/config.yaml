@@ -1,14 +1,20 @@
 $schema: https://raw.githubusercontent.com/Goldziher/ai-rulez/main/schema/ai-rules-v3.schema.json
-description: |
-    Spikard is a Rust-centric multi-language toolkit that provides a core library,
-    command-line interface, and HTTP runtime with tower-http middleware surfaced
-    through Python (PyO3), Node.js (napi-rs), Ruby (magnus), PHP (ext-php-rs), and
-    WebAssembly bindings to build and validate typed web services. The monorepo couples
-    Rust 2024 workspace crates with Python/uv, Node.js/pnpm, Ruby, PHP/Composer, and
-    taskfile automation, backed by extensive fixture-driven tests to ensure consistent
-    request handling across platforms.
+description: Rust-centric multi-language HTTP framework providing core library, CLI, and tower-http runtime with polyglot bindings (Python/TypeScript/Ruby/PHP/WASM). Type-safe web service toolkit with fixture-driven testing across all platforms.
 gitignore: true
 name: spikard
+
+# Include shared ai-rulez configuration from git repository
+includes:
+  - name: kreuzberg-shared-rules
+    source: https://github.com/kreuzberg-dev/ai-rulez.git
+    ref: main
+    include:
+      - rules
+      - context
+      - skills
+      - agents
+    merge_strategy: local-override
+
 presets:
     - claude
     - gemini
