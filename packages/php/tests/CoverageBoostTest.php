@@ -36,9 +36,9 @@ final class CoverageBoostTest extends TestCase
                 ['params' => $parameterSchema],
             )
             ->registerController(new class () {
+                /** @return array<string, mixed> */
                 #[Post('/schema')]
                 #[SchemaRef(request: 'req', response: 'resp', parameters: 'params')]
-                /** @return array<string, mixed> */
                 public function create(): array
                 {
                     return ['ok' => true];
@@ -47,7 +47,7 @@ final class CoverageBoostTest extends TestCase
 
         $routes = $app->routes();
         self::assertCount(1, $routes);
-        /** @var array{request_schema: array, response_schema: array, parameter_schema: array} $route */
+        /** @var array{request_schema: array<string, mixed>, response_schema: array<string, mixed>, parameter_schema: array<string, mixed>} $route */
         $route = $routes[0];
 
         self::assertSame($requestSchema, $route['request_schema']);
@@ -58,8 +58,8 @@ final class CoverageBoostTest extends TestCase
     public function testRegisterControllerInfersHeaderSchema(): void
     {
         $app = (new App())->registerController(new class () {
-            #[Get('/headers/{id}')]
             /** @return array<string, mixed> */
+            #[Get('/headers/{id}')]
             public function show(string $id, mixed $x_custom = new Header(alias: 'X-Custom-Header')): array
             {
                 return ['id' => $id, 'header' => $x_custom];
@@ -178,8 +178,8 @@ final class CoverageBoostTest extends TestCase
 
         try {
             $app = (new App())->registerController(new class () {
-                #[Get('/ping')]
                 /** @return array<string, mixed> */
+                #[Get('/ping')]
                 public function ping(): array
                 {
                     return ['ok' => true];
