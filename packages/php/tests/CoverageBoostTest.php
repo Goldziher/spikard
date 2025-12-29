@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Spikard\Tests;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use ReflectionProperty;
 use RuntimeException;
 use Spikard\App;
@@ -18,6 +19,7 @@ use Spikard\Http\Params\Header;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 use Spikard\Testing\TestClient;
+use Spikard\Native\TestClient as NativeTestClient;
 
 final class CoverageBoostTest extends TestCase
 {
@@ -36,6 +38,7 @@ final class CoverageBoostTest extends TestCase
             ->registerController(new class () {
                 #[Post('/schema')]
                 #[SchemaRef(request: 'req', response: 'resp', parameters: 'params')]
+                /** @return array<string, mixed> */
                 public function create(): array
                 {
                     return ['ok' => true];
@@ -44,6 +47,7 @@ final class CoverageBoostTest extends TestCase
 
         $routes = $app->routes();
         self::assertCount(1, $routes);
+        /** @var array{request_schema: array, response_schema: array, parameter_schema: array} $route */
         $route = $routes[0];
 
         self::assertSame($requestSchema, $route['request_schema']);
@@ -55,7 +59,8 @@ final class CoverageBoostTest extends TestCase
     {
         $app = (new App())->registerController(new class () {
             #[Get('/headers/{id}')]
-            public function show(string $id, string $x_custom = new Header(alias: 'X-Custom-Header')): array
+            /** @return array<string, mixed> */
+            public function show(string $id, mixed $x_custom = new Header(alias: 'X-Custom-Header')): array
             {
                 return ['id' => $id, 'header' => $x_custom];
             }
@@ -63,7 +68,9 @@ final class CoverageBoostTest extends TestCase
 
         $routes = $app->routes();
         self::assertCount(1, $routes);
-        $schema = $routes[0]['parameter_schema'];
+        /** @var array{parameter_schema: array{type: string, properties: array<string, array<string, mixed>>}} $route */
+        $route = $routes[0];
+        $schema = $route['parameter_schema'];
         self::assertIsArray($schema);
         self::assertSame('object', $schema['type']);
 
@@ -162,7 +169,7 @@ final class CoverageBoostTest extends TestCase
 
     public function testTestClientUsesNativePathWhenAvailable(): void
     {
-        if (!\function_exists('spikard_version') || !\class_exists('\\Spikard\\Native\\TestClient')) {
+        if (!\function_exists('spikard_version') || !\class_exists(NativeTestClient::class)) {
             $this->markTestSkipped('Native test client not available.');
         }
 
@@ -172,6 +179,7 @@ final class CoverageBoostTest extends TestCase
         try {
             $app = (new App())->registerController(new class () {
                 #[Get('/ping')]
+                /** @return array<string, mixed> */
                 public function ping(): array
                 {
                     return ['ok' => true];
@@ -179,14 +187,16 @@ final class CoverageBoostTest extends TestCase
             });
 
             $client = TestClient::create($app);
-            $response = $client->get('/ping');
-
-            self::assertInstanceOf(Response::class, $response);
+            $nativeMethod = new ReflectionMethod(TestClient::class, 'nativeClient');
+            $nativeMethod->setAccessible(true);
+            $nativeClient = $nativeMethod->invoke($client);
 
             $nativeProperty = new ReflectionProperty(TestClient::class, 'native');
             $nativeProperty->setAccessible(true);
-            $nativeClient = $nativeProperty->getValue($client);
-            self::assertNotNull($nativeClient);
+            $storedNative = $nativeProperty->getValue($client);
+
+            self::assertInstanceOf(NativeTestClient::class, $nativeClient);
+            self::assertSame($nativeClient, $storedNative);
 
             $client->close();
         } finally {
