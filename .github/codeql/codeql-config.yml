@@ -1,0 +1,5 @@
+name: "CodeQL config"
+paths-ignore:
+  - crates/spikard-node/src/graphql.rs
+  - crates/spikard-node/src/response.rs
+  - crates/spikard-node/src/test_client.rs
