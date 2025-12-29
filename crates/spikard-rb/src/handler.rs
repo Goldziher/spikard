@@ -25,6 +25,7 @@ use std::sync::Arc;
 use crate::conversion::{
     json_to_ruby, json_to_ruby_with_uploads, map_to_ruby_hash, multimap_to_ruby_hash, ruby_value_to_json,
 };
+use crate::gvl::with_gvl;
 
 static KEY_METHOD: LazyId = LazyId::new("method");
 static KEY_PATH: LazyId = LazyId::new("path");
@@ -241,15 +242,17 @@ impl RubyHandler {
 
     /// Handle a request synchronously.
     pub fn handle(&self, request_data: RequestData) -> HandlerResult {
-        let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(request_data)));
-        match result {
-            Ok(res) => res,
-            Err(_) => Err(ErrorResponseBuilder::structured_error(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "panic",
-                "Unexpected panic while executing Ruby handler",
-            )),
-        }
+        with_gvl(|| {
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(request_data)));
+            match result {
+                Ok(res) => res,
+                Err(_) => Err(ErrorResponseBuilder::structured_error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "panic",
+                    "Unexpected panic while executing Ruby handler",
+                )),
+            }
+        })
     }
 
     fn handle_inner(&self, request_data: RequestData) -> HandlerResult {
