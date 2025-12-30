@@ -192,7 +192,7 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
           @id = SecureRandom.uuid
         end
 
-        def on_disconnect
+        define_method(:on_disconnect) do
           disconnect_events << @id
         end
 
@@ -224,8 +224,8 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
       app = Spikard::App.new
       cleanup_ran = false
       handler_class = Class.new(Spikard::WebSocketHandler) do
-        def on_disconnect # rubocop:disable Naming/PredicateMethod
-          true
+        define_method(:on_disconnect) do # rubocop:disable Naming/PredicateMethod
+          cleanup_ran = true
         end
 
         def handle_message(message)
@@ -251,8 +251,8 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
       app = Spikard::App.new
       disconnect_ran = false
       handler_class = Class.new(Spikard::WebSocketHandler) do
-        def on_disconnect # rubocop:disable Naming/PredicateMethod
-          true
+        define_method(:on_disconnect) do # rubocop:disable Naming/PredicateMethod
+          disconnect_ran = true
         end
 
         def handle_message(message)
@@ -280,16 +280,16 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
       app = Spikard::App.new
       events = []
       handler_class = Class.new(Spikard::WebSocketHandler) do
-        def on_connect
+        define_method(:on_connect) do
           events << :connect
         end
 
-        def handle_message(message)
+        define_method(:handle_message) do |message|
           events << :handle
           message
         end
 
-        def on_disconnect
+        define_method(:on_disconnect) do
           events << :disconnect
         end
       end
@@ -335,14 +335,17 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
   describe 'multiple on_connect calls (reconnect scenarios)' do
     it 'treats multiple on_connect calls as reconnect events' do
       app = Spikard::App.new
-      connect_count = 0
       handler_class = Class.new(Spikard::WebSocketHandler) do
-        define_method(:on_connect) do
-          connect_count += 1
+        def initialize
+          @connect_count = 0
+        end
+
+        def on_connect
+          @connect_count += 1
         end
 
         def handle_message(_message)
-          { connects: connect_count }
+          { connects: @connect_count }
         end
       end
 
@@ -366,11 +369,11 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
         attr_reader :connected_at
 
         def on_connect
-          @connected_at = Time.now
+          @connected_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         end
 
         def handle_message(_message)
-          { connected_at: @connected_at.to_i }
+          { connected_at: @connected_at }
         end
       end
 
@@ -399,7 +402,7 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
         def handle_message(message)
           {
             received_size: message['data']&.size || 0,
-            data_present: message['data'].present?
+            data_present: !message['data'].nil? && !message['data'].empty?
           }
         end
       end
@@ -475,7 +478,7 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
       3.times do |i|
         response = ws.receive_json
         expect(response['sequence']).to eq(i + 1)
-        expect(response['size']).to eq(50_004)
+        expect(response['size']).to eq(50_001)
       end
 
       ws.close
@@ -776,7 +779,7 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
           # Verify we can track connection
         end
 
-        def on_disconnect
+        define_method(:on_disconnect) do
           disconnect_calls << @id
         end
 

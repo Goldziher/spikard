@@ -90,20 +90,31 @@ pub trait WebSocketHandler: Send + Sync {
 /// Contains the message handler and optional JSON schemas for validating
 /// incoming and outgoing messages. This state is shared among all connections
 /// to the same WebSocket endpoint.
-#[derive(Debug)]
 pub struct WebSocketState<H: WebSocketHandler> {
     /// The message handler implementation
     handler: Arc<H>,
+    /// Factory for producing per-connection handlers
+    handler_factory: Arc<dyn Fn() -> Result<Arc<H>, String> + Send + Sync>,
     /// Optional JSON Schema for validating incoming messages
     message_schema: Option<Arc<jsonschema::Validator>>,
     /// Optional JSON Schema for validating outgoing responses
     response_schema: Option<Arc<jsonschema::Validator>>,
 }
 
+impl<H: WebSocketHandler> std::fmt::Debug for WebSocketState<H> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WebSocketState")
+            .field("message_schema", &self.message_schema.is_some())
+            .field("response_schema", &self.response_schema.is_some())
+            .finish()
+    }
+}
+
 impl<H: WebSocketHandler> Clone for WebSocketState<H> {
     fn clone(&self) -> Self {
         Self {
             handler: Arc::clone(&self.handler),
+            handler_factory: Arc::clone(&self.handler_factory),
             message_schema: self.message_schema.clone(),
             response_schema: self.response_schema.clone(),
         }
@@ -125,8 +136,13 @@ impl<H: WebSocketHandler + 'static> WebSocketState<H> {
     /// let state = WebSocketState::new(MyHandler);
     /// ```
     pub fn new(handler: H) -> Self {
+        let handler = Arc::new(handler);
         Self {
-            handler: Arc::new(handler),
+            handler_factory: Arc::new({
+                let handler = Arc::clone(&handler);
+                move || Ok(Arc::clone(&handler))
+            }),
+            handler,
             message_schema: None,
             response_schema: None,
         }
@@ -187,8 +203,56 @@ impl<H: WebSocketHandler + 'static> WebSocketState<H> {
             None
         };
 
+        let handler = Arc::new(handler);
         Ok(Self {
-            handler: Arc::new(handler),
+            handler_factory: Arc::new({
+                let handler = Arc::clone(&handler);
+                move || Ok(Arc::clone(&handler))
+            }),
+            handler,
+            message_schema: message_validator,
+            response_schema: response_validator,
+        })
+    }
+
+    /// Create new WebSocket state with a handler factory and optional validation schemas.
+    ///
+    /// The factory is invoked once per connection, enabling per-connection handler state.
+    pub fn with_factory<F>(
+        factory: F,
+        message_schema: Option<serde_json::Value>,
+        response_schema: Option<serde_json::Value>,
+    ) -> Result<Self, String>
+    where
+        F: Fn() -> Result<H, String> + Send + Sync + 'static,
+    {
+        let message_validator = if let Some(schema) = message_schema {
+            Some(Arc::new(
+                jsonschema::validator_for(&schema).map_err(|e| format!("Invalid message schema: {}", e))?,
+            ))
+        } else {
+            None
+        };
+
+        let response_validator = if let Some(schema) = response_schema {
+            Some(Arc::new(
+                jsonschema::validator_for(&schema).map_err(|e| format!("Invalid response schema: {}", e))?,
+            ))
+        } else {
+            None
+        };
+
+        let factory = Arc::new(factory);
+        let handler = factory()
+            .map(Arc::new)
+            .map_err(|e| format!("Failed to build WebSocket handler: {}", e))?;
+
+        Ok(Self {
+            handler_factory: Arc::new({
+                let factory = Arc::clone(&factory);
+                move || factory().map(Arc::new)
+            }),
+            handler,
             message_schema: message_validator,
             response_schema: response_validator,
         })
@@ -258,7 +322,16 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
     info!("WebSocket client connected");
     trace_ws("socket:connected");
 
-    state.handler.on_connect().await;
+    let handler = match (state.handler_factory)() {
+        Ok(handler) => handler,
+        Err(err) => {
+            error!("Failed to create WebSocket handler: {}", err);
+            trace_ws("socket:handler-factory:error");
+            return;
+        }
+    };
+
+    handler.on_connect().await;
     trace_ws("socket:on_connect:done");
 
     while let Some(msg) = socket.recv().await {
@@ -285,7 +358,7 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
                             continue;
                         }
 
-                        if let Some(response) = state.handler.handle_message(json_msg).await {
+                        if let Some(response) = handler.handle_message(json_msg).await {
                             trace_ws("handler:response:some");
                             if let Some(validator) = &state.response_schema
                                 && !validator.is_valid(&response)
@@ -358,7 +431,7 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
         }
     }
 
-    state.handler.on_disconnect().await;
+    handler.on_disconnect().await;
     trace_ws("socket:on_disconnect:done");
     info!("WebSocket client disconnected");
 }

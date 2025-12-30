@@ -3,7 +3,7 @@
 //! This module provides the bridge between Ruby blocks/procs and Rust's WebSocket system.
 //! Uses magnus to safely call Ruby code from Rust async tasks.
 
-use magnus::{RHash, Value, prelude::*, value::Opaque};
+use magnus::{RHash, Ruby, Value, prelude::*, value::Opaque};
 use serde_json::Value as JsonValue;
 use spikard_http::WebSocketHandler;
 use std::sync::mpsc;
@@ -35,6 +35,13 @@ enum WebSocketWorkItem {
     },
     OnDisconnect {
         reply: oneshot::Sender<Result<(), String>>,
+    },
+    Shutdown,
+}
+
+enum WebSocketFactoryWorkItem {
+    Build {
+        reply: mpsc::Sender<Result<RubyWebSocketHandler, String>>,
     },
     Shutdown,
 }
@@ -136,6 +143,33 @@ impl RubyWebSocketHandler {
                 Ok(ruby_hash.as_value())
             }
         }
+    }
+
+    fn from_handler(ruby: &Ruby, handler_obj: Value) -> Result<Self, magnus::Error> {
+        let handle_message_proc: Value = handler_obj
+            .funcall("method", (ruby.to_symbol("handle_message"),))
+            .map_err(|e| {
+                magnus::Error::new(
+                    ruby.exception_arg_error(),
+                    format!("handle_message method not found: {}", e),
+                )
+            })?;
+
+        let on_connect_proc = handler_obj
+            .funcall::<_, _, Value>("method", (ruby.to_symbol("on_connect"),))
+            .ok();
+
+        let on_disconnect_proc = handler_obj
+            .funcall::<_, _, Value>("method", (ruby.to_symbol("on_disconnect"),))
+            .ok();
+
+        Ok(Self::new(
+            ruby,
+            "WebSocketHandler".to_string(),
+            handle_message_proc,
+            on_connect_proc,
+            on_disconnect_proc,
+        ))
     }
 }
 
@@ -319,26 +353,16 @@ unsafe impl Sync for RubyWebSocketHandler {}
 #[allow(dead_code)]
 pub fn create_websocket_state(
     ruby: &magnus::Ruby,
-    handler_obj: Value,
+    handler_factory: Value,
 ) -> Result<spikard_http::WebSocketState<RubyWebSocketHandler>, magnus::Error> {
-    let handle_message_proc: Value = handler_obj
-        .funcall("method", (ruby.to_symbol("handle_message"),))
-        .map_err(|e| {
-            magnus::Error::new(
-                ruby.exception_arg_error(),
-                format!("handle_message method not found: {}", e),
-            )
-        })?;
+    let handler_instance: Value = handler_factory.funcall("call", ()).map_err(|e| {
+        magnus::Error::new(
+            ruby.exception_runtime_error(),
+            format!("Failed to create WebSocket handler: {}", e),
+        )
+    })?;
 
-    let on_connect_proc = handler_obj
-        .funcall::<_, _, Value>("method", (ruby.to_symbol("on_connect"),))
-        .ok();
-
-    let on_disconnect_proc = handler_obj
-        .funcall::<_, _, Value>("method", (ruby.to_symbol("on_disconnect"),))
-        .ok();
-
-    let message_schema = handler_obj
+    let message_schema = handler_instance
         .funcall::<_, _, Value>("instance_variable_get", (ruby.to_symbol("@_message_schema"),))
         .ok()
         .and_then(|v| {
@@ -349,7 +373,7 @@ pub fn create_websocket_state(
             }
         });
 
-    let response_schema = handler_obj
+    let response_schema = handler_instance
         .funcall::<_, _, Value>("instance_variable_get", (ruby.to_symbol("@_response_schema"),))
         .ok()
         .and_then(|v| {
@@ -360,18 +384,87 @@ pub fn create_websocket_state(
             }
         });
 
-    let ruby_handler = RubyWebSocketHandler::new(
-        ruby,
-        "WebSocketHandler".to_string(),
-        handle_message_proc,
-        on_connect_proc,
-        on_disconnect_proc,
-    );
+    let handler_factory = Opaque::from(handler_factory);
+    let (factory_tx, factory_rx) = mpsc::channel();
+
+    let handler_factory_for_thread = handler_factory;
+    ruby.thread_create_from_fn(move |ruby| {
+        websocket_factory_worker_loop(ruby, handler_factory_for_thread, factory_rx);
+        ruby.qnil()
+    });
+
+    let handler_builder = move || {
+        let (reply_tx, reply_rx) = mpsc::channel();
+        if factory_tx
+            .send(WebSocketFactoryWorkItem::Build { reply: reply_tx })
+            .is_err()
+        {
+            return Err("WebSocket handler factory thread closed".to_string());
+        }
+        if magnus::Ruby::get().is_ok() {
+            let reply_rx_ref = &reply_rx;
+            let result = crate::call_without_gvl!(
+                recv_factory_reply,
+                args: (reply_rx_ref, &mpsc::Receiver<Result<RubyWebSocketHandler, String>>),
+                return_type: Option<Result<RubyWebSocketHandler, String>>
+            );
+            result.ok_or_else(|| "WebSocket handler factory response channel closed".to_string())?
+        } else {
+            reply_rx
+                .recv()
+                .map_err(|_| "WebSocket handler factory response channel closed".to_string())?
+        }
+    };
 
     if message_schema.is_some() || response_schema.is_some() {
-        spikard_http::WebSocketState::with_schemas(ruby_handler, message_schema, response_schema)
+        spikard_http::WebSocketState::with_factory(handler_builder, message_schema, response_schema)
             .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e))
     } else {
-        Ok(spikard_http::WebSocketState::new(ruby_handler))
+        spikard_http::WebSocketState::with_factory(handler_builder, None, None)
+            .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e))
     }
+}
+
+fn websocket_factory_worker_loop(
+    ruby: &magnus::Ruby,
+    handler_factory: Opaque<Value>,
+    work_rx: mpsc::Receiver<WebSocketFactoryWorkItem>,
+) {
+    let work_rx_ref = &work_rx;
+    loop {
+        let work = crate::call_without_gvl!(
+            recv_factory_item,
+            args: (work_rx_ref, &mpsc::Receiver<WebSocketFactoryWorkItem>),
+            return_type: Option<WebSocketFactoryWorkItem>
+        );
+        let Some(work) = work else {
+            break;
+        };
+
+        match work {
+            WebSocketFactoryWorkItem::Build { reply } => {
+                let result = (|| {
+                    let factory_value = ruby.get_inner(handler_factory);
+                    let handler_instance: Value = factory_value
+                        .funcall("call", ())
+                        .map_err(|e| format!("Failed to create WebSocket handler: {}", e))?;
+                    RubyWebSocketHandler::from_handler(ruby, handler_instance).map_err(|e| e.to_string())
+                })();
+                let _ = reply.send(result);
+            }
+            WebSocketFactoryWorkItem::Shutdown => {
+                break;
+            }
+        }
+    }
+}
+
+fn recv_factory_item(receiver: &mpsc::Receiver<WebSocketFactoryWorkItem>) -> Option<WebSocketFactoryWorkItem> {
+    receiver.recv().ok()
+}
+
+fn recv_factory_reply(
+    receiver: &mpsc::Receiver<Result<RubyWebSocketHandler, String>>,
+) -> Option<Result<RubyWebSocketHandler, String>> {
+    receiver.recv().ok()
 }

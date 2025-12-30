@@ -153,14 +153,7 @@ impl NativeTestClient {
 
             ws_hash.foreach(
                 |path: String, factory: Value| -> Result<magnus::r_hash::ForEach, Error> {
-                    let handler_instance = factory.funcall::<_, _, Value>("call", ()).map_err(|e| {
-                        Error::new(
-                            ruby.exception_runtime_error(),
-                            format!("Failed to create WebSocket handler: {}", e),
-                        )
-                    })?;
-
-                    let ws_state = crate::websocket::create_websocket_state(ruby, handler_instance)?;
+                    let ws_state = crate::websocket::create_websocket_state(ruby, factory)?;
 
                     ws_endpoints.push((path, ws_state));
 
