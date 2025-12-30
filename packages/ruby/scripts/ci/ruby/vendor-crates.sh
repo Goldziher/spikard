@@ -9,6 +9,7 @@ echo "Vendoring internal Rust crates for Ruby gem..."
 cd "$REPO_ROOT"
 
 VENDOR_DIR="packages/ruby/vendor/crates"
+rm -rf "$VENDOR_DIR"
 mkdir -p "$VENDOR_DIR"
 
 # Read workspace version for vendored crates.
