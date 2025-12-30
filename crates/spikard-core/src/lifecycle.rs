@@ -691,6 +691,63 @@ mod tests {
         assert!(hooks.is_empty());
     }
 
+    #[test]
+    fn test_execute_request_hooks_continue_flow() {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let hooks = LifecycleHooks::builder()
+                .on_request(request_hook("req", |req| async move { Ok(HookResult::Continue(req + "_a")) }))
+                .pre_validation(request_hook("pre", |req| async move { Ok(HookResult::Continue(req + "_b")) }))
+                .pre_handler(request_hook("handler", |req| async move { Ok(HookResult::Continue(req + "_c")) }))
+                .build();
+
+            let on_request = block_on(hooks.execute_on_request("start".to_string())).unwrap();
+            assert!(matches!(on_request, HookResult::Continue(ref val) if val == "start_a"));
+
+            let pre_validation = block_on(hooks.execute_pre_validation("start".to_string())).unwrap();
+            assert!(matches!(pre_validation, HookResult::Continue(ref val) if val == "start_b"));
+
+            let pre_handler = block_on(hooks.execute_pre_handler("start".to_string())).unwrap();
+            assert!(matches!(pre_handler, HookResult::Continue(ref val) if val == "start_c"));
+        }
+    }
+
+    #[test]
+    fn test_execute_request_hooks_short_circuit_flow() {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let hooks = LifecycleHooks::builder()
+                .on_request(request_hook("req", |_req| async move {
+                    Ok(HookResult::ShortCircuit("stop".to_string()))
+                }))
+                .build();
+
+            let result = block_on(hooks.execute_on_request("start".to_string())).unwrap();
+            assert!(matches!(result, HookResult::ShortCircuit(ref val) if val == "stop"));
+        }
+    }
+
+    #[test]
+    fn test_execute_response_hooks_continue_and_short_circuit() {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let hooks = LifecycleHooks::builder()
+                .on_response(response_hook("resp", |resp| async move {
+                    Ok(HookResult::Continue(resp + "_ok"))
+                }))
+                .on_error(response_hook("err", |resp| async move {
+                    Ok(HookResult::ShortCircuit(resp + "_err"))
+                }))
+                .build();
+
+            let on_response = block_on(hooks.execute_on_response("start".to_string())).unwrap();
+            assert_eq!(on_response, "start_ok");
+
+            let on_error = block_on(hooks.execute_on_error("start".to_string())).unwrap();
+            assert_eq!(on_error, "start_err");
+        }
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     struct TestShortCircuitHook;
 

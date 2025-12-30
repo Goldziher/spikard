@@ -399,6 +399,9 @@ impl SseEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::body::Body;
+    use axum::response::Response;
+    use std::io::Write;
 
     #[test]
     fn sse_stream_parses_multiple_events() {
@@ -518,5 +521,57 @@ mod tests {
 
         let errors = snapshot.graphql_errors().expect("errors extraction");
         assert!(errors.is_empty());
+    }
+
+    fn gzip_bytes(input: &[u8]) -> Vec<u8> {
+        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        encoder.write_all(input).expect("gzip write");
+        encoder.finish().expect("gzip finish")
+    }
+
+    fn brotli_bytes(input: &[u8]) -> Vec<u8> {
+        let mut encoder = brotli::CompressorWriter::new(Vec::new(), 4096, 5, 22);
+        encoder.write_all(input).expect("brotli write");
+        encoder.into_inner()
+    }
+
+    #[tokio::test]
+    async fn snapshot_http_response_decodes_gzip_body() {
+        let body = b"hello gzip";
+        let compressed = gzip_bytes(body);
+        let response = Response::builder()
+            .status(200)
+            .header("content-encoding", "gzip")
+            .body(Body::from(compressed))
+            .unwrap();
+
+        let snapshot = snapshot_http_response(response).await.expect("snapshot");
+        assert_eq!(snapshot.body, body);
+    }
+
+    #[tokio::test]
+    async fn snapshot_http_response_decodes_brotli_body() {
+        let body = b"hello brotli";
+        let compressed = brotli_bytes(body);
+        let response = Response::builder()
+            .status(200)
+            .header("content-encoding", "br")
+            .body(Body::from(compressed))
+            .unwrap();
+
+        let snapshot = snapshot_http_response(response).await.expect("snapshot");
+        assert_eq!(snapshot.body, body);
+    }
+
+    #[tokio::test]
+    async fn snapshot_http_response_leaves_plain_body() {
+        let body = b"plain";
+        let response = Response::builder()
+            .status(200)
+            .body(Body::from(body.as_slice()))
+            .unwrap();
+
+        let snapshot = snapshot_http_response(response).await.expect("snapshot");
+        assert_eq!(snapshot.body, body);
     }
 }
