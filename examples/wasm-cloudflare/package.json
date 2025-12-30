@@ -8,7 +8,7 @@
 		"@spikard/wasm": "workspace:*"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20251228.0",
+		"@cloudflare/workers-types": "^4.20251230.0",
 		"@types/node": "^25.0.3",
 		"typescript": "^5.9.3",
 		"wrangler": "^4.56.0"

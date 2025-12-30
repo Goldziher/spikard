@@ -888,24 +888,30 @@ jobs:
       - name: Install pnpm
         run: bash scripts/publish/wasm/setup-pnpm.sh
 
-      - name: Install dependencies
+      - name: Install WASM core dependencies
         working-directory: crates/spikard-wasm
         run: pnpm install
 
-      - name: Build WASM package (all targets)
+      - name: Build WASM core bindings (all targets)
         working-directory: crates/spikard-wasm
         run: pnpm run build:all
+
+      - name: Install WASM wrapper dependencies
+        working-directory: packages/wasm
+        run: pnpm install
+
+      - name: Build WASM wrapper package
+        working-directory: packages/wasm
+        run: pnpm run build
 
       - name: Upload WASM artifact
         uses: actions/upload-artifact@v6
         with:
           name: wasm-package
           path: |
-            crates/spikard-wasm/dist-bundler
-            crates/spikard-wasm/dist-node
-            crates/spikard-wasm/dist-web
-            crates/spikard-wasm/README.md
-            crates/spikard-wasm/package.json
+            packages/wasm/dist
+            packages/wasm/README.md
+            packages/wasm/package.json
           retention-days: 14
 
   cargo-packages:
@@ -1203,7 +1209,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: wasm-package
-          path: crates/spikard-wasm/pkg
+          path: packages/wasm
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -1215,8 +1221,8 @@ jobs:
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        working-directory: crates/spikard-wasm/pkg
-        run: bash ../../../scripts/publish/wasm/publish-package.sh
+        working-directory: packages/wasm
+        run: bash ../../scripts/publish/wasm/publish-package.sh
 
       - name: Dry run summary
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}

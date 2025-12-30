@@ -12,8 +12,8 @@ importers:
         specifier: ^2.3.10
         version: 2.3.10
       oxlint:
-        specifier: ^1.35.0
-        version: 1.35.0
+        specifier: ^1.36.0
+        version: 1.36.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -28,8 +28,8 @@ importers:
         version: 4.2.1
     devDependencies:
       '@napi-rs/cli':
-        specifier: ^3.5.0
-        version: 3.5.0(@emnapi/runtime@1.7.1)(@types/node@25.0.3)
+        specifier: ^3.5.1
+        version: 3.5.1(@emnapi/runtime@1.7.1)(@types/node@25.0.3)
       '@types/node':
         specifier: ^25.0.3
         version: 25.0.3
@@ -53,10 +53,10 @@ importers:
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.11.1
-        version: 0.11.1(@cloudflare/workers-types@4.20251228.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))
+        version: 0.11.1(@cloudflare/workers-types@4.20251230.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))
       '@cloudflare/workers-types':
-        specifier: ^4.20251225.0
-        version: 4.20251228.0
+        specifier: ^4.20251230.0
+        version: 4.20251230.0
       '@spikard/wasm':
         specifier: workspace:*
         version: link:../../packages/wasm
@@ -71,7 +71,7 @@ importers:
         version: 4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0)
       wrangler:
         specifier: ^4.56.0
-        version: 4.56.0(@cloudflare/workers-types@4.20251228.0)
+        version: 4.56.0(@cloudflare/workers-types@4.20251230.0)
 
   e2e/deno: {}
 
@@ -163,8 +163,8 @@ importers:
         version: link:../../packages/wasm
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20251228.0
-        version: 4.20251228.0
+        specifier: ^4.20251230.0
+        version: 4.20251230.0
       '@types/node':
         specifier: ^25.0.3
         version: 25.0.3
@@ -173,7 +173,7 @@ importers:
         version: 5.9.3
       wrangler:
         specifier: ^4.56.0
-        version: 4.56.0(@cloudflare/workers-types@4.20251228.0)
+        version: 4.56.0(@cloudflare/workers-types@4.20251230.0)
 
   examples/wasm-deno:
     dependencies:
@@ -219,8 +219,8 @@ importers:
         specifier: ^2.3.10
         version: 2.3.10
       '@napi-rs/cli':
-        specifier: ^3.5.0
-        version: 3.5.0(@emnapi/runtime@1.7.1)(@types/node@25.0.3)
+        specifier: ^3.5.1
+        version: 3.5.1(@emnapi/runtime@1.7.1)(@types/node@25.0.3)
       '@types/node':
         specifier: ^25.0.3
         version: 25.0.3
@@ -275,7 +275,7 @@ importers:
     dependencies:
       elysia:
         specifier: ^1.4.19
-        version: 1.4.19(@sinclair/typebox@0.34.41)(@types/bun@1.3.5)(exact-mirror@0.2.5(@sinclair/typebox@0.34.41))(file-type@21.1.1)(openapi-types@12.1.3)(typescript@5.9.3)
+        version: 1.4.19(@sinclair/typebox@0.34.45)(@types/bun@1.3.5)(exact-mirror@0.2.5(@sinclair/typebox@0.34.45))(file-type@21.2.0)(openapi-types@12.1.3)(typescript@5.9.3)
     devDependencies:
       '@types/bun':
         specifier: ^1.3.5
@@ -436,8 +436,8 @@ importers:
   tools/benchmark-harness/apps/morojs-raw:
     dependencies:
       '@morojs/moro':
-        specifier: ^1.7.5
-        version: 1.7.5(ws@8.18.3)
+        specifier: ^1.7.8
+        version: 1.7.8(ws@8.18.3)
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -452,8 +452,8 @@ importers:
   tools/benchmark-harness/apps/morojs-validation:
     dependencies:
       '@morojs/moro':
-        specifier: ^1.7.5
-        version: 1.7.5(ws@8.18.3)
+        specifier: ^1.7.8
+        version: 1.7.8(ws@8.18.3)
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -656,8 +656,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@4.20251228.0':
-    resolution: {integrity: sha512-lzE1IjLn5TiStPD5+sGZsPSY9sSFSSIujOWb5f6JMnDWkyNzdZOaEVFvx0sw5ztaWWQjK22hjYW7rgb+OFscjg==}
+  '@cloudflare/workers-types@4.20251230.0':
+    resolution: {integrity: sha512-mTpeOLyC088fqC0hDMFFErq0C/4tLFTDgYgkBhpbM7YeoASVErhnR5irvnHFarvJ5NWXa8jY08bSaRIG8V8PAA==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -1288,8 +1288,8 @@ packages:
     resolution: {integrity: sha512-OWV6DnaMd+kRikdQLZHzIiVYT1usFg/yw9Ey+qeWrll0GwkWpS6TS6mvYbNCqPzeG8Yq70ux3kP2ApiVhO7WoA==}
     engines: {node: '>= 10'}
 
-  '@morojs/moro@1.7.5':
-    resolution: {integrity: sha512-hSW2os6qGYNswiiPcxjQp/RyhNqckYOLFls5Hrm3fzE5PB9SYeer2E0wnfphM5aGRFw4hDNk7NPEVxcHbNNXxA==}
+  '@morojs/moro@1.7.8':
+    resolution: {integrity: sha512-zM7r7+IXefAIVYlAIMPjURdW9EweNj3D6ZW5er98sEeW0w02caWjSCAj7RSBKeQ/WW9F5yDc6zfv0NQRYmAcbQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@aws-sdk/client-ses': '>=3.927.0'
@@ -1319,7 +1319,7 @@ packages:
       resend: '>=6.4.2'
       socket.io: '>=4.8.1'
       swagger-ui-dist: '>=5.28.1'
-      uWebSockets.js: github:uNetworking/uWebSockets.js#v20.56.0
+      uWebSockets.js: github:uNetworking/uWebSockets.js#semver:^v20.52.0
       ws: '>=8.18.0'
       yup: '>=1.7.1'
     peerDependenciesMeta:
@@ -1384,8 +1384,8 @@ packages:
       yup:
         optional: true
 
-  '@napi-rs/cli@3.5.0':
-    resolution: {integrity: sha512-bJsDvAa9qK9VMkFhr780XWfQlK+GDlAX8qpK20buSmA0ld6nxCtiZ5a0J45zbd0FWT+VTZE1/u8VPH2vLfnVvw==}
+  '@napi-rs/cli@3.5.1':
+    resolution: {integrity: sha512-XBfLQRDcB3qhu6bazdMJsecWW55kR85l5/k0af9BIBELXQSsCFU0fzug7PX8eQp6vVdm7W/U3z6uP5WmITB2Gw==}
     engines: {node: '>= 16'}
     hasBin: true
     peerDependencies:
@@ -1633,8 +1633,8 @@ packages:
     resolution: {integrity: sha512-7cmzIu+Vbupriudo7UudoMRH2OA3cTw67vva8MxeoAe5S7vPFI7z0vp0pMXiA25S8IUJefImQ90FeJjl8fjEaQ==}
     engines: {node: '>= 10'}
 
-  '@napi-rs/wasm-runtime@1.1.0':
-    resolution: {integrity: sha512-Fq6DJW+Bb5jaWE69/qOE0D1TUN9+6uWhCeZpdnSBk14pjLcCWR7Q8n49PTSPHazM37JqrsdpEthXy2xn6jWWiA==}
+  '@napi-rs/wasm-runtime@1.1.1':
+    resolution: {integrity: sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A==}
 
   '@napi-rs/wasm-tools-android-arm-eabi@1.0.1':
     resolution: {integrity: sha512-lr07E/l571Gft5v4aA1dI8koJEmF1F0UigBbsqg9OWNzg80H3lDPO+auv85y3T/NHE3GirDk7x/D3sLO57vayw==}
@@ -1769,43 +1769,43 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@oxlint/darwin-arm64@1.35.0':
-    resolution: {integrity: sha512-ieiYVHkNZPo77Hgrxav595wGS4rRNKuDNrljf+4xhwpJsddrxMpM64IQUf2IvR3MhK4FxdGzhhB6OVmGVHY5/w==}
+  '@oxlint/darwin-arm64@1.36.0':
+    resolution: {integrity: sha512-MJkj82GH+nhvWKJhSIM6KlZ8tyGKdogSQXtNdpIyP02r/tTayFJQaAEWayG2Jhsn93kske+nimg5MYFhwO/rlg==}
     cpu: [arm64]
     os: [darwin]
 
-  '@oxlint/darwin-x64@1.35.0':
-    resolution: {integrity: sha512-1jNHu3j66X5jKySvgtE+jGtjx4ye+xioAucVTi2IuROZO6keK2YG74pnD+9FT+DpWZAtWRZGoW0r0x6aN9sEEg==}
+  '@oxlint/darwin-x64@1.36.0':
+    resolution: {integrity: sha512-VvEhfkqj/99dCTqOcfkyFXOSbx4lIy5u2m2GHbK4WCMDySokOcMTNRHGw8fH/WgQ5cDrDMSTYIGQTmnBGi9tiQ==}
     cpu: [x64]
     os: [darwin]
 
-  '@oxlint/linux-arm64-gnu@1.35.0':
-    resolution: {integrity: sha512-T1lc0UaYbTxZyqVpLfC7eipbauNG8pBpkaZEW4JGz8Y68rxTH7d9s+CF0zxUxNr5RCtcmT669RLVjQT7VrKVLg==}
+  '@oxlint/linux-arm64-gnu@1.36.0':
+    resolution: {integrity: sha512-EMx92X5q+hHc3olTuj/kgkx9+yP0p/AVs4yvHbUfzZhBekXNpUWxWvg4hIKmQWn+Ee2j4o80/0ACGO0hDYJ9mg==}
     cpu: [arm64]
     os: [linux]
 
-  '@oxlint/linux-arm64-musl@1.35.0':
-    resolution: {integrity: sha512-7Wv5Pke9kwWKFycUziSHsmi3EM0389TLzraB0KE/MArrKxx30ycwfJ5PYoMj9ERoW+Ybs0txdaOF/xJy/XyYkg==}
+  '@oxlint/linux-arm64-musl@1.36.0':
+    resolution: {integrity: sha512-7YCxtrPIctVYLqWrWkk8pahdCxch6PtsaucfMLC7TOlDt4nODhnQd4yzEscKqJ8Gjrw1bF4g+Ngob1gB+Qr9Fw==}
     cpu: [arm64]
     os: [linux]
 
-  '@oxlint/linux-x64-gnu@1.35.0':
-    resolution: {integrity: sha512-HDMPOzyVVy+rQl3H7UOq8oGHt7m1yaiWCanlhAu4jciK8dvXeO9OG/OQd74lD/h05IcJh93pCLEJ3wWOG8hTiQ==}
+  '@oxlint/linux-x64-gnu@1.36.0':
+    resolution: {integrity: sha512-lnaJVlx5r3NWmoOMesfQXJSf78jHTn8Z+sdAf795Kgteo72+qGC1Uax2SToCJVN2J8PNG3oRV5bLriiCNR2i6Q==}
     cpu: [x64]
     os: [linux]
 
-  '@oxlint/linux-x64-musl@1.35.0':
-    resolution: {integrity: sha512-kAPBBsUOM3HQQ6n3nnZauvFR9EoXqCSoj4O3OSXXarzsRTiItNrHabVUwxeswZEc+xMzQNR0FHEWg/d4QAAWLw==}
+  '@oxlint/linux-x64-musl@1.36.0':
+    resolution: {integrity: sha512-AhuEU2Qdl66lSfTGu/Htirq8r/8q2YnZoG3yEXLMQWnPMn7efy8spD/N1NA7kH0Hll+cdfwgQkQqC2G4MS2lPQ==}
     cpu: [x64]
     os: [linux]
 
-  '@oxlint/win32-arm64@1.35.0':
-    resolution: {integrity: sha512-qrpBkkOASS0WT8ra9xmBRXOEliN6D/MV9JhI/68lFHrtLhfFuRwg4AjzjxrCWrQCnQ0WkvAVpJzu73F4ICLYZw==}
+  '@oxlint/win32-arm64@1.36.0':
+    resolution: {integrity: sha512-GlWCBjUJY2QgvBFuNRkiRJu7K/djLmM0UQKfZV8IN+UXbP/JbjZHWKRdd4LXlQmzoz7M5Hd6p+ElCej8/90FCg==}
     cpu: [arm64]
     os: [win32]
 
-  '@oxlint/win32-x64@1.35.0':
-    resolution: {integrity: sha512-yPFcj6umrhusnG/kMS5wh96vblsqZ0kArQJS+7kEOSJDrH+DsFWaDCsSRF8U6gmSmZJ26KVMU3C3TMpqDN4M1g==}
+  '@oxlint/win32-x64@1.36.0':
+    resolution: {integrity: sha512-J+Vc00Utcf8p77lZPruQgb0QnQXuKnFogN88kCnOqs2a83I+vTBB8ILr0+L9sTwVRvIDMSC0pLdeQH4svWGFZg==}
     cpu: [x64]
     os: [win32]
 
@@ -1971,15 +1971,15 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@sinclair/typebox@0.34.41':
-    resolution: {integrity: sha512-6gS8pZzSXdyRHTIqoqSVknxolr1kzfy4/CeDnrzsVz8TTIWUbOBr6gnzOmTYJ3eXQNh4IYHIGi5aIL7sOZ2G/g==}
+  '@sinclair/typebox@0.34.45':
+    resolution: {integrity: sha512-qJcFVfCa5jxBFSuv7S5WYbA8XdeCPmhnaVVfX/2Y6L8WYg8sk3XY2+6W0zH+3mq1Cz+YC7Ki66HfqX6IHAwnkg==}
 
   '@sindresorhus/is@7.2.0':
     resolution: {integrity: sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw==}
     engines: {node: '>=18'}
 
-  '@speed-highlight/core@1.2.12':
-    resolution: {integrity: sha512-uilwrK0Ygyri5dToHYdZSjcvpS2ZwX0w5aSt3GCEN9hrjxWCoeV4Z2DTXuxjwbntaLQIEEAlCeNQss5SoHvAEA==}
+  '@speed-highlight/core@1.2.14':
+    resolution: {integrity: sha512-G4ewlBNhUtlLvrJTb88d2mdy2KRijzs4UhnlrOSRT4bmjh/IqNElZa3zkrZ+TC47TwtlDWzVLFADljF1Ijp5hA==}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -2448,8 +2448,8 @@ packages:
   fflate@0.8.2:
     resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
 
-  file-type@21.1.1:
-    resolution: {integrity: sha512-ifJXo8zUqbQ/bLbl9sFoqHNTNWbnPY1COImFfM6CCy7z+E+jC1eY9YfOKkx0fckIg+VljAy2/87T61fp0+eEkg==}
+  file-type@21.2.0:
+    resolution: {integrity: sha512-vCYBgFOrJQLoTzDyAXAL/RFfKnXXpUYt4+tipVy26nJJhT7ftgGETf2tAQF59EEL61i3MrorV/PG6tf7LJK7eg==}
     engines: {node: '>=20'}
 
   finalhandler@2.1.1:
@@ -2745,8 +2745,8 @@ packages:
   openapi-types@12.1.3:
     resolution: {integrity: sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw==}
 
-  oxlint@1.35.0:
-    resolution: {integrity: sha512-QDX1aUgaiqznkGfTM2qHwva2wtKqhVoqPSVXrnPz+yLUhlNadikD3QRuRtppHl7WGuy3wG6nKAuR8lash3aWSg==}
+  oxlint@1.36.0:
+    resolution: {integrity: sha512-IicUdXfXgI8OKrDPnoSjvBfeEF8PkKtm+CoLlg4LYe4ypc8U+T4r7730XYshdBGZdelg+JRw8GtCb2w/KaaZvw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -2831,8 +2831,8 @@ packages:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
 
-  qs@6.14.0:
-    resolution: {integrity: sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==}
+  qs@6.14.1:
+    resolution: {integrity: sha512-4EK3+xJl8Ts67nLYNwqw/dsFVnCf+qR7RgXSK9jEEm9unao3njwMDdmsdvoKBKHzxd7tCYz5e5M+SnMjdtXGQQ==}
     engines: {node: '>=0.6'}
 
   quick-format-unescaped@4.0.4:
@@ -3369,7 +3369,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20251217.0
 
-  '@cloudflare/vitest-pool-workers@0.11.1(@cloudflare/workers-types@4.20251228.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))':
+  '@cloudflare/vitest-pool-workers@0.11.1(@cloudflare/workers-types@4.20251230.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))':
     dependencies:
       '@vitest/runner': 4.0.16
       '@vitest/snapshot': 4.0.16
@@ -3380,7 +3380,7 @@ snapshots:
       miniflare: 4.20251217.0
       semver: 7.7.3
       vitest: 4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0)
-      wrangler: 4.56.0(@cloudflare/workers-types@4.20251228.0)
+      wrangler: 4.56.0(@cloudflare/workers-types@4.20251230.0)
       zod: 3.25.76
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
@@ -3402,7 +3402,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20251217.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20251228.0': {}
+  '@cloudflare/workers-types@4.20251230.0': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -3849,11 +3849,11 @@ snapshots:
 
   '@kitojs/kito-core@1.0.0-alpha.8': {}
 
-  '@morojs/moro@1.7.5(ws@8.18.3)':
+  '@morojs/moro@1.7.8(ws@8.18.3)':
     optionalDependencies:
       ws: 8.18.3
 
-  '@napi-rs/cli@3.5.0(@emnapi/runtime@1.7.1)(@types/node@25.0.3)':
+  '@napi-rs/cli@3.5.1(@emnapi/runtime@1.7.1)(@types/node@25.0.3)':
     dependencies:
       '@inquirer/prompts': 8.1.0(@types/node@25.0.3)
       '@napi-rs/cross-toolchain': 1.0.3
@@ -3933,7 +3933,7 @@ snapshots:
 
   '@napi-rs/lzma-wasm32-wasi@1.4.5':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.0
+      '@napi-rs/wasm-runtime': 1.1.1
     optional: true
 
   '@napi-rs/lzma-win32-arm64-msvc@1.4.5':
@@ -4003,7 +4003,7 @@ snapshots:
 
   '@napi-rs/tar-wasm32-wasi@1.1.0':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.0
+      '@napi-rs/wasm-runtime': 1.1.1
     optional: true
 
   '@napi-rs/tar-win32-arm64-msvc@1.1.0':
@@ -4034,7 +4034,7 @@ snapshots:
       '@napi-rs/tar-win32-ia32-msvc': 1.1.0
       '@napi-rs/tar-win32-x64-msvc': 1.1.0
 
-  '@napi-rs/wasm-runtime@1.1.0':
+  '@napi-rs/wasm-runtime@1.1.1':
     dependencies:
       '@emnapi/core': 1.7.1
       '@emnapi/runtime': 1.7.1
@@ -4070,7 +4070,7 @@ snapshots:
 
   '@napi-rs/wasm-tools-wasm32-wasi@1.0.1':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.0
+      '@napi-rs/wasm-runtime': 1.1.1
     optional: true
 
   '@napi-rs/wasm-tools-win32-arm64-msvc@1.0.1':
@@ -4160,28 +4160,28 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@oxlint/darwin-arm64@1.35.0':
+  '@oxlint/darwin-arm64@1.36.0':
     optional: true
 
-  '@oxlint/darwin-x64@1.35.0':
+  '@oxlint/darwin-x64@1.36.0':
     optional: true
 
-  '@oxlint/linux-arm64-gnu@1.35.0':
+  '@oxlint/linux-arm64-gnu@1.36.0':
     optional: true
 
-  '@oxlint/linux-arm64-musl@1.35.0':
+  '@oxlint/linux-arm64-musl@1.36.0':
     optional: true
 
-  '@oxlint/linux-x64-gnu@1.35.0':
+  '@oxlint/linux-x64-gnu@1.36.0':
     optional: true
 
-  '@oxlint/linux-x64-musl@1.35.0':
+  '@oxlint/linux-x64-musl@1.36.0':
     optional: true
 
-  '@oxlint/win32-arm64@1.35.0':
+  '@oxlint/win32-arm64@1.36.0':
     optional: true
 
-  '@oxlint/win32-x64@1.35.0':
+  '@oxlint/win32-x64@1.36.0':
     optional: true
 
   '@pinojs/redact@0.4.0': {}
@@ -4299,11 +4299,11 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.54.0':
     optional: true
 
-  '@sinclair/typebox@0.34.41': {}
+  '@sinclair/typebox@0.34.45': {}
 
   '@sindresorhus/is@7.2.0': {}
 
-  '@speed-highlight/core@1.2.12': {}
+  '@speed-highlight/core@1.2.14': {}
 
   '@standard-schema/spec@1.1.0': {}
 
@@ -4518,7 +4518,7 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.7.1
       on-finished: 2.4.1
-      qs: 6.14.0
+      qs: 6.14.1
       raw-body: 3.0.2
       type-is: 2.0.1
     transitivePeerDependencies:
@@ -4632,13 +4632,13 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  elysia@1.4.19(@sinclair/typebox@0.34.41)(@types/bun@1.3.5)(exact-mirror@0.2.5(@sinclair/typebox@0.34.41))(file-type@21.1.1)(openapi-types@12.1.3)(typescript@5.9.3):
+  elysia@1.4.19(@sinclair/typebox@0.34.45)(@types/bun@1.3.5)(exact-mirror@0.2.5(@sinclair/typebox@0.34.45))(file-type@21.2.0)(openapi-types@12.1.3)(typescript@5.9.3):
     dependencies:
-      '@sinclair/typebox': 0.34.41
+      '@sinclair/typebox': 0.34.45
       cookie: 1.1.1
-      exact-mirror: 0.2.5(@sinclair/typebox@0.34.41)
+      exact-mirror: 0.2.5(@sinclair/typebox@0.34.45)
       fast-decode-uri-component: 1.0.1
-      file-type: 21.1.1
+      file-type: 21.2.0
       memoirist: 0.4.0
       openapi-types: 12.1.3
     optionalDependencies:
@@ -4733,9 +4733,9 @@ snapshots:
 
   etag@1.8.1: {}
 
-  exact-mirror@0.2.5(@sinclair/typebox@0.34.41):
+  exact-mirror@0.2.5(@sinclair/typebox@0.34.45):
     optionalDependencies:
-      '@sinclair/typebox': 0.34.41
+      '@sinclair/typebox': 0.34.45
 
   exit-hook@2.2.1: {}
 
@@ -4763,7 +4763,7 @@ snapshots:
       once: 1.4.0
       parseurl: 1.3.3
       proxy-addr: 2.0.7
-      qs: 6.14.0
+      qs: 6.14.1
       range-parser: 1.2.1
       router: 2.2.0
       send: 1.2.1
@@ -4825,7 +4825,7 @@ snapshots:
 
   fflate@0.8.2: {}
 
-  file-type@21.1.1:
+  file-type@21.2.0:
     dependencies:
       '@tokenizer/inflate': 0.4.1
       strtok3: 10.3.4
@@ -5118,16 +5118,16 @@ snapshots:
 
   openapi-types@12.1.3: {}
 
-  oxlint@1.35.0:
+  oxlint@1.36.0:
     optionalDependencies:
-      '@oxlint/darwin-arm64': 1.35.0
-      '@oxlint/darwin-x64': 1.35.0
-      '@oxlint/linux-arm64-gnu': 1.35.0
-      '@oxlint/linux-arm64-musl': 1.35.0
-      '@oxlint/linux-x64-gnu': 1.35.0
-      '@oxlint/linux-x64-musl': 1.35.0
-      '@oxlint/win32-arm64': 1.35.0
-      '@oxlint/win32-x64': 1.35.0
+      '@oxlint/darwin-arm64': 1.36.0
+      '@oxlint/darwin-x64': 1.36.0
+      '@oxlint/linux-arm64-gnu': 1.36.0
+      '@oxlint/linux-arm64-musl': 1.36.0
+      '@oxlint/linux-x64-gnu': 1.36.0
+      '@oxlint/linux-x64-musl': 1.36.0
+      '@oxlint/win32-arm64': 1.36.0
+      '@oxlint/win32-x64': 1.36.0
 
   parseurl@1.3.3: {}
 
@@ -5195,7 +5195,7 @@ snapshots:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
 
-  qs@6.14.0:
+  qs@6.14.1:
     dependencies:
       side-channel: 1.1.0
 
@@ -5636,7 +5636,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20251217.0
       '@cloudflare/workerd-windows-64': 1.20251217.0
 
-  wrangler@4.56.0(@cloudflare/workers-types@4.20251228.0):
+  wrangler@4.56.0(@cloudflare/workers-types@4.20251230.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.1
       '@cloudflare/unenv-preset': 2.7.13(unenv@2.0.0-rc.24)(workerd@1.20251217.0)
@@ -5647,7 +5647,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20251217.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20251228.0
+      '@cloudflare/workers-types': 4.20251230.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
@@ -5676,7 +5676,7 @@ snapshots:
     dependencies:
       '@poppinss/colors': 4.1.6
       '@poppinss/dumper': 0.6.5
-      '@speed-highlight/core': 1.2.12
+      '@speed-highlight/core': 1.2.14
       cookie: 1.1.1
       youch-core: 0.3.3
 

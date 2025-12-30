@@ -1,31 +1,31 @@
 {
-	"name": "spikard/test-app-php",
-	"type": "project",
-	"require": {
-		"php": "^8.2",
-		"spikard/spikard": "0.6.1"
-	},
-	"require-dev": {
-		"phpunit/phpunit": "^11.5",
-		"phpstan/phpstan": "^2.0"
-	},
-	"autoload": {
-		"psr-4": {
-			"Spikard\\TestApp\\": "src/"
-		}
-	},
-	"autoload-dev": {
-		"psr-4": {
-			"Spikard\\TestApp\\Tests\\": "tests/"
-		}
-	},
-	"scripts": {
-		"test": "phpunit",
-		"stan": "phpstan analyse src tests --level max"
-	},
-	"config": {
-		"preferred-install": "dist",
-		"sort-packages": true,
-		"optimize-autoloader": true
-	}
+  "name": "spikard/test-app-php",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "spikard/spikard": "0.6.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5",
+    "phpstan/phpstan": "^2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Spikard\\TestApp\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Spikard\\TestApp\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "stan": "phpstan analyse src tests --level max"
+  },
+  "config": {
+    "preferred-install": "dist",
+    "sort-packages": true,
+    "optimize-autoloader": true
+  }
 }

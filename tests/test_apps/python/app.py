@@ -1,6 +1,6 @@
 """Minimal Spikard server for E2E testing of published package.
 
-Tests the PUBLISHED spikard package from PyPI (0.6.0).
+Tests the PUBLISHED spikard package from PyPI (0.6.2).
 """
 
 from spikard import Path, Query, Spikard, get, post

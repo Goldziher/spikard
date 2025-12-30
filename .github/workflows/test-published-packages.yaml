@@ -249,6 +249,10 @@ jobs:
           jq ".require[\"spikard/spikard\"] = \"$VERSION\"" composer.json > composer.json.tmp
           mv composer.json.tmp composer.json
 
+      - name: Update composer.lock
+        working-directory: tests/test_apps/php
+        run: composer update spikard/spikard --no-interaction
+
       - name: Install dependencies
         working-directory: tests/test_apps/php
         run: composer install --no-interaction
