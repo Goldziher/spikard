@@ -1081,7 +1081,6 @@ jobs:
         with:
           pattern: rubygems-*
           path: dist
-          merge-multiple: true
 
       - name: Setup Ruby (match CI toolchain)
         uses: ruby/setup-ruby@v1

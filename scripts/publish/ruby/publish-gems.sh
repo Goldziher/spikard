@@ -2,7 +2,7 @@
 set -euo pipefail
 
 shopt -s nullglob
-mapfile -d '' -t gems < <(find . -maxdepth 1 -name 'spikard-*.gem' -print0 | sort -z)
+mapfile -d '' -t gems < <(find . -type f -name 'spikard-*.gem' -print0 | sort -z)
 if [ ${#gems[@]} -eq 0 ]; then
 	echo "No gem artifacts found" >&2
 	exit 1
