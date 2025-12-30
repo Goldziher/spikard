@@ -6,3 +6,4 @@
 *.dylib
 /.gems
 /vendor/bundle
+/vendor/
