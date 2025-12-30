@@ -43,7 +43,6 @@ enum WebSocketFactoryWorkItem {
     Build {
         reply: mpsc::Sender<Result<RubyWebSocketHandler, String>>,
     },
-    Shutdown,
 }
 
 impl RubyWebSocketHandler {
@@ -451,9 +450,6 @@ fn websocket_factory_worker_loop(
                     RubyWebSocketHandler::from_handler(ruby, handler_instance).map_err(|e| e.to_string())
                 })();
                 let _ = reply.send(result);
-            }
-            WebSocketFactoryWorkItem::Shutdown => {
-                break;
             }
         }
     }
