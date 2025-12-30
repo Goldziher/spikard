@@ -224,7 +224,7 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
       app = Spikard::App.new
       cleanup_ran = false
       handler_class = Class.new(Spikard::WebSocketHandler) do
-        define_method(:on_disconnect) do # rubocop:disable Naming/PredicateMethod
+        define_method(:on_disconnect) do
           cleanup_ran = true
         end
 
@@ -251,7 +251,7 @@ RSpec.describe 'WebSocket edge cases and error recovery' do
       app = Spikard::App.new
       disconnect_ran = false
       handler_class = Class.new(Spikard::WebSocketHandler) do
-        define_method(:on_disconnect) do # rubocop:disable Naming/PredicateMethod
+        define_method(:on_disconnect) do
           disconnect_ran = true
         end
 
