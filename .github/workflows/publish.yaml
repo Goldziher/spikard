@@ -1061,7 +1061,10 @@ jobs:
         needs.prepare.outputs.tag &&
         needs.prepare.outputs.is_tag == 'true' &&
         needs.prepare.outputs.release_ruby == 'true' &&
-        needs.check-rubygems.result == 'success' &&
+        (
+          needs.check-rubygems.result == 'success' ||
+          needs.prepare.outputs.force_republish == 'true'
+        ) &&
         (
           needs.prepare.outputs.force_republish == 'true' ||
           needs.check-rubygems.outputs.exists != 'true'
