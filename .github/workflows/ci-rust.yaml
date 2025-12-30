@@ -159,8 +159,18 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.10/site-packages
         run: >
           cargo tarpaulin
-          --config tarpaulin.toml
           -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared
+          --out Lcov
+          --output-dir target/tarpaulin
+          --timeout 300
+          --fail-under 80
+          --exclude-files
+          "**/tests/**" "**/*_test.rs" "**/benches/**" "**/*_bench.rs"
+          "**/src/main.rs" "**/src/bin/**"
+          "**/examples/**" "**/tools/**" "**/packages/**"
+          "**/crates/spikard-cli/src/**" "**/crates/spikard-codegen/src/**" "**/crates/spikard-graphql/src/**"
+          "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**" "**/crates/spikard-wasm/src/**"
+          "**/packages/ruby/vendor/**"
           --verbose
 
       - name: Upload coverage to Codecov
