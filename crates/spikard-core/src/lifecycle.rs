@@ -695,10 +695,16 @@ mod tests {
     fn test_execute_request_hooks_continue_flow() {
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let hooks = LifecycleHooks::builder()
-                .on_request(request_hook("req", |req| async move { Ok(HookResult::Continue(req + "_a")) }))
-                .pre_validation(request_hook("pre", |req| async move { Ok(HookResult::Continue(req + "_b")) }))
-                .pre_handler(request_hook("handler", |req| async move { Ok(HookResult::Continue(req + "_c")) }))
+            let hooks: LifecycleHooks<String, String> = LifecycleHooks::builder()
+                .on_request(request_hook("req", |req| async move {
+                    Ok(HookResult::Continue(req + "_a"))
+                }))
+                .pre_validation(request_hook("pre", |req| async move {
+                    Ok(HookResult::Continue(req + "_b"))
+                }))
+                .pre_handler(request_hook("handler", |req| async move {
+                    Ok(HookResult::Continue(req + "_c"))
+                }))
                 .build();
 
             let on_request = block_on(hooks.execute_on_request("start".to_string())).unwrap();
@@ -716,7 +722,7 @@ mod tests {
     fn test_execute_request_hooks_short_circuit_flow() {
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let hooks = LifecycleHooks::builder()
+            let hooks: LifecycleHooks<String, String> = LifecycleHooks::builder()
                 .on_request(request_hook("req", |_req| async move {
                     Ok(HookResult::ShortCircuit("stop".to_string()))
                 }))
@@ -731,7 +737,7 @@ mod tests {
     fn test_execute_response_hooks_continue_and_short_circuit() {
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let hooks = LifecycleHooks::builder()
+            let hooks: LifecycleHooks<String, String> = LifecycleHooks::builder()
                 .on_response(response_hook("resp", |resp| async move {
                     Ok(HookResult::Continue(resp + "_ok"))
                 }))
