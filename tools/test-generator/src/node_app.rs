@@ -160,7 +160,7 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 					"devDependencies": {{
 						"{dependency}": "workspace:*",
 						"@cloudflare/vitest-pool-workers": "^0.11.1",
-						"@cloudflare/workers-types": "^4.20251225.0",
+						"@cloudflare/workers-types": "^4.20251230.0",
 						"@vitest/coverage-v8": "^4.0.16",
 					"typescript": "^5.9.3",
 					"vitest": "^4.0.16",
