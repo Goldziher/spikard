@@ -19,7 +19,7 @@ RSpec.describe 'Spikard Ruby Test App' do
 
   it 'uses the correct package version' do
     gemfile_lock = File.read(File.join(__dir__, '..', 'Gemfile.lock'))
-    expect(gemfile_lock).to include('spikard (0.7.2)')
+    expect(gemfile_lock).to include('spikard (0.7.3)')
   end
 
   it 'responds to health check' do

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3] - 2025-12-31
+
+### Fixed
+
+- **Ruby gem vendoring**: Align tower-http features, tracing-subscriber env-filter, and tower-governor version so native builds match the workspace.
+- **Cloudflare test generator**: Keep workers-types version aligned with the lockfile to avoid frozen install failures.
+
 ## [0.7.2] - 2025-12-30
 
 ### Fixed
