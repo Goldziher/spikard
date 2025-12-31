@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-12-31
+
+### Added
+
+- **gRPC/Protobuf Support**: Full gRPC server implementation with code generation
+  - Supports all 5 languages: Python, TypeScript, Ruby, PHP, Rust
+  - Complete proto3 schema parsing and type generation
+  - All 17 gRPC status codes with proper error handling
+  - Unary RPC support (streaming modes planned for future releases)
+  - FFI bindings for all language runtimes using Tonic
+  - Comprehensive test coverage (672+ tests across all layers)
+  - Complete documentation suite with 9 guides and 3 ADRs
+
+- **Documentation Enhancements**: Complete documentation transformation
+  - Created 239 reusable code snippets across 5 languages
+  - Added comprehensive testing guide with all languages
+  - Added troubleshooting and code generation guides
+  - Refactored all major guides with snippet extraction (77% line reduction)
+  - Achieved full language parity (Python, TypeScript, Ruby, PHP, Rust) in all guides
+  - Added 9 gRPC-specific guides with complete examples
+  - Split init command into quickstart and reference documentation
+
 ## [0.7.5] - 2025-12-31
 
 ### Fixed
