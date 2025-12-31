@@ -142,7 +142,8 @@ jobs:
 - Check PyPI status: https://status.python.org/
 
 ### npm Package Not Found
-- Verify publication: `npm view spikard@0.7.0`
+- Verify publication: `npm view @spikard/node@0.7.0`
+- Verify publication: `npm view @spikard/wasm@0.7.0`
 - Wait for npm registry sync
 - Check npm status: https://status.npmjs.org/
 

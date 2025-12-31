@@ -29,10 +29,17 @@ fi
 # Check npm (when published)
 echo ""
 echo "Checking npm..."
-if curl -sSf "https://registry.npmjs.org/spikard/$VERSION" >/dev/null 2>&1; then
-	echo "✓ spikard $VERSION found on npm"
+if curl -sSf "https://registry.npmjs.org/@spikard/node/$VERSION" >/dev/null 2>&1; then
+	echo "✓ @spikard/node $VERSION found on npm"
 else
-	echo "✗ spikard $VERSION NOT found on npm (may not be published yet)"
+	echo "✗ @spikard/node $VERSION NOT found on npm (may not be published yet)"
+	# Don't fail on npm for now
+fi
+
+if curl -sSf "https://registry.npmjs.org/@spikard/wasm/$VERSION" >/dev/null 2>&1; then
+	echo "✓ @spikard/wasm $VERSION found on npm"
+else
+	echo "✗ @spikard/wasm $VERSION NOT found on npm (may not be published yet)"
 	# Don't fail on npm for now
 fi
 
@@ -49,10 +56,10 @@ fi
 # Check Packagist (when published)
 echo ""
 echo "Checking Packagist..."
-if curl -sSf "https://repo.packagist.org/p2/spikard.json" | grep -q "\"version\":\"$VERSION\""; then
-	echo "✓ spikard $VERSION found on Packagist"
+if curl -sSf "https://repo.packagist.org/p2/spikard/spikard.json" | grep -q "\"version\":\"$VERSION\""; then
+	echo "✓ spikard/spikard $VERSION found on Packagist"
 else
-	echo "✗ spikard $VERSION NOT found on Packagist (may not be published yet)"
+	echo "✗ spikard/spikard $VERSION NOT found on Packagist (may not be published yet)"
 	# Don't fail on Packagist for now
 fi
 
