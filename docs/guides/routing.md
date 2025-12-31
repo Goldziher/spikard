@@ -16,6 +16,10 @@ Routing is uniform across bindings: create an app, register routes with typed pa
 
     --8<-- "snippets/ruby/routing_basic.md"
 
+=== "PHP"
+
+    --8<-- "snippets/php/routing_basic.md"
+
 === "Rust"
 
     --8<-- "snippets/rust/routing_basic.md"
@@ -33,6 +37,10 @@ Routing is uniform across bindings: create an app, register routes with typed pa
 === "Ruby"
 
     --8<-- "snippets/ruby/path_params.md"
+
+=== "PHP"
+
+    --8<-- "snippets/php/path_params.md"
 
 === "Rust"
 

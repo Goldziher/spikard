@@ -1,0 +1,6 @@
+- **Synchronous**: Ruby handlers are synchronous (Rust runtime handles async)
+- **`.decode()` / `.encode()`**: Ruby protobuf methods for serialization
+- **Metadata access**: `request.get_metadata(key)` returns `String | nil`
+- **Response construction**: Create response, then set metadata separately
+- **Error responses**: Use `Response.error()` for error cases
+- **Exception mapping**: Rescue exceptions and convert to gRPC status codes

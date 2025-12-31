@@ -1,0 +1,17 @@
+{
+  "name": "gRPC ABORTED status (10)",
+  "description": "Tests ABORTED gRPC status code. Returned when an operation was aborted, typically due to a concurrency issue like conflict.",
+  "category": "grpc",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "TransactionRequest", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "TransactionResponse", "fields": [{"name": "status", "type": "string", "number": 1, "label": "optional"}]}
+    ],
+    "services": [{"name": "TransactionService", "methods": [{"name": "Commit", "input_type": "TransactionRequest", "output_type": "TransactionResponse"}]}]
+  },
+  "handler": {"service": "example.v1.TransactionService", "method": "Commit"},
+  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"id": "txn-conflict"}},
+  "expected_response": {"status_code": "ABORTED"},
+  "tags": ["grpc_status", "transaction", "error"]
+}

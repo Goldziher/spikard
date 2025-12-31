@@ -7,6 +7,7 @@ use crate::background::background_data;
 use crate::codegen_utils::json_to_python;
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::graphql::{GraphQLFixture, load_graphql_fixtures};
+use crate::grpc::GrpcFixture;
 use crate::jsonrpc::JsonRpcFixture;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
@@ -81,6 +82,26 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
         fs::write(tests_dir.join("test_graphql.py"), graphql_content)
             .context("Failed to write test_graphql.py")?;
         println!("  ✓ Generated tests/test_graphql.py ({} tests)", graphql_fixtures.len());
+    }
+
+    // gRPC test generation
+    let grpc_fixtures_result = crate::grpc::load_grpc_fixtures(fixtures_dir);
+    if let Ok(grpc_fixtures) = grpc_fixtures_result {
+        if !grpc_fixtures.is_empty() {
+            for fixture in &grpc_fixtures {
+                let test_code = generate_grpc_test(fixture)
+                    .context(format!("Failed to generate gRPC test for {}", fixture.name))?;
+
+                let test_name = fixture.name
+                    .to_lowercase()
+                    .replace(" ", "_")
+                    .replace("-", "_");
+                let test_file = tests_dir.join(format!("test_grpc_{}.py", test_name));
+
+                fs::write(&test_file, test_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
+                println!("  ✓ Generated tests/test_grpc_{}.py", test_name);
+            }
+        }
     }
 
     Ok(())
@@ -1328,4 +1349,116 @@ fn generate_graphql_data_assertions(code: &mut String, value: &serde_json::Value
             code.push_str(&format!("        assert {} == {}\n", path, json_to_python(value)));
         }
     }
+}
+
+/// Generate pytest test for a gRPC fixture
+///
+/// Creates a pytest async test function that:
+/// - Imports the generated handler
+/// - Creates a GrpcRequest from the fixture
+/// - Calls the handler with the request
+/// - Asserts the response matches expected values
+/// - Validates metadata and status code
+///
+/// # Arguments
+///
+/// * `fixture` - The gRPC fixture containing request/response definitions
+///
+/// # Returns
+///
+/// A pytest async test function as a string
+pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
+    let mut code = String::new();
+
+    let test_name = sanitize_identifier(&fixture.name);
+    let handler_name = format!("handle_grpc_{}", test_name);
+
+    // Test function
+    code.push_str("@pytest.mark.asyncio\n");
+    code.push_str(&format!("async def test_grpc_{}() -> None:\n", test_name));
+    code.push_str(&format!(
+        "    \"\"\"{}.\"\"\"\n",
+        fixture.description.as_deref().unwrap_or(&fixture.name)
+    ));
+    code.push('\n');
+
+    // Import handler (note: this would normally be imported at module level)
+    code.push_str(&format!("    from app.main import {}\n", handler_name));
+    code.push('\n');
+
+    // Build request
+    code.push_str("    # Build gRPC request from fixture\n");
+
+    // Add metadata handling
+    if let Some(ref metadata) = fixture.request.metadata {
+        if !metadata.is_empty() {
+            code.push_str("    metadata: dict[str, str] = {\n");
+            for (key, value) in metadata {
+                let escaped_value = value
+                    .replace('\\', "\\\\")
+                    .replace('"', "\\\"")
+                    .replace('\n', "\\n")
+                    .replace('\r', "\\r")
+                    .replace('\t', "\\t");
+                code.push_str(&format!("        \"{}\": \"{}\",\n", key, escaped_value));
+            }
+            code.push_str("    }\n");
+        } else {
+            code.push_str("    metadata: dict[str, str] = {}\n");
+        }
+    } else {
+        code.push_str("    metadata: dict[str, str] = {}\n");
+    }
+
+    // Add request payload
+    code.push_str("    request_payload: bytes = b\"{}\"\n");
+    code.push_str("    request = GrpcRequest(\n");
+    code.push_str(&format!(
+        "        service_name=\"{}\",\n",
+        fixture.handler.service
+    ));
+    code.push_str(&format!(
+        "        method_name=\"{}\",\n",
+        fixture.handler.method
+    ));
+    code.push_str("        payload=request_payload,\n");
+    code.push_str("        metadata=metadata,\n");
+    code.push_str("    )\n\n");
+
+    // Call handler
+    code.push_str("    # Call handler\n");
+    code.push_str(&format!("    response = await {}(request)\n", handler_name));
+    code.push('\n');
+
+    // Assert response
+    code.push_str("    # Verify response\n");
+    code.push_str(&format!(
+        "    assert response.status_code == \"{}\"\n",
+        fixture.expected_response.status_code
+    ));
+
+    // Assert payload if present
+    if let Some(ref expected_msg) = fixture.expected_response.message {
+        let expected_json = serde_json::to_string(expected_msg)
+            .context("Failed to serialize expected response")?;
+        let escaped = expected_json
+            .replace('\\', "\\\\")
+            .replace('"', "\\\"")
+            .replace('\n', "\\n")
+            .replace('\r', "\\r")
+            .replace('\t', "\\t");
+        code.push_str(&format!(
+            "    assert response.payload == b\"{}\"\n",
+            escaped
+        ));
+    }
+
+    // Assert metadata if checking for presence
+    if let Some(ref metadata) = fixture.request.metadata {
+        if !metadata.is_empty() {
+            code.push_str("    assert response.metadata is not None\n");
+        }
+    }
+
+    Ok(code)
 }

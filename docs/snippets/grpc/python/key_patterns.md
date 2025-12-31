@@ -1,0 +1,5 @@
+- **Async/await**: All handlers are async for non-blocking I/O
+- **`ParseFromString()`**: Deserializes binary protobuf to Python object
+- **`SerializeToString()`**: Serializes Python object to binary protobuf
+- **Exception mapping**: `ValueError` -> `INVALID_ARGUMENT`, `PermissionError` -> `PERMISSION_DENIED`
+- **Metadata access**: `request.get_metadata(key)` returns `str | None`

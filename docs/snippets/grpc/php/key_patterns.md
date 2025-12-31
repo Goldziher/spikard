@@ -1,0 +1,7 @@
+- **Synchronous**: PHP handlers are synchronous
+- **`mergeFromString()`**: Deserializes binary protobuf (use merge, not parse)
+- **`serializeToString()`**: Serializes protobuf to binary
+- **Getters/Setters**: PHP protobuf uses getter/setter methods
+- **Error responses**: Return `Response::error()` instead of throwing
+- **Named arguments**: PHP 8.0+ named arguments for clarity
+- **Type hints**: Leverage PHP type system for safety

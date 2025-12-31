@@ -1,0 +1,26 @@
+{
+  "name": "gRPC DEADLINE_EXCEEDED status (4)",
+  "description": "Tests DEADLINE_EXCEEDED gRPC status code. Returned when the RPC does not complete within the specified time limit.",
+  "category": "grpc",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "TimeoutRequest", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "TimeoutResponse", "fields": [{"name": "id", "type": "string", "number": 1, "label": "optional"}]}
+    ],
+    "services": [{"name": "TimeoutService", "methods": [{"name": "SlowOp", "input_type": "TimeoutRequest", "output_type": "TimeoutResponse"}]}]
+  },
+  "handler": {
+    "service": "example.v1.TimeoutService",
+    "method": "SlowOp",
+    "middleware": {
+      "request_timeout": {
+        "seconds": 1,
+        "sleep_ms": 5000
+      }
+    }
+  },
+  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"id": "timeout-001"}},
+  "expected_response": {"status_code": "DEADLINE_EXCEEDED"},
+  "tags": ["grpc_status", "timeout", "error"]
+}

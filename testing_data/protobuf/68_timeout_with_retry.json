@@ -1,0 +1,42 @@
+{
+  "name": "Timeout with retry metadata",
+  "description": "Tests DEADLINE_EXCEEDED status code with retry metadata in response trailers. Indicates whether client should retry.",
+  "category": "grpc",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "RetryRequest", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "RetryResponse", "fields": [{"name": "status", "type": "string", "number": 1, "label": "optional"}]}
+    ],
+    "services": [
+      {
+        "name": "RetryService",
+        "methods": [
+          {
+            "name": "RetryableOperation",
+            "input_type": "RetryRequest",
+            "output_type": "RetryResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.RetryService",
+    "method": "RetryableOperation"
+  },
+  "request": {
+    "metadata": {"content-type": "application/grpc"},
+    "message": {"id": "retry-001"}
+  },
+  "expected_response": {
+    "status_code": "DEADLINE_EXCEEDED",
+    "protobuf": {
+      "trailers": {
+        "grpc-retry-delay-ms": "1000",
+        "x-retryable": "true"
+      }
+    }
+  },
+  "tags": ["grpc_status", "timeout", "retry"]
+}

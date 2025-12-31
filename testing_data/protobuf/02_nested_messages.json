@@ -1,0 +1,79 @@
+{
+  "name": "Nested messages",
+  "description": "Tests nested message types with complex field hierarchies. Covers nested message definitions and serialization.",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "Address",
+        "fields": [
+          {"name": "street", "type": "string", "number": 1, "label": "required"},
+          {"name": "city", "type": "string", "number": 2, "label": "required"},
+          {"name": "zip_code", "type": "string", "number": 3, "label": "optional"}
+        ]
+      },
+      {
+        "name": "CreateUserRequest",
+        "fields": [
+          {"name": "name", "type": "string", "number": 1, "label": "required"},
+          {"name": "email", "type": "string", "number": 2, "label": "required"},
+          {"name": "address", "type": "Address", "number": 3, "label": "optional"}
+        ]
+      },
+      {
+        "name": "CreateUserResponse",
+        "fields": [
+          {"name": "user_id", "type": "int32", "number": 1, "label": "required"},
+          {"name": "name", "type": "string", "number": 2, "label": "required"},
+          {"name": "email", "type": "string", "number": 3, "label": "required"},
+          {"name": "address", "type": "Address", "number": 4, "label": "optional"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "UserService",
+        "methods": [
+          {
+            "name": "CreateUser",
+            "input_type": "CreateUserRequest",
+            "output_type": "CreateUserResponse",
+            "client_streaming": false,
+            "server_streaming": false
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.UserService",
+    "method": "CreateUser"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "name": "Bob Smith",
+      "email": "bob@example.com",
+      "address": {
+        "street": "123 Main St",
+        "city": "Springfield",
+        "zip_code": "12345"
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "user_id": 456,
+      "name": "Bob Smith",
+      "email": "bob@example.com",
+      "address": {
+        "street": "123 Main St",
+        "city": "Springfield",
+        "zip_code": "12345"
+      }
+    }
+  }
+}

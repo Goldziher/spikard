@@ -1,0 +1,66 @@
+{
+  "name": "Chunked file upload with client streaming",
+  "description": "Tests client streaming RPC for chunked file uploads. Validates that multiple message chunks are properly accumulated and processed by the server.",
+  "category": "large_payloads",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "UploadChunk",
+        "fields": [
+          {"name": "file_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "chunk_number", "type": "int32", "number": 2, "label": "required"},
+          {"name": "chunk_data", "type": "bytes", "number": 3, "label": "required"},
+          {"name": "is_final", "type": "bool", "number": 4, "label": "optional"}
+        ]
+      },
+      {
+        "name": "UploadResult",
+        "fields": [
+          {"name": "file_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "total_chunks", "type": "int32", "number": 2, "label": "required"},
+          {"name": "total_size", "type": "int64", "number": 3, "label": "required"},
+          {"name": "upload_status", "type": "string", "number": 4, "label": "required"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "StorageService",
+        "methods": [
+          {
+            "name": "ChunkedUpload",
+            "input_type": "UploadChunk",
+            "output_type": "UploadResult",
+            "client_streaming": true
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.StorageService",
+    "method": "ChunkedUpload"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "file_id": "chunked-upload-test",
+      "chunk_number": 1,
+      "chunk_data": "Q2h1bmsgMQ==",
+      "is_final": false
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "file_id": "chunked-upload-test",
+      "total_chunks": 5,
+      "total_size": 102400,
+      "upload_status": "completed"
+    }
+  },
+  "tags": ["large_payloads", "streaming", "client_streaming"]
+}

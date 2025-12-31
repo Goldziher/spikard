@@ -1,15 +1,14 @@
 ```php
 <?php
 
+declare(strict_types=1);
+
 use Spikard\App;
 use Spikard\Attributes\Post;
 use Spikard\Config\ServerConfig;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
-$app = new App(new ServerConfig(port: 8000));
-
-// Note: UploadFile support is in development (P1.5)
 final class UploadController
 {
     #[Post('/upload')]
@@ -17,16 +16,23 @@ final class UploadController
     {
         $file = $request->files['file'] ?? null;
 
-        if (!$file) {
+        if ($file === null) {
             return Response::json(['error' => 'No file uploaded'], 400);
         }
 
+        $filename = $file['filename'] ?? 'unknown';
+        $size = $file['size'] ?? 0;
+        $contentType = $file['content_type'] ?? 'application/octet-stream';
+
         return Response::json([
-            'filename' => $file['filename'] ?? 'unknown',
+            'filename' => $filename,
+            'size' => $size,
+            'content_type' => $contentType,
             'received' => true
         ]);
     }
 }
 
-$app = $app->registerController(new UploadController());
+$app = (new App(new ServerConfig(port: 8000)))
+    ->registerController(new UploadController());
 ```

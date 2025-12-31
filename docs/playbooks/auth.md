@@ -16,6 +16,10 @@ Add lightweight auth/guard logic across bindings. Prefer middleware/hooks for cr
 
     --8<-- "snippets/ruby/auth_middleware.md"
 
+=== "PHP"
+
+    --8<-- "snippets/php/auth_middleware.md"
+
 === "Rust"
 
     --8<-- "snippets/rust/auth_layer.md"

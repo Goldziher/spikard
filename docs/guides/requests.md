@@ -16,6 +16,10 @@ Handlers receive a context object tailored to each binding but backed by the sam
 
     --8<-- "snippets/ruby/request_data.md"
 
+=== "PHP"
+
+    --8<-- "snippets/php/request_data.md"
+
 === "Rust"
 
     --8<-- "snippets/rust/request_data.md"
@@ -33,6 +37,10 @@ Handlers receive a context object tailored to each binding but backed by the sam
 === "Ruby"
 
     --8<-- "snippets/ruby/response_basic.md"
+
+=== "PHP"
+
+    --8<-- "snippets/php/response_basic.md"
 
 === "Rust"
 

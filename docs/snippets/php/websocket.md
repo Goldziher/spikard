@@ -1,11 +1,13 @@
 ```php
 <?php
 
+declare(strict_types=1);
+
 use Spikard\App;
 use Spikard\Config\ServerConfig;
 use Spikard\Handlers\WebSocketHandlerInterface;
 
-class ChatHandler implements WebSocketHandlerInterface
+final class ChatHandler implements WebSocketHandlerInterface
 {
     public function onConnect(): void
     {
@@ -14,17 +16,18 @@ class ChatHandler implements WebSocketHandlerInterface
 
     public function onMessage(string $message): void
     {
-        // Handle incoming message
         $data = json_decode($message, true);
-        error_log("Received: " . json_encode($data));
+        error_log('Received: ' . json_encode($data));
     }
 
     public function onClose(int $code, ?string $reason = null): void
     {
-        error_log("Client disconnected: {$code}");
+        error_log("Client disconnected: {$code}" . ($reason ? " ({$reason})" : ''));
     }
 }
 
-$app = new App(new ServerConfig(port: 8000));
-$app = $app->addWebSocket('/ws', new ChatHandler());
+$app = (new App(new ServerConfig(port: 8000)))
+    ->addWebSocket('/ws', new ChatHandler());
+
+$app->run();
 ```

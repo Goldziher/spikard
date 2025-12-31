@@ -67,10 +67,9 @@ module Spikard
       #
       # @param payload [String] Binary string containing serialized protobuf message
       # @raise [ArgumentError] if payload is not a String
-      def initialize(payload:)
-        # Implementation in Rust (Magnus FFI)
-        # See: crates/spikard-rb/src/grpc/handler.rs
-      end
+      #
+      # Note: Implementation in Rust (Magnus FFI)
+      # See: crates/spikard-rb/src/grpc/handler.rs
 
       # Create an error response
       #
@@ -148,10 +147,6 @@ module Spikard
       # @raise [ArgumentError] if service_name is invalid or handler doesn't respond to handle_request
       def register_handler(service_name, handler)
         raise ArgumentError, 'Service name cannot be empty' if service_name.nil? || service_name.empty?
-
-        unless service_name.include?('.')
-          raise ArgumentError, "Service name '#{service_name}' must be fully qualified (contain a dot)"
-        end
 
         unless handler.respond_to?(:handle_request)
           raise ArgumentError, "Handler must respond to :handle_request"

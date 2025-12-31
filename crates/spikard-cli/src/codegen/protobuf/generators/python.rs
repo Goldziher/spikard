@@ -246,7 +246,786 @@ impl PythonProtobufGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::codegen::protobuf::spec_parser::{MessageDef, FieldDef, ProtoType, FieldLabel};
+    use crate::codegen::protobuf::spec_parser::{
+        MessageDef, FieldDef, ProtoType, FieldLabel, ServiceDef, MethodDef, EnumDef, EnumValue,
+    };
+    use std::collections::HashMap;
+
+    // ============================================================================
+    // Helper Functions for Test Setup
+    // ============================================================================
+
+    /// Create a basic ProtobufSchema for testing
+    fn create_test_schema(package: &str) -> ProtobufSchema {
+        ProtobufSchema {
+            package: Some(package.to_string()),
+            messages: HashMap::new(),
+            services: HashMap::new(),
+            enums: HashMap::new(),
+            imports: vec![],
+            syntax: "proto3".to_string(),
+            description: None,
+        }
+    }
+
+    /// Create a simple message with string fields
+    fn create_simple_message(name: &str, fields: Vec<(&str, ProtoType, FieldLabel)>) -> MessageDef {
+        MessageDef {
+            name: name.to_string(),
+            fields: fields
+                .into_iter()
+                .enumerate()
+                .map(|(i, (field_name, field_type, label))| FieldDef {
+                    name: field_name.to_string(),
+                    number: (i + 1) as u32,
+                    field_type,
+                    label,
+                    default_value: None,
+                    description: None,
+                })
+                .collect(),
+            nested_messages: HashMap::new(),
+            nested_enums: HashMap::new(),
+            description: None,
+        }
+    }
+
+    /// Create an enum definition for testing
+    fn create_enum(name: &str, values: Vec<(&str, i32)>) -> EnumDef {
+        EnumDef {
+            name: name.to_string(),
+            values: values
+                .into_iter()
+                .map(|(value_name, number)| EnumValue {
+                    name: value_name.to_string(),
+                    number,
+                    description: None,
+                })
+                .collect(),
+            description: None,
+        }
+    }
+
+    /// Create a service definition with methods
+    fn create_service(
+        name: &str,
+        methods: Vec<(&str, &str, &str, bool, bool)>,
+    ) -> ServiceDef {
+        ServiceDef {
+            name: name.to_string(),
+            methods: methods
+                .into_iter()
+                .map(|(method_name, input, output, input_streaming, output_streaming)| MethodDef {
+                    name: method_name.to_string(),
+                    input_type: input.to_string(),
+                    output_type: output.to_string(),
+                    input_streaming,
+                    output_streaming,
+                    description: None,
+                })
+                .collect(),
+            description: None,
+        }
+    }
+
+    /// Check if generated Python code contains valid Python syntax markers
+    fn has_valid_python_syntax(code: &str) -> bool {
+        // Check for essential Python syntax elements
+        code.contains("class ") && code.contains("def ") && code.contains("\"\"\"")
+    }
+
+    /// Check if code contains type hints
+    fn has_type_hints(code: &str) -> bool {
+        code.contains(": ") && (code.contains("int") || code.contains("str") || code.contains("bool"))
+    }
+
+    /// Check if service methods are async
+    fn has_async_methods(code: &str) -> bool {
+        code.contains("async def ")
+    }
+
+    // ============================================================================
+    // Test 1: Basic Syntax Validation
+    // ============================================================================
+
+    /// Verify that generated Python code contains valid syntax elements and
+    /// can be structurally parsed by checking for essential Python keywords.
+    #[test]
+    fn test_generated_python_has_valid_syntax() {
+        let mut schema = create_test_schema("test.v1");
+
+        // Create a message with multiple field types
+        let message = MessageDef {
+            name: "User".to_string(),
+            fields: vec![
+                FieldDef {
+                    name: "id".to_string(),
+                    number: 1,
+                    field_type: ProtoType::String,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "age".to_string(),
+                    number: 2,
+                    field_type: ProtoType::Int32,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+            ],
+            nested_messages: HashMap::new(),
+            nested_enums: HashMap::new(),
+            description: Some("Represents a user".to_string()),
+        };
+
+        schema.messages.insert("User".to_string(), message);
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_messages(&schema).unwrap();
+
+        // Verify essential Python syntax elements
+        assert!(
+            code.contains("class User(_message.Message):"),
+            "Generated code must contain class definition with proper inheritance"
+        );
+        assert!(
+            code.contains("def __init__"),
+            "Generated code must contain __init__ method"
+        );
+        assert!(
+            code.contains("\"\"\""),
+            "Generated code must contain docstrings"
+        );
+        assert!(
+            has_valid_python_syntax(&code),
+            "Generated code must have valid Python syntax structure"
+        );
+    }
+
+    // ============================================================================
+    // Test 2: Type Hints Validation
+    // ============================================================================
+
+    /// Verify that all generated fields have proper type annotations.
+    /// Type hints should be present for all field types including Optional and list.
+    #[test]
+    fn test_generated_python_has_type_hints() {
+        let message = MessageDef {
+            name: "ComplexMessage".to_string(),
+            fields: vec![
+                FieldDef {
+                    name: "required_string".to_string(),
+                    number: 1,
+                    field_type: ProtoType::String,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "optional_int".to_string(),
+                    number: 2,
+                    field_type: ProtoType::Int32,
+                    label: FieldLabel::Optional,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "repeated_bool".to_string(),
+                    number: 3,
+                    field_type: ProtoType::Bool,
+                    label: FieldLabel::Repeated,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "bytes_field".to_string(),
+                    number: 4,
+                    field_type: ProtoType::Bytes,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+            ],
+            nested_messages: HashMap::new(),
+            nested_enums: HashMap::new(),
+            description: None,
+        };
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_message_class(&message);
+
+        // Verify type hints for all fields
+        assert!(
+            code.contains("required_string: str"),
+            "Required string field must have str type hint"
+        );
+        assert!(
+            code.contains("optional_int: Optional[int]"),
+            "Optional int field must have Optional[int] type hint"
+        );
+        assert!(
+            code.contains("repeated_bool: list[bool]"),
+            "Repeated bool field must have list[bool] type hint"
+        );
+        assert!(
+            code.contains("bytes_field: bytes"),
+            "Bytes field must have bytes type hint"
+        );
+        assert!(
+            has_type_hints(&code),
+            "Generated code must contain type hints"
+        );
+    }
+
+    // ============================================================================
+    // Test 3: Message Structure Validation
+    // ============================================================================
+
+    /// Verify that message classes have proper structure including:
+    /// - Class inheritance from _message.Message
+    /// - Docstrings for classes
+    /// - Field declarations with type hints
+    /// - Constructor with proper parameters
+    #[test]
+    fn test_generated_messages_structure() {
+        let message = MessageDef {
+            name: "Product".to_string(),
+            fields: vec![
+                FieldDef {
+                    name: "product_id".to_string(),
+                    number: 1,
+                    field_type: ProtoType::String,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: Some("Unique product identifier".to_string()),
+                },
+                FieldDef {
+                    name: "price".to_string(),
+                    number: 2,
+                    field_type: ProtoType::Double,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: Some("Product price in USD".to_string()),
+                },
+                FieldDef {
+                    name: "in_stock".to_string(),
+                    number: 3,
+                    field_type: ProtoType::Bool,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+            ],
+            nested_messages: HashMap::new(),
+            nested_enums: HashMap::new(),
+            description: Some("Product information".to_string()),
+        };
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_message_class(&message);
+
+        // Verify class structure
+        assert!(
+            code.contains("class Product(_message.Message):"),
+            "Message must be a proper class inheriting from _message.Message"
+        );
+
+        // Verify docstring
+        assert!(
+            code.contains("Product information"),
+            "Message class must have descriptive docstring"
+        );
+
+        // Verify field declarations
+        assert!(
+            code.contains("product_id: str"),
+            "Field 'product_id' must be declared with correct type"
+        );
+        assert!(
+            code.contains("price: float"),
+            "Field 'price' must be declared with correct type"
+        );
+        assert!(
+            code.contains("in_stock: bool"),
+            "Field 'in_stock' must be declared with correct type"
+        );
+
+        // Verify constructor
+        assert!(
+            code.contains("def __init__(self"),
+            "Message must have __init__ constructor"
+        );
+        assert!(
+            code.contains("-> None"),
+            "Constructor must have proper return type annotation"
+        );
+    }
+
+    // ============================================================================
+    // Test 4: Service Async Methods Validation
+    // ============================================================================
+
+    /// Verify that generated service methods are async and properly defined.
+    /// All RPC methods must use 'async def' and include proper context parameter.
+    #[test]
+    fn test_generated_services_async() {
+        let service = ServiceDef {
+            name: "UserService".to_string(),
+            methods: vec![
+                MethodDef {
+                    name: "create_user".to_string(),
+                    input_type: "CreateUserRequest".to_string(),
+                    output_type: "User".to_string(),
+                    input_streaming: false,
+                    output_streaming: false,
+                    description: Some("Create a new user".to_string()),
+                },
+                MethodDef {
+                    name: "list_users".to_string(),
+                    input_type: "ListUsersRequest".to_string(),
+                    output_type: "User".to_string(),
+                    input_streaming: false,
+                    output_streaming: true,
+                    description: Some("Stream all users".to_string()),
+                },
+                MethodDef {
+                    name: "watch_user".to_string(),
+                    input_type: "WatchUserRequest".to_string(),
+                    output_type: "UserEvent".to_string(),
+                    input_streaming: true,
+                    output_streaming: true,
+                    description: Some("Bidirectional streaming".to_string()),
+                },
+            ],
+            description: Some("User management service".to_string()),
+        };
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_service_class(&service);
+
+        // Verify service class structure
+        assert!(
+            code.contains("class UserServiceServicer:"),
+            "Service must be a proper Python class with 'Servicer' suffix"
+        );
+
+        // Verify docstring
+        assert!(
+            code.contains("Server handler interface for UserService"),
+            "Service must have descriptive docstring"
+        );
+        assert!(
+            code.contains("User management service"),
+            "Service must have descriptive docstring"
+        );
+
+        // Verify all methods are async
+        assert!(
+            code.contains("async def create_user"),
+            "Unary method must be async"
+        );
+        assert!(
+            code.contains("async def list_users"),
+            "Server-side streaming method must be async"
+        );
+        assert!(
+            code.contains("async def watch_user"),
+            "Bidirectional streaming method must be async"
+        );
+
+        // Verify context parameter is included
+        assert!(
+            code.contains("grpc.aio.ServicerContext"),
+            "Methods must have gRPC context parameter"
+        );
+
+        // Verify async return types for streaming
+        assert!(
+            code.contains("AsyncIterator[User]"),
+            "Server streaming method must return AsyncIterator"
+        );
+
+        assert!(
+            has_async_methods(&code),
+            "Service must have async methods"
+        );
+    }
+
+    // ============================================================================
+    // Test 5: Type Mapping Correctness
+    // ============================================================================
+
+    /// Verify that protobuf types are correctly mapped to Python types.
+    /// Tests all scalar types and complex types with various field labels.
+    #[test]
+    fn test_type_mapping_correctness() {
+        let message = MessageDef {
+            name: "AllTypes".to_string(),
+            fields: vec![
+                // Integer types
+                FieldDef {
+                    name: "int32_field".to_string(),
+                    number: 1,
+                    field_type: ProtoType::Int32,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "int64_field".to_string(),
+                    number: 2,
+                    field_type: ProtoType::Int64,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "uint32_field".to_string(),
+                    number: 3,
+                    field_type: ProtoType::Uint32,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                // Floating point types
+                FieldDef {
+                    name: "float_field".to_string(),
+                    number: 4,
+                    field_type: ProtoType::Float,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "double_field".to_string(),
+                    number: 5,
+                    field_type: ProtoType::Double,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                // Boolean type
+                FieldDef {
+                    name: "bool_field".to_string(),
+                    number: 6,
+                    field_type: ProtoType::Bool,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                // String type
+                FieldDef {
+                    name: "string_field".to_string(),
+                    number: 7,
+                    field_type: ProtoType::String,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                // Bytes type
+                FieldDef {
+                    name: "bytes_field".to_string(),
+                    number: 8,
+                    field_type: ProtoType::Bytes,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                // Optional types
+                FieldDef {
+                    name: "optional_string".to_string(),
+                    number: 9,
+                    field_type: ProtoType::String,
+                    label: FieldLabel::Optional,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "optional_int".to_string(),
+                    number: 10,
+                    field_type: ProtoType::Int32,
+                    label: FieldLabel::Optional,
+                    default_value: None,
+                    description: None,
+                },
+                // Repeated types
+                FieldDef {
+                    name: "repeated_string".to_string(),
+                    number: 11,
+                    field_type: ProtoType::String,
+                    label: FieldLabel::Repeated,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "repeated_int".to_string(),
+                    number: 12,
+                    field_type: ProtoType::Int32,
+                    label: FieldLabel::Repeated,
+                    default_value: None,
+                    description: None,
+                },
+            ],
+            nested_messages: HashMap::new(),
+            nested_enums: HashMap::new(),
+            description: None,
+        };
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_message_class(&message);
+
+        // Verify integer type mappings
+        assert!(code.contains("int32_field: int"), "int32 must map to int");
+        assert!(code.contains("int64_field: int"), "int64 must map to int");
+        assert!(code.contains("uint32_field: int"), "uint32 must map to int");
+
+        // Verify floating point mappings
+        assert!(code.contains("float_field: float"), "float must map to float");
+        assert!(code.contains("double_field: float"), "double must map to float");
+
+        // Verify boolean mapping
+        assert!(code.contains("bool_field: bool"), "bool must map to bool");
+
+        // Verify string mapping
+        assert!(code.contains("string_field: str"), "string must map to str");
+
+        // Verify bytes mapping
+        assert!(code.contains("bytes_field: bytes"), "bytes must map to bytes");
+
+        // Verify optional mappings
+        assert!(
+            code.contains("optional_string: Optional[str]"),
+            "optional string must map to Optional[str]"
+        );
+        assert!(
+            code.contains("optional_int: Optional[int]"),
+            "optional int must map to Optional[int]"
+        );
+
+        // Verify repeated mappings
+        assert!(
+            code.contains("repeated_string: list[str]"),
+            "repeated string must map to list[str]"
+        );
+        assert!(
+            code.contains("repeated_int: list[int]"),
+            "repeated int must map to list[int]"
+        );
+    }
+
+    // ============================================================================
+    // Additional Quality Tests
+    // ============================================================================
+
+    /// Verify that imports are correctly generated at the top of the file
+    #[test]
+    fn test_generated_imports_and_file_header() {
+        let mut schema = create_test_schema("example.service");
+        let message = create_simple_message("Empty", vec![]);
+        schema.messages.insert("Empty".to_string(), message);
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_messages(&schema).unwrap();
+
+        // Verify file header
+        assert!(code.starts_with("#!/usr/bin/env python3"), "Must have Python shebang");
+        assert!(code.contains("# DO NOT EDIT"), "Must have auto-generation warning");
+
+        // Verify imports
+        assert!(
+            code.contains("from __future__ import annotations"),
+            "Must import annotations for type hints"
+        );
+        assert!(
+            code.contains("from google.protobuf import message as _message"),
+            "Must import protobuf message module"
+        );
+        assert!(
+            code.contains("from typing import Optional"),
+            "Must import Optional for type hints"
+        );
+
+        // Verify package comment
+        assert!(
+            code.contains("# Package: example.service"),
+            "Must include package comment"
+        );
+    }
+
+    /// Verify service file header and imports
+    #[test]
+    fn test_service_file_header_and_imports() {
+        let mut schema = create_test_schema("example.service");
+        let service = create_service(
+            "TestService",
+            vec![("GetData", "Request", "Response", false, false)],
+        );
+        schema.services.insert("TestService".to_string(), service);
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_services(&schema).unwrap();
+
+        // Verify file header
+        assert!(code.starts_with("#!/usr/bin/env python3"), "Must have Python shebang");
+        assert!(code.contains("# DO NOT EDIT"), "Must have auto-generation warning");
+
+        // Verify imports
+        assert!(
+            code.contains("from __future__ import annotations"),
+            "Must import annotations"
+        );
+        assert!(code.contains("import grpc"), "Must import grpc module");
+        assert!(
+            code.contains("from typing import AsyncIterator"),
+            "Must import AsyncIterator for streaming"
+        );
+    }
+
+    /// Verify enum class generation
+    #[test]
+    fn test_enum_generation() {
+        let enum_def = create_enum(
+            "Status",
+            vec![("UNKNOWN", 0), ("ACTIVE", 1), ("INACTIVE", 2)],
+        );
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_enum_class(&enum_def);
+
+        // Verify enum class structure
+        assert!(code.contains("class Status(int):"), "Enum must inherit from int");
+
+        // Verify enum values
+        assert!(code.contains("UNKNOWN = 0"), "Enum must have UNKNOWN value");
+        assert!(code.contains("ACTIVE = 1"), "Enum must have ACTIVE value");
+        assert!(code.contains("INACTIVE = 2"), "Enum must have INACTIVE value");
+    }
+
+    /// Verify empty message handling
+    #[test]
+    fn test_empty_message_generation() {
+        let message = create_simple_message("Empty", vec![]);
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_message_class(&message);
+
+        // Empty messages should contain pass statement
+        assert!(
+            code.contains("pass"),
+            "Empty message must contain pass statement"
+        );
+        assert!(code.contains("class Empty"), "Message name must be present");
+    }
+
+    /// Verify field descriptions are included as comments
+    #[test]
+    fn test_field_descriptions_as_comments() {
+        let message = MessageDef {
+            name: "DocumentedMessage".to_string(),
+            fields: vec![
+                FieldDef {
+                    name: "user_id".to_string(),
+                    number: 1,
+                    field_type: ProtoType::String,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: Some("Unique user identifier".to_string()),
+                },
+                FieldDef {
+                    name: "created_at".to_string(),
+                    number: 2,
+                    field_type: ProtoType::Int64,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: Some("Timestamp of creation".to_string()),
+                },
+            ],
+            nested_messages: HashMap::new(),
+            nested_enums: HashMap::new(),
+            description: None,
+        };
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_message_class(&message);
+
+        // Verify field comments
+        assert!(
+            code.contains("Unique user identifier"),
+            "Field description must be included as comment"
+        );
+        assert!(
+            code.contains("Timestamp of creation"),
+            "Field description must be included as comment"
+        );
+    }
+
+    /// Verify constructor parameters and default values
+    #[test]
+    fn test_constructor_parameters_and_defaults() {
+        let message = MessageDef {
+            name: "Config".to_string(),
+            fields: vec![
+                FieldDef {
+                    name: "name".to_string(),
+                    number: 1,
+                    field_type: ProtoType::String,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "count".to_string(),
+                    number: 2,
+                    field_type: ProtoType::Int32,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                },
+                FieldDef {
+                    name: "optional_value".to_string(),
+                    number: 3,
+                    field_type: ProtoType::String,
+                    label: FieldLabel::Optional,
+                    default_value: None,
+                    description: None,
+                },
+            ],
+            nested_messages: HashMap::new(),
+            nested_enums: HashMap::new(),
+            description: None,
+        };
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_message_class(&message);
+
+        // Verify constructor has all parameters
+        assert!(code.contains("name: str"), "Constructor must have name parameter");
+        assert!(code.contains("count: int"), "Constructor must have count parameter");
+        assert!(
+            code.contains("optional_value: Optional[str]"),
+            "Constructor must have optional_value parameter"
+        );
+
+        // Verify default values
+        assert!(
+            code.contains("name: str = \"\""),
+            "String field should default to empty string"
+        );
+        assert!(
+            code.contains("count: int = 0"),
+            "Numeric field should default to 0"
+        );
+        assert!(
+            code.contains("optional_value: Optional[str] = None"),
+            "Optional field should default to None"
+        );
+    }
+
+    // ============================================================================
+    // Backward Compatibility Tests
+    // ============================================================================
 
     #[test]
     fn test_generate_simple_message() {

@@ -1,0 +1,62 @@
+{
+  "name": "Client streaming with large batch requests",
+  "description": "Tests client streaming RPC with large batch requests. Validates server accumulation of multiple large client messages.",
+  "category": "large_payloads",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "BatchItem",
+        "fields": [
+          {"name": "item_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "payload", "type": "bytes", "number": 2, "label": "required"},
+          {"name": "sequence", "type": "int32", "number": 3, "label": "optional"}
+        ]
+      },
+      {
+        "name": "BatchResult",
+        "fields": [
+          {"name": "batch_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "items_processed", "type": "int32", "number": 2, "label": "required"},
+          {"name": "total_bytes", "type": "int64", "number": 3, "label": "required"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "BatchService",
+        "methods": [
+          {
+            "name": "ProcessBatch",
+            "input_type": "BatchItem",
+            "output_type": "BatchResult",
+            "client_streaming": true
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.BatchService",
+    "method": "ProcessBatch"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "item_id": "batch-item-001",
+      "payload": "TGFyZ2UgYmF0Y2ggaXRlbSBwYXlsb2FkIGRhdGEgZm9yIHRlc3RpbmcgY2xpZW50IHN0cmVhbWluZyBjYXBhYmlsaXRpZXMgd2l0aCBtdWx0aXBsZSBsYXJnZSByZXF1ZXN0cy4gVGhpcyBlbnN1cmVzIHRoYXQgdGhlIHNlcnZlciBjYW4gYWNjdW11bGF0ZSBhbmQgcHJvY2VzcyBzdWNoIGJhdGNoZXMgY29ycmVjdGx5Lg==",
+      "sequence": 1
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "batch_id": "batch-large-001",
+      "items_processed": 100,
+      "total_bytes": 5242880
+    }
+  },
+  "tags": ["large_payloads", "streaming", "client_streaming", "batching"]
+}

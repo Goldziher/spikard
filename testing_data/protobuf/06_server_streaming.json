@@ -1,0 +1,75 @@
+{
+  "name": "Server streaming RPC",
+  "description": "Tests server streaming where the server sends multiple responses. Covers streaming response patterns.",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "ListItemsRequest",
+        "fields": [
+          {"name": "category_id", "type": "int32", "number": 1, "label": "required"},
+          {"name": "limit", "type": "int32", "number": 2, "label": "optional"}
+        ]
+      },
+      {
+        "name": "Item",
+        "fields": [
+          {"name": "id", "type": "int32", "number": 1, "label": "required"},
+          {"name": "name", "type": "string", "number": 2, "label": "required"},
+          {"name": "description", "type": "string", "number": 3, "label": "optional"},
+          {"name": "price", "type": "double", "number": 4, "label": "required"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "ItemService",
+        "methods": [
+          {
+            "name": "ListItems",
+            "input_type": "ListItemsRequest",
+            "output_type": "Item",
+            "client_streaming": false,
+            "server_streaming": true
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.ItemService",
+    "method": "ListItems"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "category_id": 5,
+      "limit": 100
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "stream": [
+      {
+        "id": 101,
+        "name": "Item 1",
+        "description": "First item in category",
+        "price": 9.99
+      },
+      {
+        "id": 102,
+        "name": "Item 2",
+        "description": "Second item in category",
+        "price": 14.99
+      },
+      {
+        "id": 103,
+        "name": "Item 3",
+        "description": "Third item in category",
+        "price": 19.99
+      }
+    ]
+  }
+}

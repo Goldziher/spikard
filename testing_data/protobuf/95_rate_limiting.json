@@ -1,0 +1,53 @@
+{
+  "name": "Rate limiting with metadata headers",
+  "description": "Tests gRPC rate limiting. Validates rate limit headers in response and proper 429 handling.",
+  "category": "auth_security",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "RateLimitRequest", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "RateLimitResponse", "fields": [{"name": "result", "type": "string", "number": 1, "label": "required"}]}
+    ],
+    "services": [
+      {
+        "name": "RateLimitService",
+        "methods": [
+          {
+            "name": "Query",
+            "input_type": "RateLimitRequest",
+            "output_type": "RateLimitResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.RateLimitService",
+    "method": "Query",
+    "middleware": {
+      "rate_limit": {
+        "per_second": 10,
+        "burst": 20,
+        "ip_based": true
+      }
+    }
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {"id": "rl-001"}
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {"result": "success"},
+    "protobuf": {
+      "metadata": {
+        "x-ratelimit-limit": "10",
+        "x-ratelimit-remaining": "9",
+        "x-ratelimit-reset": "<<present>>"
+      }
+    }
+  },
+  "tags": ["security", "rate_limiting"]
+}

@@ -4,6 +4,7 @@
 //! tests when the native extension is available.
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
+use crate::grpc::GrpcFixture;
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::BTreeMap;
@@ -23,6 +24,27 @@ pub fn generate_php_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()> 
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
     let test_code = build_test_file(&fixtures_by_category, &sse_fixtures, &websocket_fixtures);
     fs::write(tests_dir.join("GeneratedTest.php"), test_code).context("Failed to write GeneratedTest.php")?;
+
+    // gRPC test generation
+    let grpc_fixtures_result = crate::grpc::load_grpc_fixtures(fixtures_dir);
+    if let Ok(grpc_fixtures) = grpc_fixtures_result {
+        if !grpc_fixtures.is_empty() {
+            for fixture in &grpc_fixtures {
+                let test_code = generate_grpc_test(fixture)
+                    .context(format!("Failed to generate gRPC test for {}", fixture.name))?;
+
+                let test_name = fixture.name
+                    .to_lowercase()
+                    .replace(" ", "_")
+                    .replace("-", "_");
+                let test_name_pascal = to_pascal_case(&test_name);
+                let test_file = tests_dir.join(format!("Grpc{}Test.php", test_name_pascal));
+
+                fs::write(&test_file, test_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
+                println!("  ✓ Generated tests/Grpc{}Test.php", test_name_pascal);
+            }
+        }
+    }
 
     let bootstrap = r#"<?php
 declare(strict_types=1);
@@ -479,4 +501,111 @@ require_once __DIR__ . '/../../packages/php/vendor/autoload.php';
 require_once __DIR__ . '/app/main.php';
 "#;
     Ok(bootstrap.to_string())
+}
+
+/// Generate PHP PHPUnit test method for a gRPC fixture
+pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
+    let mut code = String::new();
+
+    let test_name = sanitize_identifier(&fixture.name);
+    let handler_name = format!("handleGrpc{}", to_pascal_case(&test_name));
+
+    // Test method
+    code.push_str(&format!(
+        "    public function testGrpc{}(): void\n",
+        to_pascal_case(&test_name)
+    ));
+    code.push_str("    {\n");
+
+    // Add description as comment if available
+    if let Some(description) = &fixture.description {
+        let escaped_desc = escape_php_comment(description);
+        code.push_str(&format!("        // {}\n", escaped_desc));
+    }
+    code.push('\n');
+
+    // Build metadata
+    let metadata_literal = if let Some(ref metadata) = fixture.request.metadata {
+        if metadata.is_empty() {
+            "[]".to_string()
+        } else {
+            let mut pairs = Vec::new();
+            for (key, value) in metadata {
+                pairs.push(format!("{} => {}", php_string_literal(key), php_string_literal(value)));
+            }
+            format!("[{}]", pairs.join(", "))
+        }
+    } else {
+        "[]".to_string()
+    };
+
+    code.push_str("        // Build gRPC request from fixture\n");
+    code.push_str(&format!("        $metadata = {};\n", metadata_literal));
+
+    // Build request payload
+    let request_payload = if let Some(ref message) = fixture.request.message {
+        value_to_php_expected(message)
+    } else {
+        "[]".to_string()
+    };
+
+    code.push_str(&format!("        $requestPayload = json_encode({});\n", request_payload));
+    code.push('\n');
+
+    code.push_str("        $request = new \\Spikard\\Grpc\\GrpcRequest(\n");
+    code.push_str(&format!("            serviceName: '{}',\n", fixture.handler.service));
+    code.push_str(&format!("            methodName: '{}',\n", fixture.handler.method));
+    code.push_str("            payload: $requestPayload,\n");
+    code.push_str("            metadata: $metadata,\n");
+    code.push_str("        );\n\n");
+
+    // Call handler
+    code.push_str("        // Call handler\n");
+    code.push_str(&format!("        $response = {}($request);\n", handler_name));
+    code.push('\n');
+
+    // Verify response
+    code.push_str("        // Verify response\n");
+    code.push_str(&format!(
+        "        $this->assertSame('{}', $response->statusCode);\n",
+        fixture.expected_response.status_code
+    ));
+
+    // Assert payload if present
+    if let Some(ref expected_msg) = fixture.expected_response.message {
+        let expected_json = value_to_php_expected(expected_msg);
+        code.push_str(&format!(
+            "        $this->assertEquals(json_encode({}), $response->payload);\n",
+            expected_json
+        ));
+    }
+
+    // Assert metadata if present
+    if let Some(ref metadata) = fixture.request.metadata {
+        if !metadata.is_empty() {
+            code.push_str("        $this->assertNotNull($response->metadata);\n");
+        }
+    }
+
+    code.push_str("    }\n\n");
+
+    Ok(code)
+}
+
+/// Convert snake_case to PascalCase for class/function names
+fn to_pascal_case(s: &str) -> String {
+    s.split('_')
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+            }
+        })
+        .collect::<String>()
+}
+
+/// Escape a string for use in PHP comments
+fn escape_php_comment(s: &str) -> String {
+    s.replace('\n', " ").replace('\r', " ")
 }

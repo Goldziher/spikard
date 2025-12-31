@@ -13,6 +13,7 @@
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
+use crate::grpc::GrpcFixture;
 use crate::jsonrpc::{JsonRpcFixture, load_jsonrpc_fixtures};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, chunk_bytes, streaming_data};
@@ -2928,4 +2929,104 @@ fn generate_lifecycle_hooks_functions(hooks: &Value, handler_name: &str, fixture
     }
 
     Ok(code)
+}
+
+/// Generate Python async gRPC handler from fixture
+///
+/// Creates a handler function that implements the gRPC service method defined in the fixture.
+/// The handler uses the spikard.grpc.GrpcHandler protocol with proper type hints.
+///
+/// # Arguments
+///
+/// * `fixture` - The gRPC fixture containing protobuf definition and expected response
+///
+/// # Returns
+///
+/// Python handler code as a string with proper imports and type hints
+pub fn generate_grpc_handler(fixture: &GrpcFixture) -> Result<String> {
+    let mut code = String::new();
+
+    // Handler function signature
+    let handler_name = sanitize_identifier(&fixture.name);
+    let output_type_name = fixture
+        .protobuf
+        .services
+        .first()
+        .and_then(|s| s.methods.first())
+        .map(|m| &m.output_type)
+        .unwrap_or(&"Response".to_string());
+
+    code.push_str(&format!(
+        "async def handle_grpc_{}(request: GrpcRequest) -> GrpcResponse:\n",
+        handler_name
+    ));
+    code.push_str(&format!(
+        "    \"\"\"{}.\"\"\"\n",
+        fixture.description.as_deref().unwrap_or(&fixture.name)
+    ));
+    code.push('\n');
+
+    // Extract expected response
+    let response_json = serde_json::to_string(&fixture.expected_response.message)
+        .context("Failed to serialize expected response")?;
+
+    // Generate response payload using bytes.Bytes
+    code.push_str("    # Build response from fixture\n");
+    code.push_str(&format!(
+        "    response_payload: bytes = {}  # type: ignore[assignment]\n",
+        format_python_bytes_literal(&response_json)
+    ));
+    code.push_str("    metadata: dict[str, str] = {}\n");
+    code.push('\n');
+
+    // Add metadata handling if present
+    if let Some(ref metadata) = fixture.request.metadata {
+        if !metadata.is_empty() {
+            code.push_str("    # Request metadata (headers)\n");
+            for (key, value) in metadata {
+                let escaped_value = value
+                    .replace('\\', "\\\\")
+                    .replace('"', "\\\"")
+                    .replace('\n', "\\n")
+                    .replace('\r', "\\r")
+                    .replace('\t', "\\t");
+                code.push_str(&format!("    # {}: \"{}\"\n", key, escaped_value));
+            }
+            code.push('\n');
+        }
+    }
+
+    // Return GrpcResponse
+    code.push_str("    return GrpcResponse(\n");
+    code.push_str("        payload=response_payload,\n");
+    code.push_str("        metadata=metadata,\n");
+    code.push_str(&format!(
+        "        status_code=\"{}\"\n",
+        fixture.expected_response.status_code
+    ));
+    code.push_str("    )\n");
+
+    Ok(code)
+}
+
+/// Format a JSON string as a Python bytes literal
+fn format_python_bytes_literal(json_str: &str) -> String {
+    // Convert JSON string to Python bytes literal
+    let bytes = json_str.as_bytes();
+    let mut literal = String::from("b\"");
+
+    for &byte in bytes {
+        match byte {
+            b'\\' => literal.push_str("\\\\"),
+            b'"' => literal.push_str("\\\""),
+            b'\n' => literal.push_str("\\n"),
+            b'\r' => literal.push_str("\\r"),
+            b'\t' => literal.push_str("\\t"),
+            0x20..=0x7e => literal.push(byte as char),
+            _ => literal.push_str(&format!("\\x{:02x}", byte)),
+        }
+    }
+
+    literal.push('"');
+    literal
 }

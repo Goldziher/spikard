@@ -1,0 +1,61 @@
+{
+  "name": "Proto3 default value behavior",
+  "description": "Tests how proto3 handles implicit default values. When fields are omitted from the request, response should reflect appropriate defaults.",
+  "category": "edge_cases",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "DefaultValueRequest",
+        "fields": [
+          {"name": "id", "type": "int32", "number": 1, "label": "optional"},
+          {"name": "name", "type": "string", "number": 2, "label": "optional"},
+          {"name": "active", "type": "bool", "number": 3, "label": "optional"}
+        ]
+      },
+      {
+        "name": "DefaultValueResponse",
+        "fields": [
+          {"name": "id", "type": "int32", "number": 1, "label": "required"},
+          {"name": "name", "type": "string", "number": 2, "label": "required"},
+          {"name": "active", "type": "bool", "number": 3, "label": "required"},
+          {"name": "has_id", "type": "bool", "number": 4, "label": "optional"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "DefaultService",
+        "methods": [
+          {
+            "name": "CheckDefaults",
+            "input_type": "DefaultValueRequest",
+            "output_type": "DefaultValueResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.DefaultService",
+    "method": "CheckDefaults"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "id": 1
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "id": 1,
+      "name": "",
+      "active": false,
+      "has_id": true
+    }
+  },
+  "tags": ["edge_cases", "default_values", "proto3"]
+}

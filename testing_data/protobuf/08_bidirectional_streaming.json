@@ -1,0 +1,96 @@
+{
+  "name": "Bidirectional streaming RPC",
+  "description": "Tests bidirectional streaming where both client and server send multiple messages. Covers duplex communication patterns.",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "ChatMessage",
+        "fields": [
+          {"name": "user_id", "type": "int32", "number": 1, "label": "required"},
+          {"name": "username", "type": "string", "number": 2, "label": "required"},
+          {"name": "message", "type": "string", "number": 3, "label": "required"},
+          {"name": "timestamp", "type": "int64", "number": 4, "label": "required"}
+        ]
+      },
+      {
+        "name": "ChatResponse",
+        "fields": [
+          {"name": "message_id", "type": "int32", "number": 1, "label": "required"},
+          {"name": "user_id", "type": "int32", "number": 2, "label": "required"},
+          {"name": "username", "type": "string", "number": 3, "label": "required"},
+          {"name": "message", "type": "string", "number": 4, "label": "required"},
+          {"name": "timestamp", "type": "int64", "number": 5, "label": "required"},
+          {"name": "acknowledged", "type": "bool", "number": 6, "label": "optional"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "ChatService",
+        "methods": [
+          {
+            "name": "Chat",
+            "input_type": "ChatMessage",
+            "output_type": "ChatResponse",
+            "client_streaming": true,
+            "server_streaming": true
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.ChatService",
+    "method": "Chat"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc",
+      "authorization": "Bearer user-token"
+    },
+    "stream": [
+      {
+        "user_id": 10,
+        "username": "alice",
+        "message": "Hello, everyone!",
+        "timestamp": 1704067200000
+      },
+      {
+        "user_id": 10,
+        "username": "alice",
+        "message": "How is everyone doing?",
+        "timestamp": 1704067210000
+      }
+    ]
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "stream": [
+      {
+        "message_id": 1,
+        "user_id": 10,
+        "username": "alice",
+        "message": "Hello, everyone!",
+        "timestamp": 1704067200000,
+        "acknowledged": true
+      },
+      {
+        "message_id": 2,
+        "user_id": 20,
+        "username": "bob",
+        "message": "Hey Alice, doing great!",
+        "timestamp": 1704067205000,
+        "acknowledged": true
+      },
+      {
+        "message_id": 3,
+        "user_id": 10,
+        "username": "alice",
+        "message": "How is everyone doing?",
+        "timestamp": 1704067210000,
+        "acknowledged": true
+      }
+    ]
+  }
+}

@@ -16,6 +16,10 @@ Register shared services once and inject them into handlers by name. Value depen
 
     --8<-- "snippets/ruby/dependency_injection.md"
 
+=== "PHP"
+
+    --8<-- "snippets/php/dependency_injection.md"
+
 === "Rust"
 
     --8<-- "snippets/rust/dependency_injection.md"

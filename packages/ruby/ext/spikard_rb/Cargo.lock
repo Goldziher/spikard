@@ -1939,6 +1939,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7231bd9b3d3d33c86b58adbac74b5ec0ad9f496b19d22801d773636feaa95f3d"
+dependencies = [
+ "bytes",
+ "prost-derive",
+]
+
+[[package]]
+name = "prost-derive"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9120690fafc389a67ba3803df527d0ec9cbbc9cc45e4cc20b332996dfb672425"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "prost-types"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9b4db3d6da204ed77bb26ba83b6122a73aeb2e87e25fbf7ad2e84c4ccbf8f72"
+dependencies = [
+ "prost",
+]
+
+[[package]]
 name = "quanta"
 version = "0.12.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2494,6 +2526,7 @@ dependencies = [
  "spikard-http",
  "thiserror 2.0.17",
  "tokio",
+ "tonic",
  "tracing",
 ]
 
@@ -2535,6 +2568,7 @@ dependencies = [
  "flate2",
  "futures",
  "futures-util",
+ "h2",
  "http-body",
  "http-body-util",
  "jiff",
@@ -2543,6 +2577,8 @@ dependencies = [
  "lazy_static",
  "lru",
  "mime",
+ "prost",
+ "prost-types",
  "regex",
  "rustc-hash 2.1.1",
  "serde",
@@ -2551,6 +2587,7 @@ dependencies = [
  "spikard-core",
  "tokio",
  "tokio-util",
+ "tonic",
  "tower",
  "tower-http",
  "tower_governor",
@@ -2587,6 +2624,7 @@ dependencies = [
  "spikard-http",
  "spikard-rb-macros",
  "tokio",
+ "tonic",
  "tracing",
  "tungstenite",
  "url",
@@ -2839,6 +2877,7 @@ dependencies = [
  "axum",
  "base64",
  "bytes",
+ "flate2",
  "h2",
  "http",
  "http-body",

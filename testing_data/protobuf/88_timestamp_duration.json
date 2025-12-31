@@ -1,0 +1,71 @@
+{
+  "name": "Timestamp and Duration well-known types",
+  "description": "Tests usage of google.protobuf.Timestamp and Duration types. Validates RFC 3339 timestamp serialization and duration calculations.",
+  "category": "edge_cases",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "Event",
+        "fields": [
+          {"name": "id", "type": "string", "number": 1, "label": "required"},
+          {"name": "occurred_at", "type": "string", "number": 2, "label": "required"},
+          {"name": "duration_seconds", "type": "int64", "number": 3, "label": "optional"},
+          {"name": "duration_nanos", "type": "int32", "number": 4, "label": "optional"}
+        ]
+      },
+      {
+        "name": "TimestampRequest",
+        "fields": [
+          {"name": "event", "type": "Event", "number": 1, "label": "required"}
+        ]
+      },
+      {
+        "name": "TimestampResponse",
+        "fields": [
+          {"name": "event_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "processed_at", "type": "string", "number": 2, "label": "required"},
+          {"name": "processing_time_ms", "type": "int64", "number": 3, "label": "optional"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "EventService",
+        "methods": [
+          {
+            "name": "LogEvent",
+            "input_type": "TimestampRequest",
+            "output_type": "TimestampResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.EventService",
+    "method": "LogEvent"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "event": {
+        "id": "event-001",
+        "occurred_at": "2024-01-15T10:30:45.123Z",
+        "duration_seconds": 3600,
+        "duration_nanos": 500000000
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "event_id": "event-001",
+      "processed_at": "2024-01-15T10:31:45.123Z",
+      "processing_time_ms": 1000
+    }
+  },
+  "tags": ["edge_cases", "well_known_types", "timestamp", "duration"]
+}

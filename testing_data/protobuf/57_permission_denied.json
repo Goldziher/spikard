@@ -1,0 +1,17 @@
+{
+  "name": "gRPC PERMISSION_DENIED status (7)",
+  "description": "Tests PERMISSION_DENIED gRPC status code. Returned when the caller does not have sufficient permissions.",
+  "category": "grpc",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "SecureRequest", "fields": [{"name": "action", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "SecureResponse", "fields": [{"name": "result", "type": "string", "number": 1, "label": "optional"}]}
+    ],
+    "services": [{"name": "SecureService", "methods": [{"name": "AdminAction", "input_type": "SecureRequest", "output_type": "SecureResponse"}]}]
+  },
+  "handler": {"service": "example.v1.SecureService", "method": "AdminAction"},
+  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"action": "delete_all"}},
+  "expected_response": {"status_code": "PERMISSION_DENIED"},
+  "tags": ["grpc_status", "auth", "error"]
+}

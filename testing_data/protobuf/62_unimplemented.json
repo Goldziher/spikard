@@ -1,0 +1,17 @@
+{
+  "name": "gRPC UNIMPLEMENTED status (12)",
+  "description": "Tests UNIMPLEMENTED gRPC status code. Returned when the server does not implement the requested RPC method.",
+  "category": "grpc",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "UnimplRequest", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "UnimplResponse", "fields": [{"name": "result", "type": "string", "number": 1, "label": "optional"}]}
+    ],
+    "services": [{"name": "UnimplService", "methods": [{"name": "NotYetImplemented", "input_type": "UnimplRequest", "output_type": "UnimplResponse"}]}]
+  },
+  "handler": {"service": "example.v1.UnimplService", "method": "NotYetImplemented"},
+  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"id": "unimp-001"}},
+  "expected_response": {"status_code": "UNIMPLEMENTED"},
+  "tags": ["grpc_status", "unimplemented", "error"]
+}

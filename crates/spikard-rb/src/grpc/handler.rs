@@ -7,7 +7,7 @@
 use bytes::Bytes;
 use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
-use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
+use magnus::{Error, RHash, RString, Ruby, Symbol, TryConvert, Value, gc::Marker};
 use spikard_bindings_shared::grpc_metadata::{extract_metadata_to_hashmap, hashmap_to_metadata};
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use std::cell::RefCell;
@@ -83,22 +83,29 @@ pub struct RubyGrpcResponse {
 
 impl RubyGrpcResponse {
     /// Initialize the response with a payload (called by Ruby's new)
-    fn initialize(&self, payload: Value) -> Result<(), Error> {
-        let ruby = Ruby::get().map_err(|_| {
-            Error::new(
-                magnus::exception::runtime_error(),
-                "Ruby VM unavailable during Response initialization",
-            )
+    fn initialize(&self, args: &[Value]) -> Result<(), Error> {
+        // Handle both positional and keyword arguments
+        let payload_value = if args.is_empty() {
+            return Err(Error::new(magnus::exception::arg_error(), "missing keyword: payload"));
+        } else if args.len() == 1 {
+            // Check if it's a hash (keyword args) or a string (positional arg)
+            if let Ok(hash) = RHash::try_convert(args[0]) {
+                // Keyword arguments: { payload: "data" }
+                hash.get(Symbol::new("payload"))
+                    .ok_or_else(|| Error::new(magnus::exception::arg_error(), "missing keyword: payload"))?
+            } else {
+                // Positional argument: "data"
+                args[0]
+            }
+        } else {
+            return Err(Error::new(magnus::exception::arg_error(), "wrong number of arguments"));
+        };
+
+        let payload_str = RString::try_convert(payload_value).map_err(|_| {
+            Error::new(magnus::exception::arg_error(), "payload must be a String (binary)")
         })?;
 
-        let payload_bytes = if let Ok(string) = RString::try_convert(payload) {
-            unsafe { string.as_slice() }.to_vec()
-        } else {
-            return Err(Error::new(
-                ruby.exception_arg_error(),
-                "payload must be a String (binary)",
-            ));
-        };
+        let payload_bytes = unsafe { payload_str.as_slice() }.to_vec();
 
         *self.payload.borrow_mut() = payload_bytes;
         *self.metadata.borrow_mut() = HashMap::new();
@@ -120,6 +127,15 @@ impl RubyGrpcResponse {
     /// Get the payload
     fn payload(ruby: &Ruby, rb_self: &Self) -> Value {
         ruby.str_from_slice(&rb_self.payload.borrow()).as_value()
+    }
+
+    /// Get metadata as a Ruby hash
+    fn get_metadata(ruby: &Ruby, rb_self: &Self) -> Result<Value, Error> {
+        let hash = ruby.hash_new();
+        for (key, value) in rb_self.metadata.borrow().iter() {
+            hash.aset(ruby.str_new(key), ruby.str_new(value))?;
+        }
+        Ok(hash.as_value())
     }
 
     /// Convert to GrpcResponseData
@@ -249,8 +265,9 @@ pub fn init(ruby: &Ruby, spikard_module: &magnus::RModule) -> Result<(), Error> 
     // Define Spikard::Grpc::Response class
     let response_class = grpc_module.define_class("Response", ruby.class_object())?;
     response_class.define_alloc_func::<RubyGrpcResponse>();
-    response_class.define_method("initialize", magnus::method!(RubyGrpcResponse::initialize, 1))?;
+    response_class.define_method("initialize", magnus::method!(RubyGrpcResponse::initialize, -1))?;
     response_class.define_method("metadata=", magnus::method!(RubyGrpcResponse::set_metadata, 1))?;
+    response_class.define_method("metadata", magnus::method!(RubyGrpcResponse::get_metadata, 0))?;
     response_class.define_method("payload", magnus::method!(RubyGrpcResponse::payload, 0))?;
 
     Ok(())

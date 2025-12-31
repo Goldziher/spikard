@@ -1,0 +1,43 @@
+{
+  "name": "OAuth2 Bearer token authentication",
+  "description": "Tests OAuth2 Bearer token authentication. Validates token validation and scope checking.",
+  "category": "auth_security",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "OAuth2Request", "fields": [{"name": "scope", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "OAuth2Response", "fields": [{"name": "granted", "type": "bool", "number": 1, "label": "required"}, {"name": "token_info", "type": "string", "number": 2, "label": "optional"}]}
+    ],
+    "services": [
+      {
+        "name": "OAuth2Service",
+        "methods": [
+          {
+            "name": "CheckScope",
+            "input_type": "OAuth2Request",
+            "output_type": "OAuth2Response"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.OAuth2Service",
+    "method": "CheckScope"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc",
+      "authorization": "Bearer ya29.a0AfH6SMBx..."
+    },
+    "message": {"scope": "read:users"}
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "granted": true,
+      "token_info": "oauth2_token"
+    }
+  },
+  "tags": ["auth", "oauth2", "security"]
+}

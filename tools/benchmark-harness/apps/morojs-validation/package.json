@@ -9,7 +9,7 @@
 		"dev": "tsx watch server.ts"
 	},
 	"dependencies": {
-		"@morojs/moro": "^1.7.8"
+		"@morojs/moro": "^1.7.9"
 	},
 	"devDependencies": {
 		"@types/node": "^25.0.3",

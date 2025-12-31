@@ -1,0 +1,72 @@
+{
+  "name": "Large repeated field with 10,000+ items",
+  "description": "Tests handling of repeated fields containing thousands of elements. Validates efficient serialization and deserialization of large arrays without memory bloat.",
+  "category": "large_payloads",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "DataPoint",
+        "fields": [
+          {"name": "timestamp", "type": "int64", "number": 1, "label": "required"},
+          {"name": "value", "type": "double", "number": 2, "label": "required"}
+        ]
+      },
+      {
+        "name": "TimeSeriesRequest",
+        "fields": [
+          {"name": "series_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "data_points", "type": "DataPoint", "number": 2, "label": "repeated"}
+        ]
+      },
+      {
+        "name": "TimeSeriesResponse",
+        "fields": [
+          {"name": "series_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "point_count", "type": "int32", "number": 2, "label": "required"},
+          {"name": "min_value", "type": "double", "number": 3, "label": "optional"},
+          {"name": "max_value", "type": "double", "number": 4, "label": "optional"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "MetricsService",
+        "methods": [
+          {
+            "name": "IngestTimeSeries",
+            "input_type": "TimeSeriesRequest",
+            "output_type": "TimeSeriesResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.MetricsService",
+    "method": "IngestTimeSeries"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "series_id": "metrics-large-series",
+      "data_points": [
+        {"timestamp": 1000000, "value": 42.5},
+        {"timestamp": 1000001, "value": 43.2},
+        {"timestamp": 1000002, "value": 41.8}
+      ]
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "series_id": "metrics-large-series",
+      "point_count": 10000,
+      "min_value": 10.5,
+      "max_value": 99.9
+    }
+  },
+  "tags": ["large_payloads", "repeated_fields", "performance"]
+}

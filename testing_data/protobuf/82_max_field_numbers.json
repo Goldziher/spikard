@@ -1,0 +1,57 @@
+{
+  "name": "Maximum field number (536870911)",
+  "description": "Tests protobuf messages using the maximum allowed field number (536870911). Validates proper field number encoding in varint format.",
+  "category": "edge_cases",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "MaxFieldRequest",
+        "fields": [
+          {"name": "id", "type": "int32", "number": 1, "label": "required"},
+          {"name": "max_field_value", "type": "string", "number": 536870911, "label": "optional"}
+        ]
+      },
+      {
+        "name": "MaxFieldResponse",
+        "fields": [
+          {"name": "id", "type": "int32", "number": 1, "label": "required"},
+          {"name": "received_max", "type": "string", "number": 536870911, "label": "optional"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "MaxFieldService",
+        "methods": [
+          {
+            "name": "TestMaxField",
+            "input_type": "MaxFieldRequest",
+            "output_type": "MaxFieldResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.MaxFieldService",
+    "method": "TestMaxField"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "id": 42,
+      "max_field_value": "Testing maximum field number"
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "id": 42,
+      "received_max": "Testing maximum field number"
+    }
+  },
+  "tags": ["edge_cases", "field_numbers", "protobuf_limits"]
+}

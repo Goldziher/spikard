@@ -1,0 +1,60 @@
+{
+  "name": "Large binary data in bytes field",
+  "description": "Tests handling of large binary data in protobuf bytes fields. Validates proper base64 encoding/decoding and preservation of binary integrity.",
+  "category": "large_payloads",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "BinaryDataRequest",
+        "fields": [
+          {"name": "file_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "content_type", "type": "string", "number": 2, "label": "optional"},
+          {"name": "binary_content", "type": "bytes", "number": 3, "label": "required"}
+        ]
+      },
+      {
+        "name": "BinaryDataResponse",
+        "fields": [
+          {"name": "file_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "bytes_received", "type": "int64", "number": 2, "label": "required"},
+          {"name": "hash", "type": "string", "number": 3, "label": "optional"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "BinaryService",
+        "methods": [
+          {
+            "name": "UploadBinary",
+            "input_type": "BinaryDataRequest",
+            "output_type": "BinaryDataResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.BinaryService",
+    "method": "UploadBinary"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "file_id": "binary-large-001",
+      "content_type": "application/octet-stream",
+      "binary_content": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQIBAQICAgICAgICAwUDAwwDAwYEBAMFBwYHBwcGBwcICQsJCAgKCAcHCg0KCgsMDAwMBwkODw0MDgsMDAz/2wBDAQICAgMDAwYDAwYMCAcIDAwIDAwYDAwMDAwYDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAz/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAAA//EABQAQQAAAAAAAAAAAAAAAAAAAAr/xAAUAQEBAAAAAAAAAAAAAAAAAAAAAv/EABERAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACEQMRAD8AwA8A/9k="
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "file_id": "binary-large-001",
+      "bytes_received": 512000
+    }
+  },
+  "tags": ["large_payloads", "binary_data", "base64"]
+}

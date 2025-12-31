@@ -1,0 +1,17 @@
+{
+  "name": "gRPC NOT_FOUND status (5)",
+  "description": "Tests NOT_FOUND gRPC status code. Returned when a requested resource (e.g., user, file) does not exist.",
+  "category": "grpc",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "GetRequest", "fields": [{"name": "resource_id", "type": "int32", "number": 1, "label": "required"}]},
+      {"name": "GetResponse", "fields": [{"name": "data", "type": "string", "number": 1, "label": "optional"}]}
+    ],
+    "services": [{"name": "ResourceService", "methods": [{"name": "Get", "input_type": "GetRequest", "output_type": "GetResponse"}]}]
+  },
+  "handler": {"service": "example.v1.ResourceService", "method": "Get"},
+  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"resource_id": 99999}},
+  "expected_response": {"status_code": "NOT_FOUND"},
+  "tags": ["grpc_status", "not_found", "error"]
+}

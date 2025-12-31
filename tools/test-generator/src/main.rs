@@ -11,6 +11,7 @@ mod codegen_utils;
 mod dependencies;
 mod graphql;
 mod graphql_tests;
+mod grpc;
 mod jsonrpc;
 mod middleware;
 mod node_app;

@@ -1,0 +1,43 @@
+{
+  "name": "Circuit breaker triggered - UNAVAILABLE with metadata",
+  "description": "Tests UNAVAILABLE status code with circuit breaker metadata. Indicates service degradation and when to retry.",
+  "category": "grpc",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "DownstreamRequest", "fields": [{"name": "request_id", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "DownstreamResponse", "fields": [{"name": "data", "type": "string", "number": 1, "label": "optional"}]}
+    ],
+    "services": [
+      {
+        "name": "DownstreamService",
+        "methods": [
+          {
+            "name": "Query",
+            "input_type": "DownstreamRequest",
+            "output_type": "DownstreamResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.DownstreamService",
+    "method": "Query"
+  },
+  "request": {
+    "metadata": {"content-type": "application/grpc"},
+    "message": {"request_id": "circuit-001"}
+  },
+  "expected_response": {
+    "status_code": "UNAVAILABLE",
+    "protobuf": {
+      "error_message": "Service circuit breaker is open",
+      "trailers": {
+        "x-circuit-breaker-state": "open",
+        "x-circuit-breaker-retry-after-ms": "30000"
+      }
+    }
+  },
+  "tags": ["grpc_status", "unavailable", "circuit_breaker"]
+}

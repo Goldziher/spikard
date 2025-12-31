@@ -5,6 +5,7 @@
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
+use crate::grpc::GrpcFixture;
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use anyhow::{Context, Result};
 use serde_json::{Map, Value};
@@ -1257,4 +1258,73 @@ fn ruby_dependency_value(dep: &Dependency) -> Result<String> {
     } else {
         Ok("nil".to_string())
     }
+}
+
+/// Generate a Ruby gRPC handler method from a fixture
+///
+/// Creates an async handler method that:
+/// - Accepts a gRPC request
+/// - Returns a Spikard::Grpc::Response with payload, metadata, and status code
+/// - Uses the expected_response from the fixture as the response payload
+///
+/// # Arguments
+///
+/// * `fixture` - The gRPC fixture containing service/method info and expected response
+///
+/// # Returns
+///
+/// A Ruby method definition as a string
+pub fn generate_grpc_handler(fixture: &GrpcFixture) -> Result<String> {
+    let mut code = String::new();
+
+    // Extract handler name from fixture
+    let handler_name = sanitize_identifier(&fixture.name);
+
+    // Generate handler method signature
+    code.push_str(&format!("  def handle_grpc_{}(request)\n", handler_name));
+
+    // Build response payload from expected_response
+    if let Some(ref response_msg) = fixture.expected_response.message {
+        let response_json = serde_json::to_string(response_msg)
+            .context("Failed to serialize expected response")?;
+        let response_literal = value_to_ruby(&serde_json::json!(response_json));
+        code.push_str(&format!(
+            "    response_payload = {}.to_json\n",
+            response_literal
+        ));
+    } else {
+        code.push_str("    response_payload = {}.to_json\n");
+    }
+
+    // Add metadata handling
+    code.push_str("    metadata = {}\n");
+    if let Some(ref req_metadata) = fixture.request.metadata {
+        if !req_metadata.is_empty() {
+            code.push_str("    # Request metadata (headers) from fixture\n");
+            for (key, value) in req_metadata {
+                let escaped_value = value
+                    .replace('\\', "\\\\")
+                    .replace('"', "\\\"")
+                    .replace('\n', "\\n")
+                    .replace('\r', "\\r")
+                    .replace('\t', "\\t");
+                code.push_str(&format!("    # {}: \"{}\"\n", key, escaped_value));
+            }
+        }
+    }
+
+    code.push('\n');
+
+    // Return Spikard::Grpc::Response
+    code.push_str("    Spikard::Grpc::Response.new(\n");
+    code.push_str("      payload: response_payload,\n");
+    code.push_str("      metadata: metadata,\n");
+    code.push_str(&format!(
+        "      status_code: {}\n",
+        string_literal(&fixture.expected_response.status_code)
+    ));
+    code.push_str("    )\n");
+    code.push_str("  end\n");
+
+    Ok(code)
 }

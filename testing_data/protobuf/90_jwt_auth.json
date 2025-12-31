@@ -1,0 +1,48 @@
+{
+  "name": "JWT Bearer token authentication",
+  "description": "Tests JWT authentication via gRPC metadata. Validates that JWT tokens are properly extracted and validated from authorization header.",
+  "category": "auth_security",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "AuthRequest", "fields": [{"name": "action", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "AuthResponse", "fields": [{"name": "user_id", "type": "string", "number": 1, "label": "required"}, {"name": "action", "type": "string", "number": 2, "label": "required"}]}
+    ],
+    "services": [
+      {
+        "name": "AuthService",
+        "methods": [
+          {
+            "name": "SecureAction",
+            "input_type": "AuthRequest",
+            "output_type": "AuthResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.AuthService",
+    "method": "SecureAction",
+    "protobuf": {
+      "metadata": {
+        "required_headers": ["authorization"]
+      }
+    }
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc",
+      "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    },
+    "message": {"action": "read"}
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "user_id": "user-123",
+      "action": "read"
+    }
+  },
+  "tags": ["auth", "jwt", "security"]
+}

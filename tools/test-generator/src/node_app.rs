@@ -10,6 +10,7 @@ use crate::codegen_utils::{
 };
 use crate::dependencies::{Dependency, DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::graphql::{GraphQLFixture, load_graphql_fixtures};
+use crate::grpc::GrpcFixture;
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, streaming_data};
 use crate::ts_target::TypeScriptTarget;
@@ -2622,4 +2623,63 @@ fn generate_cleanup_state_handler_ts(handler_name: &str, fixture_id: &str) -> St
 }}"#,
         function_name, fixture_id
     )
+}
+
+/// Generate a gRPC handler from a fixture
+pub fn generate_grpc_handler(fixture: &GrpcFixture) -> Result<String> {
+    let mut code = String::new();
+
+    // Handler function signature
+    let handler_name = sanitize_identifier(&fixture.name);
+
+    code.push_str(&format!(
+        "export async function handleGrpc{}(request: GrpcRequest): Promise<GrpcResponse> {{\n",
+        to_pascal_case(&handler_name)
+    ));
+    code.push_str(&format!(
+        "  // {}\n",
+        fixture.description.as_deref().unwrap_or(&fixture.name)
+    ));
+    code.push_str("  const responsePayload = Buffer.from(JSON.stringify(");
+
+    // Extract expected response message
+    if let Some(ref expected_msg) = fixture.expected_response.message {
+        code.push_str(&json_to_typescript(expected_msg));
+    } else {
+        code.push_str("{}");
+    }
+
+    code.push_str("));\n");
+    code.push_str("  const metadata: Record<string, string> = {};\n");
+    code.push('\n');
+
+    // Add metadata handling if present
+    if let Some(ref request_metadata) = fixture.request.metadata {
+        if !request_metadata.is_empty() {
+            code.push_str("  // Request metadata (headers)\n");
+            for (key, value) in request_metadata {
+                let escaped_value = value
+                    .replace('\\', "\\\\")
+                    .replace('"', "\\\"")
+                    .replace('\n', "\\n")
+                    .replace('\r', "\\r")
+                    .replace('\t', "\\t");
+                code.push_str(&format!("  // {}: \"{}\"\n", key, escaped_value));
+            }
+            code.push('\n');
+        }
+    }
+
+    // Return GrpcResponse
+    code.push_str("  return {\n");
+    code.push_str("    payload: responsePayload,\n");
+    code.push_str("    metadata,\n");
+    code.push_str(&format!(
+        "    statusCode: \"{}\"\n",
+        fixture.expected_response.status_code
+    ));
+    code.push_str("  };\n");
+    code.push_str("}\n");
+
+    Ok(code)
 }

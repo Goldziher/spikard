@@ -1,0 +1,56 @@
+{
+  "name": "Error handling - gRPC status codes",
+  "description": "Tests gRPC error status codes and error responses. Covers NOT_FOUND, INVALID_ARGUMENT, INTERNAL, and other gRPC status codes.",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "GetProductRequest",
+        "fields": [
+          {"name": "product_id", "type": "int32", "number": 1, "label": "required"}
+        ]
+      },
+      {
+        "name": "Product",
+        "fields": [
+          {"name": "id", "type": "int32", "number": 1, "label": "required"},
+          {"name": "name", "type": "string", "number": 2, "label": "required"},
+          {"name": "price", "type": "double", "number": 3, "label": "required"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "ProductService",
+        "methods": [
+          {
+            "name": "GetProduct",
+            "input_type": "GetProductRequest",
+            "output_type": "Product",
+            "client_streaming": false,
+            "server_streaming": false
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.ProductService",
+    "method": "GetProduct"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "product_id": -1
+    }
+  },
+  "expected_response": {
+    "status_code": "INVALID_ARGUMENT",
+    "error": {
+      "code": 3,
+      "message": "Product ID must be positive"
+    }
+  }
+}

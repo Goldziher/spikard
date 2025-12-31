@@ -5,6 +5,7 @@
 //! other bindings.
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
+use crate::grpc::GrpcFixture;
 use crate::middleware::{MiddlewareMetadata, parse_middleware};
 use anyhow::{Context, Result};
 use serde_json::{Value, json};
@@ -529,4 +530,92 @@ fn php_encode_json_value(value: &Value) -> String {
         Ok(json_str) => format!("json_decode('{}', true)", escape_php_string(&json_str)),
         Err(_) => "null".to_string(),
     }
+}
+
+/// Generate PHP gRPC handler function from a gRPC fixture
+pub fn generate_grpc_handler(fixture: &GrpcFixture) -> Result<String> {
+    let mut code = String::new();
+
+    // Extract handler details
+    let handler_name = sanitize_identifier(&fixture.name);
+    let service_name = &fixture.handler.service;
+    let method_name = &fixture.handler.method;
+
+    // Build response payload from expected response
+    let response_json = serde_json::to_string(&fixture.expected_response.message)
+        .context("Failed to serialize expected response")?;
+
+    // PHP opening tag and namespace
+    code.push_str("<?php\n\n");
+    code.push_str("use Spikard\\Grpc\\GrpcRequest;\n");
+    code.push_str("use Spikard\\Grpc\\GrpcResponse;\n\n");
+
+    // Handler function signature with type hints
+    code.push_str(&format!(
+        "function handleGrpc{}(GrpcRequest $request): GrpcResponse\n",
+        to_pascal_case(&handler_name)
+    ));
+    code.push_str("{\n");
+
+    // Add description as comment if available
+    if let Some(description) = &fixture.description {
+        let escaped_desc = escape_php_comment(description);
+        code.push_str(&format!("    // {}\n", escaped_desc));
+    }
+    code.push('\n');
+
+    // Build response payload using json_encode
+    code.push_str("    // Build response from fixture\n");
+    code.push_str(&format!(
+        "    $responsePayload = json_encode({});\n",
+        value_to_php(&fixture.expected_response.message.clone().unwrap_or(serde_json::Value::Null))
+    ));
+
+    // Initialize metadata
+    code.push_str("    $metadata = [];\n");
+
+    // Add metadata from request if present
+    if let Some(ref metadata) = fixture.request.metadata {
+        if !metadata.is_empty() {
+            code.push_str("\n    // Request metadata (headers)\n");
+            for (key, value) in metadata {
+                let escaped_key = escape_php_string(key);
+                let escaped_value = escape_php_string(value);
+                code.push_str(&format!("    // {}: \"{}\"\n", escaped_key, escaped_value));
+            }
+        }
+    }
+
+    code.push('\n');
+
+    // Return GrpcResponse with named arguments (PHP 8.0+)
+    code.push_str("    return new GrpcResponse(\n");
+    code.push_str("        payload: $responsePayload,\n");
+    code.push_str("        metadata: $metadata,\n");
+    code.push_str(&format!(
+        "        statusCode: '{}'\n",
+        fixture.expected_response.status_code
+    ));
+    code.push_str("    );\n");
+    code.push_str("}\n");
+
+    Ok(code)
+}
+
+/// Convert snake_case to PascalCase for class/function names
+fn to_pascal_case(s: &str) -> String {
+    s.split('_')
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+            }
+        })
+        .collect::<String>()
+}
+
+/// Escape a string for use in PHP comments
+fn escape_php_comment(s: &str) -> String {
+    s.replace('\n', " ").replace('\r', " ")
 }

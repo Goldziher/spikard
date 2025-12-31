@@ -9,6 +9,7 @@ use crate::codegen_utils::{
     is_value_effectively_empty, json_to_typescript,
 };
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
+use crate::grpc::GrpcFixture;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
 use crate::ts_target::TypeScriptTarget;
@@ -113,6 +114,33 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
 
     // Note: GraphQL test generation is now handled by graphql_tests::generate_graphql_tests()
     // in main.rs to consolidate duplicate code and ensure consistent categorized output
+
+    // gRPC test generation
+    let grpc_fixtures_result = crate::grpc::load_grpc_fixtures(fixtures_dir);
+    if let Ok(grpc_fixtures) = grpc_fixtures_result {
+        if !grpc_fixtures.is_empty() {
+            let test_suffix = if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
+                "_test.ts"
+            } else {
+                ".spec.ts"
+            };
+
+            for fixture in &grpc_fixtures {
+                let test_code = generate_grpc_test(fixture)
+                    .context(format!("Failed to generate gRPC test for {}", fixture.name))?;
+
+                let test_name = fixture.name
+                    .to_lowercase()
+                    .replace(" ", "_")
+                    .replace("-", "_");
+                let test_file = tests_dir.join(format!("grpc_{}{}", test_name, test_suffix));
+
+                let final_code = rewrite_wasm_imports(test_code);
+                fs::write(&test_file, final_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
+                println!("  ✓ Generated tests/grpc_{}{}", test_name, test_suffix);
+            }
+        }
+    }
 
     if !matches!(target.runtime, crate::ts_target::Runtime::Deno) {
         format_generated_ts(output_dir)?;
@@ -1603,4 +1631,86 @@ fn build_request_call(method: &str, path_with_query: &str, option_fields: &[&str
     } else {
         format!("await client.{}(\"{}\")", method, path_with_query)
     }
+}
+
+/// Generate a gRPC test from a fixture
+pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
+    let mut code = String::new();
+
+    let test_name = sanitize_test_name(&fixture.name);
+    let handler_name = format!("handleGrpc{}", to_pascal_case(&sanitize_identifier(&fixture.name)));
+
+    // Test function
+    code.push_str(&format!("it(\"should handle gRPC request: {}\", async () => {{\n", test_name));
+    code.push_str(&format!(
+        "  // {}\n",
+        fixture.description.as_deref().unwrap_or(&fixture.name)
+    ));
+    code.push('\n');
+
+    // Build request metadata if present
+    if let Some(ref metadata) = fixture.request.metadata {
+        if !metadata.is_empty() {
+            code.push_str("  const metadata: Record<string, string> = {\n");
+            for (key, value) in metadata {
+                let escaped_value = value
+                    .replace('\\', "\\\\")
+                    .replace('"', "\\\"")
+                    .replace('\n', "\\n")
+                    .replace('\r', "\\r")
+                    .replace('\t', "\\t");
+                code.push_str(&format!("    \"{}\": \"{}\",\n", key, escaped_value));
+            }
+            code.push_str("  };\n");
+        } else {
+            code.push_str("  const metadata: Record<string, string> = {};\n");
+        }
+    } else {
+        code.push_str("  const metadata: Record<string, string> = {};\n");
+    }
+
+    // Build request payload
+    code.push_str("  const request: GrpcRequest = {\n");
+    code.push_str(&format!(
+        "    serviceName: \"{}\",\n",
+        fixture.handler.service
+    ));
+    code.push_str(&format!(
+        "    methodName: \"{}\",\n",
+        fixture.handler.method
+    ));
+    code.push_str("    payload: Buffer.from(JSON.stringify({})),\n");
+    code.push_str("    metadata,\n");
+    code.push_str("  };\n\n");
+
+    // Call handler
+    code.push_str(&format!("  const response = await {}(request);\n\n", handler_name));
+
+    // Assert response
+    code.push_str("  // Verify response\n");
+    code.push_str(&format!(
+        "  expect(response.statusCode).toBe(\"{}\");\n",
+        fixture.expected_response.status_code
+    ));
+
+    // Assert payload if present
+    if let Some(ref expected_msg) = fixture.expected_response.message {
+        let expected_json = serde_json::to_string(expected_msg)
+            .context("Failed to serialize expected response")?;
+        code.push_str(&format!(
+            "  expect(response.payload).toEqual(Buffer.from(JSON.stringify({})));\n",
+            json_to_typescript(expected_msg)
+        ));
+    }
+
+    // Assert metadata if checking for presence
+    if let Some(ref request_metadata) = fixture.request.metadata {
+        if !request_metadata.is_empty() {
+            code.push_str("  expect(response.metadata).toBeDefined();\n");
+        }
+    }
+
+    code.push_str("});\n");
+
+    Ok(code)
 }

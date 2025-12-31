@@ -1,6 +1,8 @@
 ```php
 <?php
 
+declare(strict_types=1);
+
 use Spikard\App;
 use Spikard\Attributes\Get;
 use Spikard\Config\ServerConfig;
@@ -14,13 +16,16 @@ final class StreamController
     public function stream(): StreamingResponse
     {
         $generator = function (): Generator {
-            for ($i = 0; $i < 3; $i++) {
-                yield "data: " . json_encode(['tick' => $i]) . "\n\n";
-                sleep(1);
+            for ($i = 0; $i < 10; $i++) {
+                yield json_encode(['chunk' => $i]) . "\n";
+                usleep(100000); // 100ms delay
             }
         };
 
-        return StreamingResponse::sse($generator());
+        return new StreamingResponse(
+            $generator(),
+            headers: ['Content-Type' => 'application/x-ndjson']
+        );
     }
 }
 

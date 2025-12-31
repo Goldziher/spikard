@@ -1,0 +1,68 @@
+{
+  "name": "gRPC metadata (headers)",
+  "description": "Tests gRPC metadata handling for request/response headers including authorization, tracing IDs, and custom headers.",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "MetadataCheckRequest",
+        "fields": [
+          {"name": "request_id", "type": "string", "number": 1, "label": "required"}
+        ]
+      },
+      {
+        "name": "MetadataCheckResponse",
+        "fields": [
+          {"name": "request_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "received_auth_header", "type": "string", "number": 2, "label": "optional"},
+          {"name": "received_trace_id", "type": "string", "number": 3, "label": "optional"},
+          {"name": "received_custom_header", "type": "string", "number": 4, "label": "optional"},
+          {"name": "response_time_ms", "type": "int32", "number": 5, "label": "required"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "MetadataService",
+        "methods": [
+          {
+            "name": "CheckMetadata",
+            "input_type": "MetadataCheckRequest",
+            "output_type": "MetadataCheckResponse",
+            "client_streaming": false,
+            "server_streaming": false
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.MetadataService",
+    "method": "CheckMetadata"
+  },
+  "request": {
+    "metadata": {
+      "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+      "x-trace-id": "trace-abc123def456",
+      "x-custom-header": "custom-value",
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "request_id": "req-987654321"
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "metadata": {
+      "x-trace-id": "trace-abc123def456-response",
+      "x-response-time": "45"
+    },
+    "message": {
+      "request_id": "req-987654321",
+      "received_auth_header": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+      "received_trace_id": "trace-abc123def456",
+      "received_custom_header": "custom-value",
+      "response_time_ms": 45
+    }
+  }
+}

@@ -41,7 +41,9 @@
 				"request_id",
 				"body_limits",
 				"static_files",
-				"graphql"
+				"graphql",
+				"protobuf",
+				"grpc"
 			],
 			"description": "Test category for organization"
 		},
@@ -72,19 +74,19 @@
 		},
 		"handler": {
 			"type": "object",
-			"description": "Handler definition - describes the route and parameter schema",
-			"required": ["route", "method"],
+			"description": "Handler definition - describes the route/service and method. For HTTP handlers: requires route and method. For gRPC handlers: requires service and method.",
 			"properties": {
 				"route": {
 					"type": "string",
-					"description": "Route pattern with parameter placeholders (e.g., '/users/{user_id:int}')",
+					"description": "Route pattern with parameter placeholders (e.g., '/users/{user_id:int}'). Used for HTTP handlers.",
 					"minLength": 1,
 					"examples": ["/users/{user_id:int}", "/items", "/search"]
 				},
 				"method": {
 					"type": "string",
-					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
-					"description": "HTTP method"
+					"description": "HTTP method (GET, POST, etc.) for HTTP handlers, or gRPC RPC method name (GetUser, CreateUser, etc.) for gRPC handlers",
+					"minLength": 1,
+					"examples": ["GET", "POST", "GetUser", "CreateUser"]
 				},
 				"parameters": {
 					"type": "object",
@@ -471,8 +473,404 @@
 						}
 					},
 					"additionalProperties": false
+				},
+				"service": {
+					"type": "string",
+					"description": "gRPC service name (fully qualified, e.g., 'example.v1.UserService'). Used for gRPC handlers.",
+					"minLength": 1,
+					"examples": ["example.v1.UserService", "payment.PaymentService"]
+				},
+				"protobuf": {
+					"type": "object",
+					"description": "Protocol Buffers (protobuf) schema and gRPC service configuration for this handler",
+					"properties": {
+						"package": {
+							"type": "string",
+							"description": "Protobuf package name (e.g., 'example.v1', 'myservice')",
+							"minLength": 1,
+							"examples": ["example.v1", "user.service", "payment"]
+						},
+						"messages": {
+							"type": "array",
+							"description": "Protobuf message definitions",
+							"items": {
+								"type": "object",
+								"required": ["name"],
+								"properties": {
+									"name": {
+										"type": "string",
+										"description": "Message type name",
+										"minLength": 1
+									},
+									"fields": {
+										"type": "array",
+										"description": "Field definitions for this message",
+										"items": {
+											"type": "object",
+											"required": ["name", "type", "number"],
+											"properties": {
+												"name": {
+													"type": "string",
+													"description": "Field name in snake_case",
+													"minLength": 1
+												},
+												"type": {
+													"type": "string",
+													"description": "Field type: scalar type (int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64, float, double, bool, string, bytes) or message type name",
+													"minLength": 1,
+													"examples": ["int32", "string", "bytes", "bool", "User", "Address"]
+												},
+												"number": {
+													"type": "integer",
+													"description": "Field number (must be unique within message, 1-536870911)",
+													"minimum": 1,
+													"maximum": 536870911
+												},
+												"label": {
+													"type": "string",
+													"enum": ["optional", "required", "repeated"],
+													"description": "Field cardinality/label (proto3 uses optional/repeated, proto2 adds required)"
+												},
+												"oneof": {
+													"type": "string",
+													"description": "Name of oneof group this field belongs to (optional)"
+												}
+											},
+											"additionalProperties": false
+										}
+									},
+									"nested_messages": {
+										"type": "array",
+										"description": "Nested message definitions",
+										"items": {
+											"type": "object",
+											"required": ["name"],
+											"properties": {
+												"name": {
+													"type": "string",
+													"minLength": 1
+												},
+												"fields": {
+													"type": "array",
+													"items": {
+														"type": "object"
+													}
+												}
+											},
+											"additionalProperties": true
+										}
+									},
+									"enums": {
+										"type": "array",
+										"description": "Enum definitions within this message",
+										"items": {
+											"type": "object",
+											"required": ["name"],
+											"properties": {
+												"name": {
+													"type": "string",
+													"minLength": 1
+												},
+												"values": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"required": ["name", "number"],
+														"properties": {
+															"name": {
+																"type": "string"
+															},
+															"number": {
+																"type": "integer"
+															}
+														}
+													}
+												}
+											},
+											"additionalProperties": false
+										}
+									}
+								},
+								"additionalProperties": false
+							}
+						},
+						"services": {
+							"type": "array",
+							"description": "gRPC service definitions",
+							"items": {
+								"type": "object",
+								"required": ["name", "methods"],
+								"properties": {
+									"name": {
+										"type": "string",
+										"description": "Service name (e.g., 'UserService', 'AuthService')",
+										"minLength": 1
+									},
+									"methods": {
+										"type": "array",
+										"description": "RPC method definitions",
+										"items": {
+											"type": "object",
+											"required": ["name", "input_type", "output_type"],
+											"properties": {
+												"name": {
+													"type": "string",
+													"description": "RPC method name (PascalCase convention)",
+													"minLength": 1,
+													"examples": ["GetUser", "ListUsers", "CreateUser", "DeleteUser"]
+												},
+												"input_type": {
+													"type": "string",
+													"description": "Input message type name",
+													"minLength": 1
+												},
+												"output_type": {
+													"type": "string",
+													"description": "Output message type name",
+													"minLength": 1
+												},
+												"client_streaming": {
+													"type": "boolean",
+													"description": "Whether this method accepts streaming client requests",
+													"default": false
+												},
+												"server_streaming": {
+													"type": "boolean",
+													"description": "Whether this method returns streaming server responses",
+													"default": false
+												}
+											},
+											"additionalProperties": false
+										},
+										"minItems": 1
+									}
+								},
+								"additionalProperties": false
+							}
+						},
+						"metadata": {
+							"type": "object",
+							"description": "gRPC metadata (headers) configuration and defaults",
+							"properties": {
+								"required_headers": {
+									"type": "array",
+									"description": "Required metadata header names (case-insensitive)",
+									"items": {
+										"type": "string"
+									},
+									"examples": [["authorization", "x-request-id"]]
+								},
+								"default_headers": {
+									"type": "object",
+									"description": "Default metadata headers for all requests",
+									"additionalProperties": {
+										"type": "string"
+									},
+									"examples": [{
+										"content-type": "application/grpc",
+										"user-agent": "grpc-client/1.0"
+									}]
+								},
+								"timeout_ms": {
+									"type": "integer",
+									"description": "Default request timeout in milliseconds",
+									"minimum": 0
+								},
+								"max_receive_message_length": {
+									"type": "integer",
+									"description": "Maximum allowed message size in bytes (0 = unlimited)",
+									"minimum": 0
+								},
+								"max_send_message_length": {
+									"type": "integer",
+									"description": "Maximum send message size in bytes (0 = unlimited)",
+									"minimum": 0
+								},
+								"compression": {
+									"type": "string",
+									"enum": ["gzip", "deflate", "snappy", "none"],
+									"description": "Default compression algorithm for requests/responses"
+								}
+							},
+							"additionalProperties": false
+						}
+					},
+					"required": ["package"],
+					"additionalProperties": false
 				}
 			},
+			"additionalProperties": false
+		},
+		"protobuf": {
+			"type": "object",
+			"description": "Top-level Protocol Buffers schema definition for this test fixture. Defines the proto messages and services used by this test.",
+			"properties": {
+				"package": {
+					"type": "string",
+					"description": "Protobuf package name (e.g., 'example.v1', 'myservice')",
+					"minLength": 1,
+					"examples": ["example.v1", "user.service", "payment"]
+				},
+				"messages": {
+					"type": "array",
+					"description": "Protobuf message definitions",
+					"items": {
+						"type": "object",
+						"required": ["name"],
+						"properties": {
+							"name": {
+								"type": "string",
+								"description": "Message type name",
+								"minLength": 1
+							},
+							"fields": {
+								"type": "array",
+								"description": "Field definitions for this message",
+								"items": {
+									"type": "object",
+									"required": ["name", "type", "number"],
+									"properties": {
+										"name": {
+											"type": "string",
+											"description": "Field name in snake_case",
+											"minLength": 1
+										},
+										"type": {
+											"type": "string",
+											"description": "Field type: scalar type (int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64, float, double, bool, string, bytes) or message type name",
+											"minLength": 1,
+											"examples": ["int32", "string", "bytes", "bool", "User", "Address"]
+										},
+										"number": {
+											"type": "integer",
+											"description": "Field number (must be unique within message, 1-536870911)",
+											"minimum": 1,
+											"maximum": 536870911
+										},
+										"label": {
+											"type": "string",
+											"enum": ["optional", "required", "repeated"],
+											"description": "Field cardinality/label (proto3 uses optional/repeated, proto2 adds required)"
+										},
+										"oneof": {
+											"type": "string",
+											"description": "Name of oneof group this field belongs to (optional)"
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"nested_messages": {
+								"type": "array",
+								"description": "Nested message definitions",
+								"items": {
+									"type": "object",
+									"required": ["name"],
+									"properties": {
+										"name": {
+											"type": "string",
+											"minLength": 1
+										},
+										"fields": {
+											"type": "array",
+											"items": {
+												"type": "object"
+											}
+										}
+									},
+									"additionalProperties": true
+								}
+							},
+							"enums": {
+								"type": "array",
+								"description": "Enum definitions within this message",
+								"items": {
+									"type": "object",
+									"required": ["name"],
+									"properties": {
+										"name": {
+											"type": "string",
+											"minLength": 1
+										},
+										"values": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"required": ["name", "number"],
+												"properties": {
+													"name": {
+														"type": "string"
+													},
+													"number": {
+														"type": "integer"
+													}
+												}
+											}
+										}
+									},
+									"additionalProperties": false
+								}
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"services": {
+					"type": "array",
+					"description": "gRPC service definitions",
+					"items": {
+						"type": "object",
+						"required": ["name", "methods"],
+						"properties": {
+							"name": {
+								"type": "string",
+								"description": "Service name (e.g., 'UserService', 'AuthService')",
+								"minLength": 1
+							},
+							"methods": {
+								"type": "array",
+								"description": "RPC method definitions",
+								"items": {
+									"type": "object",
+									"required": ["name", "input_type", "output_type"],
+									"properties": {
+										"name": {
+											"type": "string",
+											"description": "RPC method name (PascalCase convention)",
+											"minLength": 1,
+											"examples": ["GetUser", "ListUsers", "CreateUser", "DeleteUser"]
+										},
+										"input_type": {
+											"type": "string",
+											"description": "Input message type name",
+											"minLength": 1
+										},
+										"output_type": {
+											"type": "string",
+											"description": "Output message type name",
+											"minLength": 1
+										},
+										"client_streaming": {
+											"type": "boolean",
+											"description": "Whether this method accepts streaming client requests",
+											"default": false
+										},
+										"server_streaming": {
+											"type": "boolean",
+											"description": "Whether this method returns streaming server responses",
+											"default": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"minItems": 1
+							}
+						},
+						"additionalProperties": false
+					}
+				}
+			},
+			"required": ["package"],
 			"additionalProperties": false
 		},
 		"streaming": {
@@ -563,17 +961,17 @@
 		},
 		"request": {
 			"type": "object",
-			"description": "HTTP request details",
-			"required": ["method", "path"],
+			"description": "Request details. For HTTP: includes method and path. For gRPC: includes metadata and message.",
 			"properties": {
 				"method": {
 					"type": "string",
-					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
-					"description": "HTTP method"
+					"description": "HTTP method (GET, POST, etc.) for HTTP handlers, or gRPC RPC method name (GetUser, CreateUser, etc.) for gRPC handlers",
+					"minLength": 1,
+					"examples": ["GET", "POST", "GetUser", "CreateUser"]
 				},
 				"path": {
 					"type": "string",
-					"description": "Request path without query string",
+					"description": "Request path without query string (required for HTTP requests)",
 					"minLength": 1,
 					"examples": ["/users/123", "/items", "/search"]
 				},
@@ -693,21 +1091,52 @@
 					},
 					"required": ["query"],
 					"additionalProperties": false
+				},
+				"metadata": {
+					"type": "object",
+					"description": "gRPC request metadata (headers). Case-insensitive key-value pairs. (For gRPC fixtures)",
+					"additionalProperties": {
+						"type": "string"
+					},
+					"examples": [
+						{
+							"authorization": "Bearer token123",
+							"content-type": "application/grpc"
+						}
+					]
+				},
+				"message": {
+					"type": "object",
+					"description": "Protobuf message as JSON object (matches the input message type). Will be serialized to binary protobuf format. (For gRPC fixtures)"
+				},
+				"message_base64": {
+					"type": "string",
+					"description": "Base64-encoded binary protobuf message payload (alternative to message for exact byte testing). (For gRPC fixtures)"
 				}
 			},
 			"additionalProperties": false
 		},
 		"expected_response": {
 			"type": "object",
-			"description": "Expected HTTP response",
+			"description": "Expected response. For HTTP: includes integer status_code. For gRPC: includes string status_code (gRPC status) and/or protobuf message.",
 			"required": ["status_code"],
 			"properties": {
 				"status_code": {
-					"type": "integer",
-					"description": "Expected HTTP status code",
-					"minimum": 100,
-					"maximum": 599,
-					"examples": [200, 201, 400, 422, 500]
+					"oneOf": [
+						{
+							"type": "integer",
+							"description": "Expected HTTP status code (100-599)",
+							"minimum": 100,
+							"maximum": 599,
+							"examples": [200, 201, 400, 422, 500]
+						},
+						{
+							"type": "string",
+							"description": "Expected gRPC status code",
+							"enum": ["OK", "CANCELLED", "UNKNOWN", "INVALID_ARGUMENT", "DEADLINE_EXCEEDED", "NOT_FOUND", "ALREADY_EXISTS", "PERMISSION_DENIED", "RESOURCE_EXHAUSTED", "FAILED_PRECONDITION", "ABORTED", "OUT_OF_RANGE", "UNIMPLEMENTED", "INTERNAL", "UNAVAILABLE", "DATA_LOSS", "UNAUTHENTICATED"],
+							"examples": ["OK", "NOT_FOUND", "INVALID_ARGUMENT"]
+						}
+					]
 				},
 				"body": {
 					"description": "Expected response body (any JSON type)"
@@ -716,6 +1145,14 @@
 					"type": "object",
 					"description": "Partial body match (check only these fields exist with these values)",
 					"additionalProperties": true
+				},
+				"message": {
+					"type": "object",
+					"description": "Expected protobuf response message as JSON object (for gRPC fixtures)"
+				},
+				"message_partial": {
+					"type": "object",
+					"description": "Partial protobuf message match (check only these fields exist with these values) (for gRPC fixtures)"
 				},
 				"headers": {
 					"type": "object",
@@ -824,6 +1261,53 @@
 						"extensions": {
 							"type": "object",
 							"description": "GraphQL extensions object"
+						}
+					},
+					"additionalProperties": false
+				},
+				"protobuf": {
+					"type": "object",
+					"description": "Protobuf/gRPC response details (status code, message, metadata, trailers)",
+					"properties": {
+						"status_code": {
+							"type": "string",
+							"description": "gRPC status code (OK, CANCELLED, UNKNOWN, INVALID_ARGUMENT, DEADLINE_EXCEEDED, NOT_FOUND, ALREADY_EXISTS, PERMISSION_DENIED, RESOURCE_EXHAUSTED, FAILED_PRECONDITION, ABORTED, OUT_OF_RANGE, UNIMPLEMENTED, INTERNAL, UNAVAILABLE, DATA_LOSS, UNAUTHENTICATED)",
+							"enum": ["OK", "CANCELLED", "UNKNOWN", "INVALID_ARGUMENT", "DEADLINE_EXCEEDED", "NOT_FOUND", "ALREADY_EXISTS", "PERMISSION_DENIED", "RESOURCE_EXHAUSTED", "FAILED_PRECONDITION", "ABORTED", "OUT_OF_RANGE", "UNIMPLEMENTED", "INTERNAL", "UNAVAILABLE", "DATA_LOSS", "UNAUTHENTICATED"],
+							"examples": ["OK", "NOT_FOUND", "INVALID_ARGUMENT"]
+						},
+						"message": {
+							"type": "object",
+							"description": "Expected protobuf response message as JSON object (matches the output message type)"
+						},
+						"message_partial": {
+							"type": "object",
+							"description": "Partial message match (check only these fields exist with these values)"
+						},
+						"message_base64": {
+							"type": "string",
+							"description": "Base64-encoded binary protobuf message payload (for exact byte testing)"
+						},
+						"metadata": {
+							"type": "object",
+							"description": "Expected gRPC response metadata (headers)",
+							"additionalProperties": {
+								"type": "string"
+							}
+						},
+						"trailers": {
+							"type": "object",
+							"description": "Expected gRPC response trailers (status details)",
+							"additionalProperties": {
+								"type": "string"
+							}
+						},
+						"error_message": {
+							"type": "string",
+							"description": "Expected error message for non-OK status codes"
+						},
+						"error_details": {
+							"type": "object",
+							"description": "Expected error details (custom error data attached to response)"
 						}
 					},
 					"additionalProperties": false

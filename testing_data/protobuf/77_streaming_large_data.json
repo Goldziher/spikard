@@ -1,0 +1,61 @@
+{
+  "name": "Server streaming with large response data",
+  "description": "Tests server streaming RPC that yields multiple large messages. Validates proper streaming protocol handling and backpressure management.",
+  "category": "large_payloads",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "StreamRequest",
+        "fields": [
+          {"name": "stream_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "chunk_size", "type": "int32", "number": 2, "label": "optional"}
+        ]
+      },
+      {
+        "name": "DataChunk",
+        "fields": [
+          {"name": "stream_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "chunk_number", "type": "int32", "number": 2, "label": "required"},
+          {"name": "data", "type": "bytes", "number": 3, "label": "required"},
+          {"name": "is_final", "type": "bool", "number": 4, "label": "optional"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "StreamingService",
+        "methods": [
+          {
+            "name": "StreamLargeData",
+            "input_type": "StreamRequest",
+            "output_type": "DataChunk",
+            "server_streaming": true
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.StreamingService",
+    "method": "StreamLargeData"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "stream_id": "stream-large-001",
+      "chunk_size": 1048576
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "stream_id": "stream-large-001",
+      "chunk_number": 1,
+      "is_final": false
+    }
+  },
+  "tags": ["large_payloads", "streaming", "server_streaming"]
+}

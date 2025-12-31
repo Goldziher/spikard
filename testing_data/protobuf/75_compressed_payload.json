@@ -1,0 +1,65 @@
+{
+  "name": "gRPC compression test - gzip",
+  "description": "Tests gRPC payload compression using gzip. Validates that compressed messages are properly decompressed and that header metadata indicates compression.",
+  "category": "large_payloads",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "CompressedPayloadRequest",
+        "fields": [
+          {"name": "id", "type": "string", "number": 1, "label": "required"},
+          {"name": "data", "type": "bytes", "number": 2, "label": "required"}
+        ]
+      },
+      {
+        "name": "CompressedPayloadResponse",
+        "fields": [
+          {"name": "id", "type": "string", "number": 1, "label": "required"},
+          {"name": "compressed", "type": "bool", "number": 2, "label": "required"},
+          {"name": "original_size", "type": "int64", "number": 3, "label": "optional"},
+          {"name": "compressed_size", "type": "int64", "number": 4, "label": "optional"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "CompressionService",
+        "methods": [
+          {
+            "name": "SendCompressed",
+            "input_type": "CompressedPayloadRequest",
+            "output_type": "CompressedPayloadResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.CompressionService",
+    "method": "SendCompressed",
+    "protobuf": {
+      "metadata": {
+        "compression": "gzip"
+      }
+    }
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc",
+      "grpc-encoding": "gzip"
+    },
+    "message": {
+      "id": "compress-test-001",
+      "data": "VGhpcyBpcyBhIHRlc3QgcGF5bG9hZCB0aGF0IHNob3VsZCBiZSBjb21wcmVzc2VkIHdpdGggZ3ppcC4gUmVwZWF0aW5nIHRvIGluY3JlYXNlIGNvbXByZXNzaWJpbGl0eTogVGhpcyBpcyBhIHRlc3QgcGF5bG9hZCB0aGF0IHNob3VsZCBiZSBjb21wcmVzc2VkIHdpdGggZ3ppcC4gUmVwZWF0aW5nIHRvIGluY3JlYXNlIGNvbXByZXNzaWJpbGl0eS4="
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "id": "compress-test-001",
+      "compressed": true
+    }
+  },
+  "tags": ["large_payloads", "compression", "performance"]
+}

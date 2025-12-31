@@ -1,109 +1,8 @@
-# Spikard Init Command Guide
+# Init Command Reference
 
-## Overview
+Comprehensive guide to the `spikard init` command for all supported languages.
 
-The `spikard init` command scaffolds new Spikard projects with language-specific structure, dependencies, and example handlers. It supports five programming languages with idiomatic patterns for each ecosystem.
-
-**Quick Start:**
-```bash
-spikard init --name my_api --language python
-```
-
----
-
-## Installation
-
-The init command is built into `spikard`. Ensure you have the latest version:
-
-```bash
-cargo install spikard-cli
-# or
-spikard --version
-```
-
----
-
-## Supported Languages
-
-| Language | Scaffolder | Package Manager | Init Time |
-|----------|-----------|-----------------|-----------|
-| Python | `PythonScaffolder` | pip/uv | ~2s |
-| TypeScript | `TypeScriptScaffolder` | npm/pnpm/yarn | ~3s |
-| Ruby | `RubyScaffolder` | bundler (gem) | ~2s |
-| PHP | `PhpScaffolder` | Composer | ~2s |
-| Rust | `RustScaffolder` | cargo | ~3s |
-
----
-
-## Command Syntax
-
-### Basic Usage
-```bash
-spikard init --name PROJECT_NAME --language LANGUAGE
-```
-
-### With Optional Schema
-```bash
-spikard init \
-  --name my_api \
-  --language python \
-  --schema /path/to/openapi.json
-```
-
-### Directory Specification
-```bash
-spikard init \
-  --name my_api \
-  --language typescript \
-  --project-dir ./projects
-```
-
-## Command Options
-
-| Option | Short | Required | Description | Example |
-|--------|-------|----------|-------------|---------|
-| `--name` | `-n` | Yes | Project name (identifier-safe) | `my_api` |
-| `--language` | `-l` | Yes | Target language | `python`, `typescript`, `ruby`, `php`, `rust` |
-| `--project-dir` | `-d` | No | Directory to create project in | `./projects` |
-| `--schema` | `-s` | No | Path to existing API schema | `./openapi.json` |
-| `--help` | `-h` | No | Show help message | — |
-
----
-
-## Usage Examples
-
-### Python Project
-
-```bash
-spikard init --name user_service --language python
-```
-
-Creates:
-```
-user_service/
-├── pyproject.toml              # Project metadata & dependencies
-├── uv.lock                      # Locked dependencies
-├── .python-version              # Python 3.10+
-├── src/
-│   └── user_service/
-│       ├── __init__.py
-│       ├── app.py              # Main application
-│       ├── handlers.py          # Example handlers
-│       └── models.py            # Data models
-├── tests/
-│   ├── __init__.py
-│   └── test_handlers.py         # Example tests
-├── README.md
-└── .gitignore
-```
-
-**Next Steps:**
-```bash
-cd user_service
-uv sync                         # Install dependencies
-python -m user_service.app      # Run the app
-uv run pytest tests/            # Run tests
-```
+## All Language Examples
 
 ### TypeScript Project
 
@@ -124,12 +23,11 @@ user_service/
 │   └── models.ts               # Type definitions
 ├── tests/
 │   └── handlers.spec.ts        # Example tests
-├── dist/                       # Compiled output (after build)
 ├── README.md
 └── .gitignore
 ```
 
-**Next Steps:**
+Next steps:
 ```bash
 cd user_service
 pnpm install                    # Install dependencies
@@ -165,7 +63,7 @@ user_service/
 └── .gitignore
 ```
 
-**Next Steps:**
+Next steps:
 ```bash
 cd user_service
 bundle install                  # Install dependencies
@@ -199,7 +97,7 @@ UserService/
 └── .gitignore
 ```
 
-**Next Steps:**
+Next steps:
 ```bash
 cd UserService
 composer install                # Install dependencies
@@ -224,23 +122,21 @@ user_service/
 │   ├── handlers.rs             # Example handlers
 │   └── models.rs               # Data models
 ├── tests/
-│   └── integration_test.rs      # Integration tests
+│   └── integration_test.rs     # Integration tests
 ├── examples/
 │   └── basic.rs                # Example usage
 ├── README.md
 └── .gitignore
 ```
 
-**Next Steps:**
+Next steps:
 ```bash
 cd user_service
 cargo build                     # Build the project
 cargo run                       # Run the application
 cargo test                      # Run tests
-cargo doc --open               # View documentation
+cargo doc --open                # View documentation
 ```
-
----
 
 ## Project Names & Conventions
 
@@ -275,8 +171,6 @@ The init command validates project names according to language conventions:
 - Conventionally snake_case
 - Converted to snake_case if mixed case provided
 - Examples: ✅ `user_service`, ✅ `my_api`, ❌ `UserService` (converted to user_service)
-
----
 
 ## Project Structure Documentation
 
@@ -405,8 +299,6 @@ src/
 └── models.rs          # Data structures
 ```
 
----
-
 ## Schema Integration
 
 The init command can optionally integrate an existing API schema:
@@ -440,8 +332,6 @@ my_api/
 ├── models.py                # Models extracted from schema
 └── README.md                # Updated with schema info
 ```
-
----
 
 ## Validation Rules
 
@@ -483,8 +373,6 @@ spikard init --name my_api --language python --schema ./missing.json
 # SchemaPathNotFound: Schema file not found: ./missing.json
 ```
 
----
-
 ## Error Handling
 
 ### Common Errors & Solutions
@@ -504,8 +392,6 @@ spikard init --name my_api --language python --schema ./missing.json
 #### `LanguageNotSupported: Python is not yet supported`
 - This language doesn't support init yet (shouldn't happen with current release)
 - Solution: Choose from: python, typescript, ruby, php, rust
-
----
 
 ## Next Steps Guidance
 
@@ -600,8 +486,6 @@ Documentation:
 
 For more info: https://docs.spikard.dev
 ```
-
----
 
 ## Development Workflow
 
@@ -731,8 +615,6 @@ cargo test test_get_user
 cargo tarpaulin
 ```
 
----
-
 ## Advanced Topics
 
 ### Customizing Project Templates
@@ -780,17 +662,11 @@ jobs:
           # Language-specific build & test commands
 ```
 
----
-
----
-
 ## Related Documentation
 
 - [Code Generation Guide](../guides/code-generation.md)
 - [ADR-0004: Code Generation](../adr/0004-code-generation.md)
 - [API Documentation](../reference/api.md)
-
----
 
 ## FAQ
 
@@ -815,12 +691,3 @@ A: The init command is for initial scaffolding. For code generation from schemas
 
 **Q: Can I contribute custom scaffolders?**
 A: Yes! Custom scaffolders should implement the ProjectScaffolder trait. See ADR-0004 for architecture details. Submit PR to the repository.
-
----
-
-## Support
-
-For issues or questions:
-- GitHub Issues: https://github.com/spikard/spikard/issues
-- Documentation: https://docs.spikard.dev
-- Discussions: https://github.com/spikard/spikard/discussions

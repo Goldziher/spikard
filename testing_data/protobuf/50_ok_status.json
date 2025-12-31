@@ -1,0 +1,55 @@
+{
+  "name": "gRPC OK status (0) - successful response",
+  "description": "Tests successful gRPC response with OK status code. Validates basic request-response completion.",
+  "category": "grpc",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "StatusRequest",
+        "fields": [
+          {"name": "request_id", "type": "string", "number": 1, "label": "required"}
+        ]
+      },
+      {
+        "name": "StatusResponse",
+        "fields": [
+          {"name": "request_id", "type": "string", "number": 1, "label": "required"},
+          {"name": "status", "type": "string", "number": 2, "label": "required"}
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "StatusService",
+        "methods": [
+          {
+            "name": "CheckStatus",
+            "input_type": "StatusRequest",
+            "output_type": "StatusResponse"
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.StatusService",
+    "method": "CheckStatus"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "request_id": "status-ok-001"
+    }
+  },
+  "expected_response": {
+    "status_code": "OK",
+    "message": {
+      "request_id": "status-ok-001",
+      "status": "success"
+    }
+  },
+  "tags": ["grpc_status", "ok"]
+}

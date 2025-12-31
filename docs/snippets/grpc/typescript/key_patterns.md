@@ -1,0 +1,5 @@
+- **Protobufjs**: Uses `.decode()` and `.encode().finish()` for serialization
+- **Buffer**: gRPC payloads are Node.js `Buffer` objects
+- **GrpcError**: Throw with explicit status codes for proper error responses
+- **Helper functions**: `createUnaryHandler` and `createServiceHandler` reduce boilerplate
+- **Type safety**: Full TypeScript type inference for protobuf messages

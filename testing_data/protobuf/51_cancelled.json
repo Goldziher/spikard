@@ -1,0 +1,17 @@
+{
+  "name": "gRPC CANCELLED status (1)",
+  "description": "Tests CANCELLED gRPC status code. Returned when the RPC was cancelled by the client or server.",
+  "category": "grpc",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "CancelRequest", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "CancelResponse", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]}
+    ],
+    "services": [{"name": "CancelService", "methods": [{"name": "Operation", "input_type": "CancelRequest", "output_type": "CancelResponse"}]}]
+  },
+  "handler": {"service": "example.v1.CancelService", "method": "Operation"},
+  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"id": "cancel-001"}},
+  "expected_response": {"status_code": "CANCELLED", "message": {"id": "cancel-001"}},
+  "tags": ["grpc_status", "cancelled"]
+}

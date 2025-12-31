@@ -1,0 +1,17 @@
+{
+  "name": "gRPC FAILED_PRECONDITION status (9)",
+  "description": "Tests FAILED_PRECONDITION gRPC status code. Returned when the RPC failed because the system is not in the required state.",
+  "category": "grpc",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {"name": "StateRequest", "fields": [{"name": "operation", "type": "string", "number": 1, "label": "required"}]},
+      {"name": "StateResponse", "fields": [{"name": "current_state", "type": "string", "number": 1, "label": "optional"}]}
+    ],
+    "services": [{"name": "StateService", "methods": [{"name": "Proceed", "input_type": "StateRequest", "output_type": "StateResponse"}]}]
+  },
+  "handler": {"service": "example.v1.StateService", "method": "Proceed"},
+  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"operation": "finalize"}},
+  "expected_response": {"status_code": "FAILED_PRECONDITION"},
+  "tags": ["grpc_status", "state", "error"]
+}

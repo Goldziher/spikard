@@ -1,25 +1,31 @@
 ```php
 <?php
 
+declare(strict_types=1);
+
 use Spikard\App;
 use Spikard\Attributes\Get;
 use Spikard\Config\ServerConfig;
-use Spikard\Http\Request;
 use Spikard\Http\Response;
 
-$app = new App(new ServerConfig(port: 8000));
-
-final class UserController
+final class HelloController
 {
-    #[Get('/users/{id}')]
-    public function show(Request $request): Response
+    #[Get('/')]
+    public function index(): Response
     {
-        $userId = (int) $request->pathParams['id'];
-        return Response::json(['id' => $userId, 'name' => 'Alice']);
+        return Response::text('Hello, World!');
+    }
+
+    #[Get('/hello/{name}')]
+    public function greet(\Spikard\Http\Request $request): Response
+    {
+        $name = $request->pathParams['name'];
+        return Response::json(['message' => "Hello, {$name}!"]);
     }
 }
 
-$app = $app->registerController(new UserController());
+$app = (new App(new ServerConfig(port: 8000)))
+    ->registerController(new HelloController());
 
 $app->run();
 ```

@@ -1,13 +1,13 @@
 ```php
 <?php
 
+declare(strict_types=1);
+
 use Spikard\App;
 use Spikard\Attributes\Post;
 use Spikard\Config\ServerConfig;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
-
-$app = new App(new ServerConfig(port: 8000));
 
 final class PaymentsController
 {
@@ -16,14 +16,30 @@ final class PaymentsController
     {
         $payment = $request->body;
 
-        // Validation
-        if (!isset($payment['id'], $payment['amount'])) {
-            return Response::json(['error' => 'Invalid payment data'], 400);
+        // Manual validation
+        $errors = [];
+        if (!isset($payment['id']) || !is_string($payment['id'])) {
+            $errors[] = 'id is required and must be a string';
+        }
+        if (!isset($payment['amount']) || !is_numeric($payment['amount'])) {
+            $errors[] = 'amount is required and must be numeric';
+        }
+        if (isset($payment['amount']) && $payment['amount'] <= 0) {
+            $errors[] = 'amount must be positive';
         }
 
-        return Response::json($payment);
+        if (!empty($errors)) {
+            return Response::json(['errors' => $errors], 400);
+        }
+
+        return Response::json([
+            'id' => $payment['id'],
+            'amount' => (float) $payment['amount'],
+            'status' => 'pending'
+        ], 201);
     }
 }
 
-$app = $app->registerController(new PaymentsController());
+$app = (new App(new ServerConfig(port: 8000)))
+    ->registerController(new PaymentsController());
 ```
