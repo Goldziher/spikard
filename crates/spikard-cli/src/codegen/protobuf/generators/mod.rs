@@ -4,7 +4,10 @@
 //! language-specific code generation from Protobuf specifications.
 
 pub mod base;
+pub mod php;
 pub mod python;
+pub mod ruby;
+pub mod typescript;
 
 use super::spec_parser::ProtobufSchema;
 use anyhow::Result;
