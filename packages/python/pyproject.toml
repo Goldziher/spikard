@@ -4,7 +4,7 @@ requires = [ "maturin>=1.4,<2" ]
 
 [project]
 name = "spikard"
-version = "0.7.3"
+version = "0.7.4"
 description = "High-performance Python web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with FastAPI/Litestar-style decorators backed by Axum and Tower-HTTP. 2.8x faster than FastAPI."
 readme = "README.md"
 keywords = [

@@ -22,7 +22,7 @@ describe("Spikard WASM Test App", () => {
 
 	it("should use the correct package version", () => {
 		const pkg = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8"));
-		expect(pkg.dependencies["@spikard/wasm"]).toBe("0.7.3");
+		expect(pkg.dependencies["@spikard/wasm"]).toBe("0.7.4");
 	});
 
 	it("should respond to health check", async () => {

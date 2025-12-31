@@ -1,6 +1,6 @@
 {
   "name": "spikard-workspace",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "private": true,
   "description": "Spikard HTTP framework - Multi-language workspace",
   "scripts": {

@@ -54,6 +54,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io;
 use std::mem;
+use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
@@ -61,6 +62,7 @@ use url::Url;
 
 use crate::config::extract_server_config;
 use crate::conversion::{extract_files, problem_to_json};
+use crate::gvl::with_gvl;
 use crate::integration::build_dependency_container;
 use crate::metadata::{build_route_metadata, ruby_value_to_json};
 use crate::request::NativeRequest;
@@ -875,6 +877,20 @@ impl RubyHandler {
     }
 
     fn handle(&self, request_data: RequestData) -> HandlerResult {
+        with_gvl(|| {
+            let result =
+                std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(request_data)));
+            match result {
+                Ok(res) => res,
+                Err(_) => Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Unexpected panic while executing Ruby handler".to_string(),
+                )),
+            }
+        })
+    }
+
+    fn handle_inner(&self, request_data: RequestData) -> HandlerResult {
         let validated_params = request_data.validated_params.clone();
 
         let ruby = Ruby::get().map_err(|_| {

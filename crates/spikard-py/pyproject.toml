@@ -4,7 +4,7 @@ requires = [ "maturin>=1,<2" ]
 
 [project]
 name = "spikard"
-version = "0.7.3"
+version = "0.7.4"
 description = "Fast, type-safe web framework with Rust-powered Python bindings"
 readme = "README.md"
 license = { text = "MIT" }

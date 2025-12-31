@@ -2,12 +2,12 @@
 
 [package]
 name = "spikard-test-app-rust"
-version = "0.7.3"
+version = "0.7.4"
 edition = "2024"
 publish = false
 
 [dependencies]
-spikard = "0.7.3"
+spikard = "0.7.4"
 axum = "0.8"
 tokio = { version = "1.42", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
