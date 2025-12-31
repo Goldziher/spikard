@@ -89,7 +89,7 @@ if [[ -f "$TEST_APPS_DIR/php/composer.json" ]]; then
 fi
 
 if [[ -f "$TEST_APPS_DIR/php/tests/AppTest.php" ]]; then
-	sed -i.bak "s/'[0-9.]\\+'/'$VERSION'/" "$TEST_APPS_DIR/php/tests/AppTest.php"
+	sed -E -i.bak "s/'[0-9]+\\.[0-9]+\\.[0-9]+'/'$VERSION'/" "$TEST_APPS_DIR/php/tests/AppTest.php"
 	rm -f "$TEST_APPS_DIR/php/tests/AppTest.php.bak"
 	echo "✓ Updated PHP tests to $VERSION"
 fi
@@ -109,7 +109,7 @@ fi
 
 # Python: test expectations
 if [[ -f "$TEST_APPS_DIR/python/test_published.py" ]]; then
-	sed -i.bak "s/[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+/$VERSION/g" "$TEST_APPS_DIR/python/test_published.py"
+	sed -E -i.bak "s/[0-9]+\\.[0-9]+\\.[0-9]+/$VERSION/g" "$TEST_APPS_DIR/python/test_published.py"
 	rm -f "$TEST_APPS_DIR/python/test_published.py.bak"
 	echo "✓ Updated Python tests to $VERSION"
 fi

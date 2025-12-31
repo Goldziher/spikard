@@ -33,7 +33,7 @@ final class AppTest extends TestCase
 
         $this->assertCount(1, $spikardPackage);
         $package = array_values($spikardPackage)[0];
-        $this->assertSame('0.7.3', $package['version']);
+        $this->assertSame('0.7.4', $package['version']);
     }
 
     public function testRespondsToHealthCheck(): void

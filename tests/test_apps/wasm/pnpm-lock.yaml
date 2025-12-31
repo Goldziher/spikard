@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@spikard/wasm':
-        specifier: 0.7.2
-        version: 0.7.2
+        specifier: 0.7.4
+        version: 0.7.4
     devDependencies:
       vitest:
         specifier: ^2.1.8
@@ -269,8 +269,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@spikard/wasm@0.7.2':
-    resolution: {integrity: sha512-S+5cdeUSyUxy3BIlekDS4BB45YbJkMWmRxdvmSSbiDm7jn3V+VRuAkuMOtI+IQCw3Ke0ZLxhPs55xwMm/49toA==}
+  '@spikard/wasm@0.7.4':
+    resolution: {integrity: sha512-2AgSKQGRRhNMszMlHHpiMhDSew/hGxqsWamwnveEYYLBLa69OzSd6zmOdirOrvK/1i3xYWzIPiArWYgzhuY0PQ==}
     engines: {node: '>=18'}
 
   '@types/estree@1.0.8':
@@ -629,7 +629,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.54.0':
     optional: true
 
-  '@spikard/wasm@0.7.2':
+  '@spikard/wasm@0.7.4':
     dependencies:
       fflate: 0.8.2
       zod: 4.3.1
