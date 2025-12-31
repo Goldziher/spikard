@@ -18,14 +18,25 @@ if [[ -d "$TEST_APPS_DIR/python" ]]; then
 	echo "Running Python test app..."
 	if (
 		cd "$TEST_APPS_DIR/python" &&
-			UV_VENV_CLEAR=1 uv venv &&
+			UV_VENV_CLEAR=1 UV_PYTHON="${UV_PYTHON:-3.12}" uv venv &&
 			uv pip install -e ".[dev]" &&
 			.venv/bin/python -m pytest test_published.py -v
 	); then
 		echo "✓ Python test app passed"
 	else
-		echo "✗ Python test app failed"
-		FAILED_APPS+=("Python")
+		echo "uv install failed; retrying with pip..."
+		if (
+			cd "$TEST_APPS_DIR/python" &&
+				rm -rf .venv &&
+				"${PYTHON_BIN:-python3}" -m venv .venv &&
+				.venv/bin/pip install -e ".[dev]" &&
+				.venv/bin/python -m pytest test_published.py -v
+		); then
+			echo "✓ Python test app passed (pip fallback)"
+		else
+			echo "✗ Python test app failed"
+			FAILED_APPS+=("Python")
+		fi
 	fi
 fi
 
@@ -33,11 +44,23 @@ fi
 if [[ -d "$TEST_APPS_DIR/node" ]]; then
 	echo ""
 	echo "Running Node test app..."
-	if (cd "$TEST_APPS_DIR/node" && pnpm install && pnpm test); then
+	if (cd "$TEST_APPS_DIR/node" && pnpm install --ignore-workspace && pnpm test); then
 		echo "✓ Node test app passed"
 	else
 		echo "✗ Node test app failed"
 		FAILED_APPS+=("Node")
+	fi
+fi
+
+# WASM test app
+if [[ -d "$TEST_APPS_DIR/wasm" ]]; then
+	echo ""
+	echo "Running WASM test app..."
+	if (cd "$TEST_APPS_DIR/wasm" && pnpm install --ignore-workspace && pnpm test); then
+		echo "✓ WASM test app passed"
+	else
+		echo "✗ WASM test app failed"
+		FAILED_APPS+=("WASM")
 	fi
 fi
 

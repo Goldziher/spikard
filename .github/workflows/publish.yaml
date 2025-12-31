@@ -1311,6 +1311,7 @@ jobs:
       - name: Notify Packagist
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         env:
+          PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
           PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
         run: bash scripts/publish/packagist/notify.sh "${{ needs.prepare.outputs.tag }}"
 
