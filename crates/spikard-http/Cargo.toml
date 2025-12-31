@@ -50,6 +50,10 @@ cookie = "0.18"
 base64 = "0.22.1"
 flate2.workspace = true
 brotli = "8.0"
+tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
+prost = "0.14"
+prost-types = "0.14"
+h2 = "0.4"
 
 [lints]
 workspace = true

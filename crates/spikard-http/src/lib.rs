@@ -13,6 +13,7 @@ pub mod cors;
 pub mod debug;
 #[cfg(feature = "di")]
 pub mod di_handler;
+pub mod grpc;
 pub mod handler_response;
 pub mod handler_trait;
 pub mod jsonrpc;
@@ -39,6 +40,10 @@ pub use background::{
 pub use body_metadata::ResponseBodySize;
 #[cfg(feature = "di")]
 pub use di_handler::DependencyInjectingHandler;
+pub use grpc::{
+    GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData, MessageStream,
+    StreamingRequest, StreamingResponse,
+};
 pub use handler_response::HandlerResponse;
 pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
 pub use jsonrpc::JsonRpcConfig;
@@ -140,6 +145,8 @@ pub struct ServerConfig {
     pub openapi: Option<crate::openapi::OpenApiConfig>,
     /// JSON-RPC configuration
     pub jsonrpc: Option<crate::jsonrpc::JsonRpcConfig>,
+    /// gRPC configuration
+    pub grpc: Option<crate::grpc::GrpcConfig>,
     /// Lifecycle hooks for request/response processing
     pub lifecycle_hooks: Option<std::sync::Arc<LifecycleHooks>>,
     /// Background task executor configuration
@@ -169,6 +176,7 @@ impl Default for ServerConfig {
             shutdown_timeout: 30,
             openapi: None,
             jsonrpc: None,
+            grpc: None,
             lifecycle_hooks: None,
             background_tasks: BackgroundTaskConfig::default(),
             enable_http_trace: false,
@@ -336,6 +344,12 @@ impl ServerConfigBuilder {
     /// Set JSON-RPC configuration
     pub fn jsonrpc(mut self, jsonrpc: Option<crate::jsonrpc::JsonRpcConfig>) -> Self {
         self.config.jsonrpc = jsonrpc;
+        self
+    }
+
+    /// Set gRPC configuration
+    pub fn grpc(mut self, grpc: Option<crate::grpc::GrpcConfig>) -> Self {
+        self.config.grpc = grpc;
         self
     }
 
