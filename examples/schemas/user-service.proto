@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package com.example.userservice;
+
+// User message represents a user in the system
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  optional string phone = 4;
+  repeated string tags = 5;
+}
+
+// Request to get a user by ID
+message GetUserRequest {
+  string user_id = 1;
+}
+
+// Request to create a new user
+message CreateUserRequest {
+  string name = 1;
+  string email = 2;
+  optional string phone = 3;
+}
+
+// Response for user operations
+message UserResponse {
+  User user = 1;
+  bool success = 2;
+  optional string error_message = 3;
+}
+
+// User service definition
+service UserService {
+  // Get a user by ID
+  rpc GetUser(GetUserRequest) returns (UserResponse) {}
+
+  // Create a new user
+  rpc CreateUser(CreateUserRequest) returns (UserResponse) {}
+
+  // Stream all users
+  rpc ListUsers(GetUserRequest) returns (stream User) {}
+}
+
+// Status enum
+enum UserStatus {
+  UNKNOWN = 0;
+  ACTIVE = 1;
+  INACTIVE = 2;
+  SUSPENDED = 3;
+}

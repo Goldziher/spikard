@@ -37,6 +37,10 @@ serde-saphyr = "0.0.12"
 openapiv3 = "2.2"
 asyncapiv3 = "0.1.3"  # AsyncAPI v3 spec parsing
 graphql-parser = "0.4"  # GraphQL SDL parsing
+prost = "0.14"  # Protocol Buffers runtime
+prost-types = "0.14"  # Protocol Buffers well-known types
+prost-reflect = "0.16"  # Protocol Buffers reflection
+protox = "0.7"  # Protocol Buffers compilation
 heck = "0.5"  # For case conversion (snake_case, PascalCase)
 tempfile = "3.24"  # For quality validation temporary files
 

@@ -92,6 +92,8 @@ enum GenerateCommand {
     Jsonrpc(JsonrpcArgs),
     /// Generate GraphQL types, resolvers, or schema
     Graphql(GraphqlArgs),
+    /// Generate protobuf messages and gRPC services
+    Protobuf(ProtobufArgs),
     /// Generate PHP DTO classes (Request/Response) for Spikard integration
     PhpDto(PhpDtoArgs),
 }
@@ -160,6 +162,24 @@ struct GraphqlArgs {
     output: Option<PathBuf>,
 
     /// Target specific features (all, types, resolvers, schema)
+    #[arg(long, default_value = "all")]
+    target: String,
+}
+
+#[derive(Args, Debug)]
+struct ProtobufArgs {
+    /// Path to .proto schema file
+    schema: PathBuf,
+
+    /// Target language (python, typescript, ruby, php)
+    #[arg(long, short = 'l', default_value = "python")]
+    lang: GenerateLanguage,
+
+    /// Output file path
+    #[arg(long, short = 'o')]
+    output: PathBuf,
+
+    /// Target: all, messages, or services
     #[arg(long, default_value = "all")]
     target: String,
 }
@@ -457,6 +477,33 @@ fn run(cli: Cli) -> Result<()> {
                 };
 
                 match CodegenEngine::execute(request).context("Failed to generate code from GraphQL schema")? {
+                    CodegenOutcome::InMemory(code) => println!("{}", code),
+                    CodegenOutcome::Files(files) => {
+                        for asset in files {
+                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
+                        }
+                    }
+                }
+            }
+            GenerateCommand::Protobuf(args) => {
+                println!("Generating protobuf code from schema...");
+                println!("  Input: {}", args.schema.display());
+                println!("  Language: {:?}", args.lang);
+                println!("  Target: {}", args.target);
+                println!("  Output: {}", args.output.display());
+
+                let request = CodegenRequest {
+                    schema_path: args.schema.clone(),
+                    schema_kind: SchemaKind::Protobuf,
+                    target: CodegenTargetKind::Protobuf {
+                        language: args.lang.into(),
+                        output: args.output.clone(),
+                        target: args.target.clone(),
+                    },
+                    dto: None,
+                };
+
+                match CodegenEngine::execute(request).context("Failed to generate protobuf code")? {
                     CodegenOutcome::InMemory(code) => println!("{}", code),
                     CodegenOutcome::Files(files) => {
                         for asset in files {

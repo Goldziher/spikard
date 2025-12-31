@@ -10,6 +10,7 @@ mod openapi;
 mod openrpc;
 mod php;
 mod php_dto;
+mod protobuf;
 mod python;
 pub mod quality;
 mod ruby;
@@ -40,6 +41,11 @@ pub use openrpc::{
 };
 pub use php::PhpGenerator;
 pub use php_dto::PhpDtoGenerator;
+pub use protobuf::{
+    EnumDef, EnumValue, FieldDef, FieldLabel, MessageDef, MethodDef, ProtoType, ProtobufGenerator, ProtobufSchema,
+    ProtobufTarget, generate_php_protobuf, generate_python_protobuf, generate_ruby_protobuf,
+    generate_typescript_protobuf, parse_proto_schema, parse_proto_schema_string,
+};
 pub use python::PythonGenerator;
 pub use ruby::RubyGenerator;
 pub use rust::RustGenerator;
