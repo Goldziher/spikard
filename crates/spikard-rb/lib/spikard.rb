@@ -3,7 +3,6 @@
 require 'json'
 require_relative "spikard/version"
 require_relative "spikard/response"
-require_relative "spikard/streaming_response"
 require_relative "spikard/test_client"
 
 # Load the native extension
