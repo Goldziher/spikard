@@ -15,6 +15,7 @@ use serde_json::Value;
 
 pub mod background;
 mod di;
+pub mod grpc;
 mod handler;
 mod hooks;
 mod request;
@@ -28,6 +29,10 @@ mod websocket;
 
 pub use background::{clear_handle, install_handle, process_pending_tasks};
 pub use di::{PhpFactoryDependency, PhpValueDependency, extract_di_container_from_php};
+pub use grpc::{
+    PhpGrpcHandler, PhpGrpcRequest, PhpGrpcResponse, clear_grpc_handler_registry,
+    leak_grpc_handler_registry,
+};
 pub use handler::get_runtime;
 pub use handler::{PhpHandler, clear_handler_registry, leak_handler_registry};
 pub use hooks::{PhpHookResult, PhpLifecycleHooks};
@@ -113,12 +118,15 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<PhpWebSocketTestConnection>()
         .class::<PhpSseStream>()
         .class::<PhpSseEvent>()
+        .class::<PhpGrpcRequest>()
+        .class::<PhpGrpcResponse>()
 }
 
 unsafe extern "C" fn spikard_shutdown(_type: i32, _module_number: i32) -> i32 {
     leak_handler_registry();
     leak_ws_handler_registry();
     leak_sse_producer_registry();
+    leak_grpc_handler_registry();
     ext_php_rs::ffi::ZEND_RESULT_CODE_SUCCESS
 }
 
