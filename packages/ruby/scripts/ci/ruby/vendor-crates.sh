@@ -78,7 +78,7 @@ patch_cargo_toml() {
 	# Handle brace-style workspace references (with and without additional properties)
 	sed -i.bak 's/axum = { workspace = true[^}]*}/axum = { version = "0.8", features = ["multipart", "ws"] }/' "$file"
 	sed -i.bak 's/tokio = { workspace = true[^}]*}/tokio = { version = "1", features = ["full"] }/' "$file"
-	sed -i.bak 's/http = { workspace = true[^}]*}/http = "1.4"/' "$file"
+	sed -i.bak 's/^http = { workspace = true[^}]*}/http = "1.4"/' "$file"
 	sed -i.bak 's/tower = { workspace = true[^}]*}/tower = "0.5"/' "$file"
 	sed -i.bak 's/serde = { workspace = true[^}]*}/serde = { version = "1.0", features = ["derive"] }/' "$file"
 	sed -i.bak 's/serde_json = { workspace = true[^}]*}/serde_json = "1.0"/' "$file"

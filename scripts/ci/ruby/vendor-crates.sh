@@ -89,7 +89,7 @@ patch_cargo_toml() {
 	# Handle simple { workspace = true } format without other attrs
 	perl -i.bak -pe 's/axum = \{ workspace = true \}/axum = { version = "0.8", features = ["multipart", "ws"] }/g' "$file"
 	perl -i.bak -pe 's/tokio = \{ workspace = true \}/tokio = { version = "1", features = ["full"] }/g' "$file"
-	perl -i.bak -pe 's/http = \{ workspace = true \}/http = "1.4"/g' "$file"
+	perl -i.bak -pe 's/^http = \{ workspace = true \}/http = "1.4"/g' "$file"
 
 	# Internal dependencies use path (handle both .workspace = true and { workspace = true } formats)
 	perl -i.bak -pe 's/spikard-core = \{ workspace = true/spikard-core = { path = "..\/spikard-core"/g' "$file"
