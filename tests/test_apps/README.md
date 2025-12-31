@@ -21,7 +21,7 @@ tests/test_apps/
 │   ├── run-all.sh               # Run all test apps sequentially
 │   └── validate-published.sh    # Check registry availability
 ├── python/
-│   ├── pyproject.toml           # Exact version pin (spikard==0.6.0)
+│   ├── pyproject.toml           # Exact version pin (spikard==0.7.0)
 │   ├── app.py                   # Minimal server
 │   ├── test_published.py        # Core functionality tests
 │   └── README.md                # Python-specific docs
@@ -37,12 +37,12 @@ tests/test_apps/
 
 1. **Validate registry availability**:
    ```bash
-   ./scripts/validate-published.sh 0.6.0
+   ./scripts/validate-published.sh 0.7.0
    ```
 
 2. **Update version pins**:
    ```bash
-   ./scripts/update-versions.sh 0.6.0
+   ./scripts/update-versions.sh 0.7.0
    ```
 
 3. **Run all test apps**:
@@ -53,7 +53,7 @@ tests/test_apps/
 4. **Commit updated pins**:
    ```bash
    git add tests/test_apps/
-   git commit -m "Update test apps to v0.6.0"
+   git commit -m "Update test apps to v0.7.0"
    ```
 
 ### Manual Testing (Individual App)
@@ -118,7 +118,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to test (e.g., 0.6.0)'
+        description: 'Version to test (e.g., 0.7.0)'
         required: true
 
 jobs:
@@ -137,12 +137,12 @@ jobs:
 ## Troubleshooting
 
 ### PyPI Package Not Found
-- Verify publication: `curl -sSf https://pypi.org/pypi/spikard/0.6.0/json`
+- Verify publication: `curl -sSf https://pypi.org/pypi/spikard/0.7.0/json`
 - Wait 5-10 minutes for CDN propagation
 - Check PyPI status: https://status.python.org/
 
 ### npm Package Not Found
-- Verify publication: `npm view spikard@0.6.0`
+- Verify publication: `npm view spikard@0.7.0`
 - Wait for npm registry sync
 - Check npm status: https://status.npmjs.org/
 

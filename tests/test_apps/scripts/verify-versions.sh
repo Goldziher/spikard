@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Verify all test apps use version 0.6.0
+# Verify all test apps use version 0.7.0
 
-EXPECTED_VERSION="0.6.0"
+EXPECTED_VERSION="0.7.0"
 ERRORS=0
 
 echo "Verifying package versions across all test apps..."
@@ -52,7 +52,7 @@ fi
 
 # Rust
 echo "Checking Rust test app..."
-RUST_VERSION=$(grep 'spikard = { version =' tests/test_apps/rust/Cargo.toml | grep -o '"[0-9.]*"' | tr -d '"' | head -1)
+RUST_VERSION=$(grep '^spikard = ' tests/test_apps/rust/Cargo.toml | grep -o '"[0-9.]*"' | tr -d '"' | head -1)
 if [ "$RUST_VERSION" = "$EXPECTED_VERSION" ]; then
 	echo "✅ Rust: $RUST_VERSION"
 else

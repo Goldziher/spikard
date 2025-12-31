@@ -7,7 +7,7 @@ set -euo pipefail
 VERSION="${1:-}"
 if [[ -z "$VERSION" ]]; then
 	echo "Usage: $0 <version>"
-	echo "Example: $0 0.6.0"
+	echo "Example: $0 0.7.0"
 	exit 1
 fi
 
@@ -18,7 +18,7 @@ echo "Updating test apps to version $VERSION..."
 
 # Python: pyproject.toml
 if [[ -f "$TEST_APPS_DIR/python/pyproject.toml" ]]; then
-	sed -i.bak "s/spikard==.*/spikard==$VERSION/" "$TEST_APPS_DIR/python/pyproject.toml"
+	sed -i.bak "s/spikard==[0-9.]*/spikard==$VERSION/" "$TEST_APPS_DIR/python/pyproject.toml"
 	rm -f "$TEST_APPS_DIR/python/pyproject.toml.bak"
 	echo "✓ Updated Python app to $VERSION"
 fi
@@ -37,11 +37,24 @@ if [[ -f "$TEST_APPS_DIR/node/package.json" ]]; then
 	echo "✓ Updated Node app to $VERSION"
 fi
 
+# Node: test expectations
+if [[ -f "$TEST_APPS_DIR/node/test.spec.ts" ]]; then
+	sed -i.bak "/@spikard\\/node/ s|toBe(\"[0-9.]*\")|toBe(\"$VERSION\")|" "$TEST_APPS_DIR/node/test.spec.ts"
+	rm -f "$TEST_APPS_DIR/node/test.spec.ts.bak"
+	echo "✓ Updated Node tests to $VERSION"
+fi
+
 # Ruby: Gemfile (when implemented)
 if [[ -f "$TEST_APPS_DIR/ruby/Gemfile" ]]; then
 	sed -i.bak "s/gem 'spikard', '.*'/gem 'spikard', '$VERSION'/" "$TEST_APPS_DIR/ruby/Gemfile"
 	rm -f "$TEST_APPS_DIR/ruby/Gemfile.bak"
 	echo "✓ Updated Ruby app to $VERSION"
+fi
+
+if [[ -f "$TEST_APPS_DIR/ruby/spec/app_spec.rb" ]]; then
+	sed -i.bak "s/spikard ([0-9.][0-9.]*)/spikard ($VERSION)/" "$TEST_APPS_DIR/ruby/spec/app_spec.rb"
+	rm -f "$TEST_APPS_DIR/ruby/spec/app_spec.rb.bak"
+	echo "✓ Updated Ruby tests to $VERSION"
 fi
 
 # WASM: package.json (when implemented)
@@ -57,6 +70,12 @@ if [[ -f "$TEST_APPS_DIR/wasm/package.json" ]]; then
 	echo "✓ Updated WASM app to $VERSION"
 fi
 
+if [[ -f "$TEST_APPS_DIR/wasm/test.spec.js" ]]; then
+	sed -i.bak "/@spikard\\/wasm/ s|toBe(\"[0-9.]*\")|toBe(\"$VERSION\")|" "$TEST_APPS_DIR/wasm/test.spec.js"
+	rm -f "$TEST_APPS_DIR/wasm/test.spec.js.bak"
+	echo "✓ Updated WASM tests to $VERSION"
+fi
+
 # PHP: composer.json (when implemented)
 if [[ -f "$TEST_APPS_DIR/php/composer.json" ]]; then
 	if command -v jq &>/dev/null; then
@@ -67,6 +86,32 @@ if [[ -f "$TEST_APPS_DIR/php/composer.json" ]]; then
 		rm -f "$TEST_APPS_DIR/php/composer.json.bak"
 	fi
 	echo "✓ Updated PHP app to $VERSION"
+fi
+
+if [[ -f "$TEST_APPS_DIR/php/tests/AppTest.php" ]]; then
+	sed -i.bak "s/'[0-9.]\\+'/'$VERSION'/" "$TEST_APPS_DIR/php/tests/AppTest.php"
+	rm -f "$TEST_APPS_DIR/php/tests/AppTest.php.bak"
+	echo "✓ Updated PHP tests to $VERSION"
+fi
+
+# Rust: Cargo.toml + test expectations
+if [[ -f "$TEST_APPS_DIR/rust/Cargo.toml" ]]; then
+	sed -i.bak "s/^spikard = \".*\"/spikard = \"$VERSION\"/" "$TEST_APPS_DIR/rust/Cargo.toml"
+	rm -f "$TEST_APPS_DIR/rust/Cargo.toml.bak"
+	echo "✓ Updated Rust app to $VERSION"
+fi
+
+if [[ -f "$TEST_APPS_DIR/rust/tests/integration.rs" ]]; then
+	sed -i.bak "s/spikard = \"[0-9.]*\"/spikard = \"$VERSION\"/" "$TEST_APPS_DIR/rust/tests/integration.rs"
+	rm -f "$TEST_APPS_DIR/rust/tests/integration.rs.bak"
+	echo "✓ Updated Rust tests to $VERSION"
+fi
+
+# Python: test expectations
+if [[ -f "$TEST_APPS_DIR/python/test_published.py" ]]; then
+	sed -i.bak "s/[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+/$VERSION/g" "$TEST_APPS_DIR/python/test_published.py"
+	rm -f "$TEST_APPS_DIR/python/test_published.py.bak"
+	echo "✓ Updated Python tests to $VERSION"
 fi
 
 echo ""

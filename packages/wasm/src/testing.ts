@@ -106,12 +106,15 @@ async function loadWasmBindings(): Promise<WasmBindings> {
 		return wasmBindingsPromise;
 	}
 	wasmBindingsPromise = (async () => {
+		const distPath = "./spikard_wasm.js";
 		const runtimePath = "../runtime/spikard_wasm.js";
 		const webFallback = "../../../crates/spikard-wasm/dist-web/" + "spikard_wasm.js";
 		const nodeFallback = "../../../crates/spikard-wasm/dist-node/" + "spikard_wasm.js";
 		const preferNode = isNodeLikeEnvironment();
 
-		const candidates = preferNode ? [nodeFallback, runtimePath, webFallback] : [runtimePath, webFallback, nodeFallback];
+		const candidates = preferNode
+			? [distPath, nodeFallback, runtimePath, webFallback]
+			: [distPath, runtimePath, webFallback, nodeFallback];
 
 		for (const candidate of candidates) {
 			try {
@@ -119,7 +122,7 @@ async function loadWasmBindings(): Promise<WasmBindings> {
 			} catch {}
 		}
 
-		throw new Error("Failed to load WASM bindings (runtime, dist-web, dist-node).");
+		throw new Error("Failed to load WASM bindings (dist, runtime, dist-web, dist-node).");
 	})();
 	return wasmBindingsPromise;
 }

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Test application that validates the published `spikard` Ruby gem (v0.6.0) works correctly in a real Ruby environment.
+Test application that validates the published `spikard` Ruby gem (v0.7.0) works correctly in a real Ruby environment.
 
 ## Setup
 
@@ -20,7 +20,7 @@ bundle exec rspec
 ## Troubleshooting
 
 ### Gem not found
-- Verify `spikard-0.6.0.gem` is published to RubyGems.org
+- Verify `spikard-0.7.0.gem` is published to RubyGems.org
 - Check gem availability: `gem search spikard -r`
 - Try clearing gem cache: `gem cleanup`
 

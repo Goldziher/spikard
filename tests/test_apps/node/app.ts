@@ -3,7 +3,7 @@ import { runServer, type HandlerInput, type HandlerOutput } from "@spikard/node"
 /**
  * Node.js test application for published @spikard/node package.
  *
- * Tests the PUBLISHED package from npm (0.6.1).
+ * Tests the PUBLISHED package from npm (0.7.1).
  */
 
 // Define route handlers

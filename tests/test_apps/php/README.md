@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Test application that validates the published `spikard/spikard` Composer package (v0.6.0) works correctly in a real PHP environment.
+Test application that validates the published `spikard/spikard` Composer package (v0.7.0) works correctly in a real PHP environment.
 
 ## Setup
 
@@ -25,7 +25,7 @@ composer stan
 ## Troubleshooting
 
 ### Package not found
-- Verify `spikard/spikard:0.6.0` is published to Packagist
+- Verify `spikard/spikard:0.7.0` is published to Packagist
 - Check package availability: `composer show spikard/spikard -a`
 - Try clearing cache: `composer clear-cache`
 

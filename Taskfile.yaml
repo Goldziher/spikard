@@ -536,7 +536,7 @@ tasks:
     dir: crates/spikard-py
     cmds:
       - uv run maturin build --release --out ../../target/wheels
-      - uv pip install --force-reinstall ../../target/wheels/spikard_bindings-0.7.0-cp310-abi3-macosx_11_0_arm64.whl
+      - uv pip install --force-reinstall ../../target/wheels/spikard_bindings-0.7.1-cp310-abi3-macosx_11_0_arm64.whl
 
   build:local:python:
     desc: "Clean rebuild Python bindings for local testing (removes cached .so files)"

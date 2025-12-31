@@ -14,7 +14,7 @@ This is a **Tier 3 (E2E)** test that validates:
 
 ## Files
 
-- **`pyproject.toml`**: Manifest with exact version pin (`spikard==0.6.0`)
+- **`pyproject.toml`**: Manifest with exact version pin (`spikard==0.7.0`)
 - **`app.py`**: Minimal server with routes (hello, echo, error)
 - **`test_published.py`**: Core functionality tests with version assertion
 - **`README.md`**: This file
@@ -64,7 +64,7 @@ rm -rf .venv
 The test suite validates:
 
 ### Version Validation
-- `test_version_is_correct()`: Asserts `spikard.__version__ == "0.6.0"`
+- `test_version_is_correct()`: Asserts `spikard.__version__ == "0.7.0"`
 
 ### Core Functionality
 - `test_server_can_be_created()`: Server instantiation
@@ -96,23 +96,23 @@ tests/test_apps/python/test_published.py::test_imports_work_correctly PASSED
 
 ### Package Not Found on PyPI
 
-**Error**: `ERROR: Could not find a version that satisfies the requirement spikard==0.6.0`
+**Error**: `ERROR: Could not find a version that satisfies the requirement spikard==0.7.0`
 
 **Solutions**:
-1. Verify publication: `curl -sSf https://pypi.org/pypi/spikard/0.6.0/json`
+1. Verify publication: `curl -sSf https://pypi.org/pypi/spikard/0.7.0/json`
 2. Wait 5-10 minutes for CDN propagation
 3. Check PyPI status: https://status.python.org/
-4. Run validation script: `../../scripts/validate-published.sh 0.6.0`
+4. Run validation script: `../../scripts/validate-published.sh 0.7.0`
 
 ### Version Mismatch
 
-**Error**: `AssertionError: Version mismatch: expected 0.6.0, got 0.5.0`
+**Error**: `AssertionError: Version mismatch: expected 0.7.0, got 0.5.0`
 
 **Solutions**:
-1. Check `pyproject.toml` has correct pin: `spikard==0.6.0`
+1. Check `pyproject.toml` has correct pin: `spikard==0.7.0`
 2. Clear pip cache: `uv cache clean` or `pip cache purge`
 3. Delete `.venv/` and reinstall
-4. Run update script: `../../scripts/update-versions.sh 0.6.0`
+4. Run update script: `../../scripts/update-versions.sh 0.7.0`
 
 ### Import Errors
 
@@ -121,7 +121,7 @@ tests/test_apps/python/test_published.py::test_imports_work_correctly PASSED
 **Solutions**:
 1. Ensure virtual environment is activated
 2. Verify installation: `uv pip list | grep spikard` or `pip list | grep spikard`
-3. Reinstall: `uv pip install --force-reinstall spikard==0.6.0`
+3. Reinstall: `uv pip install --force-reinstall spikard==0.7.0`
 
 ### Test Failures
 
@@ -134,7 +134,7 @@ tests/test_apps/python/test_published.py::test_imports_work_correctly PASSED
 
 ### Workspace Dependencies Detected
 
-**Error**: Tests pass but version is from local build (e.g., `0.6.0+local`)
+**Error**: Tests pass but version is from local build (e.g., `0.7.0+local`)
 
 **Solutions**:
 1. Ensure `PYTHONPATH` is not set

@@ -1,6 +1,6 @@
 {
   "name": "@spikard/node",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "High-performance HTTP framework for Node.js and Bun. Type-safe routing, validation, and testing powered by Rust core.",
   "main": "index.js",
   "types": "index.d.ts",

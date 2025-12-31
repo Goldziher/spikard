@@ -101,8 +101,8 @@ impl Drop for TestServer {
 async fn test_uses_correct_package_version() {
     let cargo_toml = include_str!("../Cargo.toml");
     assert!(
-        cargo_toml.contains(r#"spikard = "0.6.0""#),
-        "Expected spikard version 0.6.0 in Cargo.toml"
+        cargo_toml.contains(r#"spikard = "0.7.1""#),
+        "Expected spikard version 0.7.0 in Cargo.toml"
     );
 }
 

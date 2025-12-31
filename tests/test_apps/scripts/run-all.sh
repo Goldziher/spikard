@@ -16,7 +16,12 @@ FAILED_APPS=()
 if [[ -d "$TEST_APPS_DIR/python" ]]; then
 	echo ""
 	echo "Running Python test app..."
-	if (cd "$TEST_APPS_DIR/python" && uv venv && uv pip install -e . && uv run pytest test_published.py -v); then
+	if (
+		cd "$TEST_APPS_DIR/python" &&
+			UV_VENV_CLEAR=1 uv venv &&
+			uv pip install -e ".[dev]" &&
+			.venv/bin/python -m pytest test_published.py -v
+	); then
 		echo "✓ Python test app passed"
 	else
 		echo "✗ Python test app failed"

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Test application that validates the published `spikard` crate (v0.6.0) works correctly in a standalone Rust project.
+Test application that validates the published `spikard` crate (v0.7.0) works correctly in a standalone Rust project.
 
 ## Setup
 
@@ -25,7 +25,7 @@ cargo run
 ## Troubleshooting
 
 ### Crate not found
-- Verify `spikard@0.6.0` is published to crates.io
+- Verify `spikard@0.7.0` is published to crates.io
 - Check crate availability: `cargo search spikard`
 - Try updating index: `cargo update`
 
