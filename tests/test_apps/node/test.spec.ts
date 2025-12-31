@@ -17,7 +17,7 @@ describe("Spikard Node.js Test App", () => {
 		baseUrl = `http://127.0.0.1:${port}`;
 
 		// Spawn the server process using tsx
-		serverProcess = spawn("npx", ["tsx", "app.ts", port.toString()], {
+		serverProcess = spawn("pnpm", ["exec", "tsx", "app.ts", port.toString()], {
 			cwd: __dirname,
 			stdio: ["ignore", "pipe", "pipe"],
 		});

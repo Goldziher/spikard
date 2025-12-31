@@ -10,6 +10,14 @@
   "dependencies": {
     "@spikard/node": "0.7.5"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ],
+    "trustedDependencies": [
+      "esbuild"
+    ]
+  },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "tsx": "^4.21.0",

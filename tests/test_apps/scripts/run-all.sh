@@ -68,7 +68,11 @@ fi
 if [[ -d "$TEST_APPS_DIR/ruby" ]]; then
 	echo ""
 	echo "Running Ruby test app..."
-	if (cd "$TEST_APPS_DIR/ruby" && bundle install && bundle exec rspec); then
+	if (
+		cd "$TEST_APPS_DIR/ruby" &&
+			BUNDLE_IGNORE_FUNDING_REQUESTS=1 bundle install --quiet &&
+			bundle exec rspec
+	); then
 		echo "✓ Ruby test app passed"
 	else
 		echo "✗ Ruby test app failed"
@@ -80,7 +84,11 @@ fi
 if [[ -d "$TEST_APPS_DIR/php" ]]; then
 	echo ""
 	echo "Running PHP test app..."
-	if (cd "$TEST_APPS_DIR/php" && composer install && composer test); then
+	if (
+		cd "$TEST_APPS_DIR/php" &&
+			COMPOSER_NO_FUND=1 composer install --no-progress --quiet &&
+			COMPOSER_NO_FUND=1 composer test
+	); then
 		echo "✓ PHP test app passed"
 	else
 		echo "✗ PHP test app failed"

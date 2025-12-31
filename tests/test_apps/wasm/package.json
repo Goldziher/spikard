@@ -10,6 +10,14 @@
   "dependencies": {
     "@spikard/wasm": "0.7.5"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ],
+    "trustedDependencies": [
+      "esbuild"
+    ]
+  },
   "devDependencies": {
     "vitest": "^2.1.8"
   }
