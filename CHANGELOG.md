@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5] - 2025-12-31
+
+### Fixed
+
+- **Ruby bindings**: Avoid double-defining `StreamingResponse` to eliminate runtime redefinition warnings.
+- **Release automation**: Use Packagist username + token when triggering refreshes and skip gracefully if missing.
+- **Test apps**: Use registry-only pnpm installs, add uv fallback to pip, and validate npm/Packagist endpoints correctly.
+
 ## [0.7.4] - 2025-12-31
 
 ### Fixed

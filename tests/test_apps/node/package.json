@@ -8,7 +8,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@spikard/node": "0.7.4"
+    "@spikard/node": "0.7.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
