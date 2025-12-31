@@ -72,6 +72,11 @@ utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
 utoipa-swagger-ui = { version = "9", features = ["axum", "vendored"] }
 utoipa-redoc = { version = "6", features = ["axum"] }
 
+# gRPC dependencies
+tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
+prost = "0.14"
+prost-types = "0.14"
+
 # Utilities
 thiserror = "2.0"
 serde = { version = "1.0", features = ["derive"] }

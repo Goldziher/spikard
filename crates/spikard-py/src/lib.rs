@@ -8,6 +8,7 @@ pub mod conversion;
 pub mod di;
 #[cfg(feature = "graphql")]
 pub mod graphql;
+pub mod grpc;
 pub mod handler;
 mod handler_request;
 pub mod lifecycle;
@@ -545,6 +546,7 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         enable_http_trace: false,
         openapi: openapi_config,
         jsonrpc: None,
+        grpc: None,
         lifecycle_hooks: None,
         di_container: None,
     })
@@ -809,6 +811,9 @@ pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
         m.add_class::<graphql::PySchemaConfig>()?;
         m.add_class::<graphql::PySchemaBuilder>()?;
     }
+
+    // Add gRPC classes
+    grpc::init_module(m)?;
 
     Ok(())
 }

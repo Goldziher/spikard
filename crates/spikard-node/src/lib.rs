@@ -41,6 +41,7 @@ mod conversion_tests;
 pub mod di;
 #[cfg(feature = "graphql")]
 pub mod graphql;
+pub mod grpc;
 mod handler;
 pub mod handler_input;
 pub mod handler_output;

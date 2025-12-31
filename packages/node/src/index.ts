@@ -15,6 +15,17 @@ export {
 	Spikard,
 } from "./app";
 export * as background from "./background";
+export {
+	createServiceHandler,
+	createUnaryHandler,
+	GrpcError,
+	type GrpcHandler,
+	type GrpcMetadata,
+	type GrpcRequest,
+	type GrpcResponse,
+	type GrpcServiceConfig,
+	GrpcStatusCode,
+} from "./grpc";
 export type {
 	ApiKeyConfig,
 	CompressionConfig,

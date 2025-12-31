@@ -6,9 +6,11 @@ from importlib import import_module
 from typing import TYPE_CHECKING
 
 from _spikard import Response, StreamingResponse  # type: ignore[attr-defined]
+from _spikard import GrpcRequest, GrpcResponse  # type: ignore[attr-defined]
 
 if TYPE_CHECKING:
     from spikard import background as background
+    from spikard import grpc as grpc
     from spikard._internal.converters import register_decoder as register_decoder
     from spikard.app import HttpMethod as HttpMethod
     from spikard.app import Spikard as Spikard
@@ -21,6 +23,8 @@ if TYPE_CHECKING:
     from spikard.config import StaticFilesConfig as StaticFilesConfig
     from spikard.datastructures import UploadFile as UploadFile
     from spikard.di import Provide as Provide
+    from spikard.grpc import GrpcHandler as GrpcHandler
+    from spikard.grpc import GrpcService as GrpcService
     from spikard.jsonrpc import JsonRpcMethodInfo as JsonRpcMethodInfo
     from spikard.params import Body as Body
     from spikard.params import Cookie as Cookie
@@ -47,6 +51,10 @@ __all__ = [
     "Body",
     "CompressionConfig",
     "Cookie",
+    "GrpcHandler",
+    "GrpcRequest",
+    "GrpcResponse",
+    "GrpcService",
     "Header",
     "HttpMethod",
     "JsonRpcMethodInfo",
@@ -68,6 +76,7 @@ __all__ = [
     "background",
     "delete",
     "get",
+    "grpc",
     "head",
     "options",
     "patch",
@@ -85,6 +94,8 @@ _LAZY_EXPORTS: dict[str, tuple[str, str]] = {
     "Body": ("spikard.params", "Body"),
     "CompressionConfig": ("spikard.config", "CompressionConfig"),
     "Cookie": ("spikard.params", "Cookie"),
+    "GrpcHandler": ("spikard.grpc", "GrpcHandler"),
+    "GrpcService": ("spikard.grpc", "GrpcService"),
     "Header": ("spikard.params", "Header"),
     "HttpMethod": ("spikard.app", "HttpMethod"),
     "JsonRpcMethodInfo": ("spikard.jsonrpc", "JsonRpcMethodInfo"),
@@ -104,6 +115,7 @@ _LAZY_EXPORTS: dict[str, tuple[str, str]] = {
     "background": ("spikard.background", "__module__"),
     "delete": ("spikard.routing", "delete"),
     "get": ("spikard.routing", "get"),
+    "grpc": ("spikard.grpc", "__module__"),
     "head": ("spikard.routing", "head"),
     "options": ("spikard.routing", "options"),
     "patch": ("spikard.routing", "patch"),

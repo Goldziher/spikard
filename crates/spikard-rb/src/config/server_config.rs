@@ -257,6 +257,7 @@ pub fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard
         enable_http_trace: false,
         openapi,
         jsonrpc: None,
+        grpc: None,
         lifecycle_hooks: None,
         di_container: None,
     })

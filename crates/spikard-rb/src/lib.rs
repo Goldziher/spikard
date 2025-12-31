@@ -18,11 +18,13 @@
 //! - `lifecycle`: Lifecycle hook implementations
 //! - `sse`: Server-Sent Events support
 //! - `websocket`: WebSocket support
+//! - `grpc`: gRPC handler support
 
 mod background;
 mod config;
 mod conversion;
 mod di;
+mod grpc;
 mod gvl;
 mod handler;
 mod integration;
@@ -1645,12 +1647,14 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     let spikard_module = ruby.define_module("Spikard")?;
     testing::websocket::init(ruby, &spikard_module)?;
     testing::sse::init(ruby, &spikard_module)?;
+    grpc::handler::init(ruby, &spikard_module)?;
 
     let _ = NativeBuiltResponse::mark as fn(&NativeBuiltResponse, &Marker);
     let _ = NativeLifecycleRegistry::mark as fn(&NativeLifecycleRegistry, &Marker);
     let _ = NativeDependencyRegistry::mark as fn(&NativeDependencyRegistry, &Marker);
     let _ = NativeRequest::mark as fn(&NativeRequest, &Marker);
     let _ = RubyHandler::mark as fn(&RubyHandler, &Marker);
+    let _ = grpc::handler::RubyGrpcHandler::mark as fn(&grpc::handler::RubyGrpcHandler, &Marker);
     let _ = mark as fn(&NativeTestClient, &Marker);
 
     Ok(())
