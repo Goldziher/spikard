@@ -1,7 +1,7 @@
 """E2E tests for published Spikard Python package.
 
 These tests validate that:
-1. The published package installs correctly from PyPI (0.7.0)
+1. The published package installs correctly from PyPI (0.7.1)
 2. Core functionality works as expected via HTTP requests
 3. Real server is spawned and tested via HTTP (not direct handler calls)
 """
@@ -15,9 +15,9 @@ from spikard import TestClient
 
 
 def test_package_version() -> None:
-    """Validate that the installed version is 0.7.0 from PyPI."""
+    """Validate that the installed version is 0.7.1 from PyPI."""
     version = importlib.metadata.version("spikard")
-    assert version == "0.7.0", f"Expected version 0.7.0, got {version}"
+    assert version == "0.7.1", f"Expected version 0.7.1, got {version}"
 
 
 @pytest.mark.asyncio

@@ -1,4 +1,4 @@
-import { Spikard, get, post, TestClient } from "@spikard/wasm";
+import { Spikard, TestClient } from "@spikard/wasm";
 
 /**
  * WASM test application for Spikard
@@ -16,35 +16,54 @@ export function createApp() {
 	const app = new Spikard();
 
 	// Health check endpoint
-	get("/health", async (_req) => {
-		return { status: "ok" };
-	});
+	const health = async (_req) => {
+		return {
+			status: 200,
+			body: { status: "ok" },
+		};
+	};
+	app.addRoute(
+		{ method: "GET", path: "/health", handler_name: "health", is_async: true },
+		health,
+	);
 
 	// Query parameters endpoint
-	get("/query", async (req) => {
+	const query = async (req) => {
 		return {
 			name: req.query?.name ?? null,
 			age: req.query?.age ? parseInt(String(req.query.age)) : null,
 		};
-	});
+	};
+	app.addRoute(
+		{ method: "GET", path: "/query", handler_name: "query", is_async: true },
+		query,
+	);
 
 	// JSON echo endpoint
-	post("/echo", async (req) => {
+	const echo = async (req) => {
 		const body = req.json();
 		return {
 			received: body,
 			method: req.method,
 		};
-	});
+	};
+	app.addRoute(
+		{ method: "POST", path: "/echo", handler_name: "echo", is_async: true },
+		echo,
+	);
 
 	// Path parameters endpoint
-	get("/users/{id}", async (req) => {
+	const user = async (req) => {
 		const userId = req.pathParams?.id;
 		return {
 			userId,
 			type: typeof userId,
 		};
-	});
+	};
+	app.addRoute(
+		{ method: "GET", path: "/users/{id}", handler_name: "user", is_async: true },
+		user,
+	);
 
 	// Return app and test client
 	return {

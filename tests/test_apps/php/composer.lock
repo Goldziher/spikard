@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dd73a5d1030cd89e4efe3b2a5b804de9",
+    "content-hash": "dcb5dea5ff13145eb0407c8a3f599709",
     "packages": [
         {
             "name": "spikard/spikard",
-            "version": "0.6.2",
+            "version": "0.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Goldziher/spikard.git",
-                "reference": "a23f7da629b4de15b33023f0ac85f17b0c9cb05c"
+                "reference": "692d404dbd2b3dfba4a6190fb36ab80fbd3e9cc5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Goldziher/spikard/zipball/a23f7da629b4de15b33023f0ac85f17b0c9cb05c",
-                "reference": "a23f7da629b4de15b33023f0ac85f17b0c9cb05c",
+                "url": "https://api.github.com/repos/Goldziher/spikard/zipball/692d404dbd2b3dfba4a6190fb36ab80fbd3e9cc5",
+                "reference": "692d404dbd2b3dfba4a6190fb36ab80fbd3e9cc5",
                 "shasum": ""
             },
             "require": {
@@ -70,7 +70,7 @@
                 "issues": "https://github.com/Goldziher/spikard/issues",
                 "source": "https://github.com/Goldziher/spikard"
             },
-            "time": "2025-12-27T07:25:43+00:00"
+            "time": "2025-12-31T06:03:13+00:00"
         }
     ],
     "packages-dev": [
