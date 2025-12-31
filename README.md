@@ -1,6 +1,6 @@
 # Spikard
 
-A Rust-centric multi-language toolkit for building and validating typed web services. Generate type-safe API handlers from OpenAPI, GraphQL, AsyncAPI, or JSON-RPC specifications and deploy to Python, TypeScript, Ruby, PHP, or WebAssembly.
+A Rust-centric multi-language toolkit for building and validating typed web services. Generate type-safe API handlers from OpenAPI, GraphQL, gRPC/Protobuf, AsyncAPI, or JSON-RPC specifications and deploy to Python, TypeScript, Ruby, PHP, or WebAssembly.
 
 [![Rust](https://img.shields.io/badge/rust-1.75%2B-orange?logo=rust)](https://www.rust-lang.org/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python)](https://www.python.org/)
@@ -10,11 +10,11 @@ A Rust-centric multi-language toolkit for building and validating typed web serv
 
 ## Features
 
-- **Multi-Language Code Generation**: Generate type-safe handlers from OpenAPI 3.0.x, GraphQL SDL, AsyncAPI 2.x, or OpenRPC 1.x specifications
+- **Multi-Language Code Generation**: Generate type-safe handlers from OpenAPI 3.0.x, GraphQL SDL, gRPC/Protobuf, AsyncAPI 2.x, or OpenRPC 1.x specifications
 - **Project Scaffolding**: `spikard init` bootstraps production-ready projects with language-specific tooling
 - **Automatic Quality Validation**: Syntax, type checking, and linting automatically applied to generated code
 - **Zero-Copy Bindings**: Performance-optimized FFI layers (PyO3, napi-rs, magnus, ext-php-rs, wasm-bindgen)
-- **Tower-HTTP Runtime**: Complete HTTP server with compression, rate limiting, authentication, and CORS
+- **Tower-HTTP Runtime**: Complete HTTP/gRPC server with compression, rate limiting, authentication, and CORS
 - **Fixture-Driven Testing**: Comprehensive test coverage with JSON-based fixtures
 
 ## Supported Languages
@@ -53,6 +53,9 @@ spikard codegen --spec openapi.json --language python --output ./generated
 
 # From GraphQL schema
 spikard codegen --spec schema.graphql --language typescript --output ./src/generated
+
+# From Protobuf schema
+spikard codegen --spec user_service.proto --language python --output ./generated
 ```
 
 See [Init Command Guide](docs/init-command.md) for detailed options.
@@ -109,6 +112,7 @@ Spikard generates type-safe handlers from multiple API specifications:
 |--------|---------|-----------|
 | OpenAPI 3.0.x | ✅ | Python, TypeScript, Ruby, PHP |
 | GraphQL SDL | ✅ | Python, TypeScript, Ruby, PHP, Rust |
+| gRPC/Protobuf | ✅ | Python, TypeScript, Ruby, PHP, Rust |
 | AsyncAPI 2.x | ✅ | Python, TypeScript, Ruby, PHP |
 | OpenRPC 1.x | ✅ | Python, TypeScript, Ruby, PHP |
 
@@ -140,7 +144,10 @@ task test:js         # Run TypeScript tests
 
 ## Documentation
 
-- [Init Command Guide](docs/init-command.md) - Project bootstrapping options
+- [Getting Started](docs/getting-started/init-command.md) - Project bootstrapping and quick start
+- [gRPC/Protobuf Guide](docs/guides/grpc-getting-started.md) - Complete gRPC implementation guide
+- [Code Generation Guide](docs/guides/code-generation.md) - OpenAPI, GraphQL, Protobuf code generation
+- [Testing Guide](docs/guides/testing.md) - Testing patterns across all languages
 - [Architecture Decision Records](docs/adr/) - Design decisions and trade-offs
 - [Language-Specific Guides](docs/guides/) - Implementation patterns and best practices
 - See [examples/](examples/) for runnable sample projects in all languages
