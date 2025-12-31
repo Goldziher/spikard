@@ -5,28 +5,9 @@
 //! with the google/protobuf library.
 
 use super::ProtobufGenerator;
-use super::base::{escape_string, map_proto_type_to_language, sanitize_identifier};
+use super::base::{escape_string, map_proto_type_to_language, sanitize_identifier, to_camel_case};
 use crate::codegen::protobuf::spec_parser::{ProtobufSchema, FieldLabel, MessageDef, ServiceDef};
 use anyhow::Result;
-
-/// Convert snake_case to camelCase
-fn to_camel_case(s: &str) -> String {
-    let parts: Vec<&str> = s.split('_').collect();
-    if parts.is_empty() {
-        return String::new();
-    }
-
-    let mut result = parts[0].to_string();
-    for part in &parts[1..] {
-        if !part.is_empty() {
-            result.push_str(&part[0..1].to_uppercase());
-            if part.len() > 1 {
-                result.push_str(&part[1..]);
-            }
-        }
-    }
-    result
-}
 
 /// PHP Protobuf code generator
 #[derive(Default, Debug, Clone, Copy)]
@@ -239,9 +220,10 @@ impl PhpProtobufGenerator {
                 code.push_str(&format!("     * @return {}\n", response_type));
                 code.push_str("     */\n");
 
+                // Use fixed parameter name $request to avoid indexing issues
                 code.push_str(&format!(
-                    "    public function {}(${}: {}): {}\n",
-                    method_name, request_type[0..1].to_lowercase(), request_type, response_type
+                    "    public function {}({} $request): {}\n",
+                    method_name, request_type, response_type
                 ));
 
                 code.push_str("    {\n");

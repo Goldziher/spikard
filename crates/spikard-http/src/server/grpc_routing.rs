@@ -8,6 +8,32 @@ use axum::body::Body;
 use axum::http::{Request, Response, StatusCode};
 use std::sync::Arc;
 
+/// Convert gRPC status code to HTTP status code
+///
+/// Maps all gRPC status codes to appropriate HTTP status codes
+/// following the gRPC-HTTP status code mapping specification.
+fn grpc_status_to_http(code: tonic::Code) -> StatusCode {
+    match code {
+        tonic::Code::Ok => StatusCode::OK,
+        tonic::Code::Cancelled => StatusCode::from_u16(499).unwrap(), // Client Closed Request
+        tonic::Code::Unknown => StatusCode::INTERNAL_SERVER_ERROR,
+        tonic::Code::InvalidArgument => StatusCode::BAD_REQUEST,
+        tonic::Code::DeadlineExceeded => StatusCode::GATEWAY_TIMEOUT,
+        tonic::Code::NotFound => StatusCode::NOT_FOUND,
+        tonic::Code::AlreadyExists => StatusCode::CONFLICT,
+        tonic::Code::PermissionDenied => StatusCode::FORBIDDEN,
+        tonic::Code::ResourceExhausted => StatusCode::TOO_MANY_REQUESTS,
+        tonic::Code::FailedPrecondition => StatusCode::BAD_REQUEST,
+        tonic::Code::Aborted => StatusCode::CONFLICT,
+        tonic::Code::OutOfRange => StatusCode::BAD_REQUEST,
+        tonic::Code::Unimplemented => StatusCode::NOT_IMPLEMENTED,
+        tonic::Code::Internal => StatusCode::INTERNAL_SERVER_ERROR,
+        tonic::Code::Unavailable => StatusCode::SERVICE_UNAVAILABLE,
+        tonic::Code::DataLoss => StatusCode::INTERNAL_SERVER_ERROR,
+        tonic::Code::Unauthenticated => StatusCode::UNAUTHORIZED,
+    }
+}
+
 /// Route a gRPC request to the appropriate handler
 ///
 /// Parses the request path to extract service and method names,
@@ -62,14 +88,15 @@ pub async fn route_grpc_request(
     // Create a Tonic request
     let mut tonic_request = tonic::Request::new(body_bytes);
 
-    // Copy headers to Tonic metadata (need to own the strings)
+    // Copy headers to Tonic metadata
     for (key, value) in parts.headers.iter() {
         if let Ok(value_str) = value.to_str() {
-            let key_string = key.to_string();
-            if let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
-                && let Ok(key) = key_string.parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
-            {
-                tonic_request.metadata_mut().insert(key, metadata_value);
+            // Try to parse as ASCII metadata
+            if let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>() {
+                // Use key.as_str() directly instead of creating String
+                if let Ok(metadata_key) = key.as_str().parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>() {
+                    tonic_request.metadata_mut().insert(metadata_key, metadata_value);
+                }
             }
         }
     }
@@ -79,21 +106,14 @@ pub async fn route_grpc_request(
     let tonic_response = match service.handle_unary(service_name, method_name, tonic_request).await {
         Ok(resp) => resp,
         Err(status) => {
-            let status_code = match status.code() {
-                tonic::Code::NotFound => StatusCode::NOT_FOUND,
-                tonic::Code::InvalidArgument => StatusCode::BAD_REQUEST,
-                tonic::Code::Unauthenticated => StatusCode::UNAUTHORIZED,
-                tonic::Code::PermissionDenied => StatusCode::FORBIDDEN,
-                tonic::Code::Internal => StatusCode::INTERNAL_SERVER_ERROR,
-                _ => StatusCode::INTERNAL_SERVER_ERROR,
-            };
+            let status_code = grpc_status_to_http(status.code());
             return Err((status_code, status.message().to_string()));
         }
     };
 
     // Convert Tonic response to Axum response
     let payload = tonic_response.get_ref().clone();
-    let metadata = tonic_response.metadata().clone();
+    let metadata = tonic_response.metadata();
 
     let mut response = Response::builder()
         .status(StatusCode::OK)
@@ -123,7 +143,12 @@ pub async fn route_grpc_request(
 ///
 /// Returns true if the request has a content-type starting with "application/grpc"
 pub fn is_grpc_request(request: &Request<Body>) -> bool {
-    crate::grpc::is_grpc_request(request.headers())
+    request
+        .headers()
+        .get(axum::http::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .map(|v| v.starts_with("application/grpc"))
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
@@ -237,5 +262,27 @@ mod tests {
         let request = Request::builder().body(Body::empty()).unwrap();
 
         assert!(!is_grpc_request(&request));
+    }
+
+    #[test]
+    fn test_grpc_status_to_http_mappings() {
+        // Test all gRPC status codes map correctly
+        assert_eq!(grpc_status_to_http(tonic::Code::Ok), StatusCode::OK);
+        assert_eq!(grpc_status_to_http(tonic::Code::Cancelled), StatusCode::from_u16(499).unwrap());
+        assert_eq!(grpc_status_to_http(tonic::Code::Unknown), StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(grpc_status_to_http(tonic::Code::InvalidArgument), StatusCode::BAD_REQUEST);
+        assert_eq!(grpc_status_to_http(tonic::Code::DeadlineExceeded), StatusCode::GATEWAY_TIMEOUT);
+        assert_eq!(grpc_status_to_http(tonic::Code::NotFound), StatusCode::NOT_FOUND);
+        assert_eq!(grpc_status_to_http(tonic::Code::AlreadyExists), StatusCode::CONFLICT);
+        assert_eq!(grpc_status_to_http(tonic::Code::PermissionDenied), StatusCode::FORBIDDEN);
+        assert_eq!(grpc_status_to_http(tonic::Code::ResourceExhausted), StatusCode::TOO_MANY_REQUESTS);
+        assert_eq!(grpc_status_to_http(tonic::Code::FailedPrecondition), StatusCode::BAD_REQUEST);
+        assert_eq!(grpc_status_to_http(tonic::Code::Aborted), StatusCode::CONFLICT);
+        assert_eq!(grpc_status_to_http(tonic::Code::OutOfRange), StatusCode::BAD_REQUEST);
+        assert_eq!(grpc_status_to_http(tonic::Code::Unimplemented), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(grpc_status_to_http(tonic::Code::Internal), StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(grpc_status_to_http(tonic::Code::Unavailable), StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(grpc_status_to_http(tonic::Code::DataLoss), StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(grpc_status_to_http(tonic::Code::Unauthenticated), StatusCode::UNAUTHORIZED);
     }
 }

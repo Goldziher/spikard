@@ -45,4 +45,4 @@ pub mod handler;
 mod test_grpc;
 
 // Re-export main types
-pub use handler::{GrpcMetadata, GrpcRequest, GrpcResponse, NodeGrpcHandler};
+pub use handler::{GrpcRequest, GrpcResponse, NodeGrpcHandler};

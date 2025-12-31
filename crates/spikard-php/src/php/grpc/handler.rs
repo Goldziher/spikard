@@ -7,12 +7,12 @@ use bytes::Bytes;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendCallable;
+use spikard_bindings_shared::grpc_metadata::{extract_metadata_to_hashmap, hashmap_to_metadata};
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use std::collections::HashMap;
 use std::future::Future;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
-use tonic::metadata::MetadataMap;
 
 /// PHP-side gRPC request
 ///
@@ -81,16 +81,7 @@ impl PhpGrpcRequest {
 impl PhpGrpcRequest {
     /// Convert from Rust GrpcRequestData to PHP PhpGrpcRequest
     pub fn from_request_data(request: &GrpcRequestData) -> Self {
-        let mut metadata = HashMap::new();
-
-        for key_value in request.metadata.iter() {
-            if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value {
-                let key_str = key.as_str().to_string();
-                if let Ok(value_str) = value.to_str() {
-                    metadata.insert(key_str, value_str.to_string());
-                }
-            }
-        }
+        let metadata = extract_metadata_to_hashmap(&request.metadata, true);
 
         Self {
             service_name: request.service_name.clone(),
@@ -143,19 +134,7 @@ impl PhpGrpcResponse {
     /// Convert to Rust GrpcResponseData
     pub fn to_response_data(&self) -> Result<GrpcResponseData, String> {
         let payload = Bytes::copy_from_slice(&self.payload);
-        let mut metadata = MetadataMap::new();
-
-        for (key, value) in &self.metadata {
-            let metadata_key = key
-                .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
-                .map_err(|e| format!("Invalid metadata key '{}': {}", key, e))?;
-
-            let metadata_value = value
-                .parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
-                .map_err(|e| format!("Invalid metadata value for key '{}': {}", key, e))?;
-
-            metadata.insert(metadata_key, metadata_value);
-        }
+        let metadata = hashmap_to_metadata(&self.metadata)?;
 
         Ok(GrpcResponseData { payload, metadata })
     }
@@ -385,6 +364,8 @@ fn interpret_php_grpc_response(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bytes::Bytes;
+    use tonic::metadata::MetadataMap;
 
     #[test]
     fn test_php_grpc_request_creation() {

@@ -71,6 +71,24 @@ module Spikard
         # Implementation in Rust (Magnus FFI)
         # See: crates/spikard-rb/src/grpc/handler.rs
       end
+
+      # Create an error response
+      #
+      # @param message [String] Error message
+      # @param metadata [Hash<String, String>] Optional gRPC metadata
+      # @return [Response] A response with error status
+      #
+      # @example
+      #   response = Spikard::Grpc::Response.error('Method not implemented')
+      def self.error(message, metadata = {})
+        error_metadata = metadata.merge(
+          'grpc-status' => 'INTERNAL',
+          'grpc-message' => message
+        )
+        response = new(payload: '')
+        response.metadata = error_metadata
+        response
+      end
     end
 
     # Base class for gRPC handlers
@@ -127,8 +145,14 @@ module Spikard
       #
       # @param service_name [String] Fully qualified service name
       # @param handler [Spikard::Grpc::Handler] Handler instance
-      # @raise [ArgumentError] if handler doesn't respond to handle_request
+      # @raise [ArgumentError] if service_name is invalid or handler doesn't respond to handle_request
       def register_handler(service_name, handler)
+        raise ArgumentError, 'Service name cannot be empty' if service_name.nil? || service_name.empty?
+
+        unless service_name.include?('.')
+          raise ArgumentError, "Service name '#{service_name}' must be fully qualified (contain a dot)"
+        end
+
         unless handler.respond_to?(:handle_request)
           raise ArgumentError, "Handler must respond to :handle_request"
         end

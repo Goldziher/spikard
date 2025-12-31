@@ -232,6 +232,63 @@ describe("createUnaryHandler", () => {
 
 		await handler.handleRequest(request);
 	});
+
+	it("should support response metadata", async () => {
+		const handler = createUnaryHandler(
+			"GetUser",
+			async (_req: { id: number }) => {
+				return {
+					response: { name: "Test User" },
+					metadata: { "x-cache-status": "hit", "x-server-id": "server-1" },
+				};
+			},
+			mockRequestType,
+			mockResponseType,
+		);
+
+		const buffer = new ArrayBuffer(4);
+		const view = new DataView(buffer);
+		view.setUint32(0, 1, true);
+
+		const request: GrpcRequest = {
+			serviceName: "test.UserService",
+			methodName: "GetUser",
+			payload: Buffer.from(buffer),
+			metadata: {},
+		};
+
+		const response = await handler.handleRequest(request);
+		expect(response.metadata).toBeDefined();
+		expect(response.metadata?.["x-cache-status"]).toBe("hit");
+		expect(response.metadata?.["x-server-id"]).toBe("server-1");
+		expect(response.payload.toString()).toBe("Test User");
+	});
+
+	it("should work without response metadata", async () => {
+		const handler = createUnaryHandler(
+			"GetUser",
+			async (_req: { id: number }) => {
+				return { name: "Test User" };
+			},
+			mockRequestType,
+			mockResponseType,
+		);
+
+		const buffer = new ArrayBuffer(4);
+		const view = new DataView(buffer);
+		view.setUint32(0, 1, true);
+
+		const request: GrpcRequest = {
+			serviceName: "test.UserService",
+			methodName: "GetUser",
+			payload: Buffer.from(buffer),
+			metadata: {},
+		};
+
+		const response = await handler.handleRequest(request);
+		expect(response.metadata).toBeUndefined();
+		expect(response.payload.toString()).toBe("Test User");
+	});
 });
 
 describe("createServiceHandler", () => {
@@ -375,5 +432,158 @@ describe("GrpcStatusCode", () => {
 		expect(GrpcStatusCode.UNAVAILABLE).toBe(14);
 		expect(GrpcStatusCode.DATA_LOSS).toBe(15);
 		expect(GrpcStatusCode.UNAUTHENTICATED).toBe(16);
+	});
+});
+
+describe("Edge cases", () => {
+	const mockRequestType = {
+		decode(buffer: Uint8Array): { id: number } {
+			return { id: 1 };
+		},
+	};
+
+	const mockResponseType = {
+		encode(message: { name: string }): { finish(): Uint8Array } {
+			return {
+				finish() {
+					return new TextEncoder().encode(message.name);
+				},
+			};
+		},
+	};
+
+	it("should handle errors thrown from handler", async () => {
+		const handler = createUnaryHandler(
+			"GetUser",
+			async () => {
+				throw new Error("Database connection failed");
+			},
+			mockRequestType,
+			mockResponseType,
+		);
+
+		const request: GrpcRequest = {
+			serviceName: "test.UserService",
+			methodName: "GetUser",
+			payload: Buffer.from([0, 0, 0, 1]),
+			metadata: {},
+		};
+
+		await expect(handler.handleRequest(request)).rejects.toThrow("Database connection failed");
+	});
+
+	it("should handle GrpcError with different status codes", async () => {
+		const testCases = [
+			{ code: GrpcStatusCode.NOT_FOUND, message: "User not found" },
+			{ code: GrpcStatusCode.PERMISSION_DENIED, message: "Access denied" },
+			{ code: GrpcStatusCode.INVALID_ARGUMENT, message: "Invalid ID" },
+			{ code: GrpcStatusCode.UNAUTHENTICATED, message: "Not authenticated" },
+		];
+
+		for (const testCase of testCases) {
+			const handler = createUnaryHandler(
+				"GetUser",
+				async () => {
+					throw new GrpcError(testCase.code, testCase.message);
+				},
+				mockRequestType,
+				mockResponseType,
+			);
+
+			const request: GrpcRequest = {
+				serviceName: "test.UserService",
+				methodName: "GetUser",
+				payload: Buffer.from([0, 0, 0, 1]),
+				metadata: {},
+			};
+
+			try {
+				await handler.handleRequest(request);
+				throw new Error("Should have thrown");
+			} catch (error) {
+				expect(error).toBeInstanceOf(GrpcError);
+				expect((error as GrpcError).code).toBe(testCase.code);
+				expect((error as GrpcError).message).toBe(testCase.message);
+			}
+		}
+	});
+
+	it("should handle empty payload", async () => {
+		const emptyRequestType = {
+			decode(_buffer: Uint8Array): Record<string, never> {
+				return {};
+			},
+		};
+
+		const handler = createUnaryHandler(
+			"Ping",
+			async () => {
+				return { name: "pong" };
+			},
+			emptyRequestType,
+			mockResponseType,
+		);
+
+		const request: GrpcRequest = {
+			serviceName: "test.Service",
+			methodName: "Ping",
+			payload: Buffer.from([]),
+			metadata: {},
+		};
+
+		const response = await handler.handleRequest(request);
+		expect(response.payload.toString()).toBe("pong");
+	});
+
+	it("should handle large metadata", async () => {
+		const handler = createUnaryHandler(
+			"GetUser",
+			async (_req, metadata) => {
+				// Verify large metadata is passed correctly
+				expect(Object.keys(metadata).length).toBe(100);
+				return { name: "Test" };
+			},
+			mockRequestType,
+			mockResponseType,
+		);
+
+		const largeMetadata: Record<string, string> = {};
+		for (let i = 0; i < 100; i++) {
+			largeMetadata[`x-custom-${i}`] = `value-${i}`;
+		}
+
+		const request: GrpcRequest = {
+			serviceName: "test.UserService",
+			methodName: "GetUser",
+			payload: Buffer.from([0, 0, 0, 1]),
+			metadata: largeMetadata,
+		};
+
+		await handler.handleRequest(request);
+	});
+
+	it("should preserve metadata key case", async () => {
+		const handler = createUnaryHandler(
+			"GetUser",
+			async (_req, metadata) => {
+				expect(metadata["X-Custom-Header"]).toBe("value");
+				expect(metadata["x-lower-case"]).toBe("test");
+				return { name: "Test" };
+			},
+			mockRequestType,
+			mockResponseType,
+		);
+
+		const request: GrpcRequest = {
+			serviceName: "test.UserService",
+			methodName: "GetUser",
+			payload: Buffer.from([0, 0, 0, 1]),
+			metadata: {
+				"X-Custom-Header": "value",
+				"x-lower-case": "test",
+			},
+		};
+
+		await handler.handleRequest(request);
 	});
 });

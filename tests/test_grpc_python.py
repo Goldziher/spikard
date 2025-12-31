@@ -259,5 +259,211 @@ async def test_grpc_handler_with_protobuf():
     assert resp_struct["handled"] is True
 
 
+@pytest.mark.asyncio
+async def test_grpc_handler_error_handling():
+    """Test that exceptions in handlers are properly propagated."""
+    from spikard import GrpcRequest, GrpcResponse
+
+    class ErrorHandler:
+        async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
+            raise ValueError("Invalid request parameter")
+
+    handler = ErrorHandler()
+    request = GrpcRequest(
+        service_name="test.ErrorService",
+        method_name="Error",
+        payload=b"data",
+    )
+
+    with pytest.raises(ValueError, match="Invalid request parameter"):
+        await handler.handle_request(request)
+
+
+@pytest.mark.asyncio
+async def test_grpc_handler_different_exceptions():
+    """Test different exception types."""
+    from spikard import GrpcRequest, GrpcResponse
+
+    class ExceptionHandler:
+        def __init__(self, exception_type, message):
+            self.exception_type = exception_type
+            self.message = message
+
+        async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
+            raise self.exception_type(self.message)
+
+    # Test ValueError
+    handler = ExceptionHandler(ValueError, "bad value")
+    request = GrpcRequest(
+        service_name="test.Service", method_name="Method", payload=b""
+    )
+    with pytest.raises(ValueError, match="bad value"):
+        await handler.handle_request(request)
+
+    # Test NotImplementedError
+    handler = ExceptionHandler(NotImplementedError, "not yet")
+    with pytest.raises(NotImplementedError, match="not yet"):
+        await handler.handle_request(request)
+
+    # Test PermissionError
+    handler = ExceptionHandler(PermissionError, "access denied")
+    with pytest.raises(PermissionError, match="access denied"):
+        await handler.handle_request(request)
+
+
+def test_grpc_request_empty_payload():
+    """Test creating a GrpcRequest with empty payload."""
+    from spikard import GrpcRequest
+
+    request = GrpcRequest(
+        service_name="test.Service",
+        method_name="Method",
+        payload=b"",
+    )
+
+    assert request.service_name == "test.Service"
+    assert request.method_name == "Method"
+    assert request.payload == b""
+
+
+def test_grpc_request_large_payload():
+    """Test creating a GrpcRequest with large payload."""
+    from spikard import GrpcRequest
+
+    # 1MB payload
+    large_payload = b"x" * (1024 * 1024)
+    request = GrpcRequest(
+        service_name="test.Service",
+        method_name="Method",
+        payload=large_payload,
+    )
+
+    assert len(request.payload) == 1024 * 1024
+    assert request.payload == large_payload
+
+
+def test_grpc_request_metadata_special_chars():
+    """Test metadata with special characters."""
+    from spikard import GrpcRequest
+
+    request = GrpcRequest(
+        service_name="test.Service",
+        method_name="Method",
+        payload=b"data",
+        metadata={
+            "x-custom-header": "value-with-dashes",
+            "content-type": "application/grpc+proto",
+        },
+    )
+
+    assert request.get_metadata("x-custom-header") == "value-with-dashes"
+    assert request.get_metadata("content-type") == "application/grpc+proto"
+
+
+def test_grpc_response_empty_metadata():
+    """Test creating GrpcResponse without metadata."""
+    from spikard import GrpcResponse
+
+    response = GrpcResponse(payload=b"data")
+    assert len(response.metadata) == 0
+
+
+def test_grpc_response_multiple_metadata():
+    """Test GrpcResponse with multiple metadata entries."""
+    from spikard import GrpcResponse
+
+    response = GrpcResponse(
+        payload=b"data",
+        metadata={
+            "header1": "value1",
+            "header2": "value2",
+            "header3": "value3",
+        },
+    )
+
+    assert response.metadata["header1"] == "value1"
+    assert response.metadata["header2"] == "value2"
+    assert response.metadata["header3"] == "value3"
+
+
+@pytest.mark.asyncio
+async def test_grpc_handler_modifies_metadata():
+    """Test that handlers can add metadata to responses."""
+    from spikard import GrpcRequest, GrpcResponse
+
+    class MetadataHandler:
+        async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
+            response = GrpcResponse(payload=b"response")
+            response.metadata["x-server-version"] = "1.0.0"
+            response.metadata["x-request-id"] = "abc123"
+            return response
+
+    handler = MetadataHandler()
+    request = GrpcRequest(
+        service_name="test.Service", method_name="Method", payload=b"request"
+    )
+
+    response = await handler.handle_request(request)
+    assert response.metadata["x-server-version"] == "1.0.0"
+    assert response.metadata["x-request-id"] == "abc123"
+
+
+@pytest.mark.asyncio
+async def test_grpc_service_method_routing():
+    """Test that handlers can route based on method name."""
+    from spikard import GrpcRequest, GrpcResponse
+
+    class MultiMethodHandler:
+        async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
+            if request.method_name == "GetUser":
+                return GrpcResponse(payload=b"user_data")
+            elif request.method_name == "UpdateUser":
+                return GrpcResponse(payload=b"updated")
+            else:
+                raise NotImplementedError(f"Unknown method: {request.method_name}")
+
+    handler = MultiMethodHandler()
+
+    # Test GetUser
+    request = GrpcRequest(
+        service_name="test.UserService", method_name="GetUser", payload=b""
+    )
+    response = await handler.handle_request(request)
+    assert response.payload == b"user_data"
+
+    # Test UpdateUser
+    request = GrpcRequest(
+        service_name="test.UserService", method_name="UpdateUser", payload=b""
+    )
+    response = await handler.handle_request(request)
+    assert response.payload == b"updated"
+
+    # Test unknown method
+    request = GrpcRequest(
+        service_name="test.UserService", method_name="DeleteUser", payload=b""
+    )
+    with pytest.raises(NotImplementedError, match="Unknown method: DeleteUser"):
+        await handler.handle_request(request)
+
+
+def test_grpc_request_metadata_case_sensitivity():
+    """Test that metadata keys are case-sensitive."""
+    from spikard import GrpcRequest
+
+    request = GrpcRequest(
+        service_name="test.Service",
+        method_name="Method",
+        payload=b"",
+        metadata={
+            "Content-Type": "application/json",
+            "content-type": "application/xml",
+        },
+    )
+
+    # Both should exist as separate keys
+    assert request.get_metadata("Content-Type") == "application/json"
+    assert request.get_metadata("content-type") == "application/xml"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

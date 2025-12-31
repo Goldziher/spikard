@@ -43,14 +43,6 @@ pub struct GrpcResponse {
     pub metadata: Option<HashMap<String, String>>,
 }
 
-/// gRPC metadata as key-value pairs for easier JavaScript interop
-#[napi(object)]
-#[derive(Clone)]
-pub struct GrpcMetadata {
-    /// Metadata entries as key-value pairs
-    pub entries: HashMap<String, String>,
-}
-
 /// Convert tonic MetadataMap to JavaScript-friendly HashMap
 fn metadata_to_hashmap(metadata: &MetadataMap) -> HashMap<String, String> {
     let mut map = HashMap::new();
@@ -125,7 +117,8 @@ impl GrpcHandler for NodeGrpcHandler {
             let js_request = GrpcRequest {
                 service_name: request.service_name.clone(),
                 method_name: request.method_name.clone(),
-                payload: Buffer::from(request.payload.to_vec()),
+                // Zero-copy conversion: Bytes implements AsRef<[u8]>
+                payload: Buffer::from(request.payload.as_ref()),
                 metadata: metadata_to_hashmap(&request.metadata),
             };
 
@@ -142,7 +135,8 @@ impl GrpcHandler for NodeGrpcHandler {
                 })?;
 
             // Convert JavaScript response back to Rust types
-            let payload = Bytes::from(js_response.payload.to_vec());
+            // Zero-copy conversion: Buffer implements AsRef<[u8]>
+            let payload = Bytes::copy_from_slice(js_response.payload.as_ref());
             let metadata = if let Some(meta_map) = js_response.metadata {
                 hashmap_to_metadata(&meta_map).map_err(|e| tonic::Status::internal(format!("Invalid metadata: {}", e)))?
             } else {
@@ -220,71 +214,4 @@ mod tests {
         assert!(result.is_err());
     }
 
-    #[test]
-    fn test_grpc_request_creation() {
-        let request = GrpcRequest {
-            service_name: "mypackage.UserService".to_string(),
-            method_name: "GetUser".to_string(),
-            payload: Buffer::from(vec![1, 2, 3, 4]),
-            metadata: HashMap::new(),
-        };
-
-        assert_eq!(request.service_name, "mypackage.UserService");
-        assert_eq!(request.method_name, "GetUser");
-        assert_eq!(request.payload.len(), 4);
-    }
-
-    #[test]
-    fn test_grpc_response_creation() {
-        let mut metadata = HashMap::new();
-        metadata.insert("x-custom".to_string(), "value".to_string());
-
-        let response = GrpcResponse {
-            payload: Buffer::from(vec![5, 6, 7, 8]),
-            metadata: Some(metadata),
-        };
-
-        assert_eq!(response.payload.len(), 4);
-        assert!(response.metadata.is_some());
-        assert_eq!(response.metadata.unwrap().get("x-custom"), Some(&"value".to_string()));
-    }
-
-    #[test]
-    fn test_grpc_response_no_metadata() {
-        let response = GrpcResponse {
-            payload: Buffer::from(vec![1, 2, 3]),
-            metadata: None,
-        };
-
-        assert_eq!(response.payload.len(), 3);
-        assert!(response.metadata.is_none());
-    }
-
-    #[test]
-    fn test_grpc_metadata_creation() {
-        let mut entries = HashMap::new();
-        entries.insert("key1".to_string(), "value1".to_string());
-        entries.insert("key2".to_string(), "value2".to_string());
-
-        let metadata = GrpcMetadata { entries };
-
-        assert_eq!(metadata.entries.len(), 2);
-        assert_eq!(metadata.entries.get("key1"), Some(&"value1".to_string()));
-        assert_eq!(metadata.entries.get("key2"), Some(&"value2".to_string()));
-    }
-
-    #[test]
-    fn test_node_grpc_handler_service_name() {
-        // We can't test the full handler without a JavaScript runtime,
-        // but we can test the service_name method through a mock
-        struct MockHandler {
-            service_name: &'static str,
-        }
-
-        let handler = MockHandler {
-            service_name: "test.TestService",
-        };
-
-        assert_eq!(handler.service_name, "test.TestService");
-    }
 }

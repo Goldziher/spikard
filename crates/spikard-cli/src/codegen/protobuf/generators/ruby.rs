@@ -4,7 +4,7 @@
 //! Generated code uses google-protobuf gem with RBS type signatures in comments.
 
 use super::ProtobufGenerator;
-use super::base::{escape_string, map_proto_type_to_language, sanitize_identifier};
+use super::base::{escape_string, map_proto_type_to_language, sanitize_identifier, to_pascal_case};
 use crate::codegen::protobuf::spec_parser::{ProtobufSchema, FieldLabel, MessageDef, ServiceDef};
 use anyhow::Result;
 
@@ -269,19 +269,6 @@ impl RubyProtobufGenerator {
     }
 }
 
-/// Convert a string to PascalCase
-fn to_pascal_case(s: &str) -> String {
-    s.split('_')
-        .map(|part| {
-            let mut chars = part.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            }
-        })
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -443,7 +430,8 @@ mod tests {
     }
 
     #[test]
-    fn test_to_pascal_case() {
+    fn test_to_pascal_case_integration() {
+        use crate::codegen::protobuf::generators::base::to_pascal_case;
         assert_eq!(to_pascal_case("example"), "Example");
         assert_eq!(to_pascal_case("user_service"), "UserService");
         assert_eq!(to_pascal_case("api_v1"), "ApiV1");

@@ -112,8 +112,9 @@ impl TypeScriptProtobufGenerator {
                 let field_type =
                     map_proto_type_to_language(&field.field_type, "typescript", is_optional, is_repeated);
 
-                // Optional fields use ? suffix in TypeScript
-                if is_optional || is_repeated {
+                // Only truly optional fields use ? suffix in TypeScript
+                // Repeated fields (arrays) should not use ?: since an empty array is different from undefined
+                if is_optional {
                     code.push_str(&format!("  {}?: {};\n", field_name, field_type));
                 } else {
                     code.push_str(&format!("  {}: {};\n", field_name, field_type));
@@ -303,7 +304,9 @@ mod tests {
         let generator = TypeScriptProtobufGenerator;
         let code = generator.generate_message_interface(&message);
 
-        assert!(code.contains("tags?: string[]"));
+        // Repeated fields should NOT use ?: since empty array [] is different from undefined
+        assert!(code.contains("tags: string[]"));
+        assert!(!code.contains("tags?:"));
     }
 
     #[test]

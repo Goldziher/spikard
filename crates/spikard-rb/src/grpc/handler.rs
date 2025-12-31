@@ -8,6 +8,7 @@ use bytes::Bytes;
 use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
 use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
+use spikard_bindings_shared::grpc_metadata::{extract_metadata_to_hashmap, hashmap_to_metadata};
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -15,7 +16,6 @@ use std::future::Future;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
-use tonic::metadata::{MetadataMap, MetadataKey, MetadataValue};
 
 use crate::gvl::with_gvl;
 
@@ -36,7 +36,7 @@ pub struct RubyGrpcRequest {
 impl RubyGrpcRequest {
     /// Create a new RubyGrpcRequest from GrpcRequestData
     fn from_grpc_request(request: GrpcRequestData) -> Self {
-        let metadata = extract_metadata_map(&request.metadata);
+        let metadata = extract_metadata_to_hashmap(&request.metadata, true);
         Self {
             service_name: request.service_name,
             method_name: request.method_name,
@@ -46,13 +46,13 @@ impl RubyGrpcRequest {
     }
 
     /// Get the service name
-    fn service_name(_ruby: &Ruby, rb_self: &Self) -> String {
-        rb_self.service_name.clone()
+    fn service_name(&self) -> &str {
+        &self.service_name
     }
 
     /// Get the method name
-    fn method_name(_ruby: &Ruby, rb_self: &Self) -> String {
-        rb_self.method_name.clone()
+    fn method_name(&self) -> &str {
+        &self.method_name
     }
 
     /// Get the payload as a binary string
@@ -124,18 +124,11 @@ impl RubyGrpcResponse {
 
     /// Convert to GrpcResponseData
     fn into_grpc_response(self) -> Result<GrpcResponseData, String> {
-        let mut metadata_map = MetadataMap::new();
-        for (key, value) in self.metadata.borrow().iter() {
-            let metadata_key = MetadataKey::from_bytes(key.as_bytes())
-                .map_err(|err| format!("Invalid metadata key '{}': {}", key, err))?;
-            let metadata_value = MetadataValue::try_from(value)
-                .map_err(|err| format!("Invalid metadata value for '{}': {}", key, err))?;
-            metadata_map.insert(metadata_key, metadata_value);
-        }
+        let metadata = hashmap_to_metadata(&self.metadata.borrow())?;
 
         Ok(GrpcResponseData {
             payload: Bytes::from(self.payload.borrow().clone()),
-            metadata: metadata_map,
+            metadata,
         })
     }
 }
@@ -242,23 +235,6 @@ impl GrpcHandler for RubyGrpcHandler {
     }
 }
 
-/// Extract metadata from gRPC MetadataMap to a simple HashMap
-fn extract_metadata_map(metadata: &MetadataMap) -> HashMap<String, String> {
-    let mut map = HashMap::new();
-    for key_value in metadata.iter() {
-        match key_value {
-            tonic::metadata::KeyAndValueRef::Ascii(key, value) => {
-                map.insert(key.as_str().to_string(), value.to_str().unwrap_or("").to_string());
-            }
-            tonic::metadata::KeyAndValueRef::Binary(key, value) => {
-                // Binary metadata - skip or convert to base64 if needed
-                let _ = (key, value); // Acknowledge we're not using them
-            }
-        }
-    }
-    map
-}
-
 /// Initialize the gRPC module in Ruby
 pub fn init(ruby: &Ruby, spikard_module: &magnus::RModule) -> Result<(), Error> {
     let grpc_module = spikard_module.define_module("Grpc")?;
@@ -283,6 +259,7 @@ pub fn init(ruby: &Ruby, spikard_module: &magnus::RModule) -> Result<(), Error> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bytes::Bytes;
     use tonic::metadata::MetadataMap;
 
     #[test]
@@ -302,11 +279,13 @@ mod tests {
 
     #[test]
     fn test_metadata_extraction() {
+        use spikard_bindings_shared::grpc_metadata::extract_metadata_to_hashmap;
+
         let mut metadata = MetadataMap::new();
         metadata.insert("content-type", "application/grpc".parse().unwrap());
         metadata.insert("authorization", "Bearer token123".parse().unwrap());
 
-        let extracted = extract_metadata_map(&metadata);
+        let extracted = extract_metadata_to_hashmap(&metadata, false);
         assert_eq!(extracted.get("content-type").unwrap(), "application/grpc");
         assert_eq!(extracted.get("authorization").unwrap(), "Bearer token123");
     }

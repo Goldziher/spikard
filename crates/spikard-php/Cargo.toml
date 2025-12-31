@@ -20,6 +20,7 @@ extension-module = [
     "dep:urlencoding",
     "dep:bytes",
     "dep:spikard-bindings-shared",
+    "dep:tonic",
 ]
 
 [dependencies]
@@ -38,6 +39,7 @@ serde_json = { version = "1", features = ["preserve_order"] }
 serde = { version = "1", features = ["derive"] }
 anyhow = "1.0"
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "sync"] }
+tonic = { version = "0.14", optional = true }
 tracing = "0.1"
 hyper = "1"
 http-body-util = "0.1"

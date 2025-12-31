@@ -68,17 +68,7 @@ impl GenericGrpcService {
         match result {
             Ok(grpc_response) => {
                 let mut response = Response::new(grpc_response.payload);
-
-                // Copy metadata to response headers
-                let response_metadata = response.metadata_mut();
-                for key_value in grpc_response.metadata.iter() {
-                    if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value {
-                        response_metadata.insert(key, value.clone());
-                    } else if let tonic::metadata::KeyAndValueRef::Binary(key, value) = key_value {
-                        response_metadata.insert_bin(key, value.clone());
-                    }
-                }
-
+                copy_metadata(&grpc_response.metadata, response.metadata_mut());
                 Ok(response)
             }
             Err(status) => Err(status),
@@ -146,23 +136,35 @@ pub fn is_grpc_request(headers: &axum::http::HeaderMap) -> bool {
         .unwrap_or(false)
 }
 
+/// Copy metadata from source to destination MetadataMap
+///
+/// Efficiently copies all metadata entries (both ASCII and binary)
+/// from one MetadataMap to another without unnecessary allocations.
+///
+/// # Arguments
+///
+/// * `source` - Source metadata to copy from
+/// * `dest` - Destination metadata to copy into
+pub fn copy_metadata(source: &tonic::metadata::MetadataMap, dest: &mut tonic::metadata::MetadataMap) {
+    for key_value in source.iter() {
+        match key_value {
+            tonic::metadata::KeyAndValueRef::Ascii(key, value) => {
+                dest.insert(key, value.clone());
+            }
+            tonic::metadata::KeyAndValueRef::Binary(key, value) => {
+                dest.insert_bin(key, value.clone());
+            }
+        }
+    }
+}
+
 /// Convert GrpcResponseData to Tonic Response
 ///
 /// Helper function to convert our internal response representation
 /// to a Tonic Response.
 pub fn grpc_response_to_tonic(response: GrpcResponseData) -> Response<Bytes> {
     let mut tonic_response = Response::new(response.payload);
-
-    // Copy metadata
-    let metadata = tonic_response.metadata_mut();
-    for key_value in response.metadata.iter() {
-        if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value {
-            metadata.insert(key, value.clone());
-        } else if let tonic::metadata::KeyAndValueRef::Binary(key, value) = key_value {
-            metadata.insert_bin(key, value.clone());
-        }
-    }
-
+    copy_metadata(&response.metadata, tonic_response.metadata_mut());
     tonic_response
 }
 
@@ -328,6 +330,38 @@ mod tests {
         let handler = Arc::new(TestHandler);
         let service = GenericGrpcService::new(handler);
         assert_eq!(service.service_name(), "test.TestService");
+    }
+
+    #[test]
+    fn test_copy_metadata() {
+        let mut source = MetadataMap::new();
+        source.insert("key1", "value1".parse().unwrap());
+        source.insert("key2", "value2".parse().unwrap());
+
+        let mut dest = MetadataMap::new();
+        copy_metadata(&source, &mut dest);
+
+        assert_eq!(dest.get("key1").unwrap(), "value1");
+        assert_eq!(dest.get("key2").unwrap(), "value2");
+    }
+
+    #[test]
+    fn test_copy_metadata_empty() {
+        let source = MetadataMap::new();
+        let mut dest = MetadataMap::new();
+        copy_metadata(&source, &mut dest);
+        assert!(dest.is_empty());
+    }
+
+    #[test]
+    fn test_copy_metadata_binary() {
+        let mut source = MetadataMap::new();
+        source.insert_bin("binary-key-bin", tonic::metadata::MetadataValue::from_bytes(b"binary"));
+
+        let mut dest = MetadataMap::new();
+        copy_metadata(&source, &mut dest);
+
+        assert!(dest.get_bin("binary-key-bin").is_some());
     }
 
     #[tokio::test]

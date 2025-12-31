@@ -8,6 +8,7 @@ pub mod config_extractor;
 pub mod conversion_traits;
 pub mod di_traits;
 pub mod error_response;
+pub mod grpc_metadata;
 pub mod handler_base;
 pub mod lifecycle_base;
 pub mod lifecycle_executor;
@@ -18,6 +19,7 @@ pub mod validation_helpers;
 pub use config_extractor::{ConfigExtractor, ConfigSource};
 pub use di_traits::{FactoryDependencyAdapter, ValueDependencyAdapter};
 pub use error_response::ErrorResponseBuilder;
+pub use grpc_metadata::{extract_metadata_to_hashmap, hashmap_to_metadata};
 pub use handler_base::{HandlerError, HandlerExecutor, LanguageHandler};
 pub use lifecycle_executor::{
     HookResultData, LanguageLifecycleHook, LifecycleExecutor, RequestModifications, extract_body,

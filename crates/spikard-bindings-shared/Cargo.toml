@@ -18,6 +18,7 @@ spikard-http = { workspace = true, features = ["di"] }
 tracing.workspace = true
 http.workspace = true
 http-body-util = "0.1"
+tonic = "0.14"
 
 [features]
 default = []

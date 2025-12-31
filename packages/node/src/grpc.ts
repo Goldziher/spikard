@@ -11,6 +11,12 @@
  * 2. Rust side (NodeGrpcHandler) calls JavaScript via napi-rs ThreadsafeFunction
  * 3. Protobuf serialization/deserialization happens in JavaScript using protobufjs
  *
+ * # Current Limitations
+ *
+ * - Only unary (request-response) calls are currently supported
+ * - Streaming (client, server, or bidirectional) is not yet implemented
+ * - Binary metadata values are not accessible (only ASCII string metadata)
+ *
  * # Example
  *
  * ```typescript
@@ -131,16 +137,6 @@ export interface GrpcResponse {
 	 * Example: { "x-server-id": "server-1", "x-cache-status": "hit" }
 	 */
 	metadata?: Record<string, string>;
-}
-
-/**
- * gRPC metadata as key-value pairs
- *
- * Helper interface for working with gRPC metadata.
- */
-export interface GrpcMetadata {
-	/** Metadata entries as key-value pairs */
-	entries: Record<string, string>;
 }
 
 /**
@@ -305,6 +301,14 @@ export interface GrpcServiceConfig {
 }
 
 /**
+ * Result type for unary handlers that can include response metadata
+ */
+export type UnaryHandlerResult<TResponse> = TResponse | {
+	response: TResponse;
+	metadata?: Record<string, string>;
+};
+
+/**
  * Helper function to create a simple unary gRPC handler
  *
  * This is a convenience function for creating handlers that only implement
@@ -313,6 +317,7 @@ export interface GrpcServiceConfig {
  * # Example
  *
  * ```typescript
+ * // Simple response
  * const getUserHandler = createUnaryHandler<GetUserRequest, User>(
  *   'GetUser',
  *   async (req) => {
@@ -321,6 +326,20 @@ export interface GrpcServiceConfig {
  *       throw new GrpcError(GrpcStatusCode.NOT_FOUND, 'User not found');
  *     }
  *     return user;
+ *   },
+ *   UserService.GetUserRequest,
+ *   UserService.User
+ * );
+ *
+ * // With response metadata
+ * const getUserHandler = createUnaryHandler<GetUserRequest, User>(
+ *   'GetUser',
+ *   async (req) => {
+ *     const user = await db.getUser(req.id);
+ *     return {
+ *       response: user,
+ *       metadata: { 'x-cache-status': 'hit' }
+ *     };
  *   },
  *   UserService.GetUserRequest,
  *   UserService.User
@@ -335,7 +354,7 @@ export interface GrpcServiceConfig {
  */
 export function createUnaryHandler<TRequest, TResponse>(
 	methodName: string,
-	handler: (request: TRequest, metadata: Record<string, string>) => Promise<TResponse>,
+	handler: (request: TRequest, metadata: Record<string, string>) => Promise<UnaryHandlerResult<TResponse>>,
 	requestType: { decode(buffer: Uint8Array): TRequest },
 	responseType: { encode(message: TResponse): { finish(): Uint8Array } },
 ): GrpcHandler {
@@ -352,13 +371,27 @@ export function createUnaryHandler<TRequest, TResponse>(
 			const req = requestType.decode(request.payload);
 
 			// Process request
-			const response = await handler(req, request.metadata);
+			const result = await handler(req, request.metadata);
+
+			// Extract response and metadata
+			let response: TResponse;
+			let responseMetadata: Record<string, string> | undefined;
+
+			if (result && typeof result === 'object' && 'response' in result) {
+				// Result includes metadata
+				response = result.response;
+				responseMetadata = result.metadata;
+			} else {
+				// Simple response without metadata
+				response = result as TResponse;
+			}
 
 			// Serialize response
 			const encoded = responseType.encode(response).finish();
 
 			return {
 				payload: Buffer.from(encoded),
+				metadata: responseMetadata,
 			};
 		},
 	};

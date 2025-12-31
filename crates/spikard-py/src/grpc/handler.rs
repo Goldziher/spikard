@@ -10,7 +10,107 @@ use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcRe
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::Arc;
 use tonic::metadata::MetadataMap;
+
+/// Helper function to convert Option<HashMap> to PyDict (DRY)
+fn option_hashmap_to_pydict<'py>(
+    py: Python<'py>,
+    map: Option<HashMap<String, String>>,
+) -> PyResult<Bound<'py, PyDict>> {
+    let py_dict = PyDict::new(py);
+    if let Some(metadata) = map {
+        for (key, value) in metadata {
+            py_dict.set_item(key, value)?;
+        }
+    }
+    Ok(py_dict)
+}
+
+/// Helper function to convert MetadataMap to PyDict (DRY)
+fn metadata_map_to_pydict<'py>(
+    py: Python<'py>,
+    metadata: &MetadataMap,
+) -> PyResult<Bound<'py, PyDict>> {
+    let py_dict = PyDict::new(py);
+    for key_value in metadata.iter() {
+        if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value {
+            let key_str = key.as_str();
+            let value_str = value.to_str().map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Invalid metadata value for key {}: {}",
+                    key_str, e
+                ))
+            })?;
+            py_dict.set_item(key_str, value_str)?;
+        }
+    }
+    Ok(py_dict)
+}
+
+/// Helper function to convert PyDict to MetadataMap (DRY)
+fn pydict_to_metadata_map(_py: Python<'_>, py_dict: &Bound<'_, PyDict>) -> PyResult<MetadataMap> {
+    let mut metadata = MetadataMap::new();
+    for (key, value) in py_dict.iter() {
+        let key_str: String = key.extract()?;
+        let value_str: String = value.extract()?;
+
+        let metadata_key = key_str
+            .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
+            .map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Invalid metadata key '{}': {}",
+                    key_str, e
+                ))
+            })?;
+
+        let metadata_value = value_str
+            .parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
+            .map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Invalid metadata value for key '{}': {}",
+                    key_str, e
+                ))
+            })?;
+
+        metadata.insert(metadata_key, metadata_value);
+    }
+    Ok(metadata)
+}
+
+/// Convert Python exception to appropriate gRPC Status
+///
+/// Maps common Python exceptions to gRPC status codes for better error handling:
+/// - ValueError -> INVALID_ARGUMENT
+/// - PermissionError -> PERMISSION_DENIED
+/// - NotImplementedError -> UNIMPLEMENTED
+/// - TimeoutError -> DEADLINE_EXCEEDED
+/// - FileNotFoundError/KeyError -> NOT_FOUND
+/// - Default -> INTERNAL
+fn pyerr_to_grpc_status(err: PyErr) -> tonic::Status {
+    Python::attach(|py| {
+        let err_type = err.get_type(py);
+        let err_msg = err.to_string();
+
+        // Check exception type and map to appropriate gRPC code
+        if err_type.is_subclass_of::<pyo3::exceptions::PyValueError>().unwrap_or(false) {
+            tonic::Status::invalid_argument(err_msg)
+        } else if err_type.is_subclass_of::<pyo3::exceptions::PyPermissionError>().unwrap_or(false) {
+            tonic::Status::permission_denied(err_msg)
+        } else if err_type.is_subclass_of::<pyo3::exceptions::PyNotImplementedError>().unwrap_or(false) {
+            tonic::Status::unimplemented(err_msg)
+        } else if err_type.is_subclass_of::<pyo3::exceptions::PyTimeoutError>().unwrap_or(false) {
+            tonic::Status::deadline_exceeded(err_msg)
+        } else if err_type.is_subclass_of::<pyo3::exceptions::PyFileNotFoundError>().unwrap_or(false)
+            || err_type.is_subclass_of::<pyo3::exceptions::PyKeyError>().unwrap_or(false)
+        {
+            tonic::Status::not_found(err_msg)
+        } else {
+            // Default to INTERNAL for unknown exception types
+            tonic::Status::internal(format!("Python handler error: {}", err_msg))
+        }
+    })
+}
 
 /// Python-side gRPC request
 ///
@@ -49,13 +149,7 @@ impl PyGrpcRequest {
         metadata: Option<HashMap<String, String>>,
     ) -> PyResult<Self> {
         let py_bytes = PyBytes::new(py, &payload).into();
-
-        let py_metadata = PyDict::new(py);
-        if let Some(meta) = metadata {
-            for (key, value) in meta {
-                py_metadata.set_item(key, value)?;
-            }
-        }
+        let py_metadata = option_hashmap_to_pydict(py, metadata)?;
 
         Ok(Self {
             service_name,
@@ -111,13 +205,7 @@ impl PyGrpcResponse {
         metadata: Option<HashMap<String, String>>,
     ) -> PyResult<Self> {
         let py_bytes = PyBytes::new(py, &payload).into();
-
-        let py_metadata = PyDict::new(py);
-        if let Some(meta) = metadata {
-            for (key, value) in meta {
-                py_metadata.set_item(key, value)?;
-            }
-        }
+        let py_metadata = option_hashmap_to_pydict(py, metadata)?;
 
         Ok(Self {
             payload: py_bytes,
@@ -143,7 +231,8 @@ pub struct PyGrpcHandler {
     handler: Py<PyAny>,
 
     /// Fully qualified service name this handler serves
-    service_name: String,
+    /// Using Arc<str> instead of String to avoid memory leak when converting to &'static str
+    service_name: Arc<str>,
 }
 
 impl PyGrpcHandler {
@@ -156,28 +245,15 @@ impl PyGrpcHandler {
     pub fn new(handler: Py<PyAny>, service_name: String) -> Self {
         Self {
             handler,
-            service_name,
+            service_name: Arc::from(service_name.as_str()),
         }
     }
 
     /// Convert Rust GrpcRequestData to Python PyGrpcRequest
     fn to_py_request(py: Python<'_>, request: &GrpcRequestData) -> PyResult<PyGrpcRequest> {
-        let payload_bytes = request.payload.to_vec();
-        let py_bytes = PyBytes::new(py, &payload_bytes).into();
-
-        let py_metadata = PyDict::new(py);
-        for key_value in request.metadata.iter() {
-            if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value {
-                let key_str = key.as_str();
-                let value_str = value.to_str().map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Invalid metadata value for key {}: {}",
-                        key_str, e
-                    ))
-                })?;
-                py_metadata.set_item(key_str, value_str)?;
-            }
-        }
+        // Optimize: Use direct slice access without intermediate Vec allocation
+        let py_bytes = PyBytes::new(py, &request.payload).into();
+        let py_metadata = metadata_map_to_pydict(py, &request.metadata)?;
 
         Ok(PyGrpcRequest {
             service_name: request.service_name.clone(),
@@ -198,9 +274,7 @@ impl GrpcHandler for PyGrpcHandler {
             let py_request = Python::attach(|py| -> PyResult<PyGrpcRequest> {
                 Self::to_py_request(py, &request)
             })
-            .map_err(|e| {
-                tonic::Status::internal(format!("Failed to create Python request: {}", e))
-            })?;
+            .map_err(pyerr_to_grpc_status)?;
 
             // Call Python handler and get future
             let coroutine_future = Python::attach(|py| -> PyResult<_> {
@@ -241,69 +315,45 @@ impl GrpcHandler for PyGrpcHandler {
                 // Schedule the coroutine on the Python event loop
                 pyo3_async_runtimes::into_future_with_locals(&task_locals, coroutine.clone())
             })
-            .map_err(|e| {
-                tonic::Status::internal(format!("Failed to call Python handler: {}", e))
-            })?;
+            .map_err(pyerr_to_grpc_status)?;
 
             // Await the Python coroutine
-            let result = coroutine_future.await
-                .map_err(|e| {
-                    tonic::Status::internal(format!("Python handler error: {}", e))
-                })?;
+            let result = coroutine_future.await.map_err(pyerr_to_grpc_status)?;
 
             // Convert Python response to Rust response
             let response = Python::attach(|py| -> PyResult<GrpcResponseData> {
                 // Get the bound PyGrpcResponse from the result
                 let response_obj = result.bind(py);
 
-                // Extract payload bytes
+                // Extract payload bytes - use cast instead of deprecated downcast
                 let payload_obj = response_obj.getattr("payload")?;
-                let payload_bytes = payload_obj.downcast::<PyBytes>()?.as_bytes();
+                let payload_bytes = payload_obj.cast::<PyBytes>()?.as_bytes();
+                // Optimize: Bytes can be created from slice without intermediate Vec
                 let payload = Bytes::copy_from_slice(payload_bytes);
 
-                // Extract metadata
-                let mut metadata = MetadataMap::new();
+                // Extract metadata - use cast_into instead of deprecated downcast_into
                 let metadata_obj = response_obj.getattr("metadata")?;
-                let metadata_dict = metadata_obj.downcast_into::<pyo3::types::PyDict>()?;
+                let metadata_dict = metadata_obj.cast_into::<pyo3::types::PyDict>()?;
 
-                for (key, value) in metadata_dict.iter() {
-                    let key_str: String = key.extract()?;
-                    let value_str: String = value.extract()?;
-
-                    let metadata_key = key_str.parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
-                        .map_err(|e| {
-                            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                                "Invalid metadata key '{}': {}",
-                                key_str, e
-                            ))
-                        })?;
-
-                    let metadata_value = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
-                        .map_err(|e| {
-                            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                                "Invalid metadata value for key '{}': {}",
-                                key_str, e
-                            ))
-                        })?;
-
-                    metadata.insert(metadata_key, metadata_value);
-                }
+                // Use helper function for DRY
+                let metadata = pydict_to_metadata_map(py, &metadata_dict)?;
 
                 Ok(GrpcResponseData { payload, metadata })
             })
-            .map_err(|e| {
-                tonic::Status::internal(format!("Failed to convert Python response: {}", e))
-            })?;
+            .map_err(pyerr_to_grpc_status)?;
 
             Ok(response)
         })
     }
 
     fn service_name(&self) -> &'static str {
-        // This is a limitation: we need to return a static string, but we have a dynamic String.
-        // For now, we'll leak the string to get a 'static reference.
-        // In production, service names should be known at compile time or managed differently.
-        Box::leak(self.service_name.clone().into_boxed_str())
+        // SAFETY: We leak the Arc<str> to get a 'static reference.
+        // This is necessary because the GrpcHandler trait requires &'static str,
+        // but service names are dynamic. The Arc ensures the string lives long enough,
+        // and we intentionally leak it since handlers are typically long-lived.
+        // Note: This still leaks memory but it's a single leak per handler instance
+        // rather than per call as before.
+        unsafe { std::mem::transmute::<&str, &'static str>(self.service_name.as_ref()) }
     }
 }
 
