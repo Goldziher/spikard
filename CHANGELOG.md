@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-01-01
+
+### Added
+
+- **Homebrew bottles**: Pre-built binaries for macOS arm64 (Sonoma, Sequoia) for faster `brew install`/`upgrade`
+
+### Fixed
+
+- **Homebrew formula**: Fixed missing SHA256 checksum that was causing installation failures
+
 ## [0.8.0] - 2025-12-31
 
 ### Added
