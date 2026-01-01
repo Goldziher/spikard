@@ -67,12 +67,18 @@ final class TestClient
         throw new RuntimeException('Spikard PHP extension is not loaded.');
     }
 
+    /**
+     * @return \Spikard\Testing\WebSocketTestConnection
+     */
     public function websocket(string $path, ?string $sendText = null): object
     {
         unset($path, $sendText);
         throw new RuntimeException('Spikard PHP extension is not loaded.');
     }
 
+    /**
+     * @return \Spikard\Testing\SseStream
+     */
     public function sse(string $path): object
     {
         unset($path);

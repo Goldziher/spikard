@@ -107,22 +107,24 @@ final class TestClient
     /**
      * Connect to a WebSocket route (native path only).
      */
-    public function connectWebSocket(string $path, ?string $sendText = null): object
+    public function connectWebSocket(string $path, ?string $sendText = null): \Spikard\Testing\WebSocketTestConnection
     {
         if (!$this->useNative()) {
             throw new RuntimeException('WebSocket client requires the native extension.');
         }
+        /** @var \Spikard\Testing\WebSocketTestConnection */
         return $this->nativeClient()->websocket($path, $sendText);
     }
 
     /**
      * Connect to an SSE route and retrieve the event stream (native path only).
      */
-    public function connectSse(string $path): object
+    public function connectSse(string $path): \Spikard\Testing\SseStream
     {
         if (!$this->useNative()) {
             throw new RuntimeException('SSE client requires the native extension.');
         }
+        /** @var \Spikard\Testing\SseStream */
         return $this->nativeClient()->sse($path);
     }
 

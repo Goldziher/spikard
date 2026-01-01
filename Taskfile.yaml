@@ -1,7 +1,8 @@
 version: "3"
 
 vars:
-  BUNDLER_VERSION: "4.0.0"
+  BUNDLER_VERSION:
+    sh: "gem list bundler --exact | grep -o 'default: [0-9.]*' | cut -d' ' -f2 || gem list bundler --exact | grep -o '[0-9.]*' | head -n1"
   RBENV_BIN:
     sh: command -v rbenv || true
   RBENV_VERSION: "3.4.7"

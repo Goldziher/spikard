@@ -18,14 +18,14 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       zod:
-        specifier: ^4.3.2
-        version: 4.3.2
+        specifier: ^4.3.4
+        version: 4.3.4
 
   crates/spikard-node:
     dependencies:
       zod:
-        specifier: ^4.3.2
-        version: 4.3.2
+        specifier: ^4.3.4
+        version: 4.3.4
     devDependencies:
       '@napi-rs/cli':
         specifier: ^3.5.1
@@ -53,10 +53,10 @@ importers:
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.11.1
-        version: 0.11.1(@cloudflare/workers-types@4.20251231.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))
+        version: 0.11.1(@cloudflare/workers-types@4.20260101.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))
       '@cloudflare/workers-types':
-        specifier: ^4.20251231.0
-        version: 4.20251231.0
+        specifier: ^4.20260101.0
+        version: 4.20260101.0
       '@spikard/wasm':
         specifier: workspace:*
         version: link:../../packages/wasm
@@ -71,7 +71,7 @@ importers:
         version: 4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0)
       wrangler:
         specifier: ^4.56.0
-        version: 4.56.0(@cloudflare/workers-types@4.20251231.0)
+        version: 4.56.0(@cloudflare/workers-types@4.20260101.0)
 
   e2e/deno: {}
 
@@ -163,8 +163,8 @@ importers:
         version: link:../../packages/wasm
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20251231.0
-        version: 4.20251231.0
+        specifier: ^4.20260101.0
+        version: 4.20260101.0
       '@types/node':
         specifier: ^25.0.3
         version: 25.0.3
@@ -173,7 +173,7 @@ importers:
         version: 5.9.3
       wrangler:
         specifier: ^4.56.0
-        version: 4.56.0(@cloudflare/workers-types@4.20251231.0)
+        version: 4.56.0(@cloudflare/workers-types@4.20260101.0)
 
   examples/wasm-deno:
     dependencies:
@@ -212,8 +212,8 @@ importers:
   packages/node:
     dependencies:
       zod:
-        specifier: ^4.3.2
-        version: 4.3.2
+        specifier: ^4.3.4
+        version: 4.3.4
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.3.10
@@ -249,8 +249,8 @@ importers:
         specifier: ^0.8.2
         version: 0.8.2
       zod:
-        specifier: ^4.3.2
-        version: 4.3.2
+        specifier: ^4.3.4
+        version: 4.3.4
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.3.10
@@ -303,8 +303,8 @@ importers:
         specifier: 5.2.1
         version: 5.2.1
       zod:
-        specifier: 4.3.2
-        version: 4.3.2
+        specifier: 4.3.4
+        version: 4.3.4
     devDependencies:
       '@types/express':
         specifier: ^5.0.6
@@ -386,13 +386,13 @@ importers:
         version: 1.19.7(hono@4.11.3)
       '@hono/zod-validator':
         specifier: ^0.7.6
-        version: 0.7.6(hono@4.11.3)(zod@4.3.2)
+        version: 0.7.6(hono@4.11.3)(zod@4.3.4)
       hono:
         specifier: ^4.11.3
         version: 4.11.3
       zod:
-        specifier: ^4.3.2
-        version: 4.3.2
+        specifier: ^4.3.4
+        version: 4.3.4
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -436,8 +436,8 @@ importers:
   tools/benchmark-harness/apps/morojs-raw:
     dependencies:
       '@morojs/moro':
-        specifier: ^1.7.9
-        version: 1.7.9(ws@8.18.3)
+        specifier: ^1.7.11
+        version: 1.7.11(ws@8.18.3)
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -452,8 +452,8 @@ importers:
   tools/benchmark-harness/apps/morojs-validation:
     dependencies:
       '@morojs/moro':
-        specifier: ^1.7.9
-        version: 1.7.9(ws@8.18.3)
+        specifier: ^1.7.11
+        version: 1.7.11(ws@8.18.3)
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -475,8 +475,8 @@ importers:
         specifier: workspace:*
         version: link:../../../../packages/node
       zod:
-        specifier: ^4.3.2
-        version: 4.3.2
+        specifier: ^4.3.4
+        version: 4.3.4
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -491,8 +491,8 @@ importers:
         specifier: workspace:*
         version: link:../../../../packages/node
       zod:
-        specifier: ^4.3.2
-        version: 4.3.2
+        specifier: ^4.3.4
+        version: 4.3.4
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -603,8 +603,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@borewit/text-codec@0.1.1':
-    resolution: {integrity: sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA==}
+  '@borewit/text-codec@0.2.1':
+    resolution: {integrity: sha512-k7vvKPbf7J2fZ5klGRD9AeKfUvojuZIQ3BT5u7Jfv+puwXkUBUT5PVyMDfJZpy30CBDXGMgw7fguK/lpOMBvgw==}
 
   '@cloudflare/kv-asset-handler@0.4.1':
     resolution: {integrity: sha512-Nu8ahitGFFJztxUml9oD/DLb7Z28C8cd8F46IVQ7y5Btz575pvMY8AqZsXkX7Gds29eCKdMgIHjIvzskHgPSFg==}
@@ -656,8 +656,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@4.20251231.0':
-    resolution: {integrity: sha512-XOP7h2y9Nu3ECuZM9S7w3g4GSliTgj6SEEkYj6G6d3TEQtOiV/cHXuI/fKiLj8Z9+qJK/RLLcKkX14NxajrXCw==}
+  '@cloudflare/workers-types@4.20260101.0':
+    resolution: {integrity: sha512-C28o4U1T4dPe8avLv1xMQ4MtSE6G4skbVA3VfVZIrpTqklvO+homKB1uFEtNbuZlaKg+Znv8sjmGQUInTH17gA==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -1288,8 +1288,8 @@ packages:
     resolution: {integrity: sha512-OWV6DnaMd+kRikdQLZHzIiVYT1usFg/yw9Ey+qeWrll0GwkWpS6TS6mvYbNCqPzeG8Yq70ux3kP2ApiVhO7WoA==}
     engines: {node: '>= 10'}
 
-  '@morojs/moro@1.7.9':
-    resolution: {integrity: sha512-w27Dop/AuzEWGCGP41uifyFWG92wU/qbN0zi6mF5u128ioLCea41wMyzl6cwFUV+/2FDBc1Soh0JouZYh9qTMQ==}
+  '@morojs/moro@1.7.11':
+    resolution: {integrity: sha512-GhT8jVW6PTBilQ7YyjSK5fR6xPyghuM9d1MCL5FN5Qy+wMiZcqihtUKmaIajUwniX3RZTtp9xV+117xaa9wWpw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@aws-sdk/client-ses': '>=3.927.0'
@@ -3079,8 +3079,8 @@ packages:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
 
-  token-types@6.1.1:
-    resolution: {integrity: sha512-kh9LVIWH5CnL63Ipf0jhlBIy0UsrMj/NJDfpsy1SqOXlLKEVyXXYrnFxFT1yOOYVGBSApeVnjPw/sBz5BfEjAQ==}
+  token-types@6.1.2:
+    resolution: {integrity: sha512-dRXchy+C0IgK8WPC6xvCHFRIWYUbqqdEIKPaKo/AcTUNzwLTK6AH7RjdLWsEZcAN/TBdtfUw3PYEgPr5VPr6ww==}
     engines: {node: '>=14.16'}
 
   tree-kill@1.2.2:
@@ -3302,8 +3302,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.3.2:
-    resolution: {integrity: sha512-b8L8yn4rIVfiXyHAmnr52/ZEpDumlT0bmxiq3Ws1ybrinhflGpt12Hvv54kYnEsGPRs6o/Ka3/ppA2OWY21IVg==}
+  zod@4.3.4:
+    resolution: {integrity: sha512-Zw/uYiiyF6pUT1qmKbZziChgNPRu+ZRneAsMUDU6IwmXdWt5JwcUfy2bvLOCUtz5UniaN/Zx5aFttZYbYc7O/A==}
 
 snapshots:
 
@@ -3357,7 +3357,7 @@ snapshots:
   '@biomejs/cli-win32-x64@2.3.10':
     optional: true
 
-  '@borewit/text-codec@0.1.1': {}
+  '@borewit/text-codec@0.2.1': {}
 
   '@cloudflare/kv-asset-handler@0.4.1':
     dependencies:
@@ -3369,7 +3369,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20251217.0
 
-  '@cloudflare/vitest-pool-workers@0.11.1(@cloudflare/workers-types@4.20251231.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))':
+  '@cloudflare/vitest-pool-workers@0.11.1(@cloudflare/workers-types@4.20260101.0)(@vitest/runner@4.0.16)(@vitest/snapshot@4.0.16)(vitest@4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0))':
     dependencies:
       '@vitest/runner': 4.0.16
       '@vitest/snapshot': 4.0.16
@@ -3380,7 +3380,7 @@ snapshots:
       miniflare: 4.20251217.0
       semver: 7.7.3
       vitest: 4.0.16(@types/node@25.0.3)(terser@5.44.1)(tsx@4.21.0)
-      wrangler: 4.56.0(@cloudflare/workers-types@4.20251231.0)
+      wrangler: 4.56.0(@cloudflare/workers-types@4.20260101.0)
       zod: 3.25.76
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
@@ -3402,7 +3402,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20251217.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20251231.0': {}
+  '@cloudflare/workers-types@4.20260101.0': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -3624,10 +3624,10 @@ snapshots:
     dependencies:
       hono: 4.11.3
 
-  '@hono/zod-validator@0.7.6(hono@4.11.3)(zod@4.3.2)':
+  '@hono/zod-validator@0.7.6(hono@4.11.3)(zod@4.3.4)':
     dependencies:
       hono: 4.11.3
-      zod: 4.3.2
+      zod: 4.3.4
 
   '@img/sharp-darwin-arm64@0.33.5':
     optionalDependencies:
@@ -3849,7 +3849,7 @@ snapshots:
 
   '@kitojs/kito-core@1.0.0-alpha.8': {}
 
-  '@morojs/moro@1.7.9(ws@8.18.3)':
+  '@morojs/moro@1.7.11(ws@8.18.3)':
     optionalDependencies:
       ws: 8.18.3
 
@@ -4310,7 +4310,7 @@ snapshots:
   '@tokenizer/inflate@0.4.1':
     dependencies:
       debug: 4.4.3
-      token-types: 6.1.1
+      token-types: 6.1.2
     transitivePeerDependencies:
       - supports-color
 
@@ -4829,7 +4829,7 @@ snapshots:
     dependencies:
       '@tokenizer/inflate': 0.4.1
       strtok3: 10.3.4
-      token-types: 6.1.1
+      token-types: 6.1.2
       uint8array-extras: 1.5.0
     transitivePeerDependencies:
       - supports-color
@@ -5491,9 +5491,9 @@ snapshots:
 
   toidentifier@1.0.1: {}
 
-  token-types@6.1.1:
+  token-types@6.1.2:
     dependencies:
-      '@borewit/text-codec': 0.1.1
+      '@borewit/text-codec': 0.2.1
       '@tokenizer/token': 0.3.0
       ieee754: 1.2.1
 
@@ -5636,7 +5636,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20251217.0
       '@cloudflare/workerd-windows-64': 1.20251217.0
 
-  wrangler@4.56.0(@cloudflare/workers-types@4.20251231.0):
+  wrangler@4.56.0(@cloudflare/workers-types@4.20260101.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.1
       '@cloudflare/unenv-preset': 2.7.13(unenv@2.0.0-rc.24)(workerd@1.20251217.0)
@@ -5647,7 +5647,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20251217.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20251231.0
+      '@cloudflare/workers-types': 4.20260101.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
@@ -5684,4 +5684,4 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.3.2: {}
+  zod@4.3.4: {}

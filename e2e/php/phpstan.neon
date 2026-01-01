@@ -1,0 +1,10 @@
+parameters:
+    level: max
+    paths:
+        - tests
+        - ../../packages/php/stubs/Spikard
+    tmpDir: var/cache/phpstan
+    bootstrapFiles:
+        - ../../packages/php/vendor/autoload.php
+        - bootstrap.php
+    treatPhpDocTypesAsCertain: true
