@@ -89,7 +89,7 @@ fn build_test_file(
 ) -> String {
     let mut code = String::new();
     code.push_str(
-        "<?php\ndeclare(strict_types=1);\n\nuse PHPUnit\\Framework\\TestCase;\nuse Spikard\\Testing\\TestClient;\nuse E2E\\Php\\AppFactory;\n\n/**\n * Generated from testing_data fixtures.\n */\nfinal class GeneratedTest extends TestCase\n{\n",
+        "<?php\ndeclare(strict_types=1);\n\nuse PHPUnit\\Framework\\TestCase;\nuse Spikard\\Testing\\TestClient;\nuse E2E\\Php\\AppFactory;\n\n/**\n * Generated from testing_data fixtures.\n * @phpstan-type ResponseBody array<string, mixed>|string|int|float|bool|null\n */\nfinal class GeneratedTest extends TestCase\n{\n",
     );
 
     for (category, fixtures) in fixtures_by_category {
@@ -114,7 +114,7 @@ fn build_test_file(
             format!("[{items}]")
         };
         code.push_str(&format!(
-            "    public function {method}(): void\n    {{\n        $app = AppFactory::{factory}();\n        $client = TestClient::create($app);\n        $stream = $client->connectSse('{path}');\n        $this->assertEquals({expected}, $stream->eventsAsJson());\n        $client->close();\n    }}\n\n",
+            "    public function {method}(): void\n    {{\n        $app = AppFactory::{factory}();\n        $client = TestClient::create($app);\n        $stream = $client->connectSse('{path}');\n\n        /** @var array<mixed> $events */\n        $events = $stream->eventsAsJson();\n        $this->assertEquals({expected}, $events);\n        $client->close();\n    }}\n\n",
             method = method_name,
             factory = factory,
             path = channel,
@@ -212,15 +212,32 @@ fn build_fixture_test(category: &str, index: usize, fixture: &Fixture) -> String
         .map(value_to_php_expected)
         .unwrap_or_else(|| "null".to_string());
 
+    // Determine if we need type assertions for the expected body
+    let is_array_value = fixture
+        .expected_response
+        .body
+        .as_ref()
+        .map(|v| matches!(v, serde_json::Value::Array(_) | serde_json::Value::Object(_)))
+        .unwrap_or(false);
+
+    let body_assertion = if is_array_value {
+        format!(
+            "        $body = $response->body;\n        /** @var array<string, mixed>|string|int|float|bool|null $expected */\n        $expected = {};\n        $this->assertEquals($expected, $body);",
+            expected_body
+        )
+    } else {
+        format!("        $body = $response->body;\n        $this->assertEquals({}, $body);", expected_body)
+    };
+
     format!(
-        "    public function {method_name}(): void\n    {{\n        $app = AppFactory::{factory}();\n        $client = TestClient::create($app);\n        $response = $client->request('{http_method}', '{path}', {options});\n\n        $this->assertSame({status}, $response->statusCode);\n        $this->assertEquals({expected_body}, $response->body);\n    }}\n\n",
+        "    public function {method_name}(): void\n    {{\n        $app = AppFactory::{factory}();\n        $client = TestClient::create($app);\n        $response = $client->request('{http_method}', '{path}', {options});\n\n        /** @var int $statusCode */\n        $statusCode = $response->statusCode;\n        $this->assertSame({status}, $statusCode);\n\n{body_assertion}\n    }}\n\n",
         method_name = method_name,
         factory = factory,
         http_method = method,
         path = path,
         options = options_literal,
         status = expected_status,
-        expected_body = expected_body
+        body_assertion = body_assertion
     )
 }
 
@@ -558,21 +575,27 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
 
     // Call handler
     code.push_str("        // Call handler\n");
+    code.push_str(&format!("        /** @var \\Spikard\\Grpc\\GrpcResponse $response */\n"));
     code.push_str(&format!("        $response = {}($request);\n", handler_name));
     code.push('\n');
 
     // Verify response
     code.push_str("        // Verify response\n");
+    code.push_str("        /** @var string $statusCode */\n");
+    code.push_str("        $statusCode = $response->statusCode;\n");
     code.push_str(&format!(
-        "        $this->assertSame('{}', $response->statusCode);\n",
+        "        $this->assertSame('{}', $statusCode);\n",
         fixture.expected_response.status_code
     ));
 
     // Assert payload if present
     if let Some(ref expected_msg) = fixture.expected_response.message {
         let expected_json = value_to_php_expected(expected_msg);
+        code.push_str("\n");
+        code.push_str("        /** @var string $payload */\n");
+        code.push_str("        $payload = $response->payload;\n");
         code.push_str(&format!(
-            "        $this->assertEquals(json_encode({}), $response->payload);\n",
+            "        $this->assertEquals(json_encode({}), $payload);\n",
             expected_json
         ));
     }
@@ -580,7 +603,10 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
     // Assert metadata if present
     if let Some(ref metadata) = fixture.request.metadata {
         if !metadata.is_empty() {
-            code.push_str("        $this->assertNotNull($response->metadata);\n");
+            code.push_str("\n");
+            code.push_str("        /** @var mixed $metadata */\n");
+            code.push_str("        $metadata = $response->metadata;\n");
+            code.push_str("        $this->assertNotNull($metadata);\n");
         }
     }
 
