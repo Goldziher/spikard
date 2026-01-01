@@ -1,57 +1,57 @@
 {
-  "name": "Bidirectional streaming with large payloads",
-  "description": "Tests bidirectional streaming RPC with large messages in both directions. Validates concurrent read/write handling and proper message ordering.",
-  "category": "large_payloads",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "BiMessage",
-        "fields": [
-          {"name": "message_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "sequence", "type": "int32", "number": 2, "label": "required"},
-          {"name": "data", "type": "bytes", "number": 3, "label": "required"},
-          {"name": "direction", "type": "string", "number": 4, "label": "optional"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "BiDirectionalService",
-        "methods": [
-          {
-            "name": "Exchange",
-            "input_type": "BiMessage",
-            "output_type": "BiMessage",
-            "client_streaming": true,
-            "server_streaming": true
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.BiDirectionalService",
-    "method": "Exchange"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "message_id": "bi-large-001",
-      "sequence": 1,
-      "data": "QmlkaXJlY3Rpb25hbCBzdHJlYW1pbmcgdGVzdCB3aXRoIGxhcmdlIHBheWxvYWRzIGluIGJvdGggZGlyZWN0aW9ucy4gVGhpcyB2YWxpZGF0ZXMgdGhlIHNlcnZlcidzIGFiaWxpdHkgdG8gaGFuZGxlIGNvbmN1cnJlbnQgcmVhZHMgYW5kIHdyaXRlcywgYXMgd2VsbCBhcyBwcm9wZXIgbWVzc2FnZSBvcmRlcmluZy4=",
-      "direction": "client-to-server"
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "message_id": "bi-large-001",
-      "sequence": 1,
-      "direction": "server-to-client"
-    }
-  },
-  "tags": ["large_payloads", "streaming", "bidirectional_streaming"]
+	"name": "Bidirectional streaming with large payloads",
+	"description": "Tests bidirectional streaming RPC with large messages in both directions. Validates concurrent read/write handling and proper message ordering.",
+	"category": "large_payloads",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "BiMessage",
+				"fields": [
+					{ "name": "message_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "sequence", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "data", "type": "bytes", "number": 3, "label": "required" },
+					{ "name": "direction", "type": "string", "number": 4, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "BiDirectionalService",
+				"methods": [
+					{
+						"name": "Exchange",
+						"input_type": "BiMessage",
+						"output_type": "BiMessage",
+						"client_streaming": true,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.BiDirectionalService",
+		"method": "Exchange"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"message_id": "bi-large-001",
+			"sequence": 1,
+			"data": "QmlkaXJlY3Rpb25hbCBzdHJlYW1pbmcgdGVzdCB3aXRoIGxhcmdlIHBheWxvYWRzIGluIGJvdGggZGlyZWN0aW9ucy4gVGhpcyB2YWxpZGF0ZXMgdGhlIHNlcnZlcidzIGFiaWxpdHkgdG8gaGFuZGxlIGNvbmN1cnJlbnQgcmVhZHMgYW5kIHdyaXRlcywgYXMgd2VsbCBhcyBwcm9wZXIgbWVzc2FnZSBvcmRlcmluZy4=",
+			"direction": "client-to-server"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"message_id": "bi-large-001",
+			"sequence": 1,
+			"direction": "server-to-client"
+		}
+	},
+	"tags": ["large_payloads", "streaming", "bidirectional_streaming"]
 }

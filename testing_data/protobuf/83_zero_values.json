@@ -1,63 +1,63 @@
 {
-  "name": "All fields set to zero/false/empty values",
-  "description": "Tests proto3 default value behavior when all fields are explicitly set to zero, false, empty string. Validates that zero values are transmitted correctly.",
-  "category": "edge_cases",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "ZeroValueRequest",
-        "fields": [
-          {"name": "int_field", "type": "int32", "number": 1, "label": "optional"},
-          {"name": "bool_field", "type": "bool", "number": 2, "label": "optional"},
-          {"name": "string_field", "type": "string", "number": 3, "label": "optional"},
-          {"name": "bytes_field", "type": "bytes", "number": 4, "label": "optional"},
-          {"name": "float_field", "type": "float", "number": 5, "label": "optional"}
-        ]
-      },
-      {
-        "name": "ZeroValueResponse",
-        "fields": [
-          {"name": "success", "type": "bool", "number": 1, "label": "required"},
-          {"name": "fields_received", "type": "int32", "number": 2, "label": "required"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "ZeroValueService",
-        "methods": [
-          {
-            "name": "ProcessZeros",
-            "input_type": "ZeroValueRequest",
-            "output_type": "ZeroValueResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.ZeroValueService",
-    "method": "ProcessZeros"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "int_field": 0,
-      "bool_field": false,
-      "string_field": "",
-      "bytes_field": "",
-      "float_field": 0.0
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "success": true,
-      "fields_received": 5
-    }
-  },
-  "tags": ["edge_cases", "default_values", "proto3"]
+	"name": "All fields set to zero/false/empty values",
+	"description": "Tests proto3 default value behavior when all fields are explicitly set to zero, false, empty string. Validates that zero values are transmitted correctly.",
+	"category": "edge_cases",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "ZeroValueRequest",
+				"fields": [
+					{ "name": "int_field", "type": "int32", "number": 1, "label": "optional" },
+					{ "name": "bool_field", "type": "bool", "number": 2, "label": "optional" },
+					{ "name": "string_field", "type": "string", "number": 3, "label": "optional" },
+					{ "name": "bytes_field", "type": "bytes", "number": 4, "label": "optional" },
+					{ "name": "float_field", "type": "float", "number": 5, "label": "optional" }
+				]
+			},
+			{
+				"name": "ZeroValueResponse",
+				"fields": [
+					{ "name": "success", "type": "bool", "number": 1, "label": "required" },
+					{ "name": "fields_received", "type": "int32", "number": 2, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ZeroValueService",
+				"methods": [
+					{
+						"name": "ProcessZeros",
+						"input_type": "ZeroValueRequest",
+						"output_type": "ZeroValueResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ZeroValueService",
+		"method": "ProcessZeros"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"int_field": 0,
+			"bool_field": false,
+			"string_field": "",
+			"bytes_field": "",
+			"float_field": 0.0
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"success": true,
+			"fields_received": 5
+		}
+	},
+	"tags": ["edge_cases", "default_values", "proto3"]
 }

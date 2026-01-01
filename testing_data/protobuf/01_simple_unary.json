@@ -1,58 +1,56 @@
 {
-  "name": "Simple unary RPC - GetUser",
-  "description": "Tests basic unary gRPC call with scalar types (int32, string). Covers fundamental request-response pattern.",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "GetUserRequest",
-        "fields": [
-          {"name": "user_id", "type": "int32", "number": 1, "label": "required"}
-        ]
-      },
-      {
-        "name": "User",
-        "fields": [
-          {"name": "id", "type": "int32", "number": 1, "label": "required"},
-          {"name": "name", "type": "string", "number": 2, "label": "required"},
-          {"name": "email", "type": "string", "number": 3, "label": "optional"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "UserService",
-        "methods": [
-          {
-            "name": "GetUser",
-            "input_type": "GetUserRequest",
-            "output_type": "User",
-            "client_streaming": false,
-            "server_streaming": false
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.UserService",
-    "method": "GetUser"
-  },
-  "request": {
-    "metadata": {
-      "authorization": "Bearer test-token",
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "user_id": 123
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "id": 123,
-      "name": "Alice Johnson",
-      "email": "alice@example.com"
-    }
-  }
+	"name": "Simple unary RPC - GetUser",
+	"description": "Tests basic unary gRPC call with scalar types (int32, string). Covers fundamental request-response pattern.",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "GetUserRequest",
+				"fields": [{ "name": "user_id", "type": "int32", "number": 1, "label": "required" }]
+			},
+			{
+				"name": "User",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "name", "type": "string", "number": 2, "label": "required" },
+					{ "name": "email", "type": "string", "number": 3, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "UserService",
+				"methods": [
+					{
+						"name": "GetUser",
+						"input_type": "GetUserRequest",
+						"output_type": "User",
+						"client_streaming": false,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.UserService",
+		"method": "GetUser"
+	},
+	"request": {
+		"metadata": {
+			"authorization": "Bearer test-token",
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"user_id": 123
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"id": 123,
+			"name": "Alice Johnson",
+			"email": "alice@example.com"
+		}
+	}
 }

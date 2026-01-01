@@ -8,4 +8,3 @@ model: haiku
 ---
 
 # ruby-engineer
-

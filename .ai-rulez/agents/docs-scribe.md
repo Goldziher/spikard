@@ -7,4 +7,3 @@ model: haiku
 ---
 
 # docs-scribe
-

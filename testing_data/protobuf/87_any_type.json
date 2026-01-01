@@ -1,66 +1,66 @@
 {
-  "name": "Google.protobuf.Any type usage",
-  "description": "Tests usage of google.protobuf.Any for storing arbitrary message types. Validates type URL encoding and message packing.",
-  "category": "edge_cases",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "Container",
-        "fields": [
-          {"name": "id", "type": "string", "number": 1, "label": "required"},
-          {"name": "content", "type": "string", "number": 2, "label": "required"}
-        ]
-      },
-      {
-        "name": "AnyRequest",
-        "fields": [
-          {"name": "request_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "any_content", "type": "string", "number": 2, "label": "optional"}
-        ]
-      },
-      {
-        "name": "AnyResponse",
-        "fields": [
-          {"name": "request_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "type_name", "type": "string", "number": 2, "label": "optional"},
-          {"name": "success", "type": "bool", "number": 3, "label": "required"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "AnyService",
-        "methods": [
-          {
-            "name": "ProcessAny",
-            "input_type": "AnyRequest",
-            "output_type": "AnyResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.AnyService",
-    "method": "ProcessAny"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "request_id": "any-test-001",
-      "any_content": "{\"type_url\": \"example.v1.Container\", \"value\": \"base64encodedvalue\"}"
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "request_id": "any-test-001",
-      "type_name": "example.v1.Container",
-      "success": true
-    }
-  },
-  "tags": ["edge_cases", "well_known_types", "any_type"]
+	"name": "Google.protobuf.Any type usage",
+	"description": "Tests usage of google.protobuf.Any for storing arbitrary message types. Validates type URL encoding and message packing.",
+	"category": "edge_cases",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "Container",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "content", "type": "string", "number": 2, "label": "required" }
+				]
+			},
+			{
+				"name": "AnyRequest",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "any_content", "type": "string", "number": 2, "label": "optional" }
+				]
+			},
+			{
+				"name": "AnyResponse",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "type_name", "type": "string", "number": 2, "label": "optional" },
+					{ "name": "success", "type": "bool", "number": 3, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "AnyService",
+				"methods": [
+					{
+						"name": "ProcessAny",
+						"input_type": "AnyRequest",
+						"output_type": "AnyResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.AnyService",
+		"method": "ProcessAny"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"request_id": "any-test-001",
+			"any_content": "{\"type_url\": \"example.v1.Container\", \"value\": \"base64encodedvalue\"}"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"request_id": "any-test-001",
+			"type_name": "example.v1.Container",
+			"success": true
+		}
+	},
+	"tags": ["edge_cases", "well_known_types", "any_type"]
 }

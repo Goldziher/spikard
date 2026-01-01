@@ -1,17 +1,25 @@
 {
-  "name": "gRPC INTERNAL status (13) - server error",
-  "description": "Tests INTERNAL gRPC status code. Returned when an internal server error occurs.",
-  "category": "grpc",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "InternalRequest", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]},
-      {"name": "InternalResponse", "fields": [{"name": "error", "type": "string", "number": 1, "label": "optional"}]}
-    ],
-    "services": [{"name": "InternalService", "methods": [{"name": "Fail", "input_type": "InternalRequest", "output_type": "InternalResponse"}]}]
-  },
-  "handler": {"service": "example.v1.InternalService", "method": "Fail"},
-  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"id": "internal-001"}},
-  "expected_response": {"status_code": "INTERNAL"},
-  "tags": ["grpc_status", "server_error", "error"]
+	"name": "gRPC INTERNAL status (13) - server error",
+	"description": "Tests INTERNAL gRPC status code. Returned when an internal server error occurs.",
+	"category": "grpc",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{ "name": "InternalRequest", "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }] },
+			{
+				"name": "InternalResponse",
+				"fields": [{ "name": "error", "type": "string", "number": 1, "label": "optional" }]
+			}
+		],
+		"services": [
+			{
+				"name": "InternalService",
+				"methods": [{ "name": "Fail", "input_type": "InternalRequest", "output_type": "InternalResponse" }]
+			}
+		]
+	},
+	"handler": { "service": "example.v1.InternalService", "method": "Fail" },
+	"request": { "metadata": { "content-type": "application/grpc" }, "message": { "id": "internal-001" } },
+	"expected_response": { "status_code": "INTERNAL" },
+	"tags": ["grpc_status", "server_error", "error"]
 }

@@ -1,58 +1,58 @@
 {
-  "name": "Special characters, unicode, and emoji in strings",
-  "description": "Tests handling of unicode characters, emojis, and special characters in protobuf string fields. Validates proper UTF-8 encoding/decoding.",
-  "category": "edge_cases",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "SpecialCharRequest",
-        "fields": [
-          {"name": "user_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "message", "type": "string", "number": 2, "label": "required"},
-          {"name": "emoji_field", "type": "string", "number": 3, "label": "optional"}
-        ]
-      },
-      {
-        "name": "SpecialCharResponse",
-        "fields": [
-          {"name": "echo", "type": "string", "number": 1, "label": "required"},
-          {"name": "char_count", "type": "int32", "number": 2, "label": "optional"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "EchoService",
-        "methods": [
-          {
-            "name": "EchoSpecial",
-            "input_type": "SpecialCharRequest",
-            "output_type": "SpecialCharResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.EchoService",
-    "method": "EchoSpecial"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "user_id": "user-unicode-001",
-      "message": "Hello 世界 Привет שלום مرحبا",
-      "emoji_field": "🚀 🎉 🌟 ✨ 💻"
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "echo": "Hello 世界 Привет שלום مرحبا"
-    }
-  },
-  "tags": ["edge_cases", "unicode", "emoji", "internationalization"]
+	"name": "Special characters, unicode, and emoji in strings",
+	"description": "Tests handling of unicode characters, emojis, and special characters in protobuf string fields. Validates proper UTF-8 encoding/decoding.",
+	"category": "edge_cases",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "SpecialCharRequest",
+				"fields": [
+					{ "name": "user_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "message", "type": "string", "number": 2, "label": "required" },
+					{ "name": "emoji_field", "type": "string", "number": 3, "label": "optional" }
+				]
+			},
+			{
+				"name": "SpecialCharResponse",
+				"fields": [
+					{ "name": "echo", "type": "string", "number": 1, "label": "required" },
+					{ "name": "char_count", "type": "int32", "number": 2, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "EchoService",
+				"methods": [
+					{
+						"name": "EchoSpecial",
+						"input_type": "SpecialCharRequest",
+						"output_type": "SpecialCharResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.EchoService",
+		"method": "EchoSpecial"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"user_id": "user-unicode-001",
+			"message": "Hello 世界 Привет שלום مرحبا",
+			"emoji_field": "🚀 🎉 🌟 ✨ 💻"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"echo": "Hello 世界 Привет שלום مرحبا"
+		}
+	},
+	"tags": ["edge_cases", "unicode", "emoji", "internationalization"]
 }

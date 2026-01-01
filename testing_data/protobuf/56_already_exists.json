@@ -1,17 +1,22 @@
 {
-  "name": "gRPC ALREADY_EXISTS status (6)",
-  "description": "Tests ALREADY_EXISTS gRPC status code. Returned when trying to create a resource that already exists.",
-  "category": "grpc",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "CreateRequest", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]},
-      {"name": "CreateResponse", "fields": [{"name": "id", "type": "string", "number": 1, "label": "optional"}]}
-    ],
-    "services": [{"name": "CreateService", "methods": [{"name": "Create", "input_type": "CreateRequest", "output_type": "CreateResponse"}]}]
-  },
-  "handler": {"service": "example.v1.CreateService", "method": "Create"},
-  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"id": "duplicate-001"}},
-  "expected_response": {"status_code": "ALREADY_EXISTS"},
-  "tags": ["grpc_status", "already_exists", "error"]
+	"name": "gRPC ALREADY_EXISTS status (6)",
+	"description": "Tests ALREADY_EXISTS gRPC status code. Returned when trying to create a resource that already exists.",
+	"category": "grpc",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{ "name": "CreateRequest", "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }] },
+			{ "name": "CreateResponse", "fields": [{ "name": "id", "type": "string", "number": 1, "label": "optional" }] }
+		],
+		"services": [
+			{
+				"name": "CreateService",
+				"methods": [{ "name": "Create", "input_type": "CreateRequest", "output_type": "CreateResponse" }]
+			}
+		]
+	},
+	"handler": { "service": "example.v1.CreateService", "method": "Create" },
+	"request": { "metadata": { "content-type": "application/grpc" }, "message": { "id": "duplicate-001" } },
+	"expected_response": { "status_code": "ALREADY_EXISTS" },
+	"tags": ["grpc_status", "already_exists", "error"]
 }

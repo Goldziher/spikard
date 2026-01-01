@@ -1,63 +1,63 @@
 {
-  "name": "Large 1MB message payload",
-  "description": "Tests handling of 1MB protobuf messages. Verifies that large payloads are properly serialized, transmitted, and deserialized without truncation or corruption.",
-  "category": "large_payloads",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "LargePayloadRequest",
-        "fields": [
-          {"name": "request_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "data", "type": "bytes", "number": 2, "label": "required"}
-        ]
-      },
-      {
-        "name": "LargePayloadResponse",
-        "fields": [
-          {"name": "request_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "data_size", "type": "int64", "number": 2, "label": "required"},
-          {"name": "checksum", "type": "string", "number": 3, "label": "optional"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "FileService",
-        "methods": [
-          {
-            "name": "UploadLarge",
-            "input_type": "LargePayloadRequest",
-            "output_type": "LargePayloadResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.FileService",
-    "method": "UploadLarge",
-    "middleware": {
-      "body_limit": {
-        "max_bytes": 5242880
-      }
-    }
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "request_id": "large-1mb-test-001",
-      "data": "SGVsbG8gV29ybGQgLSBUaGlzIGlzIGEgbGFyZ2UgMU1CIG1lc3NhZ2UgcGF5bG9hZCB0ZXN0IGZpeHR1cmUgZm9yIHRlc3RpbmcgY2FwYWNpdHkgdGVzdHMgYW5kIHBlcmZvcm1hbmNlIG1lYXN1cmVtZW50cy4gIFRoaXMgZGF0YSBmaWVsZCB3aWxsIGNvbnRhaW4gYXBwcm94aW1hdGVseSAxIE1CIG9mIGRhdGEgd2hlbiBidWlsdC4gVGhlIGdSUEMgc2VydmVyIHNob3VsZCBoYW5kbGUgdGhpcyB0cmFuc21pc3Npb24gd2l0aG91dCBpc3N1ZXMuIEluIHJlYWwgd29ybGQgc2NlbmFyaW9zLCBsYXJnZSBmaWxlIHRyYW5zZmVycyBhcmUgY29tbW9uLiBPdXIgdGVzdCBmaXh0dXJlIGVuc3VyZXMgdGhhdCB0aGUgaW1wbGVtZW50YXRpb24gY2FuIGhhbmRsZSBzdWNoIGZpbGVzIHdpdGhvdXQgbWVtb3J5IGlzc3Vlcywgc3RyZWFtIGJyZWFrcywgb3IgdGltZW91dHMu"
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "request_id": "large-1mb-test-001",
-      "data_size": 1048576
-    }
-  },
-  "tags": ["large_payloads", "performance", "file_transfer"]
+	"name": "Large 1MB message payload",
+	"description": "Tests handling of 1MB protobuf messages. Verifies that large payloads are properly serialized, transmitted, and deserialized without truncation or corruption.",
+	"category": "large_payloads",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "LargePayloadRequest",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "data", "type": "bytes", "number": 2, "label": "required" }
+				]
+			},
+			{
+				"name": "LargePayloadResponse",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "data_size", "type": "int64", "number": 2, "label": "required" },
+					{ "name": "checksum", "type": "string", "number": 3, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "FileService",
+				"methods": [
+					{
+						"name": "UploadLarge",
+						"input_type": "LargePayloadRequest",
+						"output_type": "LargePayloadResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.FileService",
+		"method": "UploadLarge",
+		"middleware": {
+			"body_limit": {
+				"max_bytes": 5242880
+			}
+		}
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"request_id": "large-1mb-test-001",
+			"data": "SGVsbG8gV29ybGQgLSBUaGlzIGlzIGEgbGFyZ2UgMU1CIG1lc3NhZ2UgcGF5bG9hZCB0ZXN0IGZpeHR1cmUgZm9yIHRlc3RpbmcgY2FwYWNpdHkgdGVzdHMgYW5kIHBlcmZvcm1hbmNlIG1lYXN1cmVtZW50cy4gIFRoaXMgZGF0YSBmaWVsZCB3aWxsIGNvbnRhaW4gYXBwcm94aW1hdGVseSAxIE1CIG9mIGRhdGEgd2hlbiBidWlsdC4gVGhlIGdSUEMgc2VydmVyIHNob3VsZCBoYW5kbGUgdGhpcyB0cmFuc21pc3Npb24gd2l0aG91dCBpc3N1ZXMuIEluIHJlYWwgd29ybGQgc2NlbmFyaW9zLCBsYXJnZSBmaWxlIHRyYW5zZmVycyBhcmUgY29tbW9uLiBPdXIgdGVzdCBmaXh0dXJlIGVuc3VyZXMgdGhhdCB0aGUgaW1wbGVtZW50YXRpb24gY2FuIGhhbmRsZSBzdWNoIGZpbGVzIHdpdGhvdXQgbWVtb3J5IGlzc3Vlcywgc3RyZWFtIGJyZWFrcywgb3IgdGltZW91dHMu"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"request_id": "large-1mb-test-001",
+			"data_size": 1048576
+		}
+	},
+	"tags": ["large_payloads", "performance", "file_transfer"]
 }

@@ -1,24 +1,24 @@
 {
-  "name": "@spikard/test-app-wasm",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "dependencies": {
-    "@spikard/wasm": "0.7.5"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ],
-    "trustedDependencies": [
-      "esbuild"
-    ]
-  },
-  "devDependencies": {
-    "vitest": "^2.1.8"
-  }
+	"name": "@spikard/test-app-wasm",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"test": "vitest run",
+		"test:watch": "vitest"
+	},
+	"dependencies": {
+		"@spikard/wasm": "0.7.5"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild"
+		],
+		"trustedDependencies": [
+			"esbuild"
+		]
+	},
+	"devDependencies": {
+		"vitest": "^2.1.8"
+	}
 }

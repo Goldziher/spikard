@@ -1,79 +1,79 @@
 {
-  "name": "Client streaming RPC",
-  "description": "Tests client streaming where client sends multiple messages. Covers streaming request aggregation patterns.",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "UploadRequest",
-        "fields": [
-          {"name": "file_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "chunk_data", "type": "bytes", "number": 2, "label": "required"},
-          {"name": "chunk_index", "type": "int32", "number": 3, "label": "required"},
-          {"name": "total_chunks", "type": "int32", "number": 4, "label": "required"}
-        ]
-      },
-      {
-        "name": "UploadResponse",
-        "fields": [
-          {"name": "file_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "total_bytes", "type": "int64", "number": 2, "label": "required"},
-          {"name": "status", "type": "string", "number": 3, "label": "required"},
-          {"name": "checksum", "type": "string", "number": 4, "label": "optional"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "FileService",
-        "methods": [
-          {
-            "name": "Upload",
-            "input_type": "UploadRequest",
-            "output_type": "UploadResponse",
-            "client_streaming": true,
-            "server_streaming": false
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.FileService",
-    "method": "Upload"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "stream": [
-      {
-        "file_id": "file-12345",
-        "chunk_data": "VGhpcyBpcyBjaHVuayAwIQ==",
-        "chunk_index": 0,
-        "total_chunks": 3
-      },
-      {
-        "file_id": "file-12345",
-        "chunk_data": "VGhpcyBpcyBjaHVuayAxIQ==",
-        "chunk_index": 1,
-        "total_chunks": 3
-      },
-      {
-        "file_id": "file-12345",
-        "chunk_data": "VGhpcyBpcyBjaHVuayAyIQ==",
-        "chunk_index": 2,
-        "total_chunks": 3
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "file_id": "file-12345",
-      "total_bytes": 57,
-      "status": "COMPLETED",
-      "checksum": "d8e8fca2dc0f896fd7cb4cb0031ba249"
-    }
-  }
+	"name": "Client streaming RPC",
+	"description": "Tests client streaming where client sends multiple messages. Covers streaming request aggregation patterns.",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "UploadRequest",
+				"fields": [
+					{ "name": "file_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "chunk_data", "type": "bytes", "number": 2, "label": "required" },
+					{ "name": "chunk_index", "type": "int32", "number": 3, "label": "required" },
+					{ "name": "total_chunks", "type": "int32", "number": 4, "label": "required" }
+				]
+			},
+			{
+				"name": "UploadResponse",
+				"fields": [
+					{ "name": "file_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "total_bytes", "type": "int64", "number": 2, "label": "required" },
+					{ "name": "status", "type": "string", "number": 3, "label": "required" },
+					{ "name": "checksum", "type": "string", "number": 4, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "FileService",
+				"methods": [
+					{
+						"name": "Upload",
+						"input_type": "UploadRequest",
+						"output_type": "UploadResponse",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.FileService",
+		"method": "Upload"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{
+				"file_id": "file-12345",
+				"chunk_data": "VGhpcyBpcyBjaHVuayAwIQ==",
+				"chunk_index": 0,
+				"total_chunks": 3
+			},
+			{
+				"file_id": "file-12345",
+				"chunk_data": "VGhpcyBpcyBjaHVuayAxIQ==",
+				"chunk_index": 1,
+				"total_chunks": 3
+			},
+			{
+				"file_id": "file-12345",
+				"chunk_data": "VGhpcyBpcyBjaHVuayAyIQ==",
+				"chunk_index": 2,
+				"total_chunks": 3
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"file_id": "file-12345",
+			"total_bytes": 57,
+			"status": "COMPLETED",
+			"checksum": "d8e8fca2dc0f896fd7cb4cb0031ba249"
+		}
+	}
 }

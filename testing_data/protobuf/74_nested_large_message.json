@@ -1,102 +1,102 @@
 {
-  "name": "Deeply nested large structure",
-  "description": "Tests deeply nested protobuf messages with complex hierarchies. Validates that nested message serialization handles proper field numbering and recursive structures.",
-  "category": "large_payloads",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "Address",
-        "fields": [
-          {"name": "street", "type": "string", "number": 1, "label": "required"},
-          {"name": "city", "type": "string", "number": 2, "label": "required"},
-          {"name": "zip", "type": "string", "number": 3, "label": "optional"}
-        ]
-      },
-      {
-        "name": "Company",
-        "fields": [
-          {"name": "name", "type": "string", "number": 1, "label": "required"},
-          {"name": "address", "type": "Address", "number": 2, "label": "required"},
-          {"name": "employee_count", "type": "int32", "number": 3, "label": "optional"}
-        ]
-      },
-      {
-        "name": "Person",
-        "fields": [
-          {"name": "name", "type": "string", "number": 1, "label": "required"},
-          {"name": "address", "type": "Address", "number": 2, "label": "required"},
-          {"name": "company", "type": "Company", "number": 3, "label": "optional"}
-        ]
-      },
-      {
-        "name": "DeepNestedRequest",
-        "fields": [
-          {"name": "person", "type": "Person", "number": 1, "label": "required"},
-          {"name": "metadata", "type": "string", "number": 2, "label": "optional"}
-        ]
-      },
-      {
-        "name": "DeepNestedResponse",
-        "fields": [
-          {"name": "success", "type": "bool", "number": 1, "label": "required"},
-          {"name": "person", "type": "Person", "number": 2, "label": "optional"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "RegistryService",
-        "methods": [
-          {
-            "name": "RegisterPerson",
-            "input_type": "DeepNestedRequest",
-            "output_type": "DeepNestedResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.RegistryService",
-    "method": "RegisterPerson"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "person": {
-        "name": "John Doe",
-        "address": {
-          "street": "123 Main St",
-          "city": "Springfield",
-          "zip": "12345"
-        },
-        "company": {
-          "name": "Tech Corp",
-          "address": {
-            "street": "456 Tech Ave",
-            "city": "Silicon Valley",
-            "zip": "94025"
-          },
-          "employee_count": 500
-        }
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "success": true,
-      "person": {
-        "name": "John Doe",
-        "address": {
-          "street": "123 Main St",
-          "city": "Springfield"
-        }
-      }
-    }
-  },
-  "tags": ["large_payloads", "nested_messages", "complex_structures"]
+	"name": "Deeply nested large structure",
+	"description": "Tests deeply nested protobuf messages with complex hierarchies. Validates that nested message serialization handles proper field numbering and recursive structures.",
+	"category": "large_payloads",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "Address",
+				"fields": [
+					{ "name": "street", "type": "string", "number": 1, "label": "required" },
+					{ "name": "city", "type": "string", "number": 2, "label": "required" },
+					{ "name": "zip", "type": "string", "number": 3, "label": "optional" }
+				]
+			},
+			{
+				"name": "Company",
+				"fields": [
+					{ "name": "name", "type": "string", "number": 1, "label": "required" },
+					{ "name": "address", "type": "Address", "number": 2, "label": "required" },
+					{ "name": "employee_count", "type": "int32", "number": 3, "label": "optional" }
+				]
+			},
+			{
+				"name": "Person",
+				"fields": [
+					{ "name": "name", "type": "string", "number": 1, "label": "required" },
+					{ "name": "address", "type": "Address", "number": 2, "label": "required" },
+					{ "name": "company", "type": "Company", "number": 3, "label": "optional" }
+				]
+			},
+			{
+				"name": "DeepNestedRequest",
+				"fields": [
+					{ "name": "person", "type": "Person", "number": 1, "label": "required" },
+					{ "name": "metadata", "type": "string", "number": 2, "label": "optional" }
+				]
+			},
+			{
+				"name": "DeepNestedResponse",
+				"fields": [
+					{ "name": "success", "type": "bool", "number": 1, "label": "required" },
+					{ "name": "person", "type": "Person", "number": 2, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "RegistryService",
+				"methods": [
+					{
+						"name": "RegisterPerson",
+						"input_type": "DeepNestedRequest",
+						"output_type": "DeepNestedResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.RegistryService",
+		"method": "RegisterPerson"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"person": {
+				"name": "John Doe",
+				"address": {
+					"street": "123 Main St",
+					"city": "Springfield",
+					"zip": "12345"
+				},
+				"company": {
+					"name": "Tech Corp",
+					"address": {
+						"street": "456 Tech Ave",
+						"city": "Silicon Valley",
+						"zip": "94025"
+					},
+					"employee_count": 500
+				}
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"success": true,
+			"person": {
+				"name": "John Doe",
+				"address": {
+					"street": "123 Main St",
+					"city": "Springfield"
+				}
+			}
+		}
+	},
+	"tags": ["large_payloads", "nested_messages", "complex_structures"]
 }

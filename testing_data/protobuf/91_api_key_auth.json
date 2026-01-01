@@ -1,48 +1,54 @@
 {
-  "name": "API key authentication",
-  "description": "Tests API key authentication via gRPC metadata. Validates that API keys are properly validated and associated with clients.",
-  "category": "auth_security",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "ApiRequest", "fields": [{"name": "resource", "type": "string", "number": 1, "label": "required"}]},
-      {"name": "ApiResponse", "fields": [{"name": "data", "type": "string", "number": 1, "label": "required"}, {"name": "client_id", "type": "string", "number": 2, "label": "optional"}]}
-    ],
-    "services": [
-      {
-        "name": "ApiService",
-        "methods": [
-          {
-            "name": "FetchResource",
-            "input_type": "ApiRequest",
-            "output_type": "ApiResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.ApiService",
-    "method": "FetchResource",
-    "protobuf": {
-      "metadata": {
-        "required_headers": ["x-api-key"]
-      }
-    }
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc",
-      "x-api-key": "sk_live_abc123def456"
-    },
-    "message": {"resource": "users"}
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "data": "resource_data",
-      "client_id": "client-api-001"
-    }
-  },
-  "tags": ["auth", "api_key", "security"]
+	"name": "API key authentication",
+	"description": "Tests API key authentication via gRPC metadata. Validates that API keys are properly validated and associated with clients.",
+	"category": "auth_security",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{ "name": "ApiRequest", "fields": [{ "name": "resource", "type": "string", "number": 1, "label": "required" }] },
+			{
+				"name": "ApiResponse",
+				"fields": [
+					{ "name": "data", "type": "string", "number": 1, "label": "required" },
+					{ "name": "client_id", "type": "string", "number": 2, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ApiService",
+				"methods": [
+					{
+						"name": "FetchResource",
+						"input_type": "ApiRequest",
+						"output_type": "ApiResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ApiService",
+		"method": "FetchResource",
+		"protobuf": {
+			"metadata": {
+				"required_headers": ["x-api-key"]
+			}
+		}
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"x-api-key": "sk_live_abc123def456"
+		},
+		"message": { "resource": "users" }
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"data": "resource_data",
+			"client_id": "client-api-001"
+		}
+	},
+	"tags": ["auth", "api_key", "security"]
 }

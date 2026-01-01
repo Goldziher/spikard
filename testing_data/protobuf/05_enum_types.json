@@ -1,91 +1,91 @@
 {
-  "name": "Enum types",
-  "description": "Tests enum definitions and serialization. Covers enum fields with named constants.",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "Status",
-        "fields": []
-      },
-      {
-        "name": "Order",
-        "fields": [
-          {"name": "id", "type": "int32", "number": 1, "label": "required"},
-          {"name": "product_name", "type": "string", "number": 2, "label": "required"},
-          {"name": "quantity", "type": "int32", "number": 3, "label": "required"},
-          {"name": "status", "type": "OrderStatus", "number": 4, "label": "required"},
-          {"name": "priority", "type": "Priority", "number": 5, "label": "optional"}
-        ]
-      },
-      {
-        "name": "CreateOrderRequest",
-        "fields": [
-          {"name": "product_name", "type": "string", "number": 1, "label": "required"},
-          {"name": "quantity", "type": "int32", "number": 2, "label": "required"},
-          {"name": "priority", "type": "Priority", "number": 3, "label": "optional"}
-        ]
-      }
-    ],
-    "enums": [
-      {
-        "name": "OrderStatus",
-        "values": [
-          {"name": "UNKNOWN", "number": 0},
-          {"name": "PENDING", "number": 1},
-          {"name": "CONFIRMED", "number": 2},
-          {"name": "SHIPPED", "number": 3},
-          {"name": "DELIVERED", "number": 4}
-        ]
-      },
-      {
-        "name": "Priority",
-        "values": [
-          {"name": "PRIORITY_UNSPECIFIED", "number": 0},
-          {"name": "LOW", "number": 1},
-          {"name": "NORMAL", "number": 2},
-          {"name": "HIGH", "number": 3},
-          {"name": "URGENT", "number": 4}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "OrderService",
-        "methods": [
-          {
-            "name": "CreateOrder",
-            "input_type": "CreateOrderRequest",
-            "output_type": "Order",
-            "client_streaming": false,
-            "server_streaming": false
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.OrderService",
-    "method": "CreateOrder"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "product_name": "Laptop",
-      "quantity": 2,
-      "priority": "HIGH"
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "id": 1001,
-      "product_name": "Laptop",
-      "quantity": 2,
-      "status": "PENDING",
-      "priority": "HIGH"
-    }
-  }
+	"name": "Enum types",
+	"description": "Tests enum definitions and serialization. Covers enum fields with named constants.",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "Status",
+				"fields": []
+			},
+			{
+				"name": "Order",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "product_name", "type": "string", "number": 2, "label": "required" },
+					{ "name": "quantity", "type": "int32", "number": 3, "label": "required" },
+					{ "name": "status", "type": "OrderStatus", "number": 4, "label": "required" },
+					{ "name": "priority", "type": "Priority", "number": 5, "label": "optional" }
+				]
+			},
+			{
+				"name": "CreateOrderRequest",
+				"fields": [
+					{ "name": "product_name", "type": "string", "number": 1, "label": "required" },
+					{ "name": "quantity", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "priority", "type": "Priority", "number": 3, "label": "optional" }
+				]
+			}
+		],
+		"enums": [
+			{
+				"name": "OrderStatus",
+				"values": [
+					{ "name": "UNKNOWN", "number": 0 },
+					{ "name": "PENDING", "number": 1 },
+					{ "name": "CONFIRMED", "number": 2 },
+					{ "name": "SHIPPED", "number": 3 },
+					{ "name": "DELIVERED", "number": 4 }
+				]
+			},
+			{
+				"name": "Priority",
+				"values": [
+					{ "name": "PRIORITY_UNSPECIFIED", "number": 0 },
+					{ "name": "LOW", "number": 1 },
+					{ "name": "NORMAL", "number": 2 },
+					{ "name": "HIGH", "number": 3 },
+					{ "name": "URGENT", "number": 4 }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "OrderService",
+				"methods": [
+					{
+						"name": "CreateOrder",
+						"input_type": "CreateOrderRequest",
+						"output_type": "Order",
+						"client_streaming": false,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.OrderService",
+		"method": "CreateOrder"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"product_name": "Laptop",
+			"quantity": 2,
+			"priority": "HIGH"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"id": 1001,
+			"product_name": "Laptop",
+			"quantity": 2,
+			"status": "PENDING",
+			"priority": "HIGH"
+		}
+	}
 }

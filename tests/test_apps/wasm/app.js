@@ -22,10 +22,7 @@ export function createApp() {
 			body: { status: "ok" },
 		};
 	};
-	app.addRoute(
-		{ method: "GET", path: "/health", handler_name: "health", is_async: true },
-		health,
-	);
+	app.addRoute({ method: "GET", path: "/health", handler_name: "health", is_async: true }, health);
 
 	// Query parameters endpoint
 	const query = async (req) => {
@@ -34,10 +31,7 @@ export function createApp() {
 			age: req.query?.age ? parseInt(String(req.query.age)) : null,
 		};
 	};
-	app.addRoute(
-		{ method: "GET", path: "/query", handler_name: "query", is_async: true },
-		query,
-	);
+	app.addRoute({ method: "GET", path: "/query", handler_name: "query", is_async: true }, query);
 
 	// JSON echo endpoint
 	const echo = async (req) => {
@@ -47,10 +41,7 @@ export function createApp() {
 			method: req.method,
 		};
 	};
-	app.addRoute(
-		{ method: "POST", path: "/echo", handler_name: "echo", is_async: true },
-		echo,
-	);
+	app.addRoute({ method: "POST", path: "/echo", handler_name: "echo", is_async: true }, echo);
 
 	// Path parameters endpoint
 	const user = async (req) => {
@@ -60,10 +51,7 @@ export function createApp() {
 			type: typeof userId,
 		};
 	};
-	app.addRoute(
-		{ method: "GET", path: "/users/{id}", handler_name: "user", is_async: true },
-		user,
-	);
+	app.addRoute({ method: "GET", path: "/users/{id}", handler_name: "user", is_async: true }, user);
 
 	// Return app and test client
 	return {

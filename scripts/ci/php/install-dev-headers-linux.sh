@@ -23,10 +23,10 @@ echo "Setting up PHP alternatives for version ${PHP_VERSION}..."
 PHP_BINARY="/usr/bin/php${PHP_VERSION}"
 PHP_CONFIG_BINARY="/usr/bin/php-config${PHP_VERSION}"
 if [ -f "$PHP_BINARY" ]; then
-  sudo update-alternatives --install /usr/bin/php php "$PHP_BINARY" 100 || true
+	sudo update-alternatives --install /usr/bin/php php "$PHP_BINARY" 100 || true
 fi
 if [ -f "$PHP_CONFIG_BINARY" ]; then
-  sudo update-alternatives --install /usr/bin/php-config php-config "$PHP_CONFIG_BINARY" 100 || true
+	sudo update-alternatives --install /usr/bin/php-config php-config "$PHP_CONFIG_BINARY" 100 || true
 fi
 
 # Verify the correct version is installed

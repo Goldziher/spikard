@@ -1,44 +1,53 @@
 {
-  "name": "Mutual TLS metadata simulation",
-  "description": "Tests mutual TLS authentication by validating client certificate metadata. Simulates mTLS handshake verification.",
-  "category": "auth_security",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "MtlsRequest", "fields": [{"name": "operation", "type": "string", "number": 1, "label": "required"}]},
-      {"name": "MtlsResponse", "fields": [{"name": "verified", "type": "bool", "number": 1, "label": "required"}, {"name": "client_cn", "type": "string", "number": 2, "label": "optional"}]}
-    ],
-    "services": [
-      {
-        "name": "MtlsService",
-        "methods": [
-          {
-            "name": "VerifyClient",
-            "input_type": "MtlsRequest",
-            "output_type": "MtlsResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.MtlsService",
-    "method": "VerifyClient"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc",
-      "x-client-cert-cn": "client.example.com",
-      "x-client-cert-fingerprint": "AB:CD:EF:12:34:56:78:90"
-    },
-    "message": {"operation": "secure_read"}
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "verified": true,
-      "client_cn": "client.example.com"
-    }
-  },
-  "tags": ["auth", "mtls", "security", "tls"]
+	"name": "Mutual TLS metadata simulation",
+	"description": "Tests mutual TLS authentication by validating client certificate metadata. Simulates mTLS handshake verification.",
+	"category": "auth_security",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "MtlsRequest",
+				"fields": [{ "name": "operation", "type": "string", "number": 1, "label": "required" }]
+			},
+			{
+				"name": "MtlsResponse",
+				"fields": [
+					{ "name": "verified", "type": "bool", "number": 1, "label": "required" },
+					{ "name": "client_cn", "type": "string", "number": 2, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "MtlsService",
+				"methods": [
+					{
+						"name": "VerifyClient",
+						"input_type": "MtlsRequest",
+						"output_type": "MtlsResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.MtlsService",
+		"method": "VerifyClient"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"x-client-cert-cn": "client.example.com",
+			"x-client-cert-fingerprint": "AB:CD:EF:12:34:56:78:90"
+		},
+		"message": { "operation": "secure_read" }
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"verified": true,
+			"client_cn": "client.example.com"
+		}
+	},
+	"tags": ["auth", "mtls", "security", "tls"]
 }

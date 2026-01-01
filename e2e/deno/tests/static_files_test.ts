@@ -5,31 +5,34 @@
 
 import { TestClient } from "@spikard/wasm";
 import { assertEquals } from "jsr:@std/assert@1";
-import { createAppStaticFilesStaticFileServerReturnsTextFile, createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory } from "../app/main.ts";
+import {
+	createAppStaticFilesStaticFileServerReturnsTextFile,
+	createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory,
+} from "../app/main.ts";
 
-	Deno.test("static_files: Static file server returns text file", async () => {
-		const app = createAppStaticFilesStaticFileServerReturnsTextFile();
-		const client = new TestClient(app);
+Deno.test("static_files: Static file server returns text file", async () => {
+	const app = createAppStaticFilesStaticFileServerReturnsTextFile();
+	const client = new TestClient(app);
 
-		const response = await client.get("/public/hello.txt");
+	const response = await client.get("/public/hello.txt");
 
-		assertEquals(response.statusCode, 200);
-		const responseText = response.text();
-		assertEquals(responseText.trimEnd(), "Hello from static storage");
-		const responseHeaders = response.headers();
-		assertEquals(responseHeaders["content-type"], "text/plain");
-		assertEquals(responseHeaders["cache-control"], "public, max-age=60");
-	});
+	assertEquals(response.statusCode, 200);
+	const responseText = response.text();
+	assertEquals(responseText.trimEnd(), "Hello from static storage");
+	const responseHeaders = response.headers();
+	assertEquals(responseHeaders["content-type"], "text/plain");
+	assertEquals(responseHeaders["cache-control"], "public, max-age=60");
+});
 
-	Deno.test("static_files: Static server returns index html for directory", async () => {
-		const app = createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory();
-		const client = new TestClient(app);
+Deno.test("static_files: Static server returns index html for directory", async () => {
+	const app = createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory();
+	const client = new TestClient(app);
 
-		const response = await client.get("/app/");
+	const response = await client.get("/app/");
 
-		assertEquals(response.statusCode, 200);
-		const responseText = response.text();
-		assertEquals(responseText.trimEnd(), "<!doctype html><h1>Welcome</h1>");
-		const responseHeaders = response.headers();
-		assertEquals(responseHeaders["content-type"], "text/html");
-	});
+	assertEquals(response.statusCode, 200);
+	const responseText = response.text();
+	assertEquals(responseText.trimEnd(), "<!doctype html><h1>Welcome</h1>");
+	const responseHeaders = response.headers();
+	assertEquals(responseHeaders["content-type"], "text/html");
+});

@@ -47,8 +47,8 @@ sleep 1
 
 echo ""
 echo "Starting Python server on port 8200..."
-cd $WORKSPACE_ROOT
-PYTHONPATH=packages/python uv run python $PYTHON_SERVER 8200 >/tmp/python-server.log 2>&1 &
+cd "$WORKSPACE_ROOT"
+PYTHONPATH=packages/python uv run python "$PYTHON_SERVER" 8200 >/tmp/python-server.log 2>&1 &
 PYTHON_PID=$!
 sleep 3
 

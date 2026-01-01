@@ -1,45 +1,45 @@
 {
-  "name": "Empty message request and response",
-  "description": "Tests handling of empty protobuf messages with no fields. Validates that the protocol correctly handles minimal payloads.",
-  "category": "edge_cases",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "EmptyRequest",
-        "fields": []
-      },
-      {
-        "name": "EmptyResponse",
-        "fields": []
-      }
-    ],
-    "services": [
-      {
-        "name": "PingService",
-        "methods": [
-          {
-            "name": "Ping",
-            "input_type": "EmptyRequest",
-            "output_type": "EmptyResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.PingService",
-    "method": "Ping"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {}
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {}
-  },
-  "tags": ["edge_cases", "minimal_payload"]
+	"name": "Empty message request and response",
+	"description": "Tests handling of empty protobuf messages with no fields. Validates that the protocol correctly handles minimal payloads.",
+	"category": "edge_cases",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "EmptyRequest",
+				"fields": []
+			},
+			{
+				"name": "EmptyResponse",
+				"fields": []
+			}
+		],
+		"services": [
+			{
+				"name": "PingService",
+				"methods": [
+					{
+						"name": "Ping",
+						"input_type": "EmptyRequest",
+						"output_type": "EmptyResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.PingService",
+		"method": "Ping"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {}
+	},
+	"tags": ["edge_cases", "minimal_payload"]
 }

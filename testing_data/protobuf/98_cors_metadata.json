@@ -1,47 +1,47 @@
 {
-  "name": "CORS-related metadata headers",
-  "description": "Tests CORS-related metadata in gRPC calls. Validates origin validation and cross-origin request handling.",
-  "category": "auth_security",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "CorsRequest", "fields": [{"name": "resource", "type": "string", "number": 1, "label": "required"}]},
-      {"name": "CorsResponse", "fields": [{"name": "allowed", "type": "bool", "number": 1, "label": "required"}]}
-    ],
-    "services": [
-      {
-        "name": "CorsService",
-        "methods": [
-          {
-            "name": "CheckCors",
-            "input_type": "CorsRequest",
-            "output_type": "CorsResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.CorsService",
-    "method": "CheckCors"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc",
-      "origin": "https://example.com",
-      "access-control-request-method": "POST"
-    },
-    "message": {"resource": "data"}
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {"allowed": true},
-    "protobuf": {
-      "metadata": {
-        "access-control-allow-origin": "https://example.com",
-        "access-control-allow-methods": "GET, POST, PUT, DELETE"
-      }
-    }
-  },
-  "tags": ["cors", "security", "metadata"]
+	"name": "CORS-related metadata headers",
+	"description": "Tests CORS-related metadata in gRPC calls. Validates origin validation and cross-origin request handling.",
+	"category": "auth_security",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{ "name": "CorsRequest", "fields": [{ "name": "resource", "type": "string", "number": 1, "label": "required" }] },
+			{ "name": "CorsResponse", "fields": [{ "name": "allowed", "type": "bool", "number": 1, "label": "required" }] }
+		],
+		"services": [
+			{
+				"name": "CorsService",
+				"methods": [
+					{
+						"name": "CheckCors",
+						"input_type": "CorsRequest",
+						"output_type": "CorsResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.CorsService",
+		"method": "CheckCors"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"origin": "https://example.com",
+			"access-control-request-method": "POST"
+		},
+		"message": { "resource": "data" }
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": { "allowed": true },
+		"protobuf": {
+			"metadata": {
+				"access-control-allow-origin": "https://example.com",
+				"access-control-allow-methods": "GET, POST, PUT, DELETE"
+			}
+		}
+	},
+	"tags": ["cors", "security", "metadata"]
 }

@@ -1259,7 +1259,7 @@ RSpec.describe Spikard::Grpc do
       it 'handles TypeError for type mismatches' do
         handler = lambda do |request|
           # Simulate type error by treating payload as an array when it's a string
-          result = request.payload[0] + 1  # This will raise TypeError when trying to add to a string
+          result = request.payload[0] + 1 # This will raise TypeError when trying to add to a string
           Spikard::Grpc::Response.new(payload: { result: result }.to_json.b)
         rescue TypeError => e
           response_data = { error: 'Type error', details: e.message }
@@ -1342,7 +1342,7 @@ RSpec.describe Spikard::Grpc do
         handler = lambda do |request|
           Enumerator.new do |yielder|
             10.times do |i|
-              size = 2 ** i
+              size = 2**i
               data = ('a' * size).b
               yielder << Spikard::Grpc::Response.new(payload: data)
             end
@@ -1446,9 +1446,7 @@ RSpec.describe Spikard::Grpc do
             request_enum.each do |req|
               parsed = JSON.parse(req.payload)
               # Only yield even counts
-              if parsed['count'] % 2 == 0
-                yielder << Spikard::Grpc::Response.new(payload: req.payload)
-              end
+              yielder << Spikard::Grpc::Response.new(payload: req.payload) if parsed['count'].even?
             end
           end
         end
@@ -1620,7 +1618,7 @@ RSpec.describe Spikard::Grpc do
     describe 'status code as symbol vs string' do
       it 'preserves status code when metadata uses symbols converted to strings' do
         response = Spikard::Grpc::Response.new(payload: 'data'.b)
-        # Note: gRPC metadata should use string keys
+        # NOTE: gRPC metadata should use string keys
         status_key = 'grpc-status'
         response.metadata = { status_key => 'NOT_FOUND' }
 
@@ -1653,7 +1651,7 @@ RSpec.describe Spikard::Grpc do
       end
 
       it 'handles sparse binary data' do
-        sparse = (("\x00" * 1000) + "x" + ("\x00" * 1000)) * 10
+        sparse = (("\x00" * 1000) + 'x' + ("\x00" * 1000)) * 10
         response = Spikard::Grpc::Response.new(payload: sparse.b)
 
         expect(response.payload).to include('x')
@@ -1661,7 +1659,7 @@ RSpec.describe Spikard::Grpc do
       end
 
       it 'handles payload with every byte value 0-255' do
-        all_bytes = ((0..255).map(&:chr).join) * 100
+        all_bytes = (0..255).map(&:chr).join * 100
         response = Spikard::Grpc::Response.new(payload: all_bytes.b)
 
         expect(response.payload.length).to eq(all_bytes.length)
@@ -2012,11 +2010,9 @@ RSpec.describe Spikard::Grpc do
       it 'simulates multi-step processing pipeline' do
         # Step 1: Parse input
         parser = lambda do |request|
-          begin
-            JSON.parse(request.payload)
-          rescue JSON::ParserError
-            {}
-          end
+          JSON.parse(request.payload)
+        rescue JSON::ParserError
+          {}
         end
 
         # Step 2: Validate

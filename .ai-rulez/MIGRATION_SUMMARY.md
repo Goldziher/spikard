@@ -463,4 +463,3 @@ profiles:
 **Total Rules Migrated**: 30
 **Profiles Created**: 1
 **Schema Version**: ai-rules-v3
-

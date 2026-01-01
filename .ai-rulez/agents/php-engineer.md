@@ -8,4 +8,3 @@ model: haiku
 ---
 
 # php-engineer
-

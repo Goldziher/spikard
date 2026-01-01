@@ -1,59 +1,59 @@
 {
-  "name": "Oneof field handling",
-  "description": "Tests oneof fields where only one field in the group can be set at a time. Validates proper mutual exclusivity and serialization.",
-  "category": "edge_cases",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "OneofRequest",
-        "fields": [
-          {"name": "request_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "text_data", "type": "string", "number": 2, "label": "optional", "oneof": "data"},
-          {"name": "number_data", "type": "int32", "number": 3, "label": "optional", "oneof": "data"},
-          {"name": "binary_data", "type": "bytes", "number": 4, "label": "optional", "oneof": "data"}
-        ]
-      },
-      {
-        "name": "OneofResponse",
-        "fields": [
-          {"name": "received_type", "type": "string", "number": 1, "label": "required"},
-          {"name": "data_present", "type": "bool", "number": 2, "label": "required"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "OneofService",
-        "methods": [
-          {
-            "name": "ProcessOneof",
-            "input_type": "OneofRequest",
-            "output_type": "OneofResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.OneofService",
-    "method": "ProcessOneof"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "request_id": "oneof-test-001",
-      "text_data": "This is text data"
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "received_type": "text_data",
-      "data_present": true
-    }
-  },
-  "tags": ["edge_cases", "oneof", "protobuf_syntax"]
+	"name": "Oneof field handling",
+	"description": "Tests oneof fields where only one field in the group can be set at a time. Validates proper mutual exclusivity and serialization.",
+	"category": "edge_cases",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "OneofRequest",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "text_data", "type": "string", "number": 2, "label": "optional", "oneof": "data" },
+					{ "name": "number_data", "type": "int32", "number": 3, "label": "optional", "oneof": "data" },
+					{ "name": "binary_data", "type": "bytes", "number": 4, "label": "optional", "oneof": "data" }
+				]
+			},
+			{
+				"name": "OneofResponse",
+				"fields": [
+					{ "name": "received_type", "type": "string", "number": 1, "label": "required" },
+					{ "name": "data_present", "type": "bool", "number": 2, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "OneofService",
+				"methods": [
+					{
+						"name": "ProcessOneof",
+						"input_type": "OneofRequest",
+						"output_type": "OneofResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.OneofService",
+		"method": "ProcessOneof"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"request_id": "oneof-test-001",
+			"text_data": "This is text data"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"received_type": "text_data",
+			"data_present": true
+		}
+	},
+	"tags": ["edge_cases", "oneof", "protobuf_syntax"]
 }

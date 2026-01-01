@@ -1,17 +1,25 @@
 {
-  "name": "gRPC RESOURCE_EXHAUSTED status (8)",
-  "description": "Tests RESOURCE_EXHAUSTED gRPC status code. Returned when the server has run out of resources (disk space, memory, connections, etc.).",
-  "category": "grpc",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "HeavyRequest", "fields": [{"name": "size", "type": "int64", "number": 1, "label": "required"}]},
-      {"name": "HeavyResponse", "fields": [{"name": "allocated", "type": "int64", "number": 1, "label": "optional"}]}
-    ],
-    "services": [{"name": "ResourceService", "methods": [{"name": "AllocateMemory", "input_type": "HeavyRequest", "output_type": "HeavyResponse"}]}]
-  },
-  "handler": {"service": "example.v1.ResourceService", "method": "AllocateMemory"},
-  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"size": 9999999999}},
-  "expected_response": {"status_code": "RESOURCE_EXHAUSTED"},
-  "tags": ["grpc_status", "resource", "error"]
+	"name": "gRPC RESOURCE_EXHAUSTED status (8)",
+	"description": "Tests RESOURCE_EXHAUSTED gRPC status code. Returned when the server has run out of resources (disk space, memory, connections, etc.).",
+	"category": "grpc",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{ "name": "HeavyRequest", "fields": [{ "name": "size", "type": "int64", "number": 1, "label": "required" }] },
+			{
+				"name": "HeavyResponse",
+				"fields": [{ "name": "allocated", "type": "int64", "number": 1, "label": "optional" }]
+			}
+		],
+		"services": [
+			{
+				"name": "ResourceService",
+				"methods": [{ "name": "AllocateMemory", "input_type": "HeavyRequest", "output_type": "HeavyResponse" }]
+			}
+		]
+	},
+	"handler": { "service": "example.v1.ResourceService", "method": "AllocateMemory" },
+	"request": { "metadata": { "content-type": "application/grpc" }, "message": { "size": 9999999999 } },
+	"expected_response": { "status_code": "RESOURCE_EXHAUSTED" },
+	"tags": ["grpc_status", "resource", "error"]
 }

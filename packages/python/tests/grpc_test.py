@@ -703,23 +703,17 @@ class TestGrpcServiceRouting:
         service.register_handler("test.UserService", handler)
 
         # Test GetUser
-        request = GrpcRequest(
-            service_name="test.UserService", method_name="GetUser", payload=b""
-        )
+        request = GrpcRequest(service_name="test.UserService", method_name="GetUser", payload=b"")
         response = await service.handle_request(request)
         assert response.payload == b"user_data"
 
         # Test UpdateUser
-        request = GrpcRequest(
-            service_name="test.UserService", method_name="UpdateUser", payload=b""
-        )
+        request = GrpcRequest(service_name="test.UserService", method_name="UpdateUser", payload=b"")
         response = await service.handle_request(request)
         assert response.payload == b"updated"
 
         # Test unknown method
-        request = GrpcRequest(
-            service_name="test.UserService", method_name="DeleteUser", payload=b""
-        )
+        request = GrpcRequest(service_name="test.UserService", method_name="DeleteUser", payload=b"")
         with pytest.raises(NotImplementedError, match="Unknown method: DeleteUser"):
             await service.handle_request(request)
 
@@ -775,9 +769,7 @@ class TestMetadataHandling:
                 return response
 
         handler = MetadataHandler()
-        request = GrpcRequest(
-            service_name="test.Service", method_name="Method", payload=b"request"
-        )
+        request = GrpcRequest(service_name="test.Service", method_name="Method", payload=b"request")
 
         response = await handler.handle_request(request)
         assert response.metadata["x-server-version"] == "1.0.0"
@@ -857,9 +849,7 @@ class TestErrorHandling:
             async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
                 raise self.exception_type(self.message)
 
-        request = GrpcRequest(
-            service_name="test.Service", method_name="Method", payload=b""
-        )
+        request = GrpcRequest(service_name="test.Service", method_name="Method", payload=b"")
 
         # Test ValueError
         handler = ExceptionHandler(ValueError, "bad value")
@@ -891,9 +881,7 @@ class TestErrorHandling:
                 raise ValueError("")
 
         handler = ErrorHandler()
-        request = GrpcRequest(
-            service_name="test.Service", method_name="Method", payload=b""
-        )
+        request = GrpcRequest(service_name="test.Service", method_name="Method", payload=b"")
 
         # Suppressing PT011 because we're testing the generic ValueError case
         with pytest.raises(ValueError):  # noqa: PT011
@@ -909,9 +897,7 @@ class TestErrorHandling:
                 raise ValueError("Error with unicode")
 
         handler = ErrorHandler()
-        request = GrpcRequest(
-            service_name="test.Service", method_name="Method", payload=b""
-        )
+        request = GrpcRequest(service_name="test.Service", method_name="Method", payload=b"")
 
         with pytest.raises(ValueError, match="Error with unicode"):
             await handler.handle_request(request)
@@ -926,9 +912,7 @@ class TestErrorHandling:
                 raise KeyboardInterrupt
 
         handler = ErrorHandler()
-        request = GrpcRequest(
-            service_name="test.Service", method_name="Method", payload=b""
-        )
+        request = GrpcRequest(service_name="test.Service", method_name="Method", payload=b"")
 
         with pytest.raises(KeyboardInterrupt):
             await handler.handle_request(request)
@@ -943,9 +927,7 @@ class TestErrorHandling:
                 raise TimeoutError("Request timeout")
 
         handler = ErrorHandler()
-        request = GrpcRequest(
-            service_name="test.Service", method_name="Method", payload=b""
-        )
+        request = GrpcRequest(service_name="test.Service", method_name="Method", payload=b"")
 
         with pytest.raises(TimeoutError, match="Request timeout"):
             await handler.handle_request(request)
@@ -963,9 +945,7 @@ class TestErrorHandling:
                 raise CustomError("Custom error message")
 
         handler = ErrorHandler()
-        request = GrpcRequest(
-            service_name="test.Service", method_name="Method", payload=b""
-        )
+        request = GrpcRequest(service_name="test.Service", method_name="Method", payload=b"")
 
         with pytest.raises(CustomError, match="Custom error message"):
             await handler.handle_request(request)

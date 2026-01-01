@@ -1,69 +1,69 @@
 {
-  "name": "Full authorization context with role-based access control",
-  "description": "Tests complete authorization context including user roles, permissions, and resource-level access control.",
-  "category": "auth_security",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "AuthContext",
-        "fields": [
-          {"name": "user_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "roles", "type": "string", "number": 2, "label": "repeated"},
-          {"name": "permissions", "type": "string", "number": 3, "label": "repeated"}
-        ]
-      },
-      {
-        "name": "PrivilegedRequest",
-        "fields": [
-          {"name": "resource_id", "type": "string", "number": 1, "label": "required"},
-          {"name": "operation", "type": "string", "number": 2, "label": "required"}
-        ]
-      },
-      {
-        "name": "PrivilegedResponse",
-        "fields": [
-          {"name": "authorized", "type": "bool", "number": 1, "label": "required"},
-          {"name": "message", "type": "string", "number": 2, "label": "optional"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "AuthzService",
-        "methods": [
-          {
-            "name": "CheckAccess",
-            "input_type": "PrivilegedRequest",
-            "output_type": "PrivilegedResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.AuthzService",
-    "method": "CheckAccess"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc",
-      "authorization": "Bearer token123",
-      "x-user-id": "user-admin-001",
-      "x-user-roles": "admin,editor",
-      "x-user-permissions": "read,write,delete"
-    },
-    "message": {
-      "resource_id": "resource-456",
-      "operation": "write"
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "authorized": true,
-      "message": "Access granted with admin privileges"
-    }
-  },
-  "tags": ["auth", "authorization", "rbac", "security"]
+	"name": "Full authorization context with role-based access control",
+	"description": "Tests complete authorization context including user roles, permissions, and resource-level access control.",
+	"category": "auth_security",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "AuthContext",
+				"fields": [
+					{ "name": "user_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "roles", "type": "string", "number": 2, "label": "repeated" },
+					{ "name": "permissions", "type": "string", "number": 3, "label": "repeated" }
+				]
+			},
+			{
+				"name": "PrivilegedRequest",
+				"fields": [
+					{ "name": "resource_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "operation", "type": "string", "number": 2, "label": "required" }
+				]
+			},
+			{
+				"name": "PrivilegedResponse",
+				"fields": [
+					{ "name": "authorized", "type": "bool", "number": 1, "label": "required" },
+					{ "name": "message", "type": "string", "number": 2, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "AuthzService",
+				"methods": [
+					{
+						"name": "CheckAccess",
+						"input_type": "PrivilegedRequest",
+						"output_type": "PrivilegedResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.AuthzService",
+		"method": "CheckAccess"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"authorization": "Bearer token123",
+			"x-user-id": "user-admin-001",
+			"x-user-roles": "admin,editor",
+			"x-user-permissions": "read,write,delete"
+		},
+		"message": {
+			"resource_id": "resource-456",
+			"operation": "write"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"authorized": true,
+			"message": "Access granted with admin privileges"
+		}
+	},
+	"tags": ["auth", "authorization", "rbac", "security"]
 }

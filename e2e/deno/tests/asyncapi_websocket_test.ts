@@ -27,22 +27,22 @@ function loadFixtureExamples(name: string): string[] {
 }
 
 Deno.test("asyncapi_websocket: WebSocket /chat", async () => {
-		const app = createAppWebsocketChat();
-		const client = new TestClient(app);
-		const ws = await client.websocketConnect("/chat");
-		const fixtures = [
-			{ name: "chatMessage", schema: ChatMessageMessageSchema },
-			{ name: "userLeft", schema: UserLeftMessageSchema },
-			{ name: "userJoined", schema: UserJoinedMessageSchema },
-		];
-		for (const { name, schema } of fixtures) {
-			const payload = schema.parse(JSON.parse(loadFixtureExamples(name)[0] ?? "{}"));
-			await ws.sendJson(payload);
-			const response = await ws.receiveJson();
-			assertEquals(response.validated, true);
-			for (const [key, value] of Object.entries(payload)) {
-				assertEquals(response[key], value);
-			}
+	const app = createAppWebsocketChat();
+	const client = new TestClient(app);
+	const ws = await client.websocketConnect("/chat");
+	const fixtures = [
+		{ name: "chatMessage", schema: ChatMessageMessageSchema },
+		{ name: "userLeft", schema: UserLeftMessageSchema },
+		{ name: "userJoined", schema: UserJoinedMessageSchema },
+	];
+	for (const { name, schema } of fixtures) {
+		const payload = schema.parse(JSON.parse(loadFixtureExamples(name)[0] ?? "{}"));
+		await ws.sendJson(payload);
+		const response = await ws.receiveJson();
+		assertEquals(response.validated, true);
+		for (const [key, value] of Object.entries(payload)) {
+			assertEquals(response[key], value);
 		}
-		await ws.close();
-	});
+	}
+	await ws.close();
+});

@@ -295,9 +295,7 @@ async def test_grpc_handler_different_exceptions():
 
     # Test ValueError
     handler = ExceptionHandler(ValueError, "bad value")
-    request = GrpcRequest(
-        service_name="test.Service", method_name="Method", payload=b""
-    )
+    request = GrpcRequest(service_name="test.Service", method_name="Method", payload=b"")
     with pytest.raises(ValueError, match="bad value"):
         await handler.handle_request(request)
 
@@ -400,9 +398,7 @@ async def test_grpc_handler_modifies_metadata():
             return response
 
     handler = MetadataHandler()
-    request = GrpcRequest(
-        service_name="test.Service", method_name="Method", payload=b"request"
-    )
+    request = GrpcRequest(service_name="test.Service", method_name="Method", payload=b"request")
 
     response = await handler.handle_request(request)
     assert response.metadata["x-server-version"] == "1.0.0"
@@ -425,23 +421,17 @@ async def test_grpc_service_method_routing():
     handler = MultiMethodHandler()
 
     # Test GetUser
-    request = GrpcRequest(
-        service_name="test.UserService", method_name="GetUser", payload=b""
-    )
+    request = GrpcRequest(service_name="test.UserService", method_name="GetUser", payload=b"")
     response = await handler.handle_request(request)
     assert response.payload == b"user_data"
 
     # Test UpdateUser
-    request = GrpcRequest(
-        service_name="test.UserService", method_name="UpdateUser", payload=b""
-    )
+    request = GrpcRequest(service_name="test.UserService", method_name="UpdateUser", payload=b"")
     response = await handler.handle_request(request)
     assert response.payload == b"updated"
 
     # Test unknown method
-    request = GrpcRequest(
-        service_name="test.UserService", method_name="DeleteUser", payload=b""
-    )
+    request = GrpcRequest(service_name="test.UserService", method_name="DeleteUser", payload=b"")
     with pytest.raises(NotImplementedError, match="Unknown method: DeleteUser"):
         await handler.handle_request(request)
 
@@ -475,9 +465,7 @@ async def test_grpc_status_ok():
             return GrpcResponse(payload=b'{"success": true}')
 
     handler = SuccessHandler()
-    request = GrpcRequest(
-        service_name="test.SuccessService", method_name="Success", payload=b"{}"
-    )
+    request = GrpcRequest(service_name="test.SuccessService", method_name="Success", payload=b"{}")
 
     response = await handler.handle_request(request)
     assert b"success" in response.payload
@@ -490,9 +478,7 @@ async def test_grpc_status_cancelled():
 
     class CancelledHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-            return GrpcResponse(
-                payload=b'{"error": "Operation cancelled"}'
-            )
+            return GrpcResponse(payload=b'{"error": "Operation cancelled"}')
 
     handler = CancelledHandler()
     request = GrpcRequest(
@@ -512,14 +498,10 @@ async def test_grpc_status_unknown():
 
     class UnknownHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-            return GrpcResponse(
-                payload=b'{"error": "Unknown error"}'
-            )
+            return GrpcResponse(payload=b'{"error": "Unknown error"}')
 
     handler = UnknownHandler()
-    request = GrpcRequest(
-        service_name="test.UnknownService", method_name="Unknown", payload=b"{}"
-    )
+    request = GrpcRequest(service_name="test.UnknownService", method_name="Unknown", payload=b"{}")
 
     response = await handler.handle_request(request)
     assert b"Unknown error" in response.payload
@@ -533,9 +515,7 @@ async def test_grpc_status_invalid_argument():
     class InvalidArgHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             if not request.payload:
-                return GrpcResponse(
-                    payload=b'{"error": "Missing required field"}'
-                )
+                return GrpcResponse(payload=b'{"error": "Missing required field"}')
             return GrpcResponse(payload=b"{}")
 
     handler = InvalidArgHandler()
@@ -561,9 +541,7 @@ async def test_grpc_status_deadline_exceeded():
             )
 
     handler = TimeoutHandler()
-    request = GrpcRequest(
-        service_name="test.TimeoutService", method_name="SlowMethod", payload=b"{}"
-    )
+    request = GrpcRequest(service_name="test.TimeoutService", method_name="SlowMethod", payload=b"{}")
 
     response = await handler.handle_request(request)
     assert b"timed out" in response.payload
@@ -576,14 +554,10 @@ async def test_grpc_status_not_found():
 
     class NotFoundHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-            return GrpcResponse(
-                payload=b'{"error": "User not found"}'
-            )
+            return GrpcResponse(payload=b'{"error": "User not found"}')
 
     handler = NotFoundHandler()
-    request = GrpcRequest(
-        service_name="test.UserService", method_name="GetUser", payload=b'{"id": 999}'
-    )
+    request = GrpcRequest(service_name="test.UserService", method_name="GetUser", payload=b'{"id": 999}')
 
     response = await handler.handle_request(request)
     assert b"not found" in response.payload
@@ -617,9 +591,7 @@ async def test_grpc_status_permission_denied():
 
     class PermissionHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-            return GrpcResponse(
-                payload=b'{"error": "Access denied"}'
-            )
+            return GrpcResponse(payload=b'{"error": "Access denied"}')
 
     handler = PermissionHandler()
     request = GrpcRequest(
@@ -680,9 +652,7 @@ async def test_grpc_status_aborted():
 
     class AbortHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-            return GrpcResponse(
-                payload=b'{"error": "Transaction aborted"}'
-            )
+            return GrpcResponse(payload=b'{"error": "Transaction aborted"}')
 
     handler = AbortHandler()
     request = GrpcRequest(
@@ -748,9 +718,7 @@ async def test_grpc_status_internal():
             )
 
     handler = InternalHandler()
-    request = GrpcRequest(
-        service_name="test.ErrorService", method_name="Fail", payload=b"{}"
-    )
+    request = GrpcRequest(service_name="test.ErrorService", method_name="Fail", payload=b"{}")
 
     await handler.handle_request(request)
 
@@ -767,9 +735,7 @@ async def test_grpc_status_unavailable():
             )
 
     handler = UnavailableHandler()
-    request = GrpcRequest(
-        service_name="test.DownService", method_name="Process", payload=b"{}"
-    )
+    request = GrpcRequest(service_name="test.DownService", method_name="Process", payload=b"{}")
 
     await handler.handle_request(request)
 
@@ -966,7 +932,8 @@ async def test_grpc_backpressure_scenario():
                 return GrpcResponse(
                     payload=b'{"error": "Too many requests"}',
                 )
-            return GrpcResponse(payload=b'{"count": ' + str(self.request_count).encode() + b"}",
+            return GrpcResponse(
+                payload=b'{"count": ' + str(self.request_count).encode() + b"}",
             )
 
     handler = BackpressureHandler()
@@ -1129,10 +1096,7 @@ async def test_grpc_service_name_pattern_matching():
     # Verify they are distinct
     assert service.get_handler("api.v1.UserService") is not None
     assert service.get_handler("api.v2.UserService") is not None
-    assert (
-        service.get_handler("api.v1.UserService")
-        != service.get_handler("api.v2.UserService")
-    )
+    assert service.get_handler("api.v1.UserService") != service.get_handler("api.v2.UserService")
 
 
 @pytest.mark.asyncio
@@ -1173,7 +1137,7 @@ async def test_grpc_binary_payload_with_null_bytes():
     handler = BinaryHandler()
 
     # Create binary payload with null bytes
-    binary_payload = b"\x00\x01\x02\x03\x00\xFF\xFE\xFD\x00"
+    binary_payload = b"\x00\x01\x02\x03\x00\xff\xfe\xfd\x00"
     request = GrpcRequest(
         service_name="test.BinaryService",
         method_name="Process",
@@ -1270,9 +1234,7 @@ async def test_grpc_deeply_nested_json():
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             data = json.loads(request.payload.decode())
             # Navigate through nested structure
-            return GrpcResponse(
-                payload=json.dumps({"depth": 10, "found": data is not None}).encode()
-            )
+            return GrpcResponse(payload=json.dumps({"depth": 10, "found": data is not None}).encode())
 
     handler = NestedJsonHandler()
 
@@ -1304,11 +1266,7 @@ async def test_grpc_very_long_string_field():
     class LongStringHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             data = json.loads(request.payload.decode())
-            return GrpcResponse(
-                payload=json.dumps(
-                    {"length": len(data.get("text", ""))}
-                ).encode()
-            )
+            return GrpcResponse(payload=json.dumps({"length": len(data.get("text", ""))}).encode())
 
     handler = LongStringHandler()
 
@@ -1342,9 +1300,7 @@ async def test_grpc_concurrent_request_handling():
             self.call_count += 1
             # Simulate some async work
             await asyncio.sleep(0.01)
-            return GrpcResponse(
-                payload=f"processed_{self.call_count}".encode()
-            )
+            return GrpcResponse(payload=f"processed_{self.call_count}".encode())
 
     handler = ConcurrentHandler()
 
@@ -1376,9 +1332,7 @@ async def test_grpc_memory_efficiency_large_payload():
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             # Process payload without creating unnecessary copies
             payload_size = len(request.payload)
-            return GrpcResponse(
-                payload=f'{{"size": {payload_size}}}'.encode()
-            )
+            return GrpcResponse(payload=f'{{"size": {payload_size}}}'.encode())
 
     handler = MemoryEfficientHandler()
 
@@ -1927,6 +1881,7 @@ async def test_grpc_protobuf_message_validation():
 
 # --- GRRPC STATUS CODES WITH FULL ASSERTIONS (8 additional tests) ---
 
+
 @pytest.mark.asyncio
 async def test_grpc_status_cancelled_with_metadata():
     """Test CANCELLED status code with error metadata."""
@@ -1934,9 +1889,7 @@ async def test_grpc_status_cancelled_with_metadata():
 
     class CancelledMetadataHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-            response = GrpcResponse(
-                payload=b'{"error": "Operation was cancelled by client"}'
-            )
+            response = GrpcResponse(payload=b'{"error": "Operation was cancelled by client"}')
             response.metadata["x-cancel-reason"] = "user_initiated"
             response.metadata["x-retry-after"] = "5"
             return response
@@ -1961,9 +1914,7 @@ async def test_grpc_status_unknown_with_trace_id():
 
     class UnknownTraceHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-            response = GrpcResponse(
-                payload=b'{"error": "Unknown internal error", "code": "UNKNOWN"}'
-            )
+            response = GrpcResponse(payload=b'{"error": "Unknown internal error", "code": "UNKNOWN"}')
             response.metadata["x-trace-id"] = "abc-123-def-456"
             response.metadata["x-span-id"] = "span-789"
             return response
@@ -2195,6 +2146,7 @@ async def test_grpc_status_unauthenticated_with_required_auth():
 
 # --- METADATA HANDLING TESTS (5 additional tests) ---
 
+
 @pytest.mark.asyncio
 async def test_grpc_metadata_special_characters_extended():
     """Test metadata with extended special characters."""
@@ -2306,6 +2258,7 @@ async def test_grpc_metadata_unicode_values():
 
 # --- PAYLOAD EDGE CASES (7 additional tests) ---
 
+
 @pytest.mark.asyncio
 async def test_grpc_payload_empty_with_metadata():
     """Test empty payload with metadata headers."""
@@ -2382,10 +2335,12 @@ async def test_grpc_deeply_nested_json_manipulation():
                 depth += 1
 
             return GrpcResponse(
-                payload=json.dumps({
-                    "depth_found": depth,
-                    "final_value": current.get("value") if isinstance(current, dict) else current,
-                }).encode()
+                payload=json.dumps(
+                    {
+                        "depth_found": depth,
+                        "final_value": current.get("value") if isinstance(current, dict) else current,
+                    }
+                ).encode()
             )
 
     handler = DeepNestedHandler()
@@ -2419,9 +2374,7 @@ async def test_grpc_mixed_binary_and_text_payload():
             header = request.payload[:10]
             binary_data = request.payload[10:]
 
-            return GrpcResponse(
-                payload=b"processed:" + header + b":" + str(len(binary_data)).encode()
-            )
+            return GrpcResponse(payload=b"processed:" + header + b":" + str(len(binary_data)).encode())
 
     handler = MixedDataHandler()
     payload = b"text_head:" + b"\x00\x01\x02\x03\x04\x05" * 100
@@ -2472,14 +2425,10 @@ async def test_grpc_payload_large_json_array():
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             data = json.loads(request.payload.decode())
             count = len(data.get("items", []))
-            return GrpcResponse(
-                payload=json.dumps({"item_count": count, "processed": True}).encode()
-            )
+            return GrpcResponse(payload=json.dumps({"item_count": count, "processed": True}).encode())
 
     handler = ArrayHandler()
-    payload = json.dumps({
-        "items": [{"id": i, "value": f"item_{i}"} for i in range(1000)]
-    }).encode()
+    payload = json.dumps({"items": [{"id": i, "value": f"item_{i}"} for i in range(1000)]}).encode()
 
     request = GrpcRequest(
         service_name="test.ArrayService",
@@ -2494,6 +2443,7 @@ async def test_grpc_payload_large_json_array():
 
 
 # --- SERVICE ROUTING TESTS (7 additional tests) ---
+
 
 @pytest.mark.asyncio
 async def test_grpc_service_route_by_exact_service_name():
@@ -2703,6 +2653,7 @@ async def test_grpc_service_versioned_endpoints():
 
 # --- CONCURRENT AND PERFORMANCE TESTS (3 additional tests) ---
 
+
 @pytest.mark.asyncio
 async def test_grpc_concurrent_large_payload_handling():
     """Test concurrent handling of multiple large payloads."""
@@ -2719,9 +2670,7 @@ async def test_grpc_concurrent_large_payload_handling():
             await asyncio.sleep(0.01)
             payload_size = len(request.payload)
             self.processed.append(payload_size)
-            return GrpcResponse(
-                payload=f"processed_{payload_size}".encode()
-            )
+            return GrpcResponse(payload=f"processed_{payload_size}".encode())
 
     handler = LargeConcurrentHandler()
 

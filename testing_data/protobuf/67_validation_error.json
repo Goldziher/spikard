@@ -1,54 +1,52 @@
 {
-  "name": "Validation error - INVALID_ARGUMENT with details",
-  "description": "Tests INVALID_ARGUMENT status code with detailed validation error information. Demonstrates how validation failures are communicated.",
-  "category": "grpc",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "ValidateRequest",
-        "fields": [
-          {"name": "email", "type": "string", "number": 1, "label": "required"},
-          {"name": "age", "type": "int32", "number": 2, "label": "required"}
-        ]
-      },
-      {
-        "name": "ValidateResponse",
-        "fields": [
-          {"name": "valid", "type": "bool", "number": 1, "label": "required"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "ValidationService",
-        "methods": [
-          {
-            "name": "ValidateInput",
-            "input_type": "ValidateRequest",
-            "output_type": "ValidateResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.ValidationService",
-    "method": "ValidateInput"
-  },
-  "request": {
-    "metadata": {"content-type": "application/grpc"},
-    "message": {"email": "invalid-email", "age": -5}
-  },
-  "expected_response": {
-    "status_code": "INVALID_ARGUMENT",
-    "protobuf": {
-      "error_message": "Validation failed for fields: email, age",
-      "error_details": {
-        "email": "Invalid email format",
-        "age": "Age must be positive"
-      }
-    }
-  },
-  "tags": ["grpc_status", "validation", "error"]
+	"name": "Validation error - INVALID_ARGUMENT with details",
+	"description": "Tests INVALID_ARGUMENT status code with detailed validation error information. Demonstrates how validation failures are communicated.",
+	"category": "grpc",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "ValidateRequest",
+				"fields": [
+					{ "name": "email", "type": "string", "number": 1, "label": "required" },
+					{ "name": "age", "type": "int32", "number": 2, "label": "required" }
+				]
+			},
+			{
+				"name": "ValidateResponse",
+				"fields": [{ "name": "valid", "type": "bool", "number": 1, "label": "required" }]
+			}
+		],
+		"services": [
+			{
+				"name": "ValidationService",
+				"methods": [
+					{
+						"name": "ValidateInput",
+						"input_type": "ValidateRequest",
+						"output_type": "ValidateResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ValidationService",
+		"method": "ValidateInput"
+	},
+	"request": {
+		"metadata": { "content-type": "application/grpc" },
+		"message": { "email": "invalid-email", "age": -5 }
+	},
+	"expected_response": {
+		"status_code": "INVALID_ARGUMENT",
+		"protobuf": {
+			"error_message": "Validation failed for fields: email, age",
+			"error_details": {
+				"email": "Invalid email format",
+				"age": "Age must be positive"
+			}
+		}
+	},
+	"tags": ["grpc_status", "validation", "error"]
 }

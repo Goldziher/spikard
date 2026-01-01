@@ -1,65 +1,65 @@
 {
-  "name": "Optional fields",
-  "description": "Tests optional field handling with presence semantics. Covers optional fields with and without values.",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "UpdateProfileRequest",
-        "fields": [
-          {"name": "user_id", "type": "int32", "number": 1, "label": "required"},
-          {"name": "bio", "type": "string", "number": 2, "label": "optional"},
-          {"name": "phone", "type": "string", "number": 3, "label": "optional"},
-          {"name": "avatar_url", "type": "string", "number": 4, "label": "optional"}
-        ]
-      },
-      {
-        "name": "UserProfile",
-        "fields": [
-          {"name": "user_id", "type": "int32", "number": 1, "label": "required"},
-          {"name": "username", "type": "string", "number": 2, "label": "required"},
-          {"name": "bio", "type": "string", "number": 3, "label": "optional"},
-          {"name": "phone", "type": "string", "number": 4, "label": "optional"},
-          {"name": "avatar_url", "type": "string", "number": 5, "label": "optional"},
-          {"name": "updated_at", "type": "int64", "number": 6, "label": "optional"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "UserService",
-        "methods": [
-          {
-            "name": "UpdateProfile",
-            "input_type": "UpdateProfileRequest",
-            "output_type": "UserProfile",
-            "client_streaming": false,
-            "server_streaming": false
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.UserService",
-    "method": "UpdateProfile"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "user_id": 42,
-      "bio": "Software engineer and gRPC enthusiast"
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "user_id": 42,
-      "username": "charlie_dev",
-      "bio": "Software engineer and gRPC enthusiast",
-      "updated_at": 1704067200000
-    }
-  }
+	"name": "Optional fields",
+	"description": "Tests optional field handling with presence semantics. Covers optional fields with and without values.",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "UpdateProfileRequest",
+				"fields": [
+					{ "name": "user_id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "bio", "type": "string", "number": 2, "label": "optional" },
+					{ "name": "phone", "type": "string", "number": 3, "label": "optional" },
+					{ "name": "avatar_url", "type": "string", "number": 4, "label": "optional" }
+				]
+			},
+			{
+				"name": "UserProfile",
+				"fields": [
+					{ "name": "user_id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "username", "type": "string", "number": 2, "label": "required" },
+					{ "name": "bio", "type": "string", "number": 3, "label": "optional" },
+					{ "name": "phone", "type": "string", "number": 4, "label": "optional" },
+					{ "name": "avatar_url", "type": "string", "number": 5, "label": "optional" },
+					{ "name": "updated_at", "type": "int64", "number": 6, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "UserService",
+				"methods": [
+					{
+						"name": "UpdateProfile",
+						"input_type": "UpdateProfileRequest",
+						"output_type": "UserProfile",
+						"client_streaming": false,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.UserService",
+		"method": "UpdateProfile"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"user_id": 42,
+			"bio": "Software engineer and gRPC enthusiast"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"user_id": 42,
+			"username": "charlie_dev",
+			"bio": "Software engineer and gRPC enthusiast",
+			"updated_at": 1704067200000
+		}
+	}
 }

@@ -1,68 +1,68 @@
 {
-  "name": "Large 10MB message payload",
-  "description": "Tests handling of 10MB protobuf messages. Validates high-capacity transfers, memory efficiency, and absence of stream fragmentation issues.",
-  "category": "large_payloads",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "HugePayloadRequest",
-        "fields": [
-          {"name": "id", "type": "string", "number": 1, "label": "required"},
-          {"name": "content", "type": "bytes", "number": 2, "label": "required"},
-          {"name": "chunk_count", "type": "int32", "number": 3, "label": "optional"}
-        ]
-      },
-      {
-        "name": "HugePayloadResponse",
-        "fields": [
-          {"name": "id", "type": "string", "number": 1, "label": "required"},
-          {"name": "received_size", "type": "int64", "number": 2, "label": "required"},
-          {"name": "status", "type": "string", "number": 3, "label": "required"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "BulkService",
-        "methods": [
-          {
-            "name": "BulkUpload",
-            "input_type": "HugePayloadRequest",
-            "output_type": "HugePayloadResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.BulkService",
-    "method": "BulkUpload",
-    "middleware": {
-      "body_limit": {
-        "max_bytes": 20971520
-      },
-      "request_timeout": {
-        "seconds": 30
-      }
-    }
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "id": "bulk-10mb-transfer",
-      "content": "TGFyZ2UgZmlsZSB0cmFuc2Zlciwgc2ltdWxhdGluZyBhIHJlYWwtd29ybGQgY2VuYXJpbyB3aGVyZSBhIGNsaWVudCBpcyB1cGxvYWRpbmcgYSBsbGFyZ2UgZGF0YSBibG9iLiBUaGlzIGZpeHR1cmUgZW5zdXJlcyB0aGF0IHRoZSBnUlBDIGltcGxlbWVudGF0aW9uIGNhbiBoYW5kbGUgdXAgdG8gMTAgTUIgb2YgZGF0YSBpbiBlYWNoIHJlcXVlc3QuIFRlc3Rpbmcgc3VjaCBsYXJnZSBwYXlsb2FkcyBpcyBjcnVjaWFsIGZvciByZWxpYWJpbGl0eSBhbmQgcGVyZm9ybWFuY2UgaW4gcHJvZHVjdGlvbiBlbnZpcm9ubWVudHMu",
-      "chunk_count": 10
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "id": "bulk-10mb-transfer",
-      "status": "received"
-    }
-  },
-  "tags": ["large_payloads", "performance", "timeout"]
+	"name": "Large 10MB message payload",
+	"description": "Tests handling of 10MB protobuf messages. Validates high-capacity transfers, memory efficiency, and absence of stream fragmentation issues.",
+	"category": "large_payloads",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "HugePayloadRequest",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "content", "type": "bytes", "number": 2, "label": "required" },
+					{ "name": "chunk_count", "type": "int32", "number": 3, "label": "optional" }
+				]
+			},
+			{
+				"name": "HugePayloadResponse",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "received_size", "type": "int64", "number": 2, "label": "required" },
+					{ "name": "status", "type": "string", "number": 3, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "BulkService",
+				"methods": [
+					{
+						"name": "BulkUpload",
+						"input_type": "HugePayloadRequest",
+						"output_type": "HugePayloadResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.BulkService",
+		"method": "BulkUpload",
+		"middleware": {
+			"body_limit": {
+				"max_bytes": 20971520
+			},
+			"request_timeout": {
+				"seconds": 30
+			}
+		}
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"id": "bulk-10mb-transfer",
+			"content": "TGFyZ2UgZmlsZSB0cmFuc2Zlciwgc2ltdWxhdGluZyBhIHJlYWwtd29ybGQgY2VuYXJpbyB3aGVyZSBhIGNsaWVudCBpcyB1cGxvYWRpbmcgYSBsbGFyZ2UgZGF0YSBibG9iLiBUaGlzIGZpeHR1cmUgZW5zdXJlcyB0aGF0IHRoZSBnUlBDIGltcGxlbWVudGF0aW9uIGNhbiBoYW5kbGUgdXAgdG8gMTAgTUIgb2YgZGF0YSBpbiBlYWNoIHJlcXVlc3QuIFRlc3Rpbmcgc3VjaCBsYXJnZSBwYXlsb2FkcyBpcyBjcnVjaWFsIGZvciByZWxpYWJpbGl0eSBhbmQgcGVyZm9ybWFuY2UgaW4gcHJvZHVjdGlvbiBlbnZpcm9ubWVudHMu",
+			"chunk_count": 10
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"id": "bulk-10mb-transfer",
+			"status": "received"
+		}
+	},
+	"tags": ["large_payloads", "performance", "timeout"]
 }

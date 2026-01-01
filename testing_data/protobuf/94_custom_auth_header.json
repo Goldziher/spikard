@@ -1,45 +1,51 @@
 {
-  "name": "Custom authentication scheme header",
-  "description": "Tests custom authentication header scheme. Validates that custom auth headers are properly extracted and validated.",
-  "category": "auth_security",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "CustomAuthRequest", "fields": [{"name": "action", "type": "string", "number": 1, "label": "required"}]},
-      {"name": "CustomAuthResponse", "fields": [{"name": "success", "type": "bool", "number": 1, "label": "required"}]}
-    ],
-    "services": [
-      {
-        "name": "CustomAuthService",
-        "methods": [
-          {
-            "name": "Execute",
-            "input_type": "CustomAuthRequest",
-            "output_type": "CustomAuthResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.CustomAuthService",
-    "method": "Execute",
-    "protobuf": {
-      "metadata": {
-        "required_headers": ["x-custom-auth"]
-      }
-    }
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc",
-      "x-custom-auth": "CustomScheme token_value_123"
-    },
-    "message": {"action": "execute"}
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {"success": true}
-  },
-  "tags": ["auth", "custom_auth", "security"]
+	"name": "Custom authentication scheme header",
+	"description": "Tests custom authentication header scheme. Validates that custom auth headers are properly extracted and validated.",
+	"category": "auth_security",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "CustomAuthRequest",
+				"fields": [{ "name": "action", "type": "string", "number": 1, "label": "required" }]
+			},
+			{
+				"name": "CustomAuthResponse",
+				"fields": [{ "name": "success", "type": "bool", "number": 1, "label": "required" }]
+			}
+		],
+		"services": [
+			{
+				"name": "CustomAuthService",
+				"methods": [
+					{
+						"name": "Execute",
+						"input_type": "CustomAuthRequest",
+						"output_type": "CustomAuthResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.CustomAuthService",
+		"method": "Execute",
+		"protobuf": {
+			"metadata": {
+				"required_headers": ["x-custom-auth"]
+			}
+		}
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"x-custom-auth": "CustomScheme token_value_123"
+		},
+		"message": { "action": "execute" }
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": { "success": true }
+	},
+	"tags": ["auth", "custom_auth", "security"]
 }

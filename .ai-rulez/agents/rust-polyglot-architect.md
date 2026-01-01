@@ -8,4 +8,3 @@ model: sonnet
 ---
 
 # rust-polyglot-architect
-

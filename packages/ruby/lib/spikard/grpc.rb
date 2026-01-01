@@ -148,9 +148,7 @@ module Spikard
       def register_handler(service_name, handler)
         raise ArgumentError, 'Service name cannot be empty' if service_name.nil? || service_name.empty?
 
-        unless handler.respond_to?(:handle_request)
-          raise ArgumentError, "Handler must respond to :handle_request"
-        end
+        raise ArgumentError, 'Handler must respond to :handle_request' unless handler.respond_to?(:handle_request)
 
         @handlers[service_name] = handler
       end

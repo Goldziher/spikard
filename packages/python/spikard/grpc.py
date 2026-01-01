@@ -10,6 +10,7 @@ Example:
     from google.protobuf import message
     import user_pb2  # Generated protobuf
 
+
     class UserServiceHandler(GrpcHandler):
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             if request.method_name == "GetUser":
@@ -27,17 +28,14 @@ Example:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from _spikard import GrpcRequest, GrpcResponse  # type: ignore[attr-defined]
 
-if TYPE_CHECKING:
-    from google.protobuf import message as _message
-
 __all__ = [
+    "GrpcHandler",
     "GrpcRequest",
     "GrpcResponse",
-    "GrpcHandler",
     "GrpcService",
 ]
 
@@ -102,10 +100,12 @@ class GrpcService:
         from spikard.grpc import GrpcService, GrpcRequest, GrpcResponse
         import user_pb2
 
+
         class UserService(GrpcService):
             def __init__(self):
                 super().__init__()
                 self.register_handler("user.UserService", UserServiceHandler())
+
 
         class UserServiceHandler:
             async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
@@ -136,9 +136,7 @@ class GrpcService:
             ValueError: If service_name is already registered
         """
         if not isinstance(handler, GrpcHandler):
-            raise TypeError(
-                f"Handler must implement GrpcHandler protocol, got {type(handler).__name__}"
-            )
+            raise TypeError(f"Handler must implement GrpcHandler protocol, got {type(handler).__name__}")
 
         if service_name in self._handlers:
             raise ValueError(f"Handler already registered for service: {service_name}")
@@ -195,9 +193,7 @@ class GrpcService:
         """
         handler = self.get_handler(request.service_name)
         if handler is None:
-            raise ValueError(
-                f"No handler registered for service: {request.service_name}"
-            )
+            raise ValueError(f"No handler registered for service: {request.service_name}")
 
         return await handler.handle_request(request)
 

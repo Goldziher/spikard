@@ -1,70 +1,70 @@
 {
-  "name": "Map field handling - Map<string, Message>",
-  "description": "Tests protobuf map fields with string keys and message values. Validates proper key-value pair serialization and access patterns.",
-  "category": "edge_cases",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "MapValue",
-        "fields": [
-          {"name": "key", "type": "string", "number": 1, "label": "required"},
-          {"name": "value", "type": "string", "number": 2, "label": "required"}
-        ]
-      },
-      {
-        "name": "MapRequest",
-        "fields": [
-          {"name": "id", "type": "string", "number": 1, "label": "required"},
-          {"name": "data_map", "type": "MapValue", "number": 2, "label": "repeated"}
-        ]
-      },
-      {
-        "name": "MapResponse",
-        "fields": [
-          {"name": "id", "type": "string", "number": 1, "label": "required"},
-          {"name": "map_count", "type": "int32", "number": 2, "label": "required"},
-          {"name": "keys", "type": "string", "number": 3, "label": "repeated"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "MapService",
-        "methods": [
-          {
-            "name": "ProcessMap",
-            "input_type": "MapRequest",
-            "output_type": "MapResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.MapService",
-    "method": "ProcessMap"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "id": "map-test-001",
-      "data_map": [
-        {"key": "key1", "value": "value1"},
-        {"key": "key2", "value": "value2"},
-        {"key": "key3", "value": "value3"}
-      ]
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "id": "map-test-001",
-      "map_count": 3,
-      "keys": ["key1", "key2", "key3"]
-    }
-  },
-  "tags": ["edge_cases", "map_fields", "protobuf_collections"]
+	"name": "Map field handling - Map<string, Message>",
+	"description": "Tests protobuf map fields with string keys and message values. Validates proper key-value pair serialization and access patterns.",
+	"category": "edge_cases",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "MapValue",
+				"fields": [
+					{ "name": "key", "type": "string", "number": 1, "label": "required" },
+					{ "name": "value", "type": "string", "number": 2, "label": "required" }
+				]
+			},
+			{
+				"name": "MapRequest",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "data_map", "type": "MapValue", "number": 2, "label": "repeated" }
+				]
+			},
+			{
+				"name": "MapResponse",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "map_count", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "keys", "type": "string", "number": 3, "label": "repeated" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "MapService",
+				"methods": [
+					{
+						"name": "ProcessMap",
+						"input_type": "MapRequest",
+						"output_type": "MapResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.MapService",
+		"method": "ProcessMap"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"id": "map-test-001",
+			"data_map": [
+				{ "key": "key1", "value": "value1" },
+				{ "key": "key2", "value": "value2" },
+				{ "key": "key3", "value": "value3" }
+			]
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"id": "map-test-001",
+			"map_count": 3,
+			"keys": ["key1", "key2", "key3"]
+		}
+	},
+	"tags": ["edge_cases", "map_fields", "protobuf_collections"]
 }

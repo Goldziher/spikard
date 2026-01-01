@@ -8,4 +8,3 @@ model: haiku
 ---
 
 # fixture-tester
-

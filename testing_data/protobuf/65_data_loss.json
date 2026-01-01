@@ -1,17 +1,22 @@
 {
-  "name": "gRPC DATA_LOSS status (15)",
-  "description": "Tests DATA_LOSS gRPC status code. Returned when unrecoverable data loss or corruption occurred.",
-  "category": "grpc",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "DataRequest", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]},
-      {"name": "DataResponse", "fields": [{"name": "status", "type": "string", "number": 1, "label": "optional"}]}
-    ],
-    "services": [{"name": "DataService", "methods": [{"name": "Process", "input_type": "DataRequest", "output_type": "DataResponse"}]}]
-  },
-  "handler": {"service": "example.v1.DataService", "method": "Process"},
-  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"id": "dataloss-001"}},
-  "expected_response": {"status_code": "DATA_LOSS"},
-  "tags": ["grpc_status", "data_loss", "error"]
+	"name": "gRPC DATA_LOSS status (15)",
+	"description": "Tests DATA_LOSS gRPC status code. Returned when unrecoverable data loss or corruption occurred.",
+	"category": "grpc",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{ "name": "DataRequest", "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }] },
+			{ "name": "DataResponse", "fields": [{ "name": "status", "type": "string", "number": 1, "label": "optional" }] }
+		],
+		"services": [
+			{
+				"name": "DataService",
+				"methods": [{ "name": "Process", "input_type": "DataRequest", "output_type": "DataResponse" }]
+			}
+		]
+	},
+	"handler": { "service": "example.v1.DataService", "method": "Process" },
+	"request": { "metadata": { "content-type": "application/grpc" }, "message": { "id": "dataloss-001" } },
+	"expected_response": { "status_code": "DATA_LOSS" },
+	"tags": ["grpc_status", "data_loss", "error"]
 }

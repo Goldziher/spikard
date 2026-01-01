@@ -1,66 +1,66 @@
 {
-  "name": "Well-known wrapper types (StringValue, Int32Value, etc.)",
-  "description": "Tests usage of google.protobuf wrapper types (StringValue, Int32Value, BoolValue) for nullable scalar types. Validates proper null/present distinction.",
-  "category": "edge_cases",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "WrapperRequest",
-        "fields": [
-          {"name": "id", "type": "string", "number": 1, "label": "required"},
-          {"name": "optional_name", "type": "string", "number": 2, "label": "optional"},
-          {"name": "optional_count", "type": "int32", "number": 3, "label": "optional"},
-          {"name": "optional_enabled", "type": "bool", "number": 4, "label": "optional"}
-        ]
-      },
-      {
-        "name": "WrapperResponse",
-        "fields": [
-          {"name": "id", "type": "string", "number": 1, "label": "required"},
-          {"name": "name_present", "type": "bool", "number": 2, "label": "required"},
-          {"name": "name_value", "type": "string", "number": 3, "label": "optional"},
-          {"name": "count_present", "type": "bool", "number": 4, "label": "required"},
-          {"name": "count_value", "type": "int32", "number": 5, "label": "optional"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "WrapperService",
-        "methods": [
-          {
-            "name": "ProcessWrapper",
-            "input_type": "WrapperRequest",
-            "output_type": "WrapperResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.WrapperService",
-    "method": "ProcessWrapper"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "id": "wrapper-test-001",
-      "optional_name": "Test Name",
-      "optional_count": 42
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "id": "wrapper-test-001",
-      "name_present": true,
-      "name_value": "Test Name",
-      "count_present": true,
-      "count_value": 42
-    }
-  },
-  "tags": ["edge_cases", "well_known_types", "wrapper_types", "nullable"]
+	"name": "Well-known wrapper types (StringValue, Int32Value, etc.)",
+	"description": "Tests usage of google.protobuf wrapper types (StringValue, Int32Value, BoolValue) for nullable scalar types. Validates proper null/present distinction.",
+	"category": "edge_cases",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "WrapperRequest",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "optional_name", "type": "string", "number": 2, "label": "optional" },
+					{ "name": "optional_count", "type": "int32", "number": 3, "label": "optional" },
+					{ "name": "optional_enabled", "type": "bool", "number": 4, "label": "optional" }
+				]
+			},
+			{
+				"name": "WrapperResponse",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "name_present", "type": "bool", "number": 2, "label": "required" },
+					{ "name": "name_value", "type": "string", "number": 3, "label": "optional" },
+					{ "name": "count_present", "type": "bool", "number": 4, "label": "required" },
+					{ "name": "count_value", "type": "int32", "number": 5, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "WrapperService",
+				"methods": [
+					{
+						"name": "ProcessWrapper",
+						"input_type": "WrapperRequest",
+						"output_type": "WrapperResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.WrapperService",
+		"method": "ProcessWrapper"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"id": "wrapper-test-001",
+			"optional_name": "Test Name",
+			"optional_count": 42
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"id": "wrapper-test-001",
+			"name_present": true,
+			"name_value": "Test Name",
+			"count_present": true,
+			"count_value": 42
+		}
+	},
+	"tags": ["edge_cases", "well_known_types", "wrapper_types", "nullable"]
 }

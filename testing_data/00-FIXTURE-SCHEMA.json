@@ -666,10 +666,12 @@
 									"additionalProperties": {
 										"type": "string"
 									},
-									"examples": [{
-										"content-type": "application/grpc",
-										"user-agent": "grpc-client/1.0"
-									}]
+									"examples": [
+										{
+											"content-type": "application/grpc",
+											"user-agent": "grpc-client/1.0"
+										}
+									]
 								},
 								"timeout_ms": {
 									"type": "integer",
@@ -1133,7 +1135,25 @@
 						{
 							"type": "string",
 							"description": "Expected gRPC status code",
-							"enum": ["OK", "CANCELLED", "UNKNOWN", "INVALID_ARGUMENT", "DEADLINE_EXCEEDED", "NOT_FOUND", "ALREADY_EXISTS", "PERMISSION_DENIED", "RESOURCE_EXHAUSTED", "FAILED_PRECONDITION", "ABORTED", "OUT_OF_RANGE", "UNIMPLEMENTED", "INTERNAL", "UNAVAILABLE", "DATA_LOSS", "UNAUTHENTICATED"],
+							"enum": [
+								"OK",
+								"CANCELLED",
+								"UNKNOWN",
+								"INVALID_ARGUMENT",
+								"DEADLINE_EXCEEDED",
+								"NOT_FOUND",
+								"ALREADY_EXISTS",
+								"PERMISSION_DENIED",
+								"RESOURCE_EXHAUSTED",
+								"FAILED_PRECONDITION",
+								"ABORTED",
+								"OUT_OF_RANGE",
+								"UNIMPLEMENTED",
+								"INTERNAL",
+								"UNAVAILABLE",
+								"DATA_LOSS",
+								"UNAUTHENTICATED"
+							],
 							"examples": ["OK", "NOT_FOUND", "INVALID_ARGUMENT"]
 						}
 					]
@@ -1272,7 +1292,25 @@
 						"status_code": {
 							"type": "string",
 							"description": "gRPC status code (OK, CANCELLED, UNKNOWN, INVALID_ARGUMENT, DEADLINE_EXCEEDED, NOT_FOUND, ALREADY_EXISTS, PERMISSION_DENIED, RESOURCE_EXHAUSTED, FAILED_PRECONDITION, ABORTED, OUT_OF_RANGE, UNIMPLEMENTED, INTERNAL, UNAVAILABLE, DATA_LOSS, UNAUTHENTICATED)",
-							"enum": ["OK", "CANCELLED", "UNKNOWN", "INVALID_ARGUMENT", "DEADLINE_EXCEEDED", "NOT_FOUND", "ALREADY_EXISTS", "PERMISSION_DENIED", "RESOURCE_EXHAUSTED", "FAILED_PRECONDITION", "ABORTED", "OUT_OF_RANGE", "UNIMPLEMENTED", "INTERNAL", "UNAVAILABLE", "DATA_LOSS", "UNAUTHENTICATED"],
+							"enum": [
+								"OK",
+								"CANCELLED",
+								"UNKNOWN",
+								"INVALID_ARGUMENT",
+								"DEADLINE_EXCEEDED",
+								"NOT_FOUND",
+								"ALREADY_EXISTS",
+								"PERMISSION_DENIED",
+								"RESOURCE_EXHAUSTED",
+								"FAILED_PRECONDITION",
+								"ABORTED",
+								"OUT_OF_RANGE",
+								"UNIMPLEMENTED",
+								"INTERNAL",
+								"UNAVAILABLE",
+								"DATA_LOSS",
+								"UNAUTHENTICATED"
+							],
 							"examples": ["OK", "NOT_FOUND", "INVALID_ARGUMENT"]
 						},
 						"message": {

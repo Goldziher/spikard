@@ -1,76 +1,72 @@
 {
-  "name": "Repeated fields (arrays)",
-  "description": "Tests arrays/repeated fields for primitive types and messages. Covers repeated field serialization and deserialization.",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {
-        "name": "Tag",
-        "fields": [
-          {"name": "id", "type": "int32", "number": 1, "label": "required"},
-          {"name": "name", "type": "string", "number": 2, "label": "required"}
-        ]
-      },
-      {
-        "name": "BlogPost",
-        "fields": [
-          {"name": "id", "type": "int32", "number": 1, "label": "required"},
-          {"name": "title", "type": "string", "number": 2, "label": "required"},
-          {"name": "content", "type": "string", "number": 3, "label": "optional"},
-          {"name": "tags", "type": "Tag", "number": 4, "label": "repeated"},
-          {"name": "categories", "type": "string", "number": 5, "label": "repeated"}
-        ]
-      },
-      {
-        "name": "CreatePostRequest",
-        "fields": [
-          {"name": "title", "type": "string", "number": 1, "label": "required"},
-          {"name": "content", "type": "string", "number": 2, "label": "required"},
-          {"name": "tag_ids", "type": "int32", "number": 3, "label": "repeated"}
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "BlogService",
-        "methods": [
-          {
-            "name": "CreatePost",
-            "input_type": "CreatePostRequest",
-            "output_type": "BlogPost",
-            "client_streaming": false,
-            "server_streaming": false
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.BlogService",
-    "method": "CreatePost"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc"
-    },
-    "message": {
-      "title": "Getting Started with gRPC",
-      "content": "This is a comprehensive guide to gRPC...",
-      "tag_ids": [1, 2, 3]
-    }
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "id": 789,
-      "title": "Getting Started with gRPC",
-      "content": "This is a comprehensive guide to gRPC...",
-      "tags": [
-        {"id": 1, "name": "gRPC"},
-        {"id": 2, "name": "Protocol Buffers"},
-        {"id": 3, "name": "RPC"}
-      ],
-      "categories": ["tutorial", "programming", "networking"]
-    }
-  }
+	"name": "Repeated fields (arrays)",
+	"description": "Tests arrays/repeated fields for primitive types and messages. Covers repeated field serialization and deserialization.",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "Tag",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "name", "type": "string", "number": 2, "label": "required" }
+				]
+			},
+			{
+				"name": "BlogPost",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "title", "type": "string", "number": 2, "label": "required" },
+					{ "name": "content", "type": "string", "number": 3, "label": "optional" },
+					{ "name": "tags", "type": "Tag", "number": 4, "label": "repeated" },
+					{ "name": "categories", "type": "string", "number": 5, "label": "repeated" }
+				]
+			},
+			{
+				"name": "CreatePostRequest",
+				"fields": [
+					{ "name": "title", "type": "string", "number": 1, "label": "required" },
+					{ "name": "content", "type": "string", "number": 2, "label": "required" },
+					{ "name": "tag_ids", "type": "int32", "number": 3, "label": "repeated" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "BlogService",
+				"methods": [
+					{
+						"name": "CreatePost",
+						"input_type": "CreatePostRequest",
+						"output_type": "BlogPost",
+						"client_streaming": false,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.BlogService",
+		"method": "CreatePost"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"title": "Getting Started with gRPC",
+			"content": "This is a comprehensive guide to gRPC...",
+			"tag_ids": [1, 2, 3]
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"id": 789,
+			"title": "Getting Started with gRPC",
+			"content": "This is a comprehensive guide to gRPC...",
+			"tags": [{ "id": 1, "name": "gRPC" }, { "id": 2, "name": "Protocol Buffers" }, { "id": 3, "name": "RPC" }],
+			"categories": ["tutorial", "programming", "networking"]
+		}
+	}
 }

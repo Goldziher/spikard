@@ -1,17 +1,22 @@
 {
-  "name": "gRPC OUT_OF_RANGE status (11)",
-  "description": "Tests OUT_OF_RANGE gRPC status code. Returned when a value is outside the acceptable range.",
-  "category": "grpc",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "RangeRequest", "fields": [{"name": "value", "type": "int32", "number": 1, "label": "required"}]},
-      {"name": "RangeResponse", "fields": [{"name": "message", "type": "string", "number": 1, "label": "optional"}]}
-    ],
-    "services": [{"name": "RangeService", "methods": [{"name": "Check", "input_type": "RangeRequest", "output_type": "RangeResponse"}]}]
-  },
-  "handler": {"service": "example.v1.RangeService", "method": "Check"},
-  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"value": 1000}},
-  "expected_response": {"status_code": "OUT_OF_RANGE"},
-  "tags": ["grpc_status", "validation", "error"]
+	"name": "gRPC OUT_OF_RANGE status (11)",
+	"description": "Tests OUT_OF_RANGE gRPC status code. Returned when a value is outside the acceptable range.",
+	"category": "grpc",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{ "name": "RangeRequest", "fields": [{ "name": "value", "type": "int32", "number": 1, "label": "required" }] },
+			{ "name": "RangeResponse", "fields": [{ "name": "message", "type": "string", "number": 1, "label": "optional" }] }
+		],
+		"services": [
+			{
+				"name": "RangeService",
+				"methods": [{ "name": "Check", "input_type": "RangeRequest", "output_type": "RangeResponse" }]
+			}
+		]
+	},
+	"handler": { "service": "example.v1.RangeService", "method": "Check" },
+	"request": { "metadata": { "content-type": "application/grpc" }, "message": { "value": 1000 } },
+	"expected_response": { "status_code": "OUT_OF_RANGE" },
+	"tags": ["grpc_status", "validation", "error"]
 }

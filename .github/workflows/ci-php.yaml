@@ -155,7 +155,7 @@ jobs:
       - name: Install PHP extension
         run: |
           # Find the extension file
-          EXT_FILE=$(ls target/release/libspikard_php*.so target/release/deps/libspikard_php*.so 2>/dev/null | head -1)
+          EXT_FILE=$(find target/release -name 'libspikard_php*.so' | head -1)
           if [ -z "$EXT_FILE" ]; then
             echo "Error: Could not find PHP extension (.so file)"
             exit 1
@@ -237,7 +237,7 @@ jobs:
       - name: Install PHP extension
         run: |
           # Find the extension file
-          EXT_FILE=$(ls target/release/libspikard_php*.so target/release/deps/libspikard_php*.so 2>/dev/null | head -1)
+          EXT_FILE=$(find target/release -name 'libspikard_php*.so' | head -1)
           if [ -z "$EXT_FILE" ]; then
             echo "Error: Could not find PHP extension (.so file)"
             exit 1
@@ -247,7 +247,7 @@ jobs:
           sudo cp "$EXT_FILE" "$PHP_EXTENSIONS_DIR/spikard.so"
           # Enable the extension
           PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')
-          echo "extension=spikard.so" | sudo tee /etc/php/$PHP_VERSION/cli/conf.d/20-spikard.ini > /dev/null
+          echo "extension=spikard.so" | sudo tee /etc/php/"$PHP_VERSION"/cli/conf.d/20-spikard.ini > /dev/null
           # Verify extension is loaded
           php -r "if (extension_loaded('spikard')) { echo 'Extension loaded successfully'; } else { echo 'Failed to load extension'; exit(1); }"
 

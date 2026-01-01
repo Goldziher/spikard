@@ -1,43 +1,49 @@
 {
-  "name": "User-Agent and client info metadata",
-  "description": "Tests User-Agent header handling and client identification. Validates proper user-agent parsing and logging.",
-  "category": "auth_security",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "ClientRequest", "fields": [{"name": "action", "type": "string", "number": 1, "label": "required"}]},
-      {"name": "ClientResponse", "fields": [{"name": "client_type", "type": "string", "number": 1, "label": "optional"}, {"name": "client_version", "type": "string", "number": 2, "label": "optional"}]}
-    ],
-    "services": [
-      {
-        "name": "ClientService",
-        "methods": [
-          {
-            "name": "Identify",
-            "input_type": "ClientRequest",
-            "output_type": "ClientResponse"
-          }
-        ]
-      }
-    ]
-  },
-  "handler": {
-    "service": "example.v1.ClientService",
-    "method": "Identify"
-  },
-  "request": {
-    "metadata": {
-      "content-type": "application/grpc",
-      "user-agent": "grpc-client/1.2.3 (linux; amd64)"
-    },
-    "message": {"action": "identify"}
-  },
-  "expected_response": {
-    "status_code": "OK",
-    "message": {
-      "client_type": "grpc-client",
-      "client_version": "1.2.3"
-    }
-  },
-  "tags": ["metadata", "client_info", "observability"]
+	"name": "User-Agent and client info metadata",
+	"description": "Tests User-Agent header handling and client identification. Validates proper user-agent parsing and logging.",
+	"category": "auth_security",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{ "name": "ClientRequest", "fields": [{ "name": "action", "type": "string", "number": 1, "label": "required" }] },
+			{
+				"name": "ClientResponse",
+				"fields": [
+					{ "name": "client_type", "type": "string", "number": 1, "label": "optional" },
+					{ "name": "client_version", "type": "string", "number": 2, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ClientService",
+				"methods": [
+					{
+						"name": "Identify",
+						"input_type": "ClientRequest",
+						"output_type": "ClientResponse"
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ClientService",
+		"method": "Identify"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"user-agent": "grpc-client/1.2.3 (linux; amd64)"
+		},
+		"message": { "action": "identify" }
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"client_type": "grpc-client",
+			"client_version": "1.2.3"
+		}
+	},
+	"tags": ["metadata", "client_info", "observability"]
 }

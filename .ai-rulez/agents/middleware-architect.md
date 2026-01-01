@@ -8,4 +8,3 @@ model: sonnet
 ---
 
 # middleware-architect
-

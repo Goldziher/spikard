@@ -1,17 +1,25 @@
 {
-  "name": "gRPC UNAVAILABLE status (14) - service unavailable",
-  "description": "Tests UNAVAILABLE gRPC status code. Returned when the service is temporarily unavailable.",
-  "category": "grpc",
-  "protobuf": {
-    "package": "example.v1",
-    "messages": [
-      {"name": "UnavailRequest", "fields": [{"name": "id", "type": "string", "number": 1, "label": "required"}]},
-      {"name": "UnavailResponse", "fields": [{"name": "message", "type": "string", "number": 1, "label": "optional"}]}
-    ],
-    "services": [{"name": "UnavailService", "methods": [{"name": "Request", "input_type": "UnavailRequest", "output_type": "UnavailResponse"}]}]
-  },
-  "handler": {"service": "example.v1.UnavailService", "method": "Request"},
-  "request": {"metadata": {"content-type": "application/grpc"}, "message": {"id": "unavail-001"}},
-  "expected_response": {"status_code": "UNAVAILABLE"},
-  "tags": ["grpc_status", "unavailable", "error"]
+	"name": "gRPC UNAVAILABLE status (14) - service unavailable",
+	"description": "Tests UNAVAILABLE gRPC status code. Returned when the service is temporarily unavailable.",
+	"category": "grpc",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{ "name": "UnavailRequest", "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }] },
+			{
+				"name": "UnavailResponse",
+				"fields": [{ "name": "message", "type": "string", "number": 1, "label": "optional" }]
+			}
+		],
+		"services": [
+			{
+				"name": "UnavailService",
+				"methods": [{ "name": "Request", "input_type": "UnavailRequest", "output_type": "UnavailResponse" }]
+			}
+		]
+	},
+	"handler": { "service": "example.v1.UnavailService", "method": "Request" },
+	"request": { "metadata": { "content-type": "application/grpc" }, "message": { "id": "unavail-001" } },
+	"expected_response": { "status_code": "UNAVAILABLE" },
+	"tags": ["grpc_status", "unavailable", "error"]
 }
