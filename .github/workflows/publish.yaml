@@ -258,6 +258,33 @@ jobs:
       - name: Write summary
         run: bash scripts/publish/ruby/already-published-summary.sh "${{ needs.prepare.outputs.version }}"
 
+  check-homebrew:
+    name: Check if Homebrew formula already published
+    needs: prepare
+    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_homebrew == 'true' && needs.prepare.outputs.force_republish != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - name: Check Homebrew tap for formula
+        id: check
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          # Check if Formula/spikard.rb exists and contains the current version
+          if timeout 120s gh api repos/Goldziher/homebrew-tap/contents/Formula/spikard.rb --jq '.content' 2>/dev/null | base64 -d | grep -q "version \"${VERSION}\""; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Homebrew formula already contains version ${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Homebrew formula does not contain version ${VERSION} or check failed" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   python-wheels:
     name: Build Python wheels (${{ matrix.label }})
     needs: prepare
@@ -676,6 +703,91 @@ jobs:
         with:
           name: cli-${{ matrix.target }}
           path: spikard-cli-${{ matrix.target }}.zip
+          retention-days: 14
+
+  homebrew-bottles:
+    name: Build Homebrew bottles (${{ matrix.bottle_tag }})
+    needs: [prepare, check-homebrew]
+    if: |
+      needs.prepare.outputs.release_homebrew == 'true' &&
+      (needs.prepare.outputs.force_republish == 'true' || needs.check-homebrew.outputs.exists != 'true')
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            bottle_tag: arm64_sonoma
+          - runner: macos-15
+            bottle_tag: arm64_sequoia
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Homebrew
+        run: |
+          brew tap homebrew/core
+          brew update
+
+      - name: Extract version
+        id: version
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          VERSION="${TAG#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Build CLI for bottle
+        run: |
+          cargo build --release -p spikard-cli
+
+      - name: Create Homebrew bottle
+        id: bottle
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          # Prepare bottle directory structure
+          bottle_dir="/tmp/spikard-bottle"
+          mkdir -p "${bottle_dir}/bin"
+
+          # Copy the built binary
+          cp target/release/spikard "${bottle_dir}/bin/"
+
+          # Create bottle tarball
+          cd "${bottle_dir}"
+          bottle_filename="spikard-${VERSION}.${{ matrix.bottle_tag }}.bottle.tar.gz"
+          tar -czf "${bottle_filename}" bin/
+
+          # Calculate SHA256
+          sha256=$(shasum -a 256 "${bottle_filename}" | cut -d' ' -f1)
+          echo "sha256=${sha256}" >> "$GITHUB_OUTPUT"
+          echo "filename=${bottle_filename}" >> "$GITHUB_OUTPUT"
+
+          # Copy to workspace for artifact upload
+          cp "${bottle_filename}" "${{ github.workspace }}/"
+          echo "Bottle created: ${bottle_filename}"
+          echo "SHA256: ${sha256}"
+
+      - name: Upload bottle artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: homebrew-bottle-${{ matrix.bottle_tag }}
+          path: spikard-${{ steps.version.outputs.version }}.${{ matrix.bottle_tag }}.bottle.tar.gz
           retention-days: 14
 
   ruby-gem:
@@ -1260,10 +1372,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash scripts/publish/cli/upload-release-assets.sh "${{ needs.prepare.outputs.tag }}"
 
-  publish-homebrew:
-    name: Update Homebrew formula
-    needs: [prepare, publish-cli-release]
-    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.dry_run != 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_homebrew == 'true' }}
+  upload-homebrew-bottles:
+    name: Upload Homebrew bottles to GitHub Release
+    needs: [prepare, check-homebrew, homebrew-bottles]
+    if: |
+      always() &&
+      needs.prepare.outputs.dry_run != 'true' &&
+      needs.prepare.outputs.is_tag == 'true' &&
+      needs.prepare.outputs.release_homebrew == 'true' &&
+      (needs.prepare.outputs.force_republish == 'true' || needs.check-homebrew.outputs.exists != 'true') &&
+      needs.homebrew-bottles.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -1273,24 +1391,79 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.ref }}
 
+      - name: Ensure GitHub release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/publish/cli/ensure-release.sh "${{ needs.prepare.outputs.tag }}"
+
+      - name: Download bottle artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: homebrew-bottle-*
+          path: dist/homebrew
+          merge-multiple: true
+
+      - name: Upload bottles (idempotent)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/publish/homebrew/upload-homebrew-bottles.sh "${{ needs.prepare.outputs.tag }}" dist/homebrew
+
+  publish-homebrew:
+    name: Update Homebrew formula
+    needs: [prepare, check-homebrew, publish-cli-release, upload-homebrew-bottles]
+    if: |
+      always() &&
+      needs.prepare.outputs.dry_run != 'true' &&
+      needs.prepare.outputs.is_tag == 'true' &&
+      needs.prepare.outputs.release_homebrew == 'true' &&
+      (needs.prepare.outputs.force_republish == 'true' || needs.check-homebrew.outputs.exists != 'true') &&
+      needs.publish-cli-release.result == 'success' &&
+      needs.upload-homebrew-bottles.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
       - name: Extract release info
         id: release
-        run: bash scripts/publish/homebrew/extract-release-info.sh "${{ needs.prepare.outputs.tag }}" "${{ needs.prepare.outputs.version }}"
-
-      - name: Update Homebrew formula
-        uses: mislav/bump-homebrew-formula-action@v3
-        with:
-          formula-name: spikard
-          formula-path: Formula/spikard.rb
-          homebrew-tap: Goldziher/homebrew-tap
-          tag-name: ${{ needs.prepare.outputs.tag }}
-          download-url: ${{ steps.release.outputs.url }}
-          commit-message: |
-            chore(homebrew): update spikard to ${{ steps.release.outputs.version }}
-
-            Auto-update from release ${{ steps.release.outputs.tag }}
         env:
-          COMMITTER_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: bash scripts/publish/homebrew/extract-release-info.sh "$TAG" "$VERSION"
+
+      - name: Download bottle artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: homebrew-bottle-*
+          path: dist/homebrew
+          merge-multiple: true
+
+      - name: Extract bottle hashes
+        id: bottles
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: bash scripts/publish/homebrew/extract-bottle-hashes.sh dist/homebrew
+
+      - name: Setup Git credentials
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+        run: |
+          git config --global credential.helper store
+          echo "https://x-access-token:${GH_TOKEN}@github.com" > ~/.git-credentials
+          git config --global user.name "spikard-bot"
+          git config --global user.email "bot@spikard.dev"
+
+      - name: Update Homebrew formula with bottles
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          DRY_RUN: 'false'
+        run: bash scripts/publish/homebrew/update-formula-with-bottles.sh dist/homebrew homebrew-tap
 
   publish-packagist:
     name: Publish PHP extension to Packagist
