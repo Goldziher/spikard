@@ -141,12 +141,12 @@ pub struct JsonHandler {
 
 impl JsonHandler {
     /// Create a new JSON handler with given status code and body
-    pub fn new(status_code: StatusCode, body: serde_json::Value) -> Self {
+    pub const fn new(status_code: StatusCode, body: serde_json::Value) -> Self {
         Self { status_code, body }
     }
 
     /// Create a JSON handler with 200 OK status
-    pub fn ok(body: serde_json::Value) -> Self {
+    pub const fn ok(body: serde_json::Value) -> Self {
         Self {
             status_code: StatusCode::OK,
             body,
@@ -154,7 +154,7 @@ impl JsonHandler {
     }
 
     /// Create a JSON handler with 201 Created status
-    pub fn created(body: serde_json::Value) -> Self {
+    pub const fn created(body: serde_json::Value) -> Self {
         Self {
             status_code: StatusCode::CREATED,
             body,
@@ -162,7 +162,7 @@ impl JsonHandler {
     }
 
     /// Create a JSON handler with 400 Bad Request status
-    pub fn bad_request(body: serde_json::Value) -> Self {
+    pub const fn bad_request(body: serde_json::Value) -> Self {
         Self {
             status_code: StatusCode::BAD_REQUEST,
             body,
@@ -170,7 +170,7 @@ impl JsonHandler {
     }
 
     /// Create a JSON handler with 500 Internal Server Error status
-    pub fn server_error(body: serde_json::Value) -> Self {
+    pub const fn server_error(body: serde_json::Value) -> Self {
         Self {
             status_code: StatusCode::INTERNAL_SERVER_ERROR,
             body,

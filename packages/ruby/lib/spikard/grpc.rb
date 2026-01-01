@@ -42,10 +42,12 @@ module Spikard
     #   @return [String] Binary string containing serialized protobuf message
     # @!attribute [r] metadata
     #   @return [Hash<String, String>] gRPC metadata (headers)
+    # rubocop:disable Lint/EmptyClass -- Implementation in Rust via FFI
     class Request
-      # These methods are implemented in Rust via Magnus FFI
-      # See: crates/spikard-rb/src/grpc/handler.rs
+      # These methods are implemented in Rust via Magnus FFI.
+      # See: crates/spikard-rb/src/grpc/handler.rs for implementation details.
     end
+    # rubocop:enable Lint/EmptyClass
 
     # gRPC response object
     #

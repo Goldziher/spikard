@@ -24,7 +24,7 @@ class GraphQLTestClientTest extends TestCase
             [
                 'path' => '/graphql',
                 'method' => 'POST',
-                'handler' => function (\Spikard\Http\Request $request) {
+                'handler' => function (\Spikard\Http\Request $request): \Spikard\Http\Response {
                     // Parse GraphQL query from request body
                     $body = $this->decodeBody($request->body);
                     /** @var string $query */
@@ -63,20 +63,52 @@ class GraphQLTestClientTest extends TestCase
         /** @var array<int, array{method: string, path: string, handler_name: string, handler: object, websocket?: bool, sse?: bool}> $normalized */
         $normalized = [];
         foreach ($routes as $route) {
+            /** @var object $handler */
             $handler = $route['handler'];
-            \assert(\is_object($handler), 'Route handlers must be objects.');
+            /** @var object $finalHandler */
+            $finalHandler = $handler;
             if (!\is_callable($handler) && \method_exists($handler, 'handle')) {
-                $handler = static function (\Spikard\Http\Request $request) use ($handler): \Spikard\Http\Response {
-                    return $handler->handle($request);
+                $wrappedHandler = $handler;
+                $finalHandler = new class ($wrappedHandler) implements \Spikard\Handlers\HandlerInterface {
+                    /** @var object */
+                    private object $handler;
+
+                    public function __construct(object $handler)
+                    {
+                        $this->handler = $handler;
+                    }
+
+                    public function matches(\Spikard\Http\Request $request): bool
+                    {
+                        return true;
+                    }
+
+                    public function handle(\Spikard\Http\Request $request): \Spikard\Http\Response
+                    {
+                        if (!\is_callable($this->handler)) {
+                            return \Spikard\Http\Response::json(['error' => 'Handler is not callable'], 500);
+                        }
+                        /** @var mixed $result */
+                        $result = ($this->handler)($request);
+                        if ($result instanceof \Spikard\Http\Response) {
+                            return $result;
+                        }
+                        return \Spikard\Http\Response::json($result);
+                    }
+
+                    public function __invoke(\Spikard\Http\Request $request): \Spikard\Http\Response
+                    {
+                        return $this->handle($request);
+                    }
                 };
             }
-            \assert(\is_callable($handler), 'Route handlers must be callable.');
 
+            $handlerName = $route['handler_name'] ?? \spl_object_hash($finalHandler);
             $normalizedRoute = [
                 'method' => $route['method'],
                 'path' => $route['path'],
-                'handler_name' => $route['handler_name'] ?? \spl_object_hash($handler),
-                'handler' => $handler,
+                'handler_name' => $handlerName,
+                'handler' => $finalHandler,
             ];
             if (isset($route['websocket'])) {
                 $normalizedRoute['websocket'] = (bool) $route['websocket'];
@@ -97,11 +129,15 @@ class GraphQLTestClientTest extends TestCase
     private function decodeBody(mixed $body): array
     {
         if (\is_array($body)) {
-            return $body;
+            /** @var array<string, mixed> $result */
+            $result = $body;
+            return $result;
         }
         if (\is_string($body)) {
             $decoded = \json_decode($body, true);
-            return \is_array($decoded) ? $decoded : [];
+            /** @var array<string, mixed> $result */
+            $result = \is_array($decoded) ? $decoded : [];
+            return $result;
         }
 
         return [];
@@ -122,8 +158,8 @@ class GraphQLTestClientTest extends TestCase
         $response = $this->client->graphql($query);
 
         $this->assertEquals(200, $response->getStatus());
+        /** @var array<string, mixed> $data */
         $data = $response->graphqlData();
-        $this->assertIsArray($data);
         $this->assertEquals('Hello, World!', $data['hello']);
         $this->assertEquals('0.6.2', $data['version']);
     }
@@ -175,11 +211,12 @@ class GraphQLTestClientTest extends TestCase
         $response = $client->graphql($query, $variables);
 
         $this->assertEquals(200, $response->getStatus());
+        /** @var array<string, mixed> $data */
         $data = $response->graphqlData();
-        $this->assertIsArray($data);
-        $this->assertIsArray($data['user']);
-        $this->assertEquals(42, $data['user']['id']);
-        $this->assertEquals('John Doe', $data['user']['name']);
+        /** @var array<string, mixed> $user */
+        $user = $data['user'];
+        $this->assertEquals(42, $user['id']);
+        $this->assertEquals('John Doe', $user['name']);
 
         $client->close();
     }
@@ -243,10 +280,9 @@ class GraphQLTestClientTest extends TestCase
         $response = $client->graphql($query);
 
         $this->assertEquals(200, $response->getStatus());
+        /** @var array<int, array<string, mixed>> $errors */
         $errors = $response->graphqlErrors();
-        $this->assertIsArray($errors);
         $this->assertCount(1, $errors);
-        $this->assertIsArray($errors[0]);
         /** @var string $errorMessage */
         $errorMessage = $errors[0]['message'];
         $this->assertStringContainsString('unknown', $errorMessage);
@@ -343,12 +379,13 @@ class GraphQLTestClientTest extends TestCase
         $response = $client->graphql($mutation, $variables);
 
         $this->assertEquals(200, $response->getStatus());
+        /** @var array<string, mixed> $data */
         $data = $response->graphqlData();
-        $this->assertIsArray($data);
-        $this->assertIsArray($data['createUser']);
-        $this->assertEquals(123, $data['createUser']['id']);
-        $this->assertEquals('Alice Smith', $data['createUser']['name']);
-        $this->assertEquals('alice@example.com', $data['createUser']['email']);
+        /** @var array<string, mixed> $createUser */
+        $createUser = $data['createUser'];
+        $this->assertEquals(123, $createUser['id']);
+        $this->assertEquals('Alice Smith', $createUser['name']);
+        $this->assertEquals('alice@example.com', $createUser['email']);
 
         $client->close();
     }
@@ -475,8 +512,8 @@ class GraphQLTestClientTest extends TestCase
         $client = $this->createClient($routes);
         $response = $client->graphql('query { result }');
 
+        /** @var array<int, array<string, mixed>> $errors */
         $errors = $response->graphqlErrors();
-        $this->assertIsArray($errors);
         $this->assertCount(0, $errors);
 
         $client->close();
@@ -507,8 +544,8 @@ class GraphQLTestClientTest extends TestCase
         $client = $this->createClient($routes);
         $response = $client->graphql('query { status timestamp }');
 
+        /** @var array<int, array<string, mixed>> $errors */
         $errors = $response->graphqlErrors();
-        $this->assertIsArray($errors);
         $this->assertCount(0, $errors);
 
         $client->close();

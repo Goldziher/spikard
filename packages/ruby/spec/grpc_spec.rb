@@ -901,7 +901,7 @@ RSpec.describe Spikard::Grpc do
         response = Spikard::Grpc::Response.new(payload: null_heavy)
 
         expect(response.payload.length).to eq(40_000)
-        expect(response.payload.count("\x00")).to be > 0
+        expect(response.payload.count("\x00")).to be_positive
       end
 
       it 'handles random binary data' do
@@ -1651,7 +1651,7 @@ RSpec.describe Spikard::Grpc do
       end
 
       it 'handles sparse binary data' do
-        sparse = (("\x00" * 1000) + 'x' + ("\x00" * 1000)) * 10
+        sparse = "#{"\x00" * 1000}x#{"\x00" * 1000}" * 10
         response = Spikard::Grpc::Response.new(payload: sparse.b)
 
         expect(response.payload).to include('x')
@@ -1706,7 +1706,7 @@ RSpec.describe Spikard::Grpc do
         end
 
         threads.each(&:join)
-        expect(results.length).to be > 0
+        expect(results.length).to be_positive
       end
 
       it 'handles concurrent request processing' do
@@ -1859,7 +1859,7 @@ RSpec.describe Spikard::Grpc do
         }
 
         # All variations should be present as string keys
-        expect(response.metadata.keys.length).to be > 0
+        expect(response.metadata.keys.length).to be_positive
       end
     end
 

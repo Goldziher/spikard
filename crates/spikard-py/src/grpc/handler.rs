@@ -366,8 +366,7 @@ mod tests {
 
     #[test]
     fn test_py_grpc_request_creation() {
-        pyo3::prepare_freethreaded_python();
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let request = PyGrpcRequest::new(
                 py,
                 "test.TestService".to_string(),
@@ -385,8 +384,7 @@ mod tests {
 
     #[test]
     fn test_py_grpc_request_with_metadata() {
-        pyo3::prepare_freethreaded_python();
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let mut metadata = HashMap::new();
             metadata.insert("authorization".to_string(), "Bearer token".to_string());
 
@@ -406,8 +404,7 @@ mod tests {
 
     #[test]
     fn test_py_grpc_response_creation() {
-        pyo3::prepare_freethreaded_python();
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let response = PyGrpcResponse::new(py, vec![5, 6, 7, 8], None).unwrap();
 
             assert_eq!(response.payload.bind(py).as_bytes(), &[5, 6, 7, 8]);
@@ -416,8 +413,7 @@ mod tests {
 
     #[test]
     fn test_py_grpc_response_with_metadata() {
-        pyo3::prepare_freethreaded_python();
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let mut metadata = std::collections::HashMap::new();
             metadata.insert("content-type".to_string(), "application/grpc".to_string());
 
@@ -436,8 +432,7 @@ mod tests {
 
     #[test]
     fn test_py_grpc_request_repr() {
-        pyo3::prepare_freethreaded_python();
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let request = PyGrpcRequest::new(
                 py,
                 "test.Service".to_string(),
@@ -456,8 +451,7 @@ mod tests {
 
     #[test]
     fn test_py_grpc_response_repr() {
-        pyo3::prepare_freethreaded_python();
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let response = PyGrpcResponse::new(py, vec![1, 2, 3, 4, 5], None).unwrap();
 
             let repr = response.__repr__();

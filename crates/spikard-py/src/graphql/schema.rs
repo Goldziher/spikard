@@ -248,6 +248,27 @@ impl PySchemaBuilder {
     fn __repr__(&self) -> String {
         format!("GraphQLSchemaBuilder({})", self.config)
     }
+}
+
+// Regular Rust methods for use in tests (not Python methods)
+impl PySchemaBuilder {
+    /// Enable or disable introspection (Rust version)
+    pub fn enable_introspection_rs(&mut self, enable: bool) -> &mut Self {
+        self.config.introspection_enabled = enable;
+        self
+    }
+
+    /// Set the maximum complexity allowed for queries (Rust version)
+    pub fn complexity_limit_rs(&mut self, limit: usize) -> &mut Self {
+        self.config.complexity_limit = if limit > 0 { Some(limit) } else { None };
+        self
+    }
+
+    /// Set the maximum depth allowed for queries (Rust version)
+    pub fn depth_limit_rs(&mut self, limit: usize) -> &mut Self {
+        self.config.depth_limit = if limit > 0 { Some(limit) } else { None };
+        self
+    }
 
     /// Get a string representation of the builder
     fn __str__(&self) -> String {
@@ -292,30 +313,30 @@ mod tests {
     #[test]
     fn test_py_schema_builder_enable_introspection() {
         let mut builder = PySchemaBuilder::new();
-        builder.enable_introspection(false);
+        builder.enable_introspection_rs(false);
         assert!(!builder.is_introspection_enabled());
     }
 
     #[test]
     fn test_py_schema_builder_complexity_limit() {
         let mut builder = PySchemaBuilder::new();
-        builder.complexity_limit(5000);
+        builder.complexity_limit_rs(5000);
         assert_eq!(builder.get_complexity_limit(), Some(5000));
     }
 
     #[test]
     fn test_py_schema_builder_depth_limit() {
         let mut builder = PySchemaBuilder::new();
-        builder.depth_limit(50);
+        builder.depth_limit_rs(50);
         assert_eq!(builder.get_depth_limit(), Some(50));
     }
 
     #[test]
     fn test_py_schema_builder_chaining() {
         let mut builder = PySchemaBuilder::new();
-        builder.enable_introspection(false);
-        builder.complexity_limit(3000);
-        builder.depth_limit(100);
+        builder.enable_introspection_rs(false);
+        builder.complexity_limit_rs(3000);
+        builder.depth_limit_rs(100);
 
         assert!(!builder.is_introspection_enabled());
         assert_eq!(builder.get_complexity_limit(), Some(3000));
@@ -325,8 +346,8 @@ mod tests {
     #[test]
     fn test_py_schema_builder_build() {
         let mut builder = PySchemaBuilder::new();
-        builder.complexity_limit(5000);
-        builder.depth_limit(50);
+        builder.complexity_limit_rs(5000);
+        builder.depth_limit_rs(50);
 
         let config = builder.build();
         assert!(config.introspection_enabled);

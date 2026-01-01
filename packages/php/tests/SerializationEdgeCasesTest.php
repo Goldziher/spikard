@@ -116,9 +116,11 @@ final class SerializationEdgeCasesTest extends TestCase
         $this->assertIsArray($request->body);
         $this->assertSame($largeString, $request->body['large_text']);
         $this->assertSame(\strlen($largeString), \strlen($request->body['large_text']));
-        $this->assertSame(256 * 1024, \strlen($request->body['multiple_large']['chunk1']));
-        $this->assertSame(256 * 1024, \strlen($request->body['multiple_large']['chunk2']));
-        $this->assertSame(256 * 1024, \strlen($request->body['multiple_large']['chunk3']));
+        /** @var array<string, string> $multiLarge */
+        $multiLarge = $request->body['multiple_large'];
+        $this->assertSame(256 * 1024, \strlen($multiLarge['chunk1']));
+        $this->assertSame(256 * 1024, \strlen($multiLarge['chunk2']));
+        $this->assertSame(256 * 1024, \strlen($multiLarge['chunk3']));
     }
 
     /**
@@ -244,9 +246,11 @@ final class SerializationEdgeCasesTest extends TestCase
         $this->assertSame('café', $request->body['utf8_2byte']);
         $this->assertSame('中文', $request->body['utf8_3byte']);
         $this->assertSame('😀🎉', $request->body['utf8_4byte']);
-        $this->assertStringContainsString('café', $request->body['mixed_encoding']);
-        $this->assertStringContainsString('中文', $request->body['mixed_encoding']);
-        $this->assertStringContainsString('😀', $request->body['mixed_encoding']);
+        /** @var string $mixedEncoding */
+        $mixedEncoding = $request->body['mixed_encoding'];
+        $this->assertStringContainsString('café', $mixedEncoding);
+        $this->assertStringContainsString('中文', $mixedEncoding);
+        $this->assertStringContainsString('😀', $mixedEncoding);
     }
 
     /**
@@ -311,11 +315,15 @@ final class SerializationEdgeCasesTest extends TestCase
         $this->assertIsArray($request->body);
         $this->assertSame('2024-12-28T15:30:00+00:00', $request->body['datetime_string']);
         $this->assertIsInt($request->body['datetime_timestamp']);
-        $this->assertSame('Test Object', $request->body['object_as_array']['name']);
-        $this->assertSame(42, $request->body['object_as_array']['value']);
-        $this->assertSame(42, $request->body['simple_values']['int']);
-        $this->assertTrue($request->body['simple_values']['bool']);
-        $this->assertNull($request->body['simple_values']['null']);
+        /** @var array<string, mixed> $objectAsArray */
+        $objectAsArray = $request->body['object_as_array'];
+        $this->assertSame('Test Object', $objectAsArray['name']);
+        $this->assertSame(42, $objectAsArray['value']);
+        /** @var array<string, mixed> $simpleValues */
+        $simpleValues = $request->body['simple_values'];
+        $this->assertSame(42, $simpleValues['int']);
+        $this->assertTrue($simpleValues['bool']);
+        $this->assertNull($simpleValues['null']);
     }
 
     /**
@@ -352,10 +360,14 @@ final class SerializationEdgeCasesTest extends TestCase
         $this->assertSame('two', $request->body[2]);
         $this->assertSame('zero_string', $request->body['string_zero']);
         $this->assertSame('one_string', $request->body['string_one']);
-        $this->assertSame('item_0', $request->body['items'][0]);
-        $this->assertSame('special_item', $request->body['items']['special']);
-        $this->assertSame('ten', $request->body['nested_numeric'][10]);
-        $this->assertSame('twenty', $request->body['nested_numeric'][20]);
+        /** @var array<int|string, mixed> $items */
+        $items = $request->body['items'];
+        $this->assertSame('item_0', $items[0]);
+        $this->assertSame('special_item', $items['special']);
+        /** @var array<int|string, mixed> $nestedNumeric */
+        $nestedNumeric = $request->body['nested_numeric'];
+        $this->assertSame('ten', $nestedNumeric[10]);
+        $this->assertSame('twenty', $nestedNumeric[20]);
     }
 
     /**
@@ -462,10 +474,14 @@ final class SerializationEdgeCasesTest extends TestCase
         $this->assertFalse($request->body['false_bool']);
         $this->assertNull($request->body['null_value']);
         $this->assertSame([], $request->body['empty_array']);
-        $this->assertCount(3, $request->body['array_with_null']);
-        $this->assertNull($request->body['array_with_null'][0]);
-        $this->assertCount(2, $request->body['array_with_false']);
-        $this->assertFalse($request->body['array_with_false'][0]);
+        /** @var array<int, mixed> $arrayWithNull */
+        $arrayWithNull = $request->body['array_with_null'];
+        $this->assertCount(3, $arrayWithNull);
+        $this->assertNull($arrayWithNull[0]);
+        /** @var array<int, mixed> $arrayWithFalse */
+        $arrayWithFalse = $request->body['array_with_false'];
+        $this->assertCount(2, $arrayWithFalse);
+        $this->assertFalse($arrayWithFalse[0]);
     }
 
     /**
@@ -528,8 +544,10 @@ final class SerializationEdgeCasesTest extends TestCase
         $this->assertSame("It's working", $request->body['single_quotes']);
         $this->assertSame('Path: C:\\Users\\Admin', $request->body['backslashes']);
         $this->assertSame('URL: https://example.com/path', $request->body['forward_slashes']);
-        $this->assertStringContainsString('"', $request->body['mixed_escapes']);
-        $this->assertStringContainsString('\\', $request->body['mixed_escapes']);
+        /** @var string $mixedEscapes */
+        $mixedEscapes = $request->body['mixed_escapes'];
+        $this->assertStringContainsString('"', $mixedEscapes);
+        $this->assertStringContainsString('\\', $mixedEscapes);
         $this->assertSame('{"key": "value"}', $request->body['json_like']);
         $this->assertSame('<script>alert("XSS")</script>', $request->body['html_like']);
     }

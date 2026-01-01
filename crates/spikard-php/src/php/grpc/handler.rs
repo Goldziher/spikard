@@ -68,6 +68,7 @@ impl PhpGrpcRequest {
     }
 
     /// String representation for debugging
+    #[allow(non_snake_case)]
     pub fn __toString(&self) -> String {
         format!(
             "PhpGrpcRequest(service_name='{}', method_name='{}', payload_size={})",
@@ -125,6 +126,7 @@ impl PhpGrpcResponse {
     }
 
     /// String representation for debugging
+    #[allow(non_snake_case)]
     pub fn __toString(&self) -> String {
         format!("PhpGrpcResponse(payload_size={})", self.payload.len())
     }
@@ -279,59 +281,59 @@ fn interpret_php_grpc_response(response_zval: &ext_php_rs::types::Zval, service_
     // Check if the response is a PhpGrpcResponse object
     if let Some(obj) = response_zval.object() {
         // Try to get the class name to verify it's a PhpGrpcResponse
-        if let Ok(class_name) = obj.get_class_name() {
-            if class_name.contains("PhpGrpcResponse") || class_name.contains("GrpcResponse") {
-                // Extract the object's properties
-                if let Ok(Some(payload_zval)) = obj.get_property::<Option<Zval>>("payload") {
-                    let payload = if let Some(arr) = payload_zval.array() {
-                        // Convert PHP array to Vec<u8>
-                        let mut bytes = Vec::new();
-                        for (_, val) in arr.iter() {
-                            if let Some(byte) = val.long() {
-                                bytes.push(byte as u8);
-                            }
+        if let Ok(class_name) = obj.get_class_name()
+            && (class_name.contains("PhpGrpcResponse") || class_name.contains("GrpcResponse"))
+        {
+            // Extract the object's properties
+            if let Ok(payload_zval) = obj.get_property::<&Zval>("payload") {
+                let payload = if let Some(arr) = payload_zval.array() {
+                    // Convert PHP array to Vec<u8>
+                    let mut bytes = Vec::new();
+                    for (_, val) in arr.iter() {
+                        if let Some(byte) = val.long() {
+                            bytes.push(byte as u8);
                         }
-                        bytes
-                    } else if let Some(s) = payload_zval.string() {
-                        // Handle as binary string
-                        s.as_bytes().to_vec()
-                    } else {
-                        return Err(tonic::Status::internal(format!(
-                            "PHP gRPC handler '{}' returned invalid payload type",
-                            service_name
-                        )));
-                    };
+                    }
+                    bytes
+                } else if let Some(s) = payload_zval.string() {
+                    // Handle as binary string
+                    s.as_bytes().to_vec()
+                } else {
+                    return Err(tonic::Status::internal(format!(
+                        "PHP gRPC handler '{}' returned invalid payload type",
+                        service_name
+                    )));
+                };
 
-                    // Extract metadata
-                    let metadata = if let Ok(Some(metadata_zval)) = obj.get_property::<Option<Zval>>("metadata") {
-                        if let Some(arr) = metadata_zval.array() {
-                            let mut meta = HashMap::new();
-                            for (key, val) in arr.iter() {
-                                let key_str = match key {
-                                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                                    ext_php_rs::types::ArrayKey::Long(l) => l.to_string(),
-                                };
-                                if let Some(val_str) = val.string() {
-                                    meta.insert(key_str, val_str.to_string());
-                                }
+                // Extract metadata
+                let metadata = if let Ok(metadata_zval) = obj.get_property::<&Zval>("metadata") {
+                    if let Some(arr) = metadata_zval.array() {
+                        let mut meta = HashMap::new();
+                        for (key, val) in arr.iter() {
+                            let key_str = match key {
+                                ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                                ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                                ext_php_rs::types::ArrayKey::Long(l) => l.to_string(),
+                            };
+                            if let Some(val_str) = val.string() {
+                                meta.insert(key_str, val_str.to_string());
                             }
-                            meta
-                        } else {
-                            HashMap::new()
                         }
+                        meta
                     } else {
                         HashMap::new()
-                    };
+                    }
+                } else {
+                    HashMap::new()
+                };
 
-                    let php_response = PhpGrpcResponse { payload, metadata };
-                    return php_response.to_response_data().map_err(|e| {
-                        tonic::Status::internal(format!(
-                            "Failed to convert PHP gRPC response from '{}': {}",
-                            service_name, e
-                        ))
-                    });
-                }
+                let php_response = PhpGrpcResponse { payload, metadata };
+                return php_response.to_response_data().map_err(|e| {
+                    tonic::Status::internal(format!(
+                        "Failed to convert PHP gRPC response from '{}': {}",
+                        service_name, e
+                    ))
+                });
             }
         }
     }
@@ -383,8 +385,11 @@ mod tests {
 
     #[test]
     fn test_php_grpc_request_from_request_data() {
+        use tonic::metadata::Ascii;
+        use tonic::metadata::MetadataKey;
         let mut metadata_map = MetadataMap::new();
-        metadata_map.insert("authorization".parse().unwrap(), "Bearer token".parse().unwrap());
+        let key: MetadataKey<Ascii> = "authorization".parse().expect("Valid metadata key");
+        metadata_map.insert(key, "Bearer token".parse().expect("Valid metadata value"));
 
         let request_data = GrpcRequestData {
             service_name: "test.Service".to_string(),
@@ -419,7 +424,9 @@ mod tests {
 
         let php_response = PhpGrpcResponse::__construct(vec![1, 2, 3], Some(metadata));
 
-        let response_data = php_response.to_response_data().unwrap();
+        let response_data = php_response
+            .to_response_data()
+            .expect("Failed to convert response data");
         assert_eq!(response_data.payload, Bytes::from(vec![1, 2, 3]));
         assert!(response_data.metadata.contains_key("content-type"));
     }

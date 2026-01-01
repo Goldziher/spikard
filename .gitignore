@@ -105,3 +105,4 @@ perf.data*
 # AI Rules generated files
 .claude/
 CLAUDE.md
+e2e/php/var/

@@ -87,7 +87,7 @@ impl HandlerBuilder {
     /// Add a delay to the handler response for testing timeouts
     ///
     /// Useful for simulating slow handlers and testing timeout middleware.
-    pub fn delay(mut self, duration: Duration) -> Self {
+    pub const fn delay(mut self, duration: Duration) -> Self {
         self.delay = Some(duration);
         self
     }
@@ -95,7 +95,7 @@ impl HandlerBuilder {
     /// Configure the handler to panic when called
     ///
     /// Useful for testing panic recovery and error handling middleware.
-    pub fn panics(mut self) -> Self {
+    pub const fn panics(mut self) -> Self {
         self.should_panic = true;
         self
     }
@@ -119,7 +119,7 @@ impl Default for HandlerBuilder {
     }
 }
 
-/// Internal handler implementation constructed by HandlerBuilder
+/// Internal handler implementation constructed by `HandlerBuilder`
 struct ConfiguredHandler {
     status: StatusCode,
     body: Value,
@@ -139,9 +139,7 @@ impl Handler for ConfiguredHandler {
         let should_panic = self.should_panic;
 
         Box::pin(async move {
-            if should_panic {
-                panic!("Handler configured to panic");
-            }
+            assert!(!should_panic, "Handler configured to panic");
 
             if let Some(duration) = delay {
                 sleep(duration).await;
@@ -160,7 +158,7 @@ impl Handler for ConfiguredHandler {
 
 /// Fluent builder for constructing test HTTP requests
 ///
-/// Provides a fluent API for building both hyper Request objects and RequestData
+/// Provides a fluent API for building both hyper `Request` objects and `RequestData`
 /// structures needed for handler testing. Handles typical test scenarios without
 /// requiring manual construction of all components.
 ///
@@ -215,7 +213,7 @@ impl RequestBuilder {
         self
     }
 
-    /// Add or replace headers from a HashMap
+    /// Add or replace headers from a `HashMap`
     ///
     /// Values are stored as-is; no normalization is performed.
     pub fn headers(mut self, headers: HashMap<String, String>) -> Self {
@@ -229,7 +227,7 @@ impl RequestBuilder {
         self
     }
 
-    /// Add or replace cookies from a HashMap
+    /// Add or replace cookies from a `HashMap`
     pub fn cookies(mut self, cookies: HashMap<String, String>) -> Self {
         self.cookies = cookies;
         self
@@ -249,9 +247,9 @@ impl RequestBuilder {
         self
     }
 
-    /// Set query parameters as a HashMap of name to values
+    /// Set query parameters as a `HashMap` of name to values
     ///
-    /// Values are stored as Vec<String> to support multi-valued parameters.
+    /// Values are stored as `Vec<String>` to support multi-valued parameters.
     pub fn query_params(mut self, params: HashMap<String, Vec<String>>) -> Self {
         self.query_params = params;
         self
@@ -259,16 +257,13 @@ impl RequestBuilder {
 
     /// Add a single query parameter
     pub fn query_param(mut self, name: impl Into<String>, value: impl Into<String>) -> Self {
-        self.query_params
-            .entry(name.into())
-            .or_insert_with(Vec::new)
-            .push(value.into());
+        self.query_params.entry(name.into()).or_default().push(value.into());
         self
     }
 
-    /// Build the request into (Request<Body>, RequestData) tuple
+    /// Build the request into `(Request<Body>, RequestData)` tuple
     ///
-    /// The Request can be passed directly to handler.call(). RequestData contains
+    /// The `Request` can be passed directly to `handler.call()`. `RequestData` contains
     /// all extracted request information (params, body, headers, etc.).
     pub fn build(self) -> (Request<Body>, RequestData) {
         let body = if self.body.is_null() {
@@ -327,11 +322,11 @@ fn build_query_json(raw_params: &HashMap<String, Vec<String>>) -> Value {
     Value::Object(map)
 }
 
-/// Load a JSON fixture from the testing_data directory
+/// Load a JSON fixture from the `testing_data` directory
 ///
 /// # Arguments
 ///
-/// * `relative_path` - Path relative to project root, e.g., "testing_data/headers/01_user_agent_default.json"
+/// * `relative_path` - Path relative to project root, e.g., `"testing_data/headers/01_user_agent_default.json"`
 ///
 /// # Example
 ///

@@ -35,19 +35,16 @@ final class AppJsonRpcRouteTest extends TestCase
 
         $routesProperty = (new ReflectionClass($app))->getProperty('routes');
         $routesProperty->setAccessible(true);
-        /**  */
+        /** @var array<int, array<string, mixed>> $routes */
         $routes = $routesProperty->getValue($app);
-        self::assertIsArray($routes);
 
         self::assertCount(1, $routes);
         /** @var array<string, mixed> $route */
         $route = $routes[0];
-        self::assertIsArray($route);
         self::assertSame('POST', $route['method']);
         self::assertSame('/rpc', $route['path']);
         self::assertArrayHasKey('handler', $route);
         self::assertArrayHasKey('jsonrpc_method', $route);
-        self::assertIsObject($route['jsonrpc_method']);
         /** @var object{methodName: string} $jsonRpcMethod */
         $jsonRpcMethod = $route['jsonrpc_method'];
         self::assertSame('math.add', $jsonRpcMethod->methodName);

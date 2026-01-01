@@ -19,8 +19,6 @@ mod common;
 /// Test metadata extraction from request
 #[tokio::test]
 async fn test_metadata_extraction_from_request() {
-    let mut server = GrpcTestServer::new();
-
     struct MetadataCheckHandler;
     impl spikard_http::grpc::GrpcHandler for MetadataCheckHandler {
         fn call(
@@ -50,6 +48,8 @@ async fn test_metadata_extraction_from_request() {
         }
     }
 
+    let server = GrpcTestServer::new();
+
     server.register_service(Arc::new(MetadataCheckHandler));
 
     let metadata = create_test_metadata();
@@ -64,14 +64,12 @@ async fn test_metadata_extraction_from_request() {
     .await
     .expect("Failed to send request with metadata");
 
-    assert_grpc_response(response, serde_json::json!({"extracted": true}));
+    assert_grpc_response(&response, &serde_json::json!({"extracted": true}));
 }
 
 /// Test Bearer token authentication metadata
 #[tokio::test]
 async fn test_authentication_bearer_token_metadata() {
-    let mut server = GrpcTestServer::new();
-
     struct AuthServiceHandler;
     impl spikard_http::grpc::GrpcHandler for AuthServiceHandler {
         fn call(
@@ -82,8 +80,7 @@ async fn test_authentication_bearer_token_metadata() {
             let token_present = request
                 .metadata
                 .get("authorization")
-                .map(|v| v.to_str().unwrap_or("").starts_with("Bearer "))
-                .unwrap_or(false);
+                .is_some_and(|v| v.to_str().unwrap_or("").starts_with("Bearer "));
 
             let response = if token_present {
                 Bytes::from(r#"{"authenticated": true, "user": "alice"}"#)
@@ -103,6 +100,8 @@ async fn test_authentication_bearer_token_metadata() {
         }
     }
 
+    let server = GrpcTestServer::new();
+
     server.register_service(Arc::new(AuthServiceHandler));
 
     let mut metadata = create_test_metadata();
@@ -113,8 +112,8 @@ async fn test_authentication_bearer_token_metadata() {
         .expect("Failed to authenticate");
 
     assert_grpc_response(
-        response,
-        serde_json::json!({
+        &response,
+        &serde_json::json!({
             "authenticated": true,
             "user": "alice"
         }),
@@ -124,8 +123,6 @@ async fn test_authentication_bearer_token_metadata() {
 /// Test custom header metadata
 #[tokio::test]
 async fn test_custom_header_metadata() {
-    let mut server = GrpcTestServer::new();
-
     struct CustomHeaderHandler;
     impl spikard_http::grpc::GrpcHandler for CustomHeaderHandler {
         fn call(
@@ -140,7 +137,7 @@ async fn test_custom_header_metadata() {
                 .unwrap_or("missing")
                 .to_string();
 
-            let response = format!(r#"{{"custom_value": "{}"}}"#, custom_value);
+            let response = format!(r#"{{"custom_value": "{custom_value}"}}"#);
 
             Box::pin(async move {
                 Ok(spikard_http::grpc::GrpcResponseData {
@@ -153,6 +150,8 @@ async fn test_custom_header_metadata() {
             "test.CustomHeaderService"
         }
     }
+
+    let server = GrpcTestServer::new();
 
     server.register_service(Arc::new(CustomHeaderHandler));
 
@@ -169,14 +168,12 @@ async fn test_custom_header_metadata() {
     .await
     .expect("Failed to send custom header");
 
-    assert_grpc_response(response, serde_json::json!({"custom_value": "custom_value_123"}));
+    assert_grpc_response(&response, &serde_json::json!({"custom_value": "custom_value_123"}));
 }
 
 /// Test multiple custom headers
 #[tokio::test]
 async fn test_multiple_custom_headers() {
-    let mut server = GrpcTestServer::new();
-
     struct MultiHeaderHandler;
     impl spikard_http::grpc::GrpcHandler for MultiHeaderHandler {
         fn call(
@@ -198,7 +195,7 @@ async fn test_multiple_custom_headers() {
                 .unwrap_or("missing")
                 .to_string();
 
-            let response = format!(r#"{{"request_id": "{}", "trace_id": "{}"}}"#, req_id, trace_id);
+            let response = format!(r#"{{"request_id": "{req_id}", "trace_id": "{trace_id}"}}"#);
 
             Box::pin(async move {
                 Ok(spikard_http::grpc::GrpcResponseData {
@@ -211,6 +208,8 @@ async fn test_multiple_custom_headers() {
             "test.MultiHeaderService"
         }
     }
+
+    let server = GrpcTestServer::new();
 
     server.register_service(Arc::new(MultiHeaderHandler));
 
@@ -229,8 +228,8 @@ async fn test_multiple_custom_headers() {
     .expect("Failed to send multiple headers");
 
     assert_grpc_response(
-        response,
-        serde_json::json!({
+        &response,
+        &serde_json::json!({
             "request_id": "req-12345",
             "trace_id": "trace-67890"
         }),
@@ -240,8 +239,6 @@ async fn test_multiple_custom_headers() {
 /// Test metadata with special characters in values
 #[tokio::test]
 async fn test_metadata_special_characters() {
-    let mut server = GrpcTestServer::new();
-
     struct SpecialCharHandler;
     impl spikard_http::grpc::GrpcHandler for SpecialCharHandler {
         fn call(
@@ -256,7 +253,7 @@ async fn test_metadata_special_characters() {
                 .unwrap_or("")
                 .to_string();
 
-            let response = format!(r#"{{"received": "{}"}}"#, special_header);
+            let response = format!(r#"{{"received": "{special_header}"}}"#);
 
             Box::pin(async move {
                 Ok(spikard_http::grpc::GrpcResponseData {
@@ -269,6 +266,8 @@ async fn test_metadata_special_characters() {
             "test.SpecialCharService"
         }
     }
+
+    let server = GrpcTestServer::new();
 
     server.register_service(Arc::new(SpecialCharHandler));
 
@@ -287,14 +286,14 @@ async fn test_metadata_special_characters() {
     .expect("Failed to send special chars");
 
     assert_grpc_response(
-        response,
-        serde_json::json!({
+        &response,
+        &serde_json::json!({
             "received": "value-with_underscore.and.dots"
         }),
     );
 }
 
-/// Test metadata creation with HashMap
+/// Test metadata creation with `HashMap`
 #[test]
 fn test_create_metadata_with_headers_map() {
     let mut headers = HashMap::new();
@@ -324,8 +323,6 @@ fn test_default_metadata_headers() {
 /// Test response metadata is preserved
 #[tokio::test]
 async fn test_response_metadata_preservation() {
-    let mut server = GrpcTestServer::new();
-
     struct ResponseMetadataHandler;
     impl spikard_http::grpc::GrpcHandler for ResponseMetadataHandler {
         fn call(
@@ -347,6 +344,8 @@ async fn test_response_metadata_preservation() {
             "test.ResponseMetadataService"
         }
     }
+
+    let server = GrpcTestServer::new();
 
     server.register_service(Arc::new(ResponseMetadataHandler));
 
@@ -384,8 +383,6 @@ fn test_bearer_token_format() {
 /// Test metadata extraction with no headers
 #[tokio::test]
 async fn test_metadata_extraction_empty_metadata() {
-    let mut server = GrpcTestServer::new();
-
     struct EmptyMetadataHandler;
     impl spikard_http::grpc::GrpcHandler for EmptyMetadataHandler {
         fn call(
@@ -413,6 +410,8 @@ async fn test_metadata_extraction_empty_metadata() {
         }
     }
 
+    let server = GrpcTestServer::new();
+
     server.register_service(Arc::new(EmptyMetadataHandler));
 
     let empty_metadata = MetadataMap::new();
@@ -427,14 +426,12 @@ async fn test_metadata_extraction_empty_metadata() {
     .await
     .expect("Failed to send with empty metadata");
 
-    assert_grpc_response(response, serde_json::json!({"metadata_empty": true}));
+    assert_grpc_response(&response, &serde_json::json!({"metadata_empty": true}));
 }
 
 /// Test metadata header with numeric value
 #[tokio::test]
 async fn test_metadata_numeric_value() {
-    let mut server = GrpcTestServer::new();
-
     struct NumericHeaderHandler;
     impl spikard_http::grpc::GrpcHandler for NumericHeaderHandler {
         fn call(
@@ -449,7 +446,7 @@ async fn test_metadata_numeric_value() {
                 .unwrap_or("0")
                 .to_string();
 
-            let response = format!(r#"{{"count": {}}}"#, count);
+            let response = format!(r#"{{"count": {count}}}"#);
 
             Box::pin(async move {
                 Ok(spikard_http::grpc::GrpcResponseData {
@@ -462,6 +459,8 @@ async fn test_metadata_numeric_value() {
             "test.NumericHeaderService"
         }
     }
+
+    let server = GrpcTestServer::new();
 
     server.register_service(Arc::new(NumericHeaderHandler));
 
@@ -478,14 +477,12 @@ async fn test_metadata_numeric_value() {
     .await
     .expect("Failed to send numeric header");
 
-    assert_grpc_response(response, serde_json::json!({"count": 42}));
+    assert_grpc_response(&response, &serde_json::json!({"count": 42}));
 }
 
 /// Test metadata with UUID value
 #[tokio::test]
 async fn test_metadata_uuid_value() {
-    let mut server = GrpcTestServer::new();
-
     struct UuidHeaderHandler;
     impl spikard_http::grpc::GrpcHandler for UuidHeaderHandler {
         fn call(
@@ -500,7 +497,7 @@ async fn test_metadata_uuid_value() {
                 .unwrap_or("invalid")
                 .to_string();
 
-            let response = format!(r#"{{"uuid": "{}"}}"#, uuid);
+            let response = format!(r#"{{"uuid": "{uuid}"}}"#);
 
             Box::pin(async move {
                 Ok(spikard_http::grpc::GrpcResponseData {
@@ -514,6 +511,8 @@ async fn test_metadata_uuid_value() {
         }
     }
 
+    let server = GrpcTestServer::new();
+
     server.register_service(Arc::new(UuidHeaderHandler));
 
     let mut metadata = create_test_metadata();
@@ -525,8 +524,8 @@ async fn test_metadata_uuid_value() {
         .expect("Failed to send UUID header");
 
     assert_grpc_response(
-        response,
-        serde_json::json!({
+        &response,
+        &serde_json::json!({
             "uuid": "550e8400-e29b-41d4-a716-446655440000"
         }),
     );

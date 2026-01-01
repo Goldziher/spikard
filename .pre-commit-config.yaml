@@ -1,6 +1,7 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
+exclude: ^docs/snippets/|vendor/|node_modules/|target/|v3/|invalid*|dist/|artifacts/|e2e/
 
 repos:
   - repo: https://github.com/Goldziher/gitfluff
@@ -56,35 +57,14 @@ repos:
     rev: v1.0
     hooks:
       - id: fmt
-        args:
-          [
-            "-p",
-            "spikard",
-            "-p",
-            "spikard-cli",
-            "-p",
-            "spikard-codegen",
-            "-p",
-            "spikard-core",
-            "-p",
-            "spikard-http",
-            "-p",
-            "spikard-py",
-            "-p",
-            "spikard-node",
-            "-p",
-            "spikard-wasm",
-            "-p",
-            "spikard-rb",
-            "-p",
-            "test-generator",
-          ]
-        pass_filenames: false
+        files: ^(crates|packages/ruby/ext/spikard_rb/native)/.*\.rs$|^(Cargo\.toml|Cargo\.lock|crates/.*/Cargo\.toml|packages/ruby/ext/spikard_rb/native/Cargo\.toml)$
       - id: cargo-check
+        files: ^(crates|packages/ruby/ext/spikard_rb/native)/.*\.rs$|^(Cargo\.toml|Cargo\.lock|crates/.*/Cargo\.toml|packages/ruby/ext/spikard_rb/native/Cargo\.toml)$
         args: ["--workspace"]
         pass_filenames: false
       - id: clippy
-        args: ["--workspace"]
+        files: ^(crates|packages/ruby/ext/spikard_rb/native)/.*\.rs$|^(Cargo\.toml|Cargo\.lock|crates/.*/Cargo\.toml|packages/ruby/ext/spikard_rb/native/Cargo\.toml)$
+        args: ["--workspace", "--all-features", "--all-targets", "--", "-D", "warnings"]
         pass_filenames: false
   - repo: https://github.com/rubocop/rubocop
     rev: v1.82.1
@@ -117,4 +97,5 @@ repos:
         entry: phpstan analyse --memory-limit=2G --no-progress --configuration packages/php/phpstan.neon packages/php/src packages/php/tests
         language: system
         types: [php]
+        files: ^packages/php/
         pass_filenames: false

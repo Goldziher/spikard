@@ -729,7 +729,6 @@ final class BoundaryConditionsTest extends TestClientTestCase
 
         try {
             // Client should be usable even with empty app
-            $this->assertNotNull($client);
             $this->assertSame($app, $client->app());
         } finally {
             $client->close();
@@ -759,9 +758,6 @@ final class BoundaryConditionsTest extends TestClientTestCase
                 $client->close();
             }
         }
-
-        // If we reach here without memory errors or exceptions, resources were properly managed
-        $this->assertTrue(true);
     }
 
     /**

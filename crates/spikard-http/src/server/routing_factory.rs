@@ -145,98 +145,89 @@ impl MethodRouterFactory {
                 HttpMethod::Post => {
                     let handler_clone = handler_clone.clone();
                     let hooks_clone = hooks_clone.clone();
-                    axum::routing::post(
-                        move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                            let handler = handler_clone.clone();
-                            let hooks = hooks_clone.clone();
-                            async move {
-                                let (parts, body) = req.into_parts();
-                                let request_data =
-                                    request_extraction::create_request_data_with_body(
-                                        &parts,
-                                        path_params.0,
-                                        body,
-                                        include_raw_query_params,
-                                        include_query_params_json,
-                                        include_headers,
-                                        include_cookies,
-                                    )
-                                        .await?;
-                                let mut req = Request::from_parts(
-                                    parts,
-                                    Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
-                                );
-                                if handler.wants_request_extensions() {
+                    axum::routing::post(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
+                        let handler = handler_clone.clone();
+                        let hooks = hooks_clone.clone();
+                        async move {
+                            let (parts, body) = req.into_parts();
+                            let request_data = request_extraction::create_request_data_with_body(
+                                &parts,
+                                path_params.0,
+                                body,
+                                include_raw_query_params,
+                                include_query_params_json,
+                                include_headers,
+                                include_cookies,
+                            )
+                            .await?;
+                            let mut req = Request::from_parts(
+                                parts,
+                                Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
+                            );
+                            if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
                             }
-                                call_with_optional_hooks(req, request_data, handler, hooks).await
-                            }
-                        },
-                    )
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
+                        }
+                    })
                 }
                 HttpMethod::Put => {
                     let handler_clone = handler_clone.clone();
                     let hooks_clone = hooks_clone.clone();
-                    axum::routing::put(
-                        move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                            let handler = handler_clone.clone();
-                            let hooks = hooks_clone.clone();
-                            async move {
-                                let (parts, body) = req.into_parts();
-                                let request_data =
-                                    request_extraction::create_request_data_with_body(
-                                        &parts,
-                                        path_params.0,
-                                        body,
-                                        include_raw_query_params,
-                                        include_query_params_json,
-                                        include_headers,
-                                        include_cookies,
-                                    )
-                                        .await?;
-                                let mut req = Request::from_parts(
-                                    parts,
-                                    Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
-                                );
-                                if handler.wants_request_extensions() {
+                    axum::routing::put(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
+                        let handler = handler_clone.clone();
+                        let hooks = hooks_clone.clone();
+                        async move {
+                            let (parts, body) = req.into_parts();
+                            let request_data = request_extraction::create_request_data_with_body(
+                                &parts,
+                                path_params.0,
+                                body,
+                                include_raw_query_params,
+                                include_query_params_json,
+                                include_headers,
+                                include_cookies,
+                            )
+                            .await?;
+                            let mut req = Request::from_parts(
+                                parts,
+                                Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
+                            );
+                            if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
                             }
-                                call_with_optional_hooks(req, request_data, handler, hooks).await
-                            }
-                        },
-                    )
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
+                        }
+                    })
                 }
                 HttpMethod::Patch => {
                     let handler_clone = handler_clone.clone();
                     let hooks_clone = hooks_clone.clone();
-                    axum::routing::patch(
-                        move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                            let handler = handler_clone.clone();
-                            let hooks = hooks_clone.clone();
-                            async move {
-                                let (parts, body) = req.into_parts();
-                                let request_data =
-                                    request_extraction::create_request_data_with_body(
-                                        &parts,
-                                        path_params.0,
-                                        body,
-                                        include_raw_query_params,
-                                        include_query_params_json,
-                                        include_headers,
-                                        include_cookies,
-                                    )
-                                        .await?;
-                                let mut req = Request::from_parts(
-                                    parts,
-                                    Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
-                                );
-                                if handler.wants_request_extensions() {
+                    axum::routing::patch(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
+                        let handler = handler_clone.clone();
+                        let hooks = hooks_clone.clone();
+                        async move {
+                            let (parts, body) = req.into_parts();
+                            let request_data = request_extraction::create_request_data_with_body(
+                                &parts,
+                                path_params.0,
+                                body,
+                                include_raw_query_params,
+                                include_query_params_json,
+                                include_headers,
+                                include_cookies,
+                            )
+                            .await?;
+                            let mut req = Request::from_parts(
+                                parts,
+                                Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
+                            );
+                            if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
                             }
-                                call_with_optional_hooks(req, request_data, handler, hooks).await
-                            }
-                        },
-                    )
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
+                        }
+                    })
                 }
                 _ => MethodRouter::new(),
             }
@@ -245,122 +236,112 @@ impl MethodRouterFactory {
                 HttpMethod::Get => {
                     let handler_clone = handler_clone.clone();
                     let hooks_clone = hooks_clone.clone();
-                    axum::routing::get(
-                        move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                            let handler = handler_clone.clone();
-                            let hooks = hooks_clone.clone();
-                            async move {
-                                let request_data = request_extraction::create_request_data_without_body(
-                                    req.uri(),
-                                    req.method(),
-                                    req.headers(),
-                                    path_params.0,
-                                    without_body_options,
-                                );
-                                let mut req = req;
-                                if handler.wants_request_extensions() {
+                    axum::routing::get(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
+                        let handler = handler_clone.clone();
+                        let hooks = hooks_clone.clone();
+                        async move {
+                            let request_data = request_extraction::create_request_data_without_body(
+                                req.uri(),
+                                req.method(),
+                                req.headers(),
+                                path_params.0,
+                                without_body_options,
+                            );
+                            let mut req = req;
+                            if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
                             }
-                                call_with_optional_hooks(req, request_data, handler, hooks).await
-                            }
-                        },
-                    )
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
+                        }
+                    })
                 }
                 HttpMethod::Delete => {
                     let handler_clone = handler_clone.clone();
                     let hooks_clone = hooks_clone.clone();
-                    axum::routing::delete(
-                        move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                            let handler = handler_clone.clone();
-                            let hooks = hooks_clone.clone();
-                            async move {
-                                let request_data = request_extraction::create_request_data_without_body(
-                                    req.uri(),
-                                    req.method(),
-                                    req.headers(),
-                                    path_params.0,
-                                    without_body_options,
-                                );
-                                let mut req = req;
-                                if handler.wants_request_extensions() {
+                    axum::routing::delete(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
+                        let handler = handler_clone.clone();
+                        let hooks = hooks_clone.clone();
+                        async move {
+                            let request_data = request_extraction::create_request_data_without_body(
+                                req.uri(),
+                                req.method(),
+                                req.headers(),
+                                path_params.0,
+                                without_body_options,
+                            );
+                            let mut req = req;
+                            if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
                             }
-                                call_with_optional_hooks(req, request_data, handler, hooks).await
-                            }
-                        },
-                    )
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
+                        }
+                    })
                 }
                 HttpMethod::Head => {
                     let handler_clone = handler_clone.clone();
                     let hooks_clone = hooks_clone.clone();
-                    axum::routing::head(
-                        move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                            let handler = handler_clone.clone();
-                            let hooks = hooks_clone.clone();
-                            async move {
-                                let request_data = request_extraction::create_request_data_without_body(
-                                    req.uri(),
-                                    req.method(),
-                                    req.headers(),
-                                    path_params.0,
-                                    without_body_options,
-                                );
-                                let mut req = req;
-                                if handler.wants_request_extensions() {
+                    axum::routing::head(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
+                        let handler = handler_clone.clone();
+                        let hooks = hooks_clone.clone();
+                        async move {
+                            let request_data = request_extraction::create_request_data_without_body(
+                                req.uri(),
+                                req.method(),
+                                req.headers(),
+                                path_params.0,
+                                without_body_options,
+                            );
+                            let mut req = req;
+                            if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
                             }
-                                call_with_optional_hooks(req, request_data, handler, hooks).await
-                            }
-                        },
-                    )
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
+                        }
+                    })
                 }
                 HttpMethod::Trace => {
                     let handler_clone = handler_clone.clone();
                     let hooks_clone = hooks_clone.clone();
-                    axum::routing::trace(
-                        move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                            let handler = handler_clone.clone();
-                            let hooks = hooks_clone.clone();
-                            async move {
-                                let request_data = request_extraction::create_request_data_without_body(
-                                    req.uri(),
-                                    req.method(),
-                                    req.headers(),
-                                    path_params.0,
-                                    without_body_options,
-                                );
-                                let mut req = req;
-                                if handler.wants_request_extensions() {
+                    axum::routing::trace(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
+                        let handler = handler_clone.clone();
+                        let hooks = hooks_clone.clone();
+                        async move {
+                            let request_data = request_extraction::create_request_data_without_body(
+                                req.uri(),
+                                req.method(),
+                                req.headers(),
+                                path_params.0,
+                                without_body_options,
+                            );
+                            let mut req = req;
+                            if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
                             }
-                                call_with_optional_hooks(req, request_data, handler, hooks).await
-                            }
-                        },
-                    )
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
+                        }
+                    })
                 }
                 HttpMethod::Options => {
                     let handler_clone = handler_clone.clone();
                     let hooks_clone = hooks_clone.clone();
-                    axum::routing::options(
-                        move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                            let handler = handler_clone.clone();
-                            let hooks = hooks_clone.clone();
-                            async move {
-                                let request_data = request_extraction::create_request_data_without_body(
-                                    req.uri(),
-                                    req.method(),
-                                    req.headers(),
-                                    path_params.0,
-                                    without_body_options,
-                                );
-                                let mut req = req;
-                                if handler.wants_request_extensions() {
+                    axum::routing::options(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
+                        let handler = handler_clone.clone();
+                        let hooks = hooks_clone.clone();
+                        async move {
+                            let request_data = request_extraction::create_request_data_without_body(
+                                req.uri(),
+                                req.method(),
+                                req.headers(),
+                                path_params.0,
+                                without_body_options,
+                            );
+                            let mut req = req;
+                            if handler.wants_request_extensions() {
                                 req.extensions_mut().insert(Arc::new(request_data.clone()));
                             }
-                                call_with_optional_hooks(req, request_data, handler, hooks).await
-                            }
-                        },
-                    )
+                            call_with_optional_hooks(req, request_data, handler, hooks).await
+                        }
+                    })
                 }
                 _ => MethodRouter::new(),
             }
@@ -396,17 +377,16 @@ impl MethodRouterFactory {
                         let hooks = hooks_clone.clone();
                         async move {
                             let (parts, body) = req.into_parts();
-                                let request_data =
-                                    request_extraction::create_request_data_with_body(
-                                        &parts,
-                                        HashMap::new(),
-                                        body,
-                                        include_raw_query_params,
-                                        include_query_params_json,
-                                        include_headers,
-                                        include_cookies,
-                                    )
-                                        .await?;
+                            let request_data = request_extraction::create_request_data_with_body(
+                                &parts,
+                                HashMap::new(),
+                                body,
+                                include_raw_query_params,
+                                include_query_params_json,
+                                include_headers,
+                                include_cookies,
+                            )
+                            .await?;
                             let mut req = Request::from_parts(
                                 parts,
                                 Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
@@ -426,17 +406,16 @@ impl MethodRouterFactory {
                         let hooks = hooks_clone.clone();
                         async move {
                             let (parts, body) = req.into_parts();
-                            let request_data =
-                                request_extraction::create_request_data_with_body(
-                                    &parts,
-                                    HashMap::new(),
-                                    body,
-                                    include_raw_query_params,
-                                    include_query_params_json,
-                                    include_headers,
-                                    include_cookies,
-                                )
-                                .await?;
+                            let request_data = request_extraction::create_request_data_with_body(
+                                &parts,
+                                HashMap::new(),
+                                body,
+                                include_raw_query_params,
+                                include_query_params_json,
+                                include_headers,
+                                include_cookies,
+                            )
+                            .await?;
                             let mut req = Request::from_parts(
                                 parts,
                                 Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),
@@ -456,17 +435,16 @@ impl MethodRouterFactory {
                         let hooks = hooks_clone.clone();
                         async move {
                             let (parts, body) = req.into_parts();
-                            let request_data =
-                                request_extraction::create_request_data_with_body(
-                                    &parts,
-                                    HashMap::new(),
-                                    body,
-                                    include_raw_query_params,
-                                    include_query_params_json,
-                                    include_headers,
-                                    include_cookies,
-                                )
-                                .await?;
+                            let request_data = request_extraction::create_request_data_with_body(
+                                &parts,
+                                HashMap::new(),
+                                body,
+                                include_raw_query_params,
+                                include_query_params_json,
+                                include_headers,
+                                include_cookies,
+                            )
+                            .await?;
                             let mut req = Request::from_parts(
                                 parts,
                                 Body::from(request_data.raw_body.clone().unwrap_or_else(Bytes::new)),

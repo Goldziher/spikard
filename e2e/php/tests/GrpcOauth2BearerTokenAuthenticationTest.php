@@ -1,0 +1,33 @@
+    public function testGrpcOauth2BearerTokenAuthentication(): void
+    {
+        // Tests OAuth2 Bearer token authentication. Validates token validation and scope checking.
+
+        // Build gRPC request from fixture
+        $metadata = ["authorization" => "Bearer ya29.a0AfH6SMBx...", "content-type" => "application/grpc"];
+        $requestPayload = json_encode(["scope" => "read:users"]);
+
+        $request = new \Spikard\Grpc\GrpcRequest(
+            serviceName: 'example.v1.OAuth2Service',
+            methodName: 'CheckScope',
+            payload: $requestPayload,
+            metadata: $metadata,
+        );
+
+        // Call handler
+        /** @var \Spikard\Grpc\GrpcResponse $response */
+        $response = handleGrpcOauth2BearerTokenAuthentication($request);
+
+        // Verify response
+        /** @var string $statusCode */
+        $statusCode = $response->statusCode;
+        $this->assertSame('OK', $statusCode);
+
+        /** @var string $payload */
+        $payload = $response->payload;
+        $this->assertEquals(json_encode(["granted" => true, "token_info" => "oauth2_token"]), $payload);
+
+        /** @var mixed $metadata */
+        $metadata = $response->metadata;
+        $this->assertNotNull($metadata);
+    }
+

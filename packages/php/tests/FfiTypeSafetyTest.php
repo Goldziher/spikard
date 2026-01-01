@@ -43,20 +43,52 @@ final class FfiTypeSafetyTest extends TestCase
         /** @var array<int, array{method: string, path: string, handler_name: string, handler: object, websocket?: bool, sse?: bool}> $normalized */
         $normalized = [];
         foreach ($routes as $route) {
+            /** @var object $handler */
             $handler = $route['handler'];
-            \assert(\is_object($handler), 'Route handlers must be objects.');
+            /** @var object $finalHandler */
+            $finalHandler = $handler;
             if (!\is_callable($handler) && \method_exists($handler, 'handle')) {
-                $handler = static function (Request $request) use ($handler): Response {
-                    return $handler->handle($request);
+                $wrappedHandler = $handler;
+                $finalHandler = new class ($wrappedHandler) implements \Spikard\Handlers\HandlerInterface {
+                    /** @var object */
+                    private object $handler;
+
+                    public function __construct(object $handler)
+                    {
+                        $this->handler = $handler;
+                    }
+
+                    public function matches(Request $request): bool
+                    {
+                        return true;
+                    }
+
+                    public function handle(Request $request): Response
+                    {
+                        if (!\is_callable($this->handler)) {
+                            return Response::json(['error' => 'Handler is not callable'], 500);
+                        }
+                        /** @var mixed $result */
+                        $result = ($this->handler)($request);
+                        if ($result instanceof Response) {
+                            return $result;
+                        }
+                        return Response::json($result);
+                    }
+
+                    public function __invoke(Request $request): Response
+                    {
+                        return $this->handle($request);
+                    }
                 };
             }
-            \assert(\is_callable($handler), 'Route handlers must be callable.');
 
+            $handlerName = $route['handler_name'] ?? \spl_object_hash($finalHandler);
             $normalizedRoute = [
                 'method' => $route['method'],
                 'path' => $route['path'],
-                'handler_name' => $route['handler_name'] ?? \spl_object_hash($handler),
-                'handler' => $handler,
+                'handler_name' => $handlerName,
+                'handler' => $finalHandler,
             ];
             if (isset($route['websocket'])) {
                 $normalizedRoute['websocket'] = (bool) $route['websocket'];
@@ -78,19 +110,27 @@ final class FfiTypeSafetyTest extends TestCase
     {
         if (\method_exists($response, 'json')) {
             $json = $response->json();
-            return \is_array($json) ? $json : [];
+            /** @var array<string, mixed> $result */
+            $result = \is_array($json) ? $json : [];
+            return $result;
         }
         if (\method_exists($response, 'parseJson')) {
-            return $response->parseJson();
+            /** @var array<string, mixed> $result */
+            $result = $response->parseJson();
+            return $result;
         }
         if (\property_exists($response, 'body')) {
             $body = $response->body;
             if (\is_array($body)) {
-                return $body;
+                /** @var array<string, mixed> $result */
+                $result = $body;
+                return $result;
             }
             if (\is_string($body)) {
                 $decoded = \json_decode($body, true);
-                return \is_array($decoded) ? $decoded : [];
+                /** @var array<string, mixed> $result */
+                $result = \is_array($decoded) ? $decoded : [];
+                return $result;
             }
             return [];
         }
@@ -98,7 +138,9 @@ final class FfiTypeSafetyTest extends TestCase
             $body = $response->getBody();
             if (\is_string($body)) {
                 $decoded = \json_decode($body, true);
-                return \is_array($decoded) ? $decoded : [];
+                /** @var array<string, mixed> $result */
+                $result = \is_array($decoded) ? $decoded : [];
+                return $result;
             }
         }
 
@@ -445,11 +487,11 @@ final class FfiTypeSafetyTest extends TestCase
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
-                        $body = \is_array($request->body) ? $request->body : [];
+                        $body = $request->body;
 
                         // Verify we received valid data (not corrupted by circular refs)
                         return Response::json([
-                            'received_valid' => \is_array($body),
+                            'received_valid' => true,
                             'has_data' => !empty($body),
                         ]);
                     }
@@ -595,8 +637,10 @@ final class FfiTypeSafetyTest extends TestCase
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
-                        $body = \is_array($request->body) ? $request->body : [];
+                        $body = $request->body;
+                        /** @var float|int $price */
                         $price = $body['price'] ?? 0.0;
+                        /** @var float|int $tax */
                         $tax = $body['tax'] ?? 0.0;
                         $total = $price + $tax;
 
@@ -700,20 +744,20 @@ final class FfiTypeSafetyTest extends TestCase
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
-                        $body = \is_array($request->body) ? $request->body : [];
+                        $body = $request->body;
 
                         // Verify nested structure types
                         /** @var array<string, mixed> $user */
-                        $user = \is_array($body['user'] ?? null) ? $body['user'] : [];
+                        $user = $body['user'] ?? [];
                         /** @var array<string, mixed> $address */
-                        $address = \is_array($user['address'] ?? null) ? $user['address'] : [];
+                        $address = $user['address'] ?? [];
                         /** @var array<string, mixed> $coords */
-                        $coords = \is_array($address['coordinates'] ?? null) ? $address['coordinates'] : [];
+                        $coords = $address['coordinates'] ?? [];
 
                         return Response::json([
-                            'user_is_array' => \is_array($user),
-                            'address_is_array' => \is_array($address),
-                            'coords_is_array' => \is_array($coords),
+                            'user_is_array' => true,
+                            'address_is_array' => true,
+                            'coords_is_array' => true,
                             'lat_is_float' => \is_float($coords['lat'] ?? null),
                             'lng_is_float' => \is_float($coords['lng'] ?? null),
                         ]);

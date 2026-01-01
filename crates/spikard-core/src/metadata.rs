@@ -181,11 +181,7 @@ pub fn parse_parameter_schema(schema: &Value) -> Result<Vec<ParameterMetadata>, 
     let required: Vec<String> = schema
         .get("required")
         .and_then(|r| r.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_str().map(String::from))
-                .collect()
-        })
+        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
         .unwrap_or_default();
 
     for (param_name, param_schema) in props {
@@ -197,10 +193,7 @@ pub fn parse_parameter_schema(schema: &Value) -> Result<Vec<ParameterMetadata>, 
             .and_then(|s| s.parse().ok())
             .unwrap_or(ParameterSource::Query);
 
-        let schema_type = param_schema
-            .get("type")
-            .and_then(|t| t.as_str())
-            .map(String::from);
+        let schema_type = param_schema.get("type").and_then(|t| t.as_str()).map(String::from);
 
         params.push(ParameterMetadata {
             name: param_name.clone(),
@@ -242,11 +235,7 @@ pub fn validate_metadata(metadata: &ExtractedRouteMetadata) -> Result<(), Vec<St
         }
     }
 
-    if errors.is_empty() {
-        Ok(())
-    } else {
-        Err(errors)
-    }
+    if errors.is_empty() { Ok(()) } else { Err(errors) }
 }
 
 /// Merge path parameters with parameter schema

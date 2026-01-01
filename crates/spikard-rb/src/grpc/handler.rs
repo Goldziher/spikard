@@ -292,12 +292,24 @@ mod tests {
         use spikard_bindings_shared::grpc_metadata::extract_metadata_to_hashmap;
 
         let mut metadata = MetadataMap::new();
-        metadata.insert("content-type", "application/grpc".parse().unwrap());
-        metadata.insert("authorization", "Bearer token123".parse().unwrap());
+        metadata.insert(
+            "content-type",
+            "application/grpc".parse().expect("Valid metadata value"),
+        );
+        metadata.insert(
+            "authorization",
+            "Bearer token123".parse().expect("Valid metadata value"),
+        );
 
         let extracted = extract_metadata_to_hashmap(&metadata, false);
-        assert_eq!(extracted.get("content-type").unwrap(), "application/grpc");
-        assert_eq!(extracted.get("authorization").unwrap(), "Bearer token123");
+        assert_eq!(
+            extracted.get("content-type").expect("content-type header"),
+            "application/grpc"
+        );
+        assert_eq!(
+            extracted.get("authorization").expect("authorization header"),
+            "Bearer token123"
+        );
     }
 
     #[test]
@@ -309,7 +321,7 @@ mod tests {
 
         let grpc_response = response.into_grpc_response();
         assert!(grpc_response.is_ok());
-        let grpc_response = grpc_response.unwrap();
+        let grpc_response = grpc_response.expect("Valid grpc response");
         assert_eq!(grpc_response.payload, Bytes::from("test response"));
     }
 
@@ -325,7 +337,7 @@ mod tests {
 
         let grpc_response = response.into_grpc_response();
         assert!(grpc_response.is_ok());
-        let grpc_response = grpc_response.unwrap();
+        let grpc_response = grpc_response.expect("Valid grpc response");
         assert!(!grpc_response.metadata.is_empty());
     }
 

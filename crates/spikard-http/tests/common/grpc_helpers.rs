@@ -82,7 +82,7 @@ impl GrpcTestServer {
     ///
     /// # Arguments
     ///
-    /// * `url` - The base URL for the server (e.g., "http://localhost:8080")
+    /// * `url` - The base URL for the server (e.g., <http://localhost:8080>)
     pub fn with_url(url: impl Into<String>) -> Self {
         Self {
             handlers: Arc::new(std::sync::Mutex::new(Vec::new())),
@@ -102,7 +102,7 @@ impl GrpcTestServer {
     /// let mut server = GrpcTestServer::new();
     /// server.register_service(Arc::new(MyHandler));
     /// ```
-    pub fn register_service(&mut self, handler: Arc<dyn GrpcHandler>) {
+    pub fn register_service(&self, handler: Arc<dyn GrpcHandler>) {
         let mut handlers = self.handlers.lock().unwrap();
         handlers.push(handler);
     }
@@ -167,7 +167,7 @@ pub struct GrpcTestClient;
 
 impl GrpcTestClient {
     /// Create a new test client
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }
@@ -179,7 +179,7 @@ impl Default for GrpcTestClient {
 }
 
 /// Factory function to create a gRPC test client
-pub fn create_grpc_test_client() -> GrpcTestClient {
+pub const fn create_grpc_test_client() -> GrpcTestClient {
     GrpcTestClient::new()
 }
 
@@ -193,7 +193,7 @@ pub fn create_grpc_test_client() -> GrpcTestClient {
 ///
 /// * `server` - The test server instance
 /// * `service` - Fully qualified service name (e.g., "mypackage.UserService")
-/// * `method` - Method name (e.g., "GetUser")
+/// * `method` - Method name (e.g., `GetUser`)
 /// * `payload` - Serialized protobuf message bytes
 /// * `metadata` - gRPC metadata (headers) to include in the request
 ///
@@ -227,7 +227,7 @@ pub async fn send_unary_request(
     let handler = server.get_handler(service).ok_or_else(|| {
         Box::new(std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            format!("Service not found: {}", service),
+            format!("Service not found: {service}"),
         )) as Box<dyn std::error::Error>
     })?;
 
@@ -261,13 +261,12 @@ pub async fn send_unary_request(
 /// let response = send_unary_request(...).await?;
 /// assert_grpc_response(response, json!({"id": 1, "name": "Alice"}));
 /// ```
-pub fn assert_grpc_response(response: GrpcResponseData, expected: Value) {
+pub fn assert_grpc_response(response: &GrpcResponseData, expected: &Value) {
     let actual = serde_json::from_slice::<Value>(&response.payload).expect("Failed to parse response payload as JSON");
 
     assert_eq!(
-        actual, expected,
-        "Response payload mismatch.\nExpected: {}\nActual: {}",
-        expected, actual
+        actual, *expected,
+        "Response payload mismatch.\nExpected: {expected}\nActual: {actual}",
     );
 }
 
@@ -282,7 +281,7 @@ pub fn assert_grpc_response(response: GrpcResponseData, expected: Value) {
 /// # Arguments
 ///
 /// * `result` - The gRPC handler result
-/// * `expected_status` - The expected tonic::Code
+/// * `expected_status` - The expected `tonic::Code`
 ///
 /// # Example
 ///
@@ -303,7 +302,7 @@ pub fn assert_grpc_status(result: &GrpcHandlerResult, expected_status: Code) {
             );
         }
         Ok(_) => {
-            panic!("Expected error status {:?} but got success response", expected_status);
+            panic!("Expected error status {expected_status:?} but got success response");
         }
     }
 }
@@ -437,11 +436,11 @@ pub fn create_test_metadata() -> MetadataMap {
 
 /// Create test metadata with custom headers
 ///
-/// Allows building metadata from a HashMap of key-value pairs.
+/// Allows building metadata from a `HashMap` of key-value pairs.
 ///
 /// # Arguments
 ///
-/// * `headers` - HashMap of header names to values (String-based)
+/// * `headers` - `HashMap` of header names to values (String-based)
 ///
 /// # Example
 ///
@@ -466,7 +465,7 @@ pub fn create_test_metadata_with_headers(
     Ok(metadata)
 }
 
-/// Add authentication metadata to an existing MetadataMap
+/// Add authentication metadata to an existing `MetadataMap`
 ///
 /// Adds a standard Bearer token authorization header.
 ///
@@ -482,12 +481,12 @@ pub fn create_test_metadata_with_headers(
 /// add_auth_metadata(&mut metadata, "secret_token_123");
 /// ```
 pub fn add_auth_metadata(metadata: &mut MetadataMap, token: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let auth_value = format!("Bearer {}", token);
+    let auth_value = format!("Bearer {token}");
     metadata.insert("authorization", auth_value.parse()?);
     Ok(())
 }
 
-/// Add custom metadata header to an existing MetadataMap
+/// Add custom metadata header to an existing `MetadataMap`
 ///
 /// # Arguments
 ///
@@ -536,8 +535,8 @@ impl MockGrpcHandler {
     }
 
     /// Create a mock handler that returns JSON
-    pub fn with_json(service_name: &'static str, json: Value) -> Self {
-        let bytes = serde_json::to_vec(&json).unwrap_or_default();
+    pub fn with_json(service_name: &'static str, json: &Value) -> Self {
+        let bytes = serde_json::to_vec(json).unwrap_or_default();
         Self::new(service_name, Bytes::from(bytes))
     }
 }
@@ -634,6 +633,22 @@ impl GrpcHandler for EchoMockHandler {
 mod tests {
     use super::*;
 
+    // Mock handler for testing gRPC functionality
+    struct TestHandler;
+    impl GrpcHandler for TestHandler {
+        fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+            Box::pin(async {
+                Ok(GrpcResponseData {
+                    payload: serde_json::to_vec(&json!({"result": "success"})).unwrap().into(),
+                    metadata: MetadataMap::new(),
+                })
+            })
+        }
+        fn service_name(&self) -> &'static str {
+            "test.TestService"
+        }
+    }
+
     #[test]
     fn test_grpc_test_server_new() {
         let server = GrpcTestServer::new();
@@ -650,7 +665,7 @@ mod tests {
 
     #[test]
     fn test_grpc_test_server_register_service() {
-        let mut server = GrpcTestServer::new();
+        let server = GrpcTestServer::new();
         let handler = Arc::new(MockGrpcHandler::new("test.Service", "response"));
 
         server.register_service(handler);
@@ -661,7 +676,7 @@ mod tests {
 
     #[test]
     fn test_grpc_test_server_register_multiple_services() {
-        let mut server = GrpcTestServer::new();
+        let server = GrpcTestServer::new();
         let handler1 = Arc::new(MockGrpcHandler::new("service1", "response1"));
         let handler2 = Arc::new(MockGrpcHandler::new("service2", "response2"));
 
@@ -697,7 +712,7 @@ mod tests {
     #[tokio::test]
     async fn test_mock_grpc_handler_with_json() {
         let json_response = json!({"id": 1, "name": "Alice"});
-        let handler = MockGrpcHandler::with_json("test.UserService", json_response.clone());
+        let handler = MockGrpcHandler::with_json("test.UserService", &json_response);
 
         let request = GrpcRequestData {
             service_name: "test.UserService".to_string(),
@@ -899,7 +914,7 @@ mod tests {
         };
 
         let expected = json!({"id": 1, "name": "Alice"});
-        assert_grpc_response(response, expected);
+        assert_grpc_response(&response, &expected);
     }
 
     #[test]
@@ -936,24 +951,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_send_unary_request_with_mock_handler() {
-        let mut server = GrpcTestServer::new();
+        let server = GrpcTestServer::new();
         let _response_payload = json!({"result": "success"});
-
-        // Create a custom handler that reports the correct service name
-        struct TestHandler;
-        impl GrpcHandler for TestHandler {
-            fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
-                Box::pin(async {
-                    Ok(GrpcResponseData {
-                        payload: serde_json::to_vec(&json!({"result": "success"})).unwrap().into(),
-                        metadata: MetadataMap::new(),
-                    })
-                })
-            }
-            fn service_name(&self) -> &'static str {
-                "test.TestService"
-            }
-        }
 
         server.register_service(Arc::new(TestHandler));
 
@@ -1007,7 +1006,6 @@ mod tests {
     #[test]
     fn test_grpc_test_client_creation() {
         let _client = create_grpc_test_client();
-        let _default_client = GrpcTestClient::default();
         let _new_client = GrpcTestClient::new();
         // Just ensure it can be created without panicking
     }

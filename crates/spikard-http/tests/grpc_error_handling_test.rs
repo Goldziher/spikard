@@ -1,23 +1,23 @@
 //! Comprehensive gRPC error handling tests
 //!
 //! Tests all 17 standard gRPC status codes including:
-//! - OK (0)
-//! - CANCELLED (1)
-//! - UNKNOWN (2)
-//! - INVALID_ARGUMENT (3)
-//! - DEADLINE_EXCEEDED (4)
-//! - NOT_FOUND (5)
-//! - ALREADY_EXISTS (6)
-//! - PERMISSION_DENIED (7)
-//! - RESOURCE_EXHAUSTED (8)
-//! - FAILED_PRECONDITION (9)
-//! - ABORTED (10)
-//! - OUT_OF_RANGE (11)
-//! - UNIMPLEMENTED (12)
-//! - INTERNAL (13)
-//! - UNAVAILABLE (14)
-//! - DATA_LOSS (15)
-//! - UNAUTHENTICATED (16)
+//! - `OK` (0)
+//! - `CANCELLED` (1)
+//! - `UNKNOWN` (2)
+//! - `INVALID_ARGUMENT` (3)
+//! - `DEADLINE_EXCEEDED` (4)
+//! - `NOT_FOUND` (5)
+//! - `ALREADY_EXISTS` (6)
+//! - `PERMISSION_DENIED` (7)
+//! - `RESOURCE_EXHAUSTED` (8)
+//! - `FAILED_PRECONDITION` (9)
+//! - `ABORTED` (10)
+//! - `OUT_OF_RANGE` (11)
+//! - `UNIMPLEMENTED` (12)
+//! - `INTERNAL` (13)
+//! - `UNAVAILABLE` (14)
+//! - `DATA_LOSS` (15)
+//! - `UNAUTHENTICATED` (16)
 
 use crate::common::grpc_helpers::*;
 use bytes::Bytes;
@@ -29,8 +29,6 @@ mod common;
 /// Test OK status (success case)
 #[tokio::test]
 async fn test_status_ok_success() {
-    let mut server = GrpcTestServer::new();
-
     struct SuccessHandler;
     impl spikard_http::grpc::GrpcHandler for SuccessHandler {
         fn call(
@@ -50,6 +48,8 @@ async fn test_status_ok_success() {
         }
     }
 
+    let server = GrpcTestServer::new();
+
     server.register_service(Arc::new(SuccessHandler));
 
     let response = send_unary_request(
@@ -63,13 +63,13 @@ async fn test_status_ok_success() {
 
     assert!(response.is_ok());
     let resp = response.unwrap();
-    assert_grpc_response(resp, serde_json::json!({"result": "success"}));
+    assert_grpc_response(&resp, &serde_json::json!({"result": "success"}));
 }
 
 /// Test CANCELLED status code
 #[tokio::test]
 async fn test_status_cancelled() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.CancelledService",
@@ -94,7 +94,7 @@ async fn test_status_cancelled() {
 /// Test UNKNOWN status code
 #[tokio::test]
 async fn test_status_unknown() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.UnknownService",
@@ -115,10 +115,10 @@ async fn test_status_unknown() {
     assert!(result.is_err());
 }
 
-/// Test INVALID_ARGUMENT status code
+/// Test `INVALID_ARGUMENT` status code
 #[tokio::test]
 async fn test_status_invalid_argument() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.ValidationService",
@@ -140,10 +140,10 @@ async fn test_status_invalid_argument() {
     // Error verified
 }
 
-/// Test DEADLINE_EXCEEDED status code
+/// Test `DEADLINE_EXCEEDED` status code
 #[tokio::test]
 async fn test_status_deadline_exceeded() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.TimeoutService",
@@ -165,10 +165,10 @@ async fn test_status_deadline_exceeded() {
     // Error verified
 }
 
-/// Test NOT_FOUND status code
+/// Test `NOT_FOUND` status code
 #[tokio::test]
 async fn test_status_not_found() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.NotFoundService",
@@ -190,10 +190,10 @@ async fn test_status_not_found() {
     // Error verified
 }
 
-/// Test ALREADY_EXISTS status code
+/// Test `ALREADY_EXISTS` status code
 #[tokio::test]
 async fn test_status_already_exists() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.CreateService",
@@ -215,10 +215,10 @@ async fn test_status_already_exists() {
     // Error verified
 }
 
-/// Test PERMISSION_DENIED status code
+/// Test `PERMISSION_DENIED` status code
 #[tokio::test]
 async fn test_status_permission_denied() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.AuthService",
@@ -240,10 +240,10 @@ async fn test_status_permission_denied() {
     // Error verified
 }
 
-/// Test RESOURCE_EXHAUSTED status code
+/// Test `RESOURCE_EXHAUSTED` status code
 #[tokio::test]
 async fn test_status_resource_exhausted() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.QuotaService",
@@ -265,10 +265,10 @@ async fn test_status_resource_exhausted() {
     // Error verified
 }
 
-/// Test FAILED_PRECONDITION status code
+/// Test `FAILED_PRECONDITION` status code
 #[tokio::test]
 async fn test_status_failed_precondition() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.OrderService",
@@ -290,10 +290,10 @@ async fn test_status_failed_precondition() {
     // Error verified
 }
 
-/// Test ABORTED status code
+/// Test `ABORTED` status code
 #[tokio::test]
 async fn test_status_aborted() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.TransactionService",
@@ -315,10 +315,10 @@ async fn test_status_aborted() {
     // Error verified
 }
 
-/// Test OUT_OF_RANGE status code
+/// Test `OUT_OF_RANGE` status code
 #[tokio::test]
 async fn test_status_out_of_range() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.PageService",
@@ -340,10 +340,10 @@ async fn test_status_out_of_range() {
     // Error verified
 }
 
-/// Test UNIMPLEMENTED status code
+/// Test `UNIMPLEMENTED` status code
 #[tokio::test]
 async fn test_status_unimplemented() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.ExperimentalService",
@@ -365,10 +365,10 @@ async fn test_status_unimplemented() {
     // Error verified
 }
 
-/// Test INTERNAL status code
+/// Test `INTERNAL` status code
 #[tokio::test]
 async fn test_status_internal_error() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.DatabaseService",
@@ -390,10 +390,10 @@ async fn test_status_internal_error() {
     // Error verified
 }
 
-/// Test UNAVAILABLE status code
+/// Test `UNAVAILABLE` status code
 #[tokio::test]
 async fn test_status_unavailable() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.ExternalService",
@@ -415,10 +415,10 @@ async fn test_status_unavailable() {
     // Error verified
 }
 
-/// Test DATA_LOSS status code
+/// Test `DATA_LOSS` status code
 #[tokio::test]
 async fn test_status_data_loss() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.FileService",
@@ -440,10 +440,10 @@ async fn test_status_data_loss() {
     // Error verified
 }
 
-/// Test UNAUTHENTICATED status code
+/// Test `UNAUTHENTICATED` status code
 #[tokio::test]
 async fn test_status_unauthenticated() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.SecureService",
@@ -468,7 +468,7 @@ async fn test_status_unauthenticated() {
 /// Test error message propagation
 #[tokio::test]
 async fn test_error_message_propagation() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let detailed_message = "Validation failed: Password must be at least 12 characters. \
                              Current length: 8. Special characters required.";
@@ -494,7 +494,7 @@ async fn test_error_message_propagation() {
 /// Test multiple error responses in sequence
 #[tokio::test]
 async fn test_multiple_error_responses() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     // Register service that returns INVALID_ARGUMENT
     let handler1 = Arc::new(ErrorMockHandler::new(
@@ -557,7 +557,7 @@ async fn test_multiple_error_responses() {
 /// Test error with empty message
 #[tokio::test]
 async fn test_error_with_empty_message() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new("test.EmptyErrorService", Code::Internal, ""));
     server.register_service(handler);
@@ -577,7 +577,7 @@ async fn test_error_with_empty_message() {
 /// Test error with very long message
 #[tokio::test]
 async fn test_error_with_long_message() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let long_message =
         "Error occurred during processing: ".to_string() + &"detailed reason ".repeat(50) + "Please contact support.";
@@ -604,8 +604,6 @@ async fn test_error_with_long_message() {
 /// Test handler conversion of custom errors to gRPC status
 #[tokio::test]
 async fn test_handler_error_to_status_conversion() {
-    let mut server = GrpcTestServer::new();
-
     struct ValidationHandler;
     impl spikard_http::grpc::GrpcHandler for ValidationHandler {
         fn call(
@@ -634,6 +632,8 @@ async fn test_handler_error_to_status_conversion() {
             "test.ValidationService"
         }
     }
+
+    let server = GrpcTestServer::new();
 
     server.register_service(Arc::new(ValidationHandler));
 

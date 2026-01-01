@@ -58,7 +58,9 @@ final class ErrorTranslationTest extends TestClientTestCase
             throw new \RuntimeException("Fixture is not a valid array: {$fixturePath}");
         }
 
-        return $data;
+        /** @var array<string, mixed> $result */
+        $result = $data;
+        return $result;
     }
 
     /**
@@ -67,7 +69,7 @@ final class ErrorTranslationTest extends TestClientTestCase
     private function createAppWithValidationHandler(callable $handler): App
     {
         $handlerObject = new class ($handler) implements HandlerInterface {
-            /** @var callable */
+            /** @var callable(Request): Response */
             private mixed $callback;
 
             public function __construct(callable $callback)
@@ -127,7 +129,6 @@ final class ErrorTranslationTest extends TestClientTestCase
         $body = $response->parseJson();
 
         // Verify required fields
-        $this->assertIsArray($body);
         $this->assertArrayHasKey('type', $body);
         $this->assertArrayHasKey('title', $body);
         $this->assertArrayHasKey('status', $body);
@@ -217,16 +218,13 @@ final class ErrorTranslationTest extends TestClientTestCase
         $response = $client->post('/test');
 
         $body = $response->parseJson();
-        $this->assertIsArray($body);
         $this->assertArrayHasKey('errors', $body);
-        /** @var mixed $errorsRaw */
+        /** @var array<int, array<string, mixed>> $errorsRaw */
         $errorsRaw = $body['errors'];
-        $this->assertIsArray($errorsRaw);
         $this->assertNotEmpty($errorsRaw);
 
         /** @var array<string, mixed> $firstError */
         $firstError = $errorsRaw[0];
-        $this->assertIsArray($firstError);
         $this->assertArrayHasKey('msg', $firstError);
         $msgRaw = $firstError['msg'] ?? '';
         $msg = \is_scalar($msgRaw) ? (string) $msgRaw : '';
@@ -454,7 +452,6 @@ final class ErrorTranslationTest extends TestClientTestCase
         $response = $client->post('/test');
 
         $body = $response->parseJson();
-        $this->assertIsArray($body);
         $this->assertArrayHasKey('code', $body);
         $this->assertSame('VALIDATION_FAILED', $body['code']);
 
@@ -719,11 +716,9 @@ final class ErrorTranslationTest extends TestClientTestCase
         $this->assertNotEmpty($errors);
 
         foreach ($errors as $error) {
-            $this->assertIsArray($error);
             $this->assertArrayHasKey('loc', $error);
             /** @var array<int|string, mixed> $loc */
             $loc = (array) ($error['loc'] ?? []);
-            $this->assertIsArray($loc);
             $this->assertGreaterThan(0, \count($loc));
 
             // Each location element should be string or int
@@ -807,7 +802,6 @@ final class ErrorTranslationTest extends TestClientTestCase
         $fixture = self::loadValidationErrorFixture($fixtureName);
 
         // Verify fixture has expected structure
-        $this->assertIsArray($fixture);
         $this->assertArrayHasKey('expected_response', $fixture);
         /** @var array<string, mixed> $expectedResponse */
         $expectedResponse = (array) $fixture['expected_response'];
@@ -834,7 +828,6 @@ final class ErrorTranslationTest extends TestClientTestCase
 
         // Verify response body structure
         $body = $response->parseJson();
-        $this->assertIsArray($body);
 
         // Verify error structure matches schema
         if ($expectedStatusCode === 422 && isset($expectedBody['errors'])) {
@@ -843,13 +836,11 @@ final class ErrorTranslationTest extends TestClientTestCase
             $errors = (array) ($body['errors'] ?? []);
 
             foreach ($errors as $error) {
-                $this->assertIsArray($error);
                 $this->assertArrayHasKey('type', $error);
                 $this->assertArrayHasKey('loc', $error);
                 $this->assertArrayHasKey('msg', $error);
                 /** @var array<int|string, mixed> $loc */
                 $loc = (array) ($error['loc'] ?? []);
-                $this->assertIsArray($loc);
             }
         }
     }

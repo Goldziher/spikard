@@ -363,9 +363,9 @@ RSpec.describe 'HTTP Error Response Formatting and Translation' do
     before do
       app.post('/items') do |_params, _query, body|
         error_context = {}
-        error_context = { constraint: 'positive', actual_value: body[:price] } if body[:price].to_i < 0
+        error_context = { constraint: 'positive', actual_value: body[:price] } if body[:price].to_i.negative?
 
-        if body[:price].to_i < 0
+        if body[:price].to_i.negative?
           Spikard::Response.new(
             status_code: 422,
             headers: { 'Content-Type' => 'application/json' },
@@ -512,7 +512,7 @@ RSpec.describe 'HTTP Error Response Formatting and Translation' do
       json = response.json
       # Error should be generic enough for external consumption
       expect(json['detail']).to be_a(String)
-      expect(json['detail'].length).to be > 0
+      expect(json['detail'].length).to be.positive?
     end
   end
 end

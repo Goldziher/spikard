@@ -623,7 +623,9 @@ final class App
     {
         $cacheKey = $method->getDeclaringClass()->getName() . '::' . $method->getName() . '|' . $path;
         if (isset(self::$methodSchemaCache[$cacheKey])) {
-            return self::$methodSchemaCache[$cacheKey];
+            /** @var array{request: array<string, mixed>|null, parameter: array<string, mixed>|null} $cached */
+            $cached = self::$methodSchemaCache[$cacheKey];
+            return $cached;
         }
 
         $pathParams = $this->extractPathParams($path);

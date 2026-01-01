@@ -3,7 +3,7 @@
 //! Provides Python access to Rust-based metadata extraction and validation functions.
 
 use pyo3::prelude::*;
-use spikard_core::metadata::{extract_path_parameters, merge_parameters, parse_parameter_schema, ParameterMetadata};
+use spikard_core::metadata::{ParameterMetadata, extract_path_parameters, merge_parameters, parse_parameter_schema};
 
 use crate::conversion::python_to_json;
 
@@ -84,10 +84,7 @@ impl PyParameterMetadata {
 #[pyfunction]
 fn extract_path_params_py(path: &str) -> PyResult<Vec<PyParameterMetadata>> {
     let params = extract_path_parameters(path);
-    Ok(params
-        .into_iter()
-        .map(|p| PyParameterMetadata { inner: p })
-        .collect())
+    Ok(params.into_iter().map(|p| PyParameterMetadata { inner: p }).collect())
 }
 
 /// Parse parameter schema from JSON Schema
@@ -103,10 +100,7 @@ fn parse_parameter_schema_py(py: Python<'_>, schema_dict: &Bound<'_, PyAny>) -> 
     let params = parse_parameter_schema(&schema_value)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to parse schema: {}", e)))?;
 
-    Ok(params
-        .into_iter()
-        .map(|p| PyParameterMetadata { inner: p })
-        .collect())
+    Ok(params.into_iter().map(|p| PyParameterMetadata { inner: p }).collect())
 }
 
 /// Merge path parameters with schema parameters
@@ -130,10 +124,7 @@ fn merge_params_py(
     let merged = merge_parameters(path_params, schema_value.as_ref())
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to merge parameters: {}", e)))?;
 
-    Ok(merged
-        .into_iter()
-        .map(|p| PyParameterMetadata { inner: p })
-        .collect())
+    Ok(merged.into_iter().map(|p| PyParameterMetadata { inner: p }).collect())
 }
 
 /// Register metadata functions with Python module

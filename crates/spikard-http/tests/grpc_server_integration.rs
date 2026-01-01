@@ -17,9 +17,6 @@ mod common;
 /// Test successful unary RPC with JSON payload
 #[tokio::test]
 async fn test_unary_rpc_success_with_json_payload() {
-    // Arrange: Create test server and handler
-    let mut server = GrpcTestServer::new();
-
     // Create a custom handler with proper service name
     struct UserServiceHandler;
     impl spikard_http::grpc::GrpcHandler for UserServiceHandler {
@@ -46,6 +43,9 @@ async fn test_unary_rpc_success_with_json_payload() {
         }
     }
 
+    // Arrange: Create test server and handler
+    let server = GrpcTestServer::new();
+
     server.register_service(Arc::new(UserServiceHandler));
 
     // Act: Create and send request
@@ -64,8 +64,8 @@ async fn test_unary_rpc_success_with_json_payload() {
 
     // Assert
     assert_grpc_response(
-        response,
-        json!({
+        &response,
+        &json!({
             "id": 123,
             "name": "Alice Johnson",
             "email": "alice@example.com"
@@ -76,9 +76,6 @@ async fn test_unary_rpc_success_with_json_payload() {
 /// Test server routing with multiple services
 #[tokio::test]
 async fn test_server_routes_to_correct_service() {
-    // Arrange: Register multiple services
-    let mut server = GrpcTestServer::new();
-
     struct UserServiceHandler;
     impl spikard_http::grpc::GrpcHandler for UserServiceHandler {
         fn call(
@@ -117,6 +114,9 @@ async fn test_server_routes_to_correct_service() {
         }
     }
 
+    // Arrange: Register multiple services
+    let server = GrpcTestServer::new();
+
     server.register_service(Arc::new(UserServiceHandler));
     server.register_service(Arc::new(OrderServiceHandler));
 
@@ -131,7 +131,7 @@ async fn test_server_routes_to_correct_service() {
     .await
     .expect("UserService request failed");
 
-    assert_grpc_response(user_response, json!({"service": "UserService"}));
+    assert_grpc_response(&user_response, &json!({"service": "UserService"}));
 
     // Act & Assert: Route to OrderService
     let order_response = send_unary_request(
@@ -144,28 +144,28 @@ async fn test_server_routes_to_correct_service() {
     .await
     .expect("OrderService request failed");
 
-    assert_grpc_response(order_response, json!({"service": "OrderService"}));
+    assert_grpc_response(&order_response, &json!({"service": "OrderService"}));
 }
 
 /// Test server correctly counts registered services
 #[tokio::test]
 async fn test_server_service_registration_count() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     assert_eq!(server.service_count(), 0);
 
     // Register first service
-    let handler1 = Arc::new(MockGrpcHandler::with_json("service.One", json!({"id": 1})));
+    let handler1 = Arc::new(MockGrpcHandler::with_json("service.One", &json!({"id": 1})));
     server.register_service(handler1);
     assert_eq!(server.service_count(), 1);
 
     // Register second service
-    let handler2 = Arc::new(MockGrpcHandler::with_json("service.Two", json!({"id": 2})));
+    let handler2 = Arc::new(MockGrpcHandler::with_json("service.Two", &json!({"id": 2})));
     server.register_service(handler2);
     assert_eq!(server.service_count(), 2);
 
     // Register third service
-    let handler3 = Arc::new(MockGrpcHandler::with_json("service.Three", json!({"id": 3})));
+    let handler3 = Arc::new(MockGrpcHandler::with_json("service.Three", &json!({"id": 3})));
     server.register_service(handler3);
     assert_eq!(server.service_count(), 3);
 }
@@ -173,8 +173,6 @@ async fn test_server_service_registration_count() {
 /// Test unary RPC with complex nested JSON payload
 #[tokio::test]
 async fn test_unary_rpc_with_nested_json_payload() {
-    let mut server = GrpcTestServer::new();
-
     struct ProductServiceHandler;
     impl spikard_http::grpc::GrpcHandler for ProductServiceHandler {
         fn call(
@@ -205,6 +203,8 @@ async fn test_unary_rpc_with_nested_json_payload() {
         }
     }
 
+    let server = GrpcTestServer::new();
+
     server.register_service(Arc::new(ProductServiceHandler));
 
     let response = send_unary_request(
@@ -230,8 +230,6 @@ async fn test_unary_rpc_with_nested_json_payload() {
 /// Test unary RPC with binary payload (raw bytes)
 #[tokio::test]
 async fn test_unary_rpc_with_binary_payload() {
-    let mut server = GrpcTestServer::new();
-
     struct EchoServiceHandler;
     impl spikard_http::grpc::GrpcHandler for EchoServiceHandler {
         fn call(
@@ -251,6 +249,8 @@ async fn test_unary_rpc_with_binary_payload() {
             "echo.EchoService"
         }
     }
+
+    let server = GrpcTestServer::new();
 
     server.register_service(Arc::new(EchoServiceHandler));
 
@@ -273,8 +273,6 @@ async fn test_unary_rpc_with_binary_payload() {
 /// Test request with custom metadata is preserved in response
 #[tokio::test]
 async fn test_request_metadata_handling() {
-    let mut server = GrpcTestServer::new();
-
     struct MetadataAwareHandler;
     impl spikard_http::grpc::GrpcHandler for MetadataAwareHandler {
         fn call(
@@ -302,6 +300,8 @@ async fn test_request_metadata_handling() {
         }
     }
 
+    let server = GrpcTestServer::new();
+
     server.register_service(Arc::new(MetadataAwareHandler));
 
     let mut metadata = create_test_metadata();
@@ -317,13 +317,13 @@ async fn test_request_metadata_handling() {
     .await
     .expect("Failed to send request with metadata");
 
-    assert_grpc_response(response, json!({"status": "metadata_received"}));
+    assert_grpc_response(&response, &json!({"status": "metadata_received"}));
 }
 
-/// Test error response with NOT_FOUND status
+/// Test error response with `NOT_FOUND` status
 #[tokio::test]
 async fn test_error_response_not_found() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "api.NotFoundService",
@@ -344,10 +344,10 @@ async fn test_error_response_not_found() {
     assert!(result.is_err());
 }
 
-/// Test error response with INVALID_ARGUMENT status
+/// Test error response with `INVALID_ARGUMENT` status
 #[tokio::test]
 async fn test_error_response_invalid_argument() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "api.ValidationService",
@@ -371,7 +371,7 @@ async fn test_error_response_invalid_argument() {
 /// Test error response with INTERNAL status
 #[tokio::test]
 async fn test_error_response_internal_server_error() {
-    let mut server = GrpcTestServer::new();
+    let server = GrpcTestServer::new();
 
     let handler = Arc::new(ErrorMockHandler::new(
         "api.DatabaseService",
@@ -416,8 +416,6 @@ async fn test_server_no_services_registered() {
 /// Test unary RPC with empty request payload
 #[tokio::test]
 async fn test_unary_rpc_empty_request_payload() {
-    let mut server = GrpcTestServer::new();
-
     struct EmptyRequestHandler;
     impl spikard_http::grpc::GrpcHandler for EmptyRequestHandler {
         fn call(
@@ -437,6 +435,8 @@ async fn test_unary_rpc_empty_request_payload() {
         }
     }
 
+    let server = GrpcTestServer::new();
+
     server.register_service(Arc::new(EmptyRequestHandler));
 
     let response = send_unary_request(
@@ -449,14 +449,12 @@ async fn test_unary_rpc_empty_request_payload() {
     .await
     .expect("Failed to send empty request");
 
-    assert_grpc_response(response, json!({"status": "ok"}));
+    assert_grpc_response(&response, &json!({"status": "ok"}));
 }
 
 /// Test echo handler preserves exact request payload
 #[tokio::test]
 async fn test_echo_handler_payload_preservation() {
-    let mut server = GrpcTestServer::new();
-
     struct TestEchoHandler;
     impl spikard_http::grpc::GrpcHandler for TestEchoHandler {
         fn call(
@@ -476,6 +474,8 @@ async fn test_echo_handler_payload_preservation() {
             "test.EchoService"
         }
     }
+
+    let server = GrpcTestServer::new();
 
     server.register_service(Arc::new(TestEchoHandler));
 
