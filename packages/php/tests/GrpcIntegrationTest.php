@@ -42,7 +42,7 @@ final class GrpcIntegrationTest extends TestCase
                         'id' => 123,
                         'name' => 'John Doe',
                         'email' => 'john@example.com',
-                    ]);
+                    ], JSON_THROW_ON_ERROR);
 
                     return new Response($userData);
                 }
@@ -59,14 +59,15 @@ final class GrpcIntegrationTest extends TestCase
         $request = Grpc::createRequest(
             'example.UserService',
             'GetUser',
-            json_encode(['id' => 123])
+            json_encode(['id' => 123], JSON_THROW_ON_ERROR)
         );
 
         $response = $service->handleRequest($request);
 
         // Verify the response
         self::assertNotEmpty($response->payload);
-        $userData = json_decode($response->payload, true);
+        $userData = json_decode($response->payload, true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($userData);
         self::assertSame('John Doe', $userData['name']);
     }
 
@@ -221,7 +222,10 @@ final class GrpcIntegrationTest extends TestCase
         $response = $service->handleRequest($request);
 
         // Verify response contains the payload size
-        $responseSize = unpack('I', $response->payload)[1];
+        $sizeData = unpack('I', $response->payload);
+        self::assertIsArray($sizeData);
+        self::assertArrayHasKey(1, $sizeData);
+        $responseSize = $sizeData[1];
         self::assertSame(6, $responseSize);
     }
 

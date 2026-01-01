@@ -133,9 +133,8 @@ final class GrpcRequestTest extends TestCase
     {
         $request = new Request('test.Service', 'TestMethod', 'payload');
 
-        // Readonly properties cannot be modified
-        $this->expectException(\Error::class);
-        $request->serviceName = 'other.Service';
+        $property = new \ReflectionProperty(Request::class, 'serviceName');
+        self::assertTrue($property->isReadOnly());
     }
 
     public function testEmptyPayload(): void

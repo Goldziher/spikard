@@ -6,4 +6,6 @@
 pub mod handler;
 
 // Re-export main types
-pub use handler::{PhpGrpcHandler, PhpGrpcRequest, PhpGrpcResponse};
+pub use handler::{
+    PhpGrpcHandler, PhpGrpcRequest, PhpGrpcResponse, clear_grpc_handler_registry, leak_grpc_handler_registry,
+};

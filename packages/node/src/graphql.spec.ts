@@ -747,7 +747,7 @@ describe("GraphQL Methods", () => {
 		});
 
 		it("should handle very large query", async () => {
-			const largeQuery = "query { hello " + " hello".repeat(1000) + " }";
+			const largeQuery = `query { hello ${" hello".repeat(1000)} }`;
 
 			const response = await client.post("/graphql", {
 				json: { query: largeQuery },

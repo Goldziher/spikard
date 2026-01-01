@@ -200,7 +200,9 @@ mod tests {
         let service = GenericGrpcService::new(handler);
 
         let request = Request::new(Bytes::from("test payload"));
-        let result = service.handle_unary("test.TestService".to_string(), "TestMethod".to_string(), request).await;
+        let result = service
+            .handle_unary("test.TestService".to_string(), "TestMethod".to_string(), request)
+            .await;
 
         assert!(result.is_ok());
         let response = result.unwrap();
@@ -217,7 +219,9 @@ mod tests {
             .metadata_mut()
             .insert("custom-header", "custom-value".parse().unwrap());
 
-        let result = service.handle_unary("test.TestService".to_string(), "TestMethod".to_string(), request).await;
+        let result = service
+            .handle_unary("test.TestService".to_string(), "TestMethod".to_string(), request)
+            .await;
 
         assert!(result.is_ok());
     }
@@ -266,10 +270,7 @@ mod tests {
     #[test]
     fn test_is_grpc_request_valid() {
         let mut headers = axum::http::HeaderMap::new();
-        headers.insert(
-            axum::http::header::CONTENT_TYPE,
-            "application/grpc".parse().unwrap(),
-        );
+        headers.insert(axum::http::header::CONTENT_TYPE, "application/grpc".parse().unwrap());
         assert!(is_grpc_request(&headers));
     }
 
@@ -286,10 +287,7 @@ mod tests {
     #[test]
     fn test_is_grpc_request_not_grpc() {
         let mut headers = axum::http::HeaderMap::new();
-        headers.insert(
-            axum::http::header::CONTENT_TYPE,
-            "application/json".parse().unwrap(),
-        );
+        headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().unwrap());
         assert!(!is_grpc_request(&headers));
     }
 
@@ -382,7 +380,9 @@ mod tests {
         let service = GenericGrpcService::new(handler);
 
         let request = Request::new(Bytes::new());
-        let result = service.handle_unary("test.ErrorService".to_string(), "ErrorMethod".to_string(), request).await;
+        let result = service
+            .handle_unary("test.ErrorService".to_string(), "ErrorMethod".to_string(), request)
+            .await;
 
         assert!(result.is_err());
         let status = result.unwrap_err();

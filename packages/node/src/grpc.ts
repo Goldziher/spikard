@@ -303,10 +303,12 @@ export interface GrpcServiceConfig {
 /**
  * Result type for unary handlers that can include response metadata
  */
-export type UnaryHandlerResult<TResponse> = TResponse | {
-	response: TResponse;
-	metadata?: Record<string, string>;
-};
+export type UnaryHandlerResult<TResponse> =
+	| TResponse
+	| {
+			response: TResponse;
+			metadata?: Record<string, string>;
+	  };
 
 /**
  * Helper function to create a simple unary gRPC handler
@@ -361,10 +363,7 @@ export function createUnaryHandler<TRequest, TResponse>(
 	return {
 		async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
 			if (request.methodName !== methodName) {
-				throw new GrpcError(
-					GrpcStatusCode.UNIMPLEMENTED,
-					`Method ${request.methodName} not implemented`,
-				);
+				throw new GrpcError(GrpcStatusCode.UNIMPLEMENTED, `Method ${request.methodName} not implemented`);
 			}
 
 			// Deserialize request
@@ -377,7 +376,7 @@ export function createUnaryHandler<TRequest, TResponse>(
 			let response: TResponse;
 			let responseMetadata: Record<string, string> | undefined;
 
-			if (result && typeof result === 'object' && 'response' in result) {
+			if (result && typeof result === "object" && "response" in result) {
 				// Result includes metadata
 				response = result.response;
 				responseMetadata = result.metadata;
@@ -421,10 +420,7 @@ export function createServiceHandler(methods: Record<string, GrpcHandler>): Grpc
 		async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
 			const handler = methods[request.methodName];
 			if (!handler) {
-				throw new GrpcError(
-					GrpcStatusCode.UNIMPLEMENTED,
-					`Method ${request.methodName} not implemented`,
-				);
+				throw new GrpcError(GrpcStatusCode.UNIMPLEMENTED, `Method ${request.methodName} not implemented`);
 			}
 			return handler.handleRequest(request);
 		},

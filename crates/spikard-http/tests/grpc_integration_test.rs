@@ -280,9 +280,7 @@ fn test_handler_service_name() {
     let echo_handler = EchoGrpcHandler;
     assert_eq!(echo_handler.service_name(), "test.EchoService");
 
-    let fixed_handler = FixedResponseHandler {
-        response: Bytes::new(),
-    };
+    let fixed_handler = FixedResponseHandler { response: Bytes::new() };
     assert_eq!(fixed_handler.service_name(), "test.FixedService");
 
     let error_handler = ErrorGrpcHandler;

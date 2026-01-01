@@ -59,10 +59,7 @@ pub fn generate_ruby_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
                 let test_code = generate_grpc_test(fixture)
                     .context(format!("Failed to generate gRPC test for {}", fixture.name))?;
 
-                let test_name = fixture.name
-                    .to_lowercase()
-                    .replace(" ", "_")
-                    .replace("-", "_");
+                let test_name = sanitize_identifier(&fixture.name);
                 let test_file = spec_dir.join(format!("grpc_{}_spec.rb", test_name));
 
                 fs::write(&test_file, test_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;

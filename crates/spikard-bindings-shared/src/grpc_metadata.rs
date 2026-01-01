@@ -4,7 +4,7 @@
 //! language bindings (Python, Node.js, Ruby, PHP) to avoid code duplication.
 
 use std::collections::HashMap;
-use tonic::metadata::{MetadataMap, MetadataKey, MetadataValue};
+use tonic::metadata::{MetadataKey, MetadataMap, MetadataValue};
 
 /// Extract metadata from gRPC MetadataMap to a simple HashMap.
 ///
@@ -94,8 +94,8 @@ pub fn hashmap_to_metadata(map: &HashMap<String, String>) -> Result<MetadataMap,
         let metadata_key = MetadataKey::from_bytes(key.as_bytes())
             .map_err(|err| format!("Invalid metadata key '{}': {}", key, err))?;
 
-        let metadata_value = MetadataValue::try_from(value)
-            .map_err(|err| format!("Invalid metadata value for '{}': {}", key, err))?;
+        let metadata_value =
+            MetadataValue::try_from(value).map_err(|err| format!("Invalid metadata value for '{}': {}", key, err))?;
 
         metadata.insert(metadata_key, metadata_value);
     }

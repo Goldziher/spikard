@@ -33,10 +33,7 @@ pub fn generate_php_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()> 
                 let test_code = generate_grpc_test(fixture)
                     .context(format!("Failed to generate gRPC test for {}", fixture.name))?;
 
-                let test_name = fixture.name
-                    .to_lowercase()
-                    .replace(" ", "_")
-                    .replace("-", "_");
+                let test_name = sanitize_identifier(&fixture.name);
                 let test_name_pascal = to_pascal_case(&test_name);
                 let test_file = tests_dir.join(format!("Grpc{}Test.php", test_name_pascal));
 

@@ -23,14 +23,17 @@ async fn test_unary_rpc_success_with_json_payload() {
     // Create a custom handler with proper service name
     struct UserServiceHandler;
     impl spikard_http::grpc::GrpcHandler for UserServiceHandler {
-        fn call(&self, _request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            _request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let payload = serde_json::to_vec(&json!({
                 "id": 123,
                 "name": "Alice Johnson",
                 "email": "alice@example.com"
-            })).unwrap();
+            }))
+            .unwrap();
             Box::pin(async {
                 Ok(spikard_http::grpc::GrpcResponseData {
                     payload: Bytes::from(payload),
@@ -47,10 +50,7 @@ async fn test_unary_rpc_success_with_json_payload() {
 
     // Act: Create and send request
     let mut request_builder = ProtobufMessageBuilder::new();
-    let request_payload = request_builder
-        .add_int_field("user_id", 123)
-        .build()
-        .unwrap();
+    let request_payload = request_builder.add_int_field("user_id", 123).build().unwrap();
 
     let response = send_unary_request(
         &server,
@@ -63,11 +63,14 @@ async fn test_unary_rpc_success_with_json_payload() {
     .expect("Failed to send unary request");
 
     // Assert
-    assert_grpc_response(response, json!({
-        "id": 123,
-        "name": "Alice Johnson",
-        "email": "alice@example.com"
-    }));
+    assert_grpc_response(
+        response,
+        json!({
+            "id": 123,
+            "name": "Alice Johnson",
+            "email": "alice@example.com"
+        }),
+    );
 }
 
 /// Test server routing with multiple services
@@ -78,8 +81,10 @@ async fn test_server_routes_to_correct_service() {
 
     struct UserServiceHandler;
     impl spikard_http::grpc::GrpcHandler for UserServiceHandler {
-        fn call(&self, _request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            _request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             Box::pin(async {
                 Ok(spikard_http::grpc::GrpcResponseData {
@@ -95,8 +100,10 @@ async fn test_server_routes_to_correct_service() {
 
     struct OrderServiceHandler;
     impl spikard_http::grpc::GrpcHandler for OrderServiceHandler {
-        fn call(&self, _request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            _request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             Box::pin(async {
                 Ok(spikard_http::grpc::GrpcResponseData {
@@ -170,12 +177,15 @@ async fn test_unary_rpc_with_nested_json_payload() {
 
     struct ProductServiceHandler;
     impl spikard_http::grpc::GrpcHandler for ProductServiceHandler {
-        fn call(&self, _request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            _request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             Box::pin(async {
                 Ok(spikard_http::grpc::GrpcResponseData {
-                    payload: Bytes::from(r#"{
+                    payload: Bytes::from(
+                        r#"{
                         "id": 42,
                         "name": "Laptop",
                         "price": 999.99,
@@ -184,7 +194,8 @@ async fn test_unary_rpc_with_nested_json_payload() {
                             "warehouse": "US-WEST"
                         },
                         "tags": ["electronics", "computers", "portable"]
-                    }"#),
+                    }"#,
+                    ),
                     metadata: tonic::metadata::MetadataMap::new(),
                 })
             })
@@ -223,8 +234,10 @@ async fn test_unary_rpc_with_binary_payload() {
 
     struct EchoServiceHandler;
     impl spikard_http::grpc::GrpcHandler for EchoServiceHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let payload = request.payload;
             Box::pin(async {
@@ -264,8 +277,10 @@ async fn test_request_metadata_handling() {
 
     struct MetadataAwareHandler;
     impl spikard_http::grpc::GrpcHandler for MetadataAwareHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             // Check that metadata was received
             let has_custom_header = request.metadata.get("x-custom-header").is_some();
@@ -405,8 +420,10 @@ async fn test_unary_rpc_empty_request_payload() {
 
     struct EmptyRequestHandler;
     impl spikard_http::grpc::GrpcHandler for EmptyRequestHandler {
-        fn call(&self, _request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            _request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             Box::pin(async {
                 Ok(spikard_http::grpc::GrpcResponseData {
@@ -442,8 +459,10 @@ async fn test_echo_handler_payload_preservation() {
 
     struct TestEchoHandler;
     impl spikard_http::grpc::GrpcHandler for TestEchoHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let payload = request.payload;
             Box::pin(async move {

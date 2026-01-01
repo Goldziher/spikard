@@ -5,7 +5,7 @@
 
 use super::ProtobufGenerator;
 use super::base::{escape_string, map_proto_type_to_language, sanitize_identifier};
-use crate::codegen::protobuf::spec_parser::{ProtobufSchema, FieldLabel, MessageDef, ServiceDef};
+use crate::codegen::protobuf::spec_parser::{FieldLabel, MessageDef, ProtobufSchema, ServiceDef};
 use anyhow::Result;
 
 /// TypeScript Protobuf code generator
@@ -109,8 +109,7 @@ impl TypeScriptProtobufGenerator {
                 let is_optional = field.label == FieldLabel::Optional;
                 let is_repeated = field.label == FieldLabel::Repeated;
 
-                let field_type =
-                    map_proto_type_to_language(&field.field_type, "typescript", is_optional, is_repeated);
+                let field_type = map_proto_type_to_language(&field.field_type, "typescript", is_optional, is_repeated);
 
                 // Only truly optional fields use ? suffix in TypeScript
                 // Repeated fields (arrays) should not use ?: since an empty array is different from undefined
@@ -218,7 +217,7 @@ impl TypeScriptProtobufGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::codegen::protobuf::spec_parser::{MessageDef, FieldDef, ProtoType, FieldLabel, EnumDef, EnumValue};
+    use crate::codegen::protobuf::spec_parser::{EnumDef, EnumValue, FieldDef, FieldLabel, MessageDef, ProtoType};
 
     #[test]
     fn test_generate_simple_message() {
@@ -261,16 +260,14 @@ mod tests {
     fn test_generate_message_with_optional_field() {
         let message = MessageDef {
             name: "User".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "email".to_string(),
-                    number: 3,
-                    field_type: ProtoType::String,
-                    label: FieldLabel::Optional,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "email".to_string(),
+                number: 3,
+                field_type: ProtoType::String,
+                label: FieldLabel::Optional,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -286,16 +283,14 @@ mod tests {
     fn test_generate_message_with_repeated_field() {
         let message = MessageDef {
             name: "User".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "tags".to_string(),
-                    number: 4,
-                    field_type: ProtoType::String,
-                    label: FieldLabel::Repeated,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "tags".to_string(),
+                number: 4,
+                field_type: ProtoType::String,
+                label: FieldLabel::Repeated,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -348,16 +343,14 @@ mod tests {
     fn test_generate_message_with_number_field() {
         let message = MessageDef {
             name: "Order".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "amount".to_string(),
-                    number: 1,
-                    field_type: ProtoType::Int32,
-                    label: FieldLabel::None,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "amount".to_string(),
+                number: 1,
+                field_type: ProtoType::Int32,
+                label: FieldLabel::None,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -373,16 +366,14 @@ mod tests {
     fn test_generate_message_with_bigint_field() {
         let message = MessageDef {
             name: "LargeNumber".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "big_id".to_string(),
-                    number: 1,
-                    field_type: ProtoType::Int64,
-                    label: FieldLabel::None,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "big_id".to_string(),
+                number: 1,
+                field_type: ProtoType::Int64,
+                label: FieldLabel::None,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -398,16 +389,14 @@ mod tests {
     fn test_generate_message_with_boolean_field() {
         let message = MessageDef {
             name: "Settings".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "is_enabled".to_string(),
-                    number: 1,
-                    field_type: ProtoType::Bool,
-                    label: FieldLabel::None,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "is_enabled".to_string(),
+                number: 1,
+                field_type: ProtoType::Bool,
+                label: FieldLabel::None,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -423,16 +412,14 @@ mod tests {
     fn test_generate_message_with_bytes_field() {
         let message = MessageDef {
             name: "Data".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "content".to_string(),
-                    number: 1,
-                    field_type: ProtoType::Bytes,
-                    label: FieldLabel::None,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "content".to_string(),
+                number: 1,
+                field_type: ProtoType::Bytes,
+                label: FieldLabel::None,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -446,20 +433,18 @@ mod tests {
 
     #[test]
     fn test_generate_service_with_async_method() {
-        use crate::codegen::protobuf::spec_parser::{ServiceDef, MethodDef};
+        use crate::codegen::protobuf::spec_parser::{MethodDef, ServiceDef};
 
         let service = ServiceDef {
             name: "User".to_string(),
-            methods: vec![
-                MethodDef {
-                    name: "get_user".to_string(),
-                    input_type: "GetUserRequest".to_string(),
-                    output_type: "User".to_string(),
-                    input_streaming: false,
-                    output_streaming: false,
-                    description: Some("Get a user by ID".to_string()),
-                },
-            ],
+            methods: vec![MethodDef {
+                name: "get_user".to_string(),
+                input_type: "GetUserRequest".to_string(),
+                output_type: "User".to_string(),
+                input_streaming: false,
+                output_streaming: false,
+                description: Some("Get a user by ID".to_string()),
+            }],
             description: Some("User service".to_string()),
         };
 
@@ -475,20 +460,18 @@ mod tests {
 
     #[test]
     fn test_generate_service_with_streaming_method() {
-        use crate::codegen::protobuf::spec_parser::{ServiceDef, MethodDef};
+        use crate::codegen::protobuf::spec_parser::{MethodDef, ServiceDef};
 
         let service = ServiceDef {
             name: "Stream".to_string(),
-            methods: vec![
-                MethodDef {
-                    name: "get_items".to_string(),
-                    input_type: "Query".to_string(),
-                    output_type: "Item".to_string(),
-                    input_streaming: false,
-                    output_streaming: true,
-                    description: None,
-                },
-            ],
+            methods: vec![MethodDef {
+                name: "get_items".to_string(),
+                input_type: "Query".to_string(),
+                output_type: "Item".to_string(),
+                input_streaming: false,
+                output_streaming: true,
+                description: None,
+            }],
             description: None,
         };
 
@@ -506,16 +489,14 @@ mod tests {
             "User".to_string(),
             MessageDef {
                 name: "User".to_string(),
-                fields: vec![
-                    FieldDef {
-                        name: "id".to_string(),
-                        number: 1,
-                        field_type: ProtoType::String,
-                        label: FieldLabel::None,
-                        default_value: None,
-                        description: None,
-                    },
-                ],
+                fields: vec![FieldDef {
+                    name: "id".to_string(),
+                    number: 1,
+                    field_type: ProtoType::String,
+                    label: FieldLabel::None,
+                    default_value: None,
+                    description: None,
+                }],
                 nested_messages: std::collections::HashMap::new(),
                 nested_enums: std::collections::HashMap::new(),
                 description: None,
@@ -533,7 +514,9 @@ mod tests {
         };
 
         let generator = TypeScriptProtobufGenerator;
-        let code = generator.generate_messages(&schema).expect("Failed to generate messages");
+        let code = generator
+            .generate_messages(&schema)
+            .expect("Failed to generate messages");
 
         assert!(code.contains("// DO NOT EDIT - Auto-generated by Spikard CLI"));
         assert!(code.contains("import * as $protobuf from \"protobufjs\""));
@@ -543,23 +526,21 @@ mod tests {
 
     #[test]
     fn test_generate_complete_services_file() {
-        use crate::codegen::protobuf::spec_parser::{ServiceDef, MethodDef};
+        use crate::codegen::protobuf::spec_parser::{MethodDef, ServiceDef};
 
         let mut services = std::collections::HashMap::new();
         services.insert(
             "UserService".to_string(),
             ServiceDef {
                 name: "User".to_string(),
-                methods: vec![
-                    MethodDef {
-                        name: "get_user".to_string(),
-                        input_type: "GetUserRequest".to_string(),
-                        output_type: "User".to_string(),
-                        input_streaming: false,
-                        output_streaming: false,
-                        description: None,
-                    },
-                ],
+                methods: vec![MethodDef {
+                    name: "get_user".to_string(),
+                    input_type: "GetUserRequest".to_string(),
+                    output_type: "User".to_string(),
+                    input_streaming: false,
+                    output_streaming: false,
+                    description: None,
+                }],
                 description: None,
             },
         );
@@ -575,7 +556,9 @@ mod tests {
         };
 
         let generator = TypeScriptProtobufGenerator;
-        let code = generator.generate_services(&schema).expect("Failed to generate services");
+        let code = generator
+            .generate_services(&schema)
+            .expect("Failed to generate services");
 
         assert!(code.contains("// DO NOT EDIT - Auto-generated by Spikard CLI"));
         assert!(code.contains("import * as $protobuf from \"protobufjs\""));

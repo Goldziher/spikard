@@ -1653,7 +1653,7 @@ RSpec.describe Spikard::Grpc do
       end
 
       it 'handles sparse binary data' do
-        sparse = ("\x00" * 1000 + "x" + "\x00" * 1000) * 10
+        sparse = (("\x00" * 1000) + "x" + ("\x00" * 1000)) * 10
         response = Spikard::Grpc::Response.new(payload: sparse.b)
 
         expect(response.payload).to include('x')
@@ -1661,7 +1661,7 @@ RSpec.describe Spikard::Grpc do
       end
 
       it 'handles payload with every byte value 0-255' do
-        all_bytes = (0..255).map(&:chr).join * 100
+        all_bytes = ((0..255).map(&:chr).join) * 100
         response = Spikard::Grpc::Response.new(payload: all_bytes.b)
 
         expect(response.payload.length).to eq(all_bytes.length)
@@ -1875,7 +1875,7 @@ RSpec.describe Spikard::Grpc do
               )
               # Add more metadata with each response
               metadata = {}
-              (0..i*10).each do |j|
+              (0..(i * 10)).each do |j|
                 metadata["key-#{j}"] = "value-#{j}" * i
               end
               response.metadata = metadata
@@ -1902,7 +1902,7 @@ RSpec.describe Spikard::Grpc do
             @call_count = 0
           end
 
-          def handle_request(request)
+          def handle_request(_request)
             @call_count += 1
             Spikard::Grpc::Response.new(
               payload: { call_number: @call_count }.to_json.b
@@ -1979,20 +1979,23 @@ RSpec.describe Spikard::Grpc do
         handler = lambda do |request|
           payload = request.payload.to_s
 
-          if payload.empty?
-            response = Spikard::Grpc::Response.new(payload: ''.b)
-            response.metadata = {
-              'grpc-status' => 'INVALID_ARGUMENT',
-              'grpc-message' => 'Payload cannot be empty'
-            }
-            response
-          else
-            response = Spikard::Grpc::Response.new(
-              payload: { received: payload.length }.to_json.b
-            )
-            response.metadata = { 'grpc-status' => 'OK' }
-            response
-          end
+          empty_payload = payload.empty?
+          response = if empty_payload
+                       Spikard::Grpc::Response.new(payload: ''.b)
+                     else
+                       Spikard::Grpc::Response.new(
+                         payload: { received: payload.length }.to_json.b
+                       )
+                     end
+          response.metadata = if empty_payload
+                                {
+                                  'grpc-status' => 'INVALID_ARGUMENT',
+                                  'grpc-message' => 'Payload cannot be empty'
+                                }
+                              else
+                                { 'grpc-status' => 'OK' }
+                              end
+          response
         end
 
         # Valid request
@@ -2009,7 +2012,11 @@ RSpec.describe Spikard::Grpc do
       it 'simulates multi-step processing pipeline' do
         # Step 1: Parse input
         parser = lambda do |request|
-          JSON.parse(request.payload) rescue {}
+          begin
+            JSON.parse(request.payload)
+          rescue JSON::ParserError
+            {}
+          end
         end
 
         # Step 2: Validate

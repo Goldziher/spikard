@@ -5,8 +5,12 @@ from __future__ import annotations
 from importlib import import_module
 from typing import TYPE_CHECKING
 
-from _spikard import Response, StreamingResponse  # type: ignore[attr-defined]
-from _spikard import GrpcRequest, GrpcResponse  # type: ignore[attr-defined]
+from _spikard import (  # type: ignore[attr-defined]
+    GrpcRequest,
+    GrpcResponse,
+    Response,
+    StreamingResponse,
+)
 
 if TYPE_CHECKING:
     from spikard import background as background

@@ -6,7 +6,7 @@
 
 use super::ProtobufGenerator;
 use super::base::{escape_string, map_proto_type_to_language, sanitize_identifier, to_camel_case};
-use crate::codegen::protobuf::spec_parser::{ProtobufSchema, FieldLabel, MessageDef, ServiceDef};
+use crate::codegen::protobuf::spec_parser::{FieldLabel, MessageDef, ProtobufSchema, ServiceDef};
 use anyhow::Result;
 
 /// PHP Protobuf code generator
@@ -119,15 +119,18 @@ impl PhpProtobufGenerator {
                 let is_optional = field.label == FieldLabel::Optional;
                 let is_repeated = field.label == FieldLabel::Repeated;
 
-                let field_type =
-                    map_proto_type_to_language(&field.field_type, "php", is_optional, is_repeated);
+                let field_type = map_proto_type_to_language(&field.field_type, "php", is_optional, is_repeated);
 
                 // Default value based on type
                 let default_val = if is_repeated {
                     "[]".to_string()
                 } else if is_optional {
                     "null".to_string()
-                } else if matches!(field.field_type, crate::codegen::protobuf::spec_parser::ProtoType::String | crate::codegen::protobuf::spec_parser::ProtoType::Bytes) {
+                } else if matches!(
+                    field.field_type,
+                    crate::codegen::protobuf::spec_parser::ProtoType::String
+                        | crate::codegen::protobuf::spec_parser::ProtoType::Bytes
+                ) {
                     "''".to_string()
                 } else if matches!(field.field_type, crate::codegen::protobuf::spec_parser::ProtoType::Bool) {
                     "false".to_string()
@@ -135,7 +138,10 @@ impl PhpProtobufGenerator {
                     "0".to_string()
                 };
 
-                code.push_str(&format!("    protected {} ${} = {};\n", field_type, field_name, default_val));
+                code.push_str(&format!(
+                    "    protected {} ${} = {};\n",
+                    field_type, field_name, default_val
+                ));
             }
 
             code.push_str("}\n");
@@ -166,7 +172,11 @@ impl PhpProtobufGenerator {
                 if let Some(desc) = &value.description {
                     code.push_str(&format!("    /** {} */\n", escape_string(desc, "php")));
                 }
-                code.push_str(&format!("    const {} = {};\n", value.name.to_uppercase(), value.number));
+                code.push_str(&format!(
+                    "    const {} = {};\n",
+                    value.name.to_uppercase(),
+                    value.number
+                ));
             }
             code.push_str("}\n");
         }
@@ -241,7 +251,7 @@ impl PhpProtobufGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::codegen::protobuf::spec_parser::{MessageDef, FieldDef, ProtoType, FieldLabel};
+    use crate::codegen::protobuf::spec_parser::{FieldDef, FieldLabel, MessageDef, ProtoType};
 
     #[test]
     fn test_generate_simple_message() {
@@ -283,16 +293,14 @@ mod tests {
     fn test_generate_message_with_optional_field() {
         let message = MessageDef {
             name: "User".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "email".to_string(),
-                    number: 3,
-                    field_type: ProtoType::String,
-                    label: FieldLabel::Optional,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "email".to_string(),
+                number: 3,
+                field_type: ProtoType::String,
+                label: FieldLabel::Optional,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -308,16 +316,14 @@ mod tests {
     fn test_generate_message_with_repeated_field() {
         let message = MessageDef {
             name: "User".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "tags".to_string(),
-                    number: 4,
-                    field_type: ProtoType::String,
-                    label: FieldLabel::Repeated,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "tags".to_string(),
+                number: 4,
+                field_type: ProtoType::String,
+                label: FieldLabel::Repeated,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -376,16 +382,14 @@ mod tests {
     fn test_generate_service_class() {
         let service = ServiceDef {
             name: "UserService".to_string(),
-            methods: vec![
-                crate::codegen::protobuf::spec_parser::MethodDef {
-                    name: "get_user".to_string(),
-                    input_type: "GetUserRequest".to_string(),
-                    output_type: "User".to_string(),
-                    input_streaming: false,
-                    output_streaming: false,
-                    description: None,
-                },
-            ],
+            methods: vec![crate::codegen::protobuf::spec_parser::MethodDef {
+                name: "get_user".to_string(),
+                input_type: "GetUserRequest".to_string(),
+                output_type: "User".to_string(),
+                input_streaming: false,
+                output_streaming: false,
+                description: None,
+            }],
             description: Some("User service".to_string()),
         };
 
@@ -407,16 +411,14 @@ mod tests {
                 "User".to_string(),
                 MessageDef {
                     name: "User".to_string(),
-                    fields: vec![
-                        FieldDef {
-                            name: "id".to_string(),
-                            number: 1,
-                            field_type: ProtoType::String,
-                            label: FieldLabel::None,
-                            default_value: None,
-                            description: None,
-                        },
-                    ],
+                    fields: vec![FieldDef {
+                        name: "id".to_string(),
+                        number: 1,
+                        field_type: ProtoType::String,
+                        label: FieldLabel::None,
+                        default_value: None,
+                        description: None,
+                    }],
                     nested_messages: std::collections::HashMap::new(),
                     nested_enums: std::collections::HashMap::new(),
                     description: None,
@@ -432,7 +434,9 @@ mod tests {
         };
 
         let generator = PhpProtobufGenerator;
-        let code = generator.generate_messages(&schema).expect("Failed to generate messages");
+        let code = generator
+            .generate_messages(&schema)
+            .expect("Failed to generate messages");
 
         assert!(code.contains("<?php"));
         assert!(code.contains("namespace Example\\Api"));
@@ -462,7 +466,9 @@ mod tests {
         };
 
         let generator = PhpProtobufGenerator;
-        let code = generator.generate_services(&schema).expect("Failed to generate services");
+        let code = generator
+            .generate_services(&schema)
+            .expect("Failed to generate services");
 
         assert!(code.contains("<?php"));
         assert!(code.contains("namespace Example\\Service"));

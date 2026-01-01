@@ -193,7 +193,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_from_tonic_stream() {
-        let messages = vec![Ok(Bytes::from("a")), Ok(Bytes::from("b")), Err(Status::cancelled("done"))];
+        let messages = vec![
+            Ok(Bytes::from("a")),
+            Ok(Bytes::from("b")),
+            Err(Status::cancelled("done")),
+        ];
 
         let tonic_stream = futures_util::stream::iter(messages);
         let mut stream = from_tonic_stream(tonic_stream);

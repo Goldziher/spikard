@@ -5,7 +5,7 @@
 
 use super::ProtobufGenerator;
 use super::base::{escape_string, map_proto_type_to_language, sanitize_identifier, to_pascal_case};
-use crate::codegen::protobuf::spec_parser::{ProtobufSchema, FieldLabel, MessageDef, ServiceDef};
+use crate::codegen::protobuf::spec_parser::{FieldLabel, MessageDef, ProtobufSchema, ServiceDef};
 use anyhow::Result;
 
 /// Ruby Protobuf code generator
@@ -129,16 +129,14 @@ impl RubyProtobufGenerator {
         // Class definition
         code.push_str(&format!("{}class {}\n", indent, message.name));
         code.push_str(&format!("{}  include Google::Protobuf::MessageExts\n", indent));
-        code.push_str(&format!("{}  extend Google::Protobuf::MessageExts::ClassMethods\n", indent));
+        code.push_str(&format!(
+            "{}  extend Google::Protobuf::MessageExts::ClassMethods\n",
+            indent
+        ));
 
         // Docstring
         if let Some(desc) = &message.description {
-            code.push_str(&format!(
-                "{}\n{}  # {}\n",
-                indent,
-                indent,
-                escape_string(desc, "ruby")
-            ));
+            code.push_str(&format!("{}\n{}  # {}\n", indent, indent, escape_string(desc, "ruby")));
         }
 
         if message.fields.is_empty() {
@@ -156,8 +154,7 @@ impl RubyProtobufGenerator {
                 let is_optional = field.label == FieldLabel::Optional;
                 let is_repeated = field.label == FieldLabel::Repeated;
 
-                let field_type =
-                    map_proto_type_to_language(&field.field_type, "ruby", is_optional, is_repeated);
+                let field_type = map_proto_type_to_language(&field.field_type, "ruby", is_optional, is_repeated);
                 code.push_str(&format!(
                     "{}  # @!attribute [rw] {}\n{}  #   @return [{}]\n",
                     indent, field_name, indent, field_type
@@ -172,7 +169,11 @@ impl RubyProtobufGenerator {
 
     /// Generate an enum class definition
     #[allow(dead_code)]
-    fn generate_enum_class(&self, enum_def: &crate::codegen::protobuf::spec_parser::EnumDef, module_depth: usize) -> String {
+    fn generate_enum_class(
+        &self,
+        enum_def: &crate::codegen::protobuf::spec_parser::EnumDef,
+        module_depth: usize,
+    ) -> String {
         let indent = "  ".repeat(module_depth);
         let mut code = String::new();
 
@@ -180,12 +181,7 @@ impl RubyProtobufGenerator {
 
         // Docstring
         if let Some(desc) = &enum_def.description {
-            code.push_str(&format!(
-                "{}\n{}  # {}\n",
-                indent,
-                indent,
-                escape_string(desc, "ruby")
-            ));
+            code.push_str(&format!("{}\n{}  # {}\n", indent, indent, escape_string(desc, "ruby")));
         }
 
         if enum_def.values.is_empty() {
@@ -272,7 +268,7 @@ impl RubyProtobufGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::codegen::protobuf::spec_parser::{MessageDef, FieldDef, ProtoType, FieldLabel};
+    use crate::codegen::protobuf::spec_parser::{FieldDef, FieldLabel, MessageDef, ProtoType};
 
     #[test]
     fn test_generate_simple_message() {
@@ -315,16 +311,14 @@ mod tests {
     fn test_generate_message_with_optional_field() {
         let message = MessageDef {
             name: "User".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "email".to_string(),
-                    number: 3,
-                    field_type: ProtoType::String,
-                    label: FieldLabel::Optional,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "email".to_string(),
+                number: 3,
+                field_type: ProtoType::String,
+                label: FieldLabel::Optional,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -340,16 +334,14 @@ mod tests {
     fn test_generate_message_with_repeated_field() {
         let message = MessageDef {
             name: "User".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "tags".to_string(),
-                    number: 4,
-                    field_type: ProtoType::String,
-                    label: FieldLabel::Repeated,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "tags".to_string(),
+                number: 4,
+                field_type: ProtoType::String,
+                label: FieldLabel::Repeated,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -392,7 +384,9 @@ mod tests {
         );
 
         let generator = RubyProtobufGenerator;
-        let code = generator.generate_messages(&schema).expect("Failed to generate messages");
+        let code = generator
+            .generate_messages(&schema)
+            .expect("Failed to generate messages");
 
         assert!(code.contains("module Example"));
         assert!(code.contains("module User"));
@@ -402,20 +396,18 @@ mod tests {
 
     #[test]
     fn test_generate_service_class() {
-        use crate::codegen::protobuf::spec_parser::{ServiceDef, MethodDef};
+        use crate::codegen::protobuf::spec_parser::{MethodDef, ServiceDef};
 
         let service = ServiceDef {
             name: "UserService".to_string(),
-            methods: vec![
-                MethodDef {
-                    name: "get_user".to_string(),
-                    input_type: "GetUserRequest".to_string(),
-                    output_type: "User".to_string(),
-                    input_streaming: false,
-                    output_streaming: false,
-                    description: None,
-                },
-            ],
+            methods: vec![MethodDef {
+                name: "get_user".to_string(),
+                input_type: "GetUserRequest".to_string(),
+                output_type: "User".to_string(),
+                input_streaming: false,
+                output_streaming: false,
+                description: None,
+            }],
             description: None,
         };
 
@@ -470,20 +462,18 @@ mod tests {
 
     #[test]
     fn test_generate_service_with_streaming() {
-        use crate::codegen::protobuf::spec_parser::{ServiceDef, MethodDef};
+        use crate::codegen::protobuf::spec_parser::{MethodDef, ServiceDef};
 
         let service = ServiceDef {
             name: "UserService".to_string(),
-            methods: vec![
-                MethodDef {
-                    name: "stream_users".to_string(),
-                    input_type: "StreamRequest".to_string(),
-                    output_type: "User".to_string(),
-                    input_streaming: false,
-                    output_streaming: true,
-                    description: Some("Stream all users".to_string()),
-                },
-            ],
+            methods: vec![MethodDef {
+                name: "stream_users".to_string(),
+                input_type: "StreamRequest".to_string(),
+                output_type: "User".to_string(),
+                input_streaming: false,
+                output_streaming: true,
+                description: Some("Stream all users".to_string()),
+            }],
             description: None,
         };
 

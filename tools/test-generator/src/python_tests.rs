@@ -92,10 +92,7 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
                 let test_code = generate_grpc_test(fixture)
                     .context(format!("Failed to generate gRPC test for {}", fixture.name))?;
 
-                let test_name = fixture.name
-                    .to_lowercase()
-                    .replace(" ", "_")
-                    .replace("-", "_");
+                let test_name = sanitize_test_name(&fixture.name);
                 let test_file = tests_dir.join(format!("test_grpc_{}.py", test_name));
 
                 fs::write(&test_file, test_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;

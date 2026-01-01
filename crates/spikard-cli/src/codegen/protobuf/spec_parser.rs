@@ -179,11 +179,9 @@ impl ProtoType {
 /// # Returns
 /// Parsed ProtobufSchema or error (rejects proto2 syntax)
 pub fn parse_proto_schema(path: &Path) -> Result<ProtobufSchema> {
-    let content =
-        fs::read_to_string(path).with_context(|| format!("Failed to read proto file: {}", path.display()))?;
+    let content = fs::read_to_string(path).with_context(|| format!("Failed to read proto file: {}", path.display()))?;
 
-    parse_proto_schema_string(&content)
-        .with_context(|| format!("Failed to parse proto schema from {}", path.display()))
+    parse_proto_schema_string(&content).with_context(|| format!("Failed to parse proto schema from {}", path.display()))
 }
 
 /// Parse a Protobuf schema from a string

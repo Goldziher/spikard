@@ -30,8 +30,7 @@ mod websocket;
 pub use background::{clear_handle, install_handle, process_pending_tasks};
 pub use di::{PhpFactoryDependency, PhpValueDependency, extract_di_container_from_php};
 pub use grpc::{
-    PhpGrpcHandler, PhpGrpcRequest, PhpGrpcResponse, clear_grpc_handler_registry,
-    leak_grpc_handler_registry,
+    PhpGrpcHandler, PhpGrpcRequest, PhpGrpcResponse, clear_grpc_handler_registry, leak_grpc_handler_registry,
 };
 pub use handler::get_runtime;
 pub use handler::{PhpHandler, clear_handler_registry, leak_handler_registry};

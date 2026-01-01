@@ -28,10 +28,7 @@ fn option_hashmap_to_pydict<'py>(
 }
 
 /// Helper function to convert MetadataMap to PyDict (DRY)
-fn metadata_map_to_pydict<'py>(
-    py: Python<'py>,
-    metadata: &MetadataMap,
-) -> PyResult<Bound<'py, PyDict>> {
+fn metadata_map_to_pydict<'py>(py: Python<'py>, metadata: &MetadataMap) -> PyResult<Bound<'py, PyDict>> {
     let py_dict = PyDict::new(py);
     for key_value in metadata.iter() {
         if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value {
@@ -58,10 +55,7 @@ fn pydict_to_metadata_map(_py: Python<'_>, py_dict: &Bound<'_, PyDict>) -> PyRes
         let metadata_key = key_str
             .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
             .map_err(|e| {
-                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Invalid metadata key '{}': {}",
-                    key_str, e
-                ))
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid metadata key '{}': {}", key_str, e))
             })?;
 
         let metadata_value = value_str
@@ -93,16 +87,32 @@ fn pyerr_to_grpc_status(err: PyErr) -> tonic::Status {
         let err_msg = err.to_string();
 
         // Check exception type and map to appropriate gRPC code
-        if err_type.is_subclass_of::<pyo3::exceptions::PyValueError>().unwrap_or(false) {
+        if err_type
+            .is_subclass_of::<pyo3::exceptions::PyValueError>()
+            .unwrap_or(false)
+        {
             tonic::Status::invalid_argument(err_msg)
-        } else if err_type.is_subclass_of::<pyo3::exceptions::PyPermissionError>().unwrap_or(false) {
+        } else if err_type
+            .is_subclass_of::<pyo3::exceptions::PyPermissionError>()
+            .unwrap_or(false)
+        {
             tonic::Status::permission_denied(err_msg)
-        } else if err_type.is_subclass_of::<pyo3::exceptions::PyNotImplementedError>().unwrap_or(false) {
+        } else if err_type
+            .is_subclass_of::<pyo3::exceptions::PyNotImplementedError>()
+            .unwrap_or(false)
+        {
             tonic::Status::unimplemented(err_msg)
-        } else if err_type.is_subclass_of::<pyo3::exceptions::PyTimeoutError>().unwrap_or(false) {
+        } else if err_type
+            .is_subclass_of::<pyo3::exceptions::PyTimeoutError>()
+            .unwrap_or(false)
+        {
             tonic::Status::deadline_exceeded(err_msg)
-        } else if err_type.is_subclass_of::<pyo3::exceptions::PyFileNotFoundError>().unwrap_or(false)
-            || err_type.is_subclass_of::<pyo3::exceptions::PyKeyError>().unwrap_or(false)
+        } else if err_type
+            .is_subclass_of::<pyo3::exceptions::PyFileNotFoundError>()
+            .unwrap_or(false)
+            || err_type
+                .is_subclass_of::<pyo3::exceptions::PyKeyError>()
+                .unwrap_or(false)
         {
             tonic::Status::not_found(err_msg)
         } else {
@@ -199,11 +209,7 @@ impl PyGrpcResponse {
     /// Create a new gRPC response
     #[new]
     #[pyo3(signature = (payload, metadata = None))]
-    pub fn new(
-        py: Python<'_>,
-        payload: Vec<u8>,
-        metadata: Option<HashMap<String, String>>,
-    ) -> PyResult<Self> {
+    pub fn new(py: Python<'_>, payload: Vec<u8>, metadata: Option<HashMap<String, String>>) -> PyResult<Self> {
         let py_bytes = PyBytes::new(py, &payload).into();
         let py_metadata = option_hashmap_to_pydict(py, metadata)?;
 
@@ -262,7 +268,6 @@ impl PyGrpcHandler {
             metadata: py_metadata.into(),
         })
     }
-
 }
 
 impl GrpcHandler for PyGrpcHandler {
@@ -271,10 +276,8 @@ impl GrpcHandler for PyGrpcHandler {
 
         Box::pin(async move {
             // Create Python request object
-            let py_request = Python::attach(|py| -> PyResult<PyGrpcRequest> {
-                Self::to_py_request(py, &request)
-            })
-            .map_err(pyerr_to_grpc_status)?;
+            let py_request = Python::attach(|py| -> PyResult<PyGrpcRequest> { Self::to_py_request(py, &request) })
+                .map_err(pyerr_to_grpc_status)?;
 
             // Call Python handler and get future
             let coroutine_future = Python::attach(|py| -> PyResult<_> {
@@ -291,14 +294,14 @@ impl GrpcHandler for PyGrpcHandler {
                     method.call1((req_obj.clone_ref(py),))?
                 } else {
                     return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                        "Handler must be callable or have a handle_request method"
+                        "Handler must be callable or have a handle_request method",
                     ));
                 };
 
                 // Check if it's a coroutine (async)
                 if !coroutine.hasattr("__await__")? {
                     return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                        "Handler must be async (return a coroutine)"
+                        "Handler must be async (return a coroutine)",
                     ));
                 }
 
@@ -307,7 +310,7 @@ impl GrpcHandler for PyGrpcHandler {
                     .get()
                     .ok_or_else(|| {
                         PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                            "Python async context not initialized. Call init_python_event_loop() first."
+                            "Python async context not initialized. Call init_python_event_loop() first.",
                         )
                     })?
                     .clone();
@@ -405,12 +408,7 @@ mod tests {
     fn test_py_grpc_response_creation() {
         pyo3::prepare_freethreaded_python();
         Python::with_gil(|py| {
-            let response = PyGrpcResponse::new(
-                py,
-                vec![5, 6, 7, 8],
-                None,
-            )
-            .unwrap();
+            let response = PyGrpcResponse::new(py, vec![5, 6, 7, 8], None).unwrap();
 
             assert_eq!(response.payload.bind(py).as_bytes(), &[5, 6, 7, 8]);
         });
@@ -423,15 +421,15 @@ mod tests {
             let mut metadata = std::collections::HashMap::new();
             metadata.insert("content-type".to_string(), "application/grpc".to_string());
 
-            let response = PyGrpcResponse::new(
-                py,
-                vec![],
-                Some(metadata),
-            )
-            .unwrap();
+            let response = PyGrpcResponse::new(py, vec![], Some(metadata)).unwrap();
 
             let metadata_dict = response.metadata.bind(py);
-            let value: String = metadata_dict.get_item("content-type").unwrap().unwrap().extract().unwrap();
+            let value: String = metadata_dict
+                .get_item("content-type")
+                .unwrap()
+                .unwrap()
+                .extract()
+                .unwrap();
             assert_eq!(value, "application/grpc");
         });
     }
@@ -460,12 +458,7 @@ mod tests {
     fn test_py_grpc_response_repr() {
         pyo3::prepare_freethreaded_python();
         Python::with_gil(|py| {
-            let response = PyGrpcResponse::new(
-                py,
-                vec![1, 2, 3, 4, 5],
-                None,
-            )
-            .unwrap();
+            let response = PyGrpcResponse::new(py, vec![1, 2, 3, 4, 5], None).unwrap();
 
             let repr = response.__repr__();
             assert!(repr.contains("payload_size=5"));

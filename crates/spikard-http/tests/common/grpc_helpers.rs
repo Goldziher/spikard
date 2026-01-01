@@ -40,13 +40,13 @@
 //! ```
 
 use bytes::Bytes;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use tonic::metadata::MetadataMap;
 use tonic::Code;
+use tonic::metadata::MetadataMap;
 
 /// Test server for gRPC integration testing
 ///
@@ -127,10 +127,7 @@ impl GrpcTestServer {
     /// * `service_name` - The fully qualified service name to look up
     pub fn get_handler(&self, service_name: &str) -> Option<Arc<dyn GrpcHandler>> {
         let handlers = self.handlers.lock().unwrap();
-        handlers
-            .iter()
-            .find(|h| h.service_name() == service_name)
-            .cloned()
+        handlers.iter().find(|h| h.service_name() == service_name).cloned()
     }
 
     /// Check if a service is registered
@@ -227,12 +224,12 @@ pub async fn send_unary_request(
     payload: Bytes,
     metadata: MetadataMap,
 ) -> Result<GrpcResponseData, Box<dyn std::error::Error>> {
-    let handler = server
-        .get_handler(service)
-        .ok_or_else(|| Box::new(std::io::Error::new(
+    let handler = server.get_handler(service).ok_or_else(|| {
+        Box::new(std::io::Error::new(
             std::io::ErrorKind::NotFound,
             format!("Service not found: {}", service),
-        )) as Box<dyn std::error::Error>)?;
+        )) as Box<dyn std::error::Error>
+    })?;
 
     let request = GrpcRequestData {
         service_name: service.to_string(),
@@ -265,8 +262,7 @@ pub async fn send_unary_request(
 /// assert_grpc_response(response, json!({"id": 1, "name": "Alice"}));
 /// ```
 pub fn assert_grpc_response(response: GrpcResponseData, expected: Value) {
-    let actual = serde_json::from_slice::<Value>(&response.payload)
-        .expect("Failed to parse response payload as JSON");
+    let actual = serde_json::from_slice::<Value>(&response.payload).expect("Failed to parse response payload as JSON");
 
     assert_eq!(
         actual, expected,
@@ -307,10 +303,7 @@ pub fn assert_grpc_status(result: &GrpcHandlerResult, expected_status: Code) {
             );
         }
         Ok(_) => {
-            panic!(
-                "Expected error status {:?} but got success response",
-                expected_status
-            );
+            panic!("Expected error status {:?} but got success response", expected_status);
         }
     }
 }
@@ -363,15 +356,13 @@ impl ProtobufMessageBuilder {
 
     /// Add a string field to the message
     pub fn add_string_field(&mut self, name: &str, value: &str) -> &mut Self {
-        self.fields
-            .insert(name.to_string(), Value::String(value.to_string()));
+        self.fields.insert(name.to_string(), Value::String(value.to_string()));
         self
     }
 
     /// Add an integer field to the message
     pub fn add_int_field(&mut self, name: &str, value: i64) -> &mut Self {
-        self.fields
-            .insert(name.to_string(), json!(value));
+        self.fields.insert(name.to_string(), json!(value));
         self
     }
 

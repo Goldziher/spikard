@@ -6,7 +6,7 @@
 use bytes::Bytes;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::ZendCallable;
+use ext_php_rs::types::{ZendCallable, Zval};
 use spikard_bindings_shared::grpc_metadata::{extract_metadata_to_hashmap, hashmap_to_metadata};
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use std::collections::HashMap;
@@ -23,26 +23,26 @@ use std::pin::Pin;
 #[derive(Debug, Clone)]
 pub struct PhpGrpcRequest {
     /// Fully qualified service name (e.g., "mypackage.MyService")
-    #[prop(flags = ext_php_rs::flags::PropertyFlags::Public)]
+    #[php(prop)]
     pub service_name: String,
 
     /// Method name (e.g., "GetUser")
-    #[prop(flags = ext_php_rs::flags::PropertyFlags::Public)]
+    #[php(prop)]
     pub method_name: String,
 
     /// Serialized protobuf message as bytes
-    #[prop(flags = ext_php_rs::flags::PropertyFlags::Public)]
+    #[php(prop)]
     pub payload: Vec<u8>,
 
     /// gRPC metadata (headers) as associative array
-    #[prop(flags = ext_php_rs::flags::PropertyFlags::Public)]
+    #[php(prop)]
     pub metadata: HashMap<String, String>,
 }
 
 #[php_impl]
 impl PhpGrpcRequest {
     /// Create a new gRPC request
-    #[constructor]
+    #[php(constructor)]
     pub fn __construct(
         service_name: String,
         method_name: String,
@@ -100,18 +100,18 @@ impl PhpGrpcRequest {
 #[derive(Debug, Clone)]
 pub struct PhpGrpcResponse {
     /// Serialized protobuf message as bytes
-    #[prop(flags = ext_php_rs::flags::PropertyFlags::Public)]
+    #[php(prop)]
     pub payload: Vec<u8>,
 
     /// gRPC metadata (headers) to include in response
-    #[prop(flags = ext_php_rs::flags::PropertyFlags::Public)]
+    #[php(prop)]
     pub metadata: HashMap<String, String>,
 }
 
 #[php_impl]
 impl PhpGrpcResponse {
     /// Create a new gRPC response
-    #[constructor]
+    #[php(constructor)]
     pub fn __construct(payload: Vec<u8>, metadata: Option<HashMap<String, String>>) -> Self {
         Self {
             payload,
@@ -181,15 +181,9 @@ impl PhpGrpcHandler {
     /// # Parameters
     /// * `callable_zval` - The Zval containing the callable
     /// * `service_name` - Fully qualified service name
-    pub fn register_from_zval(
-        callable_zval: &ext_php_rs::types::Zval,
-        service_name: String,
-    ) -> Result<Self, String> {
+    pub fn register_from_zval(callable_zval: &ext_php_rs::types::Zval, service_name: String) -> Result<Self, String> {
         if !callable_zval.is_callable() {
-            return Err(format!(
-                "Handler for service '{}' is not callable",
-                service_name
-            ));
+            return Err(format!("Handler for service '{}' is not callable", service_name));
         }
 
         let idx = PHP_GRPC_HANDLER_REGISTRY.with(|registry| -> Result<usize, String> {
@@ -197,10 +191,7 @@ impl PhpGrpcHandler {
             let idx = registry.len();
 
             if idx > 10_000 {
-                return Err(
-                    "gRPC handler registry is full; refusing to register more handlers"
-                        .to_string(),
-                );
+                return Err("gRPC handler registry is full; refusing to register more handlers".to_string());
             }
 
             let zval_copy = callable_zval.shallow_clone();
@@ -222,10 +213,7 @@ impl PhpGrpcHandler {
 }
 
 impl GrpcHandler for PhpGrpcHandler {
-    fn call(
-        &self,
-        request: GrpcRequestData,
-    ) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+    fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
         let handler_index = self.handler_index;
         let service_name = self.service_name.clone();
 
@@ -267,8 +255,8 @@ fn invoke_php_grpc_handler(
     })?;
 
     // Call the PHP handler
-    let response_zval = PHP_GRPC_HANDLER_REGISTRY.with(
-        |registry| -> Result<ext_php_rs::types::Zval, tonic::Status> {
+    let response_zval =
+        PHP_GRPC_HANDLER_REGISTRY.with(|registry| -> Result<ext_php_rs::types::Zval, tonic::Status> {
             let registry = registry.borrow();
             let Some(callable) = registry.get(handler_index) else {
                 return Err(tonic::Status::internal(format!(
@@ -277,31 +265,24 @@ fn invoke_php_grpc_handler(
                 )));
             };
 
-            callable.try_call(vec![&request_zval]).map_err(|e| {
-                tonic::Status::internal(format!(
-                    "PHP gRPC handler '{}' failed: {:?}",
-                    service_name, e
-                ))
-            })
-        },
-    )?;
+            callable
+                .try_call(vec![&request_zval])
+                .map_err(|e| tonic::Status::internal(format!("PHP gRPC handler '{}' failed: {:?}", service_name, e)))
+        })?;
 
     // Convert PHP response back to Rust response
     interpret_php_grpc_response(&response_zval, service_name)
 }
 
 /// Interpret a PHP return value as a gRPC response
-fn interpret_php_grpc_response(
-    response_zval: &ext_php_rs::types::Zval,
-    service_name: &str,
-) -> GrpcHandlerResult {
+fn interpret_php_grpc_response(response_zval: &ext_php_rs::types::Zval, service_name: &str) -> GrpcHandlerResult {
     // Check if the response is a PhpGrpcResponse object
     if let Some(obj) = response_zval.object() {
         // Try to get the class name to verify it's a PhpGrpcResponse
         if let Ok(class_name) = obj.get_class_name() {
             if class_name.contains("PhpGrpcResponse") || class_name.contains("GrpcResponse") {
                 // Extract the object's properties
-                if let Ok(Some(payload_zval)) = obj.get_property("payload") {
+                if let Ok(Some(payload_zval)) = obj.get_property::<Option<Zval>>("payload") {
                     let payload = if let Some(arr) = payload_zval.array() {
                         // Convert PHP array to Vec<u8>
                         let mut bytes = Vec::new();
@@ -322,7 +303,7 @@ fn interpret_php_grpc_response(
                     };
 
                     // Extract metadata
-                    let metadata = if let Ok(Some(metadata_zval)) = obj.get_property("metadata") {
+                    let metadata = if let Ok(Some(metadata_zval)) = obj.get_property::<Option<Zval>>("metadata") {
                         if let Some(arr) = metadata_zval.array() {
                             let mut meta = HashMap::new();
                             for (key, val) in arr.iter() {
@@ -403,10 +384,7 @@ mod tests {
     #[test]
     fn test_php_grpc_request_from_request_data() {
         let mut metadata_map = MetadataMap::new();
-        metadata_map.insert(
-            "authorization".parse().unwrap(),
-            "Bearer token".parse().unwrap(),
-        );
+        metadata_map.insert("authorization".parse().unwrap(), "Bearer token".parse().unwrap());
 
         let request_data = GrpcRequestData {
             service_name: "test.Service".to_string(),
@@ -466,12 +444,8 @@ mod tests {
 
     #[test]
     fn test_php_grpc_request_to_string() {
-        let request = PhpGrpcRequest::__construct(
-            "test.Service".to_string(),
-            "Method".to_string(),
-            vec![1, 2, 3],
-            None,
-        );
+        let request =
+            PhpGrpcRequest::__construct("test.Service".to_string(), "Method".to_string(), vec![1, 2, 3], None);
 
         let s = request.__toString();
         assert!(s.contains("test.Service"));

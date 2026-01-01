@@ -101,9 +101,8 @@ impl RubyGrpcResponse {
             return Err(Error::new(magnus::exception::arg_error(), "wrong number of arguments"));
         };
 
-        let payload_str = RString::try_convert(payload_value).map_err(|_| {
-            Error::new(magnus::exception::arg_error(), "payload must be a String (binary)")
-        })?;
+        let payload_str = RString::try_convert(payload_value)
+            .map_err(|_| Error::new(magnus::exception::arg_error(), "payload must be a String (binary)"))?;
 
         let payload_bytes = unsafe { payload_str.as_slice() }.to_vec();
 
@@ -203,32 +202,26 @@ impl RubyGrpcHandler {
     }
 
     fn handle_request_inner(&self, request: GrpcRequestData) -> GrpcHandlerResult {
-        let ruby = Ruby::get().map_err(|_| {
-            tonic::Status::internal("Ruby VM unavailable while invoking gRPC handler")
-        })?;
+        let ruby =
+            Ruby::get().map_err(|_| tonic::Status::internal("Ruby VM unavailable while invoking gRPC handler"))?;
 
         // Convert request to Ruby object
         let ruby_request = RubyGrpcRequest::from_grpc_request(request);
-        let request_value = ruby
-            .obj_wrap(ruby_request)
-            .as_value();
+        let request_value = ruby.obj_wrap(ruby_request).as_value();
 
         // Call Ruby handler
         let handler_value = self.inner.handler.get_inner_with(&ruby);
         let response_value = handler_value
             .funcall::<_, _, Value>("handle_request", (request_value,))
-            .map_err(|err| {
-                tonic::Status::internal(format!("Ruby gRPC handler failed: {}", err))
-            })?;
+            .map_err(|err| tonic::Status::internal(format!("Ruby gRPC handler failed: {}", err)))?;
 
         // Convert Ruby response to GrpcResponseData
-        let ruby_response = <&RubyGrpcResponse>::try_convert(response_value)
-            .map_err(|err| {
-                tonic::Status::internal(format!(
-                    "Handler must return Spikard::Grpc::Response, got error: {}",
-                    err
-                ))
-            })?;
+        let ruby_response = <&RubyGrpcResponse>::try_convert(response_value).map_err(|err| {
+            tonic::Status::internal(format!(
+                "Handler must return Spikard::Grpc::Response, got error: {}",
+                err
+            ))
+        })?;
 
         ruby_response
             .clone()

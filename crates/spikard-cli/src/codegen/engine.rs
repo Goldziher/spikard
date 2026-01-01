@@ -149,7 +149,14 @@ impl CodegenEngine {
                     .context("Failed to generate code from GraphQL schema")?;
                 Ok(CodegenOutcome::Files(assets))
             }
-            (SchemaKind::Protobuf, CodegenTargetKind::Protobuf { language, output, target }) => {
+            (
+                SchemaKind::Protobuf,
+                CodegenTargetKind::Protobuf {
+                    language,
+                    output,
+                    target,
+                },
+            ) => {
                 let schema = super::protobuf::parse_proto_schema(&request.schema_path)?;
 
                 // Parse target string to ProtobufTarget enum
@@ -157,12 +164,17 @@ impl CodegenEngine {
                     "all" => super::protobuf::generators::ProtobufTarget::All,
                     "messages" => super::protobuf::generators::ProtobufTarget::Messages,
                     "services" => super::protobuf::generators::ProtobufTarget::Services,
-                    _ => bail!("Invalid protobuf target: {}. Use 'all', 'messages', or 'services'", target),
+                    _ => bail!(
+                        "Invalid protobuf target: {}. Use 'all', 'messages', or 'services'",
+                        target
+                    ),
                 };
 
                 let code = match language {
                     TargetLanguage::Python => super::protobuf::generate_python_protobuf(&schema, &proto_target)?,
-                    TargetLanguage::TypeScript => super::protobuf::generate_typescript_protobuf(&schema, &proto_target)?,
+                    TargetLanguage::TypeScript => {
+                        super::protobuf::generate_typescript_protobuf(&schema, &proto_target)?
+                    }
                     TargetLanguage::Ruby => super::protobuf::generate_ruby_protobuf(&schema, &proto_target)?,
                     TargetLanguage::Php => super::protobuf::generate_php_protobuf(&schema, &proto_target)?,
                     TargetLanguage::Rust => bail!("Rust protobuf generation not yet implemented"),

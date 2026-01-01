@@ -421,6 +421,7 @@ pub(crate) fn extract_server_config_from_php(config_zval: &Zval) -> Result<spika
         enable_http_trace: false,
         openapi: openapi_config,
         jsonrpc: None,
+        grpc: None,
         lifecycle_hooks: None,
         di_container: None,
     })

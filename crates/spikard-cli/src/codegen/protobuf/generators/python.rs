@@ -5,7 +5,7 @@
 
 use super::ProtobufGenerator;
 use super::base::{escape_string, map_proto_type_to_language, sanitize_identifier};
-use crate::codegen::protobuf::spec_parser::{ProtobufSchema, FieldLabel, MessageDef, ServiceDef};
+use crate::codegen::protobuf::spec_parser::{FieldLabel, MessageDef, ProtobufSchema, ServiceDef};
 use anyhow::Result;
 
 /// Python Protobuf code generator
@@ -116,8 +116,7 @@ impl PythonProtobufGenerator {
                 let is_optional = field.label == FieldLabel::Optional;
                 let is_repeated = field.label == FieldLabel::Repeated;
 
-                let field_type =
-                    map_proto_type_to_language(&field.field_type, "python", is_optional, is_repeated);
+                let field_type = map_proto_type_to_language(&field.field_type, "python", is_optional, is_repeated);
                 code.push_str(&format!("    {}: {}\n", field_name, field_type));
             }
 
@@ -131,15 +130,20 @@ impl PythonProtobufGenerator {
                 let is_optional = field.label == FieldLabel::Optional;
                 let is_repeated = field.label == FieldLabel::Repeated;
 
-                let field_type =
-                    map_proto_type_to_language(&field.field_type, "python", is_optional, is_repeated);
+                let field_type = map_proto_type_to_language(&field.field_type, "python", is_optional, is_repeated);
 
                 // Default value based on type
                 let default_val = if is_repeated || is_optional {
                     "None".to_string()
-                } else if matches!(field.field_type, crate::codegen::protobuf::spec_parser::ProtoType::String) {
+                } else if matches!(
+                    field.field_type,
+                    crate::codegen::protobuf::spec_parser::ProtoType::String
+                ) {
                     "\"\"".to_string()
-                } else if matches!(field.field_type, crate::codegen::protobuf::spec_parser::ProtoType::Bytes) {
+                } else if matches!(
+                    field.field_type,
+                    crate::codegen::protobuf::spec_parser::ProtoType::Bytes
+                ) {
                     "b\"\"".to_string()
                 } else if matches!(field.field_type, crate::codegen::protobuf::spec_parser::ProtoType::Bool) {
                     "False".to_string()
@@ -247,7 +251,7 @@ impl PythonProtobufGenerator {
 mod tests {
     use super::*;
     use crate::codegen::protobuf::spec_parser::{
-        MessageDef, FieldDef, ProtoType, FieldLabel, ServiceDef, MethodDef, EnumDef, EnumValue,
+        EnumDef, EnumValue, FieldDef, FieldLabel, MessageDef, MethodDef, ProtoType, ServiceDef,
     };
     use std::collections::HashMap;
 
@@ -307,22 +311,21 @@ mod tests {
     }
 
     /// Create a service definition with methods
-    fn create_service(
-        name: &str,
-        methods: Vec<(&str, &str, &str, bool, bool)>,
-    ) -> ServiceDef {
+    fn create_service(name: &str, methods: Vec<(&str, &str, &str, bool, bool)>) -> ServiceDef {
         ServiceDef {
             name: name.to_string(),
             methods: methods
                 .into_iter()
-                .map(|(method_name, input, output, input_streaming, output_streaming)| MethodDef {
-                    name: method_name.to_string(),
-                    input_type: input.to_string(),
-                    output_type: output.to_string(),
-                    input_streaming,
-                    output_streaming,
-                    description: None,
-                })
+                .map(
+                    |(method_name, input, output, input_streaming, output_streaming)| MethodDef {
+                        name: method_name.to_string(),
+                        input_type: input.to_string(),
+                        output_type: output.to_string(),
+                        input_streaming,
+                        output_streaming,
+                        description: None,
+                    },
+                )
                 .collect(),
             description: None,
         }
@@ -394,10 +397,7 @@ mod tests {
             code.contains("def __init__"),
             "Generated code must contain __init__ method"
         );
-        assert!(
-            code.contains("\"\"\""),
-            "Generated code must contain docstrings"
-        );
+        assert!(code.contains("\"\"\""), "Generated code must contain docstrings");
         assert!(
             has_valid_python_syntax(&code),
             "Generated code must have valid Python syntax structure"
@@ -473,10 +473,7 @@ mod tests {
             code.contains("bytes_field: bytes"),
             "Bytes field must have bytes type hint"
         );
-        assert!(
-            has_type_hints(&code),
-            "Generated code must contain type hints"
-        );
+        assert!(has_type_hints(&code), "Generated code must contain type hints");
     }
 
     // ============================================================================
@@ -622,10 +619,7 @@ mod tests {
         );
 
         // Verify all methods are async
-        assert!(
-            code.contains("async def create_user"),
-            "Unary method must be async"
-        );
+        assert!(code.contains("async def create_user"), "Unary method must be async");
         assert!(
             code.contains("async def list_users"),
             "Server-side streaming method must be async"
@@ -647,10 +641,7 @@ mod tests {
             "Server streaming method must return AsyncIterator"
         );
 
-        assert!(
-            has_async_methods(&code),
-            "Service must have async methods"
-        );
+        assert!(has_async_methods(&code), "Service must have async methods");
     }
 
     // ============================================================================
@@ -858,10 +849,7 @@ mod tests {
     #[test]
     fn test_service_file_header_and_imports() {
         let mut schema = create_test_schema("example.service");
-        let service = create_service(
-            "TestService",
-            vec![("GetData", "Request", "Response", false, false)],
-        );
+        let service = create_service("TestService", vec![("GetData", "Request", "Response", false, false)]);
         schema.services.insert("TestService".to_string(), service);
 
         let generator = PythonProtobufGenerator;
@@ -886,10 +874,7 @@ mod tests {
     /// Verify enum class generation
     #[test]
     fn test_enum_generation() {
-        let enum_def = create_enum(
-            "Status",
-            vec![("UNKNOWN", 0), ("ACTIVE", 1), ("INACTIVE", 2)],
-        );
+        let enum_def = create_enum("Status", vec![("UNKNOWN", 0), ("ACTIVE", 1), ("INACTIVE", 2)]);
 
         let generator = PythonProtobufGenerator;
         let code = generator.generate_enum_class(&enum_def);
@@ -912,10 +897,7 @@ mod tests {
         let code = generator.generate_message_class(&message);
 
         // Empty messages should contain pass statement
-        assert!(
-            code.contains("pass"),
-            "Empty message must contain pass statement"
-        );
+        assert!(code.contains("pass"), "Empty message must contain pass statement");
         assert!(code.contains("class Empty"), "Message name must be present");
     }
 
@@ -1013,10 +995,7 @@ mod tests {
             code.contains("name: str = \"\""),
             "String field should default to empty string"
         );
-        assert!(
-            code.contains("count: int = 0"),
-            "Numeric field should default to 0"
-        );
+        assert!(code.contains("count: int = 0"), "Numeric field should default to 0");
         assert!(
             code.contains("optional_value: Optional[str] = None"),
             "Optional field should default to None"
@@ -1068,16 +1047,14 @@ mod tests {
     fn test_generate_message_with_optional_field() {
         let message = MessageDef {
             name: "User".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "email".to_string(),
-                    number: 3,
-                    field_type: ProtoType::String,
-                    label: FieldLabel::Optional,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "email".to_string(),
+                number: 3,
+                field_type: ProtoType::String,
+                label: FieldLabel::Optional,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,
@@ -1093,16 +1070,14 @@ mod tests {
     fn test_generate_message_with_repeated_field() {
         let message = MessageDef {
             name: "User".to_string(),
-            fields: vec![
-                FieldDef {
-                    name: "tags".to_string(),
-                    number: 4,
-                    field_type: ProtoType::String,
-                    label: FieldLabel::Repeated,
-                    default_value: None,
-                    description: None,
-                },
-            ],
+            fields: vec![FieldDef {
+                name: "tags".to_string(),
+                number: 4,
+                field_type: ProtoType::String,
+                label: FieldLabel::Repeated,
+                default_value: None,
+                description: None,
+            }],
             nested_messages: std::collections::HashMap::new(),
             nested_enums: std::collections::HashMap::new(),
             description: None,

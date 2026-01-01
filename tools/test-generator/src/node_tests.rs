@@ -129,10 +129,7 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
                 let test_code = generate_grpc_test(fixture)
                     .context(format!("Failed to generate gRPC test for {}", fixture.name))?;
 
-                let test_name = fixture.name
-                    .to_lowercase()
-                    .replace(" ", "_")
-                    .replace("-", "_");
+                let test_name = sanitize_identifier(&fixture.name);
                 let test_file = tests_dir.join(format!("grpc_{}{}", test_name, test_suffix));
 
                 let final_code = rewrite_wasm_imports(test_code);

@@ -110,9 +110,8 @@ final class GrpcResponseTest extends TestCase
     {
         $response = new Response('payload');
 
-        // Readonly properties cannot be modified
-        $this->expectException(\Error::class);
-        $response->payload = 'other';
+        $property = new \ReflectionProperty(Response::class, 'payload');
+        self::assertTrue($property->isReadOnly());
     }
 
     public function testBinaryPayload(): void

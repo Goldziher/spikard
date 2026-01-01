@@ -880,8 +880,7 @@ impl RubyHandler {
 
     fn handle(&self, request_data: RequestData) -> HandlerResult {
         with_gvl(|| {
-            let result =
-                std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(request_data)));
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_inner(request_data)));
             match result {
                 Ok(res) => res,
                 Err(_) => Err((

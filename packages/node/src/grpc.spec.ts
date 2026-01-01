@@ -7,13 +7,13 @@
 
 import { describe, expect, it } from "vitest";
 import {
-	GrpcError,
-	GrpcStatusCode,
 	createServiceHandler,
 	createUnaryHandler,
+	GrpcError,
 	type GrpcHandler,
 	type GrpcRequest,
 	type GrpcResponse,
+	GrpcStatusCode,
 } from "./grpc";
 
 describe("GrpcError", () => {
@@ -212,7 +212,7 @@ describe("createUnaryHandler", () => {
 		const handler = createUnaryHandler(
 			"GetUser",
 			async (_req: { id: number }, metadata: Record<string, string>) => {
-				expect(metadata["authorization"]).toBe("Bearer token123");
+				expect(metadata.authorization).toBe("Bearer token123");
 				return { name: "Test" };
 			},
 			mockRequestType,
@@ -351,12 +351,7 @@ describe("createServiceHandler", () => {
 
 	it("should reject unimplemented methods", async () => {
 		const serviceHandler = createServiceHandler({
-			GetUser: createUnaryHandler(
-				"GetUser",
-				async () => ({ name: "Test" }),
-				mockRequestType,
-				mockResponseType,
-			),
+			GetUser: createUnaryHandler("GetUser", async () => ({ name: "Test" }), mockRequestType, mockResponseType),
 		});
 
 		const request: GrpcRequest = {
@@ -377,24 +372,9 @@ describe("createServiceHandler", () => {
 
 	it("should handle multiple methods", async () => {
 		const methods = {
-			Method1: createUnaryHandler(
-				"Method1",
-				async () => ({ name: "M1" }),
-				mockRequestType,
-				mockResponseType,
-			),
-			Method2: createUnaryHandler(
-				"Method2",
-				async () => ({ name: "M2" }),
-				mockRequestType,
-				mockResponseType,
-			),
-			Method3: createUnaryHandler(
-				"Method3",
-				async () => ({ name: "M3" }),
-				mockRequestType,
-				mockResponseType,
-			),
+			Method1: createUnaryHandler("Method1", async () => ({ name: "M1" }), mockRequestType, mockResponseType),
+			Method2: createUnaryHandler("Method2", async () => ({ name: "M2" }), mockRequestType, mockResponseType),
+			Method3: createUnaryHandler("Method3", async () => ({ name: "M3" }), mockRequestType, mockResponseType),
 		};
 
 		const serviceHandler = createServiceHandler(methods);
@@ -590,9 +570,7 @@ describe("Edge cases", () => {
 
 describe("Streaming Support - Server-Side Streaming", () => {
 	it("should handle server-side streaming RPC", async () => {
-		async function* serverStreamHandler(
-			request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* serverStreamHandler(request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			const count = 5;
 			for (let i = 0; i < count; i++) {
 				yield {
@@ -620,13 +598,11 @@ describe("Streaming Support - Server-Side Streaming", () => {
 	});
 
 	it("should handle empty server-side stream", async () => {
-		async function* emptyStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
-			// Yield nothing
-			return;
-			// This makes TypeScript happy with the async generator type
-			yield undefined as any;
+		async function* emptyStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
+			const empty: GrpcResponse[] = [];
+			for (const item of empty) {
+				yield item;
+			}
 		}
 
 		const request: GrpcRequest = {
@@ -645,9 +621,7 @@ describe("Streaming Support - Server-Side Streaming", () => {
 	});
 
 	it("should handle large server-side stream (1000+ messages)", async () => {
-		async function* largeStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* largeStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			const messageCount = 1500;
 			for (let i = 0; i < messageCount; i++) {
 				yield {
@@ -675,19 +649,14 @@ describe("Streaming Support - Server-Side Streaming", () => {
 	});
 
 	it("should handle stream with error conditions", async () => {
-		async function* errorStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* errorStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			for (let i = 0; i < 3; i++) {
 				yield {
 					payload: Buffer.from(JSON.stringify({ count: i })),
 				};
 			}
 			// Simulate error after some messages
-			throw new GrpcError(
-				GrpcStatusCode.INTERNAL,
-				"Stream processing failed",
-			);
+			throw new GrpcError(GrpcStatusCode.INTERNAL, "Stream processing failed");
 		}
 
 		const request: GrpcRequest = {
@@ -716,9 +685,7 @@ describe("Streaming Support - Server-Side Streaming", () => {
 
 describe("Streaming Support - Client-Side Streaming", () => {
 	it("should handle client-side streaming RPC", async () => {
-		async function clientStreamHandler(
-			requests: AsyncIterator<GrpcRequest>,
-		): Promise<GrpcResponse> {
+		async function clientStreamHandler(requests: AsyncIterator<GrpcRequest>): Promise<GrpcResponse> {
 			const messages: string[] = [];
 
 			for await (const request of requests) {
@@ -727,9 +694,7 @@ describe("Streaming Support - Client-Side Streaming", () => {
 			}
 
 			return {
-				payload: Buffer.from(
-					JSON.stringify({ processed: messages.length, messages }),
-				),
+				payload: Buffer.from(JSON.stringify({ processed: messages.length, messages })),
 			};
 		}
 
@@ -753,9 +718,7 @@ describe("Streaming Support - Client-Side Streaming", () => {
 	});
 
 	it("should handle empty client-side stream", async () => {
-		async function emptyClientStreamHandler(
-			requests: AsyncIterator<GrpcRequest>,
-		): Promise<GrpcResponse> {
+		async function emptyClientStreamHandler(requests: AsyncIterator<GrpcRequest>): Promise<GrpcResponse> {
 			let count = 0;
 			for await (_request of requests) {
 				count++;
@@ -767,10 +730,10 @@ describe("Streaming Support - Client-Side Streaming", () => {
 		}
 
 		async function* emptyRequestStream(): AsyncIterator<GrpcRequest> {
-			// Empty stream - no yields
-			return;
-			// This makes TypeScript happy with the async generator type
-			yield undefined as any;
+			const empty: GrpcRequest[] = [];
+			for (const item of empty) {
+				yield item;
+			}
 		}
 
 		const response = await emptyClientStreamHandler(emptyRequestStream());
@@ -782,9 +745,7 @@ describe("Streaming Support - Client-Side Streaming", () => {
 
 describe("Streaming Support - Bidirectional Streaming", () => {
 	it("should handle bidirectional streaming RPC", async () => {
-		async function* bidiStreamHandler(
-			requests: AsyncIterator<GrpcRequest>,
-		): AsyncIterator<GrpcResponse> {
+		async function* bidiStreamHandler(requests: AsyncIterator<GrpcRequest>): AsyncIterator<GrpcResponse> {
 			for await (const request of requests) {
 				const data = JSON.parse(request.payload.toString());
 				yield {
@@ -817,27 +778,18 @@ describe("Streaming Support - Bidirectional Streaming", () => {
 		}
 
 		expect(responses).toHaveLength(3);
-		expect(
-			JSON.parse(responses[0].payload.toString()),
-		).toHaveProperty("processed", true);
-		expect(
-			JSON.parse(responses[1].payload.toString()).echo.msg,
-		).toBe("hello-1");
+		expect(JSON.parse(responses[0].payload.toString())).toHaveProperty("processed", true);
+		expect(JSON.parse(responses[1].payload.toString()).echo.msg).toBe("hello-1");
 		expect(responses[2].metadata?.["x-processed"]).toBe("true");
 	});
 
 	it("should handle bidirectional streaming with error on request", async () => {
-		async function* bidiErrorHandler(
-			requests: AsyncIterator<GrpcRequest>,
-		): AsyncIterator<GrpcResponse> {
+		async function* bidiErrorHandler(requests: AsyncIterator<GrpcRequest>): AsyncIterator<GrpcResponse> {
 			let count = 0;
 			for await (const request of requests) {
 				count++;
 				if (count === 2) {
-					throw new GrpcError(
-						GrpcStatusCode.INVALID_ARGUMENT,
-						"Invalid message received",
-					);
+					throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "Invalid message received");
 				}
 				yield {
 					payload: Buffer.from(JSON.stringify({ count })),
@@ -875,9 +827,7 @@ describe("Streaming Support - Bidirectional Streaming", () => {
 
 describe("Streaming Support - Advanced Cases", () => {
 	it("should handle stream cancellation", async () => {
-		async function* cancellableStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* cancellableStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			for (let i = 0; i < 100; i++) {
 				yield {
 					payload: Buffer.from(JSON.stringify({ count: i })),
@@ -908,9 +858,7 @@ describe("Streaming Support - Advanced Cases", () => {
 	});
 
 	it("should handle stream backpressure with metadata", async () => {
-		async function* backpressureStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* backpressureStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			for (let i = 0; i < 10; i++) {
 				yield {
 					payload: Buffer.from(JSON.stringify({ id: i, size: i * 1024 })),
@@ -943,9 +891,7 @@ describe("Streaming Support - Advanced Cases", () => {
 	});
 
 	it("should handle mixed streaming patterns with response objects", async () => {
-		async function* mixedStreamHandler(
-			requests: AsyncIterator<GrpcRequest>,
-		): AsyncIterator<GrpcResponse> {
+		async function* mixedStreamHandler(requests: AsyncIterator<GrpcRequest>): AsyncIterator<GrpcResponse> {
 			let messageCount = 0;
 
 			for await (const request of requests) {
@@ -1018,10 +964,7 @@ describe("gRPC Status Codes - Extended Coverage", () => {
 		const handler = createUnaryHandler(
 			"Upload",
 			async () => {
-				throw new GrpcError(
-					GrpcStatusCode.RESOURCE_EXHAUSTED,
-					"Quota exceeded: daily upload limit reached",
-				);
+				throw new GrpcError(GrpcStatusCode.RESOURCE_EXHAUSTED, "Quota exceeded: daily upload limit reached");
 			},
 			mockRequestType,
 			mockResponseType,
@@ -1048,10 +991,7 @@ describe("gRPC Status Codes - Extended Coverage", () => {
 		const handler = createUnaryHandler(
 			"ProcessOrder",
 			async () => {
-				throw new GrpcError(
-					GrpcStatusCode.FAILED_PRECONDITION,
-					"Order cannot be processed: payment not authorized",
-				);
+				throw new GrpcError(GrpcStatusCode.FAILED_PRECONDITION, "Order cannot be processed: payment not authorized");
 			},
 			mockRequestType,
 			mockResponseType,
@@ -1076,10 +1016,7 @@ describe("gRPC Status Codes - Extended Coverage", () => {
 		const handler = createUnaryHandler(
 			"CommitTransaction",
 			async () => {
-				throw new GrpcError(
-					GrpcStatusCode.ABORTED,
-					"Transaction aborted due to concurrent modification",
-				);
+				throw new GrpcError(GrpcStatusCode.ABORTED, "Transaction aborted due to concurrent modification");
 			},
 			mockRequestType,
 			mockResponseType,
@@ -1104,10 +1041,7 @@ describe("gRPC Status Codes - Extended Coverage", () => {
 			"GetPage",
 			async (req: { id: number }) => {
 				if (req.id > 999) {
-					throw new GrpcError(
-						GrpcStatusCode.OUT_OF_RANGE,
-						"Page number out of range",
-					);
+					throw new GrpcError(GrpcStatusCode.OUT_OF_RANGE, "Page number out of range");
 				}
 				return { name: "Page" };
 			},
@@ -1133,10 +1067,7 @@ describe("gRPC Status Codes - Extended Coverage", () => {
 		const handler = createUnaryHandler(
 			"RetrieveData",
 			async () => {
-				throw new GrpcError(
-					GrpcStatusCode.DATA_LOSS,
-					"Data corruption detected in backup",
-				);
+				throw new GrpcError(GrpcStatusCode.DATA_LOSS, "Data corruption detected in backup");
 			},
 			mockRequestType,
 			mockResponseType,
@@ -1160,10 +1091,7 @@ describe("gRPC Status Codes - Extended Coverage", () => {
 		const handler = createUnaryHandler(
 			"UnknownOperation",
 			async () => {
-				throw new GrpcError(
-					GrpcStatusCode.UNKNOWN,
-					"An unknown error occurred",
-				);
+				throw new GrpcError(GrpcStatusCode.UNKNOWN, "An unknown error occurred");
 			},
 			mockRequestType,
 			mockResponseType,
@@ -1187,10 +1115,7 @@ describe("gRPC Status Codes - Extended Coverage", () => {
 		const handler = createUnaryHandler(
 			"SlowOperation",
 			async () => {
-				throw new GrpcError(
-					GrpcStatusCode.DEADLINE_EXCEEDED,
-					"Request deadline exceeded after 30 seconds",
-				);
+				throw new GrpcError(GrpcStatusCode.DEADLINE_EXCEEDED, "Request deadline exceeded after 30 seconds");
 			},
 			mockRequestType,
 			mockResponseType,
@@ -1214,10 +1139,7 @@ describe("gRPC Status Codes - Extended Coverage", () => {
 		const handler = createUnaryHandler(
 			"CancellableOperation",
 			async () => {
-				throw new GrpcError(
-					GrpcStatusCode.CANCELLED,
-					"Operation was cancelled by client",
-				);
+				throw new GrpcError(GrpcStatusCode.CANCELLED, "Operation was cancelled by client");
 			},
 			mockRequestType,
 			mockResponseType,
@@ -1241,10 +1163,7 @@ describe("gRPC Status Codes - Extended Coverage", () => {
 		const handler = createUnaryHandler(
 			"CheckService",
 			async () => {
-				throw new GrpcError(
-					GrpcStatusCode.UNAVAILABLE,
-					"Service temporarily unavailable, try again later",
-				);
+				throw new GrpcError(GrpcStatusCode.UNAVAILABLE, "Service temporarily unavailable, try again later");
 			},
 			mockRequestType,
 			mockResponseType,
@@ -1268,10 +1187,7 @@ describe("gRPC Status Codes - Extended Coverage", () => {
 		const handler = createUnaryHandler(
 			"CreateUser",
 			async () => {
-				throw new GrpcError(
-					GrpcStatusCode.ALREADY_EXISTS,
-					"User with email already exists",
-				);
+				throw new GrpcError(GrpcStatusCode.ALREADY_EXISTS, "User with email already exists");
 			},
 			mockRequestType,
 			mockResponseType,
@@ -1394,9 +1310,7 @@ describe("Protobuf Integration Tests", () => {
 	it("should handle protobuf Duration type", async () => {
 		// Simulate protobuf Duration: { seconds: number, nanos: number }
 		const mockDurationRequestType = {
-			decode(
-				_buffer: Uint8Array,
-			): { timeout: { seconds: number; nanos: number } } {
+			decode(_buffer: Uint8Array): { timeout: { seconds: number; nanos: number } } {
 				return {
 					timeout: {
 						seconds: 30,
@@ -1441,9 +1355,7 @@ describe("Protobuf Integration Tests", () => {
 	it("should handle protobuf Struct type (JSON-like data)", async () => {
 		// Simulate protobuf Struct: { fields: Map<string, Value> }
 		const mockStructRequestType = {
-			decode(
-				_buffer: Uint8Array,
-			): {
+			decode(_buffer: Uint8Array): {
 				metadata: Record<string, unknown>;
 			} {
 				return {
@@ -1461,9 +1373,7 @@ describe("Protobuf Integration Tests", () => {
 			encode(message: { processed: boolean }): { finish(): Uint8Array } {
 				return {
 					finish() {
-						return new TextEncoder().encode(
-							JSON.stringify(message),
-						);
+						return new TextEncoder().encode(JSON.stringify(message));
 					},
 				};
 			},
@@ -1489,10 +1399,7 @@ describe("Protobuf Integration Tests", () => {
 		};
 
 		const response = await handler.handleRequest(request);
-		expect(JSON.parse(response.payload.toString())).toHaveProperty(
-			"processed",
-			true,
-		);
+		expect(JSON.parse(response.payload.toString())).toHaveProperty("processed", true);
 	});
 
 	it("should handle protobuf OneOf fields", async () => {
@@ -1544,9 +1451,7 @@ describe("Protobuf Integration Tests", () => {
 	it("should handle protobuf map fields", async () => {
 		// Simulate map field: Map<string, Value>
 		const mockMapRequestType = {
-			decode(
-				_buffer: Uint8Array,
-			): {
+			decode(_buffer: Uint8Array): {
 				attributes: Map<string, string>;
 			} {
 				const map = new Map<string, string>();
@@ -1883,21 +1788,14 @@ describe("Advanced Routing and Service Handling", () => {
 		};
 
 		const userResponse = await userServiceRouter.handleRequest(userRequest);
-		const productResponse = await productServiceRouter.handleRequest(
-			productRequest,
-		);
+		const productResponse = await productServiceRouter.handleRequest(productRequest);
 
 		expect(userResponse.payload.toString()).toBe("UserService.Get");
 		expect(productResponse.payload.toString()).toBe("ProductService.Get");
 	});
 
 	it("should respect method name case sensitivity", async () => {
-		const handler = createUnaryHandler(
-			"GetUser",
-			async () => ({ name: "Found" }),
-			mockRequestType,
-			mockResponseType,
-		);
+		const handler = createUnaryHandler("GetUser", async () => ({ name: "Found" }), mockRequestType, mockResponseType);
 
 		const serviceRouter = createServiceHandler({
 			GetUser: handler,
@@ -1921,9 +1819,7 @@ describe("Advanced Routing and Service Handling", () => {
 		expect(response.payload.toString()).toBe("Found");
 
 		// Should fail with wrong case
-		await expect(serviceRouter.handleRequest(wrongCaseRequest)).rejects.toThrow(
-			GrpcError,
-		);
+		await expect(serviceRouter.handleRequest(wrongCaseRequest)).rejects.toThrow(GrpcError);
 	});
 
 	it("should handle service names with dots and segments", async () => {
@@ -1945,9 +1841,7 @@ describe("Advanced Routing and Service Handling", () => {
 			metadata: {},
 		};
 
-		const response = await serviceRouter.handleRequest(
-			complexServiceRequest,
-		);
+		const response = await serviceRouter.handleRequest(complexServiceRequest);
 		expect(response.payload.toString()).toBe("ComplexName");
 	});
 
@@ -1976,12 +1870,7 @@ describe("Advanced Routing and Service Handling", () => {
 
 	it("should handle multiple method handlers in same service", async () => {
 		const methods = {
-			GetUser: createUnaryHandler(
-				"GetUser",
-				async () => ({ name: "User" }),
-				mockRequestType,
-				mockResponseType,
-			),
+			GetUser: createUnaryHandler("GetUser", async () => ({ name: "User" }), mockRequestType, mockResponseType),
 			DeleteUser: createUnaryHandler(
 				"DeleteUser",
 				async () => ({ name: "Deleted" }),
@@ -1994,12 +1883,7 @@ describe("Advanced Routing and Service Handling", () => {
 				mockRequestType,
 				mockResponseType,
 			),
-			ListUsers: createUnaryHandler(
-				"ListUsers",
-				async () => ({ name: "List" }),
-				mockRequestType,
-				mockResponseType,
-			),
+			ListUsers: createUnaryHandler("ListUsers", async () => ({ name: "List" }), mockRequestType, mockResponseType),
 		};
 
 		const serviceRouter = createServiceHandler(methods);
@@ -2034,9 +1918,7 @@ describe("Advanced Routing and Service Handling", () => {
 			metadata: {},
 		};
 
-		await expect(emptyServiceRouter.handleRequest(request)).rejects.toThrow(
-			GrpcError,
-		);
+		await expect(emptyServiceRouter.handleRequest(request)).rejects.toThrow(GrpcError);
 	});
 
 	it("should preserve order of handlers in routing", async () => {
@@ -2106,19 +1988,14 @@ describe("Advanced Routing and Service Handling", () => {
 
 describe("Extended Streaming - Advanced Error Handling", () => {
 	it("should propagate errors in server-side stream correctly", async () => {
-		async function* errorStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* errorStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			yield {
 				payload: Buffer.from(JSON.stringify({ message: "first" })),
 			};
 			yield {
 				payload: Buffer.from(JSON.stringify({ message: "second" })),
 			};
-			throw new GrpcError(
-				GrpcStatusCode.UNAVAILABLE,
-				"Stream terminated unexpectedly",
-			);
+			throw new GrpcError(GrpcStatusCode.UNAVAILABLE, "Stream terminated unexpectedly");
 		}
 
 		const request: GrpcRequest = {
@@ -2141,15 +2018,11 @@ describe("Extended Streaming - Advanced Error Handling", () => {
 
 		expect(responses).toHaveLength(2);
 		expect(capturedError).toBeInstanceOf(GrpcError);
-		expect((capturedError as GrpcError).code).toBe(
-			GrpcStatusCode.UNAVAILABLE,
-		);
+		expect((capturedError as GrpcError).code).toBe(GrpcStatusCode.UNAVAILABLE);
 	});
 
 	it("should handle stream with concurrent message yields", async () => {
-		async function* concurrentStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* concurrentStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			const messages = Array.from({ length: 20 }, (_, i) => ({
 				id: i,
 				timestamp: Date.now(),
@@ -2184,9 +2057,7 @@ describe("Extended Streaming - Advanced Error Handling", () => {
 	});
 
 	it("should handle stream with batched responses", async () => {
-		async function* batchedStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* batchedStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			const batchSize = 5;
 			const totalMessages = 25;
 
@@ -2221,9 +2092,7 @@ describe("Extended Streaming - Advanced Error Handling", () => {
 	});
 
 	it("should handle stream with null/undefined payload handling", async () => {
-		async function* safeStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* safeStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			for (let i = 0; i < 3; i++) {
 				yield {
 					payload: Buffer.from(
@@ -2249,18 +2118,14 @@ describe("Extended Streaming - Advanced Error Handling", () => {
 		}
 
 		expect(responses).toHaveLength(3);
-		expect(JSON.parse(responses[0].payload.toString()).optional).toBe(
-			"present",
-		);
+		expect(JSON.parse(responses[0].payload.toString()).optional).toBe("present");
 		expect(JSON.parse(responses[1].payload.toString()).optional).toBeNull();
 	});
 });
 
 describe("Extended Streaming - Performance & Scale", () => {
 	it("should handle very large stream (5000+ messages)", async () => {
-		async function* veryLargeStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* veryLargeStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			const messageCount = 5000;
 			for (let i = 0; i < messageCount; i++) {
 				yield {
@@ -2285,17 +2150,13 @@ describe("Extended Streaming - Performance & Scale", () => {
 	});
 
 	it("should handle stream with large payload per message", async () => {
-		async function* largePayloadStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* largePayloadStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			const largeData = Buffer.alloc(100 * 1024); // 100KB per message
 			largeData.fill("x");
 
 			for (let i = 0; i < 5; i++) {
 				yield {
-					payload: Buffer.from(
-						JSON.stringify({ index: i, size: largeData.length }),
-					),
+					payload: Buffer.from(JSON.stringify({ index: i, size: largeData.length })),
 				};
 			}
 		}
@@ -2318,9 +2179,7 @@ describe("Extended Streaming - Performance & Scale", () => {
 	});
 
 	it("should handle rapid fire stream messages", async () => {
-		async function* rapidStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* rapidStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			// Rapidly yield many messages in quick succession
 			for (let i = 0; i < 100; i++) {
 				yield {
@@ -2350,9 +2209,7 @@ describe("Extended Streaming - Performance & Scale", () => {
 	});
 
 	it("should handle stream with mixed metadata patterns", async () => {
-		async function* mixedMetadataStreamHandler(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* mixedMetadataStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			for (let i = 0; i < 10; i++) {
 				const metadata: Record<string, string> = {
 					"x-index": i.toString(),
@@ -2460,10 +2317,7 @@ describe("Extended Status Codes - Comprehensive Coverage", () => {
 		const handlerGrpcError = createUnaryHandler(
 			"GrpcError",
 			async () => {
-				throw new GrpcError(
-					GrpcStatusCode.INTERNAL,
-					"Intentional INTERNAL error",
-				);
+				throw new GrpcError(GrpcStatusCode.INTERNAL, "Intentional INTERNAL error");
 			},
 			mockRequestType,
 			mockResponseType,
@@ -2501,18 +2355,13 @@ describe("Extended Status Codes - Comprehensive Coverage", () => {
 	});
 
 	it("should handle error codes in stream contexts", async () => {
-		async function* streamWithMultipleErrors(
-			_request: GrpcRequest,
-		): AsyncIterator<GrpcResponse> {
+		async function* streamWithMultipleErrors(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			yield {
 				payload: Buffer.from(JSON.stringify({ id: 1 })),
 			};
 
 			// Simulate context-specific error
-			throw new GrpcError(
-				GrpcStatusCode.FAILED_PRECONDITION,
-				"Stream prerequisites not met",
-			);
+			throw new GrpcError(GrpcStatusCode.FAILED_PRECONDITION, "Stream prerequisites not met");
 		}
 
 		const request: GrpcRequest = {
@@ -2645,13 +2494,14 @@ describe("Advanced Concurrency & Performance Tests", () => {
 			"StatefulOperation",
 			async (_req: { id: number }) => {
 				const requestId = requestCounter++;
-				executionStates[requestId] = [];
+				const state: string[] = [];
+				executionStates[requestId] = state;
 
-				executionStates[requestId]!.push("start");
+				state.push("start");
 				await new Promise((resolve) => setTimeout(resolve, Math.random() * 20));
-				executionStates[requestId]!.push("middle");
+				state.push("middle");
 				await new Promise((resolve) => setTimeout(resolve, Math.random() * 20));
-				executionStates[requestId]!.push("end");
+				state.push("end");
 
 				return { result: `request-${requestId}` };
 			},
@@ -2724,10 +2574,7 @@ describe("Advanced Concurrency & Performance Tests", () => {
 			async (_req: { id: number }) => {
 				const shouldFail = Math.random() > 0.6;
 				if (shouldFail) {
-					throw new GrpcError(
-						GrpcStatusCode.INTERNAL,
-						"Random failure for testing",
-					);
+					throw new GrpcError(GrpcStatusCode.INTERNAL, "Random failure for testing");
 				}
 				return { result: "success" };
 			},
@@ -2823,7 +2670,7 @@ describe("Extended Metadata & Header Tests", () => {
 				expect(metadata["x-emoji"]).toContain("🚀");
 				expect(metadata["x-special"]).toContain("@#$%");
 				expect(metadata["x-dash-case"]).toBe("value");
-				expect(metadata["x_underscore_case"]).toBe("value");
+				expect(metadata.x_underscore_case).toBe("value");
 				return { result: "ok" };
 			},
 			mockRequestType,
@@ -2838,7 +2685,7 @@ describe("Extended Metadata & Header Tests", () => {
 				"x-emoji": "test-🚀",
 				"x-special": "test-@#$%",
 				"x-dash-case": "value",
-				"x_underscore_case": "value",
+				x_underscore_case: "value",
 			},
 		};
 
@@ -2872,8 +2719,9 @@ describe("Extended Metadata & Header Tests", () => {
 
 		const response = await handler.handleRequest(request);
 		expect(response.metadata).toBeDefined();
-		expect(Object.keys(response.metadata!)).toHaveLength(50);
-		expect(response.metadata!["x-header-25"]).toBe("value-25");
+		const metadata = response.metadata ?? {};
+		expect(Object.keys(metadata)).toHaveLength(50);
+		expect(metadata["x-header-25"]).toBe("value-25");
 	});
 
 	it("should handle metadata inheritance in service routing", async () => {

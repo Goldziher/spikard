@@ -33,8 +33,10 @@ async fn test_status_ok_success() {
 
     struct SuccessHandler;
     impl spikard_http::grpc::GrpcHandler for SuccessHandler {
-        fn call(&self, _request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            _request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             Box::pin(async {
                 Ok(spikard_http::grpc::GrpcResponseData {
@@ -557,11 +559,7 @@ async fn test_multiple_error_responses() {
 async fn test_error_with_empty_message() {
     let mut server = GrpcTestServer::new();
 
-    let handler = Arc::new(ErrorMockHandler::new(
-        "test.EmptyErrorService",
-        Code::Internal,
-        "",
-    ));
+    let handler = Arc::new(ErrorMockHandler::new("test.EmptyErrorService", Code::Internal, ""));
     server.register_service(handler);
 
     let result = send_unary_request(
@@ -581,9 +579,8 @@ async fn test_error_with_empty_message() {
 async fn test_error_with_long_message() {
     let mut server = GrpcTestServer::new();
 
-    let long_message = "Error occurred during processing: ".to_string()
-        + &"detailed reason ".repeat(50)
-        + "Please contact support.";
+    let long_message =
+        "Error occurred during processing: ".to_string() + &"detailed reason ".repeat(50) + "Please contact support.";
 
     let handler = Arc::new(ErrorMockHandler::new(
         "test.LongErrorService",
@@ -611,15 +608,17 @@ async fn test_handler_error_to_status_conversion() {
 
     struct ValidationHandler;
     impl spikard_http::grpc::GrpcHandler for ValidationHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             // Simulate validation logic
             if request.payload.is_empty() {
                 Box::pin(async {
                     Err(tonic::Status::new(
                         Code::InvalidArgument,
-                        "Request body cannot be empty"
+                        "Request body cannot be empty",
                     ))
                 })
             } else {

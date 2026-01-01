@@ -126,19 +126,16 @@ impl GrpcHandler for NodeGrpcHandler {
             let js_response = handler_fn
                 .call_async(js_request)
                 .await
-                .map_err(|e| {
-                    tonic::Status::internal(format!("Handler call failed for {}: {}", service_name, e))
-                })?
+                .map_err(|e| tonic::Status::internal(format!("Handler call failed for {}: {}", service_name, e)))?
                 .await
-                .map_err(|e| {
-                    tonic::Status::internal(format!("Handler promise failed for {}: {}", service_name, e))
-                })?;
+                .map_err(|e| tonic::Status::internal(format!("Handler promise failed for {}: {}", service_name, e)))?;
 
             // Convert JavaScript response back to Rust types
             // Zero-copy conversion: Buffer implements AsRef<[u8]>
             let payload = Bytes::copy_from_slice(js_response.payload.as_ref());
             let metadata = if let Some(meta_map) = js_response.metadata {
-                hashmap_to_metadata(&meta_map).map_err(|e| tonic::Status::internal(format!("Invalid metadata: {}", e)))?
+                hashmap_to_metadata(&meta_map)
+                    .map_err(|e| tonic::Status::internal(format!("Invalid metadata: {}", e)))?
             } else {
                 MetadataMap::new()
             };
@@ -213,5 +210,4 @@ mod tests {
         let result = hashmap_to_metadata(&map);
         assert!(result.is_err());
     }
-
 }

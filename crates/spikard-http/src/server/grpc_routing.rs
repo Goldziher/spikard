@@ -69,10 +69,7 @@ pub async fn route_grpc_request(
     let handler = match registry.get(&service_name) {
         Some(h) => h,
         None => {
-            return Err((
-                StatusCode::NOT_FOUND,
-                format!("Service not found: {}", service_name),
-            ));
+            return Err((StatusCode::NOT_FOUND, format!("Service not found: {}", service_name)));
         }
     };
 
@@ -94,7 +91,10 @@ pub async fn route_grpc_request(
             // Try to parse as ASCII metadata
             if let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>() {
                 // Use key.as_str() directly instead of creating String
-                if let Ok(metadata_key) = key.as_str().parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>() {
+                if let Ok(metadata_key) = key
+                    .as_str()
+                    .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
+                {
                     tonic_request.metadata_mut().insert(metadata_key, metadata_value);
                 }
             }
@@ -132,9 +132,12 @@ pub async fn route_grpc_request(
     response = response.header("grpc-status", "0");
 
     // Convert bytes::Bytes to Body
-    let response = response
-        .body(Body::from(payload))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to build response: {}", e)))?;
+    let response = response.body(Body::from(payload)).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to build response: {}", e),
+        )
+    })?;
 
     Ok(response)
 }
@@ -268,21 +271,57 @@ mod tests {
     fn test_grpc_status_to_http_mappings() {
         // Test all gRPC status codes map correctly
         assert_eq!(grpc_status_to_http(tonic::Code::Ok), StatusCode::OK);
-        assert_eq!(grpc_status_to_http(tonic::Code::Cancelled), StatusCode::from_u16(499).unwrap());
-        assert_eq!(grpc_status_to_http(tonic::Code::Unknown), StatusCode::INTERNAL_SERVER_ERROR);
-        assert_eq!(grpc_status_to_http(tonic::Code::InvalidArgument), StatusCode::BAD_REQUEST);
-        assert_eq!(grpc_status_to_http(tonic::Code::DeadlineExceeded), StatusCode::GATEWAY_TIMEOUT);
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::Cancelled),
+            StatusCode::from_u16(499).unwrap()
+        );
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::Unknown),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::InvalidArgument),
+            StatusCode::BAD_REQUEST
+        );
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::DeadlineExceeded),
+            StatusCode::GATEWAY_TIMEOUT
+        );
         assert_eq!(grpc_status_to_http(tonic::Code::NotFound), StatusCode::NOT_FOUND);
         assert_eq!(grpc_status_to_http(tonic::Code::AlreadyExists), StatusCode::CONFLICT);
-        assert_eq!(grpc_status_to_http(tonic::Code::PermissionDenied), StatusCode::FORBIDDEN);
-        assert_eq!(grpc_status_to_http(tonic::Code::ResourceExhausted), StatusCode::TOO_MANY_REQUESTS);
-        assert_eq!(grpc_status_to_http(tonic::Code::FailedPrecondition), StatusCode::BAD_REQUEST);
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::PermissionDenied),
+            StatusCode::FORBIDDEN
+        );
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::ResourceExhausted),
+            StatusCode::TOO_MANY_REQUESTS
+        );
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::FailedPrecondition),
+            StatusCode::BAD_REQUEST
+        );
         assert_eq!(grpc_status_to_http(tonic::Code::Aborted), StatusCode::CONFLICT);
         assert_eq!(grpc_status_to_http(tonic::Code::OutOfRange), StatusCode::BAD_REQUEST);
-        assert_eq!(grpc_status_to_http(tonic::Code::Unimplemented), StatusCode::NOT_IMPLEMENTED);
-        assert_eq!(grpc_status_to_http(tonic::Code::Internal), StatusCode::INTERNAL_SERVER_ERROR);
-        assert_eq!(grpc_status_to_http(tonic::Code::Unavailable), StatusCode::SERVICE_UNAVAILABLE);
-        assert_eq!(grpc_status_to_http(tonic::Code::DataLoss), StatusCode::INTERNAL_SERVER_ERROR);
-        assert_eq!(grpc_status_to_http(tonic::Code::Unauthenticated), StatusCode::UNAUTHORIZED);
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::Unimplemented),
+            StatusCode::NOT_IMPLEMENTED
+        );
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::Internal),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::Unavailable),
+            StatusCode::SERVICE_UNAVAILABLE
+        );
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::DataLoss),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        assert_eq!(
+            grpc_status_to_http(tonic::Code::Unauthenticated),
+            StatusCode::UNAUTHORIZED
+        );
     }
 }

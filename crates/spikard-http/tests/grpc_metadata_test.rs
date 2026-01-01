@@ -23,8 +23,10 @@ async fn test_metadata_extraction_from_request() {
 
     struct MetadataCheckHandler;
     impl spikard_http::grpc::GrpcHandler for MetadataCheckHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             // Extract and verify metadata
             let has_user_agent = request.metadata.get("user-agent").is_some();
@@ -72,8 +74,10 @@ async fn test_authentication_bearer_token_metadata() {
 
     struct AuthServiceHandler;
     impl spikard_http::grpc::GrpcHandler for AuthServiceHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let token_present = request
                 .metadata
@@ -104,20 +108,17 @@ async fn test_authentication_bearer_token_metadata() {
     let mut metadata = create_test_metadata();
     add_auth_metadata(&mut metadata, "secret_token_abc123").unwrap();
 
-    let response = send_unary_request(
-        &server,
-        "api.AuthService",
-        "Authenticate",
-        Bytes::from("{}"),
-        metadata,
-    )
-    .await
-    .expect("Failed to authenticate");
+    let response = send_unary_request(&server, "api.AuthService", "Authenticate", Bytes::from("{}"), metadata)
+        .await
+        .expect("Failed to authenticate");
 
-    assert_grpc_response(response, serde_json::json!({
-        "authenticated": true,
-        "user": "alice"
-    }));
+    assert_grpc_response(
+        response,
+        serde_json::json!({
+            "authenticated": true,
+            "user": "alice"
+        }),
+    );
 }
 
 /// Test custom header metadata
@@ -127,8 +128,10 @@ async fn test_custom_header_metadata() {
 
     struct CustomHeaderHandler;
     impl spikard_http::grpc::GrpcHandler for CustomHeaderHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let custom_value = request
                 .metadata
@@ -176,8 +179,10 @@ async fn test_multiple_custom_headers() {
 
     struct MultiHeaderHandler;
     impl spikard_http::grpc::GrpcHandler for MultiHeaderHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let req_id = request
                 .metadata
@@ -193,10 +198,7 @@ async fn test_multiple_custom_headers() {
                 .unwrap_or("missing")
                 .to_string();
 
-            let response = format!(
-                r#"{{"request_id": "{}", "trace_id": "{}"}}"#,
-                req_id, trace_id
-            );
+            let response = format!(r#"{{"request_id": "{}", "trace_id": "{}"}}"#, req_id, trace_id);
 
             Box::pin(async move {
                 Ok(spikard_http::grpc::GrpcResponseData {
@@ -226,10 +228,13 @@ async fn test_multiple_custom_headers() {
     .await
     .expect("Failed to send multiple headers");
 
-    assert_grpc_response(response, serde_json::json!({
-        "request_id": "req-12345",
-        "trace_id": "trace-67890"
-    }));
+    assert_grpc_response(
+        response,
+        serde_json::json!({
+            "request_id": "req-12345",
+            "trace_id": "trace-67890"
+        }),
+    );
 }
 
 /// Test metadata with special characters in values
@@ -239,8 +244,10 @@ async fn test_metadata_special_characters() {
 
     struct SpecialCharHandler;
     impl spikard_http::grpc::GrpcHandler for SpecialCharHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let special_header = request
                 .metadata
@@ -279,9 +286,12 @@ async fn test_metadata_special_characters() {
     .await
     .expect("Failed to send special chars");
 
-    assert_grpc_response(response, serde_json::json!({
-        "received": "value-with_underscore.and.dots"
-    }));
+    assert_grpc_response(
+        response,
+        serde_json::json!({
+            "received": "value-with_underscore.and.dots"
+        }),
+    );
 }
 
 /// Test metadata creation with HashMap
@@ -318,8 +328,10 @@ async fn test_response_metadata_preservation() {
 
     struct ResponseMetadataHandler;
     impl spikard_http::grpc::GrpcHandler for ResponseMetadataHandler {
-        fn call(&self, _request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            _request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let mut response_metadata = MetadataMap::new();
             response_metadata.insert("x-response-header", "response-value".parse().unwrap());
@@ -376,8 +388,10 @@ async fn test_metadata_extraction_empty_metadata() {
 
     struct EmptyMetadataHandler;
     impl spikard_http::grpc::GrpcHandler for EmptyMetadataHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let is_empty = request.metadata.is_empty();
 
@@ -423,8 +437,10 @@ async fn test_metadata_numeric_value() {
 
     struct NumericHeaderHandler;
     impl spikard_http::grpc::GrpcHandler for NumericHeaderHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let count = request
                 .metadata
@@ -472,8 +488,10 @@ async fn test_metadata_uuid_value() {
 
     struct UuidHeaderHandler;
     impl spikard_http::grpc::GrpcHandler for UuidHeaderHandler {
-        fn call(&self, request: spikard_http::grpc::GrpcRequestData)
-            -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
+        fn call(
+            &self,
+            request: spikard_http::grpc::GrpcRequestData,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::grpc::GrpcHandlerResult> + Send>>
         {
             let uuid = request
                 .metadata
@@ -502,17 +520,14 @@ async fn test_metadata_uuid_value() {
     let uuid = "550e8400-e29b-41d4-a716-446655440000";
     add_metadata_header(&mut metadata, "x-request-uuid", uuid).unwrap();
 
-    let response = send_unary_request(
-        &server,
-        "test.UuidService",
-        "Process",
-        Bytes::from("{}"),
-        metadata,
-    )
-    .await
-    .expect("Failed to send UUID header");
+    let response = send_unary_request(&server, "test.UuidService", "Process", Bytes::from("{}"), metadata)
+        .await
+        .expect("Failed to send UUID header");
 
-    assert_grpc_response(response, serde_json::json!({
-        "uuid": "550e8400-e29b-41d4-a716-446655440000"
-    }));
+    assert_grpc_response(
+        response,
+        serde_json::json!({
+            "uuid": "550e8400-e29b-41d4-a716-446655440000"
+        }),
+    );
 }

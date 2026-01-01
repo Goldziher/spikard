@@ -120,7 +120,7 @@ markdown_extensions:
 
   # Code Snippets
   - pymdownx.snippets:
-      base_path: ["docs", "."]
+      base_path: ["docs/snippets", "docs", "."]
       check_paths: true
 
   # Table of Contents
