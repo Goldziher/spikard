@@ -761,17 +761,18 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           TAG: ${{ needs.prepare.outputs.tag }}
         run: |
-          # Prepare bottle directory structure
-          bottle_dir="/tmp/spikard-bottle"
+          # Prepare bottle directory structure with cellar path
+          bottle_root="/tmp/spikard-bottle-root"
+          bottle_dir="${bottle_root}/spikard/${VERSION}"
           mkdir -p "${bottle_dir}/bin"
 
           # Copy the built binary
           cp target/release/spikard "${bottle_dir}/bin/"
 
-          # Create bottle tarball
-          cd "${bottle_dir}"
+          # Create bottle tarball from root with proper structure
+          cd "${bottle_root}"
           bottle_filename="spikard-${VERSION}.${{ matrix.bottle_tag }}.bottle.tar.gz"
-          tar -czf "${bottle_filename}" bin/
+          tar -czf "${bottle_filename}" spikard/
 
           # Calculate SHA256
           sha256=$(shasum -a 256 "${bottle_filename}" | cut -d' ' -f1)
