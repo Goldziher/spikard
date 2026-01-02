@@ -47,7 +47,6 @@ PY
 # Expect these to be passed as environment variables from Taskfile
 RBENV_VERSION="${RBENV_VERSION:-}"
 RBENV_BIN="${RBENV_BIN:-/opt/homebrew/bin/rbenv}"
-BUNDLER_VERSION="${BUNDLER_VERSION:-2.7.2}"
 BUNDLE_UPDATE_TIMEOUT="${BUNDLE_UPDATE_TIMEOUT:-600}"
 
 USE_RBENV=0
@@ -71,9 +70,9 @@ for app in hanami-api-validation hanami-api-raw roda-validation roda-raw spikard
 	fi
 
 	if [[ "$USE_RBENV" -eq 1 ]]; then
-		run_with_timeout "$BUNDLE_UPDATE_TIMEOUT" env RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle "_${BUNDLER_VERSION}_" update --all
+		run_with_timeout "$BUNDLE_UPDATE_TIMEOUT" env RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle update --all
 	else
-		run_with_timeout "$BUNDLE_UPDATE_TIMEOUT" bundle "_${BUNDLER_VERSION}_" update --all
+		run_with_timeout "$BUNDLE_UPDATE_TIMEOUT" bundle update --all
 	fi
 	cd - >/dev/null
 done
