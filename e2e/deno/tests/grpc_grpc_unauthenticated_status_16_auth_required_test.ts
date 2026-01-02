@@ -1,4 +1,13 @@
-it("should handle gRPC request: gRPC UNAUTHENTICATED status 16 - auth required", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcGrpcUnauthenticatedStatus16AuthRequired, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: gRPC UNAUTHENTICATED status 16 - auth required", async () => {
   // Tests UNAUTHENTICATED gRPC status code. Returned when the request lacks valid authentication credentials.
 
   const metadata: Record<string, string> = {
@@ -14,6 +23,6 @@ it("should handle gRPC request: gRPC UNAUTHENTICATED status 16 - auth required",
   const response = await handleGrpcGrpcUnauthenticatedStatus16AuthRequired(request);
 
   // Verify response
-  expect(response.statusCode).toBe("UNAUTHENTICATED");
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "UNAUTHENTICATED");
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

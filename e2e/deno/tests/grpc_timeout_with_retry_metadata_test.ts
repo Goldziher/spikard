@@ -1,4 +1,13 @@
-it("should handle gRPC request: Timeout with retry metadata", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcTimeoutWithRetryMetadata, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: Timeout with retry metadata", async () => {
   // Tests DEADLINE_EXCEEDED status code with retry metadata in response trailers. Indicates whether client should retry.
 
   const metadata: Record<string, string> = {
@@ -14,6 +23,6 @@ it("should handle gRPC request: Timeout with retry metadata", async () => {
   const response = await handleGrpcTimeoutWithRetryMetadata(request);
 
   // Verify response
-  expect(response.statusCode).toBe("DEADLINE_EXCEEDED");
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "DEADLINE_EXCEEDED");
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

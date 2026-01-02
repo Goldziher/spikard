@@ -1,4 +1,13 @@
-it("should handle gRPC request: JWT Bearer token authentication", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcJwtBearerTokenAuthentication, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: JWT Bearer token authentication", async () => {
   // Tests JWT authentication via gRPC metadata. Validates that JWT tokens are properly extracted and validated from authorization header.
 
   const metadata: Record<string, string> = {
@@ -15,7 +24,7 @@ it("should handle gRPC request: JWT Bearer token authentication", async () => {
   const response = await handleGrpcJwtBearerTokenAuthentication(request);
 
   // Verify response
-  expect(response.statusCode).toBe("OK");
-  expect(response.payload).toEqual(Buffer.from(JSON.stringify({ user_id: "user-123", action: "read" })));
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "OK");
+  assertEquals(response.payload, Buffer.from(JSON.stringify({ user_id: "user-123", action: "read" })));
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

@@ -1,4 +1,13 @@
-it("should handle gRPC request: Circuit breaker triggered - UNAVAILABLE with metadata", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcCircuitBreakerTriggeredUnavailableWithMetadata, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: Circuit breaker triggered - UNAVAILABLE with metadata", async () => {
   // Tests UNAVAILABLE status code with circuit breaker metadata. Indicates service degradation and when to retry.
 
   const metadata: Record<string, string> = {
@@ -14,6 +23,6 @@ it("should handle gRPC request: Circuit breaker triggered - UNAVAILABLE with met
   const response = await handleGrpcCircuitBreakerTriggeredUnavailableWithMetadata(request);
 
   // Verify response
-  expect(response.statusCode).toBe("UNAVAILABLE");
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "UNAVAILABLE");
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

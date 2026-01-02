@@ -1,4 +1,13 @@
-it("should handle gRPC request: Bidirectional streaming with large payloads", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcBidirectionalStreamingWithLargePayloads, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: Bidirectional streaming with large payloads", async () => {
   // Tests bidirectional streaming RPC with large messages in both directions. Validates concurrent read/write handling and proper message ordering.
 
   const metadata: Record<string, string> = {
@@ -14,7 +23,7 @@ it("should handle gRPC request: Bidirectional streaming with large payloads", as
   const response = await handleGrpcBidirectionalStreamingWithLargePayloads(request);
 
   // Verify response
-  expect(response.statusCode).toBe("OK");
-  expect(response.payload).toEqual(Buffer.from(JSON.stringify({ message_id: "bi-large-001", sequence: 1, direction: "server-to-client" })));
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "OK");
+  assertEquals(response.payload, Buffer.from(JSON.stringify({ message_id: "bi-large-001", sequence: 1, direction: "server-to-client" })));
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

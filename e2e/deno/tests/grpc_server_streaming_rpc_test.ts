@@ -1,4 +1,13 @@
-it("should handle gRPC request: Server streaming RPC", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcServerStreamingRpc, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: Server streaming RPC", async () => {
   // Tests server streaming where the server sends multiple responses. Covers streaming response patterns.
 
   const metadata: Record<string, string> = {
@@ -14,6 +23,6 @@ it("should handle gRPC request: Server streaming RPC", async () => {
   const response = await handleGrpcServerStreamingRpc(request);
 
   // Verify response
-  expect(response.statusCode).toBe("OK");
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "OK");
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

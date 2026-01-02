@@ -1,4 +1,13 @@
-it("should handle gRPC request: Bidirectional streaming RPC", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcBidirectionalStreamingRpc, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: Bidirectional streaming RPC", async () => {
   // Tests bidirectional streaming where both client and server send multiple messages. Covers duplex communication patterns.
 
   const metadata: Record<string, string> = {
@@ -15,6 +24,6 @@ it("should handle gRPC request: Bidirectional streaming RPC", async () => {
   const response = await handleGrpcBidirectionalStreamingRpc(request);
 
   // Verify response
-  expect(response.statusCode).toBe("OK");
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "OK");
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

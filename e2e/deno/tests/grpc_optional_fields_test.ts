@@ -1,4 +1,13 @@
-it("should handle gRPC request: Optional fields", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcOptionalFields, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: Optional fields", async () => {
   // Tests optional field handling with presence semantics. Covers optional fields with and without values.
 
   const metadata: Record<string, string> = {
@@ -14,7 +23,7 @@ it("should handle gRPC request: Optional fields", async () => {
   const response = await handleGrpcOptionalFields(request);
 
   // Verify response
-  expect(response.statusCode).toBe("OK");
-  expect(response.payload).toEqual(Buffer.from(JSON.stringify({ user_id: 42, username: "charlie_dev", bio: "Software engineer and gRPC enthusiast", updated_at: 1704067200000 })));
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "OK");
+  assertEquals(response.payload, Buffer.from(JSON.stringify({ user_id: 42, username: "charlie_dev", bio: "Software engineer and gRPC enthusiast", updated_at: 1704067200000 })));
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

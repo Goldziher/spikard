@@ -1,4 +1,13 @@
-it("should handle gRPC request: gRPC OK status 0 - successful response", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcGrpcOkStatus0SuccessfulResponse, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: gRPC OK status 0 - successful response", async () => {
   // Tests successful gRPC response with OK status code. Validates basic request-response completion.
 
   const metadata: Record<string, string> = {
@@ -14,7 +23,7 @@ it("should handle gRPC request: gRPC OK status 0 - successful response", async (
   const response = await handleGrpcGrpcOkStatus0SuccessfulResponse(request);
 
   // Verify response
-  expect(response.statusCode).toBe("OK");
-  expect(response.payload).toEqual(Buffer.from(JSON.stringify({ request_id: "status-ok-001", status: "success" })));
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "OK");
+  assertEquals(response.payload, Buffer.from(JSON.stringify({ request_id: "status-ok-001", status: "success" })));
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

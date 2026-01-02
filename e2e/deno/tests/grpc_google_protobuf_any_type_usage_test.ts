@@ -1,4 +1,13 @@
-it("should handle gRPC request: Google protobuf Any type usage", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcGoogleProtobufAnyTypeUsage, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: Google protobuf Any type usage", async () => {
   // Tests usage of google.protobuf.Any for storing arbitrary message types. Validates type URL encoding and message packing.
 
   const metadata: Record<string, string> = {
@@ -14,7 +23,7 @@ it("should handle gRPC request: Google protobuf Any type usage", async () => {
   const response = await handleGrpcGoogleProtobufAnyTypeUsage(request);
 
   // Verify response
-  expect(response.statusCode).toBe("OK");
-  expect(response.payload).toEqual(Buffer.from(JSON.stringify({ request_id: "any-test-001", type_name: "example.v1.Container", success: true })));
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "OK");
+  assertEquals(response.payload, Buffer.from(JSON.stringify({ request_id: "any-test-001", type_name: "example.v1.Container", success: true })));
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

@@ -333,7 +333,7 @@ import {
 		const client = new TestClient(app);
 
 		const headers = {
-			Cookie: "googall_tracker=ga789; session_id=session123; fatebook_tracker=tracker456",
+			Cookie: "session_id=session123; fatebook_tracker=tracker456; googall_tracker=ga789",
 		};
 		const response = await client.get("/items/", headers);
 

@@ -1,4 +1,13 @@
-it("should handle gRPC request: gRPC DEADLINE_EXCEEDED status 4", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcGrpcDeadlineExceededStatus4, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: gRPC DEADLINE_EXCEEDED status 4", async () => {
   // Tests DEADLINE_EXCEEDED gRPC status code. Returned when the RPC does not complete within the specified time limit.
 
   const metadata: Record<string, string> = {
@@ -14,6 +23,6 @@ it("should handle gRPC request: gRPC DEADLINE_EXCEEDED status 4", async () => {
   const response = await handleGrpcGrpcDeadlineExceededStatus4(request);
 
   // Verify response
-  expect(response.statusCode).toBe("DEADLINE_EXCEEDED");
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "DEADLINE_EXCEEDED");
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

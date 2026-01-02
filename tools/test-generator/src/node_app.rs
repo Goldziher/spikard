@@ -54,6 +54,7 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
     let graphql_fixtures = load_graphql_fixtures(fixtures_dir).context("Failed to load GraphQL fixtures")?;
+    let grpc_fixtures = crate::grpc::load_grpc_fixtures(fixtures_dir).unwrap_or_default();
     let mut graphql_fixtures_by_category: HashMap<String, Vec<GraphQLFixture>> = HashMap::new();
     for fixture in graphql_fixtures {
         let category = fixture.operation_type.clone();
@@ -79,6 +80,7 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
         &sse_fixtures,
         &websocket_fixtures,
         &graphql_fixtures_by_category,
+        &grpc_fixtures,
         &dto_map,
         target,
     )?;
@@ -336,6 +338,7 @@ fn generate_app_file_per_fixture(
     sse_fixtures: &[AsyncFixture],
     websocket_fixtures: &[AsyncFixture],
     graphql_fixtures_by_category: &HashMap<String, Vec<GraphQLFixture>>,
+    grpc_fixtures: &[GrpcFixture],
     dto_map: &HashMap<String, TypeScriptDto>,
     target: &TypeScriptTarget,
 ) -> Result<String> {
@@ -346,6 +349,7 @@ fn generate_app_file_per_fixture(
     let mut padded_binary_bodies = false;
     let mut streaming_has_binary_chunks = false;
     let has_websocket = !websocket_fixtures.is_empty();
+    let has_grpc = !grpc_fixtures.is_empty();
     let mut needs_di = false;
     let mut needs_di_cleanup_state = false;
 
@@ -459,7 +463,23 @@ fn generate_app_file_per_fixture(
     code.push_str("\theaders?: Record<string, string>;\n");
     code.push_str("\t[key: string]: unknown;\n");
     code.push_str("};\n");
-    code.push_str("type HookResult = HookRequest | HookResponse;\n\n");
+    code.push_str("type HookResult = HookRequest | HookResponse;\n");
+
+    if has_grpc {
+        code.push_str("\ntype GrpcRequest = {\n");
+        code.push_str("\tserviceName: string;\n");
+        code.push_str("\tmethodName: string;\n");
+        code.push_str("\tpayload: Buffer;\n");
+        code.push_str("\tmetadata?: Record<string, string>;\n");
+        code.push_str("};\n");
+        code.push_str("type GrpcResponse = {\n");
+        code.push_str("\tpayload: Buffer;\n");
+        code.push_str("\tmetadata?: Record<string, string>;\n");
+        code.push_str("\tstatusCode: string;\n");
+        code.push_str("};\n");
+    }
+
+    code.push_str("\n");
 
     if has_websocket {
         code.push_str("function normalizeWebsocketPayload(message: unknown): unknown {\n");
@@ -595,6 +615,10 @@ fn generate_app_file_per_fixture(
         graphql_fixtures_by_category,
         &mut all_app_factories,
         &mut handler_names,
+    )?;
+    append_grpc_handlers(
+        &mut code,
+        grpc_fixtures,
     )?;
 
     code.push_str("// App factory functions:\n");
@@ -2093,6 +2117,23 @@ fn build_openapi_config_ts(openapi_obj: &serde_json::Map<String, Value>) -> Resu
     Ok(Some(format!("\t\topenapi: {{\n{}\n\t\t}}", parts.join(",\n"))))
 }
 
+fn append_grpc_handlers(
+    code: &mut String,
+    grpc_fixtures: &[GrpcFixture],
+) -> Result<()> {
+    if grpc_fixtures.is_empty() {
+        return Ok(());
+    }
+
+    code.push_str("\n\n");
+    for fixture in grpc_fixtures {
+        let handler_code = generate_grpc_handler(fixture)?;
+        code.push_str(&handler_code);
+        code.push_str("\n");
+    }
+
+    Ok(())
+}
 
 fn convert_large_numbers_to_strings(value: &serde_json::Value) -> serde_json::Value {
     match value {

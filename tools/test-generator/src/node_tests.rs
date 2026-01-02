@@ -119,9 +119,39 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
                     .context(format!("Failed to generate gRPC test for {}", fixture.name))?;
 
                 let test_name = sanitize_identifier(&fixture.name);
-                let test_file = tests_dir.join(format!("grpc_{}{}", test_name, test_suffix));
+                let handler_name = format!("handleGrpc{}", to_pascal_case(&test_name));
 
-                let final_code = test_code;
+                // Wrap test in proper file with imports
+                let mut final_code = String::new();
+                final_code.push_str("/**\n");
+                final_code.push_str(" * E2E test for gRPC\n");
+                final_code.push_str(" * @generated\n");
+                final_code.push_str(" */\n\n");
+
+                match target.runtime {
+                    crate::ts_target::Runtime::Deno => {
+                        final_code.push_str(&format!("import {{ {}, type GrpcRequest, type GrpcResponse }} from \"../app/main.ts\";\n", handler_name));
+                        final_code.push_str("import { assertEquals, assert } from \"jsr:@std/assert@1\";\n");
+                        final_code.push_str("import { Buffer } from \"node:buffer\";\n\n");
+
+                        // Wrap test in describe block before converting
+                        let wrapped_test = format!("describe(\"grpc\", () => {{\n{}}});\n", test_code);
+
+                        // Convert vitest syntax to Deno syntax
+                        let deno_test = convert_to_deno_syntax(&wrapped_test, "grpc");
+                        final_code.push_str(&deno_test);
+                    }
+                    _ => {
+                        final_code.push_str(&format!("import {{ {}, type GrpcRequest, type GrpcResponse }} from \"../app/main.ts\";\n", handler_name));
+                        final_code.push_str("import { describe, expect, it } from \"vitest\";\n");
+                        final_code.push_str("import { Buffer } from \"node:buffer\";\n\n");
+                        final_code.push_str("describe(\"grpc\", () => {\n");
+                        final_code.push_str(&test_code);
+                        final_code.push_str("});\n");
+                    }
+                }
+
+                let test_file = tests_dir.join(format!("grpc_{}{}", test_name, test_suffix));
                 fs::write(&test_file, final_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
                 println!("  ✓ Generated tests/grpc_{}{}", test_name, test_suffix);
             }
@@ -1627,7 +1657,7 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
     let handler_name = format!("handleGrpc{}", to_pascal_case(&sanitize_identifier(&fixture.name)));
 
     // Test function
-    code.push_str(&format!("it(\"should handle gRPC request: {}\", async () => {{\n", test_name));
+    code.push_str(&format!("test(\"should handle gRPC request: {}\", async () => {{\n", test_name));
     code.push_str(&format!(
         "  // {}\n",
         fixture.description.as_deref().unwrap_or(&fixture.name)

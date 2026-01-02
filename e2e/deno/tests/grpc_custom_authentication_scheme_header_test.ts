@@ -1,4 +1,13 @@
-it("should handle gRPC request: Custom authentication scheme header", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcCustomAuthenticationSchemeHeader, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: Custom authentication scheme header", async () => {
   // Tests custom authentication header scheme. Validates that custom auth headers are properly extracted and validated.
 
   const metadata: Record<string, string> = {
@@ -15,7 +24,7 @@ it("should handle gRPC request: Custom authentication scheme header", async () =
   const response = await handleGrpcCustomAuthenticationSchemeHeader(request);
 
   // Verify response
-  expect(response.statusCode).toBe("OK");
-  expect(response.payload).toEqual(Buffer.from(JSON.stringify({ success: true })));
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "OK");
+  assertEquals(response.payload, Buffer.from(JSON.stringify({ success: true })));
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

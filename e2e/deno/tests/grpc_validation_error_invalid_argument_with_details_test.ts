@@ -1,4 +1,13 @@
-it("should handle gRPC request: Validation error - INVALID_ARGUMENT with details", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcValidationErrorInvalidArgumentWithDetails, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: Validation error - INVALID_ARGUMENT with details", async () => {
   // Tests INVALID_ARGUMENT status code with detailed validation error information. Demonstrates how validation failures are communicated.
 
   const metadata: Record<string, string> = {
@@ -14,6 +23,6 @@ it("should handle gRPC request: Validation error - INVALID_ARGUMENT with details
   const response = await handleGrpcValidationErrorInvalidArgumentWithDetails(request);
 
   // Verify response
-  expect(response.statusCode).toBe("INVALID_ARGUMENT");
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "INVALID_ARGUMENT");
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

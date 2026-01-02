@@ -1,4 +1,13 @@
-it("should handle gRPC request: gRPC NOT_FOUND status 5", async () => {
+/**
+ * E2E test for gRPC
+ * @generated
+ */
+
+import { handleGrpcGrpcNotFoundStatus5, type GrpcRequest, type GrpcResponse } from "../app/main.ts";
+import { assertEquals, assert } from "jsr:@std/assert@1";
+import { Buffer } from "node:buffer";
+
+Deno.test("grpc: should handle gRPC request: gRPC NOT_FOUND status 5", async () => {
   // Tests NOT_FOUND gRPC status code. Returned when a requested resource (e.g., user, file) does not exist.
 
   const metadata: Record<string, string> = {
@@ -14,6 +23,6 @@ it("should handle gRPC request: gRPC NOT_FOUND status 5", async () => {
   const response = await handleGrpcGrpcNotFoundStatus5(request);
 
   // Verify response
-  expect(response.statusCode).toBe("NOT_FOUND");
-  expect(response.metadata).toBeDefined();
+  assertEquals(response.statusCode, "NOT_FOUND");
+  assert(response.metadata !== undefined && response.metadata !== null);
 });

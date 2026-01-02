@@ -26,17 +26,17 @@ import {
 
 		const headers = {
 			"Access-Control-Request-Method": "POST",
-			Origin: "https://example.com",
 			"Access-Control-Request-Headers": "Content-Type",
+			Origin: "https://example.com",
 		};
 		const response = await client.options("/items/", { headers });
 
 		assertEquals(response.statusCode, 200);
 		const responseHeaders = response.headers();
 		assertEquals(responseHeaders["access-control-allow-origin"], "https://example.com");
-		assertEquals(responseHeaders["access-control-allow-headers"], "Content-Type");
-		assertEquals(responseHeaders["access-control-allow-methods"], "GET, POST, PUT, DELETE, OPTIONS");
 		assertEquals(responseHeaders["access-control-max-age"], "86400");
+		assertEquals(responseHeaders["access-control-allow-methods"], "GET, POST, PUT, DELETE, OPTIONS");
+		assertEquals(responseHeaders["access-control-allow-headers"], "Content-Type");
 	});
 
 	Deno.test("http_methods: DELETE - Remove resource", async () => {
@@ -111,8 +111,8 @@ import {
 
 		assertEquals(response.statusCode, 200);
 		const responseHeaders = response.headers();
-		assertEquals(responseHeaders["content-length"], "85");
 		assertEquals(responseHeaders["content-type"], "application/json");
+		assertEquals(responseHeaders["content-length"], "85");
 	});
 
 	Deno.test("http_methods: DELETE - With response body", async () => {
