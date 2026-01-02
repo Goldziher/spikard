@@ -88,6 +88,21 @@ impl PhpResponse {
         }
     }
 
+    /// Parse response body as JSON and return as PHP array.
+    #[php(name = "parseJson")]
+    pub fn parse_json(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let body_str = self.get_body();
+        let parsed: Value =
+            serde_json::from_str(&body_str).map_err(|e| PhpException::default(format!("Invalid JSON body: {}", e)))?;
+        crate::php::json_to_php_table(&parsed)
+    }
+
+    /// Get the body parsed as JSON (alias for parseJson).
+    #[php(name = "json")]
+    pub fn json(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        self.parse_json()
+    }
+
     /// Get headers as a PHP array.
     #[php(name = "getHeaders")]
     pub fn get_headers(&self) -> PhpResult<ZBox<ZendHashTable>> {
