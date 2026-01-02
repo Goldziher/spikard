@@ -66,18 +66,8 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
         ".spec.ts"
     };
 
-    let rewrite_wasm_imports = |code: String| -> String {
-        if matches!(target.runtime, crate::ts_target::Runtime::CloudflareWorkers)
-            && target.dependency_package == "@spikard/wasm"
-        {
-            code.replace("from \"@spikard/wasm\"", "from \"../../packages/wasm/src/index.ts\"")
-        } else {
-            code
-        }
-    };
-
     for (category, fixtures) in fixtures_by_category.iter() {
-        let test_content = rewrite_wasm_imports(generate_test_file(category, fixtures, target)?);
+        let test_content = generate_test_file(category, fixtures, target)?;
         let test_file = tests_dir.join(format!("{category}{test_suffix}"));
         fs::write(&test_file, test_content).with_context(|| format!("Failed to write test file for {}", category))?;
         println!(
@@ -89,7 +79,7 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
     }
 
     if !sse_fixtures.is_empty() {
-        let sse_content = rewrite_wasm_imports(generate_sse_test_file(&sse_fixtures, &dto_map, target)?);
+        let sse_content = generate_sse_test_file(&sse_fixtures, &dto_map, target)?;
         let sse_file = if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
             "asyncapi_sse_test.ts"
         } else {
@@ -100,8 +90,7 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
     }
 
     if !websocket_fixtures.is_empty() {
-        let websocket_content =
-            rewrite_wasm_imports(generate_websocket_test_file(&websocket_fixtures, &dto_map, target)?);
+        let websocket_content = generate_websocket_test_file(&websocket_fixtures, &dto_map, target)?;
         let websocket_file = if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
             "asyncapi_websocket_test.ts"
         } else {
@@ -132,7 +121,7 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
                 let test_name = sanitize_identifier(&fixture.name);
                 let test_file = tests_dir.join(format!("grpc_{}{}", test_name, test_suffix));
 
-                let final_code = rewrite_wasm_imports(test_code);
+                let final_code = test_code;
                 fs::write(&test_file, final_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
                 println!("  ✓ Generated tests/grpc_{}{}", test_name, test_suffix);
             }

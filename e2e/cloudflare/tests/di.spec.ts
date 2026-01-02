@@ -3,8 +3,8 @@
  * @generated
  */
 
+import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
-import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppDiAsyncFactoryDependencySuccess,
 	createAppDiCircularDependencyDetectionError,
@@ -72,10 +72,10 @@ describe("di", () => {
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("app_name");
 		expect(responseData.app_name).toBe("SpikardApp");
-		expect(responseData).toHaveProperty("max_connections");
-		expect(responseData.max_connections).toBe(100);
 		expect(responseData).toHaveProperty("version");
 		expect(responseData.version).toBe("1.0.0");
+		expect(responseData).toHaveProperty("max_connections");
+		expect(responseData.max_connections).toBe(100);
 	});
 
 	test("Node js object destructuring injection - success", async () => {
@@ -102,10 +102,10 @@ describe("di", () => {
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("auth_enabled");
 		expect(responseData.auth_enabled).toBe(true);
-		expect(responseData).toHaveProperty("has_cache");
-		expect(responseData.has_cache).toBe(true);
 		expect(responseData).toHaveProperty("has_db");
 		expect(responseData.has_db).toBe(true);
+		expect(responseData).toHaveProperty("has_cache");
+		expect(responseData.has_cache).toBe(true);
 	});
 
 	test("Type mismatch in dependency resolution - error", async () => {
@@ -134,10 +134,10 @@ describe("di", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("cache_status");
-		expect(responseData.cache_status).toBe("ready");
 		expect(responseData).toHaveProperty("db_status");
 		expect(responseData.db_status).toBe("connected");
+		expect(responseData).toHaveProperty("cache_status");
+		expect(responseData.cache_status).toBe("ready");
 	});
 
 	test("Dependency injection in lifecycle hooks - success", async () => {
@@ -231,10 +231,10 @@ describe("di", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("cache_type");
-		expect(responseData.cache_type).toBe("Redis");
 		expect(responseData).toHaveProperty("pool_type");
 		expect(responseData.pool_type).toBe("PostgreSQL");
+		expect(responseData).toHaveProperty("cache_type");
+		expect(responseData.cache_type).toBe("Redis");
 	});
 
 	test("Per-request dependency caching - success", async () => {
@@ -280,9 +280,9 @@ describe("di", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("max_size");
-		expect(responseData.max_size).toBe(10);
 		expect(responseData).toHaveProperty("pool_status");
 		expect(responseData.pool_status).toBe("connected");
+		expect(responseData).toHaveProperty("max_size");
+		expect(responseData.max_size).toBe(10);
 	});
 });

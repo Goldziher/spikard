@@ -3,8 +3,8 @@
  * @generated
  */
 
+import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
-import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppRequestTimeoutRequestCompletesBeforeTimeout,
 	createAppRequestTimeoutRequestExceedsTimeout,
@@ -28,9 +28,9 @@ describe("request_timeout", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("duration");
-		expect(responseData.duration).toBe("fast");
 		expect(responseData).toHaveProperty("status");
 		expect(responseData.status).toBe("ok");
+		expect(responseData).toHaveProperty("duration");
+		expect(responseData.duration).toBe("fast");
 	});
 });

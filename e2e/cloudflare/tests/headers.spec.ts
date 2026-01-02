@@ -3,8 +3,8 @@
  * @generated
  */
 
+import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
-import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppHeaders30BearerTokenFormatValid,
 	createAppHeaders31BearerTokenFormatInvalid,
@@ -236,10 +236,10 @@ describe("headers", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("credentials");
-		expect(responseData.credentials).toBe("foobar");
 		expect(responseData).toHaveProperty("scheme");
 		expect(responseData.scheme).toBe("Digest");
+		expect(responseData).toHaveProperty("credentials");
+		expect(responseData.credentials).toBe("foobar");
 	});
 
 	test("30_bearer_token_format_valid", async () => {
@@ -329,10 +329,10 @@ describe("headers", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("password");
-		expect(responseData.password).toBe("password");
 		expect(responseData).toHaveProperty("username");
 		expect(responseData.username).toBe("username");
+		expect(responseData).toHaveProperty("password");
+		expect(responseData.password).toBe("password");
 	});
 
 	test("Bearer token authentication - missing", async () => {
@@ -378,18 +378,18 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"X-Trace-Id": "trace-abc",
 			"X-Client-Version": "1.2.3",
+			"X-Trace-Id": "trace-abc",
 			"X-Request-Id": "req-12345",
 		};
 		const response = await client.get("/headers/multiple", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("x_client_version");
-		expect(responseData.x_client_version).toBe("1.2.3");
 		expect(responseData).toHaveProperty("x_request_id");
 		expect(responseData.x_request_id).toBe("req-12345");
+		expect(responseData).toHaveProperty("x_client_version");
+		expect(responseData.x_client_version).toBe("1.2.3");
 		expect(responseData).toHaveProperty("x_trace_id");
 		expect(responseData.x_trace_id).toBe("trace-abc");
 	});
@@ -480,10 +480,10 @@ describe("headers", () => {
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("content_type_lower");
 		expect(responseData.content_type_lower).toBe("application/json");
-		expect(responseData).toHaveProperty("content_type_mixed");
-		expect(responseData.content_type_mixed).toBe("application/json");
 		expect(responseData).toHaveProperty("content_type_upper");
 		expect(responseData.content_type_upper).toBe("application/json");
+		expect(responseData).toHaveProperty("content_type_mixed");
+		expect(responseData.content_type_mixed).toBe("application/json");
 	});
 
 	test("User-Agent header - custom value", async () => {

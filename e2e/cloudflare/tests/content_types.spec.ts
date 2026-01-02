@@ -3,8 +3,8 @@
  * @generated
  */
 
+import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
-import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppContentTypes13JsonWithCharsetUtf16,
 	createAppContentTypes14ContentTypeCaseInsensitive,
@@ -78,10 +78,10 @@ describe("content_types", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("emoji");
-		expect(responseData.emoji).toBe("☕");
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("Café");
+		expect(responseData).toHaveProperty("emoji");
+		expect(responseData.emoji).toBe("☕");
 		const responseHeaders = response.headers();
 		expect(responseHeaders["content-type"]).toBe("application/json; charset=utf-8");
 	});
@@ -109,8 +109,8 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("pdf_binary_data");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("application/pdf");
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=document.pdf");
+		expect(responseHeaders["content-type"]).toBe("application/pdf");
 	});
 
 	test.skip("20_content_length_mismatch", async () => {

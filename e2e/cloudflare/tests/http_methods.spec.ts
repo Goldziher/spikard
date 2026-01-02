@@ -3,8 +3,8 @@
  * @generated
  */
 
+import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
-import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppHttpMethodsDeleteRemoveResource,
 	createAppHttpMethodsDeleteResourceNotFound,
@@ -34,10 +34,10 @@ describe("http_methods", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST, PUT, DELETE, OPTIONS");
-		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://example.com");
 		expect(responseHeaders["access-control-max-age"]).toBe("86400");
+		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type");
+		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST, PUT, DELETE, OPTIONS");
 	});
 
 	test("DELETE - Remove resource", async () => {
@@ -76,19 +76,19 @@ describe("http_methods", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = { in_stock: false, name: "Updated Name", price: 89.99 };
+		const json = { name: "Updated Name", price: 89.99, in_stock: false };
 		const response = await client.patch("/items/1", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
 		expect(responseData.id).toBe(1);
-		expect(responseData).toHaveProperty("in_stock");
-		expect(responseData.in_stock).toBe(false);
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("Updated Name");
 		expect(responseData).toHaveProperty("price");
 		expect(responseData.price).toBe(89.99);
+		expect(responseData).toHaveProperty("in_stock");
+		expect(responseData.in_stock).toBe(false);
 	});
 
 	test("PUT - Validation error", async () => {
@@ -126,10 +126,10 @@ describe("http_methods", () => {
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
 		expect(responseData.id).toBe(1);
-		expect(responseData).toHaveProperty("message");
-		expect(responseData.message).toBe("Item deleted successfully");
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("Deleted Item");
+		expect(responseData).toHaveProperty("message");
+		expect(responseData.message).toBe("Item deleted successfully");
 	});
 
 	test("PUT - Missing required field", async () => {
@@ -159,12 +159,12 @@ describe("http_methods", () => {
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
 		expect(responseData.id).toBe(1);
-		expect(responseData).toHaveProperty("in_stock");
-		expect(responseData.in_stock).toBe(true);
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("Existing Item");
 		expect(responseData).toHaveProperty("price");
 		expect(responseData.price).toBe(79.99);
+		expect(responseData).toHaveProperty("in_stock");
+		expect(responseData.in_stock).toBe(true);
 	});
 
 	test("DELETE - Resource not found", async () => {
@@ -203,20 +203,20 @@ describe("http_methods", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = { description: "Completely replaced", id: 1, in_stock: true, name: "Updated Item", price: 99.99 };
+		const json = { id: 1, name: "Updated Item", description: "Completely replaced", price: 99.99, in_stock: true };
 		const response = await client.put("/items/1", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("description");
-		expect(responseData.description).toBe("Completely replaced");
 		expect(responseData).toHaveProperty("id");
 		expect(responseData.id).toBe(1);
-		expect(responseData).toHaveProperty("in_stock");
-		expect(responseData.in_stock).toBe(true);
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("Updated Item");
+		expect(responseData).toHaveProperty("description");
+		expect(responseData.description).toBe("Completely replaced");
 		expect(responseData).toHaveProperty("price");
 		expect(responseData.price).toBe(99.99);
+		expect(responseData).toHaveProperty("in_stock");
+		expect(responseData.in_stock).toBe(true);
 	});
 });

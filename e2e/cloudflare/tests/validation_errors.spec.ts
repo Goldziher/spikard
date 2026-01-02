@@ -3,8 +3,8 @@
  * @generated
  */
 
+import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
-import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppValidationErrors09MultipleValidationErrors,
 	createAppValidationErrors10NestedErrorPath,
@@ -161,7 +161,7 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = { name: "Product", price: 10.0, seller: { address: { city: "SF", zip_code: "123" }, name: "Jo" } };
+		const json = { name: "Product", price: 10.0, seller: { name: "Jo", address: { city: "SF", zip_code: "123" } } };
 		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(422);
@@ -184,7 +184,7 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = { created_at: "not-a-datetime", name: "Item", price: 10.0 };
+		const json = { name: "Item", price: 10.0, created_at: "not-a-datetime" };
 		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(422);
@@ -267,7 +267,7 @@ describe("validation_errors", () => {
 		const app = createAppValidationErrors09MultipleValidationErrors();
 		const client = new TestClient(app);
 
-		const json = { age: 15, email: "invalid-email", name: "ab" };
+		const json = { name: "ab", email: "invalid-email", age: 15 };
 		const response = await client.post("/users", { json });
 
 		expect(response.statusCode).toBe(422);

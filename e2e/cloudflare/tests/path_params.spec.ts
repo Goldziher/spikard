@@ -3,8 +3,8 @@
  * @generated
  */
 
+import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
-import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppPathParams20UuidV3PathParamSuccess,
 	createAppPathParams21UuidV5PathParamSuccess,
@@ -341,14 +341,14 @@ describe("path_params", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("order_id");
-		expect(responseData.order_id).toBe("c892496f-b1fd-4b91-bdb8-b46f92df1716");
+		expect(responseData).toHaveProperty("version");
+		expect(responseData.version).toBe(1.0);
 		expect(responseData).toHaveProperty("service_id");
 		expect(responseData.service_id).toBe(1);
 		expect(responseData).toHaveProperty("user_id");
 		expect(responseData.user_id).toBe("abc");
-		expect(responseData).toHaveProperty("version");
-		expect(responseData.version).toBe(1.0);
+		expect(responseData).toHaveProperty("order_id");
+		expect(responseData.order_id).toBe("c892496f-b1fd-4b91-bdb8-b46f92df1716");
 	});
 
 	test("Date path parameter - success", async () => {

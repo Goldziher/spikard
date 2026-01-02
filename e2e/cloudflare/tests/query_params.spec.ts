@@ -3,8 +3,8 @@
  * @generated
  */
 
+import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
-import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppQueryParams42NegativeIntegerQueryParam,
 	createAppQueryParams43ScientificNotationFloat,
@@ -482,7 +482,7 @@ describe("query_params", () => {
 		const app = createAppQueryParamsQueryParameterWithSpecialCharactersUrlEncoding();
 		const client = new TestClient(app);
 
-		const response = await client.get("/test?special=%26%40A.ac&email=x%40test.com");
+		const response = await client.get("/test?email=x%40test.com&special=%26%40A.ac");
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
@@ -537,16 +537,16 @@ describe("query_params", () => {
 		const app = createAppQueryParamsMultipleQueryParametersWithDifferentTypes();
 		const client = new TestClient(app);
 
-		const response = await client.get("/query/multi-type?name=john&active=true&score=95.5&age=30");
+		const response = await client.get("/query/multi-type?score=95.5&age=30&active=true&name=john");
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("active");
-		expect(responseData.active).toBe(true);
-		expect(responseData).toHaveProperty("age");
-		expect(responseData.age).toBe(30);
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("john");
+		expect(responseData).toHaveProperty("age");
+		expect(responseData.age).toBe(30);
+		expect(responseData).toHaveProperty("active");
+		expect(responseData.active).toBe(true);
 		expect(responseData).toHaveProperty("score");
 		expect(responseData.score).toBe(95.5);
 	});

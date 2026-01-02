@@ -3,8 +3,8 @@
  * @generated
  */
 
+import { TestClient } from "@spikard/wasm";
 import { describe, expect, test } from "vitest";
-import { TestClient } from "../../packages/wasm/src/index.ts";
 import {
 	createAppRateLimitRateLimitBelowThresholdSucceeds,
 	createAppRateLimitRateLimitExceededReturns429,
@@ -19,10 +19,10 @@ describe("rate_limit", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("request");
-		expect(responseData.request).toBe("under-limit");
 		expect(responseData).toHaveProperty("status");
 		expect(responseData.status).toBe("ok");
+		expect(responseData).toHaveProperty("request");
+		expect(responseData.request).toBe("under-limit");
 	});
 
 	test("Rate limit exceeded returns 429", async () => {
