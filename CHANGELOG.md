@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-01-02
+
+### Fixed
+
+- **Homebrew bottles**: Fixed bottle directory structure to include formula name and version path, resolving installation failures
+
 ## [0.8.1] - 2026-01-01
 
 ### Added
