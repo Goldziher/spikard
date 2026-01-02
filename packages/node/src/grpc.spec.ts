@@ -293,7 +293,7 @@ describe("createUnaryHandler", () => {
 
 describe("createServiceHandler", () => {
 	const mockRequestType = {
-		decode(buffer: Uint8Array): { id: number } {
+		decode(_buffer: Uint8Array): { id: number } {
 			return { id: 1 };
 		},
 	};
@@ -417,7 +417,7 @@ describe("GrpcStatusCode", () => {
 
 describe("Edge cases", () => {
 	const mockRequestType = {
-		decode(buffer: Uint8Array): { id: number } {
+		decode(_buffer: Uint8Array): { id: number } {
 			return { id: 1 };
 		},
 	};
@@ -570,7 +570,7 @@ describe("Edge cases", () => {
 
 describe("Streaming Support - Server-Side Streaming", () => {
 	it("should handle server-side streaming RPC", async () => {
-		async function* serverStreamHandler(request: GrpcRequest): AsyncIterator<GrpcResponse> {
+		async function* serverStreamHandler(_request: GrpcRequest): AsyncIterator<GrpcResponse> {
 			const count = 5;
 			for (let i = 0; i < count; i++) {
 				yield {
@@ -720,7 +720,7 @@ describe("Streaming Support - Client-Side Streaming", () => {
 	it("should handle empty client-side stream", async () => {
 		async function emptyClientStreamHandler(requests: AsyncIterator<GrpcRequest>): Promise<GrpcResponse> {
 			let count = 0;
-			for await (_request of requests) {
+			for await (const _request of requests) {
 				count++;
 			}
 
@@ -786,7 +786,7 @@ describe("Streaming Support - Bidirectional Streaming", () => {
 	it("should handle bidirectional streaming with error on request", async () => {
 		async function* bidiErrorHandler(requests: AsyncIterator<GrpcRequest>): AsyncIterator<GrpcResponse> {
 			let count = 0;
-			for await (const request of requests) {
+			for await (const _request of requests) {
 				count++;
 				if (count === 2) {
 					throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "Invalid message received");
@@ -815,8 +815,8 @@ describe("Streaming Support - Bidirectional Streaming", () => {
 			for await (const response of bidiErrorHandler(mockBidiStream())) {
 				responses.push(response);
 			}
-		} catch (e) {
-			error = e as Error;
+		} catch (_e) {
+			error = _e as Error;
 		}
 
 		expect(responses).toHaveLength(1);
@@ -945,7 +945,7 @@ describe("Streaming Support - Advanced Cases", () => {
 
 describe("gRPC Status Codes - Extended Coverage", () => {
 	const mockRequestType = {
-		decode(buffer: Uint8Array): { id: number } {
+		decode(_buffer: Uint8Array): { id: number } {
 			return { id: 1 };
 		},
 	};
@@ -1260,7 +1260,7 @@ describe("Protobuf Integration Tests", () => {
 	it("should handle protobuf Timestamp type", async () => {
 		// Simulate protobuf Timestamp: { seconds: number, nanos: number }
 		const mockTimestampType = {
-			decode(buffer: Uint8Array): {
+			decode(_buffer: Uint8Array): {
 				created_at: { seconds: number; nanos: number };
 			} {
 				return {
@@ -1637,7 +1637,7 @@ describe("Performance and Edge Cases", () => {
 
 		const handler = createUnaryHandler(
 			"ConcurrentOperation",
-			async (req: { size: number }) => {
+			async (_req: { size: number }) => {
 				executionCount++;
 				const currentCount = executionCount;
 				// Simulate async work
@@ -1735,7 +1735,7 @@ describe("Performance and Edge Cases", () => {
 
 describe("Advanced Routing and Service Handling", () => {
 	const mockRequestType = {
-		decode(buffer: Uint8Array): { id: number } {
+		decode(_buffer: Uint8Array): { id: number } {
 			return { id: 1 };
 		},
 	};
@@ -2250,7 +2250,7 @@ describe("Extended Streaming - Performance & Scale", () => {
 
 describe("Extended Status Codes - Comprehensive Coverage", () => {
 	const mockRequestType = {
-		decode(buffer: Uint8Array): { id: number } {
+		decode(_buffer: Uint8Array): { id: number } {
 			return { id: 1 };
 		},
 	};
@@ -2377,8 +2377,8 @@ describe("Extended Status Codes - Comprehensive Coverage", () => {
 			for await (const _response of streamWithMultipleErrors(request)) {
 				// consume
 			}
-		} catch (e) {
-			error = e as Error;
+		} catch (_e) {
+			error = _e as Error;
 		}
 
 		expect(error).toBeInstanceOf(GrpcError);
@@ -2435,8 +2435,8 @@ describe("Extended Status Codes - Comprehensive Coverage", () => {
 
 describe("Advanced Concurrency & Performance Tests", () => {
 	const mockRequestType = {
-		decode(buffer: Uint8Array): { id: number } {
-			return { id: buffer.length };
+		decode(_buffer: Uint8Array): { id: number } {
+			return { id: _buffer.length };
 		},
 	};
 
@@ -2648,7 +2648,7 @@ describe("Advanced Concurrency & Performance Tests", () => {
 
 describe("Extended Metadata & Header Tests", () => {
 	const mockRequestType = {
-		decode(buffer: Uint8Array): { id: number } {
+		decode(_buffer: Uint8Array): { id: number } {
 			return { id: 1 };
 		},
 	};

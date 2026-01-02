@@ -76,7 +76,7 @@ describe("Request parsing edge cases", () => {
 				try {
 					req.json();
 					return { parsed: true };
-				} catch (e) {
+				} catch {
 					return {
 						status: 400,
 						body: {
@@ -366,7 +366,7 @@ describe("Request parsing edge cases", () => {
 				try {
 					const data = req.json();
 					return { parsed: true, data };
-				} catch (e) {
+				} catch {
 					return {
 						parsed: false,
 						body: req.body?.toString("utf-8"),

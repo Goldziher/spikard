@@ -436,8 +436,8 @@ importers:
   tools/benchmark-harness/apps/morojs-raw:
     dependencies:
       '@morojs/moro':
-        specifier: ^1.7.11
-        version: 1.7.11(ws@8.18.3)
+        specifier: ^1.7.12
+        version: 1.7.12(ws@8.18.3)
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -452,8 +452,8 @@ importers:
   tools/benchmark-harness/apps/morojs-validation:
     dependencies:
       '@morojs/moro':
-        specifier: ^1.7.11
-        version: 1.7.11(ws@8.18.3)
+        specifier: ^1.7.12
+        version: 1.7.12(ws@8.18.3)
     devDependencies:
       '@types/node':
         specifier: ^25.0.3
@@ -1288,8 +1288,8 @@ packages:
     resolution: {integrity: sha512-OWV6DnaMd+kRikdQLZHzIiVYT1usFg/yw9Ey+qeWrll0GwkWpS6TS6mvYbNCqPzeG8Yq70ux3kP2ApiVhO7WoA==}
     engines: {node: '>= 10'}
 
-  '@morojs/moro@1.7.11':
-    resolution: {integrity: sha512-GhT8jVW6PTBilQ7YyjSK5fR6xPyghuM9d1MCL5FN5Qy+wMiZcqihtUKmaIajUwniX3RZTtp9xV+117xaa9wWpw==}
+  '@morojs/moro@1.7.12':
+    resolution: {integrity: sha512-1X1d40HKnGdCkWPi1GXOs6VobFIuM1qzMZ3bP1XsDi7VsSoYgzMoL/QhKhekmMotP/gl8+2ckXzzoqzVNIbdTA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@aws-sdk/client-ses': '>=3.927.0'
@@ -3849,7 +3849,7 @@ snapshots:
 
   '@kitojs/kito-core@1.0.0-alpha.8': {}
 
-  '@morojs/moro@1.7.11(ws@8.18.3)':
+  '@morojs/moro@1.7.12(ws@8.18.3)':
     optionalDependencies:
       ws: 8.18.3
 

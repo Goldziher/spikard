@@ -10,7 +10,7 @@ import type { SpikardApp } from "./index";
 import { StreamingResponse } from "./streaming";
 import { __setNativeClientFactory, TestClient } from "./testing";
 
-type NativeFactory = Parameters<typeof __setNativeClientFactory>[0];
+type _NativeFactory = Parameters<typeof __setNativeClientFactory>[0];
 
 describe("StreamingResponse", () => {
 	let app: SpikardApp;

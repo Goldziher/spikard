@@ -17,7 +17,7 @@ import { Spikard } from "./app";
 import { __setNativeClientFactory, TestClient } from "./testing";
 import type { JsonValue } from "./types";
 
-type NativeFactory = Parameters<typeof __setNativeClientFactory>[0];
+type _NativeFactory = Parameters<typeof __setNativeClientFactory>[0];
 
 class MockResponse {
 	constructor(private readonly payload: JsonValue | null) {}

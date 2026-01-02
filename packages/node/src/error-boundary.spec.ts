@@ -38,7 +38,7 @@ const createRequestPayload = (overrides?: Partial<NativeRequestData>): NativeReq
  * Structured error response format from testing_data/validation_errors/schema.json
  * Errors should return JSON with: { error: string, code?: string, details?: object }
  */
-interface StructuredErrorResponse {
+interface _StructuredErrorResponse {
 	error?: string;
 	message?: string;
 	code?: string;
