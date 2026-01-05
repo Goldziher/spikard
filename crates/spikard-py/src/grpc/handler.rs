@@ -1,6 +1,6 @@
-//! Python gRPC handler implementation
+//! Python gRPC `handler` implementation
 //!
-//! This module provides PyO3 bindings for gRPC request/response handling,
+//! This module provides `PyO3` bindings for gRPC request/response handling,
 //! enabling Python code to implement gRPC service handlers.
 
 use bytes::Bytes;
@@ -13,7 +13,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tonic::metadata::MetadataMap;
 
-/// Helper function to convert Option<HashMap> to PyDict (DRY)
+/// Helper function to convert Option<HashMap> to `PyDict` (DRY)
 fn option_hashmap_to_pydict<'py>(
     py: Python<'py>,
     map: Option<HashMap<String, String>>,
@@ -27,7 +27,7 @@ fn option_hashmap_to_pydict<'py>(
     Ok(py_dict)
 }
 
-/// Helper function to convert MetadataMap to PyDict (DRY)
+/// Helper function to convert MetadataMap to `PyDict` (DRY)
 fn metadata_map_to_pydict<'py>(py: Python<'py>, metadata: &MetadataMap) -> PyResult<Bound<'py, PyDict>> {
     let py_dict = PyDict::new(py);
     for key_value in metadata.iter() {
@@ -44,7 +44,7 @@ fn metadata_map_to_pydict<'py>(py: Python<'py>, metadata: &MetadataMap) -> PyRes
     Ok(py_dict)
 }
 
-/// Helper function to convert PyDict to MetadataMap (DRY)
+/// Helper function to convert `PyDict` to MetadataMap (DRY)
 fn pydict_to_metadata_map(_py: Python<'_>, py_dict: &Bound<'_, PyDict>) -> PyResult<MetadataMap> {
     let mut metadata = MetadataMap::new();
     for (key, value) in py_dict.iter() {
@@ -73,11 +73,11 @@ fn pydict_to_metadata_map(_py: Python<'_>, py_dict: &Bound<'_, PyDict>) -> PyRes
 /// Convert Python exception to appropriate gRPC Status
 ///
 /// Maps common Python exceptions to gRPC status codes for better error handling:
-/// - ValueError -> INVALID_ARGUMENT
+/// - `ValueError` -> INVALID_ARGUMENT
 /// - PermissionError -> PERMISSION_DENIED
-/// - NotImplementedError -> UNIMPLEMENTED
+/// - `NotImplementedError` -> UNIMPLEMENTED
 /// - TimeoutError -> DEADLINE_EXCEEDED
-/// - FileNotFoundError/KeyError -> NOT_FOUND
+/// - FileNotFoundError/`KeyError` -> NOT_FOUND
 /// - Default -> INTERNAL
 fn pyerr_to_grpc_status(err: PyErr) -> tonic::Status {
     Python::attach(|py| {
@@ -226,21 +226,21 @@ impl PyGrpcResponse {
     }
 }
 
-/// Python gRPC handler that bridges Python code to Rust's GrpcHandler trait
+/// Python gRPC `handler` that bridges Python code to Rust's GrpcHandler trait
 ///
-/// This handler wraps a Python callable (async function or class with handle_request method)
+/// This `handler` wraps a Python callable (async function or class with handle_request method)
 /// and implements the GrpcHandler trait, allowing it to be used in Spikard's gRPC runtime.
 pub struct PyGrpcHandler {
-    /// Python handler object (callable or object with handle_request method)
+    /// Python `handler` object (callable or object with handle_request method)
     handler: Py<PyAny>,
 
-    /// Fully qualified service name this handler serves
-    /// Using Arc<str> instead of String to avoid memory leak when converting to &'static str
+    /// Fully qualified service name this `handler` serves
+    /// Using `Arc`<str> instead of String to avoid memory leak when converting to &'static str
     service_name: Arc<str>,
 }
 
 impl PyGrpcHandler {
-    /// Create a new Python gRPC handler
+    /// Create a new Python gRPC `handler`
     ///
     /// # Arguments
     ///

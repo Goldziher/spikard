@@ -8,7 +8,7 @@ use tracing::{debug, error};
 
 /// Python implementation of SseEventProducer
 pub struct PythonSseEventProducer {
-    /// Python producer instance wrapped in Arc for cheap cloning
+    /// Python producer instance wrapped in `Arc` for cheap cloning
     producer: Arc<Py<PyAny>>,
 }
 

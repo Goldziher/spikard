@@ -1,4 +1,4 @@
-//! Python handler implementation for spikard_http::Handler trait
+//! Python `handler` implementation for spikard_http::Handler trait
 
 use crate::conversion::{json_to_python, python_to_json};
 use crate::handler_request::PyHandlerRequest;
@@ -275,9 +275,9 @@ fn structured_error(code: &str, message: impl Into<String>) -> (StatusCode, Stri
     (StatusCode::INTERNAL_SERVER_ERROR, body)
 }
 
-/// Response result from Python handler
+/// `Response` result from Python `handler`
 pub enum ResponseResult {
-    /// Custom Response object with status code and headers
+    /// Custom `Response` object with status code and headers
     Custom {
         content: Value,
         status_code: u16,
@@ -295,7 +295,7 @@ pub enum ResponseResult {
     Stream(HandlerResponse),
 }
 
-/// Python handler wrapper that implements spikard_http::Handler
+/// Python `handler` wrapper that implements spikard_http::Handler
 #[derive(Clone)]
 pub struct PythonHandler {
     handler: Arc<Py<PyAny>>,
@@ -312,7 +312,7 @@ pub struct PythonHandler {
 }
 
 impl PythonHandler {
-    /// Create a new Python handler wrapper
+    /// Create a new Python `handler` wrapper
     pub fn new(
         handler: Py<PyAny>,
         is_async: bool,
@@ -397,7 +397,7 @@ impl PythonHandler {
         }
     }
 
-    /// Call the Python handler
+    /// Call the Python `handler`
     ///
     /// This runs the Python code in a blocking task to avoid blocking the Tokio runtime
     pub async fn call(&self, _req: Request<Body>, request_data: RequestData) -> HandlerResult {
@@ -714,7 +714,7 @@ impl Handler for PythonHandler {
 ///
 /// This uses the already-validated JSON object produced by `ParameterValidator::validate_and_extract` and
 /// (a) adds the request body (prefer raw bytes if available) and (b) lets Python filter/re-map based on
-/// the handler signature (`convert_params`).
+/// the `handler` signature (`convert_params`).
 fn validated_params_to_py_kwargs<'py>(
     py: Python<'py>,
     validated_params: &Value,
@@ -786,9 +786,9 @@ fn validated_params_to_py_kwargs<'py>(
     Ok(result)
 }
 
-/// Convert Python object to ResponseResult
+/// Convert Python object to Response`Result`
 ///
-/// Checks if the object is a Response instance with custom status/headers,
+/// Checks if the object is a `Response` instance with custom status/headers,
 /// otherwise treats it as JSON data
 fn python_to_response_result(
     py: Python<'_>,
@@ -848,7 +848,7 @@ fn python_to_response_result(
 /// Inject DI dependencies into kwargs dict
 ///
 /// Extracts resolved dependencies from request_data and adds them to the kwargs
-/// dict so they can be passed to the Python handler.
+/// dict so they can be passed to the Python `handler`.
 #[cfg(feature = "di")]
 fn inject_di_dependencies<'py>(
     py: Python<'py>,

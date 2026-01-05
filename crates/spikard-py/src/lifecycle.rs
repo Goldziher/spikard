@@ -2,7 +2,7 @@
 //!
 //! This module provides the bridge between Python async functions and Rust's lifecycle hook system.
 //! Async Python functions are executed using asyncio.run() in blocking tasks, matching the
-//! pattern used in handler.rs for consistency.
+//! pattern used in `handler`.rs for consistency.
 
 use axum::{
     body::Body,
@@ -21,10 +21,10 @@ use crate::response::Response as PyResponse;
 /// Python lifecycle hook wrapper
 ///
 /// Wraps a Python async function and makes it callable from Rust's lifecycle system.
-/// Handles conversion between Rust HTTP types and Python Request/Response objects.
+/// Handles conversion between Rust HTTP types and Python `Request`/`Response` objects.
 pub struct PythonHook {
     name: String,
-    /// Python async function: async def hook(request) -> Request | Response
+    /// Python async function: async def hook(request) -> `Request` | `Response`
     func: Py<PyAny>,
 }
 

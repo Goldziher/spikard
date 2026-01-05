@@ -1,6 +1,6 @@
 //! Python bindings for GraphQL schema building and execution
 //!
-//! This module provides PyO3 wrappers for spikard-graphql functionality,
+//! This module provides `PyO3` wrappers for spikard-graphql functionality,
 //! enabling Python code to build and work with GraphQL schemas.
 //!
 //! # Features

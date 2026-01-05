@@ -1,4 +1,4 @@
-//! PyO3 wrappers for GraphQL schema building
+//! `PyO3` wrappers for GraphQL schema building
 //!
 //! Provides Python-friendly interfaces for constructing and configuring GraphQL schemas.
 
@@ -16,11 +16,11 @@ pub struct PySchemaConfig {
     #[pyo3(get, set)]
     pub introspection_enabled: bool,
 
-    /// Maximum query complexity (None = unlimited)
+    /// Maximum query complexity (`None` = unlimited)
     #[pyo3(get, set)]
     pub complexity_limit: Option<usize>,
 
-    /// Maximum query depth (None = unlimited)
+    /// Maximum query depth (`None` = unlimited)
     #[pyo3(get, set)]
     pub depth_limit: Option<usize>,
 }
@@ -30,9 +30,9 @@ impl PySchemaConfig {
     /// Create a new GraphQL schema configuration with default settings
     ///
     /// Defaults:
-    /// - introspection_enabled: True
-    /// - complexity_limit: None (unlimited)
-    /// - depth_limit: None (unlimited)
+    /// - `introspection_enabled`: `True`
+    /// - `complexity_limit`: `None` (unlimited)
+    /// - `depth_limit`: `None` (unlimited)
     #[new]
     fn new() -> Self {
         Self {
@@ -75,7 +75,7 @@ impl PySchemaConfig {
     /// Get the complexity limit
     ///
     /// Returns:
-    ///     int or None: The complexity limit, or None if unlimited
+    ///     int or `None`: The complexity limit, or `None` if unlimited
     fn get_complexity_limit(&self) -> Option<usize> {
         self.complexity_limit
     }
@@ -83,7 +83,7 @@ impl PySchemaConfig {
     /// Get the depth limit
     ///
     /// Returns:
-    ///     int or None: The depth limit, or None if unlimited
+    ///     int or `None`: The depth limit, or `None` if unlimited
     fn get_depth_limit(&self) -> Option<usize> {
         self.depth_limit
     }
@@ -91,10 +91,10 @@ impl PySchemaConfig {
     /// Validate the configuration
     ///
     /// Returns:
-    ///     bool: True if configuration is valid
+    ///     bool: `True` if configuration is valid
     ///
     /// Raises:
-    ///     ValueError: If configuration is invalid
+    ///     `ValueError`: If configuration is invalid
     fn validate(&self) -> PyResult<bool> {
         // Configuration is valid if introspection and limits are set
         // Add specific validation rules as needed
@@ -135,12 +135,12 @@ impl fmt::Display for PySchemaConfig {
 /// # Example
 ///
 /// ```python
-/// from spikard import GraphQLSchemaBuilder
+/// from `spikard` import GraphQLSchemaBuilder
 ///
 /// config = (GraphQLSchemaBuilder()
-///     .enable_introspection(True)
-///     .complexity_limit(5000)
-///     .depth_limit(50)
+///     .enable_introspection(`True`)
+///     .`complexity_limit`(5000)
+///     .`depth_limit`(50)
 ///     .build())
 /// ```
 #[pyclass(name = "GraphQLSchemaBuilder")]
@@ -215,7 +215,7 @@ impl PySchemaBuilder {
     /// Get the complexity limit
     ///
     /// Returns:
-    ///     int or None: The complexity limit, or None if unlimited
+    ///     int or `None`: The complexity limit, or `None` if unlimited
     fn get_complexity_limit(&self) -> Option<usize> {
         self.config.get_complexity_limit()
     }
@@ -223,7 +223,7 @@ impl PySchemaBuilder {
     /// Get the depth limit
     ///
     /// Returns:
-    ///     int or None: The depth limit, or None if unlimited
+    ///     int or `None`: The depth limit, or `None` if unlimited
     fn get_depth_limit(&self) -> Option<usize> {
         self.config.get_depth_limit()
     }

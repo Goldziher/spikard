@@ -1,4 +1,4 @@
-//! Python bindings for Response type
+//! Python bindings for `Response` type
 
 use async_stream::stream;
 use axum::http::{HeaderName, HeaderValue, StatusCode};
@@ -10,8 +10,8 @@ use spikard_http::HandlerResponse;
 use std::io;
 use std::str::FromStr;
 
-/// Manual Clone implementation for Response
-/// PyO3's Py<T> requires clone_ref(py) but we can clone the struct outside of GIL context
+/// Manual Clone implementation for `Response`
+/// `PyO3`'s `Py`<T> requires clone_ref(py) but we can clone the struct outside of GIL context
 /// by using Python::attach temporarily
 impl Clone for Response {
     fn clone(&self) -> Self {
@@ -23,35 +23,35 @@ impl Clone for Response {
     }
 }
 
-/// HTTP Response with custom status code, headers, and content
+/// HTTP `Response` with custom status code, headers, and content
 ///
 /// Use this to return custom responses from route handlers with specific
 /// status codes, headers, or cookies.
 ///
 /// Examples:
-///     >>> from spikard import Response
+///     >>> from `spikard` import `Response`
 ///     >>>
 ///     >>> # Return 201 Created
-///     >>> return Response(content={"id": 1}, status_code=201)
+///     >>> return `Response`(content={"id": 1}, status_code=201)
 ///     >>>
 ///     >>> # Return 404 Not Found
-///     >>> return Response(
+///     >>> return `Response`(
 ///     ...     content={"error": "Not found"},
 ///     ...     status_code=404
 ///     ... )
 ///     >>>
 ///     >>> # Return response with custom headers
-///     >>> response = Response(content={"data": "value"})
+///     >>> response = `Response`(content={"data": "value"})
 ///     >>> response.headers["X-Custom"] = "header-value"
 ///     >>> return response
 ///     >>>
 ///     >>> # Set a cookie
-///     >>> response = Response(content={"message": "Cookie set"})
+///     >>> response = `Response`(content={"message": "Cookie set"})
 ///     >>> response.set_cookie("session_id", "abc123")
 ///     >>> return response
 #[pyclass]
 pub struct Response {
-    /// Response body content (can be dict, list, string, or None)
+    /// `Response` body content (can be dict, list, string, or `None`)
     #[pyo3(get, set)]
     pub content: Option<Py<PyAny>>,
 
@@ -59,17 +59,17 @@ pub struct Response {
     #[pyo3(get, set)]
     pub status_code: u16,
 
-    /// Response headers as a dictionary
+    /// `Response` headers as a dictionary
     #[pyo3(get)]
     pub headers: Py<PyDict>,
 }
 
 #[pymethods]
 impl Response {
-    /// Create a new Response
+    /// Create a new `Response`
     ///
     /// Args:
-    ///     content: Response body (dict, list, str, bytes, or None)
+    ///     content: `Response` body (dict, list, str, bytes, or `None`)
     ///     status_code: HTTP status code (default: 200)
     ///     headers: Dictionary of response headers (default: {})
     #[new]
@@ -100,9 +100,9 @@ impl Response {
     ///     max_age: Maximum age in seconds (optional)
     ///     domain: Cookie domain (optional)
     ///     path: Cookie path (optional, default: "/")
-    ///     secure: Whether cookie requires HTTPS (default: False)
-    ///     httponly: Whether cookie is HTTP-only (default: False)
-    ///     samesite: SameSite attribute ("Strict", "Lax", or "None")
+    ///     secure: Whether cookie requires HTTPS (default: `False`)
+    ///     httponly: Whether cookie is HTTP-only (default: `False`)
+    ///     samesite: SameSite attribute ("Strict", "Lax", or "`None`")
     #[pyo3(signature = (
         key,
         value,
@@ -159,7 +159,7 @@ impl Response {
 }
 
 impl Response {
-    /// Convert an Axum Response to PyResponse (body will be discarded)
+    /// Convert an Axum `Response` to Py`Response` (body will be discarded)
     ///
     /// This extracts response data and makes it accessible to Python.
     /// Note: The body is not accessible because it's an async stream.
@@ -183,7 +183,7 @@ impl Response {
         })
     }
 
-    /// Convert Axum Response parts with buffered body to PyResponse
+    /// Convert Axum `Response` parts with buffered body to Py`Response`
     ///
     /// This is used in lifecycle hooks where we pre-buffer the body
     /// to avoid async/sync conversion issues.
@@ -219,7 +219,7 @@ impl Response {
         })
     }
 
-    /// Convert PyResponse to Axum Response
+    /// Convert Py`Response` to Axum `Response`
     ///
     /// This reconstructs an Axum response from the Python response data.
     pub fn to_response(&self, py: Python<'_>) -> PyResult<axum::http::Response<axum::body::Body>> {

@@ -1,7 +1,7 @@
 //! Python request wrapper passed to handlers.
 //!
 //! This is separate from `request::PyRequest`, which is used for lifecycle hooks and wraps
-//! a full Axum request. `PyHandlerRequest` is focused on handler inputs and keeps conversions
+//! a full Axum request. `PyHandlerRequest` is focused on `handler` inputs and keeps conversions
 //! lazy to avoid per-request Python object allocations when handlers don't need them.
 
 use crate::conversion::json_to_python;
@@ -164,7 +164,7 @@ impl PyHandlerRequest {
         Ok(self.request_data.raw_body.as_ref().map(|raw| PyBytes::new(py, raw)))
     }
 
-    /// True when `.body` represents raw JSON bytes (to be decoded in Python).
+    /// `True` when `.body` represents raw JSON bytes (to be decoded in Python).
     #[getter]
     fn raw_json(&self) -> bool {
         self.is_json && self.request_data.raw_body.is_some()

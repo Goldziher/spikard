@@ -7,7 +7,7 @@ use spikard_core::metadata::{ParameterMetadata, extract_path_parameters, merge_p
 
 use crate::conversion::python_to_json;
 
-/// PyO3 wrapper for ParameterMetadata
+/// `PyO3` wrapper for ParameterMetadata
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct PyParameterMetadata {

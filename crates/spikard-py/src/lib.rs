@@ -1,4 +1,4 @@
-//! Python bindings for spikard
+//! Python bindings for `spikard`
 //!
 //! This crate provides Python bindings using `PyO3`
 
@@ -25,7 +25,7 @@ use spikard_http::server::Server;
 
 pub use handler::{PythonHandler, init_python_event_loop};
 
-/// Route with Python handler
+/// Route with Python `handler`
 pub struct RouteWithHandler {
     pub metadata: RouteMetadata,
     pub handler: Py<PyAny>,
@@ -199,7 +199,7 @@ fn py_to_json_value(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<serde_js
     ))
 }
 
-/// Process using spikard (legacy function)
+/// Process using `spikard` (legacy function)
 #[pyfunction]
 fn process() -> PyResult<()> {
     Ok(())
@@ -786,7 +786,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     })
 }
 
-/// Python module for spikard
+/// Python module for `spikard`
 #[pymodule]
 pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<request::PyRequest>()?;

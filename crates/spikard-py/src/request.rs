@@ -1,15 +1,15 @@
-//! Python Request wrapper for lifecycle hooks
+//! Python `Request` wrapper for lifecycle hooks
 //!
-//! This module provides a Python-accessible Request type that can be used in lifecycle hooks.
-//! Unlike the RequestData used in handlers, this wraps the full Axum Request to allow
+//! This module provides a Python-accessible `Request` type that can be used in lifecycle hooks.
+//! Unlike the RequestData used in handlers, this wraps the full Axum `Request` to allow
 //! modifications before routing/validation.
 
 use axum::{body::Body, http::Request};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict};
 
-/// Manual Clone implementation for PyRequest
-/// PyO3's Py<T> requires clone_ref(py) but we can clone the struct outside of GIL context
+/// Manual Clone implementation for Py`Request`
+/// `PyO3`'s `Py`<T> requires clone_ref(py) but we can clone the struct outside of GIL context
 /// by using Python::attach temporarily
 impl Clone for PyRequest {
     fn clone(&self) -> Self {
@@ -23,28 +23,28 @@ impl Clone for PyRequest {
     }
 }
 
-/// Python Request wrapper for lifecycle hooks
+/// Python `Request` wrapper for lifecycle hooks
 ///
 /// This provides access to request properties and allows modifications.
-/// Used primarily in lifecycle hooks (onRequest, preValidation, preHandler).
+/// Used primarily in lifecycle hooks (on`Request`, preValidation, preHandler).
 #[pyclass]
 pub struct PyRequest {
     /// HTTP method
     #[pyo3(get, set)]
     pub method: String,
 
-    /// Request path
+    /// `Request` path
     #[pyo3(get, set)]
     pub path: String,
 
-    /// Request headers (mutable)
+    /// `Request` headers (mutable)
     #[pyo3(get)]
     pub headers: Py<PyDict>,
 
-    /// Request body (if available)
+    /// `Request` body (if available)
     body: Option<Vec<u8>>,
 
-    /// Request state dictionary (for passing data between hooks)
+    /// `Request` state dictionary (for passing data between hooks)
     #[pyo3(get)]
     pub state: Py<PyDict>,
 }
@@ -73,7 +73,7 @@ impl PyRequest {
 }
 
 impl PyRequest {
-    /// Convert an Axum Request to PyRequest
+    /// Convert an Axum `Request` to Py`Request`
     ///
     /// This extracts all the necessary data from the Axum request and makes it
     /// accessible to Python code.
@@ -101,7 +101,7 @@ impl PyRequest {
         })
     }
 
-    /// Convert PyRequest back to Axum Request
+    /// Convert Py`Request` back to Axum `Request`
     ///
     /// This reconstructs an Axum request from the Python request data.
     /// Note: This creates a new request, so any modifications to the original body are lost.

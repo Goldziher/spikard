@@ -1,4 +1,4 @@
-//! Python WebSocket handler bindings
+//! Python WebSocket `handler` bindings
 
 use crate::conversion::{json_to_python, python_to_json};
 use pyo3::prelude::*;
@@ -9,12 +9,12 @@ use tracing::{debug, error};
 
 /// Python implementation of WebSocketHandler
 pub struct PythonWebSocketHandler {
-    /// Python handler instance wrapped in Arc for cheap cloning
+    /// Python `handler` instance wrapped in `Arc` for cheap cloning
     handler: Arc<Py<PyAny>>,
 }
 
 impl PythonWebSocketHandler {
-    /// Create a new Python WebSocket handler
+    /// Create a new Python WebSocket `handler`
     pub fn new(handler: Py<PyAny>) -> Self {
         Self {
             handler: Arc::new(handler),
@@ -126,7 +126,7 @@ impl WebSocketHandler for PythonWebSocketHandler {
     }
 }
 
-/// Create WebSocketState from Python handler factory
+/// Create WebSocketState from Python `handler` factory
 pub fn create_websocket_state(
     factory: &Bound<'_, PyAny>,
 ) -> PyResult<spikard_http::WebSocketState<PythonWebSocketHandler>> {

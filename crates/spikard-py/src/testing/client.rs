@@ -1,7 +1,7 @@
-//! PyO3 wrapper for the core Spikard test client
+//! `PyO3` wrapper for the core Spikard test client
 //!
 //! This module bridges the language-agnostic test client from spikard_http
-//! to Python, providing a Pythonic API surface using PyO3.
+//! to Python, providing a Pythonic API surface using `PyO3`.
 
 use crate::conversion::{json_to_python, python_to_json};
 use crate::testing::sse;
@@ -44,7 +44,7 @@ impl TestClient {
     ///     cookies: Optional cookies as a dict
     ///
     /// Returns:
-    ///     TestResponse: The response from the server
+    ///     Test`Response`: The response from the server
     #[pyo3(signature = (path, query_params=None, headers=None, cookies=None))]
     fn get<'py>(
         &self,
@@ -90,7 +90,7 @@ impl TestClient {
     ///     headers: Optional headers as a dict
     ///
     /// Returns:
-    ///     TestResponse: The response from the server
+    ///     Test`Response`: The response from the server
     #[allow(clippy::too_many_arguments)]
     #[pyo3(signature = (path, json=None, data=None, files=None, query_params=None, headers=None))]
     fn post<'py>(
@@ -357,7 +357,7 @@ impl TestClient {
     ///     operation_name: Optional operation name string
     ///
     /// Returns:
-    ///     TestResponse with GraphQL response
+    ///     Test`Response` with GraphQL response
     #[pyo3(signature = (query, variables=None, operation_name=None))]
     fn graphql<'py>(
         &self,
@@ -388,7 +388,7 @@ impl TestClient {
     ///     operation_name: Optional operation name string
     ///
     /// Returns:
-    ///     Tuple of (status_code, TestResponse)
+    ///     Tuple of (status_code, Test`Response`)
     #[pyo3(signature = (query, variables=None, operation_name=None))]
     fn graphql_with_status<'py>(
         &self,
@@ -413,7 +413,7 @@ impl TestClient {
     }
 }
 
-/// Response from a test request
+/// `Response` from a test request
 #[pyclass]
 pub struct TestResponse {
     snapshot: ResponseSnapshot,
@@ -482,7 +482,7 @@ impl TestResponse {
         self.assert_status(201)
     }
 
-    /// Assert that the status code is 400 Bad Request
+    /// Assert that the status code is 400 Bad `Request`
     fn assert_status_bad_request(&self) -> PyResult<()> {
         self.assert_status(400)
     }
@@ -541,14 +541,14 @@ fn wrap_optional_vec(vec: Vec<(String, String)>) -> Option<Vec<(String, String)>
     if vec.is_empty() { None } else { Some(vec) }
 }
 
-/// Convert optional Python value to JSON, handling None case
+/// Convert optional Python value to JSON, handling `None` case
 /// This eliminates duplicated json conversion logic across methods
 #[inline]
 fn python_to_json_opt(py: Python<'_>, value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<Value>> {
     value.map(|v| python_to_json(py, v)).transpose()
 }
 
-/// Extract a PyDict to a Vec of (String, String) tuples
+/// Extract a `PyDict` to a Vec of (String, String) tuples
 /// Handles list values by creating multiple entries with the same key
 fn extract_dict_to_vec(dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<(String, String)>> {
     if let Some(d) = dict {
