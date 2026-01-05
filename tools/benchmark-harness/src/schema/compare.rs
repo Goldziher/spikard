@@ -1,6 +1,6 @@
 //! Compare mode result schema
 
-use super::{Configuration, FrameworkInfo, Latency, Metadata, Resources, Throughput, workload::*};
+use super::{Configuration, FrameworkInfo, Latency, Metadata, Resources, Throughput, workload::Endpoint};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -10,7 +10,7 @@ pub struct StatisticalTest {
     /// Name of the statistical test performed
     pub test_name: String,
 
-    /// Metric being tested (e.g., "requests_per_sec", "latency_p50_ms")
+    /// Metric being tested (e.g., "`requests_per_sec`", "`latency_p50_ms`")
     pub metric: String,
 
     /// Test statistic value (e.g., t-statistic for Welch's t-test)
@@ -35,7 +35,7 @@ pub struct EffectSize {
     /// Cohen's d value (positive = baseline better, negative = comparison better)
     pub cohens_d: f64,
 
-    /// Magnitude classification: "small", "medium", "large", "very_large"
+    /// Magnitude classification: "small", "medium", "large", "`very_large`"
     pub magnitude: String,
 }
 
@@ -85,7 +85,7 @@ pub struct FrameworkResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub effect_sizes: Option<Vec<EffectSize>>,
 
-    /// Overall verdict: "baseline", "significantly_better", "significantly_worse", "similar"
+    /// Overall verdict: "baseline", "`significantly_better`", "`significantly_worse`", "similar"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub verdict: Option<String>,
 }

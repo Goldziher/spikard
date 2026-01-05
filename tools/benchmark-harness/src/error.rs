@@ -53,6 +53,6 @@ pub enum Error {
     FrameworkExecutionFailed {
         framework: String,
         #[source]
-        source: Box<Error>,
+        source: Box<Self>,
     },
 }

@@ -36,7 +36,7 @@ pub struct ComparisonAnalysis {
     /// Effect sizes for key metrics
     pub effect_sizes: Vec<EffectSize>,
 
-    /// Overall verdict: "significantly_better", "significantly_worse", "similar"
+    /// Overall verdict: "`significantly_better`", "`significantly_worse`", "similar"
     pub overall_verdict: String,
 }
 
@@ -64,7 +64,8 @@ impl CompareAnalyzer {
     ///
     /// let analyzer = CompareAnalyzer::new(0.05); // 95% confidence level
     /// ```
-    pub fn new(significance_threshold: f64) -> Self {
+    #[must_use]
+    pub const fn new(significance_threshold: f64) -> Self {
         Self { significance_threshold }
     }
 
@@ -82,6 +83,7 @@ impl CompareAnalyzer {
     /// # Returns
     ///
     /// Complete statistical analysis with test results, effect sizes, and overall verdict
+    #[must_use]
     pub fn compare_frameworks(&self, baseline: &ProfileResult, comparison: &ProfileResult) -> ComparisonAnalysis {
         let mut statistical_tests = Vec::new();
         let mut effect_sizes = Vec::new();
@@ -254,9 +256,9 @@ impl CompareAnalyzer {
     ///
     /// # Formula
     ///
-    /// d = (mean1 - mean2) / pooled_standard_deviation
+    /// d = (mean1 - mean2) / `pooled_standard_deviation`
     ///
-    /// where pooled_sd = sqrt(((n1-1)*sd1² + (n2-1)*sd2²) / (n1 + n2 - 2))
+    /// where `pooled_sd` = sqrt(((n1-1)*sd1² + (n2-1)*sd2²) / (n1 + n2 - 2))
     ///
     /// # Arguments
     ///
@@ -297,11 +299,11 @@ impl CompareAnalyzer {
         let n2 = sample2.len() as f64;
 
         let pooled_sd = if n1 + n2 > 2.0 {
-            let numerator = (n1 - 1.0) * sd1.powi(2) + (n2 - 1.0) * sd2.powi(2);
+            let numerator = (n1 - 1.0).mul_add(sd1.powi(2), (n2 - 1.0) * sd2.powi(2));
             let denominator = n1 + n2 - 2.0;
             (numerator / denominator).sqrt()
         } else {
-            (sd1 + sd2) / 2.0
+            f64::midpoint(sd1, sd2)
         };
 
         let d = if pooled_sd > 0.0 {
@@ -339,7 +341,7 @@ impl CompareAnalyzer {
         }
     }
 
-    /// Extract RPS samples from all workloads in a ProfileResult
+    /// Extract RPS samples from all workloads in a `ProfileResult`
     fn extract_rps_samples(profile: &ProfileResult) -> Vec<f64> {
         profile
             .suites

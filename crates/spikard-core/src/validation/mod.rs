@@ -18,6 +18,9 @@ pub struct SchemaValidator {
 
 impl SchemaValidator {
     /// Create a new validator from a JSON Schema
+    ///
+    /// # Errors
+    /// Returns an error if the schema is invalid or compilation fails.
     pub fn new(schema: Value) -> Result<Self, String> {
         let compiled = jsonschema::options()
             .with_draft(jsonschema::Draft::Draft202012)
@@ -26,7 +29,7 @@ impl SchemaValidator {
             .build(&schema)
             .map_err(|e| {
                 anyhow::anyhow!("Invalid JSON Schema")
-                    .context(format!("Schema compilation failed: {}", e))
+                    .context(format!("Schema compilation failed: {e}"))
                     .to_string()
             })?;
 
@@ -37,16 +40,17 @@ impl SchemaValidator {
     }
 
     /// Get the underlying JSON Schema
-    pub fn schema(&self) -> &Value {
+    #[must_use]
+    pub const fn schema(&self) -> &Value {
         &self.schema
     }
 
-    /// Pre-process data to convert file objects to strings for format: "binary" validation
+    /// Pre-process data to convert file objects to strings for format: `binary` validation
     ///
     /// Files uploaded via multipart are converted to objects like:
-    /// {"filename": "...", "size": N, "content": "...", "content_type": "..."}
+    /// `{"filename": "...", "size": N, "content": "...", "content_type": "..."}`
     ///
-    /// But schemas define them as: {"type": "string", "format": "binary"}
+    /// But schemas define them as: `{"type": "string", "format": "binary"}`
     ///
     /// This method recursively processes the data and converts file objects to their content strings
     /// so that validation passes, while preserving the original structure for handlers to use.
@@ -54,7 +58,7 @@ impl SchemaValidator {
         self.preprocess_value_with_schema(data, &self.schema)
     }
 
-    #[allow(clippy::only_used_in_recursion)]
+    #[allow(clippy::only_used_in_recursion, clippy::self_only_used_in_recursion)]
     fn preprocess_value_with_schema(&self, data: &Value, schema: &Value) -> Value {
         if let Some(schema_obj) = schema.as_object() {
             let is_string_type = schema_obj.get("type").and_then(|t| t.as_str()) == Some("string");
@@ -110,6 +114,13 @@ impl SchemaValidator {
     }
 
     /// Validate JSON data against the schema
+    ///
+    /// # Errors
+    /// Returns a `ValidationError` if the data does not conform to the schema.
+    ///
+    /// # Too Many Lines
+    /// This function is complex due to error mapping logic.
+    #[allow(clippy::option_if_let_else, clippy::uninlined_format_args, clippy::too_many_lines)]
     pub fn validate(&self, data: &Value) -> Result<(), ValidationError> {
         let processed_data = self.preprocess_binary_fields(data);
 
@@ -131,41 +142,39 @@ impl SchemaValidator {
                         if let Some(end) = error_msg[start + 1..].find('"') {
                             error_msg[start + 1..start + 1 + end].to_string()
                         } else {
-                            "".to_string()
+                            String::new()
                         }
                     } else {
-                        "".to_string()
+                        String::new()
                     };
 
-                    if !instance_path.is_empty() && instance_path.starts_with('/') && instance_path.len() > 1 {
+                    if instance_path.starts_with('/') && instance_path.len() > 1 {
                         let base_path = &instance_path[1..];
-                        if !field_name.is_empty() {
-                            format!("{}/{}", base_path, field_name)
-                        } else {
+                        if field_name.is_empty() {
                             base_path.to_string()
+                        } else {
+                            format!("{base_path}/{field_name}")
                         }
-                    } else if !field_name.is_empty() {
-                        field_name
-                    } else {
+                    } else if field_name.is_empty() {
                         "body".to_string()
+                    } else {
+                        field_name
                     }
                 } else if schema_path_str.contains("/additionalProperties") {
                     if let Some(start) = error_msg.find('(') {
                         if let Some(quote_start) = error_msg[start..].find('\'') {
                             let abs_start = start + quote_start + 1;
-                            if let Some(quote_end) = error_msg[abs_start..].find('\'') {
-                                let property_name = error_msg[abs_start..abs_start + quote_end].to_string();
-                                if !instance_path.is_empty()
-                                    && instance_path.starts_with('/')
-                                    && instance_path.len() > 1
-                                {
-                                    format!("{}/{}", &instance_path[1..], property_name)
-                                } else {
-                                    property_name
-                                }
-                            } else {
-                                instance_path[1..].to_string()
-                            }
+                            error_msg[abs_start..].find('\'').map_or_else(
+                                || instance_path[1..].to_string(),
+                                |quote_end| {
+                                    let property_name = error_msg[abs_start..abs_start + quote_end].to_string();
+                                    if instance_path.starts_with('/') && instance_path.len() > 1 {
+                                        format!("{}/{property_name}", &instance_path[1..])
+                                    } else {
+                                        property_name
+                                    }
+                                },
+                            )
                         } else {
                             instance_path[1..].to_string()
                         }
@@ -184,7 +193,7 @@ impl SchemaValidator {
 
                 let loc_parts: Vec<String> = if param_name.contains('/') {
                     let mut parts = vec!["body".to_string()];
-                    parts.extend(param_name.split('/').map(|s| s.to_string()));
+                    parts.extend(param_name.split('/').map(ToString::to_string));
                     parts
                 } else if param_name == "body" {
                     vec!["body".to_string()]
@@ -201,7 +210,7 @@ impl SchemaValidator {
                 let schema_prop_path = if param_name.contains('/') {
                     format!("/properties/{}", param_name.replace('/', "/properties/"))
                 } else {
-                    format!("/properties/{}", param_name)
+                    format!("/properties/{param_name}")
                 };
 
                 let mut error_condition = ErrorCondition::from_schema_error(schema_path_str, &error_msg);
@@ -210,13 +219,14 @@ impl SchemaValidator {
                     ErrorCondition::TypeMismatch { .. } => {
                         let expected_type = self
                             .schema
-                            .pointer(&format!("{}/type", schema_prop_path))
+                            .pointer(&format!("{schema_prop_path}/type"))
                             .and_then(|v| v.as_str())
                             .unwrap_or("unknown")
                             .to_string();
                         ErrorCondition::TypeMismatch { expected_type }
                     }
                     ErrorCondition::AdditionalProperties { .. } => {
+                        #[allow(clippy::redundant_clone)]
                         let unexpected_field = if param_name.contains('/') {
                             param_name.split('/').next_back().unwrap_or(&param_name).to_string()
                         } else {
@@ -268,12 +278,15 @@ impl SchemaValidator {
     }
 
     /// Validate and parse JSON bytes
+    ///
+    /// # Errors
+    /// Returns a validation error if the JSON is invalid or fails validation against the schema.
     pub fn validate_json(&self, json_bytes: &[u8]) -> Result<Value, ValidationError> {
         let value: Value = serde_json::from_slice(json_bytes).map_err(|e| ValidationError {
             errors: vec![ValidationErrorDetail {
                 error_type: "json_parse_error".to_string(),
                 loc: vec!["body".to_string()],
-                msg: format!("Invalid JSON: {}", e),
+                msg: format!("Invalid JSON: {e}"),
                 input: Value::Null,
                 ctx: None,
             }],

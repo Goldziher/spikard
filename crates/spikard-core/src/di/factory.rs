@@ -134,7 +134,7 @@ impl std::fmt::Debug for FactoryDependency {
             .field("dependencies", &self.dependencies)
             .field("cacheable", &self.cacheable)
             .field("singleton", &self.singleton)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -209,6 +209,7 @@ impl FactoryDependencyBuilder {
     ///     })
     ///     .build();
     /// ```
+    #[must_use]
     pub fn factory<F>(mut self, factory: F) -> Self
     where
         F: Fn(
@@ -245,6 +246,7 @@ impl FactoryDependencyBuilder {
     ///     })
     ///     .build();
     /// ```
+    #[must_use]
     pub fn depends_on(mut self, dependencies: Vec<String>) -> Self {
         self.dependencies = dependencies;
         self
@@ -272,7 +274,8 @@ impl FactoryDependencyBuilder {
     ///     .cacheable(true)  // Same ID for all uses in one request
     ///     .build();
     /// ```
-    pub fn cacheable(mut self, cacheable: bool) -> Self {
+    #[must_use]
+    pub const fn cacheable(mut self, cacheable: bool) -> Self {
         self.cacheable = cacheable;
         self
     }
@@ -300,7 +303,8 @@ impl FactoryDependencyBuilder {
     ///     .singleton(true)  // Share across all requests
     ///     .build();
     /// ```
-    pub fn singleton(mut self, singleton: bool) -> Self {
+    #[must_use]
+    pub const fn singleton(mut self, singleton: bool) -> Self {
         self.singleton = singleton;
         self
     }

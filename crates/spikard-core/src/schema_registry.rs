@@ -1,9 +1,9 @@
-//! Schema registry for deduplication and OpenAPI generation
+//! Schema registry for deduplication and `OpenAPI` generation
 //!
 //! This module provides a global registry that compiles JSON schemas once at application
 //! startup and reuses them across all routes. This enables:
 //! - Schema deduplication (same schema used by multiple routes)
-//! - OpenAPI spec generation (access to all schemas)
+//! - `OpenAPI` spec generation (access to all schemas)
 //! - Memory efficiency (one compiled validator per unique schema)
 
 use crate::validation::SchemaValidator;
@@ -14,7 +14,7 @@ use std::sync::{Arc, RwLock};
 /// Global schema registry for compiled validators
 ///
 /// Thread-safe registry that ensures each unique schema is compiled exactly once.
-/// Uses RwLock for concurrent read access with occasional writes during startup.
+/// Uses `RwLock` for concurrent read access with occasional writes during startup.
 pub struct SchemaRegistry {
     /// Map from schema JSON string to compiled validator
     schemas: RwLock<HashMap<String, Arc<SchemaValidator>>>,
@@ -22,13 +22,14 @@ pub struct SchemaRegistry {
 
 impl SchemaRegistry {
     /// Create a new empty schema registry
+    #[must_use]
     pub fn new() -> Self {
         Self {
             schemas: RwLock::new(HashMap::new()),
         }
     }
 
-    /// Get or compile a schema, returning Arc to the compiled validator
+    /// Get or compile a schema, returning `Arc` to the compiled validator
     ///
     /// This method is thread-safe and uses a double-check pattern:
     /// 1. Fast path: Read lock to check if schema exists
@@ -38,9 +39,15 @@ impl SchemaRegistry {
     /// * `schema` - The JSON schema to compile
     ///
     /// # Returns
-    /// Arc-wrapped compiled validator that can be cheaply cloned
+    /// `Arc`-wrapped compiled validator that can be cheaply cloned
+    ///
+    /// # Errors
+    /// Returns an error if schema serialization or compilation fails.
+    ///
+    /// # Panics
+    /// Panics if the read or write lock is poisoned.
     pub fn get_or_compile(&self, schema: &Value) -> Result<Arc<SchemaValidator>, String> {
-        let key = serde_json::to_string(schema).map_err(|e| format!("Failed to serialize schema: {}", e))?;
+        let key = serde_json::to_string(schema).map_err(|e| format!("Failed to serialize schema: {e}"))?;
 
         {
             let schemas = self.schemas.read().unwrap();
@@ -62,10 +69,14 @@ impl SchemaRegistry {
         Ok(validator)
     }
 
-    /// Get all registered schemas (for OpenAPI generation)
+    /// Get all registered schemas (for `OpenAPI` generation)
     ///
     /// Returns a snapshot of all compiled validators.
-    /// Useful for generating OpenAPI specifications from runtime schema information.
+    /// Useful for generating `OpenAPI` specifications from runtime schema information.
+    ///
+    /// # Panics
+    /// Panics if the read lock is poisoned.
+    #[must_use]
     pub fn all_schemas(&self) -> Vec<Arc<SchemaValidator>> {
         let schemas = self.schemas.read().unwrap();
         schemas.values().cloned().collect()
@@ -74,6 +85,10 @@ impl SchemaRegistry {
     /// Get the number of unique schemas registered
     ///
     /// Useful for diagnostics and understanding schema deduplication effectiveness.
+    ///
+    /// # Panics
+    /// Panics if the read lock is poisoned.
+    #[must_use]
     pub fn schema_count(&self) -> usize {
         let schemas = self.schemas.read().unwrap();
         schemas.len()

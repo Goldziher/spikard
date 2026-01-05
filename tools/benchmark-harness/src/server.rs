@@ -22,6 +22,7 @@ pub struct ServerHandle {
 
 impl ServerHandle {
     /// Get the process ID
+    #[must_use]
     pub fn pid(&self) -> u32 {
         self.process.id()
     }
@@ -83,7 +84,7 @@ impl Drop for ServerHandle {
 
 /// Server configuration
 pub struct ServerConfig {
-    /// Framework name - if None, will auto-detect from app_dir
+    /// Framework name - if None, will auto-detect from `app_dir`
     pub framework: Option<String>,
     pub port: u16,
     pub app_dir: PathBuf,
@@ -122,7 +123,7 @@ pub struct ServerConfig {
 /// - Server fails health check within timeout
 pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     let port = config.port;
-    let base_url = format!("http://127.0.0.1:{}", port);
+    let base_url = format!("http://127.0.0.1:{port}");
 
     let framework_config = match &config.framework {
         Some(name) => get_framework(name).ok_or_else(|| Error::FrameworkNotFound(name.clone()))?,
@@ -141,14 +142,13 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             build.args(args);
             build.current_dir(&config.app_dir);
 
-            let status = build.status().map_err(|e| {
-                Error::ServerStartFailed(format!("Failed to execute build command '{}': {}", build_cmd, e))
-            })?;
+            let status = build
+                .status()
+                .map_err(|e| Error::ServerStartFailed(format!("Failed to execute build command '{build_cmd}': {e}")))?;
 
             if !status.success() {
                 return Err(Error::ServerStartFailed(format!(
-                    "Build command failed with status: {}",
-                    status
+                    "Build command failed with status: {status}"
                 )));
             }
         }
@@ -262,7 +262,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         if text.is_empty() {
             String::new()
         } else {
-            format!("\n\nServer stderr (tail):\n{}", text)
+            format!("\n\nServer stderr (tail):\n{text}")
         }
     };
 
@@ -284,10 +284,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
                 }
             }
             Err(e) => {
-                return Err(Error::ServerStartFailed(format!(
-                    "Failed to check process status: {}",
-                    e
-                )));
+                return Err(Error::ServerStartFailed(format!("Failed to check process status: {e}")));
             }
         }
 
@@ -311,7 +308,7 @@ async fn health_check(base_url: &str) -> bool {
     };
 
     for path in ["/health", "/"] {
-        let url = format!("{}{}", base_url, path);
+        let url = format!("{base_url}{path}");
         if matches!(client.get(&url).send().await, Ok(r) if r.status().is_success()) {
             return true;
         }
@@ -321,6 +318,7 @@ async fn health_check(base_url: &str) -> bool {
 }
 
 /// Find an available port starting from the given port
+#[must_use]
 pub fn find_available_port(start: u16) -> Option<u16> {
     (start..(start + 100)).find(|&port| is_port_available(port))
 }
@@ -437,7 +435,7 @@ mod tests {
 
         for name in frameworks {
             let fw = get_framework(name);
-            assert!(fw.is_some(), "Framework {} should be in registry", name);
+            assert!(fw.is_some(), "Framework {name} should be in registry");
 
             let config = fw.unwrap();
             assert_eq!(config.name, name);

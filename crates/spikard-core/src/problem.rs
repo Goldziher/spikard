@@ -82,7 +82,8 @@ impl ProblemDetails {
     /// Standard type URI for bad request (400)
     pub const TYPE_BAD_REQUEST: &'static str = "https://spikard.dev/errors/bad-request";
 
-    /// Create a new ProblemDetails with required fields
+    /// Create a new `ProblemDetails` with required fields
+    #[must_use]
     pub fn new(type_uri: impl Into<String>, title: impl Into<String>, status: StatusCode) -> Self {
         Self {
             type_uri: type_uri.into(),
@@ -95,24 +96,29 @@ impl ProblemDetails {
     }
 
     /// Set the detail field
+    #[must_use]
     pub fn with_detail(mut self, detail: impl Into<String>) -> Self {
         self.detail = Some(detail.into());
         self
     }
 
     /// Set the instance field
+    #[must_use]
     pub fn with_instance(mut self, instance: impl Into<String>) -> Self {
         self.instance = Some(instance.into());
         self
     }
 
     /// Add an extension field
+    #[must_use]
     pub fn with_extension(mut self, key: impl Into<String>, value: Value) -> Self {
         self.extensions.insert(key.into(), value);
         self
     }
 
     /// Add all extensions from a JSON object
+    #[must_use]
+    #[allow(clippy::needless_pass_by_value)]
     pub fn with_extensions(mut self, extensions: Value) -> Self {
         if let Some(obj) = extensions.as_object() {
             for (key, value) in obj {
@@ -122,20 +128,21 @@ impl ProblemDetails {
         self
     }
 
-    /// Create a validation error Problem Details from ValidationError
+    /// Create a validation error Problem Details from `ValidationError`
     ///
     /// This converts the FastAPI-style validation errors to RFC 9457 format:
-    /// - `type`: "https://spikard.dev/errors/validation-error"
+    /// - `type`: <https://spikard.dev/errors/validation-error>
     /// - `title`: "Request Validation Failed"
     /// - `status`: 422
     /// - `detail`: Summary of error count
     /// - `errors`: Array of validation error details (as extension field)
+    #[must_use]
     pub fn from_validation_error(error: &ValidationError) -> Self {
         let error_count = error.errors.len();
         let detail = if error_count == 1 {
             "1 validation error in request".to_string()
         } else {
-            format!("{} validation errors in request", error_count)
+            format!("{error_count} validation errors in request")
         };
 
         let errors_json = serde_json::to_value(&error.errors).unwrap_or_else(|_| serde_json::Value::Array(vec![]));
@@ -201,16 +208,23 @@ impl ProblemDetails {
     }
 
     /// Get the HTTP status code
+    #[must_use]
     pub fn status_code(&self) -> StatusCode {
         StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR)
     }
 
     /// Serialize to JSON string
+    ///
+    /// # Errors
+    /// Returns an error if the serialization fails.
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
     }
 
     /// Serialize to pretty JSON string
+    ///
+    /// # Errors
+    /// Returns an error if the serialization fails.
     pub fn to_json_pretty(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string_pretty(self)
     }

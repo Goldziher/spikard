@@ -1,6 +1,8 @@
 //! Profile mode result schema
 
-use super::{Configuration, FrameworkInfo, Latency, Metadata, ProfilingData, Resources, Throughput, workload::*};
+use super::{
+    Configuration, FrameworkInfo, Latency, Metadata, ProfilingData, Resources, Throughput, workload::Endpoint,
+};
 use serde::{Deserialize, Serialize};
 
 /// Complete profile mode result

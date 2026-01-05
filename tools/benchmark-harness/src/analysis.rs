@@ -270,7 +270,7 @@ fn aggregate_latency_metrics(runs: &[BenchmarkResult]) -> AggregatedLatencyMetri
     let p90_ms: Vec<f64> = runs.iter().map(|r| r.latency.p90_ms).collect();
     let p95_ms: Vec<f64> = runs.iter().map(|r| r.latency.p95_ms).collect();
     let p99_ms: Vec<f64> = runs.iter().map(|r| r.latency.p99_ms).collect();
-    let p999_ms: Vec<f64> = runs.iter().map(|r| r.latency.p999_ms).collect();
+    let p99_9_ms: Vec<f64> = runs.iter().map(|r| r.latency.p999_ms).collect();
     let max_ms: Vec<f64> = runs.iter().map(|r| r.latency.max_ms).collect();
     let min_ms: Vec<f64> = runs.iter().map(|r| r.latency.min_ms).collect();
     let stddev_ms: Vec<f64> = runs.iter().map(|r| r.latency.stddev_ms).collect();
@@ -281,7 +281,7 @@ fn aggregate_latency_metrics(runs: &[BenchmarkResult]) -> AggregatedLatencyMetri
         p90_ms: calculate_stats(&p90_ms),
         p95_ms: calculate_stats(&p95_ms),
         p99_ms: calculate_stats(&p99_ms),
-        p999_ms: calculate_stats(&p999_ms),
+        p999_ms: calculate_stats(&p99_9_ms),
         max_ms: calculate_stats(&max_ms),
         min_ms: calculate_stats(&min_ms),
         stddev_ms: calculate_stats(&stddev_ms),
@@ -399,6 +399,7 @@ fn aggregate_serialization_metrics(runs: &[BenchmarkResult]) -> AggregatedSerial
 /// # Returns
 ///
 /// Vector of indices identifying outlier values
+#[must_use]
 pub fn detect_outliers(values: &[f64]) -> Vec<usize> {
     if values.len() < 4 {
         return Vec::new();
@@ -411,8 +412,8 @@ pub fn detect_outliers(values: &[f64]) -> Vec<usize> {
     let q3 = percentile(&sorted, 0.75);
     let iqr = q3 - q1;
 
-    let lower_bound = q1 - 1.5 * iqr;
-    let upper_bound = q3 + 1.5 * iqr;
+    let lower_bound = 1.5f64.mul_add(-iqr, q1);
+    let upper_bound = 1.5f64.mul_add(iqr, q3);
 
     values
         .iter()
@@ -433,7 +434,8 @@ pub fn detect_outliers(values: &[f64]) -> Vec<usize> {
 ///
 /// # Returns
 ///
-/// Tuple of (lower_bound, upper_bound)
+/// Tuple of (`lower_bound`, `upper_bound`)
+#[must_use]
 pub fn calculate_confidence_interval(values: &[f64], confidence: f64) -> (f64, f64) {
     if values.is_empty() {
         return (0.0, 0.0);
@@ -484,6 +486,7 @@ pub fn calculate_confidence_interval(values: &[f64], confidence: f64) -> (f64, f
 /// # Returns
 ///
 /// Coefficient of variation (0.0 if mean is zero)
+#[must_use]
 pub fn coefficient_of_variation(values: &[f64]) -> f64 {
     if values.is_empty() {
         return 0.0;
@@ -515,7 +518,7 @@ fn median(values: &[f64]) -> f64 {
 
     let mid = sorted.len() / 2;
     if sorted.len().is_multiple_of(2) {
-        (sorted[mid - 1] + sorted[mid]) / 2.0
+        f64::midpoint(sorted[mid - 1], sorted[mid])
     } else {
         sorted[mid]
     }
@@ -539,6 +542,11 @@ fn stddev(values: &[f64]) -> f64 {
     variance.sqrt()
 }
 
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss
+)]
 fn percentile(sorted_values: &[f64], p: f64) -> f64 {
     if sorted_values.is_empty() {
         return 0.0;
@@ -556,7 +564,7 @@ fn percentile(sorted_values: &[f64], p: f64) -> f64 {
         sorted_values[lower]
     } else {
         let weight = index - lower as f64;
-        sorted_values[lower] * (1.0 - weight) + sorted_values[upper] * weight
+        sorted_values[lower].mul_add(1.0 - weight, sorted_values[upper] * weight)
     }
 }
 

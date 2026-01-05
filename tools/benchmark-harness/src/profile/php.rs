@@ -12,6 +12,7 @@ pub struct PhpProfiler {
     output_path: Option<String>,
 }
 
+#[must_use]
 pub fn wait_for_profile_output(path: &str) -> Option<String> {
     let start = std::time::Instant::now();
     while start.elapsed() < Duration::from_secs(30) {
@@ -20,18 +21,17 @@ pub fn wait_for_profile_output(path: &str) -> Option<String> {
         }
         std::thread::sleep(Duration::from_millis(100));
     }
-    eprintln!("  ⚠ PHP profile output not found at {}", path);
+    eprintln!("  ⚠ PHP profile output not found at {path}");
     None
 }
 
 /// Start PHP profiler for the given PID.
 ///
 /// The benchmark app is expected to write profiling output when the process exits.
-pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PhpProfiler> {
-    let _ = pid;
+pub fn start_profiler(_pid: u32, output_path: Option<&PathBuf>) -> Result<PhpProfiler> {
     let output_path = output_path
         .as_ref()
-        .and_then(|p| p.to_str().map(|s| s.to_string()))
+        .and_then(|p| p.to_str().map(std::string::ToString::to_string))
         .or_else(|| std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok());
 
     if let Some(ref path) = output_path
@@ -44,6 +44,7 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>) -> Result<PhpProfi
 }
 
 impl PhpProfiler {
+    #[must_use]
     pub fn output_path(&self) -> Option<&str> {
         self.output_path.as_deref()
     }

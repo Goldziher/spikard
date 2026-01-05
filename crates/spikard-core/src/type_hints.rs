@@ -39,6 +39,10 @@ fn path_type_regex() -> &'static Regex {
 /// assert_eq!(hints.get("id"), Some(&"uuid".to_string()));
 /// assert_eq!(hints.get("tag_id"), Some(&"int".to_string()));
 /// ```
+///
+/// # Panics
+/// Panics if regex capture groups don't contain expected indices.
+#[must_use]
 pub fn parse_type_hints(route_path: &str) -> HashMap<String, String> {
     let mut hints = HashMap::new();
     let re = type_hint_regex();
@@ -66,6 +70,7 @@ pub fn parse_type_hints(route_path: &str) -> HashMap<String, String> {
 /// assert_eq!(strip_type_hints("/items/{id:uuid}"), "/items/{id}");
 /// assert_eq!(strip_type_hints("/files/{path:path}"), "/files/{*path}");
 /// ```
+#[must_use]
 pub fn strip_type_hints(route_path: &str) -> String {
     let path_re = path_type_regex();
     let route_path = path_re.replace_all(route_path, "{*$1}");
@@ -86,6 +91,8 @@ pub fn strip_type_hints(route_path: &str) -> String {
 /// - `date` → `{"type": "string", "format": "date"}`
 /// - `datetime` → `{"type": "string", "format": "date-time"}`
 /// - `path` → `{"type": "string"}` (wildcard capture)
+#[must_use]
+#[allow(clippy::match_same_arms)]
 pub fn type_hint_to_schema(type_hint: &str) -> Value {
     match type_hint {
         "uuid" => json!({
@@ -95,7 +102,7 @@ pub fn type_hint_to_schema(type_hint: &str) -> Value {
         "int" | "integer" => json!({
             "type": "integer"
         }),
-        "str" | "string" => json!({
+        "str" | "string" | "path" => json!({
             "type": "string"
         }),
         "float" | "number" => json!({
@@ -111,9 +118,6 @@ pub fn type_hint_to_schema(type_hint: &str) -> Value {
         "datetime" | "date-time" => json!({
             "type": "string",
             "format": "date-time"
-        }),
-        "path" => json!({
-            "type": "string"
         }),
         _ => json!({
             "type": "string"
@@ -145,6 +149,7 @@ pub fn type_hint_to_schema(type_hint: &str) -> Value {
 ///     "required": ["id"]
 /// })));
 /// ```
+#[must_use]
 pub fn auto_generate_parameter_schema(route_path: &str) -> Option<Value> {
     let type_hints = parse_type_hints(route_path);
 
@@ -204,7 +209,8 @@ pub fn auto_generate_parameter_schema(route_path: &str) -> Option<Value> {
 /// let merged = merge_parameter_schemas(auto_schema, explicit_schema);
 /// // Result: auto-generated id + explicit count with constraints
 /// ```
-pub fn merge_parameter_schemas(auto_schema: Value, explicit_schema: Value) -> Value {
+#[must_use]
+pub fn merge_parameter_schemas(auto_schema: &Value, explicit_schema: &Value) -> Value {
     let mut result = auto_schema.clone();
 
     let auto_props = result.get_mut("properties").and_then(|v| v.as_object_mut());

@@ -1,8 +1,8 @@
 //! Debug logging utilities for spikard-http
 //!
 //! This module provides debug logging that can be enabled via:
-//! - Building in debug mode (cfg(debug_assertions))
-//! - Setting SPIKARD_DEBUG=1 environment variable
+//! - Building in debug mode (`cfg(debug_assertions)`)
+//! - Setting `SPIKARD_DEBUG=1` environment variable
 
 use std::sync::atomic::{AtomicBool, Ordering};
 

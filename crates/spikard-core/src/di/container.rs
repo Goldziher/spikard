@@ -365,7 +365,7 @@ impl std::fmt::Debug for DependencyContainer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("DependencyContainer")
             .field("dependencies", &self.dependencies.keys())
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

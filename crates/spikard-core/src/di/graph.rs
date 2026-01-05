@@ -133,6 +133,7 @@ impl DependencyGraph {
     /// // Adding c -> [] would not
     /// assert!(!graph.has_cycle_with("c", &[]));
     /// ```
+    #[must_use]
     pub fn has_cycle_with(&self, new_key: &str, new_deps: &[String]) -> bool {
         let mut temp_graph = self.graph.clone();
         temp_graph.insert(new_key.to_string(), new_deps.to_vec());

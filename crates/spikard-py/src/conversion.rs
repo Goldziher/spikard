@@ -1,9 +1,9 @@
 //! Zero-copy JSON conversion utilities for Python bindings
 //!
-//! This module provides optimized, safe conversion between serde_json::Value and Python objects
-//! using direct PyO3 type construction, eliminating JSON string round-trips.
+//! This module provides optimized, safe conversion between `serde_json::Value` and Python objects
+//! using direct `PyO3` type construction, eliminating JSON string round-trips.
 //!
-//! Performance improvement: ~40-60% faster than json.dumps() → serde_json::from_str()
+//! Performance improvement: ~40-60% faster than `json.dumps()` → `serde_json::from_str()`
 
 use pyo3::prelude::*;
 use pyo3::sync::PyOnceLock;
@@ -32,14 +32,14 @@ fn msgspec_struct_helpers(py: Python<'_>) -> Option<(&Py<pyo3::types::PyType>, &
     Some((struct_type, to_builtins))
 }
 
-/// Convert serde_json::Value to Python object using zero-copy construction
+/// Convert `serde_json::Value` to Python object using zero-copy construction
 ///
 /// This function converts JSON values directly to Python objects without
 /// serializing to string first, which is much more efficient.
 ///
 /// # Errors
 ///
-/// Returns PyErr if conversion fails (e.g., NaN floats)
+/// Returns `PyErr` if conversion fails (e.g., NaN floats)
 ///
 /// # Examples
 ///
@@ -88,15 +88,15 @@ pub fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py
     }
 }
 
-/// Convert Python object to serde_json::Value
+/// Convert Python object to `serde_json::Value`
 ///
 /// This function converts Python objects to JSON values. For complex types
-/// like dataclasses or Pydantic models, it uses json.dumps() → serde_json::from_str()
+/// like dataclasses or Pydantic models, it uses `json.dumps()` → `serde_json::from_str()`
 /// as those types cannot be directly downcast without serialization.
 ///
 /// # Errors
 ///
-/// Returns PyErr if conversion fails (e.g., invalid JSON, unsupported types)
+/// Returns `PyErr` if conversion fails (e.g., invalid JSON, unsupported types)
 ///
 /// # Examples
 ///
@@ -166,5 +166,5 @@ pub fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value>
     let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
 
     serde_json::from_str(&json_str)
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to parse JSON: {}", e)))
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to parse JSON: {e}")))
 }

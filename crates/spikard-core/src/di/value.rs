@@ -134,6 +134,7 @@ impl<T: Clone + Send + Sync + 'static> std::fmt::Debug for ValueDependency<T> {
         f.debug_struct("ValueDependency")
             .field("key", &self.key)
             .field("value_type", &std::any::type_name::<T>())
+            .field("value", &"<T>")
             .finish()
     }
 }

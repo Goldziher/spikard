@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use std::collections::HashMap;
 
 /// Generate a small JSON payload (~100-500 bytes)
+#[must_use]
 pub fn generate_json_small() -> Value {
     json!({
         "name": "benchmark_item_small",
@@ -16,6 +17,7 @@ pub fn generate_json_small() -> Value {
 }
 
 /// Generate a medium JSON payload (~1-10KB)
+#[must_use]
 pub fn generate_json_medium() -> Value {
     let image_name = "benchmark_image_".repeat(40);
     let image_url = format!("https://cdn.example.com/{}", "image-path/".repeat(30));
@@ -30,6 +32,7 @@ pub fn generate_json_medium() -> Value {
 }
 
 /// Generate a large JSON payload (~10-100KB)
+#[must_use]
 pub fn generate_json_large() -> Value {
     json!({
         "name": "benchmark_item_large_".repeat(40),
@@ -49,6 +52,7 @@ pub fn generate_json_large() -> Value {
 }
 
 /// Generate a very large JSON payload (~100KB-1MB)
+#[must_use]
 pub fn generate_json_very_large() -> Value {
     let tags: Vec<Value> = (0..500).map(|idx| json!(format!("tag_{idx:04}"))).collect();
     let images: Vec<Value> = (0..800)
@@ -68,6 +72,7 @@ pub fn generate_json_very_large() -> Value {
 }
 
 /// Generate a simple URL-encoded form (3-5 fields)
+#[must_use]
 pub fn generate_urlencoded_simple() -> HashMap<String, String> {
     let mut form = HashMap::new();
     form.insert("name".to_string(), "Test User".to_string());
@@ -78,6 +83,7 @@ pub fn generate_urlencoded_simple() -> HashMap<String, String> {
 }
 
 /// Generate a complex URL-encoded form (10-20 fields)
+#[must_use]
 pub fn generate_urlencoded_complex() -> HashMap<String, String> {
     let mut form = HashMap::new();
     form.insert("username".to_string(), "benchmark_user".to_string());
@@ -103,16 +109,19 @@ pub fn generate_urlencoded_complex() -> HashMap<String, String> {
 }
 
 /// Generate random binary data of specified size
+#[must_use]
 pub fn generate_multipart_file(size_bytes: usize) -> Vec<u8> {
     (0..size_bytes).map(|i| (i % 256) as u8).collect()
 }
 
 /// Generate random string of specified length
+#[must_use]
 pub fn generate_random_string(length: usize) -> String {
     "x".repeat(length)
 }
 
-/// Convert HashMap to URL-encoded string
+/// Convert `HashMap` to URL-encoded string
+#[must_use]
 pub fn hashmap_to_urlencoded(map: &HashMap<String, String>) -> String {
     map.iter()
         .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))

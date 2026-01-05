@@ -8,11 +8,11 @@
     "packages": [
         {
             "name": "spikard/spikard",
-            "version": "0.8.1",
+            "version": "0.8.2",
             "dist": {
                 "type": "path",
                 "url": "../../../../packages/php",
-                "reference": "36e6f72666f5bdecc3546f05749c081f1b42d68e"
+                "reference": "d83a315ca332ea63b8d563c2f65c2dfd287c735f"
             },
             "require": {
                 "php": "^8.2"

@@ -1,6 +1,8 @@
-//! Convert test fixtures to OpenAPI 3.1 specifications
+//! Convert test fixtures to `OpenAPI` 3.1 specifications
 
-use super::spec::*;
+use super::spec::{
+    MediaType, OpenApiSpec, Operation, Parameter, PathItem, RequestBody, Response, Schema, SchemaObject,
+};
 use crate::error::{CodegenError, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -9,7 +11,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-/// Test fixture structure (matching testing_data/*.json)
+/// Test fixture structure (matching `testing_data`/*.json)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Fixture {
     pub name: String,
@@ -173,7 +175,7 @@ pub struct ValidationError {
     pub msg: String,
 }
 
-/// Options for OpenAPI generation
+/// Options for `OpenAPI` generation
 #[derive(Debug, Clone)]
 pub struct OpenApiOptions {
     pub title: String,
@@ -191,15 +193,19 @@ impl Default for OpenApiOptions {
     }
 }
 
-/// Convert test fixtures to OpenAPI 3.1 specification
-pub fn fixtures_to_openapi(fixtures: Vec<Fixture>, options: OpenApiOptions) -> Result<OpenApiSpec> {
+/// Convert test fixtures to `OpenAPI` 3.1 specification
+///
+/// # Errors
+///
+/// Returns an error if the fixtures are invalid or cannot be converted to an `OpenAPI` specification.
+pub fn fixtures_to_openapi(fixtures: &[Fixture], options: OpenApiOptions) -> Result<OpenApiSpec> {
     let mut spec = OpenApiSpec::new(options.title, options.version);
     spec.info.description = options.description;
 
-    let grouped = group_fixtures_by_route(&fixtures);
+    let grouped = group_fixtures_by_route(fixtures);
 
     for ((path, method), route_fixtures) in grouped {
-        let operation = build_operation(&route_fixtures, &method)?;
+        let operation = build_operation(&route_fixtures, &method);
 
         let path_item = spec.paths.entry(path.clone()).or_insert_with(|| PathItem {
             get: None,
@@ -224,6 +230,14 @@ pub fn fixtures_to_openapi(fixtures: Vec<Fixture>, options: OpenApiOptions) -> R
 }
 
 /// Load fixtures from a directory
+///
+/// # Errors
+///
+/// Returns an error if the directory cannot be read or if a fixture file is invalid.
+///
+/// # Panics
+///
+/// Panics if a filename in the directory cannot be converted to a string.
 pub fn load_fixtures_from_dir(dir: &Path) -> Result<Vec<Fixture>> {
     let mut fixtures = Vec::new();
 
@@ -270,8 +284,8 @@ fn group_fixtures_by_route(fixtures: &[Fixture]) -> HashMap<(String, String), Ve
     grouped
 }
 
-/// Build OpenAPI operation from fixtures
-fn build_operation(fixtures: &[Fixture], method: &str) -> Result<Operation> {
+/// Build `OpenAPI` operation from fixtures
+fn build_operation(fixtures: &[Fixture], method: &str) -> Operation {
     let first = &fixtures[0];
 
     let mut operation = Operation {
@@ -290,11 +304,11 @@ fn build_operation(fixtures: &[Fixture], method: &str) -> Result<Operation> {
 
     if let Some(ref handler) = first.handler {
         if let Some(ref params) = handler.parameters {
-            operation.parameters = Some(extract_parameters(params)?);
+            operation.parameters = Some(extract_parameters(params));
         }
 
         if let Some(ref body_schema) = handler.body_schema {
-            operation.request_body = Some(build_request_body(body_schema)?);
+            operation.request_body = Some(build_request_body(body_schema));
         }
     }
 
@@ -303,17 +317,17 @@ fn build_operation(fixtures: &[Fixture], method: &str) -> Result<Operation> {
         let status = fixture.expected_response.status_code.to_string();
 
         if !responses.contains_key(&status) {
-            responses.insert(status.clone(), build_response(&fixture.expected_response)?);
+            responses.insert(status.clone(), build_response(&fixture.expected_response));
         }
     }
 
     operation.responses = responses;
 
-    Ok(operation)
+    operation
 }
 
 /// Extract parameters from handler schema
-fn extract_parameters(params_schema: &Value) -> Result<Vec<Parameter>> {
+fn extract_parameters(params_schema: &Value) -> Vec<Parameter> {
     let mut parameters = Vec::new();
 
     if let Some(obj) = params_schema.as_object() {
@@ -324,7 +338,7 @@ fn extract_parameters(params_schema: &Value) -> Result<Vec<Parameter>> {
                     location: "path".to_string(),
                     description: schema.get("description").and_then(|v| v.as_str()).map(String::from),
                     required: Some(true),
-                    schema: Some(json_to_schema(schema)?),
+                    schema: Some(json_to_schema(schema)),
                 });
             }
         }
@@ -335,8 +349,8 @@ fn extract_parameters(params_schema: &Value) -> Result<Vec<Parameter>> {
                     name: name.clone(),
                     location: "query".to_string(),
                     description: schema.get("description").and_then(|v| v.as_str()).map(String::from),
-                    required: schema.get("required").and_then(|v| v.as_bool()),
-                    schema: Some(json_to_schema(schema)?),
+                    required: schema.get("required").and_then(Value::as_bool),
+                    schema: Some(json_to_schema(schema)),
                 });
             }
         }
@@ -347,8 +361,8 @@ fn extract_parameters(params_schema: &Value) -> Result<Vec<Parameter>> {
                     name: name.clone(),
                     location: "header".to_string(),
                     description: schema.get("description").and_then(|v| v.as_str()).map(String::from),
-                    required: schema.get("required").and_then(|v| v.as_bool()),
-                    schema: Some(json_to_schema(schema)?),
+                    required: schema.get("required").and_then(Value::as_bool),
+                    schema: Some(json_to_schema(schema)),
                 });
             }
         }
@@ -359,38 +373,38 @@ fn extract_parameters(params_schema: &Value) -> Result<Vec<Parameter>> {
                     name: name.clone(),
                     location: "cookie".to_string(),
                     description: schema.get("description").and_then(|v| v.as_str()).map(String::from),
-                    required: schema.get("required").and_then(|v| v.as_bool()),
-                    schema: Some(json_to_schema(schema)?),
+                    required: schema.get("required").and_then(Value::as_bool),
+                    schema: Some(json_to_schema(schema)),
                 });
             }
         }
     }
 
-    Ok(parameters)
+    parameters
 }
 
 /// Build request body from schema
-fn build_request_body(schema: &Value) -> Result<RequestBody> {
+fn build_request_body(schema: &Value) -> RequestBody {
     let mut content = IndexMap::new();
 
     content.insert(
         "application/json".to_string(),
         MediaType {
-            schema: Some(json_to_schema(schema)?),
+            schema: Some(json_to_schema(schema)),
             example: None,
             examples: None,
         },
     );
 
-    Ok(RequestBody {
+    RequestBody {
         description: None,
         content,
         required: Some(true),
-    })
+    }
 }
 
 /// Build response from expected response
-fn build_response(expected: &FixtureExpectedResponse) -> Result<Response> {
+fn build_response(expected: &FixtureExpectedResponse) -> Response {
     let description = match expected.status_code {
         200 => "Successful response",
         201 => "Created successfully",
@@ -436,52 +450,61 @@ fn build_response(expected: &FixtureExpectedResponse) -> Result<Response> {
         response.content = Some(content);
     }
 
-    Ok(response)
+    response
 }
 
-/// Convert JSON Schema to OpenAPI Schema
-fn json_to_schema(json: &Value) -> Result<Schema> {
-    if let Some(obj) = json.as_object() {
-        let schema_type = obj.get("type").and_then(|v| v.as_str()).unwrap_or("string").to_string();
+/// Convert JSON Schema to `OpenAPI` Schema
+fn json_to_schema(json: &Value) -> Schema {
+    json.as_object().map_or_else(
+        || {
+            Schema::Object(Box::new(SchemaObject {
+                schema_type: "string".to_string(),
+                properties: None,
+                required: None,
+                format: None,
+                items: None,
+                minimum: None,
+                maximum: None,
+                min_length: None,
+                max_length: None,
+                pattern: None,
+                description: None,
+            }))
+        },
+        |obj| {
+            let schema_type = obj.get("type").and_then(|v| v.as_str()).unwrap_or("string").to_string();
 
-        Ok(Schema::Object(Box::new(SchemaObject {
-            schema_type,
-            properties: obj.get("properties").and_then(|v| {
-                v.as_object().map(|props| {
-                    props
-                        .iter()
-                        .map(|(k, v)| (k.clone(), Box::new(json_to_schema(v).unwrap())))
-                        .collect()
-                })
-            }),
-            required: obj.get("required").and_then(|v| {
-                v.as_array()
-                    .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
-            }),
-            format: obj.get("format").and_then(|v| v.as_str()).map(String::from),
-            items: obj.get("items").map(|v| Box::new(json_to_schema(v).unwrap())),
-            minimum: obj.get("minimum").and_then(|v| v.as_f64()),
-            maximum: obj.get("maximum").and_then(|v| v.as_f64()),
-            min_length: obj.get("minLength").and_then(|v| v.as_u64()).map(|v| v as usize),
-            max_length: obj.get("maxLength").and_then(|v| v.as_u64()).map(|v| v as usize),
-            pattern: obj.get("pattern").and_then(|v| v.as_str()).map(String::from),
-            description: obj.get("description").and_then(|v| v.as_str()).map(String::from),
-        })))
-    } else {
-        Ok(Schema::Object(Box::new(SchemaObject {
-            schema_type: "string".to_string(),
-            properties: None,
-            required: None,
-            format: None,
-            items: None,
-            minimum: None,
-            maximum: None,
-            min_length: None,
-            max_length: None,
-            pattern: None,
-            description: None,
-        })))
-    }
+            Schema::Object(Box::new(SchemaObject {
+                schema_type,
+                properties: obj.get("properties").and_then(|v| {
+                    v.as_object().map(|props| {
+                        props
+                            .iter()
+                            .map(|(k, v)| (k.clone(), Box::new(json_to_schema(v))))
+                            .collect()
+                    })
+                }),
+                required: obj.get("required").and_then(|v| {
+                    v.as_array()
+                        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                }),
+                format: obj.get("format").and_then(|v| v.as_str()).map(String::from),
+                items: obj.get("items").map(|v| Box::new(json_to_schema(v))),
+                minimum: obj.get("minimum").and_then(Value::as_f64),
+                maximum: obj.get("maximum").and_then(Value::as_f64),
+                min_length: obj
+                    .get("minLength")
+                    .and_then(Value::as_u64)
+                    .map(|v| usize::try_from(v).unwrap_or(0)),
+                max_length: obj
+                    .get("maxLength")
+                    .and_then(Value::as_u64)
+                    .map(|v| usize::try_from(v).unwrap_or(0)),
+                pattern: obj.get("pattern").and_then(|v| v.as_str()).map(String::from),
+                description: obj.get("description").and_then(|v| v.as_str()).map(String::from),
+            }))
+        },
+    )
 }
 
 /// Sanitize path for operation ID

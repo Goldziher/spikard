@@ -9,7 +9,11 @@ use crate::{
     schema::{
         Configuration, FrameworkInfo, Latency, Metadata, NodeProfilingData, PhpProfilingData, ProfilingData,
         PythonProfilingData, Resources, RubyProfilingData, RustProfilingData, Throughput, WasmProfilingData,
-        profile::*, workload::WorkloadSuite,
+        profile::{
+            BaselineComparison, CategorySummary, ProfileResult, ProfileSummary, SuiteResult, WorkloadComparison,
+            WorkloadMetrics, WorkloadResult,
+        },
+        workload::WorkloadSuite,
     },
     server::{ServerConfig, ServerHandle, start_server},
 };
@@ -20,7 +24,7 @@ fn find_workspace_root(app_dir: &Path) -> Option<PathBuf> {
     app_dir
         .ancestors()
         .find(|dir| dir.join("pnpm-workspace.yaml").exists())
-        .map(|dir| dir.to_path_buf())
+        .map(std::path::Path::to_path_buf)
 }
 
 fn find_tsx_cli(app_dir: &Path) -> Option<PathBuf> {
@@ -36,8 +40,7 @@ fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) ->
     let needle = needle.to_lowercase();
     let root_matches = system
         .process(root)
-        .map(|proc_| proc_.name().to_string_lossy().to_lowercase().contains(&needle))
-        .unwrap_or(false);
+        .is_some_and(|proc_| proc_.name().to_string_lossy().to_lowercase().contains(&needle));
 
     let mut children: std::collections::HashMap<Pid, Vec<Pid>> = std::collections::HashMap::new();
     for (&pid, proc_) in system.processes() {
@@ -170,7 +173,7 @@ impl ProfileRunner {
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
         let suite_node_profiler = self.config.profiler.as_deref() == Some("node") && framework_info.language == "node";
         let suite_wasm_profiler =
-            matches!(self.config.profiler.as_deref(), Some("wasm") | Some("perf")) && framework_info.language == "wasm";
+            matches!(self.config.profiler.as_deref(), Some("wasm" | "perf")) && framework_info.language == "wasm";
 
         let php_profile_output = suite_php_profiler
             .then(|| std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from))
@@ -209,8 +212,7 @@ impl ProfileRunner {
             self.config
                 .output_dir
                 .as_ref()
-                .map(|dir| dir.join("profiles"))
-                .unwrap_or_else(|| PathBuf::from("profiles"))
+                .map_or_else(|| PathBuf::from("profiles"), |dir| dir.join("profiles"))
         });
         if let Some(ref dir) = node_cpu_profile_dir {
             let _ = std::fs::create_dir_all(dir);
@@ -575,7 +577,7 @@ impl ProfileRunner {
                         let output_path = output_dir.join(format!("php-{}.speedscope.json", workload_def.name));
                         Some(ProfilerHandle::Php(crate::profile::php::start_profiler(
                             server.pid(),
-                            Some(output_path),
+                            Some(&output_path),
                         )?))
                     }
                 }
@@ -619,7 +621,7 @@ impl ProfileRunner {
                 }
                 "wasm" => None,
                 _ => {
-                    eprintln!("  ⚠ Unknown profiler type: {}", profiler_type);
+                    eprintln!("  ⚠ Unknown profiler type: {profiler_type}");
                     None
                 }
             }
@@ -880,7 +882,7 @@ impl ProfileRunner {
         workspace_root.join("testing_data").join(fixture_file)
     }
 
-    /// Load body data from testing_data fixtures
+    /// Load body data from `testing_data` fixtures
     fn load_body_from_fixtures(&self, body_file: &str) -> Result<serde_json::Value> {
         let fixture_path = match body_file {
             "json-small.json" => "json_bodies/01_simple_object_success.json",
@@ -896,30 +898,30 @@ impl ProfileRunner {
             Ok(fixture) => fixture
                 .request
                 .body
-                .ok_or_else(|| Error::InvalidInput(format!("Fixture {} has no body", fixture_path))),
+                .ok_or_else(|| Error::InvalidInput(format!("Fixture {fixture_path} has no body"))),
             Err(_) => self.generate_synthetic_body(body_file),
         }
     }
 
     /// Generate synthetic body data as fallback
     fn generate_synthetic_body(&self, body_file: &str) -> Result<serde_json::Value> {
-        if body_file.ends_with(".txt") {
+        if body_file.to_lowercase().ends_with(".txt") {
             let urlencoded_str = match body_file {
                 "urlencoded-simple.txt" => "name=John+Doe&email=john%40example.com&age=30&subscribe=true",
                 "urlencoded-complex.txt" => {
                     "username=testuser&password=secret123&email=test%40example.com&first_name=John&last_name=Doe&age=30&country=US&state=CA&city=San+Francisco&zip=94102&phone=%2B1-555-1234&company=Acme+Corp&job_title=Engineer&subscribe=true&newsletter=weekly&terms_accepted=true&privacy_accepted=true&marketing_consent=false&two_factor_enabled=true"
                 }
-                _ => return Err(Error::InvalidInput(format!("Unknown body file: {}", body_file))),
+                _ => return Err(Error::InvalidInput(format!("Unknown body file: {body_file}"))),
             };
             return Ok(serde_json::Value::String(urlencoded_str.to_string()));
         }
 
-        if body_file.ends_with(".bin") {
+        if body_file.to_lowercase().ends_with(".bin") {
             let (file_count, total_bytes) = match body_file {
-                "multipart-small.bin" => (1, 1024),
-                "multipart-medium.bin" => (2, 10240),
-                "multipart-large.bin" => (5, 102400),
-                _ => return Err(Error::InvalidInput(format!("Unknown body file: {}", body_file))),
+                "multipart-small.bin" => (1, 1_024),
+                "multipart-medium.bin" => (2, 10_240),
+                "multipart-large.bin" => (5, 102_400),
+                _ => return Err(Error::InvalidInput(format!("Unknown body file: {body_file}"))),
             };
             return Ok(serde_json::json!({
                 "files_received": file_count,
@@ -944,7 +946,7 @@ impl ProfileRunner {
                     "count": 50
                 }));
             }
-            _ => return Err(Error::InvalidInput(format!("Unknown body file: {}", body_file))),
+            _ => return Err(Error::InvalidInput(format!("Unknown body file: {body_file}"))),
         };
 
         serde_json::from_str(json_str).map_err(Error::Json)
@@ -1031,10 +1033,10 @@ impl ProfileRunner {
         suite_results: &[SuiteResult],
     ) -> Result<BaselineComparison> {
         let baseline_json = std::fs::read_to_string(baseline_path)
-            .map_err(|e| Error::InvalidInput(format!("Failed to read baseline file: {}", e)))?;
+            .map_err(|e| Error::InvalidInput(format!("Failed to read baseline file: {e}")))?;
 
         let baseline: crate::schema::profile::ProfileResult = serde_json::from_str(&baseline_json)
-            .map_err(|e| Error::InvalidInput(format!("Failed to parse baseline JSON: {}", e)))?;
+            .map_err(|e| Error::InvalidInput(format!("Failed to parse baseline JSON: {e}")))?;
 
         let mut baseline_map: std::collections::HashMap<String, &WorkloadResult> = std::collections::HashMap::new();
         for suite in &baseline.suites {
@@ -1164,7 +1166,7 @@ impl ProfileRunner {
                     && let Ok(version) = String::from_utf8(output.stdout)
                     && let Some(version_part) = version.split_whitespace().nth(1)
                 {
-                    return format!("Ruby {}", version_part);
+                    return format!("Ruby {version_part}");
                 }
                 "Ruby".to_string()
             }
@@ -1187,7 +1189,7 @@ fn find_latest_file_with_extension(dir: &PathBuf, ext: &str) -> Option<PathBuf> 
     };
 
     read_dir
-        .filter_map(|entry| entry.ok())
+        .filter_map(std::result::Result::ok)
         .filter_map(|entry| {
             let path = entry.path();
             if path.extension().and_then(|e| e.to_str()) == Some(ext) {

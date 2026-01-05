@@ -67,7 +67,7 @@ pub struct CompareRunner {
 }
 
 impl CompareRunner {
-    /// Create a new CompareRunner with validation
+    /// Create a new `CompareRunner` with validation
     ///
     /// # Errors
     ///
@@ -89,7 +89,7 @@ impl CompareRunner {
             && !parent.exists()
         {
             std::fs::create_dir_all(parent)
-                .map_err(|e| Error::InvalidInput(format!("Cannot create output directory: {}", e)))?;
+                .map_err(|e| Error::InvalidInput(format!("Cannot create output directory: {e}")))?;
         }
 
         Ok(Self { config, suite })
@@ -98,7 +98,7 @@ impl CompareRunner {
     /// Run the comparison across all configured frameworks
     ///
     /// Executes frameworks sequentially to avoid resource contention,
-    /// collecting ProfileResult for each framework.
+    /// collecting `ProfileResult` for each framework.
     ///
     /// # Errors
     ///
@@ -106,17 +106,17 @@ impl CompareRunner {
     ///
     /// # Returns
     ///
-    /// Returns tuple of (CompareResult, profile_results) for markdown generation
+    /// Returns tuple of (`CompareResult`, `profile_results`) for markdown generation
     pub async fn run(self) -> Result<(CompareResult, Vec<(String, ProfileResult)>)> {
         let total = self.config.frameworks.len();
 
-        println!("\n🔬 Compare Mode - Starting comparison of {} frameworks", total);
+        println!("\n🔬 Compare Mode - Starting comparison of {total} frameworks");
         println!("Workload suite: {}", self.config.workload_suite);
         println!("Duration: {}s per workload", self.config.duration_secs);
         println!("Concurrency: {}", self.config.concurrency);
         println!();
 
-        println!("🔍 Validating {} frameworks...", total);
+        println!("🔍 Validating {total} frameworks...");
         for framework in &self.config.frameworks {
             self.detect_app_dir(framework)?;
         }
@@ -127,12 +127,12 @@ impl CompareRunner {
         for (idx, framework) in self.config.frameworks.iter().enumerate() {
             let num = idx + 1;
             println!("{}", "━".repeat(60));
-            println!("📊 Framework {}/{}: {}", num, total, framework);
+            println!("📊 Framework {num}/{total}: {framework}");
             println!("{}", "━".repeat(60));
 
             match self.run_single_framework(framework, idx).await {
                 Ok(result) => {
-                    println!("✓ {} completed", framework);
+                    println!("✓ {framework} completed");
                     println!("  Average RPS: {:.2}", result.summary.avg_requests_per_sec);
                     println!("  Total requests: {}", result.summary.total_requests);
                     println!("  Success rate: {:.2}%", result.summary.overall_success_rate * 100.0);
@@ -141,7 +141,7 @@ impl CompareRunner {
                     profile_results.push((framework.clone(), result));
                 }
                 Err(e) => {
-                    eprintln!("✗ {} failed: {}", framework, e);
+                    eprintln!("✗ {framework} failed: {e}");
                     return Err(Error::FrameworkExecutionFailed {
                         framework: framework.clone(),
                         source: Box::new(e),
@@ -151,7 +151,7 @@ impl CompareRunner {
         }
 
         println!("🧮 Running statistical analysis...");
-        let compare_result = self.create_basic_result(profile_results.clone())?;
+        let compare_result = self.create_basic_result(&profile_results)?;
         println!("✓ Analysis complete\n");
 
         println!("\n{}", "═".repeat(60));
@@ -162,7 +162,7 @@ impl CompareRunner {
         Ok((compare_result, profile_results))
     }
 
-    /// Run a single framework using ProfileRunner
+    /// Run a single framework using `ProfileRunner`
     ///
     /// # Arguments
     ///
@@ -171,14 +171,14 @@ impl CompareRunner {
     ///
     /// # Errors
     ///
-    /// Returns error if ProfileRunner execution fails
+    /// Returns error if `ProfileRunner` execution fails
     async fn run_single_framework(&self, framework: &str, index: usize) -> Result<ProfileResult> {
         let app_dir = self.detect_app_dir(framework)?;
 
         let port = self.config.port + (index as u16 * 10);
 
         println!("App directory: {}", app_dir.display());
-        println!("Port: {}", port);
+        println!("Port: {port}");
 
         let profile_config = ProfileRunnerConfig {
             framework: framework.to_string(),
@@ -202,7 +202,7 @@ impl CompareRunner {
     /// Looks for framework-specific directories in standard locations
     fn detect_app_dir(&self, framework: &str) -> Result<PathBuf> {
         let workspace_root = std::env::current_dir()
-            .map_err(|e| Error::InvalidInput(format!("Cannot determine workspace root: {}", e)))?;
+            .map_err(|e| Error::InvalidInput(format!("Cannot determine workspace root: {e}")))?;
 
         let apps_dir = workspace_root
             .join("tools")
@@ -234,10 +234,10 @@ impl CompareRunner {
         Err(Error::FrameworkNotFound(framework.to_string()))
     }
 
-    /// Create CompareResult from ProfileResults with statistical analysis
+    /// Create `CompareResult` from `ProfileResults` with statistical analysis
     ///
     /// Phase 2 implementation: Performs statistical tests and effect size calculations
-    fn create_basic_result(&self, profile_results: Vec<(String, ProfileResult)>) -> Result<CompareResult> {
+    fn create_basic_result(&self, profile_results: &[(String, ProfileResult)]) -> Result<CompareResult> {
         let metadata = if let Some((_, first_result)) = profile_results.first() {
             first_result.metadata.clone()
         } else {
@@ -291,8 +291,7 @@ impl CompareRunner {
                         .partial_cmp(&b.summary.avg_requests_per_sec)
                         .unwrap_or(std::cmp::Ordering::Equal)
                 })
-                .map(|(name, _)| name.clone())
-                .unwrap_or_else(|| baseline.0.clone())
+                .map_or_else(|| baseline.0.clone(), |(name, _)| name.clone())
         };
 
         let avg_rps_values: Vec<f64> = profile_results
@@ -365,7 +364,7 @@ impl CompareRunner {
         report.push_str("# Framework Comparison Report\n\n");
         report.push_str(&format!("**Baseline:** {}\n", result.frameworks[0].name));
         report.push_str(&format!("**Date:** {}\n", result.metadata.timestamp));
-        report.push_str(&format!("**Suite:** {}\n\n", workload_suite));
+        report.push_str(&format!("**Suite:** {workload_suite}\n\n"));
 
         report.push_str("## Summary\n\n");
         report.push_str("| Framework | Runtime | Verdict | Overall |\n");
@@ -465,8 +464,10 @@ impl CompareRunner {
                         .effect_sizes
                         .iter()
                         .find(|es| es.metric == test.metric)
-                        .map(|es| format!("{:.2} ({})", es.cohens_d, es.magnitude))
-                        .unwrap_or_else(|| "N/A".to_string());
+                        .map_or_else(
+                            || "N/A".to_string(),
+                            |es| format!("{:.2} ({})", es.cohens_d, es.magnitude),
+                        );
 
                     report.push_str(&format!(
                         "| {} | {:.2} | {:.4} | {} | {} |\n",
@@ -479,7 +480,7 @@ impl CompareRunner {
 
             report.push_str("---\n");
             report.push_str("**Legend:** ✓ = statistically significant (p < ");
-            report.push_str(&format!("{:.2}", significance_threshold));
+            report.push_str(&format!("{significance_threshold:.2}"));
             report.push_str("), ✗ = not significant\n");
         }
 

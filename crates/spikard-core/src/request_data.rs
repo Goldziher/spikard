@@ -17,19 +17,19 @@ use bytes::Bytes;
 ///
 /// This is the language-agnostic representation passed to handlers.
 ///
-/// Uses Arc for HashMaps to enable cheap cloning without duplicating data.
-/// When RequestData is cloned, only the Arc pointers are cloned, not the underlying data.
+/// Uses `Arc` for `HashMap`s to enable cheap cloning without duplicating data.
+/// When `RequestData` is cloned, only the `Arc` pointers are cloned, not the underlying data.
 ///
-/// Performance optimization: raw_body stores the unparsed request body bytes.
-/// Language bindings should use raw_body when possible to avoid double-parsing.
-/// The body field is lazily parsed only when needed for validation.
+/// Performance optimization: `raw_body` stores the unparsed request body bytes.
+/// Language bindings should use `raw_body` when possible to avoid double-parsing.
+/// The `body` field is lazily parsed only when needed for validation.
 #[derive(Debug, Clone)]
 pub struct RequestData {
     /// Path parameters extracted from the URL path
     pub path_params: Arc<HashMap<String, String>>,
     /// Query parameters parsed as JSON
     pub query_params: Value,
-    /// Validated parameters produced by ParameterValidator (query/path/header/cookie combined).
+    /// Validated parameters produced by `ParameterValidator` (query/path/header/cookie combined).
     pub validated_params: Option<Value>,
     /// Raw query parameters as key-value pairs
     pub raw_query_params: Arc<HashMap<String, Vec<String>>>,
@@ -66,7 +66,7 @@ impl Serialize for RequestData {
         state.serialize_field("raw_query_params", &*self.raw_query_params)?;
         state.serialize_field("body", &self.body)?;
         #[cfg(feature = "di")]
-        state.serialize_field("raw_body", &self.raw_body.as_ref().map(|b| b.as_ref()))?;
+        state.serialize_field("raw_body", &self.raw_body.as_ref().map(AsRef::as_ref))?;
         #[cfg(not(feature = "di"))]
         state.serialize_field("raw_body", &self.raw_body)?;
         state.serialize_field("headers", &*self.headers)?;
@@ -78,6 +78,7 @@ impl Serialize for RequestData {
 }
 
 impl<'de> Deserialize<'de> for RequestData {
+    #[allow(clippy::too_many_lines)]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -933,7 +934,7 @@ mod tests {
             "float": 3.2,
             "negative": -100,
             "zero": 0,
-            "large": 9223372036854775807i64
+            "large": 9_223_372_036_854_775_807i64
         });
 
         let data = create_request_data(

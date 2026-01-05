@@ -51,31 +51,35 @@ pub enum ErrorCondition {
 
 impl ErrorCondition {
     /// Determine the error condition from schema path and error message
+    #[must_use]
+    #[allow(clippy::ignored_unit_patterns)]
     pub fn from_schema_error(schema_path_str: &str, error_msg: &str) -> Self {
         match () {
-            _ if schema_path_str.contains("minLength") => Self::StringTooShort { min_length: None },
-            _ if schema_path_str.contains("maxLength") => Self::StringTooLong { max_length: None },
-            _ if schema_path_str.contains("exclusiveMinimum")
+            () if schema_path_str.contains("minLength") => Self::StringTooShort { min_length: None },
+            () if schema_path_str.contains("maxLength") => Self::StringTooLong { max_length: None },
+            () if schema_path_str.contains("exclusiveMinimum")
                 || (error_msg.contains("less than or equal to") && error_msg.contains("minimum")) =>
             {
                 Self::GreaterThan { value: None }
             }
-            _ if schema_path_str.contains("minimum") || error_msg.contains("less than the minimum") => {
+            () if schema_path_str.contains("minimum") || error_msg.contains("less than the minimum") => {
                 Self::GreaterThanEqual { value: None }
             }
-            _ if schema_path_str.contains("exclusiveMaximum")
+            () if schema_path_str.contains("exclusiveMaximum")
                 || (error_msg.contains("greater than or equal to") && error_msg.contains("maximum")) =>
             {
                 Self::LessThan { value: None }
             }
-            _ if schema_path_str.contains("maximum") || error_msg.contains("greater than the maximum") => {
+            () if schema_path_str.contains("maximum") || error_msg.contains("greater than the maximum") => {
                 Self::LessThanEqual { value: None }
             }
-            _ if schema_path_str.contains("enum") || error_msg.contains("is not one of") => Self::Enum { values: None },
-            _ if schema_path_str.contains("pattern") || error_msg.contains("does not match") => {
+            () if schema_path_str.contains("enum") || error_msg.contains("is not one of") => {
+                Self::Enum { values: None }
+            }
+            () if schema_path_str.contains("pattern") || error_msg.contains("does not match") => {
                 Self::StringPatternMismatch { pattern: None }
             }
-            _ if schema_path_str.contains("format") => {
+            () if schema_path_str.contains("format") => {
                 if error_msg.contains("email") {
                     Self::EmailFormat
                 } else if error_msg.contains("uuid") {
@@ -104,7 +108,8 @@ impl ErrorCondition {
     }
 
     /// Get the error type code for this condition
-    pub fn error_type(&self) -> &'static str {
+    #[must_use]
+    pub const fn error_type(&self) -> &'static str {
         match self {
             Self::StringTooShort { .. } => "string_too_short",
             Self::StringTooLong { .. } => "string_too_long",
@@ -113,23 +118,22 @@ impl ErrorCondition {
             Self::LessThan { .. } => "less_than",
             Self::LessThanEqual { .. } => "less_than_equal",
             Self::Enum { .. } => "enum",
-            Self::StringPatternMismatch { .. } => "string_pattern_mismatch",
-            Self::EmailFormat => "string_pattern_mismatch",
+            Self::StringPatternMismatch { .. } | Self::EmailFormat => "string_pattern_mismatch",
             Self::UuidFormat => "uuid_parsing",
             Self::DatetimeFormat => "datetime_parsing",
             Self::DateFormat => "date_parsing",
             Self::FormatError => "format_error",
             Self::TypeMismatch { .. } => "type_error",
             Self::Missing => "missing",
-            Self::AdditionalProperties { .. } => "validation_error",
+            Self::AdditionalProperties { .. } | Self::ValidationError => "validation_error",
             Self::TooFewItems { .. } => "too_short",
             Self::TooManyItems => "too_long",
-            Self::ValidationError => "validation_error",
         }
     }
 
     /// Get default message for this error condition
-    pub fn default_message(&self) -> &'static str {
+    #[must_use]
+    pub const fn default_message(&self) -> &'static str {
         match self {
             Self::StringTooShort { .. } => "String is too short",
             Self::StringTooLong { .. } => "String is too long",
@@ -159,6 +163,16 @@ pub struct ErrorMapper;
 
 impl ErrorMapper {
     /// Map an error condition to its type, message, and context
+    ///
+    /// # Panics
+    /// Panics if accessing `.last()` on an empty vector for enum values extraction.
+    #[must_use]
+    #[allow(
+        clippy::too_many_lines,
+        clippy::option_if_let_else,
+        clippy::redundant_closure_for_method_calls,
+        clippy::uninlined_format_args
+    )]
     pub fn map_error(
         condition: &ErrorCondition,
         schema: &Value,

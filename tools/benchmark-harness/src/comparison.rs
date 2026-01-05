@@ -131,6 +131,7 @@ pub enum RegressionSeverity {
 /// # Returns
 ///
 /// Comparison report with relative metrics for each framework
+#[must_use]
 pub fn compare_frameworks(baseline: &BenchmarkResult, comparisons: &[BenchmarkResult]) -> ComparisonReport {
     let framework_comparisons: Vec<FrameworkComparison> = comparisons
         .iter()
@@ -243,6 +244,7 @@ fn classify_performance(relative: &RelativeMetrics) -> PerformanceSummary {
 /// # Returns
 ///
 /// Vector of regression warnings for metrics that degraded beyond threshold
+#[must_use]
 pub fn detect_regressions(comparison: &ComparisonReport, threshold_pct: f64) -> Vec<RegressionWarning> {
     let mut warnings = Vec::new();
 
@@ -332,6 +334,7 @@ fn classify_severity(percent_change: f64, threshold: f64) -> RegressionSeverity 
 /// # Returns
 ///
 /// Markdown-formatted report string
+#[must_use]
 pub fn generate_markdown_report(comparison: &ComparisonReport) -> String {
     let mut report = String::new();
 
@@ -417,6 +420,7 @@ pub fn generate_markdown_report(comparison: &ComparisonReport) -> String {
 /// # Returns
 ///
 /// JSON value representing the comparison
+#[must_use]
 pub fn generate_json_report(comparison: &ComparisonReport) -> serde_json::Value {
     serde_json::to_value(comparison).unwrap_or(serde_json::Value::Null)
 }

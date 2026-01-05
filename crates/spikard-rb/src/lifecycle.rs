@@ -47,7 +47,7 @@ impl LifecycleHook<Request<Body>, Response<Body>> for RubyLifecycleHook {
     }
 
     fn execute_request<'a>(
-        &'a self,
+        &self,
         req: Request<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>> {
         let func = self.func;
@@ -174,7 +174,7 @@ impl LifecycleHook<Request<Body>, Response<Body>> for RubyLifecycleHook {
     }
 
     fn execute_response<'a>(
-        &'a self,
+        &self,
         resp: Response<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>> {
         let func = self.func;

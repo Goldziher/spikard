@@ -10,6 +10,9 @@ name = "spikard_php"
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
+[lints]
+workspace = true
+
 [features]
 default = []
 extension-module = [

@@ -58,7 +58,7 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64
         cmd.stdout(Stdio::null()).stderr(Stdio::from(stderr_file));
         let child = cmd
             .spawn()
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to start rbspy profiler for pid {}: {}", pid, e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to start rbspy profiler for pid {pid}: {e}")))?;
         (Some(child), Some(stderr_path))
     } else {
         (None, None)
@@ -74,7 +74,8 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64
 
 impl RubyProfiler {
     /// Get the output path for profiler data
-    pub fn output_path(&self) -> Option<&PathBuf> {
+    #[must_use]
+    pub const fn output_path(&self) -> Option<&PathBuf> {
         self.output_path.as_ref()
     }
 
@@ -120,11 +121,11 @@ impl RubyProfiler {
         match std::fs::read_to_string(path) {
             Ok(content) => match serde_json::from_str::<RubyMetricsFile>(&content) {
                 Ok(metrics) => {
-                    println!("  ✓ Loaded Ruby application metrics from {}", path);
+                    println!("  ✓ Loaded Ruby application metrics from {path}");
                     Some(metrics)
                 }
                 Err(e) => {
-                    eprintln!("  ⚠ Failed to parse Ruby metrics file: {}", e);
+                    eprintln!("  ⚠ Failed to parse Ruby metrics file: {e}");
                     None
                 }
             },
@@ -142,6 +143,7 @@ pub struct ProfilingData {
     pub heap_live_slots: Option<u64>,
 }
 
+#[must_use]
 pub fn wait_for_profile_output(path: &str) -> Option<String> {
     let start = std::time::Instant::now();
     while start.elapsed() < Duration::from_secs(30) {

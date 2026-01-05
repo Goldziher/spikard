@@ -19,11 +19,11 @@ classifiers = [
 ]
 dependencies = [
   "cloudpickle>=3.1.2",
-  "granian>=2.6.0",
+  "granian>=2.6",
   "httpx>=0.28.1",
   "httpx-sse>=0.4.3",
-  "msgspec>=0.20.0",
-  "pyinstrument>=5.1.1",
+  "msgspec>=0.20",
+  "pyinstrument>=5.1.2",
   "spikard",
   "websockets>=15.0.1",
 ]

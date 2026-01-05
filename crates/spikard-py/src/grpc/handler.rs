@@ -35,8 +35,7 @@ fn metadata_map_to_pydict<'py>(py: Python<'py>, metadata: &MetadataMap) -> PyRes
             let key_str = key.as_str();
             let value_str = value.to_str().map_err(|e| {
                 PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Invalid metadata value for key {}: {}",
-                    key_str, e
+                    "Invalid metadata value for key {key_str}: {e}"
                 ))
             })?;
             py_dict.set_item(key_str, value_str)?;
@@ -55,15 +54,14 @@ fn pydict_to_metadata_map(_py: Python<'_>, py_dict: &Bound<'_, PyDict>) -> PyRes
         let metadata_key = key_str
             .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
             .map_err(|e| {
-                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid metadata key '{}': {}", key_str, e))
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid metadata key '{key_str}': {e}"))
             })?;
 
         let metadata_value = value_str
             .parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
             .map_err(|e| {
                 PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Invalid metadata value for key '{}': {}",
-                    key_str, e
+                    "Invalid metadata value for key '{key_str}': {e}"
                 ))
             })?;
 
@@ -117,7 +115,7 @@ fn pyerr_to_grpc_status(err: PyErr) -> tonic::Status {
             tonic::Status::not_found(err_msg)
         } else {
             // Default to INTERNAL for unknown exception types
-            tonic::Status::internal(format!("Python handler error: {}", err_msg))
+            tonic::Status::internal(format!("Python handler error: {err_msg}"))
         }
     })
 }

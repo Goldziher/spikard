@@ -20,6 +20,7 @@ pub struct ResourceMonitor {
 
 impl ResourceMonitor {
     /// Create a new monitor for the given process ID
+    #[must_use]
     pub fn new(pid: u32) -> Self {
         Self {
             pid: Pid::from_u32(pid),
@@ -36,7 +37,7 @@ impl ResourceMonitor {
 
         let sample = ResourceSample {
             memory_bytes: process.memory(),
-            cpu_percent: process.cpu_usage() as f64,
+            cpu_percent: f64::from(process.cpu_usage()),
         };
 
         self.samples.push(sample.clone());
@@ -45,6 +46,7 @@ impl ResourceMonitor {
 
     /// Start monitoring in the background
     /// Returns a handle that stops monitoring when dropped
+    #[must_use]
     pub fn start_monitoring(mut self, interval_ms: u64) -> MonitorHandle {
         let (tx, mut rx) = tokio::sync::oneshot::channel::<()>();
 
@@ -113,6 +115,7 @@ impl ResourceMonitor {
     }
 
     /// Calculate CPU percentile from samples
+    #[must_use]
     pub fn cpu_percentile(&self, p: f64) -> f64 {
         if self.samples.is_empty() {
             return 0.0;
@@ -126,6 +129,7 @@ impl ResourceMonitor {
     }
 
     /// Get all samples
+    #[must_use]
     pub fn samples(&self) -> &[ResourceSample] {
         &self.samples
     }
@@ -143,7 +147,7 @@ impl MonitorHandle {
         use std::mem::ManuallyDrop;
         let mut me = ManuallyDrop::new(self);
 
-        let handle = unsafe { std::ptr::read(&me.handle) };
+        let handle = unsafe { std::ptr::read(&raw const me.handle) };
         let shutdown = me.shutdown.take();
 
         if let Some(tx) = shutdown {

@@ -19,6 +19,7 @@ pub struct WasmMetricsFile {
     pub external_mb: Option<f64>,
 }
 
+#[must_use]
 pub fn wait_for_metrics_output(path: &str) -> Option<WasmMetricsFile> {
     let start = Instant::now();
     while start.elapsed() < Duration::from_secs(5) {
@@ -26,7 +27,7 @@ pub fn wait_for_metrics_output(path: &str) -> Option<WasmMetricsFile> {
             match serde_json::from_str::<WasmMetricsFile>(&content) {
                 Ok(metrics) => return Some(metrics),
                 Err(e) => {
-                    eprintln!("  ⚠ Failed to parse WASM metrics file {}: {}", path, e);
+                    eprintln!("  ⚠ Failed to parse WASM metrics file {path}: {e}");
                     return None;
                 }
             }

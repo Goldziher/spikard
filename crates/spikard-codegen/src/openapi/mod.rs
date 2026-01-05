@@ -1,4 +1,4 @@
-//! OpenAPI 3.1 generation and manipulation
+//! `OpenAPI` 3.1 generation and manipulation
 
 pub mod from_fixtures;
 pub mod spec;

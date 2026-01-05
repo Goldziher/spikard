@@ -29,6 +29,10 @@ pub enum HookResult {
 /// Trait for implementing lifecycle hooks in language bindings
 pub trait LifecycleHook: Send + Sync {
     /// Execute the lifecycle hook
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if hook execution fails.
     fn execute(&self, context: serde_json::Value) -> Result<HookResult, String>;
 
     /// Get the hook type
@@ -43,6 +47,7 @@ pub struct LifecycleConfig {
 
 impl LifecycleConfig {
     /// Create a new lifecycle configuration
+    #[must_use] 
     pub fn new() -> Self {
         Self {
             hooks: std::collections::HashMap::new(),
@@ -55,6 +60,7 @@ impl LifecycleConfig {
     }
 
     /// Get hooks for a specific type
+    #[must_use] 
     pub fn get_hooks(&self, hook_type: LifecycleHookType) -> Vec<Arc<dyn LifecycleHook>> {
         self.hooks.get(&hook_type).cloned().unwrap_or_default()
     }

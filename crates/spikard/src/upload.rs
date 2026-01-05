@@ -56,7 +56,7 @@ pub struct UploadFile {
 }
 
 impl UploadFile {
-    /// Create a new UploadFile instance.
+    /// Create a new `UploadFile` instance.
     ///
     /// # Arguments
     ///
@@ -78,10 +78,7 @@ impl UploadFile {
             || (content_encoding.is_none() && Self::is_base64(&content))
         {
             use base64::{Engine as _, engine::general_purpose::STANDARD};
-            STANDARD
-                .decode(&content)
-                .map(Bytes::from)
-                .unwrap_or_else(|_| content.clone())
+            STANDARD.decode(&content).map_or_else(|_| content.clone(), Bytes::from)
         } else {
             content
         };
@@ -102,7 +99,8 @@ impl UploadFile {
     /// Get the raw file content as bytes.
     ///
     /// This provides zero-copy access to the underlying buffer.
-    pub fn as_bytes(&self) -> &Bytes {
+    #[must_use]
+    pub const fn as_bytes(&self) -> &Bytes {
         &self.content
     }
 

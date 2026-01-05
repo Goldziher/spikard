@@ -15,7 +15,7 @@ fn main() {
     }
 
     if let Ok(openssl_lib_dir) = env::var("OPENSSL_LIB_DIR") {
-        println!("cargo:rustc-link-search=native={}", openssl_lib_dir);
+        println!("cargo:rustc-link-search=native={openssl_lib_dir}");
     }
     println!("cargo:rerun-if-env-changed=OPENSSL_LIB_DIR");
 
@@ -26,8 +26,8 @@ fn main() {
             && output.status.success()
         {
             let openssl_prefix = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            let openssl_lib = format!("{}/lib", openssl_prefix);
-            println!("cargo:rustc-link-search=native={}", openssl_lib);
+            let openssl_lib = format!("{openssl_prefix}/lib");
+            println!("cargo:rustc-link-search=native={openssl_lib}");
         }
     }
 
@@ -37,7 +37,7 @@ fn main() {
         let includes = String::from_utf8_lossy(&output.stdout);
         for include in includes.split_whitespace() {
             if let Some(path) = include.strip_prefix("-I") {
-                println!("cargo:rustc-link-search=native={}", path);
+                println!("cargo:rustc-link-search=native={path}");
             }
         }
     }
@@ -70,7 +70,7 @@ fn main() {
             let ldflags = String::from_utf8_lossy(&output.stdout);
             for flag in ldflags.split_whitespace() {
                 if let Some(path) = flag.strip_prefix("-L") {
-                    println!("cargo:rustc-link-search=native={}", path);
+                    println!("cargo:rustc-link-search=native={path}");
                 }
             }
         }

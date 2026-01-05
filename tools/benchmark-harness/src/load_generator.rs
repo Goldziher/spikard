@@ -23,14 +23,14 @@ fn build_multipart_body(fixture: &Fixture) -> Result<(String, String)> {
     let mut body = String::new();
 
     for (key, value) in &fixture.request.data {
-        body.push_str(&format!("--{}\r\n", boundary));
-        body.push_str(&format!("Content-Disposition: form-data; name=\"{}\"\r\n\r\n", key));
+        body.push_str(&format!("--{boundary}\r\n"));
+        body.push_str(&format!("Content-Disposition: form-data; name=\"{key}\"\r\n\r\n"));
         body.push_str(value);
         body.push_str("\r\n");
     }
 
     for file in &fixture.request.files {
-        body.push_str(&format!("--{}\r\n", boundary));
+        body.push_str(&format!("--{boundary}\r\n"));
         body.push_str(&format!(
             "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n",
             file.field_name, file.filename
@@ -41,7 +41,7 @@ fn build_multipart_body(fixture: &Fixture) -> Result<(String, String)> {
         } else {
             file.content_type.clone()
         };
-        body.push_str(&format!("Content-Type: {}\r\n\r\n", content_type));
+        body.push_str(&format!("Content-Type: {content_type}\r\n\r\n"));
         body.push_str(&file.content);
         body.push_str("\r\n");
     }
@@ -62,7 +62,7 @@ fn build_multipart_body(fixture: &Fixture) -> Result<(String, String)> {
                     per_file
                 };
 
-                body.push_str(&format!("--{}\r\n", boundary));
+                body.push_str(&format!("--{boundary}\r\n"));
                 body.push_str(&format!(
                     "Content-Disposition: form-data; name=\"file\"; filename=\"upload-{}.bin\"\r\n",
                     idx + 1
@@ -74,7 +74,7 @@ fn build_multipart_body(fixture: &Fixture) -> Result<(String, String)> {
         } else {
             let synthetic_content = fixture.request.body_raw.as_deref().unwrap_or("x").to_string();
 
-            body.push_str(&format!("--{}\r\n", boundary));
+            body.push_str(&format!("--{boundary}\r\n"));
             body.push_str("Content-Disposition: form-data; name=\"file\"; filename=\"upload.bin\"\r\n");
             body.push_str("Content-Type: application/octet-stream\r\n\r\n");
             body.push_str(&synthetic_content);
@@ -82,9 +82,9 @@ fn build_multipart_body(fixture: &Fixture) -> Result<(String, String)> {
         }
     }
 
-    body.push_str(&format!("--{}--\r\n", boundary));
+    body.push_str(&format!("--{boundary}--\r\n"));
 
-    let content_type = format!("multipart/form-data; boundary={}", boundary);
+    let content_type = format!("multipart/form-data; boundary={boundary}");
 
     Ok((body, content_type))
 }
@@ -106,7 +106,7 @@ async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
         .build()
-        .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to build preflight HTTP client: {}", e)))?;
+        .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to build preflight HTTP client: {e}")))?;
 
     let mut request = client.request(method, url);
 
@@ -181,7 +181,7 @@ async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
         if body_snippet.is_empty() {
             String::new()
         } else {
-            format!("\n\nResponse body (first lines):\n{}", body_snippet)
+            format!("\n\nResponse body (first lines):\n{body_snippet}")
         }
     )))
 }
@@ -224,7 +224,7 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
                 .request
                 .query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v))
+                .map(|(k, v)| format!("{k}={v}"))
                 .collect();
             url.push_str(&query.join("&"));
         }
@@ -262,25 +262,25 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
             if is_multipart && key.eq_ignore_ascii_case("content-type") {
                 continue;
             }
-            cmd.arg("-H").arg(format!("{}: {}", key, value));
+            cmd.arg("-H").arg(format!("{key}: {value}"));
         }
 
         if is_multipart {
             // Use oha's curl-compatible multipart mode (`-F`) instead of `-d`, because multipart
             // bodies must start with `--<boundary>` and clap rejects values that look like flags.
             for (key, value) in &fixture.request.data {
-                cmd.arg("-F").arg(format!("{}={}", key, value));
+                cmd.arg("-F").arg(format!("{key}={value}"));
             }
 
             let temp_dir = std::env::temp_dir().join("spikard-bench-multipart");
             std::fs::create_dir_all(&temp_dir)
-                .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to create temp dir: {}", e)))?;
+                .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to create temp dir: {e}")))?;
 
             let mut temp_paths: Vec<PathBuf> = Vec::new();
             let mut add_temp_file = |field_name: &str, filename: &str, content: &[u8]| -> Result<()> {
                 let file_path = temp_dir.join(format!("{}-{}-{}", field_name, filename, Uuid::new_v4()));
                 std::fs::write(&file_path, content)
-                    .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to write temp file: {}", e)))?;
+                    .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to write temp file: {e}")))?;
                 cmd.arg("-F").arg(format!("{}=@{}", field_name, file_path.display()));
                 temp_paths.push(file_path);
                 Ok(())
@@ -350,7 +350,7 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
 
     let output = cmd
         .output()
-        .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to run oha: {}", e)))?;
+        .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to run oha: {e}")))?;
 
     // Best-effort cleanup (multipart temp files).
     for path in temp_paths_to_cleanup {
@@ -359,12 +359,12 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(Error::LoadGeneratorFailed(format!("oha exited with error: {}", stderr)));
+        return Err(Error::LoadGeneratorFailed(format!("oha exited with error: {stderr}")));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let oha_output: OhaOutput = serde_json::from_str(&stdout)
-        .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to parse oha output: {}", e)))?;
+        .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to parse oha output: {e}")))?;
 
     let total_duration = oha_output.summary.total.unwrap_or(0.0);
     let requests_per_sec = oha_output.summary.requests_per_sec.unwrap_or(0.0);
@@ -386,6 +386,7 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
 }
 
 /// Run bombardier load generator (fallback)
+#[allow(clippy::unused_async)]
 async fn run_bombardier(_config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics)> {
     which::which("bombardier").map_err(|_| Error::LoadGeneratorNotFound("bombardier".to_string()))?;
 
@@ -395,6 +396,7 @@ async fn run_bombardier(_config: LoadTestConfig) -> Result<(OhaOutput, Throughpu
 }
 
 /// Find the best available load generator
+#[must_use]
 pub fn find_load_generator() -> Option<LoadGeneratorType> {
     if which::which("oha").is_ok() {
         Some(LoadGeneratorType::Oha)
@@ -406,6 +408,7 @@ pub fn find_load_generator() -> Option<LoadGeneratorType> {
 }
 
 /// Check if load generator is installed
+#[must_use]
 pub fn check_load_generator(generator: LoadGeneratorType) -> bool {
     let binary = match generator {
         LoadGeneratorType::Oha => "oha",

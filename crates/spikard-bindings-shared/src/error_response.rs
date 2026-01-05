@@ -15,7 +15,7 @@ pub struct ErrorResponseBuilder;
 impl ErrorResponseBuilder {
     /// Create a structured error response with status code and error details
     ///
-    /// Returns a tuple of (StatusCode, JSON body as String)
+    /// Returns a tuple of (`StatusCode`, JSON body as String)
     ///
     /// # Arguments
     /// * `status` - HTTP status code
@@ -42,7 +42,7 @@ impl ErrorResponseBuilder {
 
     /// Create an error response with additional details
     ///
-    /// Returns a tuple of (StatusCode, JSON body as String)
+    /// Returns a tuple of (`StatusCode`, JSON body as String)
     ///
     /// # Arguments
     /// * `status` - HTTP status code
@@ -79,17 +79,18 @@ impl ErrorResponseBuilder {
         (status, body)
     }
 
-    /// Create an error response from a StructuredError
+    /// Create an error response from a `StructuredError`
     ///
-    /// Returns a tuple of (StatusCode, JSON body as String)
+    /// Returns a tuple of (`StatusCode`, JSON body as String)
     ///
     /// # Arguments
     /// * `error` - The structured error
     ///
     /// # Note
-    /// Uses INTERNAL_SERVER_ERROR as the default status code. Override with
+    /// Uses `INTERNAL_SERVER_ERROR` as the default status code. Override with
     /// `structured_error()` or `with_details()` for specific status codes.
-    pub fn from_structured_error(error: StructuredError) -> (StatusCode, String) {
+    #[must_use]
+    pub fn from_structured_error(error: &StructuredError) -> (StatusCode, String) {
         let status = StatusCode::INTERNAL_SERVER_ERROR;
         let body = serde_json::to_string(&error)
             .unwrap_or_else(|_| r#"{"error":"serialization_failed","code":"internal_error","details":{}}"#.to_string());
@@ -98,8 +99,8 @@ impl ErrorResponseBuilder {
 
     /// Create a validation error response
     ///
-    /// Converts ValidationError to RFC 9457 Problem Details format.
-    /// Returns (StatusCode::UNPROCESSABLE_ENTITY, JSON body)
+    /// Converts `ValidationError` to RFC 9457 Problem Details format.
+    /// Returns (`StatusCode::UNPROCESSABLE_ENTITY`, JSON body)
     ///
     /// # Arguments
     /// * `validation_error` - The validation error containing one or more details
@@ -124,6 +125,7 @@ impl ErrorResponseBuilder {
     ///
     /// let (status, body) = ErrorResponseBuilder::validation_error(&validation_error);
     /// ```
+    #[must_use] 
     pub fn validation_error(validation_error: &ValidationError) -> (StatusCode, String) {
         let problem = ProblemDetails::from_validation_error(validation_error);
         let status = problem.status_code();
@@ -136,7 +138,7 @@ impl ErrorResponseBuilder {
 
     /// Create an RFC 9457 Problem Details response
     ///
-    /// Returns a tuple of (StatusCode, JSON body as String)
+    /// Returns a tuple of (`StatusCode`, JSON body as String)
     ///
     /// # Arguments
     /// * `problem` - The Problem Details object
@@ -150,6 +152,7 @@ impl ErrorResponseBuilder {
     /// let problem = ProblemDetails::not_found("User with id 123 not found");
     /// let (status, body) = ErrorResponseBuilder::problem_details_response(&problem);
     /// ```
+    #[must_use] 
     pub fn problem_details_response(problem: &ProblemDetails) -> (StatusCode, String) {
         let status = problem.status_code();
         let body = serde_json::to_string(problem).unwrap_or_else(|_| {
@@ -161,70 +164,70 @@ impl ErrorResponseBuilder {
 
     /// Create a generic bad request error
     ///
-    /// Returns (StatusCode::BAD_REQUEST, JSON body)
+    /// Returns (`StatusCode::BAD_REQUEST`, JSON body)
     pub fn bad_request(message: impl Into<String>) -> (StatusCode, String) {
         Self::structured_error(StatusCode::BAD_REQUEST, "bad_request", message)
     }
 
     /// Create a generic internal server error
     ///
-    /// Returns (StatusCode::INTERNAL_SERVER_ERROR, JSON body)
+    /// Returns (`StatusCode::INTERNAL_SERVER_ERROR`, JSON body)
     pub fn internal_error(message: impl Into<String>) -> (StatusCode, String) {
         Self::structured_error(StatusCode::INTERNAL_SERVER_ERROR, "internal_error", message)
     }
 
     /// Create an unauthorized error
     ///
-    /// Returns (StatusCode::UNAUTHORIZED, JSON body)
+    /// Returns (`StatusCode::UNAUTHORIZED`, JSON body)
     pub fn unauthorized(message: impl Into<String>) -> (StatusCode, String) {
         Self::structured_error(StatusCode::UNAUTHORIZED, "unauthorized", message)
     }
 
     /// Create a forbidden error
     ///
-    /// Returns (StatusCode::FORBIDDEN, JSON body)
+    /// Returns (`StatusCode::FORBIDDEN`, JSON body)
     pub fn forbidden(message: impl Into<String>) -> (StatusCode, String) {
         Self::structured_error(StatusCode::FORBIDDEN, "forbidden", message)
     }
 
     /// Create a not found error
     ///
-    /// Returns (StatusCode::NOT_FOUND, JSON body)
+    /// Returns (`StatusCode::NOT_FOUND`, JSON body)
     pub fn not_found(message: impl Into<String>) -> (StatusCode, String) {
         Self::structured_error(StatusCode::NOT_FOUND, "not_found", message)
     }
 
     /// Create a method not allowed error
     ///
-    /// Returns (StatusCode::METHOD_NOT_ALLOWED, JSON body)
+    /// Returns (`StatusCode::METHOD_NOT_ALLOWED`, JSON body)
     pub fn method_not_allowed(message: impl Into<String>) -> (StatusCode, String) {
         Self::structured_error(StatusCode::METHOD_NOT_ALLOWED, "method_not_allowed", message)
     }
 
     /// Create an unprocessable entity error (validation failed)
     ///
-    /// Returns (StatusCode::UNPROCESSABLE_ENTITY, JSON body)
+    /// Returns (`StatusCode::UNPROCESSABLE_ENTITY`, JSON body)
     pub fn unprocessable_entity(message: impl Into<String>) -> (StatusCode, String) {
         Self::structured_error(StatusCode::UNPROCESSABLE_ENTITY, "unprocessable_entity", message)
     }
 
     /// Create a conflict error
     ///
-    /// Returns (StatusCode::CONFLICT, JSON body)
+    /// Returns (`StatusCode::CONFLICT`, JSON body)
     pub fn conflict(message: impl Into<String>) -> (StatusCode, String) {
         Self::structured_error(StatusCode::CONFLICT, "conflict", message)
     }
 
     /// Create a service unavailable error
     ///
-    /// Returns (StatusCode::SERVICE_UNAVAILABLE, JSON body)
+    /// Returns (`StatusCode::SERVICE_UNAVAILABLE`, JSON body)
     pub fn service_unavailable(message: impl Into<String>) -> (StatusCode, String) {
         Self::structured_error(StatusCode::SERVICE_UNAVAILABLE, "service_unavailable", message)
     }
 
     /// Create a request timeout error
     ///
-    /// Returns (StatusCode::REQUEST_TIMEOUT, JSON body)
+    /// Returns (`StatusCode::REQUEST_TIMEOUT`, JSON body)
     pub fn request_timeout(message: impl Into<String>) -> (StatusCode, String) {
         Self::structured_error(StatusCode::REQUEST_TIMEOUT, "request_timeout", message)
     }

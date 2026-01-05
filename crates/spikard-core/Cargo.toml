@@ -12,6 +12,9 @@ categories = ["web-programming::http-server", "web-programming", "development-to
 documentation = "https://docs.rs/spikard-core"
 readme = "README.md"
 
+[lints]
+workspace = true
+
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true

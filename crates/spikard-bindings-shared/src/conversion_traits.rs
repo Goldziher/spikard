@@ -8,6 +8,10 @@ pub trait FromLanguage: Sized {
     type Error: std::fmt::Display;
 
     /// Convert from a language-specific value
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the value cannot be converted to the expected type.
     fn from_any(value: &(dyn Any + Send + Sync)) -> Result<Self, Self::Error>;
 }
 
@@ -17,6 +21,10 @@ pub trait ToLanguage {
     type Error: std::fmt::Display;
 
     /// Convert to a language-specific value
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the conversion fails.
     fn to_any(&self) -> Result<Box<dyn Any + Send + Sync>, Self::Error>;
 }
 
@@ -26,9 +34,17 @@ pub trait JsonConvertible: Sized {
     type Error: std::fmt::Display;
 
     /// Convert from a JSON value
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the JSON value is not valid for the target type.
     fn from_json(value: serde_json::Value) -> Result<Self, Self::Error>;
 
     /// Convert to a JSON value
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the conversion fails.
     fn to_json(&self) -> Result<serde_json::Value, Self::Error>;
 }
 

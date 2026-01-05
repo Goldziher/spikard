@@ -5,7 +5,7 @@
 //!
 //! This module is distinct from the older `compare.rs` which handles post-processing
 //! of existing benchmark results. The Compare Mode runner here orchestrates the
-//! execution of multiple frameworks and produces CompareResult outputs.
+//! execution of multiple frameworks and produces `CompareResult` outputs.
 
 mod analyzer;
 mod runner;

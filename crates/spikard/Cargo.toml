@@ -16,6 +16,9 @@ readme = "README.md"
 name = "spikard"
 path = "src/lib.rs"
 
+[lints]
+workspace = true
+
 [features]
 default = ["di"]
 di = ["spikard-http/di", "spikard-core/di"]

@@ -70,8 +70,8 @@ pub struct JsonRpcMethodInfo {
 
 /// Route definition with compiled validators
 ///
-/// Validators are Arc-wrapped to enable cheap cloning across route instances
-/// and to support schema deduplication via SchemaRegistry.
+/// Validators are `Arc`-wrapped to enable cheap cloning across route instances
+/// and to support schema deduplication via `SchemaRegistry`.
 ///
 /// The `jsonrpc_method` field is optional and has zero overhead when None,
 /// enabling routes to optionally expose themselves as JSON-RPC methods.
@@ -102,10 +102,14 @@ impl Route {
     ///
     /// Auto-generates parameter schema from type hints in the path if no explicit schema provided.
     /// Type hints like `/items/{id:uuid}` generate appropriate JSON Schema validation.
-    /// Explicit parameter_schema overrides auto-generated schemas.
+    /// Explicit `parameter_schema` overrides auto-generated schemas.
+    ///
+    /// # Errors
+    /// Returns an error if the schema compilation fails or metadata is invalid.
     ///
     /// The schema registry ensures each unique schema is compiled only once, improving
     /// startup performance and memory usage for applications with many routes.
+    #[allow(clippy::items_after_statements)]
     pub fn from_metadata(metadata: RouteMetadata, registry: &SchemaRegistry) -> Result<Self, String> {
         let method = metadata.method.parse()?;
 
@@ -135,7 +139,10 @@ impl Route {
                 if is_empty_schema(&explicit_schema) {
                     Some(auto_schema)
                 } else {
-                    Some(crate::type_hints::merge_parameter_schemas(auto_schema, explicit_schema))
+                    Some(crate::type_hints::merge_parameter_schemas(
+                        &auto_schema,
+                        &explicit_schema,
+                    ))
                 }
             }
             (Some(auto_schema), None) => Some(auto_schema),
@@ -187,17 +194,20 @@ impl Route {
     ///         tags: vec!["users".to_string()],
     ///     });
     /// ```
+    #[must_use]
     pub fn with_jsonrpc_method(mut self, info: JsonRpcMethodInfo) -> Self {
         self.jsonrpc_method = Some(info);
         self
     }
 
     /// Check if this route has JSON-RPC metadata
-    pub fn is_jsonrpc_method(&self) -> bool {
+    #[must_use]
+    pub const fn is_jsonrpc_method(&self) -> bool {
         self.jsonrpc_method.is_some()
     }
 
     /// Get the JSON-RPC method name if present
+    #[must_use]
     pub fn jsonrpc_method_name(&self) -> Option<&str> {
         self.jsonrpc_method.as_ref().map(|m| m.method_name.as_str())
     }
@@ -210,6 +220,7 @@ pub struct Router {
 
 impl Router {
     /// Create a new router
+    #[must_use]
     pub fn new() -> Self {
         Self { routes: HashMap::new() }
     }
@@ -221,18 +232,21 @@ impl Router {
     }
 
     /// Find a route by method and path
+    #[must_use]
     pub fn find_route(&self, method: &Method, path: &str) -> Option<&Route> {
         self.routes.get(path)?.get(method)
     }
 
     /// Get all routes
+    #[must_use]
     pub fn routes(&self) -> Vec<&Route> {
         self.routes.values().flat_map(|methods| methods.values()).collect()
     }
 
     /// Get route count
+    #[must_use]
     pub fn route_count(&self) -> usize {
-        self.routes.values().map(|m| m.len()).sum()
+        self.routes.values().map(std::collections::HashMap::len).sum()
     }
 }
 

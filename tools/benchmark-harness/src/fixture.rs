@@ -1,11 +1,11 @@
-//! Fixture loading from testing_data
+//! Fixture loading from `testing_data`
 
 use crate::error::{Error, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-/// A test fixture from testing_data
+/// A test fixture from `testing_data`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Fixture {
     pub name: String,
@@ -99,9 +99,9 @@ impl Fixture {
     pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
         let path = path.as_ref();
         let contents = std::fs::read_to_string(path)?;
-        let fixture: Fixture = serde_json::from_str(&contents).map_err(|e| Error::InvalidFixture {
+        let fixture: Self = serde_json::from_str(&contents).map_err(|e| Error::InvalidFixture {
             path: path.to_path_buf(),
-            reason: format!("Failed to parse JSON: {}", e),
+            reason: format!("Failed to parse JSON: {e}"),
         })?;
         Ok(fixture)
     }
@@ -145,11 +145,11 @@ impl Fixture {
 
         for entry in glob::glob(pattern_str).map_err(|e| Error::InvalidFixture {
             path: full_pattern.clone(),
-            reason: format!("Invalid glob pattern: {}", e),
+            reason: format!("Invalid glob pattern: {e}"),
         })? {
             let path = entry.map_err(|e| Error::InvalidFixture {
                 path: PathBuf::new(),
-                reason: format!("Glob error: {}", e),
+                reason: format!("Glob error: {e}"),
             })?;
 
             if path.file_name().and_then(|s| s.to_str()) == Some("schema.json") {
@@ -168,6 +168,7 @@ impl Fixture {
     }
 
     /// Get the fixture category from the file path or category field
+    #[must_use]
     pub fn category(&self) -> String {
         self.category.clone().unwrap_or_else(|| "unknown".to_string())
     }
@@ -179,11 +180,12 @@ pub struct FixtureManager {
 }
 
 impl FixtureManager {
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self { fixtures: Vec::new() }
     }
 
-    /// Load fixtures from testing_data directory
+    /// Load fixtures from `testing_data` directory
     pub fn load_from_testing_data(&mut self, testing_data_dir: impl AsRef<Path>) -> Result<()> {
         let dir = testing_data_dir.as_ref();
 
@@ -220,21 +222,25 @@ impl FixtureManager {
     }
 
     /// Filter fixtures by category
+    #[must_use]
     pub fn by_category(&self, category: &str) -> Vec<&Fixture> {
         self.fixtures.iter().filter(|f| f.category() == category).collect()
     }
 
     /// Get all fixtures
+    #[must_use]
     pub fn all(&self) -> &[Fixture] {
         &self.fixtures
     }
 
     /// Get fixture count
-    pub fn len(&self) -> usize {
+    #[must_use]
+    pub const fn len(&self) -> usize {
         self.fixtures.len()
     }
 
-    pub fn is_empty(&self) -> bool {
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
         self.fixtures.is_empty()
     }
 }

@@ -31,6 +31,7 @@ pub struct WorkloadSuite {
 
 impl WorkloadSuite {
     /// Get all built-in workload definitions
+    #[must_use]
     pub fn all() -> Self {
         Self {
             name: "all".to_string(),
@@ -59,6 +60,7 @@ impl WorkloadSuite {
     }
 
     /// JSON bodies suite
+    #[must_use]
     pub fn json_bodies() -> Self {
         Self {
             name: "json-bodies".to_string(),
@@ -73,6 +75,7 @@ impl WorkloadSuite {
     }
 
     /// Path parameters suite
+    #[must_use]
     pub fn path_params() -> Self {
         Self {
             name: "path-params".to_string(),
@@ -89,6 +92,7 @@ impl WorkloadSuite {
     }
 
     /// Query parameters suite
+    #[must_use]
     pub fn query_params() -> Self {
         Self {
             name: "query-params".to_string(),
@@ -98,6 +102,7 @@ impl WorkloadSuite {
     }
 
     /// Forms suite
+    #[must_use]
     pub fn forms() -> Self {
         Self {
             name: "forms".to_string(),
@@ -107,6 +112,7 @@ impl WorkloadSuite {
     }
 
     /// Multipart suite
+    #[must_use]
     pub fn multipart() -> Self {
         Self {
             name: "multipart".to_string(),
@@ -173,7 +179,7 @@ impl WorkloadSuite {
                 method: "POST".to_string(),
                 path: "/json/very-large".to_string(),
             },
-            payload_size_bytes: Some(153600),
+            payload_size_bytes: Some(153_600),
             body_file: Some("json-very-large.json".to_string()),
             content_type: Some("application/json".to_string()),
         }
@@ -383,13 +389,14 @@ impl WorkloadSuite {
                 method: "POST".to_string(),
                 path: "/multipart/large".to_string(),
             },
-            payload_size_bytes: Some(102400),
+            payload_size_bytes: Some(102_400),
             body_file: Some("multipart-large.bin".to_string()),
             content_type: Some("multipart/form-data".to_string()),
         }
     }
 
     /// Load suite by name
+    #[must_use]
     pub fn by_name(name: &str) -> Option<Self> {
         match name {
             "all" => Some(Self::all()),

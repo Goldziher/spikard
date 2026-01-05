@@ -53,19 +53,20 @@ impl FrameworkConfig {
         }
     }
 
+    #[must_use]
     pub fn with_supported_categories(mut self, categories: Vec<String>) -> Self {
         self.supported_categories = Some(categories);
         self
     }
 
+    #[must_use]
     pub fn supports_category(&self, category: &str) -> bool {
         self.supported_categories
             .as_ref()
-            .map(|categories| categories.iter().any(|item| item == category))
-            .unwrap_or(true)
+            .is_none_or(|categories| categories.iter().any(|item| item == category))
     }
 
-    /// Checks if all detect_files exist in the given directory
+    /// Checks if all `detect_files` exist in the given directory
     fn matches(&self, app_dir: &Path) -> bool {
         self.detect_files.iter().all(|file| app_dir.join(file).exists())
     }
@@ -463,6 +464,7 @@ pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
 ///     println!("Available: {}", fw.name);
 /// }
 /// ```
+#[must_use]
 pub fn list_frameworks() -> Vec<FrameworkConfig> {
     framework_registry()
 }
@@ -487,6 +489,7 @@ pub fn list_frameworks() -> Vec<FrameworkConfig> {
 ///     println!("Start command: {}", config.start_cmd);
 /// }
 /// ```
+#[must_use]
 pub fn get_framework(name: &str) -> Option<FrameworkConfig> {
     framework_registry().into_iter().find(|fw| fw.name == name)
 }

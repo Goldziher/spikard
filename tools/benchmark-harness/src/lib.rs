@@ -2,6 +2,30 @@
 //!
 //! A tool for benchmarking Spikard HTTP framework across different language bindings
 //! and comparing against external frameworks.
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::too_many_lines,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::unused_self,
+    clippy::string_add,
+    clippy::string_add_assign,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::unnecessary_wraps,
+    clippy::option_if_let_else,
+    clippy::similar_names,
+    clippy::format_push_string,
+    clippy::type_complexity,
+    clippy::single_char_pattern,
+    clippy::implicit_hasher,
+    clippy::match_same_arms,
+    clippy::literal_string_with_formatting_args,
+    clippy::or_fun_call,
+    clippy::branches_sharing_code
+)]
 
 pub mod aggregate;
 pub mod analysis;

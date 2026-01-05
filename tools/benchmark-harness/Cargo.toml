@@ -11,6 +11,9 @@ homepage.workspace = true
 name = "benchmark-harness"
 path = "src/main.rs"
 
+[lints]
+workspace = true
+
 [dependencies]
 # Async runtime
 tokio = { version = "1", features = ["full"] }

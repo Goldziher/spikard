@@ -16,6 +16,9 @@ build = "build.rs"
 [lib]
 name = "spikard_rb_core"
 
+[lints]
+workspace = true
+
 [dependencies]
 magnus = { version = "0.8.2", features = ["rb-sys", "embed"] }
 serde = { version = "1.0", features = ["derive"] }

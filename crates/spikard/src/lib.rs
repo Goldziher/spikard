@@ -62,12 +62,20 @@ pub mod testing {
 
     impl TestServer {
         /// Build a test server from an `App`.
+        ///
+        /// # Errors
+        ///
+        /// Returns an error if the application router construction fails.
         pub fn from_app(app: App) -> Result<Self, AppError> {
             let router = app.into_router()?;
             Self::from_router(router)
         }
 
         /// Build a test server from an Axum router.
+        ///
+        /// # Errors
+        ///
+        /// Returns an error if test server construction fails.
         pub fn from_router(router: AxumRouter) -> Result<Self, AppError> {
             let mock_server = AxumTestServer::new(router.clone()).map_err(|err| AppError::Server(err.to_string()))?;
             let config = TestServerConfig {
@@ -83,6 +91,10 @@ pub mod testing {
         }
 
         /// Execute an HTTP request and return a snapshot of the response.
+        ///
+        /// # Errors
+        ///
+        /// Returns an error if the request execution or response snapshot fails.
         pub async fn call(&self, request: Request<Body>) -> Result<ResponseSnapshot, SnapshotError> {
             let response = spikard_http::testing::call_test_server(&self.mock_server, request).await;
             spikard_http::testing::snapshot_response(response).await
@@ -106,6 +118,7 @@ pub struct App {
 
 impl App {
     /// Create a new application with the default server configuration.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             config: ServerConfig::default(),
@@ -117,12 +130,17 @@ impl App {
     }
 
     /// Set the server configuration.
+    #[must_use]
     pub fn config(mut self, config: ServerConfig) -> Self {
         self.config = config;
         self
     }
 
     /// Register a route using the provided builder and handler function.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if route construction fails or if the handler registration fails.
     pub fn route<H>(&mut self, builder: RouteBuilder, handler: H) -> std::result::Result<&mut Self, AppError>
     where
         H: IntoHandler + 'static,
@@ -145,6 +163,10 @@ impl App {
     }
 
     /// Register a WebSocket handler with optional message/response schemas.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the WebSocket state construction fails.
     pub fn websocket_with_schemas<H>(
         &mut self,
         path: impl Into<String>,
@@ -161,7 +183,7 @@ impl App {
             WebSocketState::new(handler)
         };
 
-        self.register_stateful_ws_route(path, state)
+        Ok(self.register_stateful_ws_route(path, state))
     }
 
     /// Register an SSE producer for the specified path.
@@ -174,6 +196,10 @@ impl App {
     }
 
     /// Register an SSE producer with optional JSON schema.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the SSE state construction fails.
     pub fn sse_with_schema<P>(
         &mut self,
         path: impl Into<String>,
@@ -189,7 +215,7 @@ impl App {
             SseState::new(producer)
         };
 
-        self.register_stateful_sse_route(path, state)
+        Ok(self.register_stateful_sse_route(path, state))
     }
 
     /// Internal helper: register a WebSocket state with route normalization.
@@ -197,11 +223,11 @@ impl App {
         &mut self,
         path: impl Into<String>,
         state: WebSocketState<H>,
-    ) -> std::result::Result<&mut Self, AppError> {
+    ) -> &mut Self {
         let path = normalize_path(path.into());
         let router = AxumRouter::new().route(&path, axum_get(websocket_handler::<H>).with_state(state));
         self.attached_routers.push(router);
-        Ok(self)
+        self
     }
 
     /// Internal helper: register an SSE state with route normalization.
@@ -209,14 +235,15 @@ impl App {
         &mut self,
         path: impl Into<String>,
         state: SseState<P>,
-    ) -> std::result::Result<&mut Self, AppError> {
+    ) -> &mut Self {
         let path = normalize_path(path.into());
         let router = AxumRouter::new().route(&path, axum_get(sse_handler::<P>).with_state(state));
         self.attached_routers.push(router);
-        Ok(self)
+        self
     }
 
     /// Attach an existing Axum router to this application, returning ownership.
+    #[must_use]
     pub fn merge_axum_router(mut self, router: AxumRouter) -> Self {
         self.attached_routers.push(router);
         self
@@ -229,8 +256,12 @@ impl App {
     }
 
     /// Build the underlying Axum router.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if server or router construction fails.
     pub fn into_router(self) -> std::result::Result<axum::Router, AppError> {
-        let App {
+        let Self {
             config,
             routes,
             metadata,
@@ -245,8 +276,12 @@ impl App {
     }
 
     /// Run the HTTP server using the configured routes.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if server construction or execution fails.
     pub async fn run(self) -> std::result::Result<(), AppError> {
-        let App {
+        let Self {
             config,
             routes,
             metadata,
@@ -285,6 +320,7 @@ pub struct RouteBuilder {
 
 impl RouteBuilder {
     /// Create a new builder for the provided HTTP method and path.
+    #[must_use]
     pub fn new(method: Method, path: impl Into<String>) -> Self {
         let path = path.into();
         let handler_name = default_handler_name(&method, &path);
@@ -302,61 +338,71 @@ impl RouteBuilder {
     }
 
     /// Assign an explicit handler name.
+    #[must_use]
     pub fn handler_name(mut self, name: impl Into<String>) -> Self {
         self.handler_name = name.into();
         self
     }
 
     /// Attach a request body schema derived from the provided DTO type.
+    #[must_use]
     pub fn request_body<T: JsonSchema>(mut self) -> Self {
         self.request_schema = Some(schema_for::<T>());
         self
     }
 
     /// Attach a response body schema derived from the provided DTO type.
+    #[must_use]
     pub fn response_body<T: JsonSchema>(mut self) -> Self {
         self.response_schema = Some(schema_for::<T>());
         self
     }
 
     /// Attach request parameter schema derived from the provided DTO type.
+    #[must_use]
     pub fn params<T: JsonSchema>(mut self) -> Self {
         self.parameter_schema = Some(schema_for::<T>());
         self
     }
 
     /// Provide a raw JSON schema for the request body.
+    #[must_use]
     pub fn request_schema_json(mut self, schema: Value) -> Self {
         self.request_schema = Some(schema);
         self
     }
 
     /// Provide a raw JSON schema for the response body.
+    #[must_use]
     pub fn response_schema_json(mut self, schema: Value) -> Self {
         self.response_schema = Some(schema);
         self
     }
 
     /// Provide a raw JSON schema for request parameters.
+    #[must_use]
     pub fn params_schema_json(mut self, schema: Value) -> Self {
         self.parameter_schema = Some(schema);
         self
     }
 
     /// Provide multipart file parameter configuration.
+    #[must_use]
     pub fn file_params_json(mut self, schema: Value) -> Self {
         self.file_params = Some(schema);
         self
     }
 
     /// Attach a CORS configuration for this route.
+    #[must_use]
     pub fn cors(mut self, cors: CorsConfig) -> Self {
         self.cors = Some(cors);
         self
     }
 
     /// Mark the route as synchronous.
-    pub fn sync(mut self) -> Self {
+    #[must_use]
+    pub const fn sync(mut self) -> Self {
         self.is_async = false;
         self
     }
@@ -444,7 +490,7 @@ http_method!(
 fn default_handler_name(method: &Method, path: &str) -> String {
     let prefix = method.as_str().to_lowercase();
     let suffix = sanitize_identifier(path);
-    format!("{}_{}", prefix, suffix)
+    format!("{prefix}_{suffix}")
 }
 
 fn sanitize_identifier(input: &str) -> String {
@@ -469,7 +515,7 @@ fn schema_for<T: JsonSchema>() -> Value {
     match serde_json::to_value(root) {
         Ok(value) => value.get("schema").cloned().unwrap_or(value),
         Err(e) => {
-            eprintln!("warning: failed to serialize schema: {}, returning null", e);
+            eprintln!("warning: failed to serialize schema: {e}, returning null");
             Value::Null
         }
     }
@@ -479,7 +525,7 @@ fn normalize_path(path: String) -> String {
     if path.starts_with('/') {
         path
     } else {
-        format!("/{}", path)
+        format!("/{path}")
     }
 }
 
@@ -500,8 +546,7 @@ pub enum AppError {
 impl From<AppError> for (StatusCode, String) {
     fn from(err: AppError) -> Self {
         match err {
-            AppError::Route(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
-            AppError::Server(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
+            AppError::Route(msg) | AppError::Server(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
             AppError::Decode(msg) => (StatusCode::BAD_REQUEST, msg),
         }
     }
@@ -514,16 +559,21 @@ pub struct RequestContext {
 }
 
 impl RequestContext {
-    fn new(request: Request<Body>, data: RequestData) -> Self {
+    const fn new(request: Request<Body>, data: RequestData) -> Self {
         Self { request, data }
     }
 
     /// Borrow the underlying HTTP request.
-    pub fn request(&self) -> &Request<Body> {
+    #[must_use]
+    pub const fn request(&self) -> &Request<Body> {
         &self.request
     }
 
     /// Deserialize the JSON request body into the provided type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the request body cannot be deserialized into the provided type.
     pub fn json<T: DeserializeOwned>(&self) -> std::result::Result<T, AppError> {
         if !self.data.body.is_null() {
             serde_json::from_value(self.data.body.clone()).map_err(|err| AppError::Decode(err.to_string()))
@@ -535,73 +585,93 @@ impl RequestContext {
     }
 
     /// Deserialize query parameters into the provided type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the query parameters cannot be deserialized into the provided type.
     pub fn query<T: DeserializeOwned>(&self) -> std::result::Result<T, AppError> {
         serde_json::from_value(self.data.query_params.clone()).map_err(|err| AppError::Decode(err.to_string()))
     }
 
     /// Borrow the parsed query parameters as JSON.
-    pub fn query_value(&self) -> &Value {
+    #[must_use]
+    pub const fn query_value(&self) -> &Value {
         &self.data.query_params
     }
 
     /// Borrow the raw query parameter map (string inputs as received on the wire).
+    #[must_use]
     pub fn raw_query_params(&self) -> &HashMap<String, Vec<String>> {
         &self.data.raw_query_params
     }
 
     /// Extract typed path parameters into the provided type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the path parameters cannot be serialized or deserialized.
     pub fn path<T: DeserializeOwned>(&self) -> std::result::Result<T, AppError> {
         let value = serde_json::to_value(&*self.data.path_params).map_err(|err| AppError::Decode(err.to_string()))?;
         serde_json::from_value(value).map_err(|err| AppError::Decode(err.to_string()))
     }
 
     /// Borrow the raw path parameter map.
+    #[must_use]
     pub fn path_params(&self) -> &HashMap<String, String> {
         &self.data.path_params
     }
 
     /// Extract a raw path parameter by name.
+    #[must_use]
     pub fn path_param(&self, name: &str) -> Option<&str> {
-        self.data.path_params.get(name).map(|s| s.as_str())
+        self.data.path_params.get(name).map(String::as_str)
     }
 
     /// Return a header value (case-insensitive).
+    #[must_use]
     pub fn header(&self, name: &str) -> Option<&str> {
-        self.data.headers.get(&name.to_ascii_lowercase()).map(|s| s.as_str())
+        self.data.headers.get(&name.to_ascii_lowercase()).map(String::as_str)
     }
 
     /// Borrow the normalized headers map.
+    #[must_use]
     pub fn headers_map(&self) -> &HashMap<String, String> {
         &self.data.headers
     }
 
     /// Return a cookie value.
+    #[must_use]
     pub fn cookie(&self, name: &str) -> Option<&str> {
-        self.data.cookies.get(name).map(|s| s.as_str())
+        self.data.cookies.get(name).map(String::as_str)
     }
 
     /// Borrow the cookies map.
+    #[must_use]
     pub fn cookies_map(&self) -> &HashMap<String, String> {
         &self.data.cookies
     }
 
     /// Borrow the raw JSON request body.
-    pub fn body_value(&self) -> &Value {
+    #[must_use]
+    pub const fn body_value(&self) -> &Value {
         &self.data.body
     }
 
     /// Borrow resolved dependencies for this request (if DI is enabled).
     #[cfg(feature = "di")]
+    #[must_use]
     pub fn dependencies(&self) -> Option<Arc<di::ResolvedDependencies>> {
         self.data.dependencies.as_ref().map(Arc::clone)
     }
 
     /// Return the HTTP method.
+    #[must_use]
     pub fn method(&self) -> &str {
         &self.data.method
     }
 
     /// Return the request path.
+    #[must_use]
     pub fn path_str(&self) -> &str {
         &self.data.path
     }

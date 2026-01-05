@@ -7,29 +7,37 @@ pub struct HeaderValidator;
 
 impl HeaderValidator {
     /// Validate that required headers are present
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required headers are missing.
     pub fn validate_required(headers: &[(String, String)], required: &[&str]) -> Result<(), String> {
         let header_names: std::collections::HashSet<_> = headers.iter().map(|(k, _)| k.to_lowercase()).collect();
 
         for req in required {
             if !header_names.contains(&req.to_lowercase()) {
-                return Err(format!("Missing required header: {}", req));
+                return Err(format!("Missing required header: {req}"));
             }
         }
         Ok(())
     }
 
     /// Validate header format
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the header format is invalid.
     pub fn validate_format(key: &str, value: &str, format: HeaderFormat) -> Result<(), String> {
         match format {
             HeaderFormat::Bearer => {
                 if !value.starts_with("Bearer ") {
-                    return Err(format!("{}: must start with 'Bearer '", key));
+                    return Err(format!("{key}: must start with 'Bearer '"));
                 }
                 Ok(())
             }
             HeaderFormat::Json => {
                 if !value.starts_with("application/json") {
-                    return Err(format!("{}: must be 'application/json'", key));
+                    return Err(format!("{key}: must be 'application/json'"));
                 }
                 Ok(())
             }
@@ -38,6 +46,7 @@ impl HeaderValidator {
 }
 
 /// Header validation formats
+#[derive(Copy, Clone)]
 pub enum HeaderFormat {
     /// Bearer token format
     Bearer,
@@ -50,6 +59,10 @@ pub struct BodyValidator;
 
 impl BodyValidator {
     /// Validate that required fields are present in a JSON object
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required fields are missing.
     pub fn validate_required_fields(body: &Value, required: &[&str]) -> Result<(), String> {
         let obj = body
             .as_object()
@@ -57,44 +70,48 @@ impl BodyValidator {
 
         for field in required {
             if !obj.contains_key(*field) {
-                return Err(format!("Missing required field: {}", field));
+                return Err(format!("Missing required field: {field}"));
             }
         }
         Ok(())
     }
 
     /// Validate field type
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the field type doesn't match.
     pub fn validate_field_type(body: &Value, field: &str, expected_type: FieldType) -> Result<(), String> {
         let obj = body
             .as_object()
             .ok_or_else(|| "Body must be a JSON object".to_string())?;
 
-        let value = obj.get(field).ok_or_else(|| format!("Field not found: {}", field))?;
+        let value = obj.get(field).ok_or_else(|| format!("Field not found: {field}"))?;
 
         match expected_type {
             FieldType::String => {
                 if !value.is_string() {
-                    return Err(format!("{}: expected string", field));
+                    return Err(format!("{field}: expected string"));
                 }
             }
             FieldType::Number => {
                 if !value.is_number() {
-                    return Err(format!("{}: expected number", field));
+                    return Err(format!("{field}: expected number"));
                 }
             }
             FieldType::Boolean => {
                 if !value.is_boolean() {
-                    return Err(format!("{}: expected boolean", field));
+                    return Err(format!("{field}: expected boolean"));
                 }
             }
             FieldType::Object => {
                 if !value.is_object() {
-                    return Err(format!("{}: expected object", field));
+                    return Err(format!("{field}: expected object"));
                 }
             }
             FieldType::Array => {
                 if !value.is_array() {
-                    return Err(format!("{}: expected array", field));
+                    return Err(format!("{field}: expected array"));
                 }
             }
         }
@@ -103,6 +120,7 @@ impl BodyValidator {
 }
 
 /// Field types for validation
+#[derive(Copy, Clone)]
 pub enum FieldType {
     String,
     Number,

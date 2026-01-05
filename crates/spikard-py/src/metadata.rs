@@ -31,7 +31,7 @@ impl PyParameterMetadata {
             inner: ParameterMetadata {
                 name,
                 source: source.parse().map_err(|e: String| {
-                    pyo3::exceptions::PyValueError::new_err(format!("Invalid parameter source: {}", e))
+                    pyo3::exceptions::PyValueError::new_err(format!("Invalid parameter source: {e}"))
                 })?,
                 schema_type,
                 required,
@@ -98,7 +98,7 @@ fn extract_path_params_py(path: &str) -> PyResult<Vec<PyParameterMetadata>> {
 fn parse_parameter_schema_py(py: Python<'_>, schema_dict: &Bound<'_, PyAny>) -> PyResult<Vec<PyParameterMetadata>> {
     let schema_value = python_to_json(py, schema_dict)?;
     let params = parse_parameter_schema(&schema_value)
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to parse schema: {}", e)))?;
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to parse schema: {e}")))?;
 
     Ok(params.into_iter().map(|p| PyParameterMetadata { inner: p }).collect())
 }
@@ -122,7 +122,7 @@ fn merge_params_py(
     let schema_value = schema_dict.map(|s| python_to_json(py, s)).transpose()?;
 
     let merged = merge_parameters(path_params, schema_value.as_ref())
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to merge parameters: {}", e)))?;
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to merge parameters: {e}")))?;
 
     Ok(merged.into_iter().map(|p| PyParameterMetadata { inner: p }).collect())
 }

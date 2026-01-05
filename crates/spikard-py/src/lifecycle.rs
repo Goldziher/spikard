@@ -41,7 +41,7 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
     }
 
     fn execute_request<'a>(
-        &'a self,
+        &self,
         req: Request<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>> {
         let func = Python::attach(|py| self.func.clone_ref(py));
@@ -66,7 +66,7 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
     }
 
     fn execute_response<'a>(
-        &'a self,
+        &self,
         resp: Response<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>> {
         let func = Python::attach(|py| self.func.clone_ref(py));
@@ -105,7 +105,7 @@ fn resolve_hook_result(py: Python<'_>, result: Py<PyAny>, name: &str) -> PyResul
     if is_awaitable {
         let asyncio = py.import("asyncio")?;
         let awaited = asyncio.call_method1("run", (bound_result.clone(),)).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Hook {} await failed: {}", name, e))
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Hook {name} await failed: {e}"))
         })?;
         Ok(awaited.unbind())
     } else {
@@ -157,8 +157,7 @@ fn handle_python_hook_result(
         .map(|n| n.to_string())
         .unwrap_or_else(|_| "unknown".to_string());
     Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(format!(
-        "Hook {} must return Request or Response, got {}",
-        name, type_name
+        "Hook {name} must return Request or Response, got {type_name}"
     )))
 }
 
@@ -175,8 +174,7 @@ fn validate_and_convert_response(
             .map(|n| n.to_string())
             .unwrap_or_else(|_| "unknown".to_string());
         return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(format!(
-            "Hook {} must return Response, got {}",
-            name, type_name
+            "Hook {name} must return Response, got {type_name}"
         )));
     }
 
@@ -189,8 +187,9 @@ fn validate_and_convert_response(
 ///
 /// Extracts hook functions from Python dict and wraps them in PythonHook instances.
 pub fn build_lifecycle_hooks(_py: Python, config: &Bound<'_, PyAny>) -> PyResult<spikard_http::LifecycleHooks> {
-    let mut hooks = spikard_http::LifecycleHooks::new();
     type PyHookVec = Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>;
+
+    let mut hooks = spikard_http::LifecycleHooks::new();
 
     let extract_hooks = |hook_list: &Bound<'_, PyAny>, hook_type: &str| -> PyResult<PyHookVec> {
         let mut result = Vec::new();
@@ -203,7 +202,7 @@ pub fn build_lifecycle_hooks(_py: Python, config: &Bound<'_, PyAny>) -> PyResult
             .cast_exact::<pyo3::types::PyList>()
             .map_err(pyo3::PyErr::from)?;
         for (i, item) in list.iter().enumerate() {
-            let name = format!("{}_hook_{}", hook_type, i);
+            let name = format!("{hook_type}_hook_{i}");
             let func = item.clone().unbind();
             result.push(Arc::new(PythonHook::new(name, func)) as Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>);
         }

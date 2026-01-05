@@ -41,6 +41,7 @@ pub fn start_profiler(pid: u32) -> Result<NodeProfiler> {
 
 impl NodeProfiler {
     /// Get the output path for profiler data
+    #[must_use]
     pub fn output_path(&self) -> Option<&str> {
         if self.output_path.is_empty() {
             None
@@ -50,6 +51,7 @@ impl NodeProfiler {
     }
 
     /// Stop the profiler and collect final metrics
+    #[must_use]
     pub fn stop(mut self) -> ProfilingData {
         if let Some(mut process) = self.process.take() {
             let _ = process.kill();
@@ -62,7 +64,7 @@ impl NodeProfiler {
         let app_metrics = self.load_metrics_file(&metrics_path);
 
         ProfilingData {
-            flamegraph_path: self.output_path().map(|s| s.to_string()),
+            flamegraph_path: self.output_path().map(std::string::ToString::to_string),
             v8_heap_used_mb: app_metrics.as_ref().and_then(|m| m.v8_heap_used_mb),
             v8_heap_total_mb: app_metrics.as_ref().and_then(|m| m.v8_heap_total_mb),
             event_loop_lag_ms: app_metrics.as_ref().and_then(|m| m.event_loop_lag_ms),
@@ -75,11 +77,11 @@ impl NodeProfiler {
         match std::fs::read_to_string(path) {
             Ok(content) => match serde_json::from_str::<NodeMetricsFile>(&content) {
                 Ok(metrics) => {
-                    println!("  ✓ Loaded Node application metrics from {}", path);
+                    println!("  ✓ Loaded Node application metrics from {path}");
                     Some(metrics)
                 }
                 Err(e) => {
-                    eprintln!("  ⚠ Failed to parse Node metrics file: {}", e);
+                    eprintln!("  ⚠ Failed to parse Node metrics file: {e}");
                     None
                 }
             },

@@ -14,6 +14,15 @@
 /// * `Ok(())` if the method name is valid
 /// * `Err(String)` with a descriptive error message if invalid
 ///
+/// # Errors
+///
+/// Returns an error if:
+/// - The method name is empty
+/// - The method name starts with the reserved "rpc." prefix
+/// - The method name contains invalid characters (only alphanumeric, dots, underscores, and hyphens allowed)
+/// - The method name starts or ends with invalid characters
+/// - The method name contains consecutive dots
+///
 /// # Examples
 ///
 /// ```
@@ -43,9 +52,8 @@ pub fn validate_jsonrpc_method_name(name: &str) -> Result<(), String> {
         .all(|c| c.is_alphanumeric() || c == '.' || c == '_' || c == '-')
     {
         return Err(format!(
-            "Invalid JSON-RPC method name '{}'. Method names must contain only alphanumeric \
-             characters, dots (.), underscores (_), and hyphens (-)",
-            name
+            "Invalid JSON-RPC method name '{name}'. Method names must contain only alphanumeric \
+             characters, dots (.), underscores (_), and hyphens (-)"
         ));
     }
 
@@ -53,22 +61,19 @@ pub fn validate_jsonrpc_method_name(name: &str) -> Result<(), String> {
         && (first_char == '.' || first_char == '-')
     {
         return Err(format!(
-            "Invalid JSON-RPC method name '{}'. Method name cannot start with '.' or '-'",
-            name
+            "Invalid JSON-RPC method name '{name}'. Method name cannot start with '.' or '-'"
         ));
     }
 
     if name.ends_with('.') {
         return Err(format!(
-            "Invalid JSON-RPC method name '{}'. Method name cannot end with '.'",
-            name
+            "Invalid JSON-RPC method name '{name}'. Method name cannot end with '.'"
         ));
     }
 
     if name.contains("..") {
         return Err(format!(
-            "Invalid JSON-RPC method name '{}'. Method name cannot contain consecutive dots '..'",
-            name
+            "Invalid JSON-RPC method name '{name}'. Method name cannot contain consecutive dots '..'"
         ));
     }
 

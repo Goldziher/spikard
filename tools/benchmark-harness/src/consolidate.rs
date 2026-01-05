@@ -200,7 +200,7 @@ struct FrameworkAccumulator {
 }
 
 impl FrameworkAccumulator {
-    fn new(info: FrameworkInfo) -> Self {
+    const fn new(info: FrameworkInfo) -> Self {
         Self {
             info,
             avg_rps: Vec::new(),
@@ -215,7 +215,7 @@ impl FrameworkAccumulator {
 pub fn consolidate_profile_dir(input_dir: &Path, pattern: &str) -> Result<ConsolidatedProfileReport> {
     let pattern = normalize_pattern(input_dir, pattern);
     let mut paths = Vec::new();
-    for path in (glob(&pattern).map_err(|e| Error::InvalidInput(format!("Invalid glob pattern: {}", e)))?).flatten() {
+    for path in (glob(&pattern).map_err(|e| Error::InvalidInput(format!("Invalid glob pattern: {e}")))?).flatten() {
         paths.push(path);
     }
     consolidate_profile_paths(&paths)

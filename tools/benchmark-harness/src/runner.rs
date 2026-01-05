@@ -48,7 +48,7 @@ impl BenchmarkRunner {
         let port =
             find_available_port(8000).ok_or_else(|| Error::ServerStartFailed("No available ports".to_string()))?;
 
-        println!("Starting server on port {}", port);
+        println!("Starting server on port {port}");
 
         let spawn_start = Instant::now();
 
@@ -67,7 +67,7 @@ impl BenchmarkRunner {
 
         let total_startup_ms = spawn_start.elapsed().as_secs_f64() * 1000.0;
 
-        println!("Server started with PID {} (startup: {:.2}ms)", pid, total_startup_ms);
+        println!("Server started with PID {pid} (startup: {total_startup_ms:.2}ms)");
 
         let init_monitor = ResourceMonitor::new(pid);
         let init_monitor_handle = init_monitor.start_monitoring(50);
@@ -77,12 +77,12 @@ impl BenchmarkRunner {
         let init_monitor = init_monitor_handle.stop().await;
         let init_samples = init_monitor.samples();
 
-        let initialization_memory_mb = if !init_samples.is_empty() {
+        let initialization_memory_mb = if init_samples.is_empty() {
+            0.0
+        } else {
             let sample_count = init_samples.len().min(5);
             let total_memory: u64 = init_samples.iter().take(sample_count).map(|s| s.memory_bytes).sum();
             crate::types::bytes_to_mb(total_memory / sample_count as u64)
-        } else {
-            0.0
         };
 
         let startup_metrics = StartupMetrics {
@@ -92,7 +92,7 @@ impl BenchmarkRunner {
             total_startup_ms,
         };
 
-        println!("Initialization memory: {:.2} MB", initialization_memory_mb);
+        println!("Initialization memory: {initialization_memory_mb:.2} MB");
 
         if self.config.warmup_secs > 0 {
             println!("Warming up for {} seconds...", self.config.warmup_secs);
@@ -135,7 +135,7 @@ impl BenchmarkRunner {
 
         match load_result {
             Ok((oha_output, throughput)) => {
-                let latency = LatencyMetrics::from(oha_output.clone());
+                let latency = LatencyMetrics::from(oha_output);
 
                 let error_metrics = calculate_error_metrics(&throughput, &latency);
 
@@ -218,12 +218,12 @@ impl BenchmarkRunner {
     }
 }
 
-/// Classify a fixture into a RouteType based on its characteristics
+/// Classify a fixture into a `RouteType` based on its characteristics
 fn classify_route_type(fixture: &Fixture) -> RouteType {
     let method = fixture.handler.method.to_uppercase();
     let has_path_params = !fixture.handler.parameters.path.is_empty();
     let has_query_params = !fixture.handler.parameters.query.is_empty() || !fixture.request.query_params.is_empty();
-    let body_size_bytes = fixture.request.body.as_ref().map(|b| b.to_string().len()).unwrap_or(0);
+    let body_size_bytes = fixture.request.body.as_ref().map_or(0, |b| b.to_string().len());
 
     match method.as_str() {
         "GET" => match (has_path_params, has_query_params) {
@@ -238,8 +238,7 @@ fn classify_route_type(fixture: &Fixture) -> RouteType {
                 .headers
                 .get("content-type")
                 .or_else(|| fixture.request.headers.get("Content-Type"))
-                .map(|ct| ct.contains("multipart"))
-                .unwrap_or(false);
+                .is_some_and(|ct| ct.contains("multipart"));
 
             if is_multipart {
                 return RouteType::PostMultipart;

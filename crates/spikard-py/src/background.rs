@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use pyo3_async_runtimes::tokio::into_future;
-use spikard_http::{BackgroundHandle, BackgroundJobError, BackgroundJobMetadata, BackgroundSpawnError};
+use spikard_http::{BackgroundHandle, BackgroundJobError, BackgroundJobMetadata};
 use std::sync::RwLock;
 
 static BACKGROUND_HANDLE: Lazy<RwLock<Option<BackgroundHandle>>> = Lazy::new(|| RwLock::new(None));
@@ -46,13 +46,9 @@ pub fn background_run(awaitable: Bound<'_, PyAny>) -> PyResult<()> {
             },
             BackgroundJobMetadata::default(),
         )
-        .map_err(map_spawn_error)?;
+        .map_err(|err| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(err.to_string()))?;
 
     Ok(())
-}
-
-fn map_spawn_error(err: BackgroundSpawnError) -> PyErr {
-    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(err.to_string())
 }
 
 fn format_pyerr(err: PyErr) -> String {

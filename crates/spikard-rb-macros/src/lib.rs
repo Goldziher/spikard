@@ -20,11 +20,10 @@ pub fn without_gvl(_attr: TokenStream, item: TokenStream) -> TokenStream {
         FnArg::Receiver(recv) => {
             let ty = if let Some((_and, lifetime)) = &recv.reference {
                 let mutability = recv.mutability;
-                if let Some(lifetime) = lifetime {
-                    quote!(&#lifetime #mutability Self)
-                } else {
-                    quote!(& #mutability Self)
-                }
+                lifetime.as_ref().map_or_else(
+                    || quote!(& #mutability Self),
+                    |lifetime| quote!(&#lifetime #mutability Self),
+                )
             } else {
                 quote!(Self)
             };

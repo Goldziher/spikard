@@ -15,6 +15,8 @@ pub struct RawResponse {
 
 impl RawResponse {
     /// Construct a new response.
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn new(status: u16, headers: HashMap<String, String>, body: Vec<u8>) -> Self {
         Self { status, headers, body }
     }
@@ -35,19 +37,13 @@ impl RawResponse {
             return;
         }
 
-        let accept_encoding = header_value(request_headers, "Accept-Encoding").map(|value| value.to_ascii_lowercase());
-        let accepts_brotli = accept_encoding
-            .as_ref()
-            .map(|value| value.contains("br"))
-            .unwrap_or(false);
+        let accept_encoding = header_value(request_headers, "Accept-Encoding").map(str::to_ascii_lowercase);
+        let accepts_brotli = accept_encoding.as_ref().is_some_and(|value| value.contains("br"));
         if compression.brotli && accepts_brotli && self.try_compress_brotli(compression) {
             return;
         }
 
-        let accepts_gzip = accept_encoding
-            .as_ref()
-            .map(|value| value.contains("gzip"))
-            .unwrap_or(false);
+        let accepts_gzip = accept_encoding.as_ref().is_some_and(|value| value.contains("gzip"));
         if compression.gzip && accepts_gzip {
             self.try_compress_gzip(compression);
         }
@@ -110,6 +106,7 @@ pub struct StaticAsset {
 
 impl StaticAsset {
     /// Build a response snapshot if the incoming request targets this asset.
+    #[must_use]
     pub fn serve(&self, method: &str, normalized_path: &str) -> Option<RawResponse> {
         if !method.eq_ignore_ascii_case("GET") && !method.eq_ignore_ascii_case("HEAD") {
             return None;

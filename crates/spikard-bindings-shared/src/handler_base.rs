@@ -33,7 +33,7 @@ pub enum HandlerError {
 
 impl From<ValidationError> for HandlerError {
     fn from(err: ValidationError) -> Self {
-        HandlerError::Validation(format!("{:?}", err))
+        Self::Validation(format!("{err:?}"))
     }
 }
 
@@ -54,6 +54,10 @@ pub trait LanguageHandler: Send + Sync {
     type Output: Send;
 
     /// Prepare request data for passing to the language handler
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if request preparation fails.
     fn prepare_request(&self, request_data: &RequestData) -> Result<Self::Input, HandlerError>;
 
     /// Invoke the language-specific handler with the prepared input
@@ -63,6 +67,10 @@ pub trait LanguageHandler: Send + Sync {
     ) -> Pin<Box<dyn Future<Output = Result<Self::Output, HandlerError>> + Send + '_>>;
 
     /// Interpret the handler's output and convert it to an HTTP response
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if response interpretation fails.
     fn interpret_response(&self, output: Self::Output) -> Result<Response<Body>, HandlerError>;
 }
 
@@ -81,7 +89,7 @@ pub struct HandlerExecutor<L: LanguageHandler> {
 
 impl<L: LanguageHandler> HandlerExecutor<L> {
     /// Create a new handler executor
-    pub fn new(language_handler: Arc<L>, request_validator: Option<Arc<SchemaValidator>>) -> Self {
+    pub const fn new(language_handler: Arc<L>, request_validator: Option<Arc<SchemaValidator>>) -> Self {
         Self {
             language_handler,
             request_validator,
@@ -89,7 +97,7 @@ impl<L: LanguageHandler> HandlerExecutor<L> {
     }
 
     /// Create a handler executor with only a language handler
-    pub fn with_handler(language_handler: Arc<L>) -> Self {
+    pub const fn with_handler(language_handler: Arc<L>) -> Self {
         Self {
             language_handler,
             request_validator: None,
@@ -97,6 +105,7 @@ impl<L: LanguageHandler> HandlerExecutor<L> {
     }
 
     /// Add request validation to this executor
+    #[must_use] 
     pub fn with_request_validator(mut self, validator: Arc<SchemaValidator>) -> Self {
         self.request_validator = Some(validator);
         self
@@ -119,18 +128,18 @@ impl<L: LanguageHandler + 'static> Handler for HandlerExecutor<L> {
             let input = self
                 .language_handler
                 .prepare_request(&request_data)
-                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Failed to prepare request: {}", e)))?;
+                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Failed to prepare request: {e}")))?;
 
             let output = self
                 .language_handler
                 .invoke_handler(input)
                 .await
-                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Handler execution failed: {}", e)))?;
+                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Handler execution failed: {e}")))?;
 
             let response = self
                 .language_handler
                 .interpret_response(output)
-                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Failed to interpret response: {}", e)))?;
+                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Failed to interpret response: {e}")))?;
 
             Ok(response)
         })

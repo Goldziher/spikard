@@ -62,7 +62,7 @@ impl PyRequest {
             .as_ref()
             .map(|b| {
                 String::from_utf8(b.clone())
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid UTF-8: {}", e)))
+                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid UTF-8: {e}")))
             })
             .transpose()
     }
@@ -109,12 +109,12 @@ impl PyRequest {
         let method = self
             .method
             .parse::<axum::http::Method>()
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid method: {}", e)))?;
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid method: {e}")))?;
 
         let uri = self
             .path
             .parse::<axum::http::Uri>()
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid path: {}", e)))?;
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid path: {e}")))?;
 
         let mut req_builder = Request::builder().method(method).uri(uri);
 
@@ -133,6 +133,6 @@ impl PyRequest {
 
         req_builder
             .body(body)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to build request: {}", e)))
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to build request: {e}")))
     }
 }

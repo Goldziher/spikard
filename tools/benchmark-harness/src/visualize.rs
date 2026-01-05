@@ -16,7 +16,8 @@ pub enum ChartType {
 }
 
 impl ChartType {
-    pub fn as_str(&self) -> &str {
+    #[must_use]
+    pub const fn as_str(&self) -> &str {
         match self {
             Self::Throughput => "throughput",
             Self::Latency => "latency",
@@ -37,7 +38,7 @@ impl FromStr for ChartType {
             "validation" | "validation-overhead" => Ok(Self::ValidationOverhead),
             "resources" => Ok(Self::Resources),
             "all" => Ok(Self::All),
-            _ => Err(format!("Unknown chart type: '{}'", s)),
+            _ => Err(format!("Unknown chart type: '{s}'")),
         }
     }
 }
@@ -51,7 +52,8 @@ pub struct VisualizeRunner {
 }
 
 impl VisualizeRunner {
-    pub fn new(
+    #[must_use]
+    pub const fn new(
         input_path: PathBuf,
         output_dir: PathBuf,
         charts: Vec<ChartType>,
@@ -67,10 +69,14 @@ impl VisualizeRunner {
         }
     }
 
+    /// Run the visualization process.
+    ///
+    /// # Errors
+    /// Returns an error if the visualization script is not found, input is invalid, or the script fails.
     pub async fn run(&self) -> Result<()> {
         println!("🔍 Locating Python visualization script...");
-        let script_path = self.find_script()?;
-        println!("✅ Found script at {:?}", script_path);
+        let script_path = Self::find_script()?;
+        println!("✅ Found script at {}", script_path.display());
 
         println!("📖 Validating input file...");
         let aggregated = self.validate_input()?;
@@ -79,7 +85,7 @@ impl VisualizeRunner {
         println!("📁 Creating output directory...");
         tokio::fs::create_dir_all(&self.output_dir)
             .await
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to create output directory: {}", e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to create output directory: {e}")))?;
         println!("✅ Output directory ready");
 
         println!("📊 Generating charts...");
@@ -88,13 +94,17 @@ impl VisualizeRunner {
 
         println!();
         println!("Output:");
-        println!("  Directory: {:?}", self.output_dir);
+        println!("  Directory: {}", self.output_dir.display());
         println!("  Charts: {}", self.charts_arg());
 
         Ok(())
     }
 
-    fn find_script(&self) -> Result<PathBuf> {
+    /// Find the visualization script.
+    ///
+    /// # Errors
+    /// Returns an error if the script cannot be found.
+    fn find_script() -> Result<PathBuf> {
         let possible_paths = vec![
             PathBuf::from("tools/benchmark-harness/visualize_benchmarks.py"),
             PathBuf::from("visualize_benchmarks.py"),
@@ -116,10 +126,10 @@ impl VisualizeRunner {
 
     fn validate_input(&self) -> Result<AggregatedBenchmarkResults> {
         let content = std::fs::read_to_string(&self.input_path)
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to read input file: {}", e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to read input file: {e}")))?;
 
         serde_json::from_str(&content)
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to parse aggregated results JSON: {}", e)))
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to parse aggregated results JSON: {e}")))
     }
 
     async fn run_visualizer(&self, script_path: &Path) -> Result<()> {
@@ -141,7 +151,7 @@ impl VisualizeRunner {
         let output = cmd
             .output()
             .await
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to execute Python script: {}", e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to execute Python script: {e}")))?;
 
         if !output.status.success() {
             eprintln!("Python script stderr:");
@@ -160,12 +170,16 @@ impl VisualizeRunner {
     }
 
     fn charts_arg(&self) -> String {
-        self.charts.iter().map(|c| c.as_str()).collect::<Vec<_>>().join(",")
+        self.charts.iter().map(ChartType::as_str).collect::<Vec<_>>().join(",")
     }
 }
 
+/// Parse comma-separated chart type strings into `ChartType` enums.
+///
+/// # Errors
+/// Returns an error if an unknown chart type is encountered.
 pub fn parse_chart_types(charts_str: &str) -> Result<Vec<ChartType>> {
-    let chart_names: Vec<&str> = charts_str.split(',').map(|s| s.trim()).collect();
+    let chart_names: Vec<&str> = charts_str.split(',').map(str::trim).collect();
 
     if chart_names.contains(&"all") {
         return Ok(vec![ChartType::All]);
@@ -177,8 +191,7 @@ pub fn parse_chart_types(charts_str: &str) -> Result<Vec<ChartType>> {
             Ok(chart_type) => types.push(chart_type),
             Err(_) => {
                 return Err(Error::BenchmarkFailed(format!(
-                    "Unknown chart type: '{}'. Valid types: throughput, latency, validation, resources, all",
-                    name
+                    "Unknown chart type: '{name}'. Valid types: throughput, latency, validation, resources, all"
                 )));
             }
         }

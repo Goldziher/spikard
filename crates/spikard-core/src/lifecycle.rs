@@ -29,10 +29,10 @@ pub trait NativeLifecycleHook<Req, Resp>: Send + Sync {
     fn name(&self) -> &str;
 
     /// Execute hook with a request
-    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFutureSend<'a, Req, Resp>;
+    fn execute_request<'a>(&self, req: Req) -> RequestHookFutureSend<'a, Req, Resp>;
 
     /// Execute hook with a response
-    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFutureSend<'a, Resp>;
+    fn execute_response<'a>(&self, resp: Resp) -> ResponseHookFutureSend<'a, Resp>;
 }
 
 /// Trait for lifecycle hooks on local (wasm) targets (no Send requirements).
@@ -41,10 +41,10 @@ pub trait LocalLifecycleHook<Req, Resp> {
     fn name(&self) -> &str;
 
     /// Execute hook with a request
-    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFutureLocal<'a, Req, Resp>;
+    fn execute_request<'a>(&self, req: Req) -> RequestHookFutureLocal<'a, Req, Resp>;
 
     /// Execute hook with a response
-    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFutureLocal<'a, Resp>;
+    fn execute_response<'a>(&self, resp: Resp) -> ResponseHookFutureLocal<'a, Resp>;
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -97,17 +97,19 @@ impl<Req, Resp> std::fmt::Debug for LifecycleHooks<Req, Resp> {
 
 impl<Req, Resp> LifecycleHooks<Req, Resp> {
     /// Create a new empty hooks container
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Builder constructor for ergonomic hook registration
+    #[must_use]
     pub fn builder() -> LifecycleHooksBuilder<Req, Resp> {
         LifecycleHooksBuilder::new()
     }
 
     /// Check if any hooks are registered
-    #[inline(always)]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.on_request.is_empty()
             && self.pre_validation.is_empty()
@@ -136,6 +138,8 @@ impl<Req, Resp> LifecycleHooks<Req, Resp> {
         self.on_error.push(hook);
     }
 
+    /// # Errors
+    /// Returns an error string if a hook execution fails.
     pub async fn execute_on_request(&self, mut req: Req) -> Result<HookResult<Req, Resp>, String> {
         if self.on_request.is_empty() {
             return Ok(HookResult::Continue(req));
@@ -151,6 +155,8 @@ impl<Req, Resp> LifecycleHooks<Req, Resp> {
         Ok(HookResult::Continue(req))
     }
 
+    /// # Errors
+    /// Returns an error string if a hook execution fails.
     pub async fn execute_pre_validation(&self, mut req: Req) -> Result<HookResult<Req, Resp>, String> {
         if self.pre_validation.is_empty() {
             return Ok(HookResult::Continue(req));
@@ -166,6 +172,8 @@ impl<Req, Resp> LifecycleHooks<Req, Resp> {
         Ok(HookResult::Continue(req))
     }
 
+    /// # Errors
+    /// Returns an error string if a hook execution fails.
     pub async fn execute_pre_handler(&self, mut req: Req) -> Result<HookResult<Req, Resp>, String> {
         if self.pre_handler.is_empty() {
             return Ok(HookResult::Continue(req));
@@ -181,6 +189,8 @@ impl<Req, Resp> LifecycleHooks<Req, Resp> {
         Ok(HookResult::Continue(req))
     }
 
+    /// # Errors
+    /// Returns an error string if a hook execution fails.
     pub async fn execute_on_response(&self, mut resp: Resp) -> Result<Resp, String> {
         if self.on_response.is_empty() {
             return Ok(resp);
@@ -188,14 +198,15 @@ impl<Req, Resp> LifecycleHooks<Req, Resp> {
 
         for hook in &self.on_response {
             match hook.execute_response(resp).await? {
-                HookResult::Continue(r) => resp = r,
-                HookResult::ShortCircuit(r) => resp = r,
+                HookResult::Continue(r) | HookResult::ShortCircuit(r) => resp = r,
             }
         }
 
         Ok(resp)
     }
 
+    /// # Errors
+    /// Returns an error string if a hook execution fails.
     pub async fn execute_on_error(&self, mut resp: Resp) -> Result<Resp, String> {
         if self.on_error.is_empty() {
             return Ok(resp);
@@ -203,8 +214,7 @@ impl<Req, Resp> LifecycleHooks<Req, Resp> {
 
         for hook in &self.on_error {
             match hook.execute_response(resp).await? {
-                HookResult::Continue(r) => resp = r,
-                HookResult::ShortCircuit(r) => resp = r,
+                HookResult::Continue(r) | HookResult::ShortCircuit(r) => resp = r,
             }
         }
 
@@ -237,11 +247,11 @@ where
         &self.name
     }
 
-    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFutureSend<'a, Req, Resp> {
+    fn execute_request<'a>(&self, req: Req) -> RequestHookFutureSend<'a, Req, Resp> {
         Box::pin((self.func)(req))
     }
 
-    fn execute_response<'a>(&'a self, _resp: Resp) -> ResponseHookFutureSend<'a, Resp> {
+    fn execute_response<'a>(&self, _resp: Resp) -> ResponseHookFutureSend<'a, Resp> {
         Box::pin(async move { Err("Request hook called with response - this is a bug".to_string()) })
     }
 }
@@ -258,11 +268,11 @@ where
         &self.name
     }
 
-    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFutureLocal<'a, Req, Resp> {
+    fn execute_request<'a>(&self, req: Req) -> RequestHookFutureLocal<'a, Req, Resp> {
         Box::pin((self.func)(req))
     }
 
-    fn execute_response<'a>(&'a self, _resp: Resp) -> ResponseHookFutureLocal<'a, Resp> {
+    fn execute_response<'a>(&self, _resp: Resp) -> ResponseHookFutureLocal<'a, Resp> {
         Box::pin(async move { Err("Request hook called with response - this is a bug".to_string()) })
     }
 }
@@ -279,11 +289,11 @@ where
         &self.name
     }
 
-    fn execute_request<'a>(&'a self, _req: Req) -> RequestHookFutureSend<'a, Req, Resp> {
+    fn execute_request<'a>(&self, _req: Req) -> RequestHookFutureSend<'a, Req, Resp> {
         Box::pin(async move { Err("Response hook called with request - this is a bug".to_string()) })
     }
 
-    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFutureSend<'a, Resp> {
+    fn execute_response<'a>(&self, resp: Resp) -> ResponseHookFutureSend<'a, Resp> {
         Box::pin((self.func)(resp))
     }
 }
@@ -300,52 +310,66 @@ where
         &self.name
     }
 
-    fn execute_request<'a>(&'a self, _req: Req) -> RequestHookFutureLocal<'a, Req, Resp> {
+    fn execute_request<'a>(&self, _req: Req) -> RequestHookFutureLocal<'a, Req, Resp> {
         Box::pin(async move { Err("Response hook called with request - this is a bug".to_string()) })
     }
 
-    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFutureLocal<'a, Resp> {
+    fn execute_response<'a>(&self, resp: Resp) -> ResponseHookFutureLocal<'a, Resp> {
         Box::pin((self.func)(resp))
     }
 }
 
-/// Builder Pattern for LifecycleHooks
+/// Builder pattern for `LifecycleHooks`
 pub struct LifecycleHooksBuilder<Req, Resp> {
     hooks: LifecycleHooks<Req, Resp>,
 }
 
 impl<Req, Resp> LifecycleHooksBuilder<Req, Resp> {
+    /// Create a new builder
+    #[must_use]
     pub fn new() -> Self {
         Self {
             hooks: LifecycleHooks::default(),
         }
     }
 
+    /// Add an `on_request` hook
+    #[must_use]
     pub fn on_request(mut self, hook: Arc<CoreHook<Req, Resp>>) -> Self {
         self.hooks.add_on_request(hook);
         self
     }
 
+    /// Add a `pre_validation` hook
+    #[must_use]
     pub fn pre_validation(mut self, hook: Arc<CoreHook<Req, Resp>>) -> Self {
         self.hooks.add_pre_validation(hook);
         self
     }
 
+    /// Add a `pre_handler` hook
+    #[must_use]
     pub fn pre_handler(mut self, hook: Arc<CoreHook<Req, Resp>>) -> Self {
         self.hooks.add_pre_handler(hook);
         self
     }
 
+    /// Add an `on_response` hook
+    #[must_use]
     pub fn on_response(mut self, hook: Arc<CoreHook<Req, Resp>>) -> Self {
         self.hooks.add_on_response(hook);
         self
     }
 
+    /// Add an `on_error` hook
+    #[must_use]
     pub fn on_error(mut self, hook: Arc<CoreHook<Req, Resp>>) -> Self {
         self.hooks.add_on_error(hook);
         self
     }
 
+    /// Build the `LifecycleHooks` instance
+    #[must_use]
     pub fn build(self) -> LifecycleHooks<Req, Resp> {
         self.hooks
     }

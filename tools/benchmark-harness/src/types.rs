@@ -51,7 +51,7 @@ pub struct BenchmarkResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub serialization: Option<SerializationMetrics>,
 
-    /// Per-pattern breakdown (deprecated - use route_types instead)
+    /// Per-pattern breakdown (deprecated - use `route_types` instead)
     #[serde(default)]
     pub patterns: Vec<PatternMetrics>,
 
@@ -138,10 +138,10 @@ pub struct ResourceMetrics {
     pub peak_cpu_percent: f64,
 }
 
-/// Metrics for a specific request pattern (deprecated - use RouteTypeMetrics)
+/// Metrics for a specific request pattern (deprecated - use `RouteTypeMetrics`)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PatternMetrics {
-    /// Pattern name (e.g., "simple_query", "json_body")
+    /// Pattern name (e.g., "`simple_query`", "`json_body`")
     pub pattern: String,
 
     /// Number of requests for this pattern
@@ -198,7 +198,7 @@ pub enum RouteType {
     /// POST with large payload (>10KB)
     PostJsonLarge,
 
-    /// POST with validation constraints (min_length, gt, lt, etc.)
+    /// POST with validation constraints (`min_length`, gt, lt, etc.)
     PostValidated,
 
     /// POST with multipart/form-data
@@ -220,19 +220,19 @@ pub enum RouteType {
 impl std::fmt::Display for RouteType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RouteType::GetSimple => write!(f, "GET (simple)"),
-            RouteType::GetPathParams => write!(f, "GET (path params)"),
-            RouteType::GetQueryParams => write!(f, "GET (query params)"),
-            RouteType::GetBoth => write!(f, "GET (path + query)"),
-            RouteType::PostJsonSimple => write!(f, "POST (simple JSON)"),
-            RouteType::PostJsonNested => write!(f, "POST (nested JSON)"),
-            RouteType::PostJsonLarge => write!(f, "POST (large payload)"),
-            RouteType::PostValidated => write!(f, "POST (validated)"),
-            RouteType::PostMultipart => write!(f, "POST (multipart)"),
-            RouteType::PutJson => write!(f, "PUT (JSON)"),
-            RouteType::PatchJson => write!(f, "PATCH (JSON)"),
-            RouteType::Delete => write!(f, "DELETE"),
-            RouteType::Other => write!(f, "Other"),
+            Self::GetSimple => write!(f, "GET (simple)"),
+            Self::GetPathParams => write!(f, "GET (path params)"),
+            Self::GetQueryParams => write!(f, "GET (query params)"),
+            Self::GetBoth => write!(f, "GET (path + query)"),
+            Self::PostJsonSimple => write!(f, "POST (simple JSON)"),
+            Self::PostJsonNested => write!(f, "POST (nested JSON)"),
+            Self::PostJsonLarge => write!(f, "POST (large payload)"),
+            Self::PostValidated => write!(f, "POST (validated)"),
+            Self::PostMultipart => write!(f, "POST (multipart)"),
+            Self::PutJson => write!(f, "PUT (JSON)"),
+            Self::PatchJson => write!(f, "PATCH (JSON)"),
+            Self::Delete => write!(f, "DELETE"),
+            Self::Other => write!(f, "Other"),
         }
     }
 }
@@ -361,8 +361,8 @@ pub enum StreamingProtocol {
 impl std::fmt::Display for StreamingProtocol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            StreamingProtocol::WebSocket => write!(f, "websocket"),
-            StreamingProtocol::Sse => write!(f, "sse"),
+            Self::WebSocket => write!(f, "websocket"),
+            Self::Sse => write!(f, "sse"),
         }
     }
 }
@@ -423,7 +423,7 @@ impl From<OhaOutput> for LatencyMetrics {
         let s = &oha.summary;
         let p = &oha.latency_percentiles;
 
-        let to_ms = |opt: Option<f64>| opt.map(|secs| secs * 1000.0).unwrap_or(0.0);
+        let to_ms = |opt: Option<f64>| opt.map_or(0.0, |secs| secs * 1000.0);
 
         Self {
             mean_ms: to_ms(s.average),
@@ -440,11 +440,13 @@ impl From<OhaOutput> for LatencyMetrics {
 }
 
 /// Helper to convert Duration to milliseconds
+#[must_use]
 pub fn duration_to_ms(duration: Duration) -> f64 {
     duration.as_secs_f64() * 1000.0
 }
 
 /// Helper to convert bytes to megabytes
+#[must_use]
 pub fn bytes_to_mb(bytes: u64) -> f64 {
     bytes as f64 / (1024.0 * 1024.0)
 }

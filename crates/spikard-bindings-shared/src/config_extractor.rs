@@ -1,6 +1,6 @@
 //! Configuration extraction trait and implementation for language bindings
 //!
-//! This module provides a trait-based abstraction for extracting ServerConfig and related
+//! This module provides a trait-based abstraction for extracting `ServerConfig` and related
 //! configuration structs from language-specific objects (Python dicts, JavaScript objects, etc.)
 //! without duplicating extraction logic across bindings.
 //!
@@ -17,7 +17,7 @@ use std::collections::HashMap;
 /// Trait for reading configuration from language-specific objects
 ///
 /// Bindings implement this trait to provide unified access to configuration values
-/// regardless of the language-specific representation (PyDict, JavaScript Object, etc.).
+/// regardless of the language-specific representation (`PyDict`, JavaScript Object, etc.).
 pub trait ConfigSource {
     /// Get a boolean value from the source
     fn get_bool(&self, key: &str) -> Option<bool>;
@@ -34,7 +34,7 @@ pub trait ConfigSource {
     /// Get a vector of strings from the source
     fn get_vec_string(&self, key: &str) -> Option<Vec<String>>;
 
-    /// Get a nested ConfigSource for nested objects
+    /// Get a nested `ConfigSource` for nested objects
     fn get_nested(&self, key: &str) -> Option<Box<dyn ConfigSource + '_>>;
 
     /// Check if a key exists in the source
@@ -61,11 +61,15 @@ pub trait ConfigSource {
     }
 }
 
-/// Configuration extractor that works with any ConfigSource
+/// Configuration extractor that works with any `ConfigSource`
 pub struct ConfigExtractor;
 
 impl ConfigExtractor {
-    /// Extract a complete ServerConfig from a ConfigSource
+    /// Extract a complete `ServerConfig` from a `ConfigSource`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required configuration fields are invalid or missing.
     pub fn extract_server_config(source: &dyn ConfigSource) -> Result<ServerConfig, String> {
         let mut config = ServerConfig::default();
 
@@ -75,7 +79,12 @@ impl ConfigExtractor {
 
         if let Some(port) = source
             .get_u16("port")
-            .or_else(|| source.get_u32("port").map(|p| p as u16))
+            .or_else(|| source.get_u32("port").map(|p| {
+                #[allow(clippy::cast_possible_truncation)]
+                {
+                    p as u16
+                }
+            }))
         {
             config.port = port;
         }
@@ -144,7 +153,11 @@ impl ConfigExtractor {
         Ok(config)
     }
 
-    /// Extract CompressionConfig from a ConfigSource
+    /// Extract `CompressionConfig` from a `ConfigSource`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required configuration fields are invalid.
     pub fn extract_compression_config(source: &dyn ConfigSource) -> Result<CompressionConfig, String> {
         let gzip = source.get_bool("gzip").unwrap_or(true);
         let brotli = source.get_bool("brotli").unwrap_or(true);
@@ -162,7 +175,11 @@ impl ConfigExtractor {
         })
     }
 
-    /// Extract RateLimitConfig from a ConfigSource
+    /// Extract `RateLimitConfig` from a `ConfigSource`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required fields `per_second` or `burst` are missing.
     pub fn extract_rate_limit_config(source: &dyn ConfigSource) -> Result<RateLimitConfig, String> {
         let per_second = source.get_u64("per_second").ok_or("Rate limit requires 'per_second'")?;
 
@@ -177,7 +194,11 @@ impl ConfigExtractor {
         })
     }
 
-    /// Extract JwtConfig from a ConfigSource
+    /// Extract `JwtConfig` from a `ConfigSource`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the required `secret` field is missing.
     pub fn extract_jwt_config(source: &dyn ConfigSource) -> Result<JwtConfig, String> {
         let secret = source.get_string("secret").ok_or("JWT auth requires 'secret'")?;
 
@@ -198,7 +219,11 @@ impl ConfigExtractor {
         })
     }
 
-    /// Extract ApiKeyConfig from a ConfigSource
+    /// Extract `ApiKeyConfig` from a `ConfigSource`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the required `keys` field is missing.
     pub fn extract_api_key_config(source: &dyn ConfigSource) -> Result<ApiKeyConfig, String> {
         let keys = source
             .get_vec_string("keys")
@@ -211,7 +236,11 @@ impl ConfigExtractor {
         Ok(ApiKeyConfig { keys, header_name })
     }
 
-    /// Extract static files configuration list from a ConfigSource
+    /// Extract static files configuration list from a `ConfigSource`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if array elements are invalid or missing required fields.
     pub fn extract_static_files_config(source: &dyn ConfigSource) -> Result<Vec<StaticFilesConfig>, String> {
         let length = source.get_array_length("static_files").unwrap_or(0);
         if length == 0 {
@@ -247,7 +276,11 @@ impl ConfigExtractor {
         Ok(configs)
     }
 
-    /// Extract OpenApiConfig from a ConfigSource
+    /// Extract `OpenApiConfig` from a `ConfigSource`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required configuration fields are invalid.
     pub fn extract_openapi_config(source: &dyn ConfigSource) -> Result<OpenApiConfig, String> {
         let enabled = source.get_bool("enabled").unwrap_or(false);
         let title = source.get_string("title").unwrap_or_else(|| "API".to_string());
@@ -279,7 +312,7 @@ impl ConfigExtractor {
 
         let servers = Self::extract_servers_config(source)?;
 
-        let security_schemes = Self::extract_security_schemes_config(source)?;
+        let security_schemes = Self::extract_security_schemes_config(source);
 
         Ok(OpenApiConfig {
             enabled,
@@ -296,7 +329,11 @@ impl ConfigExtractor {
         })
     }
 
-    /// Extract servers list from OpenAPI config
+    /// Extract servers list from `OpenAPI` config
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if array elements are invalid or missing.
     fn extract_servers_config(source: &dyn ConfigSource) -> Result<Vec<ServerInfo>, String> {
         let length = source.get_array_length("servers").unwrap_or(0);
         if length == 0 {
@@ -319,15 +356,19 @@ impl ConfigExtractor {
         Ok(servers)
     }
 
-    /// Extract security schemes from OpenAPI config
+    /// Extract security schemes from `OpenAPI` config
     fn extract_security_schemes_config(
         _source: &dyn ConfigSource,
-    ) -> Result<HashMap<String, SecuritySchemeInfo>, String> {
+    ) -> HashMap<String, SecuritySchemeInfo> {
         // TODO: Implement when bindings support iterating HashMap-like structures
-        Ok(HashMap::new())
+        HashMap::new()
     }
 
-    /// Extract JsonRpcConfig from a ConfigSource
+    /// Extract `JsonRpcConfig` from a `ConfigSource`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required configuration fields are invalid.
     pub fn extract_jsonrpc_config(source: &dyn ConfigSource) -> Result<JsonRpcConfig, String> {
         let enabled = source.get_bool("enabled").unwrap_or(true);
         let endpoint_path = source.get_string("endpoint_path").unwrap_or_else(|| "/rpc".to_string());

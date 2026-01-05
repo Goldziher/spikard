@@ -443,7 +443,7 @@ impl PythonHandler {
                         request_data.body.clone()
                     } else {
                         serde_json::from_slice::<Value>(raw)
-                            .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {}", e)))?
+                            .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}")))?
                     };
                     let py_body = json_to_python(py, &body_value)?;
                     handler_obj.call1((py_body,))?
@@ -492,15 +492,15 @@ impl PythonHandler {
                 pyo3_async_runtimes::into_future_with_locals(&task_locals, awaitable)
             })
             .map_err(|e: PyErr| {
-                structured_error("python_call_error", format!("Python error calling handler: {}", e))
+                structured_error("python_call_error", format!("Python error calling handler: {e}"))
             })?;
 
             let coroutine_result = coroutine_future
                 .await
-                .map_err(|e: PyErr| structured_error("python_async_error", format!("Python async error: {}", e)))?;
+                .map_err(|e: PyErr| structured_error("python_async_error", format!("Python async error: {e}")))?;
 
             Python::attach(|py| python_to_response_result(py, coroutine_result.bind(py), prefer_msgspec_json))
-                .map_err(|e: PyErr| structured_error("python_response_error", format!("Python error: {}", e)))?
+                .map_err(|e: PyErr| structured_error("python_response_error", format!("Python error: {e}")))?
         } else {
             let handler_params = handler_params.clone();
             let request_data_for_sync = request_data.clone();
@@ -535,7 +535,7 @@ impl PythonHandler {
                             request_data_for_sync.body.clone()
                         } else {
                             serde_json::from_slice::<Value>(raw).map_err(|e| {
-                                pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {}", e))
+                                pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}"))
                             })?
                         };
                         let py_body = json_to_python(py, &body_value)?;
@@ -573,8 +573,8 @@ impl PythonHandler {
                 })
             })
             .await
-            .map_err(|e| structured_error("spawn_blocking_error", format!("Spawn blocking error: {}", e)))?
-            .map_err(|e: PyErr| structured_error("python_error", format!("Python error: {}", e)))?
+            .map_err(|e| structured_error("spawn_blocking_error", format!("Spawn blocking error: {e}")))?
+            .map_err(|e: PyErr| structured_error("python_error", format!("Python error: {e}")))?
         };
 
         let (json_value, status_code, headers, raw_body_bytes) = match result {
@@ -605,7 +605,7 @@ impl PythonHandler {
                 && let Some(validator) = &response_validator
             {
                 let json_value = serde_json::from_slice::<Value>(&raw).map_err(|e| {
-                    structured_error("response_parse_error", format!("Failed to parse response: {}", e))
+                    structured_error("response_parse_error", format!("Failed to parse response: {e}"))
                 })?;
                 if let Err(errors) = validator.validate(&json_value) {
                     let problem = ProblemDetails::from_validation_error(&errors);
@@ -621,7 +621,7 @@ impl PythonHandler {
                     serde_json::to_vec(&json_value).map_err(|e| {
                         structured_error(
                             "response_serialize_error",
-                            format!("Failed to serialize response: {}", e),
+                            format!("Failed to serialize response: {e}"),
                         )
                     })?
                 }
@@ -638,7 +638,7 @@ impl PythonHandler {
                 serde_json::to_vec(&json_value).map_err(|e| {
                     structured_error(
                         "response_serialize_error",
-                        format!("Failed to serialize response: {}", e),
+                        format!("Failed to serialize response: {e}"),
                     )
                 })?
             }
@@ -646,7 +646,7 @@ impl PythonHandler {
             serde_json::to_vec(&json_value).map_err(|e| {
                 structured_error(
                     "response_serialize_error",
-                    format!("Failed to serialize response: {}", e),
+                    format!("Failed to serialize response: {e}"),
                 )
             })?
         };
@@ -663,7 +663,7 @@ impl PythonHandler {
 
         response_builder
             .body(Body::from(body_bytes))
-            .map_err(|e| structured_error("response_build_error", format!("Failed to build response: {}", e)))
+            .map_err(|e| structured_error("response_build_error", format!("Failed to build response: {e}")))
     }
 }
 
@@ -738,7 +738,7 @@ fn validated_params_to_py_kwargs<'py>(
                     request_data.body.clone()
                 } else {
                     serde_json::from_slice::<Value>(raw_bytes)
-                        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {}", e)))?
+                        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}")))?
                 };
                 let py_body = json_to_python(py, &body_value)?;
                 if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {
@@ -944,7 +944,7 @@ fn request_data_to_py_kwargs<'py>(
                     request_data.body.clone()
                 } else {
                     serde_json::from_slice::<Value>(raw_bytes)
-                        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {}", e)))?
+                        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}")))?
                 };
                 let py_body = json_to_python(py, &body_value)?;
                 if handler_params.is_none() || handler_params.is_some_and(|set| set.contains(body_param_name)) {

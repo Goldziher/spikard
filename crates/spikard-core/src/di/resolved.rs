@@ -88,6 +88,9 @@ impl ResolvedDependencies {
     /// let config = Arc::new("production".to_string());
     /// resolved.insert("config".to_string(), config);
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the lock is poisoned.
     pub fn insert(&mut self, key: String, value: Arc<dyn Any + Send + Sync>) {
         self.dependencies.lock().unwrap().insert(key, value);
     }
@@ -126,6 +129,10 @@ impl ResolvedDependencies {
     /// let missing: Option<Arc<i32>> = resolved.get("missing");
     /// assert!(missing.is_none());
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the lock is poisoned.
+    #[must_use]
     pub fn get<T: Send + Sync + 'static>(&self, key: &str) -> Option<Arc<T>> {
         self.dependencies
             .lock()
@@ -155,6 +162,10 @@ impl ResolvedDependencies {
     /// let any_ref = resolved.get_arc("data");
     /// assert!(any_ref.is_some());
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the lock is poisoned.
+    #[must_use]
     pub fn get_arc(&self, key: &str) -> Option<Arc<dyn Any + Send + Sync>> {
         self.dependencies.lock().unwrap().get(key).cloned()
     }
@@ -177,6 +188,9 @@ impl ResolvedDependencies {
     /// assert!(resolved.contains("exists"));
     /// assert!(!resolved.contains("missing"));
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the lock is poisoned.
     #[must_use]
     pub fn contains(&self, key: &str) -> bool {
         self.dependencies.lock().unwrap().contains_key(key)
@@ -202,6 +216,9 @@ impl ResolvedDependencies {
     /// assert!(keys.contains(&"config".to_string()));
     /// assert!(keys.contains(&"db".to_string()));
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the lock is poisoned.
     #[must_use]
     pub fn keys(&self) -> Vec<String> {
         self.dependencies.lock().unwrap().keys().cloned().collect()
@@ -233,6 +250,9 @@ impl ResolvedDependencies {
     /// resolved.cleanup().await;
     /// # });
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the lock is poisoned.
     pub fn add_cleanup_task(&self, task: CleanupTask) {
         self.cleanup_tasks.lock().unwrap().push(task);
     }
@@ -275,6 +295,9 @@ impl ResolvedDependencies {
     /// assert_eq!(*order.lock().unwrap(), vec![2, 1]);
     /// # });
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the lock is poisoned.
     pub async fn cleanup(self) {
         let tasks = {
             let mut cleanup_tasks = self.cleanup_tasks.lock().unwrap();

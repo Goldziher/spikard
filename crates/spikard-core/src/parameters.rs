@@ -69,6 +69,9 @@ impl ParameterValidator {
     ///
     /// The schema should describe all parameters with their types and constraints.
     /// Each property MUST have a "source" field indicating where the parameter comes from.
+    ///
+    /// # Errors
+    /// Returns an error if the schema is invalid or malformed.
     pub fn new(schema: Value) -> Result<Self, String> {
         let parameter_defs = Self::extract_parameter_defs(&schema)?;
         let validation_schema = Self::create_validation_schema(&schema);
@@ -88,6 +91,7 @@ impl ParameterValidator {
     }
 
     /// Whether this validator needs access to request headers.
+    #[must_use]
     pub fn requires_headers(&self) -> bool {
         self.inner
             .parameter_defs
@@ -96,6 +100,7 @@ impl ParameterValidator {
     }
 
     /// Whether this validator needs access to request cookies.
+    #[must_use]
     pub fn requires_cookies(&self) -> bool {
         self.inner
             .parameter_defs
@@ -104,6 +109,7 @@ impl ParameterValidator {
     }
 
     /// Whether the validator has any parameter definitions.
+    #[must_use]
     pub fn has_params(&self) -> bool {
         !self.inner.parameter_defs.is_empty()
     }
@@ -125,12 +131,22 @@ impl ParameterValidator {
 
             for (key, child) in obj {
                 match key.as_str() {
-                    // Structural keywords we support in the coercion pass.
-                    "type" | "format" | "properties" | "required" | "items" | "additionalProperties" => {}
-
-                    // Metadata keywords which don't affect validation semantics.
-                    "title" | "description" | "default" | "examples" | "deprecated" | "readOnly" | "writeOnly"
-                    | "$schema" | "$id" => {}
+                    // Structural keywords we support in the coercion pass, and metadata keywords.
+                    "type"
+                    | "format"
+                    | "properties"
+                    | "required"
+                    | "items"
+                    | "additionalProperties"
+                    | "title"
+                    | "description"
+                    | "default"
+                    | "examples"
+                    | "deprecated"
+                    | "readOnly"
+                    | "writeOnly"
+                    | "$schema"
+                    | "$id" => {}
 
                     // Anything else may impose constraints we don't enforce manually.
                     _ => return true,
@@ -166,15 +182,14 @@ impl ParameterValidator {
         for (name, prop) in properties {
             let source_str = prop.get("source").and_then(|s| s.as_str()).ok_or_else(|| {
                 anyhow::anyhow!("Invalid parameter schema")
-                    .context(format!("Parameter '{}' missing required 'source' field", name))
+                    .context(format!("Parameter '{name}' missing required 'source' field"))
                     .to_string()
             })?;
 
             let source = ParameterSource::from_str(source_str).ok_or_else(|| {
                 anyhow::anyhow!("Invalid parameter schema")
                     .context(format!(
-                        "Invalid source '{}' for parameter '{}' (expected: query, path, header, or cookie)",
-                        source_str, name
+                        "Invalid source '{source_str}' for parameter '{name}' (expected: query, path, header, or cookie)"
                     ))
                     .to_string()
             })?;
@@ -182,7 +197,10 @@ impl ParameterValidator {
             let expected_type = prop.get("type").and_then(|t| t.as_str()).map(String::from);
             let format = prop.get("format").and_then(|f| f.as_str()).map(String::from);
 
-            let is_optional = prop.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
+            let is_optional = prop
+                .get("optional")
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(false);
             let required = required_list.contains(&name.as_str()) && !is_optional;
 
             let (lookup_key, error_key) = if source == ParameterSource::Header {
@@ -207,6 +225,7 @@ impl ParameterValidator {
     }
 
     /// Get the underlying JSON Schema
+    #[must_use]
     pub fn schema(&self) -> &Value {
         &self.inner.schema
     }
@@ -217,6 +236,10 @@ impl ParameterValidator {
     /// It performs type coercion (e.g., "123" → 123) based on the schema.
     ///
     /// Returns the validated JSON object that can be directly converted to Python kwargs.
+    ///
+    /// # Errors
+    /// Returns a validation error if parameter validation fails.
+    #[allow(clippy::too_many_lines)]
     pub fn validate_and_extract(
         &self,
         query_params: &Value,
@@ -279,11 +302,11 @@ impl ParameterValidator {
                                             "Input should be a valid boolean, unable to interpret input".to_string()
                                         }
                                         Some("string") => match item_format {
-                                            Some("uuid") => format!("Input should be a valid UUID, {}", e),
-                                            Some("date") => format!("Input should be a valid date, {}", e),
-                                            Some("date-time") => format!("Input should be a valid datetime, {}", e),
-                                            Some("time") => format!("Input should be a valid time, {}", e),
-                                            Some("duration") => format!("Input should be a valid duration, {}", e),
+                                            Some("uuid") => format!("Input should be a valid UUID, {e}"),
+                                            Some("date") => format!("Input should be a valid date, {e}"),
+                                            Some("date-time") => format!("Input should be a valid datetime, {e}"),
+                                            Some("time") => format!("Input should be a valid time, {e}"),
+                                            Some("duration") => format!("Input should be a valid duration, {e}"),
                                             _ => e,
                                         },
                                         _ => e,
@@ -303,6 +326,7 @@ impl ParameterValidator {
                     };
                     let (item_type, item_format) = self.array_item_type_and_format(&param_def.name);
 
+                    #[allow(clippy::option_if_let_else)]
                     let coerced_items = match array_value.as_array() {
                         Some(items) => {
                             let mut out = Vec::with_capacity(items.len());
@@ -332,11 +356,11 @@ impl ParameterValidator {
                                                     Some("number") => "Input should be a valid number, unable to parse string as a number".to_string(),
                                                     Some("boolean") => "Input should be a valid boolean, unable to interpret input".to_string(),
                                                     Some("string") => match item_format {
-                                                        Some("uuid") => format!("Input should be a valid UUID, {}", e),
-                                                        Some("date") => format!("Input should be a valid date, {}", e),
-                                                        Some("date-time") => format!("Input should be a valid datetime, {}", e),
-                                                        Some("time") => format!("Input should be a valid time, {}", e),
-                                                        Some("duration") => format!("Input should be a valid duration, {}", e),
+                                                        Some("uuid") => format!("Input should be a valid UUID, {e}"),
+                                                        Some("date") => format!("Input should be a valid date, {e}"),
+                                                        Some("date-time") => format!("Input should be a valid datetime, {e}"),
+                                                        Some("time") => format!("Input should be a valid time, {e}"),
+                                                        Some("duration") => format!("Input should be a valid duration, {e}"),
                                                         _ => e.clone(),
                                                     },
                                                     _ => e.clone(),
@@ -410,19 +434,19 @@ impl ParameterValidator {
                                     "Input should be a valid boolean, unable to interpret input".to_string(),
                                 ),
                                 (Some("string"), Some("uuid")) => {
-                                    ("uuid_parsing", format!("Input should be a valid UUID, {}", e))
+                                    ("uuid_parsing", format!("Input should be a valid UUID, {e}"))
                                 }
                                 (Some("string"), Some("date")) => {
-                                    ("date_parsing", format!("Input should be a valid date, {}", e))
+                                    ("date_parsing", format!("Input should be a valid date, {e}"))
                                 }
                                 (Some("string"), Some("date-time")) => {
-                                    ("datetime_parsing", format!("Input should be a valid datetime, {}", e))
+                                    ("datetime_parsing", format!("Input should be a valid datetime, {e}"))
                                 }
                                 (Some("string"), Some("time")) => {
-                                    ("time_parsing", format!("Input should be a valid time, {}", e))
+                                    ("time_parsing", format!("Input should be a valid time, {e}"))
                                 }
                                 (Some("string"), Some("duration")) => {
-                                    ("duration_parsing", format!("Input should be a valid duration, {}", e))
+                                    ("duration_parsing", format!("Input should be a valid duration, {e}"))
                                 }
                                 _ => ("type_error", e),
                             };
@@ -445,7 +469,7 @@ impl ParameterValidator {
         let params_json = Value::Object(params_map);
         if let Some(schema_validator) = &self.inner.schema_validator {
             match schema_validator.validate(&params_json) {
-                Ok(_) => Ok(params_json),
+                Ok(()) => Ok(params_json),
                 Err(mut validation_err) => {
                     for error in &mut validation_err.errors {
                         if error.loc.len() >= 2 && error.loc[0] == "body" {
@@ -459,7 +483,7 @@ impl ParameterValidator {
                                 };
                                 error.loc[0] = source_str.to_string();
                                 if param_def.source == ParameterSource::Header {
-                                    error.loc[1] = param_def.error_key.clone();
+                                    error.loc[1].clone_from(&param_def.error_key);
                                 }
                                 if let Some(raw_value) =
                                     self.raw_value_for_error(param_def, raw_query_params, path_params, headers, cookies)
@@ -477,6 +501,7 @@ impl ParameterValidator {
         }
     }
 
+    #[allow(clippy::unused_self)]
     fn raw_value_for_error<'a>(
         &self,
         param_def: &ParameterDef,
@@ -485,6 +510,7 @@ impl ParameterValidator {
         headers: &'a HashMap<String, String>,
         cookies: &'a HashMap<String, String>,
     ) -> Option<&'a str> {
+        #[allow(clippy::too_many_arguments)]
         match param_def.source {
             ParameterSource::Query => raw_query_params
                 .get(&param_def.lookup_key)
@@ -548,11 +574,11 @@ impl ParameterValidator {
             Some("integer") => value
                 .parse::<i64>()
                 .map(|i| json!(i))
-                .map_err(|e| format!("Invalid integer: {}", e)),
+                .map_err(|e| format!("Invalid integer: {e}")),
             Some("number") => value
                 .parse::<f64>()
                 .map(|f| json!(f))
-                .map_err(|e| format!("Invalid number: {}", e)),
+                .map_err(|e| format!("Invalid number: {e}")),
             Some("boolean") => {
                 if value.is_empty() {
                     return Ok(json!(false));
@@ -563,7 +589,7 @@ impl ParameterValidator {
                 } else if value_lower == "false" || value == "0" {
                     Ok(json!(false))
                 } else {
-                    Err(format!("Invalid boolean: {}", value))
+                    Err(format!("Invalid boolean: {value}"))
                 }
             }
             _ => Ok(json!(value)),
@@ -574,7 +600,7 @@ impl ParameterValidator {
     fn validate_date_format(value: &str) -> Result<(), String> {
         jiff::civil::Date::strptime("%Y-%m-%d", value)
             .map(|_| ())
-            .map_err(|e| format!("Invalid date format: {}", e))
+            .map_err(|e| format!("Invalid date format: {e}"))
     }
 
     /// Validate ISO 8601 datetime format
@@ -582,7 +608,7 @@ impl ParameterValidator {
         use std::str::FromStr;
         jiff::Timestamp::from_str(value)
             .map(|_| ())
-            .map_err(|e| format!("Invalid datetime format: {}", e))
+            .map_err(|e| format!("Invalid datetime format: {e}"))
     }
 
     /// Validate ISO 8601 time format: HH:MM:SS or HH:MM:SS.ffffff
@@ -608,7 +634,7 @@ impl ParameterValidator {
         };
 
         let base_time = time_part.split('.').next().unwrap_or(time_part);
-        jiff::civil::Time::strptime("%H:%M:%S", base_time).map_err(|e| format!("Invalid time format: {}", e))?;
+        jiff::civil::Time::strptime("%H:%M:%S", base_time).map_err(|e| format!("Invalid time format: {e}"))?;
 
         if let Some((_, frac)) = time_part.split_once('.')
             && (frac.is_empty() || frac.len() > 9 || !frac.chars().all(|c| c.is_ascii_digit()))
@@ -648,7 +674,7 @@ impl ParameterValidator {
         use std::str::FromStr;
         jiff::Span::from_str(value)
             .map(|_| ())
-            .map_err(|e| format!("Invalid duration format: {}", e))
+            .map_err(|e| format!("Invalid duration format: {e}"))
     }
 
     /// Validate UUID format
@@ -671,7 +697,7 @@ impl ParameterValidator {
             for (name, prop) in properties.iter_mut() {
                 if let Some(obj) = prop.as_object_mut() {
                     obj.remove("source");
-                    if obj.get("optional").and_then(|v| v.as_bool()) == Some(true) {
+                    if obj.get("optional").and_then(serde_json::Value::as_bool) == Some(true) {
                         optional_fields.push(name.clone());
                     }
                     obj.remove("optional");

@@ -17,7 +17,8 @@ pub struct AggregateRunner {
 }
 
 impl AggregateRunner {
-    pub fn new(run_id: Option<String>, workflow: String, download_dir: PathBuf, keep_artifacts: bool) -> Self {
+    #[must_use]
+    pub const fn new(run_id: Option<String>, workflow: String, download_dir: PathBuf, keep_artifacts: bool) -> Self {
         Self {
             run_id,
             workflow,
@@ -29,7 +30,7 @@ impl AggregateRunner {
     pub async fn run(&self, output: &Path) -> Result<()> {
         println!("🔍 Determining workflow run ID...");
         let run_id = self.resolve_run_id().await?;
-        println!("✅ Using run ID: {}", run_id);
+        println!("✅ Using run ID: {run_id}");
 
         println!("📥 Downloading artifacts from GitHub Actions...");
         let artifacts = self.download_artifacts(&run_id).await?;
@@ -49,7 +50,7 @@ impl AggregateRunner {
             .build_aggregated_result(&run_id, frameworks, artifact_infos)
             .await?;
 
-        println!("💾 Writing aggregated results to {:?}...", output);
+        println!("💾 Writing aggregated results to {}...", output.display());
         if let Some(parent) = output.parent() {
             tokio::fs::create_dir_all(parent).await?;
         }
@@ -95,7 +96,7 @@ impl AggregateRunner {
             ])
             .output()
             .await
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to execute gh CLI (is it installed?): {}", e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to execute gh CLI (is it installed?): {e}")))?;
 
         if !output.status.success() {
             return Err(Error::BenchmarkFailed(format!(
@@ -105,7 +106,7 @@ impl AggregateRunner {
         }
 
         let run_id = String::from_utf8(output.stdout)
-            .map_err(|e| Error::BenchmarkFailed(format!("Invalid UTF-8 in gh output: {}", e)))?
+            .map_err(|e| Error::BenchmarkFailed(format!("Invalid UTF-8 in gh output: {e}")))?
             .trim()
             .to_string();
 
@@ -122,7 +123,7 @@ impl AggregateRunner {
     async fn download_artifacts(&self, run_id: &str) -> Result<Vec<PathBuf>> {
         tokio::fs::create_dir_all(&self.download_dir)
             .await
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to create download directory: {}", e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to create download directory: {e}")))?;
 
         let output = Command::new("gh")
             .args([
@@ -136,7 +137,7 @@ impl AggregateRunner {
             ])
             .output()
             .await
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to list artifacts: {}", e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to list artifacts: {e}")))?;
 
         if !output.status.success() {
             return Err(Error::BenchmarkFailed(format!(
@@ -146,16 +147,15 @@ impl AggregateRunner {
         }
 
         let artifact_names: Vec<String> = String::from_utf8(output.stdout)
-            .map_err(|e| Error::BenchmarkFailed(format!("Invalid UTF-8 in artifact list: {}", e)))?
+            .map_err(|e| Error::BenchmarkFailed(format!("Invalid UTF-8 in artifact list: {e}")))?
             .lines()
             .filter(|line| !line.trim().is_empty())
-            .map(|s| s.to_string())
+            .map(std::string::ToString::to_string)
             .collect();
 
         if artifact_names.is_empty() {
             return Err(Error::BenchmarkFailed(format!(
-                "No benchmark artifacts found for run {}",
-                run_id
+                "No benchmark artifacts found for run {run_id}"
             )));
         }
 
@@ -175,12 +175,12 @@ impl AggregateRunner {
                 ])
                 .status()
                 .await
-                .map_err(|e| Error::BenchmarkFailed(format!("Failed to download artifact {}: {}", name, e)))?;
+                .map_err(|e| Error::BenchmarkFailed(format!("Failed to download artifact {name}: {e}")))?;
 
             if status.success() {
                 artifacts.push(artifact_dir);
             } else {
-                eprintln!("⚠️  Failed to download artifact: {}", name);
+                eprintln!("⚠️  Failed to download artifact: {name}");
             }
         }
 
@@ -207,7 +207,7 @@ impl AggregateRunner {
                 Ok(content) => match serde_json::from_str::<ProfileResult>(&content) {
                     Ok(profile) => {
                         artifact_infos.push(ArtifactInfo {
-                            name: format!("benchmark-results-{}", framework_name),
+                            name: format!("benchmark-results-{framework_name}"),
                             framework: framework_name.clone(),
                             size_bytes,
                             downloaded: true,
@@ -221,24 +221,24 @@ impl AggregateRunner {
                         });
                     }
                     Err(e) => {
-                        eprintln!("⚠️  Failed to parse profile.json for {}: {}", framework_name, e);
+                        eprintln!("⚠️  Failed to parse profile.json for {framework_name}: {e}");
                         artifact_infos.push(ArtifactInfo {
-                            name: format!("benchmark-results-{}", framework_name),
+                            name: format!("benchmark-results-{framework_name}"),
                             framework: framework_name,
                             size_bytes,
                             downloaded: true,
-                            error: Some(format!("Parse error: {}", e)),
+                            error: Some(format!("Parse error: {e}")),
                         });
                     }
                 },
                 Err(e) => {
-                    eprintln!("⚠️  Failed to read profile.json for {}: {}", framework_name, e);
+                    eprintln!("⚠️  Failed to read profile.json for {framework_name}: {e}");
                     artifact_infos.push(ArtifactInfo {
-                        name: format!("benchmark-results-{}", framework_name),
+                        name: format!("benchmark-results-{framework_name}"),
                         framework: framework_name,
                         size_bytes: 0,
                         downloaded: false,
-                        error: Some(format!("Read error: {}", e)),
+                        error: Some(format!("Read error: {e}")),
                     });
                 }
             }
@@ -302,7 +302,7 @@ impl AggregateRunner {
             .args(["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"])
             .output()
             .await
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to get repository slug: {}", e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to get repository slug: {e}")))?;
 
         if !output.status.success() {
             return Err(Error::BenchmarkFailed(format!(
@@ -312,7 +312,7 @@ impl AggregateRunner {
         }
 
         let slug = String::from_utf8(output.stdout)
-            .map_err(|e| Error::BenchmarkFailed(format!("Invalid UTF-8 in repository slug: {}", e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Invalid UTF-8 in repository slug: {e}")))?;
 
         Ok(slug.trim().to_string())
     }
@@ -335,8 +335,8 @@ impl AggregateRunner {
             Ok(output) if output.status.success() => {
                 match serde_json::from_slice::<serde_json::Value>(&output.stdout) {
                     Ok(json) => {
-                        let commit = json["commit"].as_str().map(|s| s.to_string());
-                        let branch = json["branch"].as_str().map(|s| s.to_string());
+                        let commit = json["commit"].as_str().map(std::string::ToString::to_string);
+                        let branch = json["branch"].as_str().map(std::string::ToString::to_string);
                         (commit, branch)
                     }
                     Err(_) => (None, None),

@@ -39,10 +39,7 @@ pub fn start_profiler(pid: u32) -> Result<RustProfiler> {
     {
         eprintln!("  ℹ Rust profiling via Instruments");
         eprintln!("  → CPU profiling available");
-        eprintln!(
-            "  → Run: xcrun xctrace record --template 'Time Profiler' --attach {}",
-            pid
-        );
+        eprintln!("  → Run: xcrun xctrace record --template 'Time Profiler' --attach {pid}");
     }
 
     eprintln!("  → Heap metrics will be collected if instrumented");
@@ -56,6 +53,7 @@ pub fn start_profiler(pid: u32) -> Result<RustProfiler> {
 
 impl RustProfiler {
     /// Get the output path for profiler data
+    #[must_use]
     pub fn output_path(&self) -> Option<&str> {
         if self.output_path.is_empty() {
             None
@@ -65,6 +63,7 @@ impl RustProfiler {
     }
 
     /// Stop the profiler and collect final metrics
+    #[must_use]
     pub fn stop(mut self) -> ProfilingData {
         if let Some(mut process) = self.process.take() {
             let _ = process.kill();
@@ -75,7 +74,7 @@ impl RustProfiler {
         let app_metrics = self.load_metrics_file(&metrics_path);
 
         ProfilingData {
-            flamegraph_path: self.output_path().map(|s| s.to_string()),
+            flamegraph_path: self.output_path().map(std::string::ToString::to_string),
             heap_allocated_mb: app_metrics.as_ref().and_then(|m| m.heap_allocated_mb),
         }
     }
@@ -85,11 +84,11 @@ impl RustProfiler {
         match std::fs::read_to_string(path) {
             Ok(content) => match serde_json::from_str::<RustMetricsFile>(&content) {
                 Ok(metrics) => {
-                    println!("  ✓ Loaded Rust application metrics from {}", path);
+                    println!("  ✓ Loaded Rust application metrics from {path}");
                     Some(metrics)
                 }
                 Err(e) => {
-                    eprintln!("  ⚠ Failed to parse Rust metrics file: {}", e);
+                    eprintln!("  ⚠ Failed to parse Rust metrics file: {e}");
                     None
                 }
             },

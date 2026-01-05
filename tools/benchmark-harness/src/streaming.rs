@@ -35,7 +35,8 @@ pub struct StreamingBenchmarkRunner {
 }
 
 impl StreamingBenchmarkRunner {
-    pub fn new(config: StreamingRunnerConfig) -> Self {
+    #[must_use]
+    pub const fn new(config: StreamingRunnerConfig) -> Self {
         Self { config }
     }
 
@@ -150,7 +151,7 @@ impl StreamingBenchmarkRunner {
     }
 }
 
-/// Streaming fixture derived from AsyncAPI testing_data artifacts.
+/// Streaming fixture derived from `AsyncAPI` `testing_data` artifacts.
 #[derive(Debug, Clone, Deserialize)]
 pub struct StreamingFixture {
     pub name: String,
@@ -166,12 +167,13 @@ impl StreamingFixture {
         let data = std::fs::read_to_string(&path)?;
         let fixture: Self = serde_json::from_str(&data).map_err(|e| Error::InvalidFixture {
             path: path.as_ref().to_path_buf(),
-            reason: format!("Failed to parse streaming fixture: {}", e),
+            reason: format!("Failed to parse streaming fixture: {e}"),
         })?;
         Ok(fixture)
     }
 
     /// Example JSON payload for WebSocket benchmarks.
+    #[must_use]
     pub fn example_payload(&self) -> String {
         self.examples
             .first()
@@ -267,7 +269,7 @@ async fn aggregate_stats(mut join_set: JoinSet<StreamingTaskStats>) -> Result<St
             }
             Err(e) => {
                 aggregate.errors += 1;
-                eprintln!("Streaming worker failed: {}", e);
+                eprintln!("Streaming worker failed: {e}");
             }
         }
     }
@@ -313,7 +315,7 @@ async fn websocket_worker(uri: String, payload: String, deadline: Instant, captu
                         stats.responses_received += 1;
                     }
                     Ok(Some(Ok(Message::Frame(_)))) => {}
-                    Ok(Some(Ok(Message::Ping(_)))) | Ok(Some(Ok(Message::Pong(_)))) => {}
+                    Ok(Some(Ok(Message::Ping(_) | Message::Pong(_)))) => {}
                     Ok(Some(Ok(Message::Close(_)))) => break,
                     Ok(Some(Err(_))) => {
                         stats.errors += 1;
@@ -328,7 +330,7 @@ async fn websocket_worker(uri: String, payload: String, deadline: Instant, captu
         }
         Err(e) => {
             stats.errors += 1;
-            eprintln!("WebSocket connection failed: {}", e);
+            eprintln!("WebSocket connection failed: {e}");
         }
     }
 
@@ -363,13 +365,13 @@ async fn sse_worker(uri: String, deadline: Instant, capture: bool) -> StreamingT
                             None => break,
                         }
                     }
-                    _ = sleep_until(deadline) => break,
+                    () = sleep_until(deadline) => break,
                 }
             }
         }
         Err(e) => {
             stats.errors += 1;
-            eprintln!("SSE request failed: {}", e);
+            eprintln!("SSE request failed: {e}");
         }
     }
 
@@ -398,9 +400,9 @@ fn drain_sse_events(buffer: &mut Vec<u8>, mut transcript: Option<&mut StreamingT
 
 fn http_to_ws(base: &str) -> String {
     if let Some(rest) = base.strip_prefix("https://") {
-        format!("wss://{}", rest)
+        format!("wss://{rest}")
     } else if let Some(rest) = base.strip_prefix("http://") {
-        format!("ws://{}", rest)
+        format!("ws://{rest}")
     } else {
         base.to_string()
     }

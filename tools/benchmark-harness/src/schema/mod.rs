@@ -180,6 +180,7 @@ pub struct StatisticalSignificance {
 
 /// Helper to collect system metadata
 impl Metadata {
+    #[must_use]
     pub fn collect() -> Self {
         Self {
             timestamp: chrono::Utc::now().to_rfc3339(),
@@ -213,12 +214,12 @@ impl Metadata {
             .args(["status", "--porcelain"])
             .output()
             .ok()
-            .map(|o| !o.stdout.is_empty())
-            .unwrap_or(false)
+            .is_some_and(|o| !o.stdout.is_empty())
     }
 }
 
 impl HostInfo {
+    #[must_use]
     pub fn collect() -> Self {
         let cpu_model = Self::cpu_model();
         let cpu_info = Self::cpu_info();
@@ -242,8 +243,7 @@ impl HostInfo {
                 .output()
                 .ok()
                 .and_then(|o| String::from_utf8(o.stdout).ok())
-                .map(|s| s.trim().to_string())
-                .unwrap_or_else(|| "Unknown CPU".to_string())
+                .map_or_else(|| "Unknown CPU".to_string(), |s| s.trim().to_string())
         }
         #[cfg(target_os = "linux")]
         {
@@ -279,8 +279,7 @@ impl HostInfo {
                 .ok()
                 .and_then(|o| String::from_utf8(o.stdout).ok())
                 .and_then(|s| s.trim().parse::<u64>().ok())
-                .map(|bytes| bytes as f64 / 1024.0 / 1024.0 / 1024.0)
-                .unwrap_or(0.0)
+                .map_or(0.0, |bytes| bytes as f64 / 1024.0 / 1024.0 / 1024.0)
         }
         #[cfg(target_os = "linux")]
         {

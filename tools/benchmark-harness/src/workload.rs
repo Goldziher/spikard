@@ -34,7 +34,8 @@ pub enum WorkloadCategory {
 }
 
 impl WorkloadCategory {
-    pub fn as_str(&self) -> &str {
+    #[must_use]
+    pub const fn as_str(&self) -> &str {
         match self {
             Self::JsonBodies => "json-bodies",
             Self::Multipart => "multipart",
@@ -47,6 +48,7 @@ impl WorkloadCategory {
         }
     }
 
+    #[must_use]
     pub fn parse(s: &str) -> Option<Self> {
         match s {
             "json-bodies" => Some(Self::JsonBodies),
@@ -77,7 +79,8 @@ pub enum PayloadSize {
 }
 
 impl PayloadSize {
-    pub fn as_str(&self) -> &str {
+    #[must_use]
+    pub const fn as_str(&self) -> &str {
         match self {
             Self::Small => "small",
             Self::Medium => "medium",
@@ -87,7 +90,8 @@ impl PayloadSize {
     }
 
     /// Get approximate byte range for this size category
-    pub fn byte_range(&self) -> (usize, usize) {
+    #[must_use]
+    pub const fn byte_range(&self) -> (usize, usize) {
         match self {
             Self::Small => (100, 1024),
             Self::Medium => (1024, 10 * 1024),
@@ -112,6 +116,7 @@ pub struct JsonBodyWorkload {
 
 impl JsonBodyWorkload {
     /// Generate a JSON value for this workload
+    #[must_use]
     pub fn generate(&self) -> Value {
         self.generate_nested(self.depth, self.field_count)
     }
@@ -120,7 +125,7 @@ impl JsonBodyWorkload {
         if depth == 0 {
             let mut obj = serde_json::Map::new();
             for i in 0..fields {
-                obj.insert(format!("field_{}", i), Value::String(format!("value_{}", i)));
+                obj.insert(format!("field_{i}"), Value::String(format!("value_{i}")));
             }
 
             if self.include_arrays {
@@ -138,7 +143,7 @@ impl JsonBodyWorkload {
         } else {
             let mut obj = serde_json::Map::new();
             for i in 0..fields.min(5) {
-                obj.insert(format!("field_{}", i), Value::String(format!("value_{}", i)));
+                obj.insert(format!("field_{i}"), Value::String(format!("value_{i}")));
             }
             obj.insert("nested".to_string(), self.generate_nested(depth - 1, fields));
             Value::Object(obj)
@@ -146,7 +151,8 @@ impl JsonBodyWorkload {
     }
 
     /// Estimate the size in bytes
-    pub fn estimate_size(&self) -> usize {
+    #[must_use]
+    pub const fn estimate_size(&self) -> usize {
         let base_size = self.field_count * 25;
         let nesting_overhead = self.depth * 50;
         let array_overhead = if self.include_arrays { 100 } else { 0 };
@@ -169,13 +175,15 @@ pub struct MultipartWorkload {
 
 impl MultipartWorkload {
     /// Generate test file data
+    #[must_use]
     pub fn generate_file_data(&self) -> Vec<u8> {
         let (min, max) = self.file_size.byte_range();
-        let size = (min + max) / 2;
+        let size = usize::midpoint(min, max);
         vec![b'A'; size]
     }
 
     /// Generate multipart boundary
+    #[must_use]
     pub fn boundary(&self) -> String {
         format!("----BenchmarkBoundary{}", chrono::Utc::now().timestamp())
     }
@@ -194,16 +202,17 @@ pub struct UrlEncodedWorkload {
 
 impl UrlEncodedWorkload {
     /// Generate URL encoded form data
+    #[must_use]
     pub fn generate(&self) -> HashMap<String, String> {
         let mut fields = HashMap::new();
 
         for i in 0..self.field_count {
             let value = if self.special_chars && i % 3 == 0 {
-                format!("value with spaces & special=chars {}", i)
+                format!("value with spaces & special=chars {i}")
             } else {
-                format!("value_{}", i)
+                format!("value_{i}")
             };
-            fields.insert(format!("field_{}", i), value);
+            fields.insert(format!("field_{i}"), value);
         }
 
         if self.include_arrays {
@@ -214,7 +223,8 @@ impl UrlEncodedWorkload {
     }
 
     /// Estimate the encoded size
-    pub fn estimate_size(&self) -> usize {
+    #[must_use]
+    pub const fn estimate_size(&self) -> usize {
         self.field_count * 30
     }
 }
@@ -225,7 +235,7 @@ impl UrlEncodedWorkload {
 pub enum PathComplexity {
     /// Single parameter: /users/{id}
     Simple,
-    /// Multiple parameters: /users/{user_id}/posts/{post_id}
+    /// Multiple parameters: /`users/{user_id}/posts/{post_id`}
     Multiple,
     /// Deep nesting: /{org}/{team}/{project}/{resource}/{id}
     Deep,
@@ -242,6 +252,7 @@ pub struct PathParamWorkload {
 
 impl PathParamWorkload {
     /// Generate a path pattern for this workload
+    #[must_use]
     pub fn path_pattern(&self) -> String {
         match self.complexity {
             PathComplexity::Simple => "/items/{id}".to_string(),
@@ -251,8 +262,9 @@ impl PathParamWorkload {
     }
 
     /// Generate example values for path parameters
+    #[must_use]
     pub fn generate_values(&self) -> Vec<String> {
-        self.param_types.iter().map(|t| t.example_value()).collect()
+        self.param_types.iter().map(ParamType::example_value).collect()
     }
 }
 
@@ -271,12 +283,13 @@ pub struct QueryParamWorkload {
 
 impl QueryParamWorkload {
     /// Generate query parameters
+    #[must_use]
     pub fn generate(&self) -> HashMap<String, String> {
         let mut params = HashMap::new();
 
         for i in 0..self.param_count {
             let param_type = &self.param_types[i % self.param_types.len()];
-            params.insert(format!("param_{}", i), param_type.example_value());
+            params.insert(format!("param_{i}"), param_type.example_value());
         }
 
         if self.include_arrays {
@@ -284,14 +297,15 @@ impl QueryParamWorkload {
         }
 
         if self.include_optional {
-            params.insert("optional_field".to_string(), "".to_string());
+            params.insert("optional_field".to_string(), String::new());
         }
 
         params
     }
 
     /// Estimate URL length
-    pub fn estimate_url_length(&self) -> usize {
+    #[must_use]
+    pub const fn estimate_url_length(&self) -> usize {
         50 + (self.param_count * 20)
     }
 }
@@ -312,7 +326,7 @@ pub enum ParamType {
     Uuid,
     /// Date value (ISO 8601)
     Date,
-    /// DateTime value (ISO 8601)
+    /// `DateTime` value (ISO 8601)
     DateTime,
     /// Enum value
     Enum,
@@ -320,6 +334,7 @@ pub enum ParamType {
 
 impl ParamType {
     /// Generate an example value for this type
+    #[must_use]
     pub fn example_value(&self) -> String {
         match self {
             Self::String => "example_string".to_string(),
@@ -352,7 +367,8 @@ pub enum Workload {
 
 impl Workload {
     /// Get the workload category
-    pub fn category(&self) -> WorkloadCategory {
+    #[must_use]
+    pub const fn category(&self) -> WorkloadCategory {
         match self {
             Self::JsonBody(_) => WorkloadCategory::JsonBodies,
             Self::Multipart(_) => WorkloadCategory::Multipart,
@@ -363,6 +379,7 @@ impl Workload {
     }
 
     /// Get a human-readable name for this workload
+    #[must_use]
     pub fn name(&self) -> String {
         match self {
             Self::JsonBody(w) => format!("json-{}-depth{}-fields{}", w.size.as_str(), w.depth, w.field_count),
@@ -379,6 +396,7 @@ pub struct WorkloadPresets;
 
 impl WorkloadPresets {
     /// JSON body workloads: small, medium, large, very large
+    #[must_use]
     pub fn json_bodies() -> Vec<Workload> {
         vec![
             Workload::JsonBody(JsonBodyWorkload {
@@ -409,6 +427,7 @@ impl WorkloadPresets {
     }
 
     /// Multipart form workloads: small, medium, large files
+    #[must_use]
     pub fn multipart() -> Vec<Workload> {
         vec![
             Workload::Multipart(MultipartWorkload {
@@ -433,6 +452,7 @@ impl WorkloadPresets {
     }
 
     /// URL encoded form workloads: simple to complex
+    #[must_use]
     pub fn url_encoded() -> Vec<Workload> {
         vec![
             Workload::UrlEncoded(UrlEncodedWorkload {
@@ -454,6 +474,7 @@ impl WorkloadPresets {
     }
 
     /// Path parameter workloads: simple to complex
+    #[must_use]
     pub fn path_params() -> Vec<Workload> {
         vec![
             Workload::PathParam(PathParamWorkload {
@@ -478,6 +499,7 @@ impl WorkloadPresets {
     }
 
     /// Query parameter workloads: few to many parameters
+    #[must_use]
     pub fn query_params() -> Vec<Workload> {
         vec![
             Workload::QueryParam(QueryParamWorkload {
@@ -540,7 +562,8 @@ impl WorkloadPresets {
     }
 
     /// Get all workload presets for a category
-    pub fn for_category(category: WorkloadCategory) -> Vec<Workload> {
+    #[must_use]
+    pub fn for_category(category: &WorkloadCategory) -> Vec<Workload> {
         match category {
             WorkloadCategory::JsonBodies => Self::json_bodies(),
             WorkloadCategory::Multipart => Self::multipart(),

@@ -6,20 +6,20 @@
 use std::collections::HashMap;
 use tonic::metadata::{MetadataKey, MetadataMap, MetadataValue};
 
-/// Extract metadata from gRPC MetadataMap to a simple HashMap.
+/// Extract metadata from gRPC `MetadataMap` to a simple `HashMap`.
 ///
-/// This function converts gRPC metadata to a language-agnostic HashMap format
+/// This function converts gRPC metadata to a language-agnostic `HashMap` format
 /// that can be easily passed to language bindings. Only ASCII metadata is
 /// included; binary metadata is skipped with optional logging.
 ///
 /// # Arguments
 ///
-/// * `metadata` - The gRPC MetadataMap to extract from
+/// * `metadata` - The gRPC `MetadataMap` to extract from
 /// * `log_binary_skip` - Whether to log when binary metadata is skipped
 ///
 /// # Returns
 ///
-/// A HashMap containing all ASCII metadata key-value pairs
+/// A `HashMap` containing all ASCII metadata key-value pairs
 ///
 /// # Examples
 ///
@@ -55,19 +55,19 @@ pub fn extract_metadata_to_hashmap(metadata: &MetadataMap, log_binary_skip: bool
     map
 }
 
-/// Convert a HashMap to gRPC MetadataMap.
+/// Convert a `HashMap` to gRPC `MetadataMap`.
 ///
-/// This function converts a language-agnostic HashMap into a gRPC MetadataMap
+/// This function converts a language-agnostic `HashMap` into a gRPC `MetadataMap`
 /// that can be used in responses. All keys and values are validated and errors
 /// are returned if any are invalid.
 ///
 /// # Arguments
 ///
-/// * `map` - The HashMap to convert
+/// * `map` - The `HashMap` to convert
 ///
 /// # Returns
 ///
-/// A Result containing the MetadataMap or an error message
+/// A Result containing the `MetadataMap` or an error message
 ///
 /// # Errors
 ///
@@ -87,15 +87,17 @@ pub fn extract_metadata_to_hashmap(metadata: &MetadataMap, log_binary_skip: bool
 /// let metadata = hashmap_to_metadata(&map).unwrap();
 /// assert!(metadata.contains_key("content-type"));
 /// ```
-pub fn hashmap_to_metadata(map: &HashMap<String, String>) -> Result<MetadataMap, String> {
+pub fn hashmap_to_metadata<S: std::hash::BuildHasher>(
+    map: &std::collections::HashMap<String, String, S>,
+) -> Result<MetadataMap, String> {
     let mut metadata = MetadataMap::new();
 
     for (key, value) in map {
         let metadata_key = MetadataKey::from_bytes(key.as_bytes())
-            .map_err(|err| format!("Invalid metadata key '{}': {}", key, err))?;
+            .map_err(|err| format!("Invalid metadata key '{key}': {err}"))?;
 
         let metadata_value =
-            MetadataValue::try_from(value).map_err(|err| format!("Invalid metadata value for '{}': {}", key, err))?;
+            MetadataValue::try_from(value).map_err(|err| format!("Invalid metadata value for '{key}': {err}"))?;
 
         metadata.insert(metadata_key, metadata_value);
     }

@@ -33,7 +33,7 @@ pub trait ValueDependencyAdapter: Send + Sync {
 /// Adapter trait for factory dependencies across language bindings
 ///
 /// Language bindings should implement this trait to wrap their
-/// language-specific callable storage (e.g., Py<PyAny>, ThreadsafeFunction, etc.)
+/// language-specific callable storage (e.g., Py<PyAny>, `ThreadsafeFunction`, etc.)
 pub trait FactoryDependencyAdapter: Send + Sync {
     /// Get the dependency key
     fn key(&self) -> &str;

@@ -1,10 +1,10 @@
-//! OpenAPI 3.1 specification data structures
+//! `OpenAPI` 3.1 specification data structures
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-/// OpenAPI 3.1 Specification
+/// `OpenAPI` 3.1 Specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenApiSpec {
     pub openapi: String,

@@ -94,8 +94,28 @@ patch_cargo_toml() {
 	sed -i.bak 's/flate2 = { workspace = true[^}]*}/flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }/' "$file"
 	sed -i.bak 's/tower-http = { workspace = true[^}]*}/tower-http = { version = "0.6.8", features = ["fs", "trace", "compression-gzip", "compression-br", "compression-deflate", "cors", "request-id", "limit", "timeout", "set-header", "sensitive-headers"] }/' "$file"
 
-	# Remove [lints] section if it only contains workspace = true
-	sed -i.bak '/^\[lints\]/,/^$/{ /^workspace = true$/d; /^\[lints\]$/d; }' "$file"
+	# Replace [lints] workspace = true with actual lint configuration
+	python3 -c "
+import sys
+file_path = '$file'
+with open(file_path, 'r') as f:
+	content = f.read()
+
+# Replace the lints section
+lints_config = '[lints]\nworkspace = true'
+new_lints_config = '''[lints.rust]
+unexpected_cfgs = { level = \"allow\", check-cfg = ['cfg(tarpaulin_include)'] }
+
+[lints.clippy]
+all = { level = \"deny\", priority = 0 }
+pedantic = { level = \"deny\", priority = 0 }
+nursery = { level = \"deny\", priority = 0 }'''
+
+content = content.replace(lints_config, new_lints_config)
+
+with open(file_path, 'w') as f:
+	f.write(content)
+"
 
 	# Internal dependencies use path
 	# Handle both brace-style and dot-style workspace references

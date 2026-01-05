@@ -15,6 +15,9 @@ readme = "README.md"
 [lib]
 crate-type = ["cdylib"]
 
+[lints]
+workspace = true
+
 [features]
 default = ["di"]
 di = ["spikard/di", "spikard-http/di"]

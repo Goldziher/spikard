@@ -1,6 +1,6 @@
 //! Python bindings for spikard
 //!
-//! This crate provides Python bindings using PyO3
+//! This crate provides Python bindings using `PyO3`
 
 mod background;
 pub mod conversion;
@@ -242,7 +242,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
             match spikard_http::Route::from_metadata(r.metadata, &schema_registry) {
                 Ok(route) => Some((route, metadata_clone, r.handler)),
                 Err(e) => {
-                    eprintln!("[UNCONDITIONAL DEBUG] Failed to create route: {}", e);
+                    eprintln!("[UNCONDITIONAL DEBUG] Failed to create route: {e}");
                     None
                 }
             }
@@ -309,16 +309,17 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
         .collect();
 
     let mut axum_router = Server::with_handlers_and_metadata(config, handler_routes, route_metadata)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build router: {}", e)))?;
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build router: {e}")))?;
+
+    use axum::routing::get;
 
     let websocket_handlers = app.call_method0("get_websocket_handlers")?;
     let ws_dict = websocket_handlers.cast::<pyo3::types::PyDict>()?;
     for (path, factory) in ws_dict.iter() {
         let path_str: String = path.extract()?;
         let ws_state = crate::websocket::create_websocket_state(&factory)?;
-        eprintln!("[spikard-test] Registered WebSocket endpoint: {}", path_str);
+        eprintln!("[spikard-test] Registered WebSocket endpoint: {path_str}");
 
-        use axum::routing::get;
         axum_router = axum_router.route(
             &path_str,
             get(spikard_http::websocket_handler::<crate::websocket::PythonWebSocketHandler>).with_state(ws_state),
@@ -330,9 +331,8 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
     for (path, factory) in sse_dict.iter() {
         let path_str: String = path.extract()?;
         let sse_state = crate::sse::create_sse_state(&factory)?;
-        eprintln!("[spikard-test] Registered SSE endpoint: {}", path_str);
+        eprintln!("[spikard-test] Registered SSE endpoint: {path_str}");
 
-        use axum::routing::get;
         axum_router = axum_router.route(
             &path_str,
             get(spikard_http::sse_handler::<crate::sse::PythonSseEventProducer>).with_state(sse_state),
@@ -504,8 +504,7 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
                     }
                     _ => {
                         return Err(pyo3::exceptions::PyValueError::new_err(format!(
-                            "Invalid security scheme type: {}",
-                            scheme_type
+                            "Invalid security scheme type: {scheme_type}"
                         )));
                     }
                 };
@@ -600,7 +599,7 @@ fn build_dependency_container(
             let value_dep = crate::di::PythonValueDependency::new(key_str.clone(), py_value);
 
             container.register(key_str, Arc::new(value_dep)).map_err(|e| {
-                PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to register value dependency: {}", e))
+                PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to register value dependency: {e}"))
             })?;
         }
     }
@@ -699,7 +698,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     eprintln!("[spikard] Listening on http://{}:{}", config.host, config.port);
 
     let mut app_router = Server::with_handlers(config.clone(), routes).map_err(|e| {
-        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build Axum router: {}", e))
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build Axum router: {e}"))
     })?;
 
     let websocket_handlers = app.call_method0("get_websocket_handlers")?;
@@ -707,7 +706,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     for (path, factory) in ws_dict.iter() {
         let path_str: String = path.extract()?;
         let ws_state = crate::websocket::create_websocket_state(&factory)?;
-        eprintln!("[spikard] Registered WebSocket endpoint: {}", path_str);
+        eprintln!("[spikard] Registered WebSocket endpoint: {path_str}");
 
         use axum::routing::get;
         app_router = app_router.route(
@@ -721,7 +720,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     for (path, factory) in sse_dict.iter() {
         let path_str: String = path.extract()?;
         let sse_state = crate::sse::create_sse_state(&factory)?;
-        eprintln!("[spikard] Registered SSE endpoint: {}", path_str);
+        eprintln!("[spikard] Registered SSE endpoint: {path_str}");
 
         use axum::routing::get;
         app_router = app_router.route(
@@ -738,7 +737,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
             .build()
             .map_err(|e| {
                 pyo3::Python::attach(|_py| {
-                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to create Tokio runtime: {}", e))
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to create Tokio runtime: {e}"))
                 })
             })?
             .block_on(async {
@@ -746,8 +745,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
                 let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
                     pyo3::Python::attach(|_py| {
                         PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                            "Invalid socket address {}: {}",
-                            addr, e
+                            "Invalid socket address {addr}: {e}"
                         ))
                     })
                 })?;
@@ -761,7 +759,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
                     })
                 })?;
 
-                eprintln!("[spikard] Server listening on {}", socket_addr);
+                eprintln!("[spikard] Server listening on {socket_addr}");
 
                 let background_runtime = spikard_http::BackgroundRuntime::start(config.background_tasks.clone()).await;
                 crate::background::install_handle(background_runtime.handle());
@@ -773,7 +771,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
 
                 serve_result.map_err(|e| {
                     pyo3::Python::attach(|_py| {
-                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {}", e))
+                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {e}"))
                     })
                 })?;
 

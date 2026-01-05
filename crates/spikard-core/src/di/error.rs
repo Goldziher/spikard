@@ -33,7 +33,7 @@ pub enum DependencyError {
     /// ```
     #[error("Circular dependency detected: {cycle:?}")]
     CircularDependency {
-        /// The cycle of dependencies (e.g., ["A", "B", "C", "A"])
+        /// The cycle of dependencies (e.g., `["A", "B", "C", "A"]`)
         cycle: Vec<String>,
     },
 

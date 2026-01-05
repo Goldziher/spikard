@@ -129,13 +129,13 @@ impl Response {
         let mut cookie_value = format!("{}={}", key, value);
 
         if let Some(age) = max_age {
-            cookie_value.push_str(&format!("; Max-Age={}", age));
+            cookie_value.push_str(&format!("; Max-Age={age}"));
         }
         if let Some(d) = domain {
-            cookie_value.push_str(&format!("; Domain={}", d));
+            cookie_value.push_str(&format!("; Domain={d}"));
         }
         let cookie_path = path.unwrap_or_else(|| "/".to_string());
-        cookie_value.push_str(&format!("; Path={}", cookie_path));
+        cookie_value.push_str(&format!("; Path={cookie_path}"));
 
         if secure {
             cookie_value.push_str("; Secure");
@@ -144,7 +144,7 @@ impl Response {
             cookie_value.push_str("; HttpOnly");
         }
         if let Some(ss) = samesite {
-            cookie_value.push_str(&format!("; SameSite={}", ss));
+            cookie_value.push_str(&format!("; SameSite={ss}"));
         }
 
         let headers_dict = self.headers.bind(py);
@@ -246,7 +246,7 @@ impl Response {
 
         resp_builder
             .body(body)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to build response: {}", e)))
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to build response: {e}")))
     }
 }
 
@@ -299,7 +299,7 @@ impl StreamingResponse {
 impl StreamingResponse {
     pub fn to_handler_response(&self, py: Python<'_>) -> PyResult<HandlerResponse> {
         let status = StatusCode::from_u16(self.status_code)
-            .map_err(|e| PyValueError::new_err(format!("Invalid status code: {}", e)))?;
+            .map_err(|e| PyValueError::new_err(format!("Invalid status code: {e}")))?;
         let header_pairs = extract_header_pairs(py, &self.headers)?;
         let stream_object = Python::attach(|py| self.stream.clone_ref(py));
 

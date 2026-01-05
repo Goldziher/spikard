@@ -140,7 +140,7 @@ impl Dependency for PythonFactoryDependency {
                 }
             })
             .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
-                message: format!("Failed to call factory: {}", e),
+                message: format!("Failed to call factory: {e}"),
             })?;
 
             match coroutine_or_result {
@@ -154,19 +154,19 @@ impl Dependency for PythonFactoryDependency {
                             Ok(first_value_coro.unbind())
                         })
                         .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
-                            message: format!("Failed to call __anext__: {}", e),
+                            message: format!("Failed to call __anext__: {e}"),
                         })?;
 
                         let final_value =
                             Python::attach(|py| -> Result<Py<PyAny>, spikard_core::di::DependencyError> {
                                 let asyncio = py.import("asyncio").map_err(|e| {
                                     spikard_core::di::DependencyError::ResolutionFailed {
-                                        message: format!("Failed to import asyncio: {}", e),
+                                        message: format!("Failed to import asyncio: {e}"),
                                     }
                                 })?;
                                 let awaited = asyncio.call_method1("run", (anext_coro.bind(py),)).map_err(|e| {
                                     spikard_core::di::DependencyError::ResolutionFailed {
-                                        message: format!("Async generator __anext__ failed: {}", e),
+                                        message: format!("Async generator __anext__ failed: {e}"),
                                     }
                                 })?;
                                 Ok(awaited.unbind())
@@ -190,12 +190,12 @@ impl Dependency for PythonFactoryDependency {
                         let result = Python::attach(|py| -> Result<Py<PyAny>, spikard_core::di::DependencyError> {
                             let asyncio = py.import("asyncio").map_err(|e| {
                                 spikard_core::di::DependencyError::ResolutionFailed {
-                                    message: format!("Failed to import asyncio: {}", e),
+                                    message: format!("Failed to import asyncio: {e}"),
                                 }
                             })?;
                             let awaited = asyncio.call_method1("run", (coroutine_py.bind(py),)).map_err(|e| {
                                 spikard_core::di::DependencyError::ResolutionFailed {
-                                    message: format!("Async factory failed: {}", e),
+                                    message: format!("Async factory failed: {e}"),
                                 }
                             })?;
                             Ok(awaited.unbind())

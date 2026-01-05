@@ -31,6 +31,9 @@ impl StructuredError {
 }
 
 /// Catch panics and convert to a structured error so they don't cross FFI boundaries.
+///
+/// # Errors
+/// Returns a structured error if a panic occurs during function execution.
 pub fn shield_panic<T, F>(f: F) -> Result<T, StructuredError>
 where
     F: FnOnce() -> T + UnwindSafe,

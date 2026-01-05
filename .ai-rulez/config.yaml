@@ -6,7 +6,7 @@ name: spikard
 # Include shared ai-rulez configuration from git repository
 includes:
   - name: kreuzberg-shared-rules
-    source: https://github.com/kreuzberg-dev/ai-rulez.git
+    source: git@github.com:kreuzberg-dev/ai-rulez.git
     ref: main
     include:
       - rules
@@ -16,7 +16,7 @@ includes:
     merge_strategy: local-override
 
 presets:
-    - claude
-    - gemini
-    - codex
+  - claude
+  - gemini
+  - codex
 version: "3.0"

@@ -17,6 +17,9 @@ name = "_spikard"
 crate-type = ["cdylib", "rlib"]
 doctest = false
 
+[lints]
+workspace = true
+
 [dependencies]
 spikard-core = { path = "../spikard-core", features = ["di"] }
 spikard-http = { path = "../spikard-http", features = ["di"] }

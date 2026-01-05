@@ -23,9 +23,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// List available fixtures from testing_data
+    /// List available fixtures from `testing_data`
     ListFixtures {
-        /// Path to testing_data directory
+        /// Path to `testing_data` directory
         #[arg(short, long, default_value = "../../testing_data")]
         dir: PathBuf,
 
@@ -40,7 +40,7 @@ enum Commands {
     /// Run a benchmark
     Run {
         /// Framework to benchmark (e.g., spikard-python-validation, fastapi).
-        /// If not specified, framework will be auto-detected from app_dir.
+        /// If not specified, framework will be auto-detected from `app_dir`.
         #[arg(short, long)]
         framework: Option<String>,
 
@@ -52,7 +52,7 @@ enum Commands {
         #[arg(short, long, default_value = "default")]
         workload: String,
 
-        /// Workload category to test (json_bodies, multipart, url_encoded, query_params)
+        /// Workload category to test (`json_bodies`, multipart, `url_encoded`, `query_params`)
         #[arg(long)]
         category: Option<String>,
 
@@ -80,7 +80,7 @@ enum Commands {
         #[arg(long)]
         fixture: Option<PathBuf>,
 
-        /// Path to testing_data directory (for category-based benchmarks)
+        /// Path to `testing_data` directory (for category-based benchmarks)
         #[arg(long, default_value = "testing_data")]
         fixtures_dir: PathBuf,
     },
@@ -88,7 +88,7 @@ enum Commands {
     /// Run a streaming benchmark (WebSocket/SSE)
     Stream {
         /// Framework to benchmark (e.g., spikard-python-validation).
-        /// If not specified, framework will be auto-detected from app_dir.
+        /// If not specified, framework will be auto-detected from `app_dir`.
         #[arg(short, long)]
         framework: Option<String>,
 
@@ -96,7 +96,7 @@ enum Commands {
         #[arg(short, long)]
         app_dir: PathBuf,
 
-        /// Streaming fixture path (from testing_data/websockets or testing_data/sse)
+        /// Streaming fixture path (from `testing_data/websockets` or `testing_data/sse`)
         #[arg(long)]
         fixture: PathBuf,
 
@@ -124,7 +124,7 @@ enum Commands {
     /// Profile mode - Deep analysis of a single framework with profiling
     Profile {
         /// Framework to profile (e.g., spikard-python-validation, spikard-rust-validation).
-        /// If not specified, framework will be auto-detected from app_dir.
+        /// If not specified, framework will be auto-detected from `app_dir`.
         #[arg(short, long)]
         framework: Option<String>,
 
@@ -152,7 +152,7 @@ enum Commands {
         #[arg(long)]
         profiler: Option<String>,
 
-        /// Baseline ProfileResult JSON to compare against
+        /// Baseline `ProfileResult` JSON to compare against
         #[arg(long)]
         baseline: Option<PathBuf>,
 
@@ -160,7 +160,7 @@ enum Commands {
         #[arg(long)]
         variant: Option<String>,
 
-        /// Output file for ProfileResult JSON
+        /// Output file for `ProfileResult` JSON
         #[arg(short, long)]
         output: Option<PathBuf>,
     },
@@ -172,7 +172,7 @@ enum Commands {
     /// effect sizes (Cohen's d) to determine which framework performs best.
     ///
     /// Examples:
-    ///   # Compare Spikard Python binding against FastAPI and Flask
+    ///   # Compare Spikard Python binding against `FastAPI` and Flask
     ///   benchmark-harness compare --frameworks spikard-python-validation,fastapi,flask
     ///
     ///   # Compare with custom duration and concurrency
@@ -286,54 +286,317 @@ enum Commands {
     },
 }
 
+/// Handle list-fixtures command
+fn handle_list_fixtures(dir: &std::path::Path, category: Option<String>) -> Result<()> {
+    println!("Loading fixtures from {}...", dir.display());
+
+    let mut manager = FixtureManager::new();
+    manager.load_from_testing_data(dir)?;
+
+    let fixtures = category.map_or_else(|| manager.all().iter().collect(), |cat| manager.by_category(&cat));
+
+    println!("\nFound {} fixture(s):\n", fixtures.len());
+
+    for fixture in fixtures {
+        println!("  [{}] {} - {}", fixture.category(), fixture.name, fixture.description);
+        println!("    {} {}", fixture.handler.method, fixture.handler.route);
+        println!();
+    }
+
+    Ok(())
+}
+
+/// Handle check-tools command
+fn handle_check_tools() {
+    println!("Checking for load generators...\n");
+
+    let oha = which::which("oha").is_ok();
+    let bombardier = which::which("bombardier").is_ok();
+
+    println!("  oha:        {}", if oha { "✓ installed" } else { "✗ not found" });
+    println!(
+        "  bombardier: {}",
+        if bombardier { "✓ installed" } else { "✗ not found" }
+    );
+
+    if !oha && !bombardier {
+        println!("\n⚠ No load generators found!");
+        println!("Install oha: cargo install oha");
+        println!("Install bombardier: go install github.com/codesenberg/bombardier@latest");
+        std::process::exit(1);
+    }
+
+    println!("\n✓ All tools available");
+}
+
+/// Handle stream command
+#[allow(clippy::too_many_lines, clippy::too_many_arguments)]
+async fn handle_stream(
+    framework: Option<String>,
+    app_dir: PathBuf,
+    fixture: PathBuf,
+    duration: u64,
+    connections: usize,
+    warmup: u64,
+    variant: Option<String>,
+    output: Option<PathBuf>,
+) -> Result<()> {
+    let framework_name = if let Some(fw) = framework {
+        fw
+    } else {
+        println!("🔍 Auto-detecting framework in {}...", app_dir.display());
+        let detected = detect_framework(&app_dir)?;
+        println!("✓ Detected framework: {}", detected.name);
+        detected.name
+    };
+
+    let streaming_fixture = StreamingFixture::from_file(&fixture)?;
+    let config = StreamingRunnerConfig {
+        framework: framework_name,
+        app_dir,
+        duration_secs: duration,
+        connections,
+        warmup_secs: warmup,
+        variant,
+    };
+
+    let runner = StreamingBenchmarkRunner::new(config);
+    let result = runner.run(&streaming_fixture).await?;
+
+    println!("{}\nStreaming Benchmark\n{}", "=".repeat(60), "=".repeat(60));
+    println!("Framework: {}", result.framework);
+    println!("Protocol:  {}", result.protocol);
+    println!("Channel:   {}", result.channel);
+    println!("Duration:  {}s", result.duration_secs);
+    println!("Connections: {}", result.connections);
+
+    if result.success {
+        println!("\n--- Streaming Metrics ---");
+        println!("  Connections established: {}", result.metrics.connections_established);
+        println!("  Messages sent:           {}", result.metrics.messages_sent);
+        println!("  Responses received:      {}", result.metrics.responses_received);
+        println!("  Events received:         {}", result.metrics.events_received);
+        if let Some(latency) = &result.metrics.latency {
+            println!("  Avg round-trip (ms):     {:.2}", latency.average_ms);
+            println!("  Max round-trip (ms):     {:.2}", latency.max_ms);
+            println!("  Latency samples:         {}", latency.samples);
+        }
+        println!("  Errors:                  {}", result.metrics.errors);
+
+        println!("\n--- Resources ---");
+        println!("  Avg Memory:  {:.2} MB", result.resources.avg_memory_mb);
+        println!("  Peak Memory: {:.2} MB", result.resources.peak_memory_mb);
+        println!("  Avg CPU:     {:.1}%", result.resources.avg_cpu_percent);
+        println!("  Peak CPU:    {:.1}%", result.resources.peak_cpu_percent);
+    } else if let Some(err) = &result.error {
+        println!("\n❌ Streaming benchmark failed: {err}");
+    }
+
+    if let Some(output_path) = output {
+        let json = serde_json::to_string_pretty(&result)?;
+        std::fs::write(&output_path, json)?;
+        println!("\nResults written to: {}", output_path.display());
+    }
+
+    Ok(())
+}
+
+/// Handle profile command
+#[allow(clippy::too_many_lines, clippy::too_many_arguments)]
+async fn handle_profile(
+    framework: Option<String>,
+    app_dir: PathBuf,
+    suite: String,
+    duration: u64,
+    concurrency: usize,
+    warmup: u64,
+    profiler: Option<String>,
+    baseline: Option<PathBuf>,
+    variant: Option<String>,
+    output: Option<PathBuf>,
+) -> Result<()> {
+    let framework_name = if let Some(fw) = framework {
+        fw
+    } else {
+        println!("🔍 Auto-detecting framework in {}...", app_dir.display());
+        let detected = detect_framework(&app_dir)?;
+        println!("✓ Detected framework: {}", detected.name);
+        detected.name
+    };
+
+    let config = ProfileRunnerConfig {
+        framework: framework_name,
+        app_dir,
+        suite_name: suite,
+        duration_secs: duration,
+        concurrency,
+        warmup_secs: warmup,
+        profiler,
+        baseline_path: baseline,
+        variant,
+        output_dir: output
+            .as_ref()
+            .and_then(|p| p.parent().map(std::path::Path::to_path_buf)),
+    };
+
+    let runner = ProfileRunner::new(config)?;
+    let result = runner.run().await?;
+
+    println!("\n{}", "=".repeat(70));
+    println!(
+        "Profile Results: {} - {}",
+        result.framework.name, result.framework.runtime
+    );
+    println!("{}", "=".repeat(70));
+    println!("\nSuites: {}", result.suites.len());
+    println!("Total workloads: {}", result.summary.total_workloads);
+    println!("Total requests: {}", result.summary.total_requests);
+    println!(
+        "Overall success rate: {:.2}%",
+        result.summary.overall_success_rate * 100.0
+    );
+    println!("Average RPS: {:.2}", result.summary.avg_requests_per_sec);
+
+    println!("\n--- Category Breakdown ---");
+    for cat in &result.summary.category_breakdown {
+        println!(
+            "  {}: {} workloads, {:.2} RPS avg, {:.2}ms latency avg",
+            cat.category, cat.workload_count, cat.avg_requests_per_sec, cat.avg_latency_ms
+        );
+    }
+
+    if let Some(comparison) = &result.comparison {
+        println!("\n--- Baseline Comparison ---");
+        println!(
+            "  vs {}: {:.2}x",
+            comparison.baseline_framework, comparison.overall_ratio
+        );
+    }
+
+    println!("\n{}", "=".repeat(70));
+
+    if let Some(output_path) = output {
+        let json = serde_json::to_string_pretty(&result)?;
+        std::fs::write(&output_path, json)?;
+        println!("\n✓ Results written to: {}", output_path.display());
+    }
+
+    Ok(())
+}
+
+/// Handle run command
+#[allow(clippy::too_many_lines, clippy::too_many_arguments)]
+async fn handle_run(
+    framework: Option<String>,
+    app_dir: PathBuf,
+    workload: String,
+    category: Option<String>,
+    variant: Option<String>,
+    duration: u64,
+    concurrency: usize,
+    warmup: u64,
+    output: Option<PathBuf>,
+    fixture: Option<PathBuf>,
+    fixtures_dir: PathBuf,
+) -> Result<()> {
+    let framework_name = if let Some(fw) = framework {
+        fw
+    } else {
+        println!("🔍 Auto-detecting framework in {}...", app_dir.display());
+        let detected = detect_framework(&app_dir)?;
+        println!("✓ Detected framework: {}", detected.name);
+        detected.name
+    };
+
+    let fixture_obj = if let Some(path) = fixture {
+        Some(Fixture::from_file(path)?)
+    } else if let Some(cat) = &category {
+        let mut manager = FixtureManager::new();
+        manager.load_from_testing_data(&fixtures_dir)?;
+        let fixtures = manager.by_category(cat);
+        if fixtures.is_empty() {
+            eprintln!("No fixtures found for category: {cat}");
+            std::process::exit(1);
+        }
+        Some(fixtures[0].clone())
+    } else {
+        None
+    };
+
+    let config = RunnerConfig {
+        framework: framework_name,
+        app_dir,
+        workload_name: workload,
+        duration_secs: duration,
+        concurrency,
+        warmup_secs: warmup,
+        variant,
+    };
+
+    let runner = BenchmarkRunner::new(config)?;
+    let result = runner.run(fixture_obj.as_ref()).await?;
+
+    println!("\n{}", "=".repeat(60));
+    println!("Benchmark Results");
+    println!("{}", "=".repeat(60));
+    println!("\nFramework: {}", result.framework);
+    println!("Workload:  {}", result.workload);
+    println!("Duration:  {}s", result.duration_secs);
+    println!("Concurrency: {}", result.concurrency);
+
+    if result.success {
+        println!("\n--- Throughput ---");
+        println!("  Total requests:  {}", result.throughput.total_requests);
+        println!("  Requests/sec:    {:.2}", result.throughput.requests_per_sec);
+        println!(
+            "  Bytes/sec:       {:.2} MB",
+            result.throughput.bytes_per_sec / 1024.0 / 1024.0
+        );
+        println!("  Success rate:    {:.2}%", result.throughput.success_rate * 100.0);
+
+        println!("\n--- Latency (ms) ---");
+        println!("  Mean:    {:.2}", result.latency.mean_ms);
+        println!("  p50:     {:.2}", result.latency.p50_ms);
+        println!("  p90:     {:.2}", result.latency.p90_ms);
+        println!("  p95:     {:.2}", result.latency.p95_ms);
+        println!("  p99:     {:.2}", result.latency.p99_ms);
+        println!("  p99.9:   {:.2}", result.latency.p999_ms);
+        println!("  Max:     {:.2}", result.latency.max_ms);
+
+        println!("\n--- Resources ---");
+        println!("  Avg Memory:  {:.2} MB", result.resources.avg_memory_mb);
+        println!("  Peak Memory: {:.2} MB", result.resources.peak_memory_mb);
+        println!("  p95 Memory:  {:.2} MB", result.resources.p95_memory_mb);
+        println!("  Avg CPU:     {:.1}%", result.resources.avg_cpu_percent);
+        println!("  Peak CPU:    {:.1}%", result.resources.peak_cpu_percent);
+    } else {
+        println!(
+            "\n❌ Benchmark failed: {}",
+            result.error.as_deref().unwrap_or("Unknown error")
+        );
+    }
+
+    println!("\n{}", "=".repeat(60));
+
+    if let Some(output_path) = output {
+        let json = serde_json::to_string_pretty(&result)?;
+        std::fs::write(&output_path, json)?;
+        println!("\nResults written to: {}", output_path.display());
+    }
+
+    Ok(())
+}
+
 #[tokio::main]
+#[allow(clippy::too_many_lines)]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::ListFixtures { dir, category } => {
-            println!("Loading fixtures from {}...", dir.display());
-
-            let mut manager = FixtureManager::new();
-            manager.load_from_testing_data(&dir)?;
-
-            let fixtures = if let Some(cat) = category {
-                manager.by_category(&cat)
-            } else {
-                manager.all().iter().collect()
-            };
-
-            println!("\nFound {} fixture(s):\n", fixtures.len());
-
-            for fixture in fixtures {
-                println!("  [{}] {} - {}", fixture.category(), fixture.name, fixture.description);
-                println!("    {} {}", fixture.handler.method, fixture.handler.route);
-                println!();
-            }
-
-            Ok(())
-        }
+        Commands::ListFixtures { dir, category } => handle_list_fixtures(&dir, category),
 
         Commands::CheckTools => {
-            println!("Checking for load generators...\n");
-
-            let oha = which::which("oha").is_ok();
-            let bombardier = which::which("bombardier").is_ok();
-
-            println!("  oha:        {}", if oha { "✓ installed" } else { "✗ not found" });
-            println!(
-                "  bombardier: {}",
-                if bombardier { "✓ installed" } else { "✗ not found" }
-            );
-
-            if !oha && !bombardier {
-                println!("\n⚠ No load generators found!");
-                println!("Install oha: cargo install oha");
-                println!("Install bombardier: go install github.com/codesenberg/bombardier@latest");
-                std::process::exit(1);
-            }
-
-            println!("\n✓ All tools available");
+            handle_check_tools();
             Ok(())
         }
 
@@ -350,93 +613,20 @@ async fn main() -> Result<()> {
             fixture,
             fixtures_dir,
         } => {
-            let framework_name = match framework {
-                Some(fw) => fw,
-                None => {
-                    println!("🔍 Auto-detecting framework in {}...", app_dir.display());
-                    let detected = detect_framework(&app_dir)?;
-                    println!("✓ Detected framework: {}", detected.name);
-                    detected.name
-                }
-            };
-
-            let fixture_obj = if let Some(path) = fixture {
-                Some(Fixture::from_file(path)?)
-            } else if let Some(cat) = &category {
-                let mut manager = FixtureManager::new();
-                manager.load_from_testing_data(&fixtures_dir)?;
-                let fixtures = manager.by_category(cat);
-                if fixtures.is_empty() {
-                    eprintln!("No fixtures found for category: {}", cat);
-                    std::process::exit(1);
-                }
-                Some(fixtures[0].clone())
-            } else {
-                None
-            };
-
-            let config = RunnerConfig {
-                framework: framework_name,
+            handle_run(
+                framework,
                 app_dir,
-                workload_name: workload,
-                duration_secs: duration,
-                concurrency,
-                warmup_secs: warmup,
+                workload,
+                category,
                 variant,
-            };
-
-            let runner = BenchmarkRunner::new(config)?;
-            let result = runner.run(fixture_obj.as_ref()).await?;
-
-            println!("\n{}", "=".repeat(60));
-            println!("Benchmark Results");
-            println!("{}", "=".repeat(60));
-            println!("\nFramework: {}", result.framework);
-            println!("Workload:  {}", result.workload);
-            println!("Duration:  {}s", result.duration_secs);
-            println!("Concurrency: {}", result.concurrency);
-
-            if result.success {
-                println!("\n--- Throughput ---");
-                println!("  Total requests:  {}", result.throughput.total_requests);
-                println!("  Requests/sec:    {:.2}", result.throughput.requests_per_sec);
-                println!(
-                    "  Bytes/sec:       {:.2} MB",
-                    result.throughput.bytes_per_sec / 1024.0 / 1024.0
-                );
-                println!("  Success rate:    {:.2}%", result.throughput.success_rate * 100.0);
-
-                println!("\n--- Latency (ms) ---");
-                println!("  Mean:    {:.2}", result.latency.mean_ms);
-                println!("  p50:     {:.2}", result.latency.p50_ms);
-                println!("  p90:     {:.2}", result.latency.p90_ms);
-                println!("  p95:     {:.2}", result.latency.p95_ms);
-                println!("  p99:     {:.2}", result.latency.p99_ms);
-                println!("  p99.9:   {:.2}", result.latency.p999_ms);
-                println!("  Max:     {:.2}", result.latency.max_ms);
-
-                println!("\n--- Resources ---");
-                println!("  Avg Memory:  {:.2} MB", result.resources.avg_memory_mb);
-                println!("  Peak Memory: {:.2} MB", result.resources.peak_memory_mb);
-                println!("  p95 Memory:  {:.2} MB", result.resources.p95_memory_mb);
-                println!("  Avg CPU:     {:.1}%", result.resources.avg_cpu_percent);
-                println!("  Peak CPU:    {:.1}%", result.resources.peak_cpu_percent);
-            } else {
-                println!(
-                    "\n❌ Benchmark failed: {}",
-                    result.error.as_deref().unwrap_or("Unknown error")
-                );
-            }
-
-            println!("\n{}", "=".repeat(60));
-
-            if let Some(output_path) = output {
-                let json = serde_json::to_string_pretty(&result)?;
-                std::fs::write(&output_path, json)?;
-                println!("\nResults written to: {}", output_path.display());
-            }
-
-            Ok(())
+                duration,
+                concurrency,
+                warmup,
+                output,
+                fixture,
+                fixtures_dir,
+            )
+            .await
         }
 
         Commands::Stream {
@@ -449,65 +639,17 @@ async fn main() -> Result<()> {
             variant,
             output,
         } => {
-            let framework_name = match framework {
-                Some(fw) => fw,
-                None => {
-                    println!("🔍 Auto-detecting framework in {}...", app_dir.display());
-                    let detected = detect_framework(&app_dir)?;
-                    println!("✓ Detected framework: {}", detected.name);
-                    detected.name
-                }
-            };
-
-            let streaming_fixture = StreamingFixture::from_file(&fixture)?;
-            let config = StreamingRunnerConfig {
-                framework: framework_name,
+            handle_stream(
+                framework,
                 app_dir,
-                duration_secs: duration,
+                fixture,
+                duration,
                 connections,
-                warmup_secs: warmup,
+                warmup,
                 variant,
-            };
-
-            let runner = StreamingBenchmarkRunner::new(config);
-            let result = runner.run(&streaming_fixture).await?;
-
-            println!("{}\nStreaming Benchmark\n{}", "=".repeat(60), "=".repeat(60));
-            println!("Framework: {}", result.framework);
-            println!("Protocol:  {}", result.protocol);
-            println!("Channel:   {}", result.channel);
-            println!("Duration:  {}s", result.duration_secs);
-            println!("Connections: {}", result.connections);
-
-            if result.success {
-                println!("\n--- Streaming Metrics ---");
-                println!("  Connections established: {}", result.metrics.connections_established);
-                println!("  Messages sent:           {}", result.metrics.messages_sent);
-                println!("  Responses received:      {}", result.metrics.responses_received);
-                println!("  Events received:         {}", result.metrics.events_received);
-                if let Some(latency) = &result.metrics.latency {
-                    println!("  Avg round-trip (ms):     {:.2}", latency.average_ms);
-                    println!("  Max round-trip (ms):     {:.2}", latency.max_ms);
-                    println!("  Latency samples:         {}", latency.samples);
-                }
-                println!("  Errors:                  {}", result.metrics.errors);
-
-                println!("\n--- Resources ---");
-                println!("  Avg Memory:  {:.2} MB", result.resources.avg_memory_mb);
-                println!("  Peak Memory: {:.2} MB", result.resources.peak_memory_mb);
-                println!("  Avg CPU:     {:.1}%", result.resources.avg_cpu_percent);
-                println!("  Peak CPU:    {:.1}%", result.resources.peak_cpu_percent);
-            } else if let Some(err) = &result.error {
-                println!("\n❌ Streaming benchmark failed: {}", err);
-            }
-
-            if let Some(output_path) = output {
-                let json = serde_json::to_string_pretty(&result)?;
-                std::fs::write(&output_path, json)?;
-                println!("\nResults written to: {}", output_path.display());
-            }
-
-            Ok(())
+                output,
+            )
+            .await
         }
 
         Commands::Profile {
@@ -522,72 +664,19 @@ async fn main() -> Result<()> {
             variant,
             output,
         } => {
-            let framework_name = match framework {
-                Some(fw) => fw,
-                None => {
-                    println!("🔍 Auto-detecting framework in {}...", app_dir.display());
-                    let detected = detect_framework(&app_dir)?;
-                    println!("✓ Detected framework: {}", detected.name);
-                    detected.name
-                }
-            };
-
-            let config = ProfileRunnerConfig {
-                framework: framework_name,
+            handle_profile(
+                framework,
                 app_dir,
-                suite_name: suite,
-                duration_secs: duration,
+                suite,
+                duration,
                 concurrency,
-                warmup_secs: warmup,
+                warmup,
                 profiler,
-                baseline_path: baseline,
+                baseline,
                 variant,
-                output_dir: output.as_ref().and_then(|p| p.parent().map(|d| d.to_path_buf())),
-            };
-
-            let runner = ProfileRunner::new(config)?;
-            let result = runner.run().await?;
-
-            println!("\n{}", "=".repeat(70));
-            println!(
-                "Profile Results: {} - {}",
-                result.framework.name, result.framework.runtime
-            );
-            println!("{}", "=".repeat(70));
-            println!("\nSuites: {}", result.suites.len());
-            println!("Total workloads: {}", result.summary.total_workloads);
-            println!("Total requests: {}", result.summary.total_requests);
-            println!(
-                "Overall success rate: {:.2}%",
-                result.summary.overall_success_rate * 100.0
-            );
-            println!("Average RPS: {:.2}", result.summary.avg_requests_per_sec);
-
-            println!("\n--- Category Breakdown ---");
-            for cat in &result.summary.category_breakdown {
-                println!(
-                    "  {}: {} workloads, {:.2} RPS avg, {:.2}ms latency avg",
-                    cat.category, cat.workload_count, cat.avg_requests_per_sec, cat.avg_latency_ms
-                );
-            }
-
-            if let Some(comparison) = &result.comparison {
-                println!("\n--- Baseline Comparison ---");
-                println!(
-                    "  vs {}: {:.2}x",
-                    comparison.baseline_framework, comparison.overall_ratio
-                );
-            }
-
-            println!("\n{}", "=".repeat(70));
-
-            if let Some(output_path) = output {
-                let json = serde_json::to_string_pretty(&result)?;
-                std::fs::write(&output_path, json)?;
-                println!("\n✓ Results written to: {}", output_path.display());
-            }
-
-            Ok(())
+                output,
+            )
+            .await
         }
 
         Commands::Compare {
@@ -611,7 +700,7 @@ async fn main() -> Result<()> {
 
             if !(0.0..=1.0).contains(&significance) {
                 eprintln!("❌ Error: Significance threshold must be between 0.0 and 1.0");
-                eprintln!("   Provided: {}", significance);
+                eprintln!("   Provided: {significance}");
                 std::process::exit(1);
             }
 
@@ -679,7 +768,7 @@ async fn main() -> Result<()> {
 
             if stdout {
                 println!();
-                println!("{}", json);
+                println!("{json}");
             }
 
             Ok(())

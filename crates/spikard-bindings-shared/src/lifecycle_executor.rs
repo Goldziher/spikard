@@ -10,7 +10,7 @@
 //! `LanguageLifecycleHook` to provide language-specific hook invocation, while
 //! `LifecycleExecutor` handles the common logic:
 //!
-//! - Hook result type handling (Continue vs ShortCircuit)
+//! - Hook result type handling (Continue vs `ShortCircuit`)
 //! - Response/Request building from hook results
 //! - Error handling and conversion
 //!
@@ -73,7 +73,8 @@ pub struct RequestModifications {
 
 impl HookResultData {
     /// Create a Continue result (pass through)
-    pub fn continue_execution() -> Self {
+    #[must_use] 
+    pub const fn continue_execution() -> Self {
         Self {
             continue_execution: true,
             status_code: None,
@@ -84,7 +85,8 @@ impl HookResultData {
     }
 
     /// Create a short-circuit response result
-    pub fn short_circuit(status_code: u16, body: Vec<u8>, headers: Option<HashMap<String, String>>) -> Self {
+    #[must_use] 
+    pub const fn short_circuit(status_code: u16, body: Vec<u8>, headers: Option<HashMap<String, String>>) -> Self {
         Self {
             continue_execution: false,
             status_code: Some(status_code),
@@ -95,7 +97,8 @@ impl HookResultData {
     }
 
     /// Create a request modification result
-    pub fn modify_request(modifications: RequestModifications) -> Self {
+    #[must_use] 
+    pub const fn modify_request(modifications: RequestModifications) -> Self {
         Self {
             continue_execution: true,
             status_code: None,
@@ -117,6 +120,10 @@ pub trait LanguageLifecycleHook: Send + Sync {
     /// Prepare hook data from the incoming request/response
     ///
     /// This should convert axum HTTP types to language-specific representations.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if hook data preparation fails.
     fn prepare_hook_data(&self, req: &Request<Body>) -> Result<Self::HookData, String>;
 
     /// Invoke the language hook and return normalized result data
@@ -139,13 +146,17 @@ pub struct LifecycleExecutor<L: LanguageLifecycleHook> {
 
 impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
     /// Create a new executor for the given hook
-    pub fn new(hook: Arc<L>) -> Self {
+    pub const fn new(hook: Arc<L>) -> Self {
         Self { hook }
     }
 
     /// Execute a request hook, handling Continue/ShortCircuit semantics
     ///
     /// Returns either the modified request or a short-circuit response.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if hook execution or modification fails.
     pub async fn execute_request_hook(
         &self,
         req: Request<Body>,
@@ -154,12 +165,12 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
         let result = self.hook.invoke_hook(hook_data).await?;
 
         if !result.continue_execution {
-            let response = self.build_response_from_hook_result(&result)?;
+            let response = Self::build_response_from_hook_result(&result)?;
             return Ok(Err(response));
         }
 
         if let Some(modifications) = result.request_modifications {
-            let modified_req = self.apply_request_modifications(req, modifications)?;
+            let modified_req = Self::apply_request_modifications(req, modifications)?;
             Ok(Ok(modified_req))
         } else {
             Ok(Ok(req))
@@ -170,6 +181,11 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
     ///
     /// Response hooks can only continue or modify the response,
     /// never short-circuit.
+    /// Execute the lifecycle hook on an outgoing response
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if hook execution or response building fails.
     pub async fn execute_response_hook(&self, resp: Response<Body>) -> Result<Response<Body>, String> {
         let (parts, body) = resp.into_parts();
         let body_bytes = extract_body(body).await?;
@@ -178,7 +194,7 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
             .method("GET")
             .uri("/")
             .body(Body::empty())
-            .map_err(|e| format!("Failed to build dummy request: {}", e))?;
+            .map_err(|e| format!("Failed to build dummy request: {e}"))?;
 
         let hook_data = self.hook.prepare_hook_data(&dummy_req)?;
         let result = self.hook.invoke_hook(hook_data).await?;
@@ -198,7 +214,7 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
                 }
             }
 
-            for (name, value) in parts.headers.iter() {
+            for (name, value) in &parts.headers {
                 let key_str = name.as_str().to_lowercase();
                 if !header_mod_keys.contains(&key_str) {
                     builder = builder.header(name, value);
@@ -208,7 +224,7 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
             let body = modifications.body.unwrap_or(body_bytes);
             return builder
                 .body(Body::from(body))
-                .map_err(|e| format!("Failed to build modified response: {}", e));
+                .map_err(|e| format!("Failed to build modified response: {e}"));
         }
 
         let mut builder = Response::builder().status(parts.status);
@@ -219,14 +235,14 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
         }
         builder
             .body(Body::from(body_bytes))
-            .map_err(|e| format!("Failed to rebuild response: {}", e))
+            .map_err(|e| format!("Failed to rebuild response: {e}"))
     }
 
     /// Build an axum Response from hook result data
-    fn build_response_from_hook_result(&self, result: &HookResultData) -> Result<Response<Body>, String> {
+    fn build_response_from_hook_result(result: &HookResultData) -> Result<Response<Body>, String> {
         let status_code = result.status_code.unwrap_or(200);
         let status =
-            StatusCode::from_u16(status_code).map_err(|e| format!("Invalid status code {}: {}", status_code, e))?;
+            StatusCode::from_u16(status_code).map_err(|e| format!("Invalid status code {status_code}: {e}"))?;
 
         let mut builder = Response::builder().status(status);
 
@@ -238,8 +254,7 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
 
         if !builder
             .headers_ref()
-            .map(|h| h.contains_key("content-type"))
-            .unwrap_or(false)
+            .is_some_and(|h| h.contains_key("content-type"))
         {
             builder = builder.header("content-type", "application/json");
         }
@@ -248,12 +263,11 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
 
         builder
             .body(Body::from(body))
-            .map_err(|e| format!("Failed to build response: {}", e))
+            .map_err(|e| format!("Failed to build response: {e}"))
     }
 
     /// Apply request modifications to a request
     fn apply_request_modifications(
-        &self,
         req: Request<Body>,
         mods: RequestModifications,
     ) -> Result<Request<Body>, String> {
@@ -262,29 +276,25 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
         if let Some(method) = &mods.method {
             parts.method = method
                 .parse()
-                .map_err(|e| format!("Invalid method '{}': {}", method, e))?;
+                .map_err(|e| format!("Invalid method '{method}': {e}"))?;
         }
 
         if let Some(path) = &mods.path {
-            parts.uri = path.parse().map_err(|e| format!("Invalid path '{}': {}", path, e))?;
+            parts.uri = path.parse().map_err(|e| format!("Invalid path '{path}': {e}"))?;
         }
 
         if let Some(new_headers) = &mods.headers {
             for (key, value) in new_headers {
                 let header_name: http::header::HeaderName =
-                    key.parse().map_err(|_| format!("Invalid header name: {}", key))?;
+                    key.parse().map_err(|_| format!("Invalid header name: {key}"))?;
                 let header_value: http::header::HeaderValue = value
                     .parse()
-                    .map_err(|_| format!("Invalid header value for {}: {}", key, value))?;
+                    .map_err(|_| format!("Invalid header value for {key}: {value}"))?;
                 parts.headers.insert(header_name, header_value);
             }
         }
 
-        let body = if let Some(new_body) = mods.body {
-            Body::from(new_body)
-        } else {
-            body
-        };
+        let body = mods.body.map_or(body, Body::from);
 
         Ok(Request::from_parts(parts, body))
     }
@@ -293,13 +303,17 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
 /// Extract body bytes from an axum Body
 ///
 /// This is a helper used by lifecycle executors to read response bodies.
+///
+/// # Errors
+///
+/// Returns an error if body collection fails.
 pub async fn extract_body(body: Body) -> Result<Vec<u8>, String> {
     use http_body_util::BodyExt;
 
     let bytes = body
         .collect()
         .await
-        .map_err(|e| format!("Failed to read body: {}", e))?
+        .map_err(|e| format!("Failed to read body: {e}"))?
         .to_bytes();
     Ok(bytes.to_vec())
 }

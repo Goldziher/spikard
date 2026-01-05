@@ -28,10 +28,11 @@ pub struct PythonAppMetrics {
     pub ffi_overhead_ms: Option<f64>,
 }
 
+#[must_use]
 pub fn collect_app_metrics(pid: u32) -> Option<PythonAppMetrics> {
     let metrics_path = std::env::var("SPIKARD_METRICS_FILE")
         .ok()
-        .unwrap_or_else(|| format!("/tmp/python-metrics-{}.json", pid));
+        .unwrap_or_else(|| format!("/tmp/python-metrics-{pid}.json"));
 
     #[cfg(unix)]
     {
@@ -52,24 +53,24 @@ pub fn collect_app_metrics(pid: u32) -> Option<PythonAppMetrics> {
         }
     }
 
-    match std::fs::read_to_string(&metrics_path) {
-        Ok(content) => match serde_json::from_str::<PythonAppMetrics>(&content) {
+    if let Ok(content) = std::fs::read_to_string(&metrics_path) {
+        match serde_json::from_str::<PythonAppMetrics>(&content) {
             Ok(metrics) => {
-                println!("  ✓ Loaded application metrics from {}", metrics_path);
+                println!("  ✓ Loaded application metrics from {metrics_path}");
                 Some(metrics)
             }
             Err(e) => {
-                eprintln!("  ⚠ Failed to parse metrics file: {}", e);
+                eprintln!("  ⚠ Failed to parse metrics file: {e}");
                 None
             }
-        },
-        Err(_) => {
-            eprintln!("  ⚠ Python metrics file not found or unreadable at {}", metrics_path);
-            None
         }
+    } else {
+        eprintln!("  ⚠ Python metrics file not found or unreadable at {metrics_path}");
+        None
     }
 }
 
+#[must_use]
 pub fn wait_for_profile_output(path: &str) -> Option<String> {
     let start = std::time::Instant::now();
     while start.elapsed() < Duration::from_secs(30) {
@@ -78,7 +79,7 @@ pub fn wait_for_profile_output(path: &str) -> Option<String> {
         }
         std::thread::sleep(Duration::from_millis(100));
     }
-    eprintln!("  ⚠ Python profile output not found at {}", path);
+    eprintln!("  ⚠ Python profile output not found at {path}");
     None
 }
 
@@ -112,7 +113,7 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64
         cmd.stdout(Stdio::null()).stderr(Stdio::from(stderr_file));
         let child = cmd
             .spawn()
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to start py-spy profiler for pid {}: {}", pid, e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to start py-spy profiler for pid {pid}: {e}")))?;
         (Some(child), Some(stderr_path))
     } else {
         (None, None)
@@ -127,13 +128,14 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64
 
 impl PythonProfiler {
     /// Get the output path for profiler data
-    pub fn output_path(&self) -> Option<&PathBuf> {
+    #[must_use]
+    pub const fn output_path(&self) -> Option<&PathBuf> {
         self.output_path.as_ref()
     }
 
     /// Stop the profiler and collect final metrics
     pub fn stop(self) -> ProfilingData {
-        let PythonProfiler {
+        let Self {
             output_path,
             stderr_path,
             child,
