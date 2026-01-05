@@ -270,7 +270,7 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
     }
 
     fn execute_request<'a>(
-        &'a self,
+        &self,
         req: Request<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>> {
         let callback_index = self.callback_index;
@@ -348,7 +348,7 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
     }
 
     fn execute_response<'a>(
-        &'a self,
+        &self,
         resp: Response<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>> {
         Box::pin(async move { Ok(HookResult::Continue(resp)) })
@@ -388,14 +388,14 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
     }
 
     fn execute_request<'a>(
-        &'a self,
+        &self,
         req: Request<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>> {
         Box::pin(async move { Ok(HookResult::Continue(req)) })
     }
 
     fn execute_response<'a>(
-        &'a self,
+        &self,
         resp: Response<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>> {
         let callback_index = self.callback_index;
@@ -519,14 +519,14 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
     }
 
     fn execute_request<'a>(
-        &'a self,
+        &self,
         req: Request<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>> {
         Box::pin(async move { Ok(HookResult::Continue(req)) })
     }
 
     fn execute_response<'a>(
-        &'a self,
+        &self,
         resp: Response<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>> {
         let callback_index = self.callback_index;

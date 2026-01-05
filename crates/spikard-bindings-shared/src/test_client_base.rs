@@ -23,14 +23,14 @@ impl TestClientConfig {
     }
 
     /// Set the timeout in milliseconds
-    #[must_use] 
+    #[must_use]
     pub const fn with_timeout(mut self, timeout_ms: u64) -> Self {
         self.timeout_ms = timeout_ms;
         self
     }
 
     /// Set whether to follow redirects
-    #[must_use] 
+    #[must_use]
     pub const fn with_follow_redirects(mut self, follow_redirects: bool) -> Self {
         self.follow_redirects = follow_redirects;
         self
@@ -62,8 +62,13 @@ pub struct TestResponseMetadata {
 
 impl TestResponseMetadata {
     /// Create a new test response metadata
-    #[must_use] 
-    pub const fn new(status_code: u16, headers: HashMap<String, String>, body_size: usize, response_time_ms: u64) -> Self {
+    #[must_use]
+    pub const fn new(
+        status_code: u16,
+        headers: HashMap<String, String>,
+        body_size: usize,
+        response_time_ms: u64,
+    ) -> Self {
         Self {
             status_code,
             headers,
@@ -73,7 +78,7 @@ impl TestResponseMetadata {
     }
 
     /// Get a header value by name (case-insensitive)
-    #[must_use] 
+    #[must_use]
     pub fn get_header(&self, name: &str) -> Option<&String> {
         let lower_name = name.to_lowercase();
         self.headers
@@ -83,19 +88,19 @@ impl TestResponseMetadata {
     }
 
     /// Check if response was successful (2xx status code)
-    #[must_use] 
+    #[must_use]
     pub const fn is_success(&self) -> bool {
         self.status_code >= 200 && self.status_code < 300
     }
 
     /// Check if response was a client error (4xx status code)
-    #[must_use] 
+    #[must_use]
     pub const fn is_client_error(&self) -> bool {
         self.status_code >= 400 && self.status_code < 500
     }
 
     /// Check if response was a server error (5xx status code)
-    #[must_use] 
+    #[must_use]
     pub const fn is_server_error(&self) -> bool {
         self.status_code >= 500 && self.status_code < 600
     }

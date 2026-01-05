@@ -47,7 +47,7 @@ pub struct LifecycleConfig {
 
 impl LifecycleConfig {
     /// Create a new lifecycle configuration
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             hooks: std::collections::HashMap::new(),
@@ -60,7 +60,7 @@ impl LifecycleConfig {
     }
 
     /// Get hooks for a specific type
-    #[must_use] 
+    #[must_use]
     pub fn get_hooks(&self, hook_type: LifecycleHookType) -> Vec<Arc<dyn LifecycleHook>> {
         self.hooks.get(&hook_type).cloned().unwrap_or_default()
     }

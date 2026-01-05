@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-01-05
+
+### Fixed
+
+- **Workspace lints**: Added proper workspace lints configuration to eliminate unexpected `tarpaulin_include` cfg condition errors across all crates
+- **Clippy warnings**: Resolved 500+ clippy warnings in core crates (spikard, spikard-core, spikard-codegen, benchmark-harness, spikard-bindings-shared) to maintain zero-warning policy
+- **Language binding lifetime parameters**: Fixed lifetime parameter errors in all language binding crates (Python/PyO3, TypeScript/NAPI-RS, Ruby/Magnus, PHP/ext-php-rs, WASM/wasm-bindgen)
+- **FFI binding crates**: Added comprehensive clippy allow attributes for FFI-specific crates to suppress intentional FFI-related warnings
+- **Ruby vendoring**: Updated vendoring script to preserve workspace lints configuration during gem dependency vendoring
+- **Code formatting**: Fixed formatting inconsistencies across all binding crates to comply with project standards
+
 ## [0.8.2] - 2026-01-02
 
 ### Fixed

@@ -12,7 +12,7 @@ pub struct ResponseBuilder {
 
 impl ResponseBuilder {
     /// Create a new response builder with default status 200 OK
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             status: StatusCode::OK,
@@ -22,14 +22,14 @@ impl ResponseBuilder {
     }
 
     /// Set the HTTP status code
-    #[must_use] 
+    #[must_use]
     pub const fn status(mut self, status: StatusCode) -> Self {
         self.status = status;
         self
     }
 
     /// Set the response body
-    #[must_use] 
+    #[must_use]
     pub fn body(mut self, body: serde_json::Value) -> Self {
         self.body = body;
         self
@@ -47,7 +47,7 @@ impl ResponseBuilder {
     }
 
     /// Build the response as (status, headers, body)
-    #[must_use] 
+    #[must_use]
     pub fn build(self) -> (StatusCode, HeaderMap, String) {
         let body = serde_json::to_string(&self.body).unwrap_or_else(|_| "{}".to_string());
         (self.status, self.headers, body)

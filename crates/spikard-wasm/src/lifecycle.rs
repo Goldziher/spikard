@@ -53,7 +53,7 @@ impl LifecycleHook<LifecycleRequest, LifecycleResponse> for WasmLifecycleHook {
     }
 
     fn execute_request<'a>(
-        &'a self,
+        &self,
         req: LifecycleRequest,
     ) -> HookFuture<'a, HookResult<LifecycleRequest, LifecycleResponse>> {
         let func = self.func.clone();
@@ -80,7 +80,7 @@ impl LifecycleHook<LifecycleRequest, LifecycleResponse> for WasmLifecycleHook {
     }
 
     fn execute_response<'a>(
-        &'a self,
+        &self,
         resp: LifecycleResponse,
     ) -> HookFuture<'a, HookResult<LifecycleResponse, LifecycleResponse>> {
         let func = self.func.clone();

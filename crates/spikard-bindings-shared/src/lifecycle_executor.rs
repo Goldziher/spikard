@@ -73,7 +73,7 @@ pub struct RequestModifications {
 
 impl HookResultData {
     /// Create a Continue result (pass through)
-    #[must_use] 
+    #[must_use]
     pub const fn continue_execution() -> Self {
         Self {
             continue_execution: true,
@@ -85,7 +85,7 @@ impl HookResultData {
     }
 
     /// Create a short-circuit response result
-    #[must_use] 
+    #[must_use]
     pub const fn short_circuit(status_code: u16, body: Vec<u8>, headers: Option<HashMap<String, String>>) -> Self {
         Self {
             continue_execution: false,
@@ -97,7 +97,7 @@ impl HookResultData {
     }
 
     /// Create a request modification result
-    #[must_use] 
+    #[must_use]
     pub const fn modify_request(modifications: RequestModifications) -> Self {
         Self {
             continue_execution: true,
@@ -252,10 +252,7 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
             }
         }
 
-        if !builder
-            .headers_ref()
-            .is_some_and(|h| h.contains_key("content-type"))
-        {
+        if !builder.headers_ref().is_some_and(|h| h.contains_key("content-type")) {
             builder = builder.header("content-type", "application/json");
         }
 
@@ -267,16 +264,11 @@ impl<L: LanguageLifecycleHook> LifecycleExecutor<L> {
     }
 
     /// Apply request modifications to a request
-    fn apply_request_modifications(
-        req: Request<Body>,
-        mods: RequestModifications,
-    ) -> Result<Request<Body>, String> {
+    fn apply_request_modifications(req: Request<Body>, mods: RequestModifications) -> Result<Request<Body>, String> {
         let (mut parts, body) = req.into_parts();
 
         if let Some(method) = &mods.method {
-            parts.method = method
-                .parse()
-                .map_err(|e| format!("Invalid method '{method}': {e}"))?;
+            parts.method = method.parse().map_err(|e| format!("Invalid method '{method}': {e}"))?;
         }
 
         if let Some(path) = &mods.path {

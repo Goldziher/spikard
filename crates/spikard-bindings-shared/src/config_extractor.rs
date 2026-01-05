@@ -77,15 +77,14 @@ impl ConfigExtractor {
             config.host = host;
         }
 
-        if let Some(port) = source
-            .get_u16("port")
-            .or_else(|| source.get_u32("port").map(|p| {
+        if let Some(port) = source.get_u16("port").or_else(|| {
+            source.get_u32("port").map(|p| {
                 #[allow(clippy::cast_possible_truncation)]
                 {
                     p as u16
                 }
-            }))
-        {
+            })
+        }) {
             config.port = port;
         }
 
@@ -357,9 +356,7 @@ impl ConfigExtractor {
     }
 
     /// Extract security schemes from `OpenAPI` config
-    fn extract_security_schemes_config(
-        _source: &dyn ConfigSource,
-    ) -> HashMap<String, SecuritySchemeInfo> {
+    fn extract_security_schemes_config(_source: &dyn ConfigSource) -> HashMap<String, SecuritySchemeInfo> {
         // TODO: Implement when bindings support iterating HashMap-like structures
         HashMap::new()
     }

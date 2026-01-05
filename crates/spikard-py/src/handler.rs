@@ -491,9 +491,7 @@ impl PythonHandler {
                 let awaitable = coroutine.clone();
                 pyo3_async_runtimes::into_future_with_locals(&task_locals, awaitable)
             })
-            .map_err(|e: PyErr| {
-                structured_error("python_call_error", format!("Python error calling handler: {e}"))
-            })?;
+            .map_err(|e: PyErr| structured_error("python_call_error", format!("Python error calling handler: {e}")))?;
 
             let coroutine_result = coroutine_future
                 .await
@@ -604,9 +602,8 @@ impl PythonHandler {
             if content_type.starts_with("application/json")
                 && let Some(validator) = &response_validator
             {
-                let json_value = serde_json::from_slice::<Value>(&raw).map_err(|e| {
-                    structured_error("response_parse_error", format!("Failed to parse response: {e}"))
-                })?;
+                let json_value = serde_json::from_slice::<Value>(&raw)
+                    .map_err(|e| structured_error("response_parse_error", format!("Failed to parse response: {e}")))?;
                 if let Err(errors) = validator.validate(&json_value) {
                     let problem = ProblemDetails::from_validation_error(&errors);
                     return Err(structured_error_response(problem));
@@ -619,10 +616,7 @@ impl PythonHandler {
                     s.as_bytes().to_vec()
                 } else {
                     serde_json::to_vec(&json_value).map_err(|e| {
-                        structured_error(
-                            "response_serialize_error",
-                            format!("Failed to serialize response: {e}"),
-                        )
+                        structured_error("response_serialize_error", format!("Failed to serialize response: {e}"))
                     })?
                 }
             } else {
@@ -636,18 +630,12 @@ impl PythonHandler {
                     }
                 }
                 serde_json::to_vec(&json_value).map_err(|e| {
-                    structured_error(
-                        "response_serialize_error",
-                        format!("Failed to serialize response: {e}"),
-                    )
+                    structured_error("response_serialize_error", format!("Failed to serialize response: {e}"))
                 })?
             }
         } else {
             serde_json::to_vec(&json_value).map_err(|e| {
-                structured_error(
-                    "response_serialize_error",
-                    format!("Failed to serialize response: {e}"),
-                )
+                structured_error("response_serialize_error", format!("Failed to serialize response: {e}"))
             })?
         };
 

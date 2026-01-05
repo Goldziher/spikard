@@ -104,9 +104,9 @@ fn resolve_hook_result(py: Python<'_>, result: Py<PyAny>, name: &str) -> PyResul
 
     if is_awaitable {
         let asyncio = py.import("asyncio")?;
-        let awaited = asyncio.call_method1("run", (bound_result.clone(),)).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Hook {name} await failed: {e}"))
-        })?;
+        let awaited = asyncio
+            .call_method1("run", (bound_result.clone(),))
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Hook {name} await failed: {e}")))?;
         Ok(awaited.unbind())
     } else {
         Ok(bound_result.clone().unbind())

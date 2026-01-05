@@ -93,8 +93,8 @@ pub fn hashmap_to_metadata<S: std::hash::BuildHasher>(
     let mut metadata = MetadataMap::new();
 
     for (key, value) in map {
-        let metadata_key = MetadataKey::from_bytes(key.as_bytes())
-            .map_err(|err| format!("Invalid metadata key '{key}': {err}"))?;
+        let metadata_key =
+            MetadataKey::from_bytes(key.as_bytes()).map_err(|err| format!("Invalid metadata key '{key}': {err}"))?;
 
         let metadata_value =
             MetadataValue::try_from(value).map_err(|err| format!("Invalid metadata value for '{key}': {err}"))?;

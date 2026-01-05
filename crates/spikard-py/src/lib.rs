@@ -755,9 +755,8 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     eprintln!("[spikard] Registered {} routes", routes.len());
     eprintln!("[spikard] Listening on http://{}:{}", config.host, config.port);
 
-    let mut app_router = Server::with_handlers(config.clone(), routes).map_err(|e| {
-        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build Axum router: {e}"))
-    })?;
+    let mut app_router = Server::with_handlers(config.clone(), routes)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build Axum router: {e}")))?;
 
     let websocket_handlers = app.call_method0("get_websocket_handlers")?;
     let ws_dict = websocket_handlers.cast::<pyo3::types::PyDict>()?;
@@ -802,9 +801,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
                 let addr = format!("{}:{}", config.host, config.port);
                 let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
                     pyo3::Python::attach(|_py| {
-                        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                            "Invalid socket address {addr}: {e}"
-                        ))
+                        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid socket address {addr}: {e}"))
                     })
                 })?;
 

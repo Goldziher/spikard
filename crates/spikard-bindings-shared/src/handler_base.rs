@@ -105,7 +105,7 @@ impl<L: LanguageHandler> HandlerExecutor<L> {
     }
 
     /// Add request validation to this executor
-    #[must_use] 
+    #[must_use]
     pub fn with_request_validator(mut self, validator: Arc<SchemaValidator>) -> Self {
         self.request_validator = Some(validator);
         self

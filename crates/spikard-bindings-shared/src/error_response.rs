@@ -125,7 +125,7 @@ impl ErrorResponseBuilder {
     ///
     /// let (status, body) = ErrorResponseBuilder::validation_error(&validation_error);
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn validation_error(validation_error: &ValidationError) -> (StatusCode, String) {
         let problem = ProblemDetails::from_validation_error(validation_error);
         let status = problem.status_code();
@@ -152,7 +152,7 @@ impl ErrorResponseBuilder {
     /// let problem = ProblemDetails::not_found("User with id 123 not found");
     /// let (status, body) = ErrorResponseBuilder::problem_details_response(&problem);
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn problem_details_response(problem: &ProblemDetails) -> (StatusCode, String) {
         let status = problem.status_code();
         let body = serde_json::to_string(problem).unwrap_or_else(|_| {
