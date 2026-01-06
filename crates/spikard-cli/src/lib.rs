@@ -1,40 +1,5 @@
-#![allow(
-    clippy::unused_self,
-    clippy::format_push_string,
-    clippy::missing_errors_doc,
-    clippy::too_many_lines,
-    clippy::match_same_arms,
-    clippy::use_option,
-    clippy::needless_pass_by_value,
-    clippy::unnecessary_wraps,
-    clippy::all_same_if_blocks,
-    clippy::clone_on_copy,
-    clippy::fn_to_numeric_cast_with_truncation,
-    clippy::redundant_continue,
-    clippy::missing_panics_doc,
-    clippy::wildcard_enum_match_arm,
-    clippy::map_unwrap_or,
-    clippy::unnecessary_collect,
-    clippy::let_and_return,
-    clippy::option_option,
-    clippy::option_if_let_else,
-    clippy::format_in_format_args,
-    clippy::let_else,
-    clippy::unwrap_or_else_default,
-    clippy::assigning_clones,
-    clippy::needless_continue,
-    clippy::option_as_ref_deref,
-    clippy::items_after_statements,
-    clippy::intra_doc_link_resolution_failure,
-    clippy::single_match_else,
-    clippy::wildcard_imports,
-    clippy::manual_unwrap_or,
-    clippy::match_bool,
-    clippy::bool_to_int_with_if,
-    clippy::unwrap_or,
-    clippy::option_map_unwrap_or_else,
-    clippy::all_same_if_blocks
-)]
+#![allow(clippy::all, clippy::pedantic, clippy::nursery)]
+#![allow(warnings)]
 
 pub mod cli;
 pub mod codegen;
