@@ -10,13 +10,13 @@ members = [
     "crates/spikard-http",
     "crates/spikard-php",
     "crates/spikard-py",
+    "crates/spikard-node",
     "crates/spikard-wasm",
     "crates/spikard-rb",
     "crates/spikard-rb-macros",
     "tools/benchmark-harness",
 ]
 exclude = [
-    "crates/spikard-node",
     "e2e/*",
     "examples/*",
     "tests/test_apps/*",
