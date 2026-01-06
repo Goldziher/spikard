@@ -74,6 +74,7 @@ impl PhpRequest {
     ///
     /// This intentionally matches `packages/php/src/Http/Request.php` so PHP code can use named
     /// arguments like `queryParams:` and `pathParams:` even when the native extension is loaded.
+    #[php(name = "create")]
     #[allow(clippy::too_many_arguments)]
     #[allow(non_snake_case)]
     pub fn new(

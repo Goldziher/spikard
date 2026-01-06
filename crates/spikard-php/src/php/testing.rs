@@ -444,6 +444,7 @@ pub struct PhpTestClient {}
 #[php_impl]
 impl PhpTestClient {
     /// Create a new test client.
+    #[php(name = "create")]
     pub fn new() -> Self {
         Self::default()
     }
@@ -1091,6 +1092,7 @@ pub struct PhpHttpTestClient {}
 #[php_impl]
 impl PhpHttpTestClient {
     /// Create a new HTTP test client.
+    #[php(name = "create")]
     pub fn new() -> Self {
         Self::default()
     }

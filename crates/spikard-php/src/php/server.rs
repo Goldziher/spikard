@@ -5,13 +5,11 @@
 
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Response, StatusCode};
-use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
-use spikard_http::ParameterValidator;
 use spikard_http::server::build_router_with_handlers_and_config;
-use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, Route, Router, SchemaRegistry, ServerConfig};
+use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, Route, Router, ServerConfig};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -56,6 +54,7 @@ pub struct PhpServer {
 #[php_impl]
 impl PhpServer {
     /// Create a new server instance.
+    #[php(name = "create")]
     pub fn new(host: Option<String>, port: Option<i64>) -> Self {
         Self {
             routes: Vec::new(),

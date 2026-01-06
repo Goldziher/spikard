@@ -61,6 +61,7 @@ pub struct PhpLifecycleHooks {
 
 #[php_impl]
 impl PhpLifecycleHooks {
+    #[php(name = "create")]
     pub fn new() -> Self {
         Self::default()
     }

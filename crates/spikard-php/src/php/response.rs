@@ -5,7 +5,6 @@
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendHashTable;
-use ext_php_rs::types::Zval;
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -38,6 +37,7 @@ impl PhpResponse {
     ///
     /// This intentionally matches `packages/php/src/Http/Response.php` so PHP code can use named
     /// arguments like `statusCode:` even when the native extension is loaded.
+    #[php(name = "create")]
     #[allow(non_snake_case)]
     pub fn new(
         body: Option<&Zval>,
