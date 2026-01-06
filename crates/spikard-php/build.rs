@@ -52,11 +52,11 @@ fn main() {
             let libs = String::from_utf8_lossy(&output.stdout);
             for lib in libs.split_whitespace() {
                 if let Some(path) = lib.strip_prefix("-L") {
-                    println!("cargo:rustc-link-search=native={}", path);
+                    println!("cargo:rustc-link-search=native={path}");
                 } else if let Some(name) = lib.strip_prefix("-l")
                     && essential_libs.contains(&name)
                 {
-                    println!("cargo:rustc-link-lib=dylib={}", name);
+                    println!("cargo:rustc-link-lib=dylib={name}");
                 }
             }
         }
