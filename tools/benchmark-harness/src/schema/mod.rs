@@ -292,8 +292,7 @@ impl HostInfo {
                         .and_then(|line| line.split_whitespace().nth(1))
                         .and_then(|s| s.parse::<u64>().ok())
                 })
-                .map(|kb| kb as f64 / 1024.0 / 1024.0)
-                .unwrap_or(0.0)
+                .map_or(0.0, |kb| kb as f64 / 1024.0 / 1024.0)
         }
         #[cfg(not(any(target_os = "macos", target_os = "linux")))]
         {

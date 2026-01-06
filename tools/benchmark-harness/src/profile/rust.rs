@@ -29,7 +29,7 @@ pub fn start_profiler(pid: u32) -> Result<RustProfiler> {
         if which::which("perf").is_ok() {
             eprintln!("  ℹ Rust profiling via perf");
             eprintln!("  → CPU profiling available");
-            eprintln!("  → Run: perf record -p {} -g", pid);
+            eprintln!("  → Run: perf record -p {pid} -g");
         } else {
             eprintln!("  ⚠ perf not found (install: apt-get install linux-tools-common)");
         }

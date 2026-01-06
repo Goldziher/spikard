@@ -54,7 +54,7 @@ pub fn start_profiler(pid: u32, svg_path: Option<PathBuf>, duration_secs: u64) -
 
         let child = cmd
             .spawn()
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to start perf profiler for pid {}: {}", pid, e)))?;
+            .map_err(|e| Error::BenchmarkFailed(format!("Failed to start perf profiler for pid {pid}: {e}")))?;
         (Some(child), Some(perf_data_path))
     } else {
         (None, None)
@@ -69,6 +69,7 @@ pub fn start_profiler(pid: u32, svg_path: Option<PathBuf>, duration_secs: u64) -
 
 #[cfg(target_os = "linux")]
 impl PerfProfiler {
+    #[must_use]
     pub fn stop(mut self) -> Option<String> {
         if let Some(mut child) = self.child.take() {
             let _ = child.wait();
