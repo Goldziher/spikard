@@ -35,4 +35,4 @@ runs:
 
     - name: Build spikard-python
       shell: bash
-      run: cd $GITHUB_WORKSPACE/crates/spikard-py && uv run maturin develop --release --features extension-module
+      run: cd $GITHUB_WORKSPACE/crates/spikard-py && maturin develop --release --features extension-module
