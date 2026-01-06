@@ -4,7 +4,7 @@
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::ZendHashTable;
+use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
 use std::collections::HashMap;
 
