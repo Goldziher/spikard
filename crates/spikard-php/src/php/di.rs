@@ -266,8 +266,9 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
     };
 
     let deps_array = if let Some(obj) = container_zval.object() {
-        obj.get_property::<&Zval>("dependencies")
-            .map_err(|_| "DependencyContainer must have 'dependencies' property".to_string())?
+        // Call getDependencies() method which returns the dependencies array
+        obj.call_method("getDependencies", vec![])
+            .map_err(|e| format!("Failed to invoke getDependencies() method: {:?}", e))?
     } else {
         return Err("DI container must be an object".to_string());
     };
