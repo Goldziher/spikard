@@ -104,6 +104,15 @@ runs:
       with:
         bun-version: latest
 
+    - name: Verify Bun is available
+      if: steps.detect.outputs.language == 'node' && (startsWith(inputs.framework, 'elysia') || startsWith(inputs.framework, 'spikard-bun-'))
+      shell: bash
+      run: |
+        echo "Verifying bun is available..."
+        which bun || (echo "bun not in PATH, checking ~/.bun/bin" && ls -la ~/.bun/bin/ 2>/dev/null || true)
+        bun --version
+        echo "bun successfully verified"
+
     - name: Cache Bun dependencies
       if: steps.detect.outputs.language == 'node' && (startsWith(inputs.framework, 'elysia') || startsWith(inputs.framework, 'spikard-bun-'))
       uses: actions/cache@v4
@@ -125,7 +134,10 @@ runs:
       if: steps.detect.outputs.language == 'node' && startsWith(inputs.framework, 'elysia')
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
-      run: bun install
+      run: |
+        # Ensure bun is in PATH
+        export PATH="$HOME/.bun/bin:$PATH"
+        bun install
 
     - name: Build Ruby binding (if needed)
       if: steps.detect.outputs.language == 'ruby' && startsWith(inputs.framework, 'spikard-ruby-')
@@ -277,6 +289,9 @@ runs:
     - name: Run benchmark
       shell: bash
       run: |
+        # Ensure bun is in PATH for elysia frameworks
+        export PATH="$HOME/.bun/bin:$PATH"
+
         benchmark-harness profile \
           --framework "${{ inputs.framework }}" \
           --app-dir "tools/benchmark-harness/apps/${{ inputs.framework }}" \
