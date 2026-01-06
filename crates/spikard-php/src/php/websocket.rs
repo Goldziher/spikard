@@ -39,9 +39,9 @@ pub fn leak_ws_handler_registry() {
 /// We store Zval representations of the callables, not ZendCallable directly,
 /// to avoid lifetime issues.
 struct PhpWebSocketHandlerCallables {
-    on_connect: Zval,
-    on_message: Zval,
-    on_close: Zval,
+    connect: Zval,
+    message: Zval,
+    close: Zval,
 }
 
 /// PHP implementation of WebSocketHandler
@@ -70,17 +70,17 @@ impl PhpWebSocketHandler {
     /// # Returns
     /// Result containing the handler or an error string if method extraction fails
     pub fn register(handler_obj: &Zval, handler_name: String) -> Result<Self, String> {
-        let on_connect = extract_method_as_zval(handler_obj, "onConnect")?;
-        let on_message = extract_method_as_zval(handler_obj, "onMessage")?;
-        let on_close = extract_method_as_zval(handler_obj, "onClose")?;
+        let connect = extract_method_as_zval(handler_obj, "onConnect")?;
+        let message = extract_method_as_zval(handler_obj, "onMessage")?;
+        let close = extract_method_as_zval(handler_obj, "onClose")?;
 
         let idx = PHP_WS_HANDLER_REGISTRY.with(|registry| {
             let mut registry = registry.borrow_mut();
             let idx = registry.len();
             registry.push(PhpWebSocketHandlerCallables {
-                on_connect,
-                on_message,
-                on_close,
+                connect,
+                message,
+                close,
             });
             idx
         });
@@ -117,9 +117,9 @@ impl PhpWebSocketHandler {
                 .ok_or_else(|| format!("PHP WebSocket handler not found at index {}", handler_index))?;
 
             let callable_zval = match method_name {
-                "onConnect" => &callables.on_connect,
-                "onMessage" => &callables.on_message,
-                "onClose" => &callables.on_close,
+                "onConnect" => &callables.connect,
+                "onMessage" => &callables.message,
+                "onClose" => &callables.close,
                 _ => return Err(format!("Unknown WebSocket method: {}", method_name)),
             };
 

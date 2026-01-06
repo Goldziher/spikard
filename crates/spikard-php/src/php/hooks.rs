@@ -52,11 +52,11 @@ impl PhpHookResult {
 #[php(name = "Spikard\\Lifecycle\\Hooks")]
 #[derive(Default)]
 pub struct PhpLifecycleHooks {
-    on_request_hooks: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
-    pre_validation_hooks: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
-    pre_handler_hooks: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
-    on_response_hooks: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
-    on_error_hooks: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
+    on_request: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
+    pre_validation: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
+    pre_handler: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
+    on_response: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
+    on_error: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
 }
 
 #[php_impl]
@@ -71,7 +71,7 @@ impl PhpLifecycleHooks {
     #[php(name = "onRequest")]
     pub fn on_request(&mut self, name: String, callback: &ext_php_rs::types::Zval) {
         let hook = make_request_hook(name, callback);
-        self.on_request_hooks.push(hook);
+        self.on_request.push(hook);
     }
 
     /// Register a preValidation hook.
@@ -79,7 +79,7 @@ impl PhpLifecycleHooks {
     #[php(name = "preValidation")]
     pub fn pre_validation(&mut self, name: String, callback: &ext_php_rs::types::Zval) {
         let hook = make_request_hook(name, callback);
-        self.pre_validation_hooks.push(hook);
+        self.pre_validation.push(hook);
     }
 
     /// Register a preHandler hook.
@@ -87,7 +87,7 @@ impl PhpLifecycleHooks {
     #[php(name = "preHandler")]
     pub fn pre_handler(&mut self, name: String, callback: &ext_php_rs::types::Zval) {
         let hook = make_request_hook(name, callback);
-        self.pre_handler_hooks.push(hook);
+        self.pre_handler.push(hook);
     }
 
     /// Register an onResponse hook.
@@ -95,7 +95,7 @@ impl PhpLifecycleHooks {
     #[php(name = "onResponse")]
     pub fn on_response(&mut self, name: String, callback: &ext_php_rs::types::Zval) {
         let hook = make_response_hook(name, callback);
-        self.on_response_hooks.push(hook);
+        self.on_response.push(hook);
     }
 
     /// Register an onError hook.
@@ -103,7 +103,7 @@ impl PhpLifecycleHooks {
     #[php(name = "onError")]
     pub fn on_error(&mut self, name: String, callback: &ext_php_rs::types::Zval) {
         let hook = make_error_hook(name, callback);
-        self.on_error_hooks.push(hook);
+        self.on_error.push(hook);
     }
 }
 
@@ -113,19 +113,19 @@ impl PhpLifecycleHooks {
     pub fn build(&self) -> LifecycleHooks {
         let mut builder = LifecycleHooksBuilder::new();
 
-        for hook in &self.on_request_hooks {
+        for hook in &self.on_request {
             builder = builder.on_request(Arc::clone(hook));
         }
-        for hook in &self.pre_validation_hooks {
+        for hook in &self.pre_validation {
             builder = builder.pre_validation(Arc::clone(hook));
         }
-        for hook in &self.pre_handler_hooks {
+        for hook in &self.pre_handler {
             builder = builder.pre_handler(Arc::clone(hook));
         }
-        for hook in &self.on_response_hooks {
+        for hook in &self.on_response {
             builder = builder.on_response(Arc::clone(hook));
         }
-        for hook in &self.on_error_hooks {
+        for hook in &self.on_error {
             builder = builder.on_error(Arc::clone(hook));
         }
 

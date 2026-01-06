@@ -1338,11 +1338,10 @@ impl PhpSseStream {
     /// Get the raw body of the SSE response.
     #[php(name = "body")]
     pub fn body(&self) -> String {
-        self.events
-            .iter()
-            .map(|e| format!("data: {}\n\n", e.data))
-            .collect::<Vec<_>>()
-            .join("")
+        self.events.iter().fold(String::new(), |mut acc, e| {
+            acc.push_str(&format!("data: {}\n\n", e.data));
+            acc
+        })
     }
 
     /// Get the number of events in the stream.

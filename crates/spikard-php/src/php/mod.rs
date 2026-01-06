@@ -22,7 +22,7 @@ mod request;
 mod response;
 mod server;
 mod sse;
-pub(crate) mod start;
+pub mod start;
 mod streaming;
 mod testing;
 mod websocket;
@@ -46,11 +46,11 @@ pub use testing::{
 };
 pub use websocket::{PhpWebSocketHandler, clear_ws_handler_registry, create_websocket_state, leak_ws_handler_registry};
 
-pub(crate) fn map_ext_php_err(e: ExtPhpError) -> PhpException {
+pub fn map_ext_php_err(e: ExtPhpError) -> PhpException {
     PhpException::default(e.to_string())
 }
 
-pub(crate) fn php_table_with_capacity(len: usize) -> ZBox<ZendHashTable> {
+pub fn php_table_with_capacity(len: usize) -> ZBox<ZendHashTable> {
     if len == 0 || len > (u32::MAX as usize) {
         ZendHashTable::new()
     } else {
@@ -58,7 +58,7 @@ pub(crate) fn php_table_with_capacity(len: usize) -> ZBox<ZendHashTable> {
     }
 }
 
-pub(crate) fn table_insert_str_fast<V: IntoZval>(table: &mut ZendHashTable, key: &str, value: V) -> PhpResult<()> {
+pub fn table_insert_str_fast<V: IntoZval>(table: &mut ZendHashTable, key: &str, value: V) -> PhpResult<()> {
     table.insert(key, value).map_err(map_ext_php_err)?;
     Ok(())
 }
@@ -188,7 +188,7 @@ pub fn json_to_php_table(value: &Value) -> PhpResult<ZBox<ZendHashTable>> {
                         let inner = json_to_php_table(v)?;
                         table_insert_str_fast(&mut table, k.as_str(), inner)?;
                     }
-                };
+                }
             }
         }
         Value::Array(arr) => {
@@ -246,7 +246,7 @@ fn json_array_to_php(arr: &[Value]) -> PhpResult<ZBox<ZendHashTable>> {
                 let inner = json_to_php_table(v)?;
                 table.push(inner).map_err(map_ext_php_err)?;
             }
-        };
+        }
     }
 
     Ok(table)

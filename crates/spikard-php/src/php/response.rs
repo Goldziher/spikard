@@ -156,6 +156,7 @@ impl PhpResponse {
 
     /// Return a copy of this response with new cookies.
     #[php(name = "withCookies")]
+    #[must_use]
     pub fn with_cookies(&self, cookies: HashMap<String, String>) -> Self {
         Self {
             status_code: self.status_code,
@@ -192,6 +193,7 @@ impl PhpResponse {
     }
 
     /// Add headers (internal use).
+    #[must_use]
     pub fn with_headers(mut self, headers: HashMap<String, String>) -> Self {
         for (k, v) in headers {
             self.headers.insert(k.to_ascii_lowercase(), v);

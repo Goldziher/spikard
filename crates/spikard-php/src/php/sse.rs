@@ -245,16 +245,14 @@ impl PhpSseEventProducer {
                 state.done = true;
             }
 
-            let json_str = match current_value.string() {
-                Some(s) => s.to_string(),
-                None => {
-                    if let Ok(json_value) = crate::php::zval_to_json(&current_value) {
-                        debug!("PHP SSE producer: using raw JSON event data");
-                        return Some(SseEvent::new(json_value));
-                    }
-                    error!("Generator yielded non-string value");
-                    return None;
-                }
+            let json_str = if let Some(s) = current_value.string() {
+                s.to_string()
+            } else if let Ok(json_value) = crate::php::zval_to_json(&current_value) {
+                debug!("PHP SSE producer: using raw JSON event data");
+                return Some(SseEvent::new(json_value));
+            } else {
+                error!("Generator yielded non-string value");
+                return None;
             };
 
             match Self::parse_event_json(&json_str) {
@@ -280,7 +278,7 @@ impl SseEventProducer for PhpSseEventProducer {
         debug!("PHP SSE producer: next_event called");
 
         let producer_index = self.producer_index;
-        let producer = PhpSseEventProducer { producer_index };
+        let producer = Self { producer_index };
         producer.get_next_event_sync()
     }
 

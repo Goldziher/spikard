@@ -400,7 +400,7 @@ impl PhpServer {
     /// Set host
     #[php(name = "setHost")]
     pub fn set_host(&mut self, host: String) {
-        self.host = host.clone();
+        self.host.clone_from(&host);
         self.config.host = host;
     }
 

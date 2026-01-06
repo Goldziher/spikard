@@ -66,7 +66,7 @@ impl RegisteredRoutePayload {
 ///
 /// This function manually extracts each field and constructs ServerConfig directly, avoiding
 /// JSON deserialization which fails on non-serializable fields like lifecycle_hooks and di_container.
-pub(crate) fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::ServerConfig, String> {
+pub fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::ServerConfig, String> {
     use spikard_http::{
         ApiKeyConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig, RateLimitConfig,
         SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
@@ -448,7 +448,6 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
     };
 
     let mut lifecycle_hooks = LifecycleHooks::default();
-    let mut has_any_hook = false;
 
     if let Some(on_request_zval) = hooks_array.get("onRequest")
         && on_request_zval.is_callable()
@@ -456,7 +455,6 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
         let hook = PhpRequestHook::new_from_zval(on_request_zval)
             .map_err(|e| format!("Failed to create onRequest hook: {}", e))?;
         lifecycle_hooks.add_on_request(Arc::new(hook));
-        has_any_hook = true;
     }
 
     if let Some(pre_validation_zval) = hooks_array.get("preValidation")
@@ -465,7 +463,6 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
         let hook = PhpRequestHook::new_from_zval(pre_validation_zval)
             .map_err(|e| format!("Failed to create preValidation hook: {}", e))?;
         lifecycle_hooks.add_pre_validation(Arc::new(hook));
-        has_any_hook = true;
     }
 
     if let Some(pre_handler_zval) = hooks_array.get("preHandler")
@@ -474,7 +471,6 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
         let hook = PhpRequestHook::new_from_zval(pre_handler_zval)
             .map_err(|e| format!("Failed to create preHandler hook: {}", e))?;
         lifecycle_hooks.add_pre_handler(Arc::new(hook));
-        has_any_hook = true;
     }
 
     if let Some(on_response_zval) = hooks_array.get("onResponse")
@@ -483,7 +479,6 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
         let hook = PhpResponseHook::new_from_zval(on_response_zval)
             .map_err(|e| format!("Failed to create onResponse hook: {}", e))?;
         lifecycle_hooks.add_on_response(Arc::new(hook));
-        has_any_hook = true;
     }
 
     if let Some(on_error_zval) = hooks_array.get("onError")
@@ -492,10 +487,10 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
         let hook =
             PhpErrorHook::new_from_zval(on_error_zval).map_err(|e| format!("Failed to create onError hook: {}", e))?;
         lifecycle_hooks.add_on_error(Arc::new(hook));
-        has_any_hook = true;
     }
 
-    if has_any_hook {
+    // Check if any hooks were actually added
+    if hooks_array.iter().any(|(_, v)| v.is_callable()) {
         Ok(Some(Arc::new(lifecycle_hooks)))
     } else {
         Ok(None)

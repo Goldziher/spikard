@@ -79,7 +79,7 @@ pub fn process_pending_tasks() -> bool {
 /// Tasks execute on the main thread, avoiding PHP threading issues.
 ///
 /// # Arguments
-/// * `callable` - PHP callable (closure, function name, array ['class', 'method'])
+/// * `callable` - PHP callable (closure, function name, array `['class', 'method']`)
 /// * `args` - Array of arguments to pass to callable (or null for no args)
 ///
 /// # Errors
