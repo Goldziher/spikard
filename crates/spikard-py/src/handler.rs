@@ -973,7 +973,7 @@ fn request_data_to_py_kwargs<'py>(
     Ok(result)
 }
 
-fn strip_internal_keys<'py>(kwargs: &Bound<'py, PyDict>) -> PyResult<()> {
+fn strip_internal_keys(kwargs: &Bound<'_, PyDict>) -> PyResult<()> {
     for key in ["_raw_body", "_raw_json"] {
         if kwargs.contains(key)? {
             kwargs.del_item(key)?;

@@ -14,10 +14,10 @@ use std::sync::Arc;
 use tonic::metadata::MetadataMap;
 
 /// Helper function to convert Option<HashMap> to `PyDict` (DRY)
-fn option_hashmap_to_pydict<'py>(
-    py: Python<'py>,
+fn option_hashmap_to_pydict(
+    py: Python<'_>,
     map: Option<HashMap<String, String>>,
-) -> PyResult<Bound<'py, PyDict>> {
+) -> PyResult<Bound<'_, PyDict>> {
     let py_dict = PyDict::new(py);
     if let Some(metadata) = map {
         for (key, value) in metadata {
