@@ -383,10 +383,8 @@ final class App
         $configPayload = $this->configToNative($configToUse);
         /** @var array<string, callable> $lifecyclePayload */
         $lifecyclePayload = $this->hooks ? $this->hooksToNative($this->hooks) : [];
-        /** @var array<string, mixed> $dependenciesPayload */
-        $dependenciesPayload = [
-            'dependencies' => $this->dependencies ? $this->dependencies->getDependencies() : [],
-        ];
+        /** @var DependencyContainer|null $dependenciesPayload */
+        $dependenciesPayload = $this->dependencies;
 
         // Extension entrypoint is guaranteed by the guard above; call directly.
         $routes = $this->nativeRoutes();
