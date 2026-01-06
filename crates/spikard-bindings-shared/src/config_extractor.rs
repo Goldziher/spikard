@@ -620,7 +620,7 @@ mod tests {
     fn test_security_schemes_config_empty() {
         let source = MockConfigSource::new();
 
-        let schemes = ConfigExtractor::extract_security_schemes_config(&source).unwrap();
+        let schemes = ConfigExtractor::extract_security_schemes_config(&source);
         assert_eq!(schemes.len(), 0);
     }
 

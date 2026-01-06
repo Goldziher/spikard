@@ -475,12 +475,8 @@ mod tests {
         headers.insert("X-Custom".to_string(), "value".to_string());
 
         let result = HookResultData::short_circuit(201, b"Created".to_vec(), Some(headers));
-        let hook = Arc::new(MockHook {
-            result: HookResultData::continue_execution(),
-        });
-        let executor = LifecycleExecutor::new(hook);
 
-        let response = executor.build_response_from_hook_result(&result).unwrap();
+        let response = LifecycleExecutor::<MockHook>::build_response_from_hook_result(&result).unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
         assert_eq!(response.headers().get("X-Custom").unwrap().to_str().unwrap(), "value");
     }
@@ -488,12 +484,8 @@ mod tests {
     #[tokio::test]
     async fn test_build_response_from_hook_result_default_content_type() {
         let result = HookResultData::short_circuit(200, b"{}".to_vec(), None);
-        let hook = Arc::new(MockHook {
-            result: HookResultData::continue_execution(),
-        });
-        let executor = LifecycleExecutor::new(hook);
 
-        let response = executor.build_response_from_hook_result(&result).unwrap();
+        let response = LifecycleExecutor::<MockHook>::build_response_from_hook_result(&result).unwrap();
         assert_eq!(
             response.headers().get("content-type").unwrap().to_str().unwrap(),
             "application/json"
@@ -508,10 +500,6 @@ mod tests {
             headers: None,
             body: None,
         };
-        let hook = Arc::new(MockHook {
-            result: HookResultData::continue_execution(),
-        });
-        let executor = LifecycleExecutor::new(hook);
 
         let req = Request::builder().method("GET").body(Body::empty()).unwrap();
         let modified = LifecycleExecutor::<MockHook>::apply_request_modifications(req, mods).unwrap();
@@ -527,10 +515,6 @@ mod tests {
             headers: None,
             body: None,
         };
-        let hook = Arc::new(MockHook {
-            result: HookResultData::continue_execution(),
-        });
-        let executor = LifecycleExecutor::new(hook);
 
         let req = Request::builder().uri("/api/v1/users").body(Body::empty()).unwrap();
         let modified = LifecycleExecutor::<MockHook>::apply_request_modifications(req, mods).unwrap();
@@ -549,10 +533,6 @@ mod tests {
             headers: Some(new_headers),
             body: None,
         };
-        let hook = Arc::new(MockHook {
-            result: HookResultData::continue_execution(),
-        });
-        let executor = LifecycleExecutor::new(hook);
 
         let req = Request::builder().body(Body::empty()).unwrap();
         let modified = LifecycleExecutor::<MockHook>::apply_request_modifications(req, mods).unwrap();
@@ -572,10 +552,6 @@ mod tests {
             headers: None,
             body: Some(new_body.clone()),
         };
-        let hook = Arc::new(MockHook {
-            result: HookResultData::continue_execution(),
-        });
-        let executor = LifecycleExecutor::new(hook);
 
         let req = Request::builder().body(Body::from("original body")).unwrap();
         let modified = LifecycleExecutor::<MockHook>::apply_request_modifications(req, mods).unwrap();
@@ -592,10 +568,6 @@ mod tests {
             headers: None,
             body: None,
         };
-        let hook = Arc::new(MockHook {
-            result: HookResultData::continue_execution(),
-        });
-        let executor = LifecycleExecutor::new(hook);
 
         let req = Request::builder().body(Body::empty()).unwrap();
         let result = LifecycleExecutor::<MockHook>::apply_request_modifications(req, mods);

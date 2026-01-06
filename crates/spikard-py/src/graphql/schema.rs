@@ -106,7 +106,8 @@ impl PySchemaConfig {
         format!(
             "GraphQLSchemaConfig(introspection_enabled={}, complexity_limit={}, depth_limit={})",
             self.introspection_enabled,
-            self.complexity_limit.map_or_else(|| "None".to_string(), |l| l.to_string()),
+            self.complexity_limit
+                .map_or_else(|| "None".to_string(), |l| l.to_string()),
             self.depth_limit.map_or_else(|| "None".to_string(), |l| l.to_string()),
         )
     }

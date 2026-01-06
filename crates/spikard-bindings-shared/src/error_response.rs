@@ -273,7 +273,7 @@ mod tests {
     #[test]
     fn test_from_structured_error() {
         let error = StructuredError::simple("test_error", "Something went wrong");
-        let (status, body) = ErrorResponseBuilder::from_structured_error(error);
+        let (status, body) = ErrorResponseBuilder::from_structured_error(&error);
         assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
         let parsed: Value = serde_json::from_str(&body).unwrap();
         assert_eq!(parsed["code"], "test_error");
