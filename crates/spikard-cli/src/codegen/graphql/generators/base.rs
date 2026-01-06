@@ -25,10 +25,10 @@ pub fn map_graphql_type_to_language(graphql_type: &str, language: &str, is_nulla
 
     if is_nullable {
         match language {
-            "python" => format!("Optional[{}]", base_type),
-            "typescript" => format!("{} | null", base_type),
-            "rust" => format!("Option<{}>", base_type),
-            "php" => format!("?{}", base_type),
+            "python" => format!("Optional[{base_type}]"),
+            "typescript" => format!("{base_type} | null"),
+            "rust" => format!("Option<{base_type}>"),
+            "php" => format!("?{base_type}"),
             _ => base_type.to_string(),
         }
     } else {
@@ -39,12 +39,12 @@ pub fn map_graphql_type_to_language(graphql_type: &str, language: &str, is_nulla
 #[allow(dead_code)]
 pub fn generate_field_docs(field_description: &str, comment_style: &str) -> String {
     match comment_style {
-        "python" => format!("    \"\"\"{}\"\"\"", field_description),
-        "typescript" | "javascript" => format!("  /** {} */", field_description),
-        "rust" => format!("    /// {}", field_description),
-        "ruby" => format!("  # {}", field_description),
-        "php" => format!("    /** {} */", field_description),
-        _ => format!("  // {}", field_description),
+        "python" => format!("    \"\"\"{field_description}\"\"\""),
+        "typescript" | "javascript" => format!("  /** {field_description} */"),
+        "rust" => format!("    /// {field_description}"),
+        "ruby" => format!("  # {field_description}"),
+        "php" => format!("    /** {field_description} */"),
+        _ => format!("  // {field_description}"),
     }
 }
 
@@ -90,7 +90,7 @@ pub fn indent(code: &str, spaces: usize) -> String {
             if line.is_empty() {
                 String::new()
             } else {
-                format!("{}{}", indent_str, line)
+                format!("{indent_str}{line}")
             }
         })
         .collect::<Vec<_>>()
@@ -115,7 +115,7 @@ pub fn sanitize_identifier(name: &str) -> String {
     if ident.is_empty() {
         "field".to_string()
     } else if ident.chars().next().unwrap().is_ascii_digit() {
-        format!("_{}", ident)
+        format!("_{ident}")
     } else {
         ident
     }

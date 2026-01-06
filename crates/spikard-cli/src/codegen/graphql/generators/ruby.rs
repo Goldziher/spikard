@@ -5,8 +5,8 @@
 //! type annotations via RBS (Ruby Signature files) for integration with Steep type checker.
 //!
 //! Generated code includes:
-//! - GraphQL::Schema::Object/InputObject classes for types
-//! - GraphQL::Schema::Enum for enumerations
+//! - `GraphQL::Schema::Object/InputObject` classes for types
+//! - `GraphQL::Schema::Enum` for enumerations
 //! - Resolver methods with keyword arguments
 //! - RBS type signatures in comments for optional type checking
 
@@ -163,7 +163,7 @@ impl RubyGenerator {
 
             let method_name = to_snake_case(&field.name);
             if field.arguments.is_empty() {
-                rbs.push_str(&format!("    def {}: () -> {}\n", method_name, field_type));
+                rbs.push_str(&format!("    def {method_name}: () -> {field_type}\n"));
             } else {
                 let mut arg_types = Vec::new();
                 for arg in &field.arguments {
@@ -203,7 +203,7 @@ impl RubyGenerator {
 
                 let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
-                    rbs.push_str(&format!("    def {}: () -> {}\n", method_name, field_type));
+                    rbs.push_str(&format!("    def {method_name}: () -> {field_type}\n"));
                 } else {
                     let mut arg_types = Vec::new();
                     for arg in &field.arguments {
@@ -244,7 +244,7 @@ impl RubyGenerator {
 
                 let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
-                    rbs.push_str(&format!("    def {}: () -> {}\n", method_name, field_type));
+                    rbs.push_str(&format!("    def {method_name}: () -> {field_type}\n"));
                 } else {
                     let mut arg_types = Vec::new();
                     for arg in &field.arguments {
@@ -306,7 +306,7 @@ impl GraphQLGenerator for RubyGenerator {
 
             // Add description as comment
             if let Some(desc) = &type_def.description {
-                code.push_str(&format!("  # {}\n", desc));
+                code.push_str(&format!("  # {desc}\n"));
             }
 
             // Generate type based on kind
@@ -320,7 +320,7 @@ impl GraphQLGenerator for RubyGenerator {
                         }
 
                         if let Some(field_desc) = &field.description {
-                            code.push_str(&format!("    # {}\n", field_desc));
+                            code.push_str(&format!("    # {field_desc}\n"));
                         }
 
                         if field.arguments.is_empty() {
@@ -329,12 +329,12 @@ impl GraphQLGenerator for RubyGenerator {
                             let base_type = field.type_name.trim_matches(|c| c == '!' || c == '[' || c == ']');
                             let field_type = if field.is_list {
                                 if field.list_item_nullable {
-                                    format!("[Types::{}, null: true]", base_type)
+                                    format!("[Types::{base_type}, null: true]")
                                 } else {
-                                    format!("[Types::{}]", base_type)
+                                    format!("[Types::{base_type}]")
                                 }
                             } else {
-                                format!("Types::{}", base_type)
+                                format!("Types::{base_type}")
                             };
 
                             let null_option = if field.is_nullable { "null: true" } else { "null: false" };
@@ -342,7 +342,7 @@ impl GraphQLGenerator for RubyGenerator {
 
                             if let Some(reason) = &field.deprecation_reason {
                                 let safe_reason = reason.replace('"', "\\\"").replace('\n', " ");
-                                code.push_str(&format!("    deprecation_reason \"{}\"\n", safe_reason));
+                                code.push_str(&format!("    deprecation_reason \"{safe_reason}\"\n"));
                             }
                         } else {
                             code.push_str(&format!("    field :{} do\n", field.name));
@@ -355,12 +355,12 @@ impl GraphQLGenerator for RubyGenerator {
                                 let base_type = arg.type_name.trim_matches(|c| c == '!' || c == '[' || c == ']');
                                 let arg_type = if arg.is_list {
                                     if arg.list_item_nullable {
-                                        format!("[Types::{}, null: true]", base_type)
+                                        format!("[Types::{base_type}, null: true]")
                                     } else {
-                                        format!("[Types::{}]", base_type)
+                                        format!("[Types::{base_type}]")
                                     }
                                 } else {
-                                    format!("Types::{}", base_type)
+                                    format!("Types::{base_type}")
                                 };
 
                                 let required = if arg.is_nullable { "" } else { ", required: true" };
@@ -382,18 +382,18 @@ impl GraphQLGenerator for RubyGenerator {
                         }
 
                         if let Some(field_desc) = &field.description {
-                            code.push_str(&format!("    # {}\n", field_desc));
+                            code.push_str(&format!("    # {field_desc}\n"));
                         }
 
                         let base_type = field.type_name.trim_matches(|c| c == '!' || c == '[' || c == ']');
                         let field_type = if field.is_list {
                             if field.list_item_nullable {
-                                format!("[Types::{}, null: true]", base_type)
+                                format!("[Types::{base_type}, null: true]")
                             } else {
-                                format!("[Types::{}]", base_type)
+                                format!("[Types::{base_type}]")
                             }
                         } else {
-                            format!("Types::{}", base_type)
+                            format!("Types::{base_type}")
                         };
 
                         let required = if field.is_nullable { "" } else { ", required: true" };
@@ -407,7 +407,7 @@ impl GraphQLGenerator for RubyGenerator {
 
                     for value in &type_def.enum_values {
                         if let Some(desc) = &value.description {
-                            code.push_str(&format!("    # {}\n", desc));
+                            code.push_str(&format!("    # {desc}\n"));
                         }
 
                         code.push_str(&format!("    value :{}\n", value.name));
@@ -429,7 +429,7 @@ impl GraphQLGenerator for RubyGenerator {
                     code.push_str(&format!("  class {} < GraphQL::Schema::Union\n", type_def.name));
 
                     for possible_type in &type_def.possible_types {
-                        code.push_str(&format!("    possible_type Types::{}\n", possible_type));
+                        code.push_str(&format!("    possible_type Types::{possible_type}\n"));
                     }
 
                     code.push_str("  end\n\n");
@@ -443,18 +443,18 @@ impl GraphQLGenerator for RubyGenerator {
                         }
 
                         if let Some(field_desc) = &field.description {
-                            code.push_str(&format!("    # {}\n", field_desc));
+                            code.push_str(&format!("    # {field_desc}\n"));
                         }
 
                         let base_type = field.type_name.trim_matches(|c| c == '!' || c == '[' || c == ']');
                         let field_type = if field.is_list {
                             if field.list_item_nullable {
-                                format!("[Types::{}, null: true]", base_type)
+                                format!("[Types::{base_type}, null: true]")
                             } else {
-                                format!("[Types::{}]", base_type)
+                                format!("[Types::{base_type}]")
                             }
                         } else {
-                            format!("Types::{}", base_type)
+                            format!("Types::{base_type}")
                         };
 
                         let null_option = if field.is_nullable { "null: true" } else { "null: false" };
@@ -488,15 +488,14 @@ impl GraphQLGenerator for RubyGenerator {
         } else {
             for field in &schema.queries {
                 if let Some(desc) = &field.description {
-                    code.push_str(&format!("  # {}\n", desc));
+                    code.push_str(&format!("  # {desc}\n"));
                 }
 
                 let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
-                    code.push_str(&format!("  def {}\n", method_name));
+                    code.push_str(&format!("  def {method_name}\n"));
                     code.push_str(&format!(
-                        "    raise NotImplementedError, \"TODO: Implement QueryType#{}\"\n",
-                        method_name
+                        "    raise NotImplementedError, \"TODO: Implement QueryType#{method_name}\"\n"
                     ));
                     code.push_str("  end\n\n");
                 } else {
@@ -506,12 +505,11 @@ impl GraphQLGenerator for RubyGenerator {
                             args.push_str(", ");
                         }
                         let arg_name = to_snake_case(&arg.name);
-                        args.push_str(&format!("{}:", arg_name));
+                        args.push_str(&format!("{arg_name}:"));
                     }
-                    code.push_str(&format!("  def {}({})\n", method_name, args));
+                    code.push_str(&format!("  def {method_name}({args})\n"));
                     code.push_str(&format!(
-                        "    raise NotImplementedError, \"TODO: Implement QueryType#{}\"\n",
-                        method_name
+                        "    raise NotImplementedError, \"TODO: Implement QueryType#{method_name}\"\n"
                     ));
                     code.push_str("  end\n\n");
                 }
@@ -526,15 +524,14 @@ impl GraphQLGenerator for RubyGenerator {
         } else {
             for field in &schema.mutations {
                 if let Some(desc) = &field.description {
-                    code.push_str(&format!("  # {}\n", desc));
+                    code.push_str(&format!("  # {desc}\n"));
                 }
 
                 let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
-                    code.push_str(&format!("  def {}\n", method_name));
+                    code.push_str(&format!("  def {method_name}\n"));
                     code.push_str(&format!(
-                        "    raise NotImplementedError, \"TODO: Implement MutationType#{}\"\n",
-                        method_name
+                        "    raise NotImplementedError, \"TODO: Implement MutationType#{method_name}\"\n"
                     ));
                     code.push_str("  end\n\n");
                 } else {
@@ -544,12 +541,11 @@ impl GraphQLGenerator for RubyGenerator {
                             args.push_str(", ");
                         }
                         let arg_name = to_snake_case(&arg.name);
-                        args.push_str(&format!("{}:", arg_name));
+                        args.push_str(&format!("{arg_name}:"));
                     }
-                    code.push_str(&format!("  def {}({})\n", method_name, args));
+                    code.push_str(&format!("  def {method_name}({args})\n"));
                     code.push_str(&format!(
-                        "    raise NotImplementedError, \"TODO: Implement MutationType#{}\"\n",
-                        method_name
+                        "    raise NotImplementedError, \"TODO: Implement MutationType#{method_name}\"\n"
                     ));
                     code.push_str("  end\n\n");
                 }
@@ -562,15 +558,14 @@ impl GraphQLGenerator for RubyGenerator {
             code.push_str("class SubscriptionType < GraphQL::Schema::Object\n");
             for field in &schema.subscriptions {
                 if let Some(desc) = &field.description {
-                    code.push_str(&format!("  # {}\n", desc));
+                    code.push_str(&format!("  # {desc}\n"));
                 }
 
                 let method_name = to_snake_case(&field.name);
                 if field.arguments.is_empty() {
-                    code.push_str(&format!("  def {}\n", method_name));
+                    code.push_str(&format!("  def {method_name}\n"));
                     code.push_str(&format!(
-                        "    raise NotImplementedError, \"TODO: Implement SubscriptionType#{}\"\n",
-                        method_name
+                        "    raise NotImplementedError, \"TODO: Implement SubscriptionType#{method_name}\"\n"
                     ));
                     code.push_str("  end\n\n");
                 } else {
@@ -580,12 +575,11 @@ impl GraphQLGenerator for RubyGenerator {
                             args.push_str(", ");
                         }
                         let arg_name = to_snake_case(&arg.name);
-                        args.push_str(&format!("{}:", arg_name));
+                        args.push_str(&format!("{arg_name}:"));
                     }
-                    code.push_str(&format!("  def {}({})\n", method_name, args));
+                    code.push_str(&format!("  def {method_name}({args})\n"));
                     code.push_str(&format!(
-                        "    raise NotImplementedError, \"TODO: Implement SubscriptionType#{}\"\n",
-                        method_name
+                        "    raise NotImplementedError, \"TODO: Implement SubscriptionType#{method_name}\"\n"
                     ));
                     code.push_str("  end\n\n");
                 }

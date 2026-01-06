@@ -37,7 +37,7 @@ pub struct MessageDef {
     /// Message fields
     pub fields: Vec<FieldDef>,
     /// Nested message definitions
-    pub nested_messages: HashMap<String, MessageDef>,
+    pub nested_messages: HashMap<String, Self>,
     /// Nested enum definitions
     pub nested_enums: HashMap<String, EnumDef>,
     /// Message description from comments
@@ -148,25 +148,26 @@ pub enum ProtoType {
 
 impl ProtoType {
     /// Get the string representation of a proto type
+    #[must_use] 
     pub fn as_str(&self) -> String {
         match self {
-            ProtoType::Double => "double".to_string(),
-            ProtoType::Float => "float".to_string(),
-            ProtoType::Int32 => "int32".to_string(),
-            ProtoType::Int64 => "int64".to_string(),
-            ProtoType::Uint32 => "uint32".to_string(),
-            ProtoType::Uint64 => "uint64".to_string(),
-            ProtoType::Sint32 => "sint32".to_string(),
-            ProtoType::Sint64 => "sint64".to_string(),
-            ProtoType::Fixed32 => "fixed32".to_string(),
-            ProtoType::Fixed64 => "fixed64".to_string(),
-            ProtoType::Sfixed32 => "sfixed32".to_string(),
-            ProtoType::Sfixed64 => "sfixed64".to_string(),
-            ProtoType::Bool => "bool".to_string(),
-            ProtoType::String => "string".to_string(),
-            ProtoType::Bytes => "bytes".to_string(),
-            ProtoType::Message(name) => name.clone(),
-            ProtoType::Enum(name) => name.clone(),
+            Self::Double => "double".to_string(),
+            Self::Float => "float".to_string(),
+            Self::Int32 => "int32".to_string(),
+            Self::Int64 => "int64".to_string(),
+            Self::Uint32 => "uint32".to_string(),
+            Self::Uint64 => "uint64".to_string(),
+            Self::Sint32 => "sint32".to_string(),
+            Self::Sint64 => "sint64".to_string(),
+            Self::Fixed32 => "fixed32".to_string(),
+            Self::Fixed64 => "fixed64".to_string(),
+            Self::Sfixed32 => "sfixed32".to_string(),
+            Self::Sfixed64 => "sfixed64".to_string(),
+            Self::Bool => "bool".to_string(),
+            Self::String => "string".to_string(),
+            Self::Bytes => "bytes".to_string(),
+            Self::Message(name) => name.clone(),
+            Self::Enum(name) => name.clone(),
         }
     }
 }
@@ -177,7 +178,7 @@ impl ProtoType {
 /// * `path` - Path to .proto file
 ///
 /// # Returns
-/// Parsed ProtobufSchema or error (rejects proto2 syntax)
+/// Parsed `ProtobufSchema` or error (rejects proto2 syntax)
 pub fn parse_proto_schema(path: &Path) -> Result<ProtobufSchema> {
     let content = fs::read_to_string(path).with_context(|| format!("Failed to read proto file: {}", path.display()))?;
 

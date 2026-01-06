@@ -1,4 +1,4 @@
-//! TypeScript OpenRPC code generation.
+//! TypeScript `OpenRPC` code generation.
 
 use anyhow::Result;
 use serde_json::Value;
@@ -9,7 +9,7 @@ use crate::codegen::openrpc::spec_parser::{
 
 use super::OpenRpcGenerator;
 
-/// TypeScript OpenRPC code generator
+/// TypeScript `OpenRPC` code generator
 pub struct TypeScriptOpenRpcGenerator;
 
 impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
@@ -78,7 +78,7 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
         for method in extract_methods(spec) {
             let handler_name = format!("handle{}", pascal_case(&method.name));
             code.push_str(&format!("    if (method === \"{}\") {{\n", method.name));
-            code.push_str(&format!("      const result = await {}(params);\n", handler_name));
+            code.push_str(&format!("      const result = await {handler_name}(params);\n"));
             code.push_str("      return { jsonrpc: \"2.0\", result, id };\n");
             code.push_str("    }\n");
         }
@@ -145,7 +145,7 @@ fn generate_typescript_schemas(
 ) -> Result<()> {
     if !method.params.is_empty() {
         let schema_name = format!("{}ParamsSchema", pascal_case(&method.name));
-        code.push_str(&format!("const {} = z.object({{\n", schema_name));
+        code.push_str(&format!("const {schema_name} = z.object({{\n"));
         for param in &method.params {
             code.push_str(&format!("  {}: {},\n", param.name, json_schema_to_zod(&param.schema)));
         }
@@ -153,7 +153,7 @@ fn generate_typescript_schemas(
     }
 
     let result_schema_name = format!("{}ResultSchema", pascal_case(&method.name));
-    code.push_str(&format!("const {} = z.object({{\n", result_schema_name));
+    code.push_str(&format!("const {result_schema_name} = z.object({{\n"));
     if let Some(properties) = method.result.schema.get("properties")
         && let Some(props) = properties.as_object()
     {
@@ -173,14 +173,13 @@ fn generate_typescript_types(
     if !method.params.is_empty() {
         let type_name = get_method_params_class_name(&method.name);
         let schema_name = format!("{}ParamsSchema", pascal_case(&method.name));
-        code.push_str(&format!("type {} = z.infer<typeof {}>;\n", type_name, schema_name));
+        code.push_str(&format!("type {type_name} = z.infer<typeof {schema_name}>;\n"));
     }
 
     let result_type_name = get_result_class_name(&method.name);
     let result_schema_name = format!("{}ResultSchema", pascal_case(&method.name));
     code.push_str(&format!(
-        "type {} = z.infer<typeof {}>;\n",
-        result_type_name, result_schema_name
+        "type {result_type_name} = z.infer<typeof {result_schema_name}>;\n"
     ));
 
     code.push('\n');
@@ -196,15 +195,14 @@ fn generate_typescript_handler(
     let result_type_name = get_result_class_name(&method.name);
 
     code.push_str(&format!(
-        "async function {}(params: unknown): Promise<{}> {{\n",
-        handler_name, result_type_name
+        "async function {handler_name}(params: unknown): Promise<{result_type_name}> {{\n"
     ));
     code.push_str("  /**\n");
     if let Some(summary) = &method.summary {
-        code.push_str(&format!("   * {}\n", summary));
+        code.push_str(&format!("   * {summary}\n"));
     }
     if let Some(desc) = &method.description {
-        code.push_str(&format!("   *\n   * {}\n", desc));
+        code.push_str(&format!("   *\n   * {desc}\n"));
     }
     code.push_str("   *\n");
     code.push_str("   * @param params - Method parameters\n");
@@ -214,7 +212,7 @@ fn generate_typescript_handler(
 
     if !method.params.is_empty() {
         let schema_name = format!("{}ParamsSchema", pascal_case(&method.name));
-        code.push_str(&format!("  const parsedParams = {}.parse(params);\n\n", schema_name));
+        code.push_str(&format!("  const parsedParams = {schema_name}.parse(params);\n\n"));
     }
 
     // TODO comment
@@ -231,7 +229,7 @@ fn generate_typescript_handler(
         && let Some(props) = properties.as_object()
     {
         for field_name in props.keys().take(3) {
-            code.push_str(&format!("  result[\"{}\"] = \"TODO\";\n", field_name));
+            code.push_str(&format!("  result[\"{field_name}\"] = \"TODO\";\n"));
         }
     }
     code.push_str("  return result as any; // TODO: type-safe return\n");
@@ -286,6 +284,5 @@ fn pascal_case(input: &str) -> String {
                 Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
             }
         })
-        .collect::<Vec<_>>()
-        .join("")
+        .collect::<String>()
 }

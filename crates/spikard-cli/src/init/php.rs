@@ -22,7 +22,7 @@ impl ProjectScaffolder for PhpScaffolder {
         ));
 
         // Create composer.lock (empty placeholder)
-        files.push(ScaffoldedFile::new(PathBuf::from("composer.lock"), "".to_string()));
+        files.push(ScaffoldedFile::new(PathBuf::from("composer.lock"), String::new()));
 
         // Create phpstan.neon
         files.push(ScaffoldedFile::new(
@@ -76,7 +76,7 @@ impl PhpScaffolder {
     fn generate_composer_json(&self, project_name: &str) -> String {
         format!(
             r#"{{
-  "name": "{}",
+  "name": "{project_name}",
   "description": "Spikard PHP application",
   "type": "project",
   "require": {{
@@ -105,13 +105,12 @@ impl PhpScaffolder {
   ],
   "license": "MIT"
 }}
-"#,
-            project_name
+"#
         )
     }
 
     fn generate_phpstan_neon(&self) -> String {
-        r#"parameters:
+        r"parameters:
   level: max
   paths:
     - src
@@ -120,7 +119,7 @@ impl PhpScaffolder {
     - */vendor/*
   treatPhpDocTypesAsCertain: false
   checkMissingIterableValueType: false
-"#
+"
         .to_string()
     }
 
@@ -152,7 +151,7 @@ impl PhpScaffolder {
     }
 
     fn generate_app_php(&self) -> String {
-        r#"<?php
+        r"<?php
 
 declare(strict_types=1);
 
@@ -182,12 +181,12 @@ final class AppController
         return Response::text('Welcome to Spikard PHP');
     }
 }
-"#
+"
         .to_string()
     }
 
     fn generate_app_test_php(&self) -> String {
-        r#"<?php
+        r"<?php
 
 declare(strict_types=1);
 
@@ -211,12 +210,12 @@ final class AppTest extends TestCase
         $this->assertTrue(true);
     }
 }
-"#
+"
         .to_string()
     }
 
     fn generate_gitignore(&self) -> String {
-        r#"# Dependencies
+        r"# Dependencies
 /vendor/
 composer.lock
 
@@ -242,13 +241,13 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
-"#
+"
         .to_string()
     }
 
     fn generate_readme(&self, project_name: &str) -> String {
         format!(
-            r#"# {}
+            r"# {project_name}
 
 A Spikard PHP application.
 
@@ -293,8 +292,7 @@ composer run phpstan
 
 - [Spikard Documentation](https://spikard.dev)
 - [PHP PSR Standards](https://www.php-fig.org/)
-"#,
-            project_name
+"
         )
     }
 }

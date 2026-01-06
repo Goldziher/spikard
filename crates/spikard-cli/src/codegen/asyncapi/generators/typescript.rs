@@ -1,11 +1,11 @@
-//! TypeScript AsyncAPI code generation.
+//! TypeScript `AsyncAPI` code generation.
 
 use anyhow::{Result, bail};
 
 use super::base::sanitize_typescript_identifier;
 use super::{AsyncApiGenerator, ChannelInfo};
 
-/// TypeScript AsyncAPI code generator
+/// TypeScript `AsyncAPI` code generator
 pub struct TypeScriptAsyncApiGenerator;
 
 impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
@@ -26,8 +26,7 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
             }
             _ => {
                 return Err(anyhow::anyhow!(
-                    "Unsupported protocol for TypeScript test app: {}",
-                    protocol
+                    "Unsupported protocol for TypeScript test app: {protocol}"
                 ));
             }
         }
@@ -68,7 +67,7 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
 
         match protocol {
             "websocket" | "sse" => {}
-            other => bail!("Protocol {} is not supported for TypeScript handler generation", other),
+            other => bail!("Protocol {other} is not supported for TypeScript handler generation"),
         }
 
         let mut code = String::new();
@@ -94,8 +93,7 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
             match protocol {
                 "websocket" => {
                     code.push_str(&format!(
-                        "async function {}(message: unknown): Promise<string> {{\n",
-                        handler_name
+                        "async function {handler_name}(message: unknown): Promise<string> {{\n"
                     ));
                     code.push_str(&format!(
                         "  // TODO: Handle {} for {}\n",
@@ -106,8 +104,7 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
                 }
                 "sse" => {
                     code.push_str(&format!(
-                        "async function {}(): Promise<StreamingResponse> {{\n",
-                        handler_name
+                        "async function {handler_name}(): Promise<StreamingResponse> {{\n"
                     ));
                     code.push_str("  async function* eventStream() {\n");
                     code.push_str("    yield \"data: {\\\"message\\\": \\\"replace with event\\\"}\\n\\n\";\n");
@@ -124,7 +121,7 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
                 "{{ method: \"GET\", path: \"{}\", handler_name: \"{}\", is_async: true }}",
                 channel.path, handler_name
             ));
-            handler_entries.push(format!("{}: {}", handler_name, handler_name));
+            handler_entries.push(format!("{handler_name}: {handler_name}"));
         }
 
         code.push_str("const routes: RouteMetadata[] = [\n    ");

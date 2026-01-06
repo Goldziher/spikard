@@ -22,14 +22,14 @@ pub enum QualityError {
 impl fmt::Display for QualityError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            QualityError::ToolNotFound(tool) => {
-                write!(f, "Required validation tool not found: {}", tool)
+            Self::ToolNotFound(tool) => {
+                write!(f, "Required validation tool not found: {tool}")
             }
-            QualityError::ValidationFailed(msg) => {
-                write!(f, "Validation failed: {}", msg)
+            Self::ValidationFailed(msg) => {
+                write!(f, "Validation failed: {msg}")
             }
-            QualityError::IoError(msg) => {
-                write!(f, "I/O error: {}", msg)
+            Self::IoError(msg) => {
+                write!(f, "I/O error: {msg}")
             }
         }
     }
@@ -39,7 +39,7 @@ impl std::error::Error for QualityError {}
 
 impl From<std::io::Error> for QualityError {
     fn from(err: std::io::Error) -> Self {
-        QualityError::IoError(err.to_string())
+        Self::IoError(err.to_string())
     }
 }
 
@@ -58,7 +58,7 @@ pub struct ValidationReport {
 
 impl ValidationReport {
     /// Creates a new empty validation report
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             syntax_passed: false,
             types_passed: false,
@@ -70,12 +70,14 @@ impl ValidationReport {
     /// Checks if all validation checks passed
     ///
     /// Returns `true` only if syntax, types, and lint all passed without errors.
-    pub fn is_valid(&self) -> bool {
+    #[must_use] 
+    pub const fn is_valid(&self) -> bool {
         self.syntax_passed && self.types_passed && self.lint_passed && self.errors.is_empty()
     }
 
     /// Returns the count of validation errors
-    pub fn error_count(&self) -> usize {
+    #[must_use] 
+    pub const fn error_count(&self) -> usize {
         self.errors.len()
     }
 
@@ -95,7 +97,7 @@ impl fmt::Display for ValidationReport {
         if !self.errors.is_empty() {
             writeln!(f, "  Errors: {}", self.error_count())?;
             for error in &self.errors {
-                writeln!(f, "    - {}", error)?;
+                writeln!(f, "    - {error}")?;
             }
         }
 
@@ -138,7 +140,8 @@ impl QualityValidator {
     /// ```ignore
     /// let validator = QualityValidator::new(TargetLanguage::Python);
     /// ```
-    pub fn new(language: TargetLanguage) -> Self {
+    #[must_use] 
+    pub const fn new(language: TargetLanguage) -> Self {
         Self { language }
     }
 
@@ -369,7 +372,7 @@ impl QualityValidator {
             Ok(()) => report.syntax_passed = true,
             Err(e) => {
                 report.syntax_passed = false;
-                report.add_error(format!("Syntax: {}", e));
+                report.add_error(format!("Syntax: {e}"));
             }
         }
 
@@ -378,7 +381,7 @@ impl QualityValidator {
             Ok(()) => report.types_passed = true,
             Err(e) => {
                 report.types_passed = false;
-                report.add_error(format!("Types: {}", e));
+                report.add_error(format!("Types: {e}"));
             }
         }
 
@@ -387,7 +390,7 @@ impl QualityValidator {
             Ok(()) => report.lint_passed = true,
             Err(e) => {
                 report.lint_passed = false;
-                report.add_error(format!("Lint: {}", e));
+                report.add_error(format!("Lint: {e}"));
             }
         }
 
@@ -446,10 +449,10 @@ impl QualityValidator {
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stdout = String::from_utf8_lossy(&output.stdout);
-            let message = if !stderr.is_empty() {
-                stderr.to_string()
-            } else {
+            let message = if stderr.is_empty() {
                 stdout.to_string()
+            } else {
+                stderr.to_string()
             };
             Err(QualityError::ValidationFailed(message))
         }

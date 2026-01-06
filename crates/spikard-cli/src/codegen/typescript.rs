@@ -1,4 +1,4 @@
-//! TypeScript code generation from OpenAPI schemas
+//! TypeScript code generation from `OpenAPI` schemas
 
 use super::NodeDtoStyle;
 use anyhow::Result;
@@ -12,7 +12,8 @@ pub struct TypeScriptGenerator {
 }
 
 impl TypeScriptGenerator {
-    pub fn new(spec: OpenAPI, dto: NodeDtoStyle) -> Self {
+    #[must_use] 
+    pub const fn new(spec: OpenAPI, dto: NodeDtoStyle) -> Self {
         Self { spec, dto }
     }
 
@@ -85,7 +86,7 @@ import {{ z }} from "zod";
         let mut output = String::new();
 
         if let Some(description) = &schema.schema_data.description {
-            output.push_str(&format!("/** {} */\n", description));
+            output.push_str(&format!("/** {description} */\n"));
         }
 
         let mut schema_expr = match &schema.schema_kind {
@@ -104,12 +105,12 @@ import {{ z }} from "zod";
                             if is_required {
                                 ref_schema
                             } else {
-                                format!("{}.optional()", ref_schema)
+                                format!("{ref_schema}.optional()")
                             }
                         }
                     };
 
-                    expr.push_str(&format!("\t{}: {},\n", field_name, zod_type));
+                    expr.push_str(&format!("\t{field_name}: {zod_type},\n"));
                 }
 
                 expr.push_str("})");
@@ -122,11 +123,10 @@ import {{ z }} from "zod";
             schema_expr.push_str(".nullable()");
         }
 
-        output.push_str(&format!("export const {} = {};\n", schema_name, schema_expr));
+        output.push_str(&format!("export const {schema_name} = {schema_expr};\n"));
 
         output.push_str(&format!(
-            "\nexport type {} = z.infer<typeof {}>;\n",
-            type_name, schema_name
+            "\nexport type {type_name} = z.infer<typeof {schema_name}>;\n"
         ));
 
         Ok(output)
@@ -215,7 +215,7 @@ import {{ z }} from "zod";
                     }
                     None => "z.record(z.string(), z.unknown())".to_string(),
                 };
-                format!("z.array({})", item_type)
+                format!("z.array({item_type})")
             }
             SchemaKind::Type(Type::Object(_)) => "z.record(z.string(), z.unknown())".to_string(),
             _ => "z.unknown()".to_string(),
@@ -235,7 +235,7 @@ import {{ z }} from "zod";
     fn schema_to_typescript_type(schema: &Schema, optional: bool) -> String {
         let mut base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "string".to_string(),
-            SchemaKind::Type(Type::Number(_)) | SchemaKind::Type(Type::Integer(_)) => "number".to_string(),
+            SchemaKind::Type(Type::Number(_) | Type::Integer(_)) => "number".to_string(),
             SchemaKind::Type(Type::Boolean(_)) => "boolean".to_string(),
             SchemaKind::Type(Type::Array(arr)) => {
                 let item_type = match &arr.items {
@@ -246,7 +246,7 @@ import {{ z }} from "zod";
                     }
                     None => "Record<string, unknown>".to_string(),
                 };
-                format!("{}[]", item_type)
+                format!("{item_type}[]")
             }
             SchemaKind::Type(Type::Object(_)) => "Record<string, unknown>".to_string(),
             _ => "unknown".to_string(),
@@ -297,7 +297,7 @@ import {{ z }} from "zod";
         let mut output = String::new();
 
         if let Some(summary) = &operation.summary {
-            output.push_str(&format!("/**\n * {}\n", summary));
+            output.push_str(&format!("/**\n * {summary}\n"));
         } else {
             output.push_str("/**\n");
         }
@@ -338,7 +338,7 @@ import {{ z }} from "zod";
 
         let return_type = self.extract_response_type(operation);
 
-        output.push_str(&format!("export function {}(_request: Request", func_name));
+        output.push_str(&format!("export function {func_name}(_request: Request"));
 
         for (param_name, param_type) in &path_params {
             output.push_str(&format!(", _{}: Path<{}>", param_name.to_snake_case(), param_type));
@@ -362,13 +362,13 @@ import {{ z }} from "zod";
             } else {
                 body_schema_name.as_str()
             };
-            output.push_str(&format!(", _body: Body<{}>", body_type));
+            output.push_str(&format!(", _body: Body<{body_type}>"));
         }
 
-        output.push_str(&format!("): {} {{\n", return_type));
+        output.push_str(&format!("): {return_type} {{\n"));
 
         if let Some(desc) = &operation.description {
-            output.push_str(&format!("\t/**\n\t * {}\n\t */\n", desc));
+            output.push_str(&format!("\t/**\n\t * {desc}\n\t */\n"));
         }
 
         output.push_str("\tthrow new Error(\"TODO: Implement this endpoint\");\n");
@@ -385,10 +385,10 @@ import {{ z }} from "zod";
     }
 
     fn generate_main(&self) -> String {
-        r#"
+        r"
 // Run the application
 // Note: Actual server setup depends on your runtime configuration
-"#
+"
         .to_string()
     }
 }

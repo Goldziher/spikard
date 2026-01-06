@@ -25,7 +25,7 @@ pub struct RustGenerator {
 
 impl RustGenerator {
     /// Create a new Rust GraphQL generator with default settings
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             include_serde: true,
             include_debug: true,
@@ -35,21 +35,21 @@ impl RustGenerator {
 
     /// Builder method to disable serde derives
     #[allow(dead_code)]
-    pub fn without_serde(mut self) -> Self {
+    pub const fn without_serde(mut self) -> Self {
         self.include_serde = false;
         self
     }
 
     /// Builder method to disable debug derives
     #[allow(dead_code)]
-    pub fn without_debug(mut self) -> Self {
+    pub const fn without_debug(mut self) -> Self {
         self.include_debug = false;
         self
     }
 
     /// Builder method to use bare types instead of Result
     #[allow(dead_code)]
-    pub fn with_bare_types(mut self) -> Self {
+    pub const fn with_bare_types(mut self) -> Self {
         self.use_result_types = false;
         self
     }
@@ -83,15 +83,15 @@ impl RustGenerator {
         let base = self.map_scalar_type(field_type);
         let with_list = if is_list {
             if list_item_nullable {
-                format!("Vec<Option<{}>>", base)
+                format!("Vec<Option<{base}>>")
             } else {
-                format!("Vec<{}>", base)
+                format!("Vec<{base}>")
             }
         } else {
             base
         };
         if is_nullable {
-            format!("Option<{}>", with_list)
+            format!("Option<{with_list}>")
         } else {
             with_list
         }
@@ -104,7 +104,7 @@ impl RustGenerator {
             let lines: Vec<&str> = desc.lines().collect();
             let mut result = String::new();
             for line in lines {
-                result.push_str(&format!("{}/// {}\n", indent_str, line));
+                result.push_str(&format!("{indent_str}/// {line}\n"));
             }
             result
         } else {
@@ -144,7 +144,7 @@ impl RustGenerator {
         code
     }
 
-    /// Generate InputObject type definition
+    /// Generate `InputObject` type definition
     fn gen_input_object_type(&self, type_def: &GraphQLType) -> String {
         let mut code = String::new();
         code.push_str(&self.gen_doc(type_def.description.as_deref(), 0));
@@ -227,7 +227,7 @@ impl RustGenerator {
         code.push_str(&format!("pub enum {} {{\n", type_def.name));
 
         for possible_type in &type_def.possible_types {
-            code.push_str(&format!("    {}({}),\n", possible_type, possible_type));
+            code.push_str(&format!("    {possible_type}({possible_type}),\n"));
         }
 
         code.push_str("}\n");
@@ -256,9 +256,9 @@ impl RustGenerator {
 
             let return_type = self.map_type(&field.type_name, field.is_nullable, field.is_list);
             if self.use_result_types {
-                code.push_str(&format!(") -> async_graphql::Result<{}>;\n", return_type));
+                code.push_str(&format!(") -> async_graphql::Result<{return_type}>;\n"));
             } else {
-                code.push_str(&format!(") -> {};\n", return_type));
+                code.push_str(&format!(") -> {return_type};\n"));
             }
         }
 
@@ -327,7 +327,9 @@ impl GraphQLGenerator for RustGenerator {
         code.push_str("#[Object]\n");
         code.push_str("impl Query {\n");
 
-        if !schema.queries.is_empty() {
+        if schema.queries.is_empty() {
+            code.push_str("    // TODO: Add query fields\n");
+        } else {
             for field in &schema.queries {
                 code.push_str(&self.gen_doc(field.description.as_deref(), 4));
                 code.push_str(&format!("    pub async fn {}(&self", field.name.to_snake_case()));
@@ -342,21 +344,25 @@ impl GraphQLGenerator for RustGenerator {
 
                 let return_type = self.map_type(&field.type_name, field.is_nullable, field.is_list);
                 if self.use_result_types {
-                    code.push_str(&format!(") -> Result<{}> {{\n", return_type));
+                    code.push_str(&format!(") -> Result<{return_type}> {{\n"));
                 } else {
-                    code.push_str(&format!(") -> {} {{\n", return_type));
+                    code.push_str(&format!(") -> {return_type} {{\n"));
                 }
                 code.push_str("        todo!(\"Implement query resolver\")\n");
                 code.push_str("    }\n");
             }
-        } else {
-            code.push_str("    // TODO: Add query fields\n");
         }
 
         code.push_str("}\n\n");
 
         // Generate Mutation resolver if mutations exist
-        if !schema.mutations.is_empty() {
+        if schema.mutations.is_empty() {
+            code.push_str("/// Mutation root type (empty)\n");
+            code.push_str("#[derive(Default, Debug)]\n");
+            code.push_str("pub struct Mutation;\n\n");
+            code.push_str("#[Object]\n");
+            code.push_str("impl Mutation {}\n\n");
+        } else {
             code.push_str("/// Mutation root type resolver\n");
             code.push_str("#[derive(Default, Debug)]\n");
             code.push_str("pub struct Mutation;\n\n");
@@ -377,21 +383,15 @@ impl GraphQLGenerator for RustGenerator {
 
                 let return_type = self.map_type(&field.type_name, field.is_nullable, field.is_list);
                 if self.use_result_types {
-                    code.push_str(&format!(") -> Result<{}> {{\n", return_type));
+                    code.push_str(&format!(") -> Result<{return_type}> {{\n"));
                 } else {
-                    code.push_str(&format!(") -> {} {{\n", return_type));
+                    code.push_str(&format!(") -> {return_type} {{\n"));
                 }
                 code.push_str("        todo!(\"Implement mutation resolver\")\n");
                 code.push_str("    }\n");
             }
 
             code.push_str("}\n\n");
-        } else {
-            code.push_str("/// Mutation root type (empty)\n");
-            code.push_str("#[derive(Default, Debug)]\n");
-            code.push_str("pub struct Mutation;\n\n");
-            code.push_str("#[Object]\n");
-            code.push_str("impl Mutation {}\n\n");
         }
 
         // Generate Subscription stub if subscriptions exist

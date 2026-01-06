@@ -40,7 +40,7 @@ pub trait ProtobufGenerator {
     fn generate_complete(&self, schema: &ProtobufSchema) -> Result<String> {
         let messages = self.generate_messages(schema)?;
         let services = self.generate_services(schema)?;
-        Ok(format!("{}\n\n{}", messages, services))
+        Ok(format!("{messages}\n\n{services}"))
     }
 }
 

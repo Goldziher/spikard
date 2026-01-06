@@ -1,11 +1,11 @@
-//! Rust AsyncAPI code generation.
+//! Rust `AsyncAPI` code generation.
 
 use anyhow::{Result, bail};
 
 use super::base::sanitize_identifier;
 use super::{AsyncApiGenerator, ChannelInfo};
 
-/// Rust AsyncAPI code generator
+/// Rust `AsyncAPI` code generator
 pub struct RustAsyncApiGenerator;
 
 impl AsyncApiGenerator for RustAsyncApiGenerator {
@@ -22,7 +22,7 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
                 code.push_str("use reqwest::Client;\n\n");
             }
             _ => {
-                return Err(anyhow::anyhow!("Unsupported protocol for Rust test app: {}", protocol));
+                return Err(anyhow::anyhow!("Unsupported protocol for Rust test app: {protocol}"));
             }
         }
 
@@ -50,7 +50,7 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
 
         match protocol {
             "websocket" | "sse" => {}
-            other => bail!("Protocol {} is not supported for Rust handler generation", other),
+            other => bail!("Protocol {other} is not supported for Rust handler generation"),
         }
 
         let mut code = String::new();
@@ -82,8 +82,8 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
             let path = escape_rust_string(&channel.path);
             match protocol {
                 "websocket" => {
-                    handler_defs.push_str(&format!("struct {};\n\n", struct_name));
-                    handler_defs.push_str(&format!("impl WebSocketHandler for {} {{\n", struct_name));
+                    handler_defs.push_str(&format!("struct {struct_name};\n\n"));
+                    handler_defs.push_str(&format!("impl WebSocketHandler for {struct_name} {{\n"));
                     handler_defs.push_str("    fn handle_message(&self, message: Value) -> impl std::future::Future<Output = Option<Value>> + Send {\n");
                     handler_defs.push_str("        async move {\n");
                     handler_defs.push_str("            println!(\"Received message: {:?}\", message);\n");
@@ -91,11 +91,11 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
                     handler_defs.push_str("        }\n");
                     handler_defs.push_str("    }\n");
                     handler_defs.push_str("}\n\n");
-                    registrations.push_str(&format!("    app.websocket(\"{}\", {});\n", path, struct_name));
+                    registrations.push_str(&format!("    app.websocket(\"{path}\", {struct_name});\n"));
                 }
                 "sse" => {
-                    handler_defs.push_str(&format!("struct {};\n\n", struct_name));
-                    handler_defs.push_str(&format!("impl SseEventProducer for {} {{\n", struct_name));
+                    handler_defs.push_str(&format!("struct {struct_name};\n\n"));
+                    handler_defs.push_str(&format!("impl SseEventProducer for {struct_name} {{\n"));
                     handler_defs.push_str(
                         "    fn next_event(&self) -> impl std::future::Future<Output = Option<SseEvent>> + Send {\n",
                     );
@@ -105,7 +105,7 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
                     handler_defs.push_str("        }\n");
                     handler_defs.push_str("    }\n");
                     handler_defs.push_str("}\n\n");
-                    registrations.push_str(&format!("    app.sse(\"{}\", {});\n", path, struct_name));
+                    registrations.push_str(&format!("    app.sse(\"{path}\", {struct_name});\n"));
                 }
                 _ => {}
             }

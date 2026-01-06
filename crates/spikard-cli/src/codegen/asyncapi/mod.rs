@@ -1,11 +1,11 @@
-//! AsyncAPI v3 specification parsing and code generation
+//! `AsyncAPI` v3 specification parsing and code generation
 //!
-//! This module orchestrates AsyncAPI spec parsing and code generation across
+//! This module orchestrates `AsyncAPI` spec parsing and code generation across
 //! multiple languages. The actual generation logic is delegated to language-specific
 //! generators in the `generators/` module.
 //!
-//! AsyncAPI is the standard for describing event-driven APIs, similar to
-//! how OpenAPI describes REST APIs.
+//! `AsyncAPI` is the standard for describing event-driven APIs, similar to
+//! how `OpenAPI` describes REST APIs.
 
 pub mod generators;
 pub mod spec_parser;
@@ -50,7 +50,7 @@ pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Pro
     let mut generated_paths = Vec::new();
 
     for (message_name, definition) in &schemas {
-        let fixture_path = target_dir.join(format!("{}.json", message_name));
+        let fixture_path = target_dir.join(format!("{message_name}.json"));
 
         let channel = message_channels.get(message_name).cloned();
         let operations = message_operations
@@ -88,7 +88,7 @@ pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Pro
     Ok(generated_paths)
 }
 
-/// Extract channel information from AsyncAPI spec for code generation
+/// Extract channel information from `AsyncAPI` spec for code generation
 pub fn extract_channel_info(spec: &AsyncApiV3Spec) -> Result<Vec<ChannelInfo>> {
     use asyncapiv3::spec::common::Either;
 
@@ -103,7 +103,7 @@ pub fn extract_channel_info(spec: &AsyncApiV3Spec) -> Result<Vec<ChannelInfo>> {
                 let normalized_path = if raw_path.starts_with('/') {
                     raw_path.clone()
                 } else {
-                    format!("/{}", raw_path)
+                    format!("/{raw_path}")
                 };
                 let _operations = operation_map.get(&normalized_path).cloned().unwrap_or_default();
 
@@ -122,104 +122,104 @@ pub fn extract_channel_info(spec: &AsyncApiV3Spec) -> Result<Vec<ChannelInfo>> {
     Ok(channels)
 }
 
-/// Generate Python test application from AsyncAPI spec
+/// Generate Python test application from `AsyncAPI` spec
 pub fn generate_python_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let channels = extract_channel_info(spec)?;
     let protocol_str = match protocol {
         Protocol::WebSocket => "websocket",
         Protocol::Sse => "sse",
-        other => bail!("Unsupported protocol for Python test app: {:?}", other),
+        other => bail!("Unsupported protocol for Python test app: {other:?}"),
     };
 
     let generator = PythonAsyncApiGenerator;
     generator.generate_test_app(&channels, protocol_str)
 }
 
-/// Generate Node.js test application from AsyncAPI spec
+/// Generate Node.js test application from `AsyncAPI` spec
 pub fn generate_nodejs_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let channels = extract_channel_info(spec)?;
     let protocol_str = match protocol {
         Protocol::WebSocket => "websocket",
         Protocol::Sse => "sse",
-        other => bail!("Unsupported protocol for TypeScript test app: {:?}", other),
+        other => bail!("Unsupported protocol for TypeScript test app: {other:?}"),
     };
 
     let generator = TypeScriptAsyncApiGenerator;
     generator.generate_test_app(&channels, protocol_str)
 }
 
-/// Generate Ruby test application from AsyncAPI spec
+/// Generate Ruby test application from `AsyncAPI` spec
 pub fn generate_ruby_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let channels = extract_channel_info(spec)?;
     let protocol_str = match protocol {
         Protocol::WebSocket => "websocket",
         Protocol::Sse => "sse",
-        other => bail!("Unsupported protocol for Ruby test app: {:?}", other),
+        other => bail!("Unsupported protocol for Ruby test app: {other:?}"),
     };
 
     let generator = RubyAsyncApiGenerator;
     generator.generate_test_app(&channels, protocol_str)
 }
 
-/// Generate Python handler scaffolding from AsyncAPI spec
+/// Generate Python handler scaffolding from `AsyncAPI` spec
 pub fn generate_python_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let channels = extract_channel_info(spec)?;
     let protocol_str = match protocol {
         Protocol::WebSocket => "websocket",
         Protocol::Sse => "sse",
-        other => bail!("Unsupported protocol for Python handler generation: {:?}", other),
+        other => bail!("Unsupported protocol for Python handler generation: {other:?}"),
     };
 
     let generator = PythonAsyncApiGenerator;
     generator.generate_handler_app(&channels, protocol_str)
 }
 
-/// Generate Node.js handler scaffolding from AsyncAPI spec
+/// Generate Node.js handler scaffolding from `AsyncAPI` spec
 pub fn generate_nodejs_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let channels = extract_channel_info(spec)?;
     let protocol_str = match protocol {
         Protocol::WebSocket => "websocket",
         Protocol::Sse => "sse",
-        other => bail!("Unsupported protocol for TypeScript handler generation: {:?}", other),
+        other => bail!("Unsupported protocol for TypeScript handler generation: {other:?}"),
     };
 
     let generator = TypeScriptAsyncApiGenerator;
     generator.generate_handler_app(&channels, protocol_str)
 }
 
-/// Generate Ruby handler scaffolding from AsyncAPI spec
+/// Generate Ruby handler scaffolding from `AsyncAPI` spec
 pub fn generate_ruby_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let channels = extract_channel_info(spec)?;
     let protocol_str = match protocol {
         Protocol::WebSocket => "websocket",
         Protocol::Sse => "sse",
-        other => bail!("Unsupported protocol for Ruby handler generation: {:?}", other),
+        other => bail!("Unsupported protocol for Ruby handler generation: {other:?}"),
     };
 
     let generator = RubyAsyncApiGenerator;
     generator.generate_handler_app(&channels, protocol_str)
 }
 
-/// Generate Rust handler scaffolding from AsyncAPI spec
+/// Generate Rust handler scaffolding from `AsyncAPI` spec
 pub fn generate_rust_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let channels = extract_channel_info(spec)?;
     let protocol_str = match protocol {
         Protocol::WebSocket => "websocket",
         Protocol::Sse => "sse",
-        other => bail!("Unsupported protocol for Rust handler generation: {:?}", other),
+        other => bail!("Unsupported protocol for Rust handler generation: {other:?}"),
     };
 
     let generator = RustAsyncApiGenerator;
     generator.generate_handler_app(&channels, protocol_str)
 }
 
-/// Generate PHP handler scaffolding from AsyncAPI spec
+/// Generate PHP handler scaffolding from `AsyncAPI` spec
 pub fn generate_php_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let channels = extract_channel_info(spec)?;
     let protocol_str = match protocol {
         Protocol::WebSocket => "websocket",
         Protocol::Sse => "sse",
-        other => bail!("Unsupported protocol for PHP handler generation: {:?}", other),
+        other => bail!("Unsupported protocol for PHP handler generation: {other:?}"),
     };
 
     let generator = PhpAsyncApiGenerator;

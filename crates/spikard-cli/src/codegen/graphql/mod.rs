@@ -33,7 +33,7 @@ struct PlaceholderConfig {
 impl PlaceholderConfig {
     /// Create configuration for Python
     #[allow(dead_code)]
-    fn python() -> Self {
+    const fn python() -> Self {
         Self {
             language: "Python",
             comment_marker: "#",
@@ -45,7 +45,7 @@ impl PlaceholderConfig {
 
     /// Create configuration for TypeScript
     #[allow(dead_code)]
-    fn typescript() -> Self {
+    const fn typescript() -> Self {
         Self {
             language: "TypeScript",
             comment_marker: "//",
@@ -57,7 +57,7 @@ impl PlaceholderConfig {
 
     /// Create configuration for Ruby
     #[allow(dead_code)]
-    fn ruby() -> Self {
+    const fn ruby() -> Self {
         Self {
             language: "Ruby",
             comment_marker: "#",
@@ -69,7 +69,7 @@ impl PlaceholderConfig {
 
     /// Create configuration for PHP
     #[allow(dead_code)]
-    fn php() -> Self {
+    const fn php() -> Self {
         Self {
             language: "PHP",
             comment_marker: "//",
@@ -363,7 +363,7 @@ pub fn generate_ruby_graphql(schema: &str, target: &str) -> Result<String> {
 ///
 /// Parses the GraphQL schema string and generates complete PHP code with type definitions,
 /// resolver implementations, and schema configuration based on the target specification.
-/// Generated code uses PSR-4 namespacing, strict_types declarations, typed properties,
+/// Generated code uses PSR-4 namespacing, `strict_types` declarations, typed properties,
 /// and webonyx/graphql-php library for schema binding.
 ///
 /// # Arguments

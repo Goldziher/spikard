@@ -12,7 +12,7 @@
 //!
 //! - **Headers**: Shebangs, auto-generation notices, module docstrings
 //! - **Imports**: Dependency declarations, type imports, organization
-//! - **Docstrings**: Language-specific documentation formatting (NumPy, JSDoc, etc.)
+//! - **Docstrings**: Language-specific documentation formatting (`NumPy`, `JSDoc`, etc.)
 //! - **Merging**: Combining sections with proper spacing and deduplication
 //!
 //! # Example
@@ -48,7 +48,7 @@ pub use typescript::TypeScriptFormatter;
 pub struct HeaderMetadata {
     /// Whether this file is auto-generated and should not be edited manually
     pub auto_generated: bool,
-    /// Optional path to the source schema file (GraphQL, OpenAPI, etc.)
+    /// Optional path to the source schema file (GraphQL, `OpenAPI`, etc.)
     pub schema_file: Option<String>,
     /// Optional version of the generator tool that created this file
     pub generator_version: Option<String>,
@@ -97,13 +97,14 @@ impl Import {
     pub fn with_items(module: impl Into<String>, items: Vec<&str>) -> Self {
         Self {
             module: module.into(),
-            items: items.iter().map(|s| s.to_string()).collect(),
+            items: items.iter().map(std::string::ToString::to_string).collect(),
             is_type_only: false,
         }
     }
 
     /// Mark this import as type-only (TypeScript only)
-    pub fn with_type_only(mut self, type_only: bool) -> Self {
+    #[must_use] 
+    pub const fn with_type_only(mut self, type_only: bool) -> Self {
         self.is_type_only = type_only;
         self
     }
@@ -160,7 +161,7 @@ pub trait Formatter: Send + Sync {
     /// Format a docstring with proper escaping and indentation
     ///
     /// This method should:
-    /// - Use the language's standard docstring format (triple quotes, JSDoc, etc.)
+    /// - Use the language's standard docstring format (triple quotes, `JSDoc`, etc.)
     /// - Escape any special characters (e.g., triple quotes within the content)
     /// - Apply proper indentation for nested context
     /// - Preserve line breaks and formatting in the original content

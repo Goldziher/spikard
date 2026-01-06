@@ -1,7 +1,7 @@
 //! Ruby Project Scaffolder
 //!
 //! Generates a minimal Ruby project structure with Spikard integration.
-//! Follows modern Ruby conventions with RBS type annotations and RSpec testing.
+//! Follows modern Ruby conventions with RBS type annotations and `RSpec` testing.
 
 use super::scaffolder::{ProjectScaffolder, ScaffoldedFile};
 use anyhow::Result;
@@ -43,19 +43,19 @@ impl ProjectScaffolder for RubyScaffolder {
 
         // lib/my_app.rb
         files.push(ScaffoldedFile::new(
-            PathBuf::from(format!("lib/{}.rb", snake_name)),
+            PathBuf::from(format!("lib/{snake_name}.rb")),
             self.generate_app_rb(),
         ));
 
         // sig/my_app.rbs
         files.push(ScaffoldedFile::new(
-            PathBuf::from(format!("sig/{}.rbs", snake_name)),
+            PathBuf::from(format!("sig/{snake_name}.rbs")),
             self.generate_app_rbs(&snake_name),
         ));
 
         // spec/my_app_spec.rb
         files.push(ScaffoldedFile::new(
-            PathBuf::from(format!("spec/{}_spec.rb", snake_name)),
+            PathBuf::from(format!("spec/{snake_name}_spec.rb")),
             self.generate_app_spec_rb(&snake_name),
         ));
 
@@ -98,7 +98,7 @@ end
     }
 
     fn generate_gitignore(&self) -> String {
-        r#"# Dependencies
+        r"# Dependencies
 /vendor/
 /Gemfile.lock
 .ruby-version
@@ -132,13 +132,13 @@ Thumbs.db
 
 # Steep
 .steep.log
-"#
+"
         .to_string()
     }
 
     fn generate_readme(&self, snake_name: &str) -> String {
         format!(
-            r#"# {0}
+            r"# {snake_name}
 
 A Spikard Ruby application.
 
@@ -158,7 +158,7 @@ bundle install
 Start the development server:
 
 ```bash
-bundle exec ruby lib/{0}.rb
+bundle exec ruby lib/{snake_name}.rb
 ```
 
 The server will start on `http://127.0.0.1:8000`.
@@ -202,17 +202,17 @@ bundle exec rubocop -A
 ## Next Steps
 
 1. Install dependencies: `bundle install`
-2. Start the server: `bundle exec ruby lib/{0}.rb`
+2. Start the server: `bundle exec ruby lib/{snake_name}.rb`
 3. Make requests to `http://localhost:8000/health` to verify
-4. Write your handlers in `lib/{0}.rb`
+4. Write your handlers in `lib/{snake_name}.rb`
 5. Add tests in `spec/`
 
 ## Project Structure
 
 ```
 my-app/
-├── lib/{0}.rb          # Main application code
-├── sig/{0}.rbs         # RBS type definitions
+├── lib/{snake_name}.rb          # Main application code
+├── sig/{snake_name}.rbs         # RBS type definitions
 ├── spec/              # RSpec tests
 ├── Gemfile            # Ruby dependencies
 ├── Rakefile           # Rake tasks
@@ -223,8 +223,8 @@ my-app/
 
 This project uses RBS (Ruby Signature) files for type safety. Steep provides static type checking:
 
-- Type definitions in `sig/{0}.rbs`
-- Main code in `lib/{0}.rb`
+- Type definitions in `sig/{snake_name}.rbs`
+- Main code in `lib/{snake_name}.rb`
 - Run `bundle exec steep check` to verify types
 
 ## Documentation
@@ -233,13 +233,12 @@ This project uses RBS (Ruby Signature) files for type safety. Steep provides sta
 - [Ruby Documentation](https://ruby-doc.org)
 - [RBS Guide](https://github.com/ruby/rbs)
 - [Steep Documentation](https://github.com/soutaro/steep)
-"#,
-            snake_name
+"
         )
     }
 
     fn generate_app_rb(&self) -> String {
-        r#"#!/usr/bin/env ruby
+        r"#!/usr/bin/env ruby
 # frozen_string_literal: true
 
 # Spikard Ruby Application
@@ -300,13 +299,13 @@ puts ''
 
 # Run the server
 app.run
-"#
+"
         .to_string()
     }
 
     fn generate_app_rbs(&self, snake_name: &str) -> String {
         format!(
-            r#"# Type definitions for {0}
+            r"# Type definitions for {snake_name}
 
 module Spikard
   class App
@@ -339,18 +338,17 @@ end
 class RequestHandler
   def call: (Spikard::Request) -> Hash[String, untyped] | String | Spikard::Response
 end
-"#,
-            snake_name
+"
         )
     }
 
     fn generate_app_spec_rb(&self, snake_name: &str) -> String {
         format!(
-            r#"# frozen_string_literal: true
+            r"# frozen_string_literal: true
 
 require 'rspec'
 
-describe '{}' do
+describe '{snake_name}' do
   describe 'Application initialization' do
     it 'requires spikard' do
       expect {{ require('spikard') }}.not_to raise_error
@@ -385,21 +383,20 @@ describe '{}' do
     end
   end
 end
-"#,
-            snake_name
+"
         )
     }
 
     fn generate_rspec(&self) -> String {
-        r#"--require spec_helper
+        r"--require spec_helper
 --format documentation
 --color
-"#
+"
         .to_string()
     }
 
     fn generate_rakefile(&self) -> String {
-        r#"# frozen_string_literal: true
+        r"# frozen_string_literal: true
 
 require 'bundler/setup'
 
@@ -429,7 +426,7 @@ task :lint_fix do
 end
 
 task default: :spec
-"#
+"
         .to_string()
     }
 }

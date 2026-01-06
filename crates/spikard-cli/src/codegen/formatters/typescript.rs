@@ -6,9 +6,9 @@
 //!
 //! # Features
 //!
-//! - **Headers**: Auto-generation notices, JSDoc file-level comments with metadata
+//! - **Headers**: Auto-generation notices, `JSDoc` file-level comments with metadata
 //! - **Imports**: Grouped and sorted (type imports first, then external, then local)
-//! - **Docstrings**: JSDoc format with proper escaping of special sequences
+//! - **Docstrings**: `JSDoc` format with proper escaping of special sequences
 //! - **Spacing**: Single blank line between top-level declarations
 
 use super::{Formatter, HeaderMetadata, Import, Section};
@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 ///
 /// Formats generated TypeScript code to comply with:
 /// - Biome formatting rules (single quotes, semicolons, 2-space indentation)
-/// - JSDoc documentation standards
+/// - `JSDoc` documentation standards
 /// - TypeScript strict mode conventions
 /// - Module organization (imports → exports → implementations)
 ///
@@ -43,7 +43,8 @@ pub struct TypeScriptFormatter;
 
 impl TypeScriptFormatter {
     /// Create a new TypeScript code formatter
-    pub fn new() -> Self {
+    #[must_use] 
+    pub const fn new() -> Self {
         Self
     }
 
@@ -52,7 +53,7 @@ impl TypeScriptFormatter {
         !source.starts_with('.') && !source.starts_with('/')
     }
 
-    /// Escape JSDoc delimiters in content.
+    /// Escape `JSDoc` delimiters in content.
     fn escape_jsdoc_content(content: &str) -> String {
         content.replace("*/", "*&#47;").replace("/*", "&#47;*")
     }
@@ -73,10 +74,10 @@ impl Formatter for TypeScriptFormatter {
 
         // Optional schema file and version comments
         if let Some(schema) = &metadata.schema_file {
-            header.push_str(&format!("// Source: {}\n", schema));
+            header.push_str(&format!("// Source: {schema}\n"));
         }
         if let Some(version) = &metadata.generator_version {
-            header.push_str(&format!("// Generator: Spikard {}\n", version));
+            header.push_str(&format!("// Generator: Spikard {version}\n"));
         }
 
         // JSDoc file-level comment
@@ -86,10 +87,10 @@ impl Formatter for TypeScriptFormatter {
             header.push_str(" *\n");
         }
         if let Some(schema) = &metadata.schema_file {
-            header.push_str(&format!(" * @source {}\n", schema));
+            header.push_str(&format!(" * @source {schema}\n"));
         }
         if let Some(version) = &metadata.generator_version {
-            header.push_str(&format!(" * @generator Spikard {}\n", version));
+            header.push_str(&format!(" * @generator Spikard {version}\n"));
         }
         header.push_str(" */");
 
@@ -140,22 +141,22 @@ impl Formatter for TypeScriptFormatter {
         // Write type imports first (external then internal)
         for (module, items) in &external_type_imports {
             if items.is_empty() {
-                result.push_str(&format!("import type '{}';", module));
+                result.push_str(&format!("import type '{module}';"));
             } else {
-                let sorted_items: Vec<_> = items.to_vec();
+                let sorted_items: Vec<_> = items.clone();
                 let joined = sorted_items.join(", ");
-                result.push_str(&format!("import type {{ {} }} from '{}';", joined, module));
+                result.push_str(&format!("import type {{ {joined} }} from '{module}';"));
             }
             result.push('\n');
         }
 
         for (module, items) in &internal_type_imports {
             if items.is_empty() {
-                result.push_str(&format!("import type '{}';", module));
+                result.push_str(&format!("import type '{module}';"));
             } else {
-                let sorted_items: Vec<_> = items.to_vec();
+                let sorted_items: Vec<_> = items.clone();
                 let joined = sorted_items.join(", ");
-                result.push_str(&format!("import type {{ {} }} from '{}';", joined, module));
+                result.push_str(&format!("import type {{ {joined} }} from '{module}';"));
             }
             result.push('\n');
         }
@@ -173,22 +174,22 @@ impl Formatter for TypeScriptFormatter {
         // Write regular imports (external then internal)
         for (module, items) in &external_imports {
             if items.is_empty() {
-                result.push_str(&format!("import '{}';", module));
+                result.push_str(&format!("import '{module}';"));
             } else {
-                let sorted_items: Vec<_> = items.to_vec();
+                let sorted_items: Vec<_> = items.clone();
                 let joined = sorted_items.join(", ");
-                result.push_str(&format!("import {{ {} }} from '{}';", joined, module));
+                result.push_str(&format!("import {{ {joined} }} from '{module}';"));
             }
             result.push('\n');
         }
 
         for (module, items) in &internal_imports {
             if items.is_empty() {
-                result.push_str(&format!("import '{}';", module));
+                result.push_str(&format!("import '{module}';"));
             } else {
-                let sorted_items: Vec<_> = items.to_vec();
+                let sorted_items: Vec<_> = items.clone();
                 let joined = sorted_items.join(", ");
-                result.push_str(&format!("import {{ {} }} from '{}';", joined, module));
+                result.push_str(&format!("import {{ {joined} }} from '{module}';"));
             }
             result.push('\n');
         }
@@ -221,7 +222,7 @@ impl Formatter for TypeScriptFormatter {
                 if line.trim().is_empty() {
                     result.push_str(" *\n");
                 } else {
-                    result.push_str(&format!(" * {}\n", line));
+                    result.push_str(&format!(" * {line}\n"));
                 }
             }
             result.push_str(" */");
@@ -268,7 +269,7 @@ impl Formatter for TypeScriptFormatter {
         } else if result.ends_with('\n') {
             result
         } else {
-            format!("{}\n", result)
+            format!("{result}\n")
         }
     }
 }

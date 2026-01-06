@@ -1,4 +1,4 @@
-//! PHP OpenRPC code generation.
+//! PHP `OpenRPC` code generation.
 
 use anyhow::Result;
 
@@ -6,7 +6,7 @@ use crate::codegen::openrpc::spec_parser::OpenRpcSpec;
 
 use super::OpenRpcGenerator;
 
-/// PHP OpenRPC code generator
+/// PHP `OpenRPC` code generator
 pub struct PhpOpenRpcGenerator;
 
 impl OpenRpcGenerator for PhpOpenRpcGenerator {
@@ -126,13 +126,13 @@ impl OpenRpcGenerator for PhpOpenRpcGenerator {
 fn generate_php_handler(code: &mut String, method: &crate::codegen::openrpc::spec_parser::OpenRpcMethod) -> Result<()> {
     let handler_name = format!("Handle{}", pascal_case(&method.name));
 
-    code.push_str(&format!("final class {} {{\n", handler_name));
+    code.push_str(&format!("final class {handler_name} {{\n"));
     code.push_str("    /**\n");
     if let Some(summary) = &method.summary {
-        code.push_str(&format!("     * {}\n", summary));
+        code.push_str(&format!("     * {summary}\n"));
     }
     if let Some(desc) = &method.description {
-        code.push_str(&format!("     *\n     * {}\n", desc));
+        code.push_str(&format!("     *\n     * {desc}\n"));
     }
     code.push_str("     */\n");
     code.push_str("    public function execute(mixed $params): array {\n");
@@ -155,7 +155,7 @@ fn generate_php_handler(code: &mut String, method: &crate::codegen::openrpc::spe
         && let Some(props) = properties.as_object()
     {
         for field_name in props.keys().take(3) {
-            code.push_str(&format!("        $result['{}'] = 'TODO';\n", field_name));
+            code.push_str(&format!("        $result['{field_name}'] = 'TODO';\n"));
         }
     }
     code.push_str("        return $result;\n");
@@ -194,6 +194,5 @@ fn pascal_case(input: &str) -> String {
                 Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
             }
         })
-        .collect::<Vec<_>>()
-        .join("")
+        .collect::<String>()
 }

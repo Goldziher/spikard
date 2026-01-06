@@ -2,7 +2,7 @@
 //!
 //! This generator produces type-safe TypeScript code for GraphQL resolver implementations.
 //! Generated code includes proper type definitions with Promise-based async resolvers
-//! and imports GraphQLResolveInfo from the 'graphql' package for introspection support.
+//! and imports `GraphQLResolveInfo` from the 'graphql' package for introspection support.
 
 use super::{GraphQLGenerator, sanitize_typescript_identifier};
 use crate::codegen::common::escaping::{EscapeContext, escape_template_literal};
@@ -15,7 +15,7 @@ use anyhow::Result;
 pub struct TypeScriptGenerator;
 
 impl TypeScriptGenerator {
-    /// Reconstruct GraphQL SDL from parsed schema using shared SdlBuilder
+    /// Reconstruct GraphQL SDL from parsed schema using shared `SdlBuilder`
     fn reconstruct_sdl(&self, schema: &GraphQLSchema) -> String {
         SdlBuilder::new(schema).build()
     }
@@ -108,7 +108,7 @@ impl TypeScriptGenerator {
         }
 
         let mut code = String::new();
-        code.push_str(&format!("export type {}Resolvers = {{\n", type_name));
+        code.push_str(&format!("export type {type_name}Resolvers = {{\n"));
 
         for field in fields {
             code.push_str(&self.gen_resolver_function_type(field));
@@ -134,8 +134,7 @@ impl TypeScriptGenerator {
             type_name.to_string()
         };
         code.push_str(&format!(
-            "export const {}Resolvers: {}Resolvers = {{\n",
-            instance_name, type_name
+            "export const {instance_name}Resolvers: {type_name}Resolvers = {{\n"
         ));
 
         for field in fields {
@@ -171,7 +170,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
-                            code.push_str(&format!(" * {}\n", line));
+                            code.push_str(&format!(" * {line}\n"));
                         }
                     } else {
                         code.push_str(&format!(" * {}\n", type_def.name));
@@ -184,14 +183,14 @@ impl GraphQLGenerator for TypeScriptGenerator {
                         if let Some(field_desc) = &field.description {
                             code.push_str("  /**\n");
                             for line in field_desc.lines() {
-                                code.push_str(&format!("   * {}\n", line));
+                                code.push_str(&format!("   * {line}\n"));
                             }
                             code.push_str("   */\n");
                         }
 
                         // Add deprecated tag if present
                         if let Some(reason) = &field.deprecation_reason {
-                            code.push_str(&format!("  /** @deprecated {} */\n", reason));
+                            code.push_str(&format!("  /** @deprecated {reason} */\n"));
                         }
 
                         let field_type = self.map_type_with_schema(
@@ -210,7 +209,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
-                            code.push_str(&format!(" * {}\n", line));
+                            code.push_str(&format!(" * {line}\n"));
                         }
                     } else {
                         code.push_str(&format!(" * {}\n", type_def.name));
@@ -223,7 +222,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
                         if let Some(field_desc) = &field.description {
                             code.push_str("  /**\n");
                             for line in field_desc.lines() {
-                                code.push_str(&format!("   * {}\n", line));
+                                code.push_str(&format!("   * {line}\n"));
                             }
                             code.push_str("   */\n");
                         }
@@ -237,7 +236,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
                         );
 
                         // For input types, use the full type union including null
-                        code.push_str(&format!("  {}: {};\n", field_name, field_type));
+                        code.push_str(&format!("  {field_name}: {field_type};\n"));
                     }
                     code.push_str("}\n\n");
                 }
@@ -246,7 +245,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
-                            code.push_str(&format!(" * {}\n", line));
+                            code.push_str(&format!(" * {line}\n"));
                         }
                     } else {
                         code.push_str(&format!(" * {}\n", type_def.name));
@@ -259,7 +258,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
                         if let Some(value_desc) = &value.description {
                             code.push_str("  /**\n");
                             for line in value_desc.lines() {
-                                code.push_str(&format!("   * {}\n", line));
+                                code.push_str(&format!("   * {line}\n"));
                             }
                             code.push_str("   */\n");
                         }
@@ -267,7 +266,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
                         // Add deprecated tag if present
                         if value.is_deprecated {
                             if let Some(reason) = &value.deprecation_reason {
-                                code.push_str(&format!("  /** @deprecated {} */\n", reason));
+                                code.push_str(&format!("  /** @deprecated {reason} */\n"));
                             } else {
                                 code.push_str("  /** @deprecated */\n");
                             }
@@ -282,7 +281,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
-                            code.push_str(&format!(" * {}\n", line));
+                            code.push_str(&format!(" * {line}\n"));
                         }
                     } else {
                         code.push_str(&format!(" * {}\n", type_def.name));
@@ -295,7 +294,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
-                            code.push_str(&format!(" * {}\n", line));
+                            code.push_str(&format!(" * {line}\n"));
                         }
                     } else {
                         code.push_str(&format!(" * {}\n", type_def.name));
@@ -310,7 +309,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
-                            code.push_str(&format!(" * {}\n", line));
+                            code.push_str(&format!(" * {line}\n"));
                         }
                     } else {
                         code.push_str(&format!(" * {}\n", type_def.name));
@@ -323,14 +322,14 @@ impl GraphQLGenerator for TypeScriptGenerator {
                         if let Some(field_desc) = &field.description {
                             code.push_str("  /**\n");
                             for line in field_desc.lines() {
-                                code.push_str(&format!("   * {}\n", line));
+                                code.push_str(&format!("   * {line}\n"));
                             }
                             code.push_str("   */\n");
                         }
 
                         // Add deprecated tag if present
                         if let Some(reason) = &field.deprecation_reason {
-                            code.push_str(&format!("  /** @deprecated {} */\n", reason));
+                            code.push_str(&format!("  /** @deprecated {reason} */\n"));
                         }
 
                         let field_type = self.map_type_with_schema(
@@ -360,14 +359,14 @@ impl GraphQLGenerator for TypeScriptGenerator {
                 if let Some(field_desc) = &field.description {
                     code.push_str("  /**\n");
                     for line in field_desc.lines() {
-                        code.push_str(&format!("   * {}\n", line));
+                        code.push_str(&format!("   * {line}\n"));
                     }
                     code.push_str("   */\n");
                 }
 
                 // Add deprecated tag if present
                 if let Some(reason) = &field.deprecation_reason {
-                    code.push_str(&format!("  /** @deprecated {} */\n", reason));
+                    code.push_str(&format!("  /** @deprecated {reason} */\n"));
                 }
 
                 let field_type = self.map_type_with_schema(
@@ -394,14 +393,14 @@ impl GraphQLGenerator for TypeScriptGenerator {
                 if let Some(field_desc) = &field.description {
                     code.push_str("  /**\n");
                     for line in field_desc.lines() {
-                        code.push_str(&format!("   * {}\n", line));
+                        code.push_str(&format!("   * {line}\n"));
                     }
                     code.push_str("   */\n");
                 }
 
                 // Add deprecated tag if present
                 if let Some(reason) = &field.deprecation_reason {
-                    code.push_str(&format!("  /** @deprecated {} */\n", reason));
+                    code.push_str(&format!("  /** @deprecated {reason} */\n"));
                 }
 
                 let field_type = self.map_type_with_schema(

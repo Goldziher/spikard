@@ -2,7 +2,7 @@
 //!
 //! This generator produces type-safe PHP code for GraphQL resolver implementations.
 //! Generated code uses webonyx/graphql-php for type definitions with PHP 8.2+,
-//! strict types, full type hints, and PHPDoc annotations compliant with PSR-12.
+//! strict types, full type hints, and `PHPDoc` annotations compliant with PSR-12.
 
 use super::GraphQLGenerator;
 #[allow(unused_imports)]
@@ -15,8 +15,8 @@ pub struct PhpGenerator;
 
 impl PhpGenerator {
     /// Map GraphQL scalar type to webonyx/graphql-php Type constant
-    /// String → "Type::string()", Int → "Type::int()", Float → "Type::float()",
-    /// Boolean → "Type::boolean()", ID → "Type::id()"
+    /// String → "`Type::string()`", Int → "`Type::int()`", Float → "`Type::float()`",
+    /// Boolean → "`Type::boolean()`", ID → "`Type::id()`"
     fn map_scalar_type(&self, gql_type: &str, schema: Option<&GraphQLSchema>) -> String {
         let base_type = gql_type.trim_matches(|c| c == '!' || c == '[' || c == ']');
 
@@ -33,13 +33,13 @@ impl PhpGenerator {
                 {
                     return "Type::string()".to_string();
                 }
-                format!("{}Type::class", custom)
+                format!("{custom}Type::class")
             }
         }
     }
 
     /// Map GraphQL type to webonyx/graphql-php Type with proper nullability
-    /// Returns Type::nonNull(Type::string()), Type::listOf(...), etc.
+    /// Returns `Type::nonNull(Type::string())`, `Type::listOf`(...), etc.
     fn map_type_with_nullability(
         &self,
         field_type: &str,
@@ -52,18 +52,18 @@ impl PhpGenerator {
 
         let with_list = if is_list {
             if list_item_nullable {
-                format!("Type::listOf({})", base)
+                format!("Type::listOf({base})")
             } else {
-                format!("Type::listOf(Type::nonNull({}))", base)
+                format!("Type::listOf(Type::nonNull({base}))")
             }
         } else {
             base
         };
 
-        if !is_nullable {
-            format!("Type::nonNull({})", with_list)
-        } else {
+        if is_nullable {
             with_list
+        } else {
+            format!("Type::nonNull({with_list})")
         }
     }
 
@@ -75,9 +75,9 @@ impl PhpGenerator {
 
         let mut result = if is_list {
             if list_item_nullable {
-                format!("[{}]", clean_type)
+                format!("[{clean_type}]")
             } else {
-                format!("[{}!]", clean_type)
+                format!("[{clean_type}!]")
             }
         } else {
             clean_type.to_string()
@@ -145,13 +145,13 @@ impl GraphQLGenerator for PhpGenerator {
 
             match type_def.kind {
                 TypeKind::Object => {
-                    code.push_str(&format!("/**\n * {}\n */\n", type_name));
-                    code.push_str(&format!("final class {}Type extends ObjectType\n", type_name));
+                    code.push_str(&format!("/**\n * {type_name}\n */\n"));
+                    code.push_str(&format!("final class {type_name}Type extends ObjectType\n"));
                     code.push_str("{\n");
                     code.push_str("    public function __construct()\n");
                     code.push_str("    {\n");
                     code.push_str("        parent::__construct([\n");
-                    code.push_str(&format!("            'name' => '{}',\n", type_name));
+                    code.push_str(&format!("            'name' => '{type_name}',\n"));
                     code.push_str("            'fields' => [\n");
 
                     for field in &type_def.fields {
@@ -174,8 +174,8 @@ impl GraphQLGenerator for PhpGenerator {
                     code.push_str("}\n\n");
                 }
                 TypeKind::Enum => {
-                    code.push_str(&format!("/**\n * {}\n */\n", type_name));
-                    code.push_str(&format!("enum {}: string\n", type_name));
+                    code.push_str(&format!("/**\n * {type_name}\n */\n"));
+                    code.push_str(&format!("enum {type_name}: string\n"));
                     code.push_str("{\n");
 
                     for value in &type_def.enum_values {
@@ -185,13 +185,13 @@ impl GraphQLGenerator for PhpGenerator {
                     code.push_str("}\n\n");
                 }
                 TypeKind::InputObject => {
-                    code.push_str(&format!("/**\n * {}\n */\n", type_name));
-                    code.push_str(&format!("final class {}InputType extends InputObjectType\n", type_name));
+                    code.push_str(&format!("/**\n * {type_name}\n */\n"));
+                    code.push_str(&format!("final class {type_name}InputType extends InputObjectType\n"));
                     code.push_str("{\n");
                     code.push_str("    public function __construct()\n");
                     code.push_str("    {\n");
                     code.push_str("        parent::__construct([\n");
-                    code.push_str(&format!("            'name' => '{}',\n", type_name));
+                    code.push_str(&format!("            'name' => '{type_name}',\n"));
                     code.push_str("            'fields' => [\n");
 
                     for field in &type_def.input_fields {
@@ -214,17 +214,17 @@ impl GraphQLGenerator for PhpGenerator {
                     code.push_str("}\n\n");
                 }
                 TypeKind::Union => {
-                    code.push_str(&format!("/**\n * {}\n */\n", type_name));
-                    code.push_str(&format!("final class {}UnionType extends UnionType\n", type_name));
+                    code.push_str(&format!("/**\n * {type_name}\n */\n"));
+                    code.push_str(&format!("final class {type_name}UnionType extends UnionType\n"));
                     code.push_str("{\n");
                     code.push_str("    public function __construct()\n");
                     code.push_str("    {\n");
                     code.push_str("        parent::__construct([\n");
-                    code.push_str(&format!("            'name' => '{}',\n", type_name));
+                    code.push_str(&format!("            'name' => '{type_name}',\n"));
                     code.push_str("            'types' => [\n");
 
                     for possible_type in &type_def.possible_types {
-                        code.push_str(&format!("                {}Type::class,\n", possible_type));
+                        code.push_str(&format!("                {possible_type}Type::class,\n"));
                     }
 
                     code.push_str("            ],\n");
@@ -233,10 +233,9 @@ impl GraphQLGenerator for PhpGenerator {
                     code.push_str("}\n\n");
                 }
                 TypeKind::Scalar => {
-                    code.push_str(&format!("/**\n * Custom scalar type: {}\n */\n", type_name));
+                    code.push_str(&format!("/**\n * Custom scalar type: {type_name}\n */\n"));
                     code.push_str(&format!(
-                        "const {} = 'DateTime'; // Custom scalar placeholder\n\n",
-                        type_name
+                        "const {type_name} = 'DateTime'; // Custom scalar placeholder\n\n"
                     ));
                 }
                 _ => {}

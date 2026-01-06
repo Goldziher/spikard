@@ -85,7 +85,7 @@ impl<'a> TypeMapper<'a> {
     /// let mapper = TypeMapper::new(TargetLanguage::TypeScript, None);
     /// let python_mapper = TypeMapper::new(TargetLanguage::Python, Some(&schema));
     /// ```
-    pub fn new(language: TargetLanguage, schema: Option<&'a GraphQLSchema>) -> Self {
+    pub const fn new(language: TargetLanguage, schema: Option<&'a GraphQLSchema>) -> Self {
         Self { language, schema }
     }
 
@@ -284,16 +284,16 @@ impl<'a> TypeMapper<'a> {
             TargetLanguage::Python => {
                 let with_list = if is_list {
                     if list_item_nullable {
-                        format!("list[{} | None]", base)
+                        format!("list[{base} | None]")
                     } else {
-                        format!("list[{}]", base)
+                        format!("list[{base}]")
                     }
                 } else {
                     base
                 };
 
                 if is_nullable {
-                    format!("{} | None", with_list)
+                    format!("{with_list} | None")
                 } else {
                     with_list
                 }
@@ -301,16 +301,16 @@ impl<'a> TypeMapper<'a> {
             TargetLanguage::TypeScript => {
                 let with_list = if is_list {
                     if list_item_nullable {
-                        format!("({} | null)[]", base)
+                        format!("({base} | null)[]")
                     } else {
-                        format!("{}[]", base)
+                        format!("{base}[]")
                     }
                 } else {
                     base
                 };
 
                 if is_nullable {
-                    format!("{} | null", with_list)
+                    format!("{with_list} | null")
                 } else {
                     with_list
                 }
@@ -318,16 +318,16 @@ impl<'a> TypeMapper<'a> {
             TargetLanguage::Ruby => {
                 let with_list = if is_list {
                     if list_item_nullable {
-                        format!("Array[{} | nil]", base)
+                        format!("Array[{base} | nil]")
                     } else {
-                        format!("Array[{}]", base)
+                        format!("Array[{base}]")
                     }
                 } else {
                     base
                 };
 
                 if is_nullable {
-                    format!("{} | nil", with_list)
+                    format!("{with_list} | nil")
                 } else {
                     with_list
                 }
@@ -338,7 +338,7 @@ impl<'a> TypeMapper<'a> {
                 let with_list = if is_list { "array".to_string() } else { base };
 
                 if is_nullable {
-                    format!("?{}", with_list)
+                    format!("?{with_list}")
                 } else {
                     with_list
                 }
@@ -346,16 +346,16 @@ impl<'a> TypeMapper<'a> {
             TargetLanguage::Rust => {
                 let with_list = if is_list {
                     if list_item_nullable {
-                        format!("Vec<Option<{}>>", base)
+                        format!("Vec<Option<{base}>>")
                     } else {
-                        format!("Vec<{}>", base)
+                        format!("Vec<{base}>")
                     }
                 } else {
                     base
                 };
 
                 if is_nullable {
-                    format!("Option<{}>", with_list)
+                    format!("Option<{with_list}>")
                 } else {
                     with_list
                 }
@@ -402,9 +402,9 @@ impl<'a> TypeMapper<'a> {
 
         let mut result = if is_list {
             if list_item_nullable {
-                format!("[{}]", clean_type)
+                format!("[{clean_type}]")
             } else {
-                format!("[{}!]", clean_type)
+                format!("[{clean_type}!]")
             }
         } else {
             clean_type.to_string()

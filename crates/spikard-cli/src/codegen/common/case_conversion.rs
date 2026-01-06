@@ -4,15 +4,15 @@
 //! (Python, Ruby, PHP, TypeScript, Rust). Handles edge cases like consecutive
 //! uppercase letters (acronyms) and preserves leading/trailing underscores.
 
-/// Convert string to snake_case.
+/// Convert string to `snake_case`.
 ///
-/// Converts camelCase, PascalCase, and other formats to snake_case by inserting
+/// Converts camelCase, `PascalCase`, and other formats to `snake_case` by inserting
 /// underscores before uppercase letters and converting them to lowercase.
 ///
 /// Edge cases:
-/// - Consecutive uppercase letters (acronyms) like "HTTPServer" → "http_server"
+/// - Consecutive uppercase letters (acronyms) like "`HTTPServer`" → "`http_server`"
 /// - Leading/trailing underscores are preserved
-/// - Already snake_case strings pass through unchanged
+/// - Already `snake_case` strings pass through unchanged
 ///
 /// # Examples
 ///
@@ -26,6 +26,7 @@
 /// assert_eq!(to_snake_case("_id"), "_id");
 /// assert_eq!(to_snake_case("id_"), "id_");
 /// ```
+#[must_use] 
 pub fn to_snake_case(s: &str) -> String {
     if s.is_empty() {
         return String::new();
@@ -69,7 +70,7 @@ pub fn to_snake_case(s: &str) -> String {
 
 /// Convert string to camelCase.
 ///
-/// Converts snake_case and other formats to camelCase by capitalizing the first
+/// Converts `snake_case` and other formats to camelCase by capitalizing the first
 /// letter of each word (except the first word) and removing separators.
 ///
 /// Edge cases:
@@ -87,6 +88,7 @@ pub fn to_snake_case(s: &str) -> String {
 /// assert_eq!(to_camel_case("_id"), "_id");
 /// assert_eq!(to_camel_case("id_"), "id_");
 /// ```
+#[must_use] 
 pub fn to_camel_case(s: &str) -> String {
     if s.is_empty() {
         return String::new();
@@ -136,9 +138,9 @@ pub fn to_camel_case(s: &str) -> String {
     result
 }
 
-/// Convert string to PascalCase.
+/// Convert string to `PascalCase`.
 ///
-/// Converts snake_case and other formats to PascalCase by capitalizing the first
+/// Converts `snake_case` and other formats to `PascalCase` by capitalizing the first
 /// letter of every word and removing separators. First word is also capitalized.
 ///
 /// Edge cases:
@@ -156,6 +158,7 @@ pub fn to_camel_case(s: &str) -> String {
 /// assert_eq!(to_pascal_case("http_server"), "HttpServer");
 /// assert_eq!(to_pascal_case("graphql-type"), "GraphqlType");
 /// ```
+#[must_use] 
 pub fn to_pascal_case(s: &str) -> String {
     if s.is_empty() {
         return String::new();
@@ -183,11 +186,11 @@ pub fn to_pascal_case(s: &str) -> String {
 
 /// Convert string to kebab-case.
 ///
-/// Converts camelCase, PascalCase, and other formats to kebab-case by inserting
+/// Converts camelCase, `PascalCase`, and other formats to kebab-case by inserting
 /// hyphens before uppercase letters and converting them to lowercase.
 ///
 /// Edge cases:
-/// - Consecutive uppercase letters (acronyms) like "HTTPServer" → "http-server"
+/// - Consecutive uppercase letters (acronyms) like "`HTTPServer`" → "http-server"
 /// - Leading/trailing hyphens are removed
 /// - Already kebab-case strings pass through unchanged
 ///
@@ -201,6 +204,7 @@ pub fn to_pascal_case(s: &str) -> String {
 /// assert_eq!(to_kebab_case("HTTPServer"), "http-server");
 /// assert_eq!(to_kebab_case("GraphQLType"), "graph-ql-type"); // Splits on each uppercase
 /// ```
+#[must_use] 
 pub fn to_kebab_case(s: &str) -> String {
     if s.is_empty() {
         return String::new();

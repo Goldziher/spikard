@@ -77,7 +77,7 @@ impl TypeScriptScaffolder {
     fn generate_package_json(&self, kebab_name: &str) -> String {
         format!(
             r#"{{
-	"name": "{}",
+	"name": "{kebab_name}",
 	"version": "0.0.1",
 	"type": "module",
 	"description": "Spikard TypeScript application",
@@ -105,8 +105,7 @@ impl TypeScriptScaffolder {
 		"node": ">=18"
 	}}
 }}
-"#,
-            kebab_name
+"#
         )
     }
 
@@ -150,7 +149,7 @@ impl TypeScriptScaffolder {
     }
 
     fn generate_vitest_config(&self) -> String {
-        r#"import { defineConfig } from 'vitest/config';
+        r"import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	test: {
@@ -166,12 +165,12 @@ export default defineConfig({
 		},
 	},
 });
-"#
+"
         .to_string()
     }
 
     fn generate_gitignore(&self) -> String {
-        r#"# Dependencies
+        r"# Dependencies
 node_modules/
 pnpm-lock.yaml
 package-lock.json
@@ -203,13 +202,13 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
-"#
+"
         .to_string()
     }
 
     fn generate_readme(&self, kebab_name: &str) -> String {
         format!(
-            r#"# {}
+            r"# {kebab_name}
 
 A Spikard TypeScript application.
 
@@ -281,13 +280,12 @@ pnpm format
 - [Spikard Documentation](https://github.com/spikard/spikard)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Node.js API](https://nodejs.org/api/)
-"#,
-            kebab_name
+"
         )
     }
 
     fn generate_app_ts(&self) -> String {
-        r#"/**
+        r"/**
  * Basic Spikard TypeScript Application
  *
  * This example demonstrates a simple HTTP server with health check
@@ -345,12 +343,12 @@ console.log('Starting Spikard TypeScript server on http://0.0.0.0:8000');
 console.log('Press Ctrl+C to stop\n');
 
 app.run({ port: 8000, host: '0.0.0.0' });
-"#
+"
         .to_string()
     }
 
     fn generate_app_spec_ts(&self) -> String {
-        r#"import { describe, it, expect } from 'vitest';
+        r"import { describe, it, expect } from 'vitest';
 
 describe('Spikard App', () => {
 	it('should be importable', () => {
@@ -378,7 +376,7 @@ describe('Spikard App', () => {
 		});
 	});
 });
-"#
+"
         .to_string()
     }
 }

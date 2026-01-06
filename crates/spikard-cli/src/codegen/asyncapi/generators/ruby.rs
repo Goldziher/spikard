@@ -1,14 +1,14 @@
-//! Ruby AsyncAPI code generation.
+//! Ruby `AsyncAPI` code generation.
 
 use anyhow::{Result, bail};
 
 use super::base::sanitize_identifier;
 use super::{AsyncApiGenerator, ChannelInfo};
 
-/// Ruby AsyncAPI code generator
+/// Ruby `AsyncAPI` code generator
 pub struct RubyAsyncApiGenerator;
 
-/// Convert identifier to PascalCase for Ruby class names
+/// Convert identifier to `PascalCase` for Ruby class names
 fn to_pascal_case(name: &str) -> String {
     let identifier = sanitize_identifier(name);
     let parts: Vec<&str> = identifier.split('_').collect();
@@ -42,7 +42,7 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
                 code.push_str("require 'net/http'\n");
             }
             _ => {
-                return Err(anyhow::anyhow!("Unsupported protocol for Ruby test app: {}", protocol));
+                return Err(anyhow::anyhow!("Unsupported protocol for Ruby test app: {protocol}"));
             }
         }
 
@@ -81,7 +81,7 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
 
         match protocol {
             "websocket" | "sse" => {}
-            other => bail!("Protocol {} is not supported for Ruby handler generation", other),
+            other => bail!("Protocol {other} is not supported for Ruby handler generation"),
         }
 
         let mut code = String::new();
@@ -101,7 +101,7 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
             match protocol {
                 "websocket" => {
                     code.push_str(&format!("# WebSocket handler for {}\n", channel.path));
-                    code.push_str(&format!("class {}Handler\n", handler_name));
+                    code.push_str(&format!("class {handler_name}Handler\n"));
                     code.push_str("  def initialize(ws)\n");
                     code.push_str("    @ws = ws\n");
                     code.push_str("  end\n\n");
@@ -115,7 +115,7 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
                     code.push_str("  end\n");
                     code.push_str("end\n\n");
                     code.push_str(&format!("app.websocket(\"{}\") do |ws|\n", channel.path));
-                    code.push_str(&format!("  handler = {}Handler.new(ws)\n", handler_name));
+                    code.push_str(&format!("  handler = {handler_name}Handler.new(ws)\n"));
                     code.push_str("  ws.on(:message) { |msg| handler.handle_message(msg) }\n");
                     code.push_str("end\n\n");
                 }
@@ -123,7 +123,7 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
                     code.push_str(&format!("# Server-Sent Events handler for {}\n", channel.path));
                     code.push_str(&format!("app.get(\"{}\") do |_request|\n", channel.path));
                     code.push_str("  stream = Enumerator.new do |yielder|\n");
-                    code.push_str(&format!("    # TODO: Stream {} events\n", message_description));
+                    code.push_str(&format!("    # TODO: Stream {message_description} events\n"));
                     code.push_str("    yielder << \"data: {\\\"status\\\": \\\"connected\\\"}\\n\\n\"\n");
                     code.push_str("  end\n\n");
                     code.push_str(

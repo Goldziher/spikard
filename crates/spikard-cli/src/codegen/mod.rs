@@ -1,4 +1,4 @@
-//! Code generation from OpenAPI and AsyncAPI schemas
+//! Code generation from `OpenAPI` and `AsyncAPI` schemas
 
 mod asyncapi;
 mod base;
@@ -113,7 +113,7 @@ pub enum PhpDtoStyle {
     ReadonlyClass,
 }
 
-/// Generate server code from an OpenAPI schema file
+/// Generate server code from an `OpenAPI` schema file
 pub fn generate_from_openapi(
     schema_path: &Path,
     target_lang: TargetLanguage,

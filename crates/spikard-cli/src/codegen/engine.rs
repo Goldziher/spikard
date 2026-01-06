@@ -30,18 +30,18 @@ pub enum SchemaKind {
 /// Type of artifact to generate for a schema
 #[derive(Clone)]
 pub enum CodegenTargetKind {
-    /// Generate server handler code for a language (OpenAPI today)
+    /// Generate server handler code for a language (`OpenAPI` today)
     Server {
         language: TargetLanguage,
         output: Option<PathBuf>,
     },
-    /// Generate AsyncAPI fixtures (SSE/WebSocket)
+    /// Generate `AsyncAPI` fixtures (SSE/WebSocket)
     AsyncFixtures { output: PathBuf },
-    /// Generate AsyncAPI test application for a language
+    /// Generate `AsyncAPI` test application for a language
     AsyncTestApp { language: TargetLanguage, output: PathBuf },
-    /// Generate AsyncAPI handler scaffolding for a language
+    /// Generate `AsyncAPI` handler scaffolding for a language
     AsyncHandlers { language: TargetLanguage, output: PathBuf },
-    /// Generate fixtures + test applications for all AsyncAPI languages
+    /// Generate fixtures + test applications for all `AsyncAPI` languages
     AsyncAll { output: PathBuf },
     /// Generate JSON-RPC handler scaffolding for a language
     JsonRpcHandlers { language: TargetLanguage, output: PathBuf },
@@ -165,8 +165,7 @@ impl CodegenEngine {
                     "messages" => super::protobuf::generators::ProtobufTarget::Messages,
                     "services" => super::protobuf::generators::ProtobufTarget::Services,
                     _ => bail!(
-                        "Invalid protobuf target: {}. Use 'all', 'messages', or 'services'",
-                        target
+                        "Invalid protobuf target: {target}. Use 'all', 'messages', or 'services'"
                     ),
                 };
 
@@ -221,7 +220,7 @@ impl CodegenEngine {
             TargetLanguage::TypeScript => generate_nodejs_test_app(spec, protocol)?,
             TargetLanguage::Ruby => generate_ruby_test_app(spec, protocol)?,
             other => {
-                bail!("{:?} is not supported for AsyncAPI test apps", other);
+                bail!("{other:?} is not supported for AsyncAPI test apps");
             }
         };
 
@@ -297,7 +296,7 @@ impl CodegenEngine {
             TargetLanguage::Ruby => generate_openrpc_ruby_handler(spec)?,
             TargetLanguage::Php => generate_openrpc_php_handler(spec)?,
             other => {
-                bail!("{:?} is not supported for OpenRPC handler generation", other);
+                bail!("{other:?} is not supported for OpenRPC handler generation");
             }
         };
 
@@ -368,7 +367,7 @@ impl CodegenEngine {
     }
 }
 
-fn language_name(language: TargetLanguage) -> &'static str {
+const fn language_name(language: TargetLanguage) -> &'static str {
     match language {
         TargetLanguage::Python => "Python",
         TargetLanguage::TypeScript => "Node.js",
@@ -381,30 +380,30 @@ fn language_name(language: TargetLanguage) -> &'static str {
 impl std::fmt::Debug for CodegenTargetKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CodegenTargetKind::Server { language, .. } => f
+            Self::Server { language, .. } => f
                 .debug_struct("Server")
                 .field("language", language)
                 .finish_non_exhaustive(),
-            CodegenTargetKind::AsyncFixtures { output } => {
+            Self::AsyncFixtures { output } => {
                 f.debug_struct("AsyncFixtures").field("output", output).finish()
             }
-            CodegenTargetKind::AsyncTestApp { language, output } => f
+            Self::AsyncTestApp { language, output } => f
                 .debug_struct("AsyncTestApp")
                 .field("language", language)
                 .field("output", output)
                 .finish(),
-            CodegenTargetKind::AsyncHandlers { language, output } => f
+            Self::AsyncHandlers { language, output } => f
                 .debug_struct("AsyncHandlers")
                 .field("language", language)
                 .field("output", output)
                 .finish(),
-            CodegenTargetKind::AsyncAll { output } => f.debug_struct("AsyncAll").field("output", output).finish(),
-            CodegenTargetKind::JsonRpcHandlers { language, output } => f
+            Self::AsyncAll { output } => f.debug_struct("AsyncAll").field("output", output).finish(),
+            Self::JsonRpcHandlers { language, output } => f
                 .debug_struct("JsonRpcHandlers")
                 .field("language", language)
                 .field("output", output)
                 .finish(),
-            CodegenTargetKind::GraphQL {
+            Self::GraphQL {
                 language,
                 output,
                 target,
@@ -414,7 +413,7 @@ impl std::fmt::Debug for CodegenTargetKind {
                 .field("output", output)
                 .field("target", target)
                 .finish(),
-            CodegenTargetKind::Protobuf {
+            Self::Protobuf {
                 language,
                 output,
                 target,

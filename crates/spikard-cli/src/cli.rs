@@ -33,9 +33,9 @@ enum Commands {
         #[command(subcommand)]
         target: TestingCommand,
     },
-    /// Validate an AsyncAPI specification
+    /// Validate an `AsyncAPI` specification
     ValidateAsyncapi {
-        /// Path to AsyncAPI schema file (JSON or YAML)
+        /// Path to `AsyncAPI` schema file (JSON or YAML)
         schema: PathBuf,
     },
     /// Show information about Spikard
@@ -73,22 +73,22 @@ enum InitLanguage {
 impl From<InitLanguage> for TargetLanguage {
     fn from(lang: InitLanguage) -> Self {
         match lang {
-            InitLanguage::Python => TargetLanguage::Python,
-            InitLanguage::TypeScript => TargetLanguage::TypeScript,
-            InitLanguage::Rust => TargetLanguage::Rust,
-            InitLanguage::Ruby => TargetLanguage::Ruby,
-            InitLanguage::Php => TargetLanguage::Php,
+            InitLanguage::Python => Self::Python,
+            InitLanguage::TypeScript => Self::TypeScript,
+            InitLanguage::Rust => Self::Rust,
+            InitLanguage::Ruby => Self::Ruby,
+            InitLanguage::Php => Self::Php,
         }
     }
 }
 
 #[derive(Subcommand, Debug)]
 enum GenerateCommand {
-    /// Generate REST handlers from OpenAPI schemas
+    /// Generate REST handlers from `OpenAPI` schemas
     Openapi(OpenapiArgs),
-    /// Generate AsyncAPI handler scaffolding (SSE/WebSocket)
+    /// Generate `AsyncAPI` handler scaffolding (SSE/WebSocket)
     Asyncapi(AsyncapiHandlerArgs),
-    /// Generate JSON-RPC 2.0 handlers from OpenRPC schemas
+    /// Generate JSON-RPC 2.0 handlers from `OpenRPC` schemas
     Jsonrpc(JsonrpcArgs),
     /// Generate GraphQL types, resolvers, or schema
     Graphql(GraphqlArgs),
@@ -100,7 +100,7 @@ enum GenerateCommand {
 
 #[derive(Args, Debug)]
 struct OpenapiArgs {
-    /// Path to OpenAPI schema file (JSON or YAML)
+    /// Path to `OpenAPI` schema file (JSON or YAML)
     schema: PathBuf,
 
     /// Target language for code generation
@@ -118,7 +118,7 @@ struct OpenapiArgs {
 
 #[derive(Args, Debug)]
 struct AsyncapiHandlerArgs {
-    /// Path to AsyncAPI schema file (JSON or YAML)
+    /// Path to `AsyncAPI` schema file (JSON or YAML)
     schema: PathBuf,
 
     /// Target language for handler scaffolding
@@ -136,7 +136,7 @@ struct AsyncapiHandlerArgs {
 
 #[derive(Args, Debug)]
 struct JsonrpcArgs {
-    /// Path to OpenRPC schema file (JSON or YAML)
+    /// Path to `OpenRPC` schema file (JSON or YAML)
     schema: PathBuf,
 
     /// Target language for handler scaffolding
@@ -205,16 +205,16 @@ enum AsyncapiTestingTarget {
 
 #[derive(Args, Debug)]
 struct AsyncFixtureArgs {
-    /// Path to AsyncAPI schema file (JSON or YAML)
+    /// Path to `AsyncAPI` schema file (JSON or YAML)
     schema: PathBuf,
-    /// Output directory for fixtures (default: testing_data/)
+    /// Output directory for fixtures (default: `testing_data`/)
     #[arg(long, short = 'o', default_value = "testing_data")]
     output: PathBuf,
 }
 
 #[derive(Args, Debug)]
 struct AsyncTestAppArgs {
-    /// Path to AsyncAPI schema file (JSON or YAML)
+    /// Path to `AsyncAPI` schema file (JSON or YAML)
     schema: PathBuf,
     /// Target language
     #[arg(long, short = 'l')]
@@ -226,7 +226,7 @@ struct AsyncTestAppArgs {
 
 #[derive(Args, Debug)]
 struct AsyncAllArgs {
-    /// Path to AsyncAPI schema file (JSON or YAML)
+    /// Path to `AsyncAPI` schema file (JSON or YAML)
     schema: PathBuf,
     /// Output directory (default: current directory)
     #[arg(long, short = 'o', default_value = ".")]
@@ -257,11 +257,11 @@ enum GenerateLanguage {
 impl From<GenerateLanguage> for codegen::TargetLanguage {
     fn from(lang: GenerateLanguage) -> Self {
         match lang {
-            GenerateLanguage::Python => codegen::TargetLanguage::Python,
-            GenerateLanguage::TypeScript => codegen::TargetLanguage::TypeScript,
-            GenerateLanguage::Rust => codegen::TargetLanguage::Rust,
-            GenerateLanguage::Ruby => codegen::TargetLanguage::Ruby,
-            GenerateLanguage::Php => codegen::TargetLanguage::Php,
+            GenerateLanguage::Python => Self::Python,
+            GenerateLanguage::TypeScript => Self::TypeScript,
+            GenerateLanguage::Rust => Self::Rust,
+            GenerateLanguage::Ruby => Self::Ruby,
+            GenerateLanguage::Php => Self::Php,
         }
     }
 }
@@ -346,7 +346,7 @@ fn run(cli: Cli) -> Result<()> {
                     }
                 }
                 Err(e) => {
-                    eprintln!("✗ Failed to create project: {}", e);
+                    eprintln!("✗ Failed to create project: {e}");
                     return Err(e);
                 }
             }
@@ -379,13 +379,13 @@ fn run(cli: Cli) -> Result<()> {
                     schema_kind: SchemaKind::OpenApi,
                     target: CodegenTargetKind::Server {
                         language: args.lang.into(),
-                        output: args.output.clone(),
+                        output: args.output,
                     },
                     dto: Some(dto_config),
                 };
 
                 match CodegenEngine::execute(request).context("Failed to generate code from OpenAPI schema")? {
-                    CodegenOutcome::InMemory(code) => println!("{}", code),
+                    CodegenOutcome::InMemory(code) => println!("{code}"),
                     CodegenOutcome::Files(files) => {
                         for asset in files {
                             println!("✓ Generated {} at {}", asset.description, asset.path.display());
@@ -407,7 +407,7 @@ fn run(cli: Cli) -> Result<()> {
                     schema_kind: SchemaKind::AsyncApi,
                     target: CodegenTargetKind::AsyncHandlers {
                         language: args.lang.into(),
-                        output: args.output.clone(),
+                        output: args.output,
                     },
                     dto: Some(dto_config),
                 };
@@ -432,13 +432,13 @@ fn run(cli: Cli) -> Result<()> {
                     schema_kind: SchemaKind::OpenRpc,
                     target: CodegenTargetKind::JsonRpcHandlers {
                         language: args.lang.into(),
-                        output: args.output.clone().unwrap_or_else(|| PathBuf::from("handlers.py")),
+                        output: args.output.unwrap_or_else(|| PathBuf::from("handlers.py")),
                     },
                     dto: None,
                 };
 
                 match CodegenEngine::execute(request).context("Failed to generate code from OpenRPC schema")? {
-                    CodegenOutcome::InMemory(code) => println!("{}", code),
+                    CodegenOutcome::InMemory(code) => println!("{code}"),
                     CodegenOutcome::Files(files) => {
                         for asset in files {
                             println!("✓ Generated {} at {}", asset.description, asset.path.display());
@@ -462,7 +462,7 @@ fn run(cli: Cli) -> Result<()> {
                         GenerateLanguage::Ruby => ".rb",
                         GenerateLanguage::Php => ".php",
                     };
-                    PathBuf::from(format!("generated{}", ext))
+                    PathBuf::from(format!("generated{ext}"))
                 });
 
                 let request = CodegenRequest {
@@ -470,14 +470,14 @@ fn run(cli: Cli) -> Result<()> {
                     schema_kind: SchemaKind::GraphQL,
                     target: CodegenTargetKind::GraphQL {
                         language: args.lang.into(),
-                        output: output_path.clone(),
-                        target: args.target.clone(),
+                        output: output_path,
+                        target: args.target,
                     },
                     dto: None,
                 };
 
                 match CodegenEngine::execute(request).context("Failed to generate code from GraphQL schema")? {
-                    CodegenOutcome::InMemory(code) => println!("{}", code),
+                    CodegenOutcome::InMemory(code) => println!("{code}"),
                     CodegenOutcome::Files(files) => {
                         for asset in files {
                             println!("✓ Generated {} at {}", asset.description, asset.path.display());
@@ -498,13 +498,13 @@ fn run(cli: Cli) -> Result<()> {
                     target: CodegenTargetKind::Protobuf {
                         language: args.lang.into(),
                         output: args.output.clone(),
-                        target: args.target.clone(),
+                        target: args.target,
                     },
                     dto: None,
                 };
 
                 match CodegenEngine::execute(request).context("Failed to generate protobuf code")? {
-                    CodegenOutcome::InMemory(code) => println!("{}", code),
+                    CodegenOutcome::InMemory(code) => println!("{code}"),
                     CodegenOutcome::Files(files) => {
                         for asset in files {
                             println!("✓ Generated {} at {}", asset.description, asset.path.display());
@@ -523,7 +523,7 @@ fn run(cli: Cli) -> Result<()> {
                         schema_path: args.schema.clone(),
                         schema_kind: SchemaKind::AsyncApi,
                         target: CodegenTargetKind::AsyncFixtures {
-                            output: args.output.clone(),
+                            output: args.output,
                         },
                         dto: None,
                     };
@@ -543,7 +543,7 @@ fn run(cli: Cli) -> Result<()> {
                         schema_kind: SchemaKind::AsyncApi,
                         target: CodegenTargetKind::AsyncTestApp {
                             language: args.lang.into(),
-                            output: args.output.clone(),
+                            output: args.output,
                         },
                         dto: None,
                     };
@@ -564,7 +564,7 @@ fn run(cli: Cli) -> Result<()> {
                         schema_path: args.schema.clone(),
                         schema_kind: SchemaKind::AsyncApi,
                         target: CodegenTargetKind::AsyncAll {
-                            output: args.output.clone(),
+                            output: args.output,
                         },
                         dto: None,
                     };
@@ -600,10 +600,10 @@ fn run(cli: Cli) -> Result<()> {
             println!("  API Version: {}", spec.info.version);
 
             let protocol = codegen::detect_primary_protocol(&spec)?;
-            println!("  Primary Protocol: {:?}", protocol);
+            println!("  Primary Protocol: {protocol:?}");
 
             let channel_count = spec.channels.len();
-            println!("  Channels: {}", channel_count);
+            println!("  Channels: {channel_count}");
 
             println!("\nSchema validated successfully!");
         }

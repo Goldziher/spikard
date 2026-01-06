@@ -29,7 +29,7 @@ impl ProtobufGenerator for PhpProtobufGenerator {
 
         // Namespace
         if let Some(package) = &schema.package {
-            code.push_str(&format!("namespace {};\n\n", package));
+            code.push_str(&format!("namespace {package};\n\n"));
         } else {
             code.push_str("namespace Protobuf;\n\n");
         }
@@ -66,7 +66,7 @@ impl ProtobufGenerator for PhpProtobufGenerator {
 
         // Namespace
         if let Some(package) = &schema.package {
-            code.push_str(&format!("namespace {};\n\n", package));
+            code.push_str(&format!("namespace {package};\n\n"));
         } else {
             code.push_str("namespace Protobuf;\n\n");
         }
@@ -139,8 +139,7 @@ impl PhpProtobufGenerator {
                 };
 
                 code.push_str(&format!(
-                    "    protected {} ${} = {};\n",
-                    field_type, field_name, default_val
+                    "    protected {field_type} ${field_name} = {default_val};\n"
                 ));
             }
 
@@ -226,14 +225,13 @@ impl PhpProtobufGenerator {
                 let request_type = &method.input_type;
                 let response_type = &method.output_type;
 
-                code.push_str(&format!("     * @param {} $request\n", request_type));
-                code.push_str(&format!("     * @return {}\n", response_type));
+                code.push_str(&format!("     * @param {request_type} $request\n"));
+                code.push_str(&format!("     * @return {response_type}\n"));
                 code.push_str("     */\n");
 
                 // Use fixed parameter name $request to avoid indexing issues
                 code.push_str(&format!(
-                    "    public function {}({} $request): {}\n",
-                    method_name, request_type, response_type
+                    "    public function {method_name}({request_type} $request): {response_type}\n"
                 ));
 
                 code.push_str("    {\n");

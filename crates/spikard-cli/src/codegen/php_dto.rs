@@ -32,6 +32,7 @@ pub struct PhpDtoGenerator {
 
 impl PhpDtoGenerator {
     /// Create a new PHP DTO generator with default Request/Response metadata
+    #[must_use] 
     pub fn new() -> Self {
         Self {
             metadata: Self::default_metadata(),
@@ -39,7 +40,8 @@ impl PhpDtoGenerator {
     }
 
     /// Create a PHP DTO generator with custom metadata
-    pub fn with_metadata(metadata: Vec<DtoDefinition>) -> Self {
+    #[must_use] 
+    pub const fn with_metadata(metadata: Vec<DtoDefinition>) -> Self {
         Self { metadata }
     }
 
@@ -75,7 +77,7 @@ impl PhpDtoGenerator {
         let dependencies_doc = self.php_doc_for(&definition.fields, "dependencies");
 
         Ok(format!(
-            r#"<?php
+            r"<?php
 
 declare(strict_types=1);
 
@@ -215,7 +217,7 @@ final class Request
         return $result;
     }}
 }}
-"#
+"
         ))
     }
 
@@ -225,7 +227,7 @@ final class Request
         let cookies_doc = self.php_doc_for(&definition.fields, "cookies");
 
         Ok(format!(
-            r#"<?php
+            r"<?php
 
 declare(strict_types=1);
 
@@ -321,7 +323,7 @@ final class Response
         throw new \BadMethodCallException('Undefined method ' . __CLASS__ . '::' . $name);
     }}
 }}
-"#
+"
         ))
     }
 
@@ -331,7 +333,7 @@ final class Response
             if field.name == name {
                 let doc = field.php_doc.trim();
                 if !doc.is_empty() {
-                    return format!("/** @var {} */\n        ", doc);
+                    return format!("/** @var {doc} */\n        ");
                 }
             }
         }

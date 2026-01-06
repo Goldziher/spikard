@@ -23,7 +23,7 @@ impl ProjectScaffolder for RustScaffolder {
         ));
 
         // Create Cargo.lock (empty placeholder)
-        files.push(ScaffoldedFile::new(PathBuf::from("Cargo.lock"), "".to_string()));
+        files.push(ScaffoldedFile::new(PathBuf::from("Cargo.lock"), String::new()));
 
         // Create src/main.rs
         files.push(ScaffoldedFile::new(
@@ -85,14 +85,14 @@ impl RustScaffolder {
     fn generate_cargo_toml(&self, kebab_name: &str) -> String {
         format!(
             r#"[package]
-name = "{}"
+name = "{kebab_name}"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.75"
 authors = ["Your Name <you@example.com>"]
 license = "MIT"
 description = "A Spikard-powered HTTP application"
-repository = "https://github.com/yourusername/{}"
+repository = "https://github.com/yourusername/{kebab_name}"
 
 [dependencies]
 spikard-http = "0.6"
@@ -101,8 +101,7 @@ serde = {{ version = "1", features = ["derive"] }}
 serde_json = "1"
 
 [dev-dependencies]
-"#,
-            kebab_name, kebab_name
+"#
         )
     }
 
@@ -187,7 +186,7 @@ mod tests {
     }
 
     fn generate_integration_test(&self) -> String {
-        r#"//! Integration tests
+        r"//! Integration tests
 //!
 //! Tests that verify the HTTP server and handlers work correctly.
 
@@ -204,12 +203,12 @@ async fn test_health_endpoint() {
     // Example using a test client
     assert!(true);
 }
-"#
+"
         .to_string()
     }
 
     fn generate_gitignore(&self) -> String {
-        r#"# Rust build artifacts
+        r"# Rust build artifacts
 /target/
 Cargo.lock
 
@@ -231,13 +230,13 @@ Thumbs.db
 
 # Testing
 *.profdata
-"#
+"
         .to_string()
     }
 
     fn generate_readme(&self, project_name: &str, kebab_name: &str) -> String {
         format!(
-            r#"# {}
+            r"# {project_name}
 
 A Rust HTTP server powered by Spikard.
 
@@ -276,7 +275,7 @@ cargo run --release
 ## Project Structure
 
 ```
-{}/
+{kebab_name}/
 ├── src/
 │   ├── main.rs      # Binary entry point
 │   └── lib.rs       # Library code
@@ -312,8 +311,7 @@ cargo clippy -- -D warnings
 - [Spikard Documentation](https://spikard.dev)
 - [Rust Book](https://doc.rust-lang.org/book/)
 - [Tokio Documentation](https://tokio.rs/)
-"#,
-            project_name, kebab_name
+"
         )
     }
 }

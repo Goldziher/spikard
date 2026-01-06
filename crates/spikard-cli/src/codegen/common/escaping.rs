@@ -67,6 +67,7 @@ pub enum EscapeContext {
 /// // Escape for Ruby single-quoted strings
 /// assert_eq!(escape_quotes("it's", EscapeContext::Ruby), "it\\'s");
 /// ```
+#[must_use] 
 pub fn escape_quotes(s: &str, context: EscapeContext) -> String {
     match context {
         EscapeContext::Python => {
@@ -114,6 +115,7 @@ pub fn escape_quotes(s: &str, context: EscapeContext) -> String {
 /// // Python and Ruby double-quoted strings need standard escaping
 /// assert_eq!(escape_double_quotes("say \"hi\"", EscapeContext::Python), "say \\\"hi\\\"");
 /// ```
+#[must_use] 
 pub fn escape_double_quotes(s: &str, context: EscapeContext) -> String {
     match context {
         EscapeContext::Python | EscapeContext::Rust => {
@@ -158,6 +160,7 @@ pub fn escape_double_quotes(s: &str, context: EscapeContext) -> String {
 /// assert_eq!(escape_template_literal("hello $name", EscapeContext::JavaScript), "hello \\$name");
 /// assert_eq!(escape_template_literal("say `hi`", EscapeContext::JavaScript), "say \\`hi\\`");
 /// ```
+#[must_use] 
 pub fn escape_template_literal(s: &str, context: EscapeContext) -> String {
     match context {
         EscapeContext::JavaScript => {
@@ -175,9 +178,9 @@ pub fn escape_template_literal(s: &str, context: EscapeContext) -> String {
 ///
 /// Docstrings have language-specific delimiters and rules:
 /// - **Python**: Triple-quoted strings (`"""`) with different escape patterns
-/// - **JavaScript/TypeScript**: JSDoc comments with `/**` and `*/`
+/// - **JavaScript/TypeScript**: `JSDoc` comments with `/**` and `*/`
 /// - **Ruby**: YARD documentation with special comment markers
-/// - **PHP**: PHPDoc comments with special markers
+/// - **PHP**: `PHPDoc` comments with special markers
 /// - **Rust**: rustdoc with `///` or `//!`
 ///
 /// # Arguments
@@ -199,6 +202,7 @@ pub fn escape_template_literal(s: &str, context: EscapeContext) -> String {
 /// assert!(!result.contains("\"\"\""));
 /// assert!(result.contains("\\\""));
 /// ```
+#[must_use] 
 pub fn escape_for_docstring(s: &str, context: EscapeContext) -> String {
     match context {
         EscapeContext::Python => {
@@ -211,7 +215,7 @@ pub fn escape_for_docstring(s: &str, context: EscapeContext) -> String {
         EscapeContext::JavaScript => {
             // JSDoc comments: standard escape for double quotes and special comment markers
             // Avoid */ and /** within the docstring
-            s.replace("*/", "*\\/").replace("\\", "\\\\").replace('"', "\\\"")
+            s.replace("*/", "*\\/").replace('\\', "\\\\").replace('"', "\\\"")
         }
         EscapeContext::Ruby => {
             // YARD documentation: standard escape for quotes
@@ -221,7 +225,7 @@ pub fn escape_for_docstring(s: &str, context: EscapeContext) -> String {
         EscapeContext::Php => {
             // PHPDoc comments: standard escape for quotes and special markers
             // Avoid */ and /** within the docstring
-            s.replace("*/", "*\\/").replace("\\", "\\\\").replace('"', "\\\"")
+            s.replace("*/", "*\\/").replace('\\', "\\\\").replace('"', "\\\"")
         }
         EscapeContext::Rust => {
             // Rustdoc: standard escape for quotes
@@ -255,6 +259,7 @@ pub fn escape_for_docstring(s: &str, context: EscapeContext) -> String {
 /// let result = escape_graphql_sdl_description("Has \"\"\" in description", EscapeContext::Python);
 /// assert!(result.contains("\\\\\\\""));
 /// ```
+#[must_use] 
 pub fn escape_graphql_sdl_description(s: &str, _context: EscapeContext) -> String {
     // GraphQL SDL descriptions use triple-quoted strings.
     // Escape """ with \"\"\", similar to GraphQL string escaping
@@ -284,6 +289,7 @@ pub fn escape_graphql_sdl_description(s: &str, _context: EscapeContext) -> Strin
 /// // Standard GraphQL string escaping
 /// assert_eq!(escape_graphql_string("hello \"world\"", EscapeContext::Rust), "hello \\\"world\\\"");
 /// ```
+#[must_use] 
 pub fn escape_graphql_string(s: &str, _context: EscapeContext) -> String {
     // GraphQL string escaping: escape quotes and backslashes
     s.replace('\\', "\\\\").replace('"', "\\\"")
@@ -313,6 +319,7 @@ pub fn escape_graphql_string(s: &str, _context: EscapeContext) -> String {
 /// assert!(result.contains("\\t"));
 /// assert!(result.contains("\\\""));
 /// ```
+#[must_use] 
 pub fn escape_json_string(s: &str, _context: EscapeContext) -> String {
     let mut result = String::new();
     for ch in s.chars() {

@@ -14,13 +14,13 @@ pub struct TypeScriptDto {
 /// Generate TypeScript + Zod declarations for a JSON Schema payload.
 pub fn generate_typescript_dto(message_name: &str, schema: &Value) -> Result<TypeScriptDto> {
     let type_ident = format!("{}Message", camel_case(message_name));
-    let schema_ident = format!("{}Schema", type_ident);
+    let schema_ident = format!("{type_ident}Schema");
 
     let zod_expr = schema_to_zod(schema, false);
     let ts_type = schema_to_typescript(schema, false);
 
-    let schema_declaration = format!("const {} = {};\n", schema_ident, zod_expr);
-    let type_declaration = format!("type {} = {};\n", type_ident, ts_type);
+    let schema_declaration = format!("const {schema_ident} = {zod_expr};\n");
+    let type_declaration = format!("type {type_ident} = {ts_type};\n");
 
     Ok(TypeScriptDto {
         schema_ident,
@@ -34,7 +34,7 @@ pub fn generate_typescript_dto(message_name: &str, schema: &Value) -> Result<Typ
 fn schema_to_typescript(schema: &Value, optional: bool) -> String {
     let mut base = match detect_type(schema) {
         Some("string") => "string".to_string(),
-        Some("number") | Some("integer") => "number".to_string(),
+        Some("number" | "integer") => "number".to_string(),
         Some("boolean") => "boolean".to_string(),
         Some("array") => {
             if let Some(items) = schema.get("items") {
@@ -104,7 +104,7 @@ fn schema_to_zod(schema: &Value, optional: bool) -> String {
                 "z.string()".to_string()
             }
         }
-        Some("number") | Some("integer") => "z.number()".to_string(),
+        Some("number" | "integer") => "z.number()".to_string(),
         Some("boolean") => "z.boolean()".to_string(),
         Some("array") => {
             if let Some(items) = schema.get("items") {
@@ -127,7 +127,7 @@ fn schema_to_zod(schema: &Value, optional: bool) -> String {
         }
     };
 
-    if schema.get("nullable").and_then(|v| v.as_bool()).unwrap_or(false) {
+    if schema.get("nullable").and_then(serde_json::Value::as_bool).unwrap_or(false) {
         base.push_str(".nullable()");
     }
 
@@ -139,7 +139,7 @@ fn schema_to_zod(schema: &Value, optional: bool) -> String {
 }
 
 fn object_to_zod(schema: &Value) -> String {
-    if let Some(Value::Bool(true)) = schema.get("additionalProperties") {
+    if matches!(schema.get("additionalProperties"), Some(Value::Bool(true))) {
         return "z.record(z.string(), z.unknown())".to_string();
     }
 
@@ -184,7 +184,7 @@ fn required_set(schema: &Value) -> std::collections::HashSet<String> {
         .map(|values| {
             values
                 .iter()
-                .filter_map(|value| value.as_str().map(|s| s.to_string()))
+                .filter_map(|value| value.as_str().map(std::string::ToString::to_string))
                 .collect()
         })
         .unwrap_or_default()
@@ -208,7 +208,7 @@ fn enum_literal(values: &Value) -> String {
 
 fn literal_value(value: &Value) -> String {
     match value {
-        Value::String(s) => format!("{:?}", s),
+        Value::String(s) => format!("{s:?}"),
         Value::Number(num) => num.to_string(),
         Value::Bool(b) => b.to_string(),
         Value::Null => "null".to_string(),
@@ -218,7 +218,7 @@ fn literal_value(value: &Value) -> String {
 
 fn literal_type(value: &Value) -> String {
     match value {
-        Value::String(s) => format!("{:?}", s),
+        Value::String(s) => format!("{s:?}"),
         Value::Number(num) => num.to_string(),
         Value::Bool(b) => b.to_string(),
         Value::Null => "null".to_string(),
@@ -249,10 +249,10 @@ pub fn json_value_to_ts_literal(value: &Value) -> String {
                     .map(json_value_to_ts_literal)
                     .collect::<Vec<_>>()
                     .join(", ");
-                format!("[{}]", inner)
+                format!("[{inner}]")
             }
         }
-        Value::String(s) => format!("{:?}", s),
+        Value::String(s) => format!("{s:?}"),
         Value::Number(num) => num.to_string(),
         Value::Bool(b) => b.to_string(),
         Value::Null => "null".to_string(),
@@ -277,6 +277,6 @@ fn format_property(name: &str) -> String {
     if valid_ident {
         name.to_string()
     } else {
-        format!("{:?}", name)
+        format!("{name:?}")
     }
 }

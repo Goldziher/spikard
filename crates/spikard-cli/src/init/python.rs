@@ -17,7 +17,7 @@ use std::path::PathBuf;
 pub struct PythonScaffolder;
 
 impl PythonScaffolder {
-    /// Convert a project name to a valid Python package name (snake_case)
+    /// Convert a project name to a valid Python package name (`snake_case`)
     fn to_package_name(project_name: &str) -> String {
         // Replace hyphens with underscores and convert to lowercase
         project_name.replace('-', "_").to_lowercase()
@@ -27,7 +27,7 @@ impl PythonScaffolder {
     fn generate_pyproject_toml(project_name: &str, _package_name: &str) -> String {
         format!(
             r#"[project]
-name = "{}"
+name = "{project_name}"
 version = "0.1.0"
 description = "A Spikard application"
 requires-python = ">=3.10"
@@ -48,8 +48,7 @@ dev-dependencies = [
 
 [tool.uv.sources]
 spikard = {{ path = ".", editable = true }}
-"#,
-            project_name
+"#
         )
     }
 
@@ -69,10 +68,9 @@ async def health() -> dict[str, str]:
 
 if __name__ == "__main__":
     # Run the application
-    # For local development: uvicorn {}.app:app --reload
+    # For local development: uvicorn {package_name}.app:app --reload
     pass
-"#,
-            package_name
+"#
         )
     }
 
@@ -86,7 +84,7 @@ if __name__ == "__main__":
         format!(
             r#""""Tests for the application."""
 import pytest
-from {}.app import app
+from {package_name}.app import app
 
 
 @pytest.fixture
@@ -101,14 +99,13 @@ def test_health(client):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {{"status": "ok"}}
-"#,
-            package_name
+"#
         )
     }
 
     /// Generate .gitignore file
     fn generate_gitignore() -> String {
-        r#"__pycache__/
+        r"__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -142,14 +139,14 @@ env/
 *~
 .DS_Store
 uv.lock
-"#
+"
         .to_string()
     }
 
     /// Generate README.md file
     fn generate_readme(project_name: &str, package_name: &str) -> String {
         format!(
-            r#"# {}
+            r"# {project_name}
 
 A Spikard application.
 
@@ -166,7 +163,7 @@ uv sync
 Start the development server:
 
 ```bash
-uv run python -m {}.app
+uv run python -m {package_name}.app
 ```
 
 ## Test
@@ -182,7 +179,7 @@ uv run pytest
 Run mypy to check types:
 
 ```bash
-uv run mypy {}/
+uv run mypy {package_name}/
 ```
 
 ## Linting
@@ -190,8 +187,8 @@ uv run mypy {}/
 Run ruff to lint code:
 
 ```bash
-uv run ruff check {}/
-uv run ruff format {}/
+uv run ruff check {package_name}/
+uv run ruff format {package_name}/
 ```
 
 ## Documentation
@@ -199,8 +196,7 @@ uv run ruff format {}/
 For more information about Spikard, visit:
 - [Spikard Documentation](https://spikard.dev)
 - [Spikard GitHub](https://github.com/Goldziher/spikard)
-"#,
-            project_name, package_name, package_name, package_name, package_name
+"
         )
     }
 }
@@ -219,13 +215,13 @@ impl ProjectScaffolder for PythonScaffolder {
 
         // src/{package_name}/__init__.py
         files.push(ScaffoldedFile::new(
-            PathBuf::from(format!("src/{}/__init__.py", package_name)),
+            PathBuf::from(format!("src/{package_name}/__init__.py")),
             Self::generate_init_py(),
         ));
 
         // src/{package_name}/app.py
         files.push(ScaffoldedFile::new(
-            PathBuf::from(format!("src/{}/app.py", package_name)),
+            PathBuf::from(format!("src/{package_name}/app.py")),
             Self::generate_app_module(&package_name),
         ));
 

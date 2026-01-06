@@ -8,11 +8,11 @@
 //!
 //! The initialization system follows a layered design:
 //!
-//! - **ProjectScaffolder**: Language-agnostic trait defining what files and structure
+//! - **`ProjectScaffolder`**: Language-agnostic trait defining what files and structure
 //!   are needed for a new project.
-//! - **InitEngine**: Orchestrates the scaffolding process, validates inputs, and
+//! - **`InitEngine`**: Orchestrates the scaffolding process, validates inputs, and
 //!   manages file creation.
-//! - **ScaffoldedFile**: Represents a file to be written with path and content.
+//! - **`ScaffoldedFile`**: Represents a file to be written with path and content.
 //!
 //! # Example
 //!

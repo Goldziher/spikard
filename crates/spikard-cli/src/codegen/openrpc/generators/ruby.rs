@@ -1,4 +1,4 @@
-//! Ruby OpenRPC code generation.
+//! Ruby `OpenRPC` code generation.
 
 use anyhow::Result;
 
@@ -6,7 +6,7 @@ use crate::codegen::openrpc::spec_parser::OpenRpcSpec;
 
 use super::OpenRpcGenerator;
 
-/// Ruby OpenRPC code generator
+/// Ruby `OpenRPC` code generator
 pub struct RubyOpenRpcGenerator;
 
 impl OpenRpcGenerator for RubyOpenRpcGenerator {
@@ -117,11 +117,11 @@ fn generate_ruby_handler(
 ) -> Result<()> {
     let handler_name = format!("Handle{}", pascal_case(&method.name));
 
-    code.push_str(&format!("class {}\n", handler_name));
+    code.push_str(&format!("class {handler_name}\n"));
     code.push_str("  # JSON-RPC 2.0 handler method\n");
     if let Some(summary) = &method.summary {
         let safe_summary = summary.replace('"', "\\\"").replace('\n', " ");
-        code.push_str(&format!("  # {}\n", safe_summary));
+        code.push_str(&format!("  # {safe_summary}\n"));
     }
     code.push_str("  def execute(params)\n");
 
@@ -144,7 +144,7 @@ fn generate_ruby_handler(
     {
         for field_name in props.keys().take(3) {
             let safe_field = field_name.replace('"', "\\\"");
-            code.push_str(&format!("    result[\"{}\"] = nil  # TODO: implement\n", safe_field));
+            code.push_str(&format!("    result[\"{safe_field}\"] = nil  # TODO: implement\n"));
         }
         if props.len() > 3 {
             code.push_str("    # ... add remaining fields\n");
@@ -182,6 +182,5 @@ fn pascal_case(input: &str) -> String {
                 Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
             }
         })
-        .collect::<Vec<_>>()
-        .join("")
+        .collect::<String>()
 }

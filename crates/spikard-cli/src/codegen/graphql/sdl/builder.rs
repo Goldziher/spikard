@@ -29,7 +29,7 @@
 //!
 //! The builder automatically excludes built-in scalar types:
 //! - String, Int, Float, Boolean, ID
-//! - DateTime, Date, Time, JSON, Upload
+//! - `DateTime`, Date, Time, JSON, Upload
 //!
 //! These are assumed to be defined elsewhere in the language runtime or GraphQL library.
 //!
@@ -38,7 +38,7 @@
 //! - **Consistent formatting**: All SDL output follows GraphQL specification formatting
 //! - **Description handling**: Preserves type descriptions as `"""..."""` comments
 //! - **Deprecation support**: Includes `@deprecated(reason: "...")` directives
-//! - **Complete coverage**: Handles Objects, InputObjects, Enums, Scalars, Unions, Interfaces
+//! - **Complete coverage**: Handles Objects, `InputObjects`, Enums, Scalars, Unions, Interfaces
 //! - **Field arguments**: Properly formats field arguments with default values
 
 use crate::codegen::graphql::spec_parser::{
@@ -67,7 +67,7 @@ impl<'a> SdlBuilder<'a> {
     /// # Returns
     ///
     /// A new `SdlBuilder` instance ready to generate SDL.
-    pub fn new(schema: &'a GraphQLSchema) -> Self {
+    pub const fn new(schema: &'a GraphQLSchema) -> Self {
         Self { schema }
     }
 
@@ -501,9 +501,9 @@ impl<'a> SdlBuilder<'a> {
         // Build type with list notation if applicable
         let mut result = if is_list {
             if list_item_nullable {
-                format!("[{}]", clean_type)
+                format!("[{clean_type}]")
             } else {
-                format!("[{}!]", clean_type)
+                format!("[{clean_type}!]")
             }
         } else {
             clean_type.to_string()

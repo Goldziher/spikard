@@ -23,7 +23,7 @@ pub trait GraphQLGenerator {
         let types = self.generate_types(schema)?;
         let resolvers = self.generate_resolvers(schema)?;
         let schema_def = self.generate_schema_definition(schema)?;
-        Ok(format!("{}\n{}\n{}", types, resolvers, schema_def))
+        Ok(format!("{types}\n{resolvers}\n{schema_def}"))
     }
 
     /// Optional: Generate language-specific type signatures (e.g., RBS for Ruby, .d.ts for TypeScript)

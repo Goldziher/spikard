@@ -1,18 +1,18 @@
-//! Base trait for OpenAPI code generators
+//! Base trait for `OpenAPI` code generators
 //!
-//! Provides a language-neutral abstraction for code generation from OpenAPI specs,
+//! Provides a language-neutral abstraction for code generation from `OpenAPI` specs,
 //! eliminating duplication across Python, TypeScript, Ruby, and PHP generators.
 
 use crate::codegen::SchemaRegistry;
 use anyhow::Result;
 use openapiv3::{OpenAPI, Operation, ReferenceOr, Schema};
 
-/// Base trait for OpenAPI code generators to eliminate duplication across languages.
+/// Base trait for `OpenAPI` code generators to eliminate duplication across languages.
 ///
 /// Implementors should override language-specific methods while leveraging shared
 /// default implementations for common patterns.
 pub trait OpenApiGenerator {
-    /// Get the OpenAPI specification
+    /// Get the `OpenAPI` specification
     fn spec(&self) -> &OpenAPI;
 
     /// Get the schema registry for reference resolution
@@ -21,10 +21,10 @@ pub trait OpenApiGenerator {
     /// Generate the file header (imports, module declaration, etc.)
     fn generate_header(&self) -> String;
 
-    /// Generate data models/DTOs from OpenAPI components
+    /// Generate data models/DTOs from `OpenAPI` components
     fn generate_models(&self) -> Result<String>;
 
-    /// Generate route handlers from OpenAPI paths
+    /// Generate route handlers from `OpenAPI` paths
     fn generate_routes(&self) -> Result<String>;
 
     /// Generate file footer (bootstrap, exports, etc.)
@@ -153,7 +153,7 @@ pub trait OpenApiGenerator {
         }
     }
 
-    /// Format a type name according to language conventions (PascalCase by default)
+    /// Format a type name according to language conventions (`PascalCase` by default)
     fn format_type_name(&self, name: &str) -> String {
         heck::ToPascalCase::to_pascal_case(name)
     }

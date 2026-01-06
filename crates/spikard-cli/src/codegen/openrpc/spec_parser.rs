@@ -1,6 +1,6 @@
-//! OpenRPC 1.3.2 specification parsing and extraction.
+//! `OpenRPC` 1.3.2 specification parsing and extraction.
 //!
-//! This module handles parsing OpenRPC 1.3.2 specs and extracting structured data
+//! This module handles parsing `OpenRPC` 1.3.2 specs and extracting structured data
 //! for code generation, including methods, parameters, results, and errors.
 
 use anyhow::{Context, Result};
@@ -10,10 +10,10 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-/// Complete OpenRPC 1.3.2 specification
+/// Complete `OpenRPC` 1.3.2 specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenRpcSpec {
-    /// OpenRPC version (should be "1.3.2")
+    /// `OpenRPC` version (should be "1.3.2")
     pub openrpc: String,
     /// API metadata
     pub info: OpenRpcInfo,
@@ -172,7 +172,7 @@ pub struct OpenRpcComponents {
     pub schemas: HashMap<String, Value>,
 }
 
-/// Parse an OpenRPC 1.3.2 specification file
+/// Parse an `OpenRPC` 1.3.2 specification file
 ///
 /// Supports both JSON and YAML formats
 pub fn parse_openrpc_schema(path: &Path) -> Result<OpenRpcSpec> {
@@ -210,8 +210,7 @@ pub fn get_method_params_class_name(method_name: &str) -> String {
                 Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
             }
         })
-        .collect::<Vec<_>>()
-        .join("");
+        .collect::<String>();
 
     format!("{method_pascal}Params")
 }
@@ -227,10 +226,9 @@ pub fn get_result_class_name(method_name: &str) -> String {
                 Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
             }
         })
-        .collect::<Vec<_>>()
-        .join("");
+        .collect::<String>();
 
-    format!("{}Result", method_pascal)
+    format!("{method_pascal}Result")
 }
 
 #[cfg(test)]

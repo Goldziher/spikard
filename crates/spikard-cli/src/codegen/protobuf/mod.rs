@@ -30,7 +30,7 @@ struct PlaceholderConfig {
 impl PlaceholderConfig {
     /// Create configuration for Python
     #[allow(dead_code)]
-    fn python() -> Self {
+    const fn python() -> Self {
         Self {
             language: "Python",
             comment_marker: "#",
@@ -42,7 +42,7 @@ impl PlaceholderConfig {
 
     /// Create configuration for TypeScript
     #[allow(dead_code)]
-    fn typescript() -> Self {
+    const fn typescript() -> Self {
         Self {
             language: "TypeScript",
             comment_marker: "//",
@@ -54,7 +54,7 @@ impl PlaceholderConfig {
 
     /// Create configuration for Ruby
     #[allow(dead_code)]
-    fn ruby() -> Self {
+    const fn ruby() -> Self {
         Self {
             language: "Ruby",
             comment_marker: "#",
@@ -66,7 +66,7 @@ impl PlaceholderConfig {
 
     /// Create configuration for PHP
     #[allow(dead_code)]
-    fn php() -> Self {
+    const fn php() -> Self {
         Self {
             language: "PHP",
             comment_marker: "//",

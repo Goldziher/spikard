@@ -98,7 +98,7 @@ pub struct InitRequest {
 pub struct InitResponse {
     /// Absolute paths to all files that were created
     pub files_created: Vec<PathBuf>,
-    /// Next steps to guide the user (e.g., "cd my_api", "pip install", etc.)
+    /// Next steps to guide the user (e.g., "cd `my_api`", "pip install", etc.)
     pub next_steps: Vec<String>,
 }
 
@@ -301,8 +301,8 @@ impl InitEngine {
     ///
     /// - **Python**: Lowercase, alphanumeric + underscore, no leading digit
     /// - **TypeScript**: Must be valid npm package name (lowercase, hyphen OK)
-    /// - **Ruby**: Snake_case, no leading digit
-    /// - **Rust**: Snake_case, alphanumeric + underscore, no leading digit
+    /// - **Ruby**: `Snake_case`, no leading digit
+    /// - **Rust**: `Snake_case`, alphanumeric + underscore, no leading digit
     /// - **PHP**: Alphanumeric + underscore, no leading digit
     ///
     /// # Arguments

@@ -29,7 +29,7 @@ impl ProtobufGenerator for RubyProtobufGenerator {
 
         // Package comment
         if let Some(package) = &schema.package {
-            code.push_str(&format!("# Package: {}\n\n", package));
+            code.push_str(&format!("# Package: {package}\n\n"));
         }
 
         // Generate module namespace if package exists
@@ -82,7 +82,7 @@ impl ProtobufGenerator for RubyProtobufGenerator {
 
         // Package comment
         if let Some(package) = &schema.package {
-            code.push_str(&format!("# Package: {}\n\n", package));
+            code.push_str(&format!("# Package: {package}\n\n"));
         }
 
         // Generate module namespace if package exists
@@ -128,10 +128,9 @@ impl RubyProtobufGenerator {
 
         // Class definition
         code.push_str(&format!("{}class {}\n", indent, message.name));
-        code.push_str(&format!("{}  include Google::Protobuf::MessageExts\n", indent));
+        code.push_str(&format!("{indent}  include Google::Protobuf::MessageExts\n"));
         code.push_str(&format!(
-            "{}  extend Google::Protobuf::MessageExts::ClassMethods\n",
-            indent
+            "{indent}  extend Google::Protobuf::MessageExts::ClassMethods\n"
         ));
 
         // Docstring
@@ -140,14 +139,14 @@ impl RubyProtobufGenerator {
         }
 
         if message.fields.is_empty() {
-            code.push_str(&format!("{}}}\n", indent));
+            code.push_str(&format!("{indent}}}\n"));
         } else {
             // Add field type hints as RBS comments
             for field in &message.fields {
                 // Field comment if available
                 if let Some(desc) = &field.description {
-                    code.push_str(&format!("{}\n", indent));
-                    code.push_str(&format!("{}  # {}\n", indent, desc));
+                    code.push_str(&format!("{indent}\n"));
+                    code.push_str(&format!("{indent}  # {desc}\n"));
                 }
 
                 let field_name = sanitize_identifier(&field.name, "ruby");
@@ -156,12 +155,11 @@ impl RubyProtobufGenerator {
 
                 let field_type = map_proto_type_to_language(&field.field_type, "ruby", is_optional, is_repeated);
                 code.push_str(&format!(
-                    "{}  # @!attribute [rw] {}\n{}  #   @return [{}]\n",
-                    indent, field_name, indent, field_type
+                    "{indent}  # @!attribute [rw] {field_name}\n{indent}  #   @return [{field_type}]\n"
                 ));
             }
 
-            code.push_str(&format!("{}}}\n", indent));
+            code.push_str(&format!("{indent}}}\n"));
         }
 
         code
@@ -185,15 +183,15 @@ impl RubyProtobufGenerator {
         }
 
         if enum_def.values.is_empty() {
-            code.push_str(&format!("{}}}\n", indent));
+            code.push_str(&format!("{indent}}}\n"));
         } else {
             for value in &enum_def.values {
                 if let Some(desc) = &value.description {
-                    code.push_str(&format!("{}  # {}\n", indent, desc));
+                    code.push_str(&format!("{indent}  # {desc}\n"));
                 }
                 code.push_str(&format!("{}  {} = {}\n", indent, value.name, value.number));
             }
-            code.push_str(&format!("{}}}\n", indent));
+            code.push_str(&format!("{indent}}}\n"));
         }
 
         code
@@ -224,14 +222,14 @@ impl RubyProtobufGenerator {
         }
 
         if service.methods.is_empty() {
-            code.push_str(&format!("{}}}\n", indent));
+            code.push_str(&format!("{indent}}}\n"));
         } else {
             for method in &service.methods {
                 code.push('\n');
 
                 // Method docstring
                 if let Some(desc) = &method.description {
-                    code.push_str(&format!("{}  # {}\n", indent, desc));
+                    code.push_str(&format!("{indent}  # {desc}\n"));
                 }
 
                 // Build method signature
@@ -242,23 +240,20 @@ impl RubyProtobufGenerator {
                 // Add RBS type hint comment
                 if method.output_streaming {
                     code.push_str(&format!(
-                        "{}  # @param request [{}]\n{}  # @return [Enumerator<{}>]\n",
-                        indent, request_type, indent, response_type
+                        "{indent}  # @param request [{request_type}]\n{indent}  # @return [Enumerator<{response_type}>]\n"
                     ));
                 } else {
                     code.push_str(&format!(
-                        "{}  # @param request [{}]\n{}  # @return [{}]\n",
-                        indent, request_type, indent, response_type
+                        "{indent}  # @param request [{request_type}]\n{indent}  # @return [{response_type}]\n"
                     ));
                 }
 
                 code.push_str(&format!(
-                    "{}  def {}(request)\n{}    raise NotImplementedError\n{}  end\n",
-                    indent, method_name, indent, indent
+                    "{indent}  def {method_name}(request)\n{indent}    raise NotImplementedError\n{indent}  end\n"
                 ));
             }
 
-            code.push_str(&format!("{}}}\n", indent));
+            code.push_str(&format!("{indent}}}\n"));
         }
 
         code

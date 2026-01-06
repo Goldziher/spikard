@@ -1,11 +1,11 @@
-//! Python AsyncAPI code generation.
+//! Python `AsyncAPI` code generation.
 
 use anyhow::{Result, bail};
 
 use super::base::sanitize_identifier;
 use super::{AsyncApiGenerator, ChannelInfo};
 
-/// Python AsyncAPI code generator
+/// Python `AsyncAPI` code generator
 pub struct PythonAsyncApiGenerator;
 
 impl AsyncApiGenerator for PythonAsyncApiGenerator {
@@ -29,8 +29,7 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
             }
             _ => {
                 return Err(anyhow::anyhow!(
-                    "Unsupported protocol for Python test app: {}",
-                    protocol
+                    "Unsupported protocol for Python test app: {protocol}"
                 ));
             }
         }
@@ -87,7 +86,7 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
         match protocol {
             "websocket" | "sse" => {}
             other => {
-                bail!("Protocol {} is not supported for Python handler generation", other);
+                bail!("Protocol {other} is not supported for Python handler generation");
             }
         }
 
@@ -117,8 +116,7 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
                 "websocket" => {
                     code.push_str(&format!("@websocket(\"{}\")\n", channel.path));
                     code.push_str(&format!(
-                        "async def {}(message: dict[str, Any]) -> dict[str, Any]:\n",
-                        handler_name
+                        "async def {handler_name}(message: dict[str, Any]) -> dict[str, Any]:\n"
                     ));
                     code.push_str(&format!(
                         "    \"\"\"Handles {} on {}.\"\"\"\n",
@@ -128,7 +126,7 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
                 }
                 "sse" => {
                     code.push_str(&format!("@sse(\"{}\")\n", channel.path));
-                    code.push_str(&format!("async def {}() -> Any:\n", handler_name));
+                    code.push_str(&format!("async def {handler_name}() -> Any:\n"));
                     code.push_str(&format!(
                         "    \"\"\"Streams events for {} on {}.\"\"\"\n",
                         message_description, channel.path

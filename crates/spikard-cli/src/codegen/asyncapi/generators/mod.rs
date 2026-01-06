@@ -1,7 +1,7 @@
-//! Language-specific AsyncAPI code generators.
+//! Language-specific `AsyncAPI` code generators.
 //!
 //! Each generator implements the `AsyncApiGenerator` trait to provide
-//! language-specific code generation from AsyncAPI specifications.
+//! language-specific code generation from `AsyncAPI` specifications.
 
 use anyhow::Result;
 
@@ -18,17 +18,17 @@ pub use ruby::RubyAsyncApiGenerator;
 pub use rust::RustAsyncApiGenerator;
 pub use typescript::TypeScriptAsyncApiGenerator;
 
-/// Language-agnostic AsyncAPI code generator trait
+/// Language-agnostic `AsyncAPI` code generator trait
 ///
 /// Implementations provide language-specific code generation for:
-/// - Test applications (clients that consume AsyncAPI specs)
+/// - Test applications (clients that consume `AsyncAPI` specs)
 /// - Handler scaffolding (server-side request handlers)
 /// - Fixture data (test fixtures for integration testing)
 pub trait AsyncApiGenerator {
     /// Generate a test application client
     ///
     /// Creates a runnable application that connects to a WebSocket/SSE endpoint
-    /// and sends/receives messages according to the AsyncAPI spec.
+    /// and sends/receives messages according to the `AsyncAPI` spec.
     fn generate_test_app(&self, channels: &[ChannelInfo], protocol: &str) -> Result<String>;
 
     /// Generate handler scaffolding for a server implementation
@@ -38,7 +38,7 @@ pub trait AsyncApiGenerator {
     fn generate_handler_app(&self, channels: &[ChannelInfo], protocol: &str) -> Result<String>;
 }
 
-/// Channel information extracted from AsyncAPI spec
+/// Channel information extracted from `AsyncAPI` spec
 #[derive(Debug, Clone)]
 pub struct ChannelInfo {
     /// Channel path/identifier

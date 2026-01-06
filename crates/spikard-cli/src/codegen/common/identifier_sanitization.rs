@@ -45,7 +45,8 @@ pub enum TargetLanguage {
 
 impl TargetLanguage {
     /// Get the reserved keywords for this language.
-    pub fn reserved_keywords(self) -> &'static [&'static str] {
+    #[must_use] 
+    pub const fn reserved_keywords(self) -> &'static [&'static str] {
         match self {
             Self::Python => PYTHON_KEYWORDS,
             Self::TypeScript => TYPESCRIPT_KEYWORDS,
@@ -56,7 +57,8 @@ impl TargetLanguage {
     }
 
     /// Get the reserved soft keywords that may be contextual for this language.
-    pub fn soft_keywords(self) -> &'static [&'static str] {
+    #[must_use] 
+    pub const fn soft_keywords(self) -> &'static [&'static str] {
         match self {
             Self::Python => PYTHON_SOFT_KEYWORDS,
             Self::TypeScript => TYPESCRIPT_SOFT_KEYWORDS,
@@ -69,7 +71,8 @@ impl TargetLanguage {
     /// Get the keyword prefix for this language.
     ///
     /// When a reserved keyword is used as an identifier, it's prefixed with this character(s).
-    pub fn keyword_prefix(self) -> &'static str {
+    #[must_use] 
+    pub const fn keyword_prefix(self) -> &'static str {
         match self {
             Self::Rust => "r#",
             _ => "_",
@@ -78,7 +81,7 @@ impl TargetLanguage {
 }
 
 /// Python 3.10+ reserved keywords.
-/// https://docs.python.org/3/reference/lexical_analysis.html#keywords
+/// <https://docs.python.org/3/reference/lexical_analysis.html#keywords>
 const PYTHON_KEYWORDS: &[&str] = &[
     "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue", "def", "del",
     "elif", "else", "except", "finally", "for", "from", "global", "if", "import", "in", "is", "lambda", "nonlocal",
@@ -89,7 +92,7 @@ const PYTHON_KEYWORDS: &[&str] = &[
 const PYTHON_SOFT_KEYWORDS: &[&str] = &["match", "case", "type"];
 
 /// TypeScript/JavaScript reserved keywords and common built-ins.
-/// https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes-func.html
+/// <https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes-func.html>
 const TYPESCRIPT_KEYWORDS: &[&str] = &[
     "abstract",
     "any",
@@ -166,7 +169,7 @@ const TYPESCRIPT_KEYWORDS: &[&str] = &[
 const TYPESCRIPT_SOFT_KEYWORDS: &[&str] = &["as", "require", "get", "set", "accessor"];
 
 /// Rust 2024 reserved keywords.
-/// https://doc.rust-lang.org/reference/keywords.html
+/// <https://doc.rust-lang.org/reference/keywords.html>
 const RUST_KEYWORDS: &[&str] = &[
     "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern", "false", "fn",
     "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self",
@@ -179,7 +182,7 @@ const RUST_SOFT_KEYWORDS: &[&str] = &[
 ];
 
 /// Ruby 3.2+ reserved keywords.
-/// https://ruby-doc.org/docs/ruby-doc-bundle/FAQ/FAQ.html#label-Keywords
+/// <https://ruby-doc.org/docs/ruby-doc-bundle/FAQ/FAQ.html#label-Keywords>
 const RUBY_KEYWORDS: &[&str] = &[
     "BEGIN",
     "END",
@@ -228,7 +231,7 @@ const RUBY_KEYWORDS: &[&str] = &[
 const RUBY_SOFT_KEYWORDS: &[&str] = &[];
 
 /// PHP 8.2+ reserved keywords.
-/// https://www.php.net/manual/en/reserved.keywords.php
+/// <https://www.php.net/manual/en/reserved.keywords.php>
 const PHP_KEYWORDS: &[&str] = &[
     "abstract",
     "and",
@@ -350,6 +353,7 @@ const PHP_SOFT_KEYWORDS: &[&str] = &["mixed", "object", "parent", "self", "stati
 ///     "_42answer"
 /// );
 /// ```
+#[must_use] 
 pub fn sanitize_identifier(name: &str, language: TargetLanguage) -> String {
     if name.is_empty() {
         return "field".to_string();
@@ -394,15 +398,15 @@ pub fn sanitize_identifier(name: &str, language: TargetLanguage) -> String {
 
     if is_reserved {
         let prefix = language.keyword_prefix();
-        format!("{}{}", prefix, lower_ident)
+        format!("{prefix}{lower_ident}")
     } else {
         lower_ident
     }
 }
 
-/// Sanitize an identifier and convert it to snake_case.
+/// Sanitize an identifier and convert it to `snake_case`.
 ///
-/// This is useful for Python, Ruby, and general use cases where snake_case is preferred.
+/// This is useful for Python, Ruby, and general use cases where `snake_case` is preferred.
 ///
 /// # Arguments
 ///
@@ -411,7 +415,7 @@ pub fn sanitize_identifier(name: &str, language: TargetLanguage) -> String {
 ///
 /// # Returns
 ///
-/// A sanitized identifier in snake_case format.
+/// A sanitized identifier in `snake_case` format.
 ///
 /// # Examples
 ///
@@ -423,6 +427,7 @@ pub fn sanitize_identifier(name: &str, language: TargetLanguage) -> String {
 ///     "hello_world"
 /// );
 /// ```
+#[must_use] 
 pub fn sanitize_identifier_snake_case(name: &str, language: TargetLanguage) -> String {
     let mut result = String::new();
     let mut prev_was_upper = false;
@@ -467,6 +472,7 @@ pub fn sanitize_identifier_snake_case(name: &str, language: TargetLanguage) -> S
 ///     "helloWorld"
 /// );
 /// ```
+#[must_use] 
 pub fn sanitize_identifier_camel_case(name: &str, language: TargetLanguage) -> String {
     let sanitized = sanitize_identifier(name, language);
     let parts: Vec<&str> = sanitized.split('_').collect();
@@ -489,7 +495,7 @@ pub fn sanitize_identifier_camel_case(name: &str, language: TargetLanguage) -> S
     result
 }
 
-/// Sanitize an identifier and convert it to PascalCase.
+/// Sanitize an identifier and convert it to `PascalCase`.
 ///
 /// This is useful for class names and type names in most languages.
 ///
@@ -500,7 +506,7 @@ pub fn sanitize_identifier_camel_case(name: &str, language: TargetLanguage) -> S
 ///
 /// # Returns
 ///
-/// A sanitized identifier in PascalCase format.
+/// A sanitized identifier in `PascalCase` format.
 ///
 /// # Examples
 ///
@@ -512,6 +518,7 @@ pub fn sanitize_identifier_camel_case(name: &str, language: TargetLanguage) -> S
 ///     "HelloWorld"
 /// );
 /// ```
+#[must_use] 
 pub fn sanitize_identifier_pascal_case(name: &str, language: TargetLanguage) -> String {
     let sanitized = sanitize_identifier(name, language);
     let parts: Vec<&str> = sanitized.split('_').collect();

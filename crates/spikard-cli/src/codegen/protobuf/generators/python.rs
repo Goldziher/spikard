@@ -33,7 +33,7 @@ impl ProtobufGenerator for PythonProtobufGenerator {
 
         // Package comment
         if let Some(package) = &schema.package {
-            code.push_str(&format!("# Package: {}\n\n", package));
+            code.push_str(&format!("# Package: {package}\n\n"));
         }
 
         // Generate message definitions
@@ -69,7 +69,7 @@ impl ProtobufGenerator for PythonProtobufGenerator {
 
         // Package comment
         if let Some(package) = &schema.package {
-            code.push_str(&format!("# Package: {}\n\n", package));
+            code.push_str(&format!("# Package: {package}\n\n"));
         }
 
         // Generate service definitions
@@ -109,7 +109,7 @@ impl PythonProtobufGenerator {
             for field in &message.fields {
                 // Field comment if available
                 if let Some(desc) = &field.description {
-                    code.push_str(&format!("    # {}\n", desc));
+                    code.push_str(&format!("    # {desc}\n"));
                 }
 
                 let field_name = sanitize_identifier(&field.name, "python");
@@ -117,7 +117,7 @@ impl PythonProtobufGenerator {
                 let is_repeated = field.label == FieldLabel::Repeated;
 
                 let field_type = map_proto_type_to_language(&field.field_type, "python", is_optional, is_repeated);
-                code.push_str(&format!("    {}: {}\n", field_name, field_type));
+                code.push_str(&format!("    {field_name}: {field_type}\n"));
             }
 
             // Constructor
@@ -151,7 +151,7 @@ impl PythonProtobufGenerator {
                     "0".to_string()
                 };
 
-                code.push_str(&format!(", {}: {} = {}", field_name, field_type, default_val));
+                code.push_str(&format!(", {field_name}: {field_type} = {default_val}"));
             }
 
             code.push_str(") -> None: ...\n");
@@ -179,7 +179,7 @@ impl PythonProtobufGenerator {
         } else {
             for value in &enum_def.values {
                 if let Some(desc) = &value.description {
-                    code.push_str(&format!("    # {}\n", desc));
+                    code.push_str(&format!("    # {desc}\n"));
                 }
                 code.push_str(&format!("    {} = {}\n", value.name, value.number));
             }
@@ -218,7 +218,7 @@ impl PythonProtobufGenerator {
 
                 // Method docstring
                 if let Some(desc) = &method.description {
-                    code.push_str(&format!("    # {}\n", desc));
+                    code.push_str(&format!("    # {desc}\n"));
                 }
 
                 // Build method signature
@@ -228,14 +228,13 @@ impl PythonProtobufGenerator {
 
                 // Determine if async is needed and return type
                 let (async_keyword, return_type) = if method.output_streaming {
-                    ("async ".to_string(), format!("AsyncIterator[{}]", response_type))
+                    ("async ".to_string(), format!("AsyncIterator[{response_type}]"))
                 } else {
                     ("async ".to_string(), response_type.clone())
                 };
 
                 code.push_str(&format!(
-                    "    {}def {}(self, request: {}, context: grpc.aio.ServicerContext) -> {}:\n",
-                    async_keyword, method_name, request_type, return_type
+                    "    {async_keyword}def {method_name}(self, request: {request_type}, context: grpc.aio.ServicerContext) -> {return_type}:\n"
                 ));
 
                 code.push_str("        \"\"\"Implement this method.\"\"\"\n");

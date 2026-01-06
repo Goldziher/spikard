@@ -1,7 +1,7 @@
-//! Language-specific OpenRPC code generators.
+//! Language-specific `OpenRPC` code generators.
 //!
 //! Each generator implements the `OpenRpcGenerator` trait to provide
-//! language-specific code generation from OpenRPC specifications.
+//! language-specific code generation from `OpenRPC` specifications.
 
 use anyhow::Result;
 
@@ -20,7 +20,7 @@ use crate::codegen::openrpc::spec_parser::OpenRpcSpec;
 #[cfg(test)]
 mod tests;
 
-/// Language-agnostic OpenRPC code generator trait
+/// Language-agnostic `OpenRPC` code generator trait
 ///
 /// Implementations provide language-specific code generation for:
 /// - Handler scaffolding (server-side JSON-RPC handlers)

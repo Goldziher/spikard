@@ -1,4 +1,4 @@
-//! Shared helpers for AsyncAPI code generators.
+//! Shared helpers for `AsyncAPI` code generators.
 //!
 //! This module provides common utilities used by all language-specific generators,
 //! including identifier sanitization helpers.

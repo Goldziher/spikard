@@ -1,6 +1,6 @@
-//! AsyncAPI v3 specification parsing and extraction.
+//! `AsyncAPI` v3 specification parsing and extraction.
 //!
-//! This module handles parsing AsyncAPI v3 specs and extracting structured data
+//! This module handles parsing `AsyncAPI` v3 specs and extracting structured data
 //! for code generation, including channels, messages, operations, and metadata.
 
 use anyhow::{Context, Result};
@@ -17,7 +17,7 @@ pub struct MessageDefinition {
     pub examples: Vec<Value>,
 }
 
-/// Message operation metadata from AsyncAPI spec
+/// Message operation metadata from `AsyncAPI` spec
 #[derive(Debug, Clone)]
 pub struct MessageOperationMetadata {
     pub name: String,
@@ -25,7 +25,7 @@ pub struct MessageOperationMetadata {
     pub replies: Vec<String>,
 }
 
-/// Channel operation metadata from AsyncAPI spec
+/// Channel operation metadata from `AsyncAPI` spec
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub struct ChannelOperation {
@@ -35,7 +35,7 @@ pub struct ChannelOperation {
     pub replies: Vec<String>,
 }
 
-/// Parse an AsyncAPI v3 specification file
+/// Parse an `AsyncAPI` v3 specification file
 ///
 /// Supports both JSON and YAML formats
 pub fn parse_asyncapi_schema(path: &Path) -> Result<AsyncApiV3Spec> {
@@ -55,7 +55,7 @@ pub fn parse_asyncapi_schema(path: &Path) -> Result<AsyncApiV3Spec> {
     }
 }
 
-/// Extract message schemas from AsyncAPI spec for fixture generation
+/// Extract message schemas from `AsyncAPI` spec for fixture generation
 ///
 /// Returns a map of message name -> JSON Schema for generating test fixtures
 pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, MessageDefinition>> {
@@ -132,19 +132,16 @@ fn build_message_definition(
     Ok(Some(MessageDefinition { schema, examples }))
 }
 
-/// Extract JSON Schema from an AsyncAPI Message object
+/// Extract JSON Schema from an `AsyncAPI` Message object
 fn extract_schema_from_message(
     message: &asyncapiv3::spec::message::Message,
     message_name: &str,
 ) -> Result<Option<Value>> {
     use asyncapiv3::spec::common::Either;
 
-    let payload = match &message.payload {
-        Some(payload_ref_or) => payload_ref_or,
-        None => {
-            tracing::debug!("Message {} has no payload", message_name);
-            return Ok(None);
-        }
+    let payload = if let Some(payload_ref_or) = &message.payload { payload_ref_or } else {
+        tracing::debug!("Message {} has no payload", message_name);
+        return Ok(None);
     };
 
     match payload {
@@ -182,8 +179,7 @@ pub fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
         && schema
             .get("type")
             .and_then(|value| value.as_str())
-            .map(|ty| ty.eq_ignore_ascii_case("array"))
-            .unwrap_or(false)
+            .is_some_and(|ty| ty.eq_ignore_ascii_case("array"))
     {
         if let Some(items) = schema.get("items") {
             let generated = generate_example_from_schema(items)?;
@@ -191,7 +187,7 @@ pub fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
                 .into_iter()
                 .next()
                 .unwrap_or_else(|| Value::Object(serde_json::Map::new()));
-            let min_items = schema.get("minItems").and_then(|value| value.as_u64()).unwrap_or(1);
+            let min_items = schema.get("minItems").and_then(serde_json::Value::as_u64).unwrap_or(1);
             let mut target_len = usize::try_from(min_items).unwrap_or(usize::MAX);
             if target_len == 0 {
                 target_len = 1;
@@ -226,10 +222,10 @@ pub fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
                                 "email" => Value::String("user@example.com".to_string()),
                                 "uri" => Value::String("https://example.com".to_string()),
                                 "uuid" => Value::String("550e8400-e29b-41d4-a716-446655440000".to_string()),
-                                _ => Value::String(format!("example_{}", prop_name)),
+                                _ => Value::String(format!("example_{prop_name}")),
                             }
                         } else {
-                            Value::String(format!("example_{}", prop_name))
+                            Value::String(format!("example_{prop_name}"))
                         }
                     }
                     "number" => Value::Number(
@@ -257,7 +253,7 @@ pub fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
     Ok(examples)
 }
 
-/// Protocol types supported by AsyncAPI
+/// Protocol types supported by `AsyncAPI`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Protocol {
     WebSocket,
@@ -270,28 +266,30 @@ pub enum Protocol {
 }
 
 impl Protocol {
-    /// Detect protocol from AsyncAPI server definition
+    /// Detect protocol from `AsyncAPI` server definition
+    #[must_use] 
     pub fn from_protocol_string(protocol: &str) -> Self {
         match protocol.to_lowercase().as_str() {
-            "ws" | "wss" | "websocket" | "websockets" => Protocol::WebSocket,
-            "sse" | "server-sent-events" => Protocol::Sse,
-            "http" | "https" => Protocol::Http,
-            "kafka" => Protocol::Kafka,
-            "mqtt" => Protocol::Mqtt,
-            "amqp" => Protocol::Amqp,
-            _ => Protocol::Other,
+            "ws" | "wss" | "websocket" | "websockets" => Self::WebSocket,
+            "sse" | "server-sent-events" => Self::Sse,
+            "http" | "https" => Self::Http,
+            "kafka" => Self::Kafka,
+            "mqtt" => Self::Mqtt,
+            "amqp" => Self::Amqp,
+            _ => Self::Other,
         }
     }
 
-    pub fn as_str(&self) -> &'static str {
+    #[must_use] 
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            Protocol::WebSocket => "websocket",
-            Protocol::Sse => "sse",
-            Protocol::Http => "http",
-            Protocol::Kafka => "kafka",
-            Protocol::Mqtt => "mqtt",
-            Protocol::Amqp => "amqp",
-            Protocol::Other => "other",
+            Self::WebSocket => "websocket",
+            Self::Sse => "sse",
+            Self::Http => "http",
+            Self::Kafka => "kafka",
+            Self::Mqtt => "mqtt",
+            Self::Amqp => "amqp",
+            Self::Other => "other",
         }
     }
 }
@@ -302,7 +300,7 @@ impl std::fmt::Display for Protocol {
     }
 }
 
-/// Determine primary protocol from AsyncAPI spec
+/// Determine primary protocol from `AsyncAPI` spec
 pub fn detect_primary_protocol(spec: &AsyncApiV3Spec) -> Result<Protocol> {
     use asyncapiv3::spec::common::Either;
 
@@ -334,7 +332,7 @@ pub fn resolve_channel_from_ref(reference: &str) -> Option<String> {
     let raw = reference.strip_prefix("#/channels/")?;
     let decoded = raw.split('/').map(decode_pointer_segment).collect::<Vec<_>>().join("/");
     let normalized = decoded.trim_start_matches('/').to_string();
-    Some(format!("/{}", normalized))
+    Some(format!("/{normalized}"))
 }
 
 /// Resolve message reference to message name
@@ -359,7 +357,7 @@ pub fn resolve_message_from_ref(reference: &str) -> Option<String> {
 }
 
 /// Get operation action name as string
-pub fn operation_action_name(action: &asyncapiv3::spec::operation::OperationAction) -> &'static str {
+pub const fn operation_action_name(action: &asyncapiv3::spec::operation::OperationAction) -> &'static str {
     use asyncapiv3::spec::operation::OperationAction;
     match action {
         OperationAction::Send => "send",
@@ -382,13 +380,13 @@ pub fn collect_message_channels(spec: &AsyncApiV3Spec) -> (HashMap<String, Strin
         let normalized_address = if address.starts_with('/') {
             address.clone()
         } else {
-            format!("/{}", address)
+            format!("/{address}")
         };
 
         if let Either::Right(channel) = channel_ref_or {
             for (message_name, message_ref) in &channel.messages {
                 let slug = channel_path.trim_start_matches('/').replace('/', "_");
-                let inline_key = format!("{}_{}", slug, message_name);
+                let inline_key = format!("{slug}_{message_name}");
                 match message_ref {
                     Either::Right(_) => {
                         map.entry(inline_key.clone())

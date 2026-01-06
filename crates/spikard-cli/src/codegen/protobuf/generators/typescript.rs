@@ -29,7 +29,7 @@ impl ProtobufGenerator for TypeScriptProtobufGenerator {
 
         // Package comment
         if let Some(package) = &schema.package {
-            code.push_str(&format!("// Package: {}\n\n", package));
+            code.push_str(&format!("// Package: {package}\n\n"));
         }
 
         // Generate message definitions
@@ -62,7 +62,7 @@ impl ProtobufGenerator for TypeScriptProtobufGenerator {
 
         // Package comment
         if let Some(package) = &schema.package {
-            code.push_str(&format!("// Package: {}\n\n", package));
+            code.push_str(&format!("// Package: {package}\n\n"));
         }
 
         // Generate service definitions
@@ -102,7 +102,7 @@ impl TypeScriptProtobufGenerator {
             for field in &message.fields {
                 // Field comment if available
                 if let Some(desc) = &field.description {
-                    code.push_str(&format!("  /** {} */\n", desc));
+                    code.push_str(&format!("  /** {desc} */\n"));
                 }
 
                 let field_name = sanitize_identifier(&field.name, "typescript");
@@ -114,9 +114,9 @@ impl TypeScriptProtobufGenerator {
                 // Only truly optional fields use ? suffix in TypeScript
                 // Repeated fields (arrays) should not use ?: since an empty array is different from undefined
                 if is_optional {
-                    code.push_str(&format!("  {}?: {};\n", field_name, field_type));
+                    code.push_str(&format!("  {field_name}?: {field_type};\n"));
                 } else {
-                    code.push_str(&format!("  {}: {};\n", field_name, field_type));
+                    code.push_str(&format!("  {field_name}: {field_type};\n"));
                 }
             }
 
@@ -145,7 +145,7 @@ impl TypeScriptProtobufGenerator {
         } else {
             for (idx, value) in enum_def.values.iter().enumerate() {
                 if let Some(desc) = &value.description {
-                    code.push_str(&format!("  /** {} */\n", desc));
+                    code.push_str(&format!("  /** {desc} */\n"));
                 }
 
                 let comma = if idx < enum_def.values.len() - 1 { "," } else { "" };
@@ -184,7 +184,7 @@ impl TypeScriptProtobufGenerator {
 
                 // Method JSDoc comment
                 if let Some(desc) = &method.description {
-                    code.push_str(&format!("  /** {} */\n", desc));
+                    code.push_str(&format!("  /** {desc} */\n"));
                 }
 
                 // Build method signature
@@ -194,14 +194,13 @@ impl TypeScriptProtobufGenerator {
 
                 // Determine return type based on streaming
                 let return_type = if method.output_streaming {
-                    format!("AsyncIterable<{}>", response_type)
+                    format!("AsyncIterable<{response_type}>")
                 } else {
-                    format!("Promise<{}>", response_type)
+                    format!("Promise<{response_type}>")
                 };
 
                 code.push_str(&format!(
-                    "  async {}(request: {}): {} {{\n",
-                    method_name, request_type, return_type
+                    "  async {method_name}(request: {request_type}): {return_type} {{\n"
                 ));
 
                 code.push_str("    throw new Error(\"Not implemented\");\n");

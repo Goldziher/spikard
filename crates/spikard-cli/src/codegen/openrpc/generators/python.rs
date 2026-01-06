@@ -1,4 +1,4 @@
-//! Python OpenRPC code generation.
+//! Python `OpenRPC` code generation.
 
 use anyhow::Result;
 use serde_json::Value;
@@ -9,7 +9,7 @@ use crate::codegen::openrpc::spec_parser::{
 
 use super::OpenRpcGenerator;
 
-/// Python OpenRPC code generator
+/// Python `OpenRPC` code generator
 pub struct PythonOpenRpcGenerator;
 
 impl OpenRpcGenerator for PythonOpenRpcGenerator {
@@ -67,7 +67,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         for method in &spec.methods {
             let handler_name = format!("handle_{}", method.name.replace('.', "_"));
             code.push_str(&format!("        if method_name == \"{}\":\n", method.name));
-            code.push_str(&format!("            result = await {}(params)\n", handler_name));
+            code.push_str(&format!("            result = await {handler_name}(params)\n"));
             code.push_str("            return {\"jsonrpc\": \"2.0\", \"result\": result, \"id\": request_id}\n");
         }
 
@@ -117,7 +117,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
 fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
     if !method.params.is_empty() {
         let params_class = get_method_params_class_name(&method.name);
-        code.push_str(&format!("class {}(msgspec.Struct, frozen=True):\n", params_class));
+        code.push_str(&format!("class {params_class}(msgspec.Struct, frozen=True):\n"));
         code.push_str("    \"\"\"\n");
         if let Some(desc) = &method.description {
             code.push_str("    ");
@@ -134,7 +134,7 @@ fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()>
     }
 
     let result_class = get_result_class_name(&method.name);
-    code.push_str(&format!("class {}(msgspec.Struct, frozen=True):\n", result_class));
+    code.push_str(&format!("class {result_class}(msgspec.Struct, frozen=True):\n"));
     code.push_str("    \"\"\"\n");
     if let Some(desc) = &method.result.description {
         code.push_str("    ");
@@ -148,7 +148,7 @@ fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()>
     {
         for (field_name, field_schema) in props {
             let py_type = json_schema_to_python_type(field_schema);
-            code.push_str(&format!("    {}: {}\n", field_name, py_type));
+            code.push_str(&format!("    {field_name}: {py_type}\n"));
         }
     }
     code.push_str("\n\n");
@@ -160,7 +160,7 @@ fn generate_python_handler(code: &mut String, method: &OpenRpcMethod) -> Result<
     let handler_name = format!("handle_{}", method.name.replace('.', "_"));
     let params_class = get_method_params_class_name(&method.name);
 
-    code.push_str(&format!("async def {}(params: Any) -> Dict[str, Any]:\n", handler_name));
+    code.push_str(&format!("async def {handler_name}(params: Any) -> Dict[str, Any]:\n"));
     code.push_str("    \"\"\"\n");
     if let Some(summary) = &method.summary {
         code.push_str("    ");
@@ -188,8 +188,7 @@ fn generate_python_handler(code: &mut String, method: &OpenRpcMethod) -> Result<
 
     if !method.params.is_empty() {
         code.push_str(&format!(
-            "    parsed_params = msgspec.convert(params, type={})\n",
-            params_class
+            "    parsed_params = msgspec.convert(params, type={params_class})\n"
         ));
     }
 
@@ -207,7 +206,7 @@ fn generate_python_handler(code: &mut String, method: &OpenRpcMethod) -> Result<
         && let Some(props) = properties.as_object()
     {
         for field_name in props.keys().take(3) {
-            code.push_str(&format!("    result_data[\"{}\"] = \"TODO\"\n", field_name));
+            code.push_str(&format!("    result_data[\"{field_name}\"] = \"TODO\"\n"));
         }
     }
     code.push_str("    return result_data\n\n");

@@ -34,7 +34,7 @@ pub struct GraphQLSchema {
 pub struct GraphQLType {
     /// Type name (e.g., "User", "Post")
     pub name: String,
-    /// The kind of type (Object, Interface, Union, Enum, InputObject, Scalar)
+    /// The kind of type (Object, Interface, Union, Enum, `InputObject`, Scalar)
     pub kind: TypeKind,
     /// Fields for Object and Interface types
     pub fields: Vec<GraphQLField>,
@@ -44,7 +44,7 @@ pub struct GraphQLType {
     pub possible_types: Vec<String>,
     /// Enum values (for Enum types)
     pub enum_values: Vec<GraphQLEnumValue>,
-    /// Input fields (for InputObject types)
+    /// Input fields (for `InputObject` types)
     pub input_fields: Vec<GraphQLInputField>,
 }
 
@@ -78,7 +78,7 @@ pub struct GraphQLField {
     pub type_name: String,
     /// Whether the field returns a list
     pub is_list: bool,
-    /// Whether list items are nullable (only meaningful if is_list is true)
+    /// Whether list items are nullable (only meaningful if `is_list` is true)
     pub list_item_nullable: bool,
     /// Whether the field is nullable (default true)
     pub is_nullable: bool,
@@ -101,7 +101,7 @@ pub struct GraphQLArgument {
     pub is_nullable: bool,
     /// Whether argument type is a list
     pub is_list: bool,
-    /// Whether list items are nullable (only meaningful if is_list is true)
+    /// Whether list items are nullable (only meaningful if `is_list` is true)
     pub list_item_nullable: bool,
     /// Default value as string (e.g., "10", "\"default\"")
     pub default_value: Option<String>,
@@ -135,7 +135,7 @@ pub struct GraphQLEnumValue {
     pub deprecation_reason: Option<String>,
 }
 
-/// Represents an input field (for InputObject types)
+/// Represents an input field (for `InputObject` types)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphQLInputField {
     /// Field name
@@ -146,7 +146,7 @@ pub struct GraphQLInputField {
     pub is_nullable: bool,
     /// Whether field type is a list
     pub is_list: bool,
-    /// Whether list items are nullable (only meaningful if is_list is true)
+    /// Whether list items are nullable (only meaningful if `is_list` is true)
     pub list_item_nullable: bool,
     /// Default value as string
     pub default_value: Option<String>,
@@ -160,7 +160,7 @@ pub struct GraphQLInputField {
 /// * `path` - Path to .graphql or .gql file containing SDL
 ///
 /// # Returns
-/// Parsed GraphQLSchema or error
+/// Parsed `GraphQLSchema` or error
 pub fn parse_graphql_sdl(path: &Path) -> Result<GraphQLSchema> {
     let content =
         fs::read_to_string(path).with_context(|| format!("Failed to read GraphQL SDL file: {}", path.display()))?;
@@ -170,7 +170,7 @@ pub fn parse_graphql_sdl(path: &Path) -> Result<GraphQLSchema> {
 
 /// Parse GraphQL SDL from a string
 pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
-    let doc: Document<String> = parse_schema(content).map_err(|e| anyhow!("GraphQL parsing error: {}", e))?;
+    let doc: Document<String> = parse_schema(content).map_err(|e| anyhow!("GraphQL parsing error: {e}"))?;
 
     let mut schema = GraphQLSchema {
         types: HashMap::new(),
@@ -200,7 +200,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
 
             schema.directives.push(GraphQLDirective {
                 name: dir_def.name.clone(),
-                locations: dir_def.locations.iter().map(|l| format!("{:?}", l)).collect(),
+                locations: dir_def.locations.iter().map(|l| format!("{l:?}")).collect(),
                 arguments: args,
                 description: dir_def.description.clone(),
             });
@@ -271,7 +271,7 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                             union.name
                         ));
                     }
-                    let possible_types = union.types.to_vec();
+                    let possible_types = union.types.clone();
                     schema.types.insert(
                         union.name.clone(),
                         GraphQLType {
@@ -400,9 +400,9 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
 /// * `path` - Path to schema file (.graphql, .gql, or .json)
 ///
 /// # Returns
-/// Parsed GraphQLSchema or error
+/// Parsed `GraphQLSchema` or error
 pub fn parse_graphql_schema(path: &Path) -> Result<GraphQLSchema> {
-    let ext = path.extension().and_then(|s| s.to_str()).map(|s| s.to_lowercase());
+    let ext = path.extension().and_then(|s| s.to_str()).map(str::to_lowercase);
 
     match ext.as_deref() {
         Some("json") => {
@@ -416,7 +416,7 @@ pub fn parse_graphql_schema(path: &Path) -> Result<GraphQLSchema> {
             // Fall back to treating as SDL
             parse_graphql_sdl_string(&content)
         }
-        Some("graphql") | Some("gql") => parse_graphql_sdl(path),
+        Some("graphql" | "gql") => parse_graphql_sdl(path),
         _ => {
             // Try to detect by content
             let content =
@@ -447,7 +447,7 @@ fn parse_graphql_introspection(path: &Path) -> Result<GraphQLSchema> {
     parse_graphql_introspection_value(&value)
 }
 
-/// Parse GraphQL introspection from a serde_json Value (internal - not exposed in mod.rs)
+/// Parse GraphQL introspection from a `serde_json` Value (internal - not exposed in mod.rs)
 fn parse_graphql_introspection_value(_value: &Value) -> Result<GraphQLSchema> {
     // For now, return a placeholder schema from introspection
     // Full introspection support would require mapping __schema to our types
@@ -459,29 +459,27 @@ fn parse_graphql_introspection_value(_value: &Value) -> Result<GraphQLSchema> {
 // Helper functions
 
 /// Format a GraphQL default value as a proper GraphQL literal
-/// Converts graphql_parser Value types to their GraphQL string representation
+/// Converts `graphql_parser` Value types to their GraphQL string representation
 /// Examples:
 /// - IntValue(10) -> "10"
 /// - StringValue("hello") -> "\"hello\""
 /// - BooleanValue(true) -> "true"
 /// - EnumValue("ACTIVE") -> "ACTIVE"
-/// - ListValue([1, 2, 3]) -> "[1, 2, 3]"
+/// - `ListValue`([1, 2, 3]) -> "[1, 2, 3]"
 fn format_default_value(value: &graphql_parser::schema::Value<String>) -> String {
     use graphql_parser::schema::Value;
 
     match value {
         Value::Int(i) => {
             // Extract the integer value from IntValue
-            i.as_i64()
-                .map(|num| format!("{}", num))
-                .unwrap_or_else(|| format!("{:?}", i))
+            i.as_i64().map_or_else(|| format!("{i:?}"), |num| format!("{num}"))
         }
-        Value::Float(f) => format!("{}", f),
+        Value::Float(f) => format!("{f}"),
         Value::String(s) => {
             // Escape quotes in string values
             format!("\"{}\"", s.replace('"', "\\\""))
         }
-        Value::Boolean(b) => format!("{}", b),
+        Value::Boolean(b) => format!("{b}"),
         Value::Null => "null".to_string(),
         Value::Enum(e) => e.clone(),
         Value::List(items) => {
@@ -498,7 +496,7 @@ fn format_default_value(value: &graphql_parser::schema::Value<String>) -> String
             format!("{{{}}}", formatted.join(", "))
         }
         // Fallback for any other variants (variables not typically used in defaults)
-        _ => format!("{:?}", value),
+        _ => format!("{value:?}"),
     }
 }
 
@@ -586,7 +584,7 @@ fn format_type(type_def: &graphql_parser::schema::Type<String>) -> String {
 }
 
 /// Extract the bare type name (e.g., "String" from "String!" or "[String!]!")
-/// This should be used for type_name field to avoid double notation in SDL reconstruction
+/// This should be used for `type_name` field to avoid double notation in SDL reconstruction
 fn extract_bare_type_name(type_def: &graphql_parser::schema::Type<String>) -> String {
     match type_def {
         graphql_parser::schema::Type::NamedType(name) => name.clone(),
@@ -595,8 +593,8 @@ fn extract_bare_type_name(type_def: &graphql_parser::schema::Type<String>) -> St
     }
 }
 
-/// Check if a type is nullable (not wrapped in NonNull)
-fn is_nullable_type(type_def: &graphql_parser::schema::Type<String>) -> bool {
+/// Check if a type is nullable (not wrapped in `NonNull`)
+const fn is_nullable_type(type_def: &graphql_parser::schema::Type<String>) -> bool {
     !matches!(type_def, graphql_parser::schema::Type::NonNullType(_))
 }
 

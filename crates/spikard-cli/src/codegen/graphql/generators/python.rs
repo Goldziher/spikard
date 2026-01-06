@@ -68,7 +68,7 @@ impl GraphQLGenerator for PythonGenerator {
                 }
                 for value in &type_def.enum_values {
                     if let Some(desc) = &value.description {
-                        code.push_str(&format!("    # {}\n", desc));
+                        code.push_str(&format!("    # {desc}\n"));
                     }
                     code.push_str(&format!("    {} = \"{}\"\n", value.name, value.name));
                 }
@@ -96,7 +96,7 @@ impl GraphQLGenerator for PythonGenerator {
                 } else {
                     for field in &type_def.input_fields {
                         if let Some(desc) = &field.description {
-                            code.push_str(&format!("    # {}\n", desc));
+                            code.push_str(&format!("    # {desc}\n"));
                         }
                         let py_type = mapper.map_type_with_list_nullability(
                             &field.type_name,
@@ -130,7 +130,7 @@ impl GraphQLGenerator for PythonGenerator {
                 } else {
                     for field in &type_def.fields {
                         if let Some(desc) = &field.description {
-                            code.push_str(&format!("    # {}\n", desc));
+                            code.push_str(&format!("    # {desc}\n"));
                         }
                         let py_type = mapper.map_type_with_list_nullability(
                             &field.type_name,
@@ -209,7 +209,7 @@ impl GraphQLGenerator for PythonGenerator {
             let mut sorted_types: Vec<_> = used_types.iter().collect();
             sorted_types.sort();
             let types_list = sorted_types.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ");
-            code.push_str(&format!("from .types import {}\n", types_list));
+            code.push_str(&format!("from .types import {types_list}\n"));
         }
 
         code.push('\n');
@@ -242,7 +242,7 @@ impl GraphQLGenerator for PythonGenerator {
                     field.is_list,
                     field.list_item_nullable,
                 );
-                sig.push_str(&format!(") -> {}:", py_type));
+                sig.push_str(&format!(") -> {py_type}:"));
                 sig
             };
 
@@ -333,7 +333,9 @@ impl GraphQLGenerator for PythonGenerator {
         }
 
         // Create MutationType instance (if mutations exist)
-        if !schema.mutations.is_empty() {
+        if schema.mutations.is_empty() {
+            code.push_str("# mutation = MutationType()\n\n");
+        } else {
             code.push_str("# Mutation resolvers\n");
             code.push_str("mutation = MutationType()\n\n");
 
@@ -349,8 +351,6 @@ impl GraphQLGenerator for PythonGenerator {
                     field.name
                 ));
             }
-        } else {
-            code.push_str("# mutation = MutationType()\n\n");
         }
 
         // Create SubscriptionType instance (if subscriptions exist)
@@ -416,7 +416,7 @@ impl GraphQLGenerator for PythonGenerator {
         Ok(code)
     }
 
-    /// Override generate_complete to merge sections without duplicate headers
+    /// Override `generate_complete` to merge sections without duplicate headers
     ///
     /// When generating a complete file, each section has its own header (shebang,
     /// comments, docstrings). This reorganizes the code to have:
@@ -449,12 +449,11 @@ impl GraphQLGenerator for PythonGenerator {
                             // Skip one-line docstring entirely
                             header_lines.push(line.to_string());
                             continue;
-                        } else {
-                            // Multi-line docstring: toggle state
-                            header_lines.push(line.to_string());
-                            in_header_docstring = !in_header_docstring;
-                            continue;
                         }
+                        // Multi-line docstring: toggle state
+                        header_lines.push(line.to_string());
+                        in_header_docstring = !in_header_docstring;
+                        continue;
                     }
 
                     // Lines inside multi-line docstring
@@ -595,7 +594,7 @@ fn extract_base_type_name(type_name: &str) -> Option<String> {
 
 /// Check if a type is a custom type (not a built-in scalar).
 ///
-/// Built-in scalars: String, Int, Float, Boolean, ID, DateTime, Date, Time, JSON, Upload
+/// Built-in scalars: String, Int, Float, Boolean, ID, `DateTime`, Date, Time, JSON, Upload
 fn is_custom_type(type_name: &str, schema: &GraphQLSchema) -> bool {
     let built_ins = [
         "String", "Int", "Float", "Boolean", "ID", "DateTime", "Date", "Time", "JSON", "Upload",
