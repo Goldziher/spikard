@@ -42,7 +42,7 @@ impl Clone for Response {
 ///     >>>
 ///     >>> # Return response with custom headers
 ///     >>> response = `Response`(content={"data": "value"})
-///     >>> response.headers["X-Custom"] = "header-value"
+///     >>> response.headers[\"X-Custom\"] = "header-value"
 ///     >>> return response
 ///     >>>
 ///     >>> # Set a cookie

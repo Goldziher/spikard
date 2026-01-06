@@ -97,11 +97,6 @@ impl PhpResponse {
         crate::php::json_to_php_table(&parsed)
     }
 
-    /// Get the body parsed as JSON (alias for parseJson).
-    #[php(name = "json")]
-    pub fn json(&self) -> PhpResult<ZBox<ZendHashTable>> {
-        self.parse_json()
-    }
 
     /// Get headers as a PHP array.
     #[php(name = "getHeaders")]
@@ -137,7 +132,7 @@ impl PhpResponse {
 
     /// Create a JSON response.
     #[php(name = "json")]
-    pub fn json_response(
+    pub fn json(
         data: &Zval,
         status: Option<i64>,
         headers: Option<HashMap<String, String>>,
@@ -178,7 +173,7 @@ impl PhpResponse {
 
 impl PhpResponse {
     /// Build a JSON response (internal use).
-    pub fn json(body: Value, status: Option<i64>) -> Self {
+    pub fn with_json(body: Value, status: Option<i64>) -> Self {
         let mut headers = HashMap::new();
         headers.insert("content-type".to_string(), "application/json".to_string());
         Self {

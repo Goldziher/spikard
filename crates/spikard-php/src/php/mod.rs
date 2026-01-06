@@ -148,7 +148,7 @@ pub fn spikard_echo_response(body: String) -> PhpResponse {
 #[php(name = "spikard_json_response")]
 pub fn spikard_json_response(body: String, status: Option<i64>) -> PhpResult<PhpResponse> {
     let value: Value = serde_json::from_str(&body).map_err(|e| PhpException::default(format!("Invalid JSON: {e}")))?;
-    Ok(PhpResponse::json(value, status))
+    Ok(PhpResponse::with_json(value, status))
 }
 
 /// Parse a JSON string into a PHP array.
