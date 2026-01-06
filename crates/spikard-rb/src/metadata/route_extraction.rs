@@ -70,6 +70,7 @@ pub fn build_route_metadata(
         Some(ruby_value_to_json(ruby, json_module, jsonrpc_method_value)?)
     };
 
+    #[cfg(feature = "di")]
     let mut metadata = RouteMetadata {
         method,
         path: normalized_path,
@@ -81,8 +82,22 @@ pub fn build_route_metadata(
         is_async,
         cors,
         body_param_name,
-        #[cfg(feature = "di")]
         handler_dependencies: handler_deps_option,
+        jsonrpc_method,
+    };
+
+    #[cfg(not(feature = "di"))]
+    let mut metadata = RouteMetadata {
+        method,
+        path: normalized_path,
+        handler_name: final_handler_name,
+        request_schema,
+        response_schema,
+        parameter_schema,
+        file_params,
+        is_async,
+        cors,
+        body_param_name,
         jsonrpc_method,
     };
 

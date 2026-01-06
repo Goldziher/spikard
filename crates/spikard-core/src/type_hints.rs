@@ -302,7 +302,7 @@ mod tests {
             "required": ["count"]
         });
 
-        let merged = merge_parameter_schemas(auto_schema, explicit_schema);
+        let merged = merge_parameter_schemas(&auto_schema, &explicit_schema);
         assert!(merged["properties"]["id"].is_object());
         assert!(merged["properties"]["count"].is_object());
         assert_eq!(merged["properties"]["count"]["minimum"], 1);

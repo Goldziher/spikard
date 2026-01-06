@@ -70,7 +70,7 @@ mod tests {
         }
 
         fn execute_request<'a>(
-            &'a self,
+            &self,
             req: Request<Body>,
         ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>>
         {
@@ -78,7 +78,7 @@ mod tests {
         }
 
         fn execute_response<'a>(
-            &'a self,
+            &self,
             resp: Response<Body>,
         ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>>
         {
@@ -97,7 +97,7 @@ mod tests {
         }
 
         fn execute_request<'a>(
-            &'a self,
+            &self,
             _req: Request<Body>,
         ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>>
         {
@@ -111,7 +111,7 @@ mod tests {
         }
 
         fn execute_response<'a>(
-            &'a self,
+            &self,
             _resp: Response<Body>,
         ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>>
         {

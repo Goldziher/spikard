@@ -570,11 +570,11 @@ mod tests {
             "test_request_hook"
         }
 
-        fn execute_request<'a>(&'a self, req: String) -> RequestHookFutureSend<'a, String, String> {
+        fn execute_request<'a>(&self, req: String) -> RequestHookFutureSend<'a, String, String> {
             Box::pin(async move { Ok(HookResult::Continue(req + "_modified")) })
         }
 
-        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureSend<'a, String> {
+        fn execute_response<'a>(&self, _resp: String) -> ResponseHookFutureSend<'a, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
     }
@@ -588,11 +588,11 @@ mod tests {
             "test_request_hook"
         }
 
-        fn execute_request<'a>(&'a self, req: String) -> RequestHookFutureLocal<'a, String, String> {
+        fn execute_request<'a>(&self, req: String) -> RequestHookFutureLocal<'a, String, String> {
             Box::pin(async move { Ok(HookResult::Continue(req + "_modified")) })
         }
 
-        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
+        fn execute_response<'a>(&self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
     }
@@ -632,11 +632,11 @@ mod tests {
             "test_response_hook"
         }
 
-        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureSend<'a, String, String> {
+        fn execute_request<'a>(&self, _req: String) -> RequestHookFutureSend<'a, String, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
 
-        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureSend<'a, String> {
+        fn execute_response<'a>(&self, resp: String) -> ResponseHookFutureSend<'a, String> {
             Box::pin(async move { Ok(HookResult::Continue(resp + "_processed")) })
         }
     }
@@ -650,11 +650,11 @@ mod tests {
             "test_response_hook"
         }
 
-        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
+        fn execute_request<'a>(&self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
 
-        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureLocal<'a, String> {
+        fn execute_response<'a>(&self, resp: String) -> ResponseHookFutureLocal<'a, String> {
             Box::pin(async move { Ok(HookResult::Continue(resp + "_processed")) })
         }
     }
@@ -787,11 +787,11 @@ mod tests {
             "short_circuit"
         }
 
-        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureSend<'a, String, String> {
+        fn execute_request<'a>(&self, _req: String) -> RequestHookFutureSend<'a, String, String> {
             Box::pin(async { Ok(HookResult::ShortCircuit("short_circuit_response".to_string())) })
         }
 
-        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureSend<'a, String> {
+        fn execute_response<'a>(&self, _resp: String) -> ResponseHookFutureSend<'a, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
     }
@@ -805,11 +805,11 @@ mod tests {
             "short_circuit"
         }
 
-        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
+        fn execute_request<'a>(&self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
             Box::pin(async { Ok(HookResult::ShortCircuit("short_circuit_response".to_string())) })
         }
 
-        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
+        fn execute_response<'a>(&self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
     }
@@ -862,11 +862,11 @@ mod tests {
             "response_short_circuit"
         }
 
-        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureSend<'a, String, String> {
+        fn execute_request<'a>(&self, _req: String) -> RequestHookFutureSend<'a, String, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
 
-        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureSend<'a, String> {
+        fn execute_response<'a>(&self, resp: String) -> ResponseHookFutureSend<'a, String> {
             Box::pin(async move { Ok(HookResult::ShortCircuit("short_circuit_".to_string() + &resp)) })
         }
     }
@@ -880,11 +880,11 @@ mod tests {
             "response_short_circuit"
         }
 
-        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
+        fn execute_request<'a>(&self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
 
-        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureLocal<'a, String> {
+        fn execute_response<'a>(&self, resp: String) -> ResponseHookFutureLocal<'a, String> {
             Box::pin(async move { Ok(HookResult::ShortCircuit("short_circuit_".to_string() + &resp)) })
         }
     }
@@ -942,12 +942,12 @@ mod tests {
             "append"
         }
 
-        fn execute_request<'a>(&'a self, req: String) -> RequestHookFutureSend<'a, String, String> {
+        fn execute_request<'a>(&self, req: String) -> RequestHookFutureSend<'a, String, String> {
             let suffix = self.0;
             Box::pin(async move { Ok(HookResult::Continue(req + suffix)) })
         }
 
-        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureSend<'a, String> {
+        fn execute_response<'a>(&self, _resp: String) -> ResponseHookFutureSend<'a, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
     }
@@ -961,12 +961,12 @@ mod tests {
             "append"
         }
 
-        fn execute_request<'a>(&'a self, req: String) -> RequestHookFutureLocal<'a, String, String> {
+        fn execute_request<'a>(&self, req: String) -> RequestHookFutureLocal<'a, String, String> {
             let suffix = self.0;
             Box::pin(async move { Ok(HookResult::Continue(req + suffix)) })
         }
 
-        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
+        fn execute_response<'a>(&self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
     }
@@ -998,11 +998,11 @@ mod tests {
             "append_response"
         }
 
-        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureSend<'a, String, String> {
+        fn execute_request<'a>(&self, _req: String) -> RequestHookFutureSend<'a, String, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
 
-        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureSend<'a, String> {
+        fn execute_response<'a>(&self, resp: String) -> ResponseHookFutureSend<'a, String> {
             let suffix = self.0;
             Box::pin(async move { Ok(HookResult::Continue(resp + suffix)) })
         }
@@ -1017,11 +1017,11 @@ mod tests {
             "append_response"
         }
 
-        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
+        fn execute_request<'a>(&self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
             Box::pin(async { Err("not implemented".to_string()) })
         }
 
-        fn execute_response<'a>(&'a self, resp: String) -> ResponseHookFutureLocal<'a, String> {
+        fn execute_response<'a>(&self, resp: String) -> ResponseHookFutureLocal<'a, String> {
             let suffix = self.0;
             Box::pin(async move { Ok(HookResult::Continue(resp + suffix)) })
         }
@@ -1059,11 +1059,11 @@ mod tests {
             "error_hook"
         }
 
-        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureSend<'a, String, String> {
+        fn execute_request<'a>(&self, _req: String) -> RequestHookFutureSend<'a, String, String> {
             Box::pin(async { Err("hook_error".to_string()) })
         }
 
-        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureSend<'a, String> {
+        fn execute_response<'a>(&self, _resp: String) -> ResponseHookFutureSend<'a, String> {
             Box::pin(async { Err("hook_error".to_string()) })
         }
     }
@@ -1077,11 +1077,11 @@ mod tests {
             "error_hook"
         }
 
-        fn execute_request<'a>(&'a self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
+        fn execute_request<'a>(&self, _req: String) -> RequestHookFutureLocal<'a, String, String> {
             Box::pin(async { Err("hook_error".to_string()) })
         }
 
-        fn execute_response<'a>(&'a self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
+        fn execute_response<'a>(&self, _resp: String) -> ResponseHookFutureLocal<'a, String> {
             Box::pin(async { Err("hook_error".to_string()) })
         }
     }

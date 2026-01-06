@@ -99,7 +99,7 @@ fn test_from_structured_error_with_details() {
         json!({"field": "username", "reason": "already_exists"}),
     );
 
-    let (status, body) = ErrorResponseBuilder::from_structured_error(error);
+    let (status, body) = ErrorResponseBuilder::from_structured_error(&error);
     assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
     let parsed: Value = serde_json::from_str(&body).unwrap();
     assert_eq!(parsed["code"], "custom_error");

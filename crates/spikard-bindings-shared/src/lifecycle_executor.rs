@@ -514,7 +514,7 @@ mod tests {
         let executor = LifecycleExecutor::new(hook);
 
         let req = Request::builder().method("GET").body(Body::empty()).unwrap();
-        let modified = executor.apply_request_modifications(req, mods).unwrap();
+        let modified = LifecycleExecutor::apply_request_modifications(req, mods).unwrap();
 
         assert_eq!(modified.method(), "PATCH");
     }
@@ -533,7 +533,7 @@ mod tests {
         let executor = LifecycleExecutor::new(hook);
 
         let req = Request::builder().uri("/api/v1/users").body(Body::empty()).unwrap();
-        let modified = executor.apply_request_modifications(req, mods).unwrap();
+        let modified = LifecycleExecutor::apply_request_modifications(req, mods).unwrap();
 
         assert_eq!(modified.uri().path(), "/api/v2/users");
     }
@@ -555,7 +555,7 @@ mod tests {
         let executor = LifecycleExecutor::new(hook);
 
         let req = Request::builder().body(Body::empty()).unwrap();
-        let modified = executor.apply_request_modifications(req, mods).unwrap();
+        let modified = LifecycleExecutor::apply_request_modifications(req, mods).unwrap();
 
         assert_eq!(
             modified.headers().get("Authorization").unwrap().to_str().unwrap(),
@@ -578,7 +578,7 @@ mod tests {
         let executor = LifecycleExecutor::new(hook);
 
         let req = Request::builder().body(Body::from("original body")).unwrap();
-        let modified = executor.apply_request_modifications(req, mods).unwrap();
+        let modified = LifecycleExecutor::apply_request_modifications(req, mods).unwrap();
 
         let body_bytes = extract_body(modified.into_body()).await.unwrap();
         assert_eq!(body_bytes, new_body);
@@ -598,7 +598,7 @@ mod tests {
         let executor = LifecycleExecutor::new(hook);
 
         let req = Request::builder().body(Body::empty()).unwrap();
-        let result = executor.apply_request_modifications(req, mods);
+        let result = LifecycleExecutor::apply_request_modifications(req, mods);
 
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Invalid method"));

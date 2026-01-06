@@ -180,12 +180,19 @@ impl PhpNativeTestClient {
     #[php(constructor)]
     pub fn __construct(routes: &Zval, config: Option<&Zval>) -> PhpResult<Self> {
         let parsed_routes = parse_native_routes(routes)?;
-        let server_config = if let Some(config_zval) = config {
+        let mut server_config = if let Some(config_zval) = config {
             super::start::extract_server_config_from_php(config_zval)
                 .map_err(|e| PhpException::default(format!("Invalid server config: {}", e)))?
         } else {
             ServerConfig::default()
         };
+
+        // Extract DI container from config if present
+        let di_container = crate::php::extract_di_container_from_php(config)
+            .map_err(|e| PhpException::default(format!("Invalid DI container: {}", e)))?;
+        if let Some(container) = di_container {
+            server_config.di_container = Some(std::sync::Arc::new(container));
+        }
 
         let mut handler_refs = Vec::new();
         let mut route_pairs: Vec<(Route, Arc<dyn Handler>)> = Vec::new();
