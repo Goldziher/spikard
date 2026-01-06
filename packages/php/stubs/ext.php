@@ -19,9 +19,9 @@ namespace {
          * @param array<int, array{method: string, path: string, handler: object}> $routes HTTP routes
          * @param array<string, mixed> $config Server configuration
          * @param array<string, callable> $lifecycle Lifecycle hooks
-         * @param array<string, mixed> $dependencies Handler dependencies
+         * @param object|array<string, mixed>|null $dependencies Handler dependencies (DependencyContainer|array|null)
          */
-        function spikard_start_server(array $routes, array $config, array $lifecycle, array $dependencies): int
+        function spikard_start_server(array $routes, array $config, array $lifecycle, object|array|null $dependencies): int
         {
             return 1;
         }
