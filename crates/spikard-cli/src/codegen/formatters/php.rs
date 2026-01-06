@@ -43,7 +43,7 @@ pub struct PhpFormatter;
 
 impl PhpFormatter {
     /// Create a new PHP formatter instance
-    #[must_use] 
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

@@ -32,7 +32,7 @@ pub struct PhpDtoGenerator {
 
 impl PhpDtoGenerator {
     /// Create a new PHP DTO generator with default Request/Response metadata
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             metadata: Self::default_metadata(),
@@ -40,7 +40,7 @@ impl PhpDtoGenerator {
     }
 
     /// Create a PHP DTO generator with custom metadata
-    #[must_use] 
+    #[must_use]
     pub const fn with_metadata(metadata: Vec<DtoDefinition>) -> Self {
         Self { metadata }
     }

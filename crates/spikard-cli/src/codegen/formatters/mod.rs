@@ -103,7 +103,7 @@ impl Import {
     }
 
     /// Mark this import as type-only (TypeScript only)
-    #[must_use] 
+    #[must_use]
     pub const fn with_type_only(mut self, type_only: bool) -> Self {
         self.is_type_only = type_only;
         self

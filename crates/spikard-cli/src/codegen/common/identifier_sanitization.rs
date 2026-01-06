@@ -45,7 +45,7 @@ pub enum TargetLanguage {
 
 impl TargetLanguage {
     /// Get the reserved keywords for this language.
-    #[must_use] 
+    #[must_use]
     pub const fn reserved_keywords(self) -> &'static [&'static str] {
         match self {
             Self::Python => PYTHON_KEYWORDS,
@@ -57,7 +57,7 @@ impl TargetLanguage {
     }
 
     /// Get the reserved soft keywords that may be contextual for this language.
-    #[must_use] 
+    #[must_use]
     pub const fn soft_keywords(self) -> &'static [&'static str] {
         match self {
             Self::Python => PYTHON_SOFT_KEYWORDS,
@@ -71,7 +71,7 @@ impl TargetLanguage {
     /// Get the keyword prefix for this language.
     ///
     /// When a reserved keyword is used as an identifier, it's prefixed with this character(s).
-    #[must_use] 
+    #[must_use]
     pub const fn keyword_prefix(self) -> &'static str {
         match self {
             Self::Rust => "r#",
@@ -353,7 +353,7 @@ const PHP_SOFT_KEYWORDS: &[&str] = &["mixed", "object", "parent", "self", "stati
 ///     "_42answer"
 /// );
 /// ```
-#[must_use] 
+#[must_use]
 pub fn sanitize_identifier(name: &str, language: TargetLanguage) -> String {
     if name.is_empty() {
         return "field".to_string();
@@ -427,7 +427,7 @@ pub fn sanitize_identifier(name: &str, language: TargetLanguage) -> String {
 ///     "hello_world"
 /// );
 /// ```
-#[must_use] 
+#[must_use]
 pub fn sanitize_identifier_snake_case(name: &str, language: TargetLanguage) -> String {
     let mut result = String::new();
     let mut prev_was_upper = false;
@@ -472,7 +472,7 @@ pub fn sanitize_identifier_snake_case(name: &str, language: TargetLanguage) -> S
 ///     "helloWorld"
 /// );
 /// ```
-#[must_use] 
+#[must_use]
 pub fn sanitize_identifier_camel_case(name: &str, language: TargetLanguage) -> String {
     let sanitized = sanitize_identifier(name, language);
     let parts: Vec<&str> = sanitized.split('_').collect();
@@ -518,7 +518,7 @@ pub fn sanitize_identifier_camel_case(name: &str, language: TargetLanguage) -> S
 ///     "HelloWorld"
 /// );
 /// ```
-#[must_use] 
+#[must_use]
 pub fn sanitize_identifier_pascal_case(name: &str, language: TargetLanguage) -> String {
     let sanitized = sanitize_identifier(name, language);
     let parts: Vec<&str> = sanitized.split('_').collect();

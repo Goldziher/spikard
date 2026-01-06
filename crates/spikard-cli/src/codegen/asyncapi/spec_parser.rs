@@ -139,7 +139,9 @@ fn extract_schema_from_message(
 ) -> Result<Option<Value>> {
     use asyncapiv3::spec::common::Either;
 
-    let payload = if let Some(payload_ref_or) = &message.payload { payload_ref_or } else {
+    let payload = if let Some(payload_ref_or) = &message.payload {
+        payload_ref_or
+    } else {
         tracing::debug!("Message {} has no payload", message_name);
         return Ok(None);
     };
@@ -267,7 +269,7 @@ pub enum Protocol {
 
 impl Protocol {
     /// Detect protocol from `AsyncAPI` server definition
-    #[must_use] 
+    #[must_use]
     pub fn from_protocol_string(protocol: &str) -> Self {
         match protocol.to_lowercase().as_str() {
             "ws" | "wss" | "websocket" | "websockets" => Self::WebSocket,
@@ -280,7 +282,7 @@ impl Protocol {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::WebSocket => "websocket",

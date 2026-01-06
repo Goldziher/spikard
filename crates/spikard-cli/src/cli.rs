@@ -522,9 +522,7 @@ fn run(cli: Cli) -> Result<()> {
                     let request = CodegenRequest {
                         schema_path: args.schema.clone(),
                         schema_kind: SchemaKind::AsyncApi,
-                        target: CodegenTargetKind::AsyncFixtures {
-                            output: args.output,
-                        },
+                        target: CodegenTargetKind::AsyncFixtures { output: args.output },
                         dto: None,
                     };
                     let files = match CodegenEngine::execute(request)? {
@@ -563,9 +561,7 @@ fn run(cli: Cli) -> Result<()> {
                     let request = CodegenRequest {
                         schema_path: args.schema.clone(),
                         schema_kind: SchemaKind::AsyncApi,
-                        target: CodegenTargetKind::AsyncAll {
-                            output: args.output,
-                        },
+                        target: CodegenTargetKind::AsyncAll { output: args.output },
                         dto: None,
                     };
                     let files = match CodegenEngine::execute(request)? {

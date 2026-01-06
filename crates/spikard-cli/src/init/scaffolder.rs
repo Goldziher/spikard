@@ -42,7 +42,7 @@ impl ScaffoldedFile {
     /// assert_eq!(file.path, PathBuf::from("src/main.py"));
     /// assert!(file.content.contains("Hello"));
     /// ```
-    #[must_use] 
+    #[must_use]
     pub const fn new(path: PathBuf, content: String) -> Self {
         Self { path, content }
     }

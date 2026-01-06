@@ -70,13 +70,13 @@ impl ValidationReport {
     /// Checks if all validation checks passed
     ///
     /// Returns `true` only if syntax, types, and lint all passed without errors.
-    #[must_use] 
+    #[must_use]
     pub const fn is_valid(&self) -> bool {
         self.syntax_passed && self.types_passed && self.lint_passed && self.errors.is_empty()
     }
 
     /// Returns the count of validation errors
-    #[must_use] 
+    #[must_use]
     pub const fn error_count(&self) -> usize {
         self.errors.len()
     }
@@ -140,7 +140,7 @@ impl QualityValidator {
     /// ```ignore
     /// let validator = QualityValidator::new(TargetLanguage::Python);
     /// ```
-    #[must_use] 
+    #[must_use]
     pub const fn new(language: TargetLanguage) -> Self {
         Self { language }
     }

@@ -11,7 +11,7 @@ pub struct RustGenerator {
 }
 
 impl RustGenerator {
-    #[must_use] 
+    #[must_use]
     pub const fn new(spec: OpenAPI, style: RustDtoStyle) -> Self {
         Self { spec, style }
     }
@@ -267,9 +267,10 @@ use spikard::{{App, AppError, RequestContext, delete, get, patch, post, put}};
             _ => return Ok(()),
         };
 
-        let handler_name = operation
-            .operation_id
-            .as_ref().map_or_else(|| format!("{}_{}", method.to_lowercase(), sanitize_identifier(path)), |id| id.to_snake_case());
+        let handler_name = operation.operation_id.as_ref().map_or_else(
+            || format!("{}_{}", method.to_lowercase(), sanitize_identifier(path)),
+            |id| id.to_snake_case(),
+        );
 
         let request_type = self.extract_request_body_type(operation);
         let response_type = self.extract_response_type(operation);

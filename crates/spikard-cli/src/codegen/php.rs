@@ -11,7 +11,7 @@ pub struct PhpGenerator {
 }
 
 impl PhpGenerator {
-    #[must_use] 
+    #[must_use]
     pub const fn new(spec: OpenAPI, style: PhpDtoStyle) -> Self {
         Self { spec, style }
     }
@@ -412,9 +412,7 @@ impl PhpGenerator {
         let mut output = String::new();
 
         output.push_str("/**\n");
-        output.push_str(&format!(
-            " * {controller_name} - Generated controller for API routes\n"
-        ));
+        output.push_str(&format!(" * {controller_name} - Generated controller for API routes\n"));
         output.push_str(" */\n");
 
         output.push_str(&format!("class {controller_name}\n{{\n"));

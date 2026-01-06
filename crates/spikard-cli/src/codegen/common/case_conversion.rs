@@ -26,7 +26,7 @@
 /// assert_eq!(to_snake_case("_id"), "_id");
 /// assert_eq!(to_snake_case("id_"), "id_");
 /// ```
-#[must_use] 
+#[must_use]
 pub fn to_snake_case(s: &str) -> String {
     if s.is_empty() {
         return String::new();
@@ -88,7 +88,7 @@ pub fn to_snake_case(s: &str) -> String {
 /// assert_eq!(to_camel_case("_id"), "_id");
 /// assert_eq!(to_camel_case("id_"), "id_");
 /// ```
-#[must_use] 
+#[must_use]
 pub fn to_camel_case(s: &str) -> String {
     if s.is_empty() {
         return String::new();
@@ -158,7 +158,7 @@ pub fn to_camel_case(s: &str) -> String {
 /// assert_eq!(to_pascal_case("http_server"), "HttpServer");
 /// assert_eq!(to_pascal_case("graphql-type"), "GraphqlType");
 /// ```
-#[must_use] 
+#[must_use]
 pub fn to_pascal_case(s: &str) -> String {
     if s.is_empty() {
         return String::new();
@@ -204,7 +204,7 @@ pub fn to_pascal_case(s: &str) -> String {
 /// assert_eq!(to_kebab_case("HTTPServer"), "http-server");
 /// assert_eq!(to_kebab_case("GraphQLType"), "graph-ql-type"); // Splits on each uppercase
 /// ```
-#[must_use] 
+#[must_use]
 pub fn to_kebab_case(s: &str) -> String {
     if s.is_empty() {
         return String::new();

@@ -127,7 +127,11 @@ fn schema_to_zod(schema: &Value, optional: bool) -> String {
         }
     };
 
-    if schema.get("nullable").and_then(serde_json::Value::as_bool).unwrap_or(false) {
+    if schema
+        .get("nullable")
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false)
+    {
         base.push_str(".nullable()");
     }
 

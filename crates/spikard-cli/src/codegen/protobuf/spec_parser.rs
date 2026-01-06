@@ -148,7 +148,7 @@ pub enum ProtoType {
 
 impl ProtoType {
     /// Get the string representation of a proto type
-    #[must_use] 
+    #[must_use]
     pub fn as_str(&self) -> String {
         match self {
             Self::Double => "double".to_string(),

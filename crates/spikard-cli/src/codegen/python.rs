@@ -12,7 +12,7 @@ pub struct PythonGenerator {
 }
 
 impl PythonGenerator {
-    #[must_use] 
+    #[must_use]
     pub fn new(spec: OpenAPI, dto: PythonDtoStyle) -> Self {
         let registry = SchemaRegistry::from_spec(&spec);
         Self { spec, dto, registry }

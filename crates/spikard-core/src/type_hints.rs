@@ -206,7 +206,7 @@ pub fn auto_generate_parameter_schema(route_path: &str) -> Option<Value> {
 ///     "required": ["count"]
 /// });
 ///
-/// let merged = merge_parameter_schemas(auto_schema, explicit_schema);
+/// let merged = merge_parameter_schemas(&auto_schema, &explicit_schema);
 /// // Result: auto-generated id + explicit count with constraints
 /// ```
 #[must_use]

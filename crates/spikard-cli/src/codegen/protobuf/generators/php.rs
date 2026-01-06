@@ -138,9 +138,7 @@ impl PhpProtobufGenerator {
                     "0".to_string()
                 };
 
-                code.push_str(&format!(
-                    "    protected {field_type} ${field_name} = {default_val};\n"
-                ));
+                code.push_str(&format!("    protected {field_type} ${field_name} = {default_val};\n"));
             }
 
             code.push_str("}\n");

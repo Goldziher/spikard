@@ -12,7 +12,7 @@ pub struct TypeScriptGenerator {
 }
 
 impl TypeScriptGenerator {
-    #[must_use] 
+    #[must_use]
     pub const fn new(spec: OpenAPI, dto: NodeDtoStyle) -> Self {
         Self { spec, dto }
     }
@@ -125,9 +125,7 @@ import {{ z }} from "zod";
 
         output.push_str(&format!("export const {schema_name} = {schema_expr};\n"));
 
-        output.push_str(&format!(
-            "\nexport type {type_name} = z.infer<typeof {schema_name}>;\n"
-        ));
+        output.push_str(&format!("\nexport type {type_name} = z.infer<typeof {schema_name}>;\n"));
 
         Ok(output)
     }

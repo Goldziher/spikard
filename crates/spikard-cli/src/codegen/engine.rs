@@ -164,9 +164,7 @@ impl CodegenEngine {
                     "all" => super::protobuf::generators::ProtobufTarget::All,
                     "messages" => super::protobuf::generators::ProtobufTarget::Messages,
                     "services" => super::protobuf::generators::ProtobufTarget::Services,
-                    _ => bail!(
-                        "Invalid protobuf target: {target}. Use 'all', 'messages', or 'services'"
-                    ),
+                    _ => bail!("Invalid protobuf target: {target}. Use 'all', 'messages', or 'services'"),
                 };
 
                 let code = match language {
@@ -384,9 +382,7 @@ impl std::fmt::Debug for CodegenTargetKind {
                 .debug_struct("Server")
                 .field("language", language)
                 .finish_non_exhaustive(),
-            Self::AsyncFixtures { output } => {
-                f.debug_struct("AsyncFixtures").field("output", output).finish()
-            }
+            Self::AsyncFixtures { output } => f.debug_struct("AsyncFixtures").field("output", output).finish(),
             Self::AsyncTestApp { language, output } => f
                 .debug_struct("AsyncTestApp")
                 .field("language", language)

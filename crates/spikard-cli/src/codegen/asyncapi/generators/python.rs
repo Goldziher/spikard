@@ -28,9 +28,7 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
                 code.push_str("import aiohttp\n\n");
             }
             _ => {
-                return Err(anyhow::anyhow!(
-                    "Unsupported protocol for Python test app: {protocol}"
-                ));
+                return Err(anyhow::anyhow!("Unsupported protocol for Python test app: {protocol}"));
             }
         }
 

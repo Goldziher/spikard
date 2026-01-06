@@ -11,7 +11,7 @@ pub struct RubyGenerator {
 }
 
 impl RubyGenerator {
-    #[must_use] 
+    #[must_use]
     pub const fn new(spec: OpenAPI, dto: RubyDtoStyle) -> Self {
         Self { spec, dto }
     }
