@@ -38,7 +38,7 @@ struct RequestCache {
 }
 
 #[magnus::wrap(class = "Spikard::Native::Request", free_immediately, mark)]
-pub(crate) struct NativeRequest {
+pub struct NativeRequest {
     method: String,
     path: String,
     path_params: Arc<HashMap<String, String>>,
@@ -93,8 +93,8 @@ impl NativeRequest {
         }
     }
 
-    fn cache_get(cache: &Option<Opaque<Value>>, ruby: &Ruby) -> Option<Value> {
-        cache.as_ref().map(|v| v.get_inner_with(ruby))
+    fn cache_get(cache: Option<&Opaque<Value>>, ruby: &Ruby) -> Option<Value> {
+        cache.map(|v| v.get_inner_with(ruby))
     }
 
     fn cache_set(slot: &mut Option<Opaque<Value>>, value: Value) -> Value {
@@ -105,7 +105,7 @@ impl NativeRequest {
     pub(crate) fn method(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(value) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.method, ruby)
+            Self::cache_get(cache.method.as_ref(), ruby)
         } {
             return Ok(value);
         }
@@ -117,7 +117,7 @@ impl NativeRequest {
     pub(crate) fn path(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(value) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.path, ruby)
+            Self::cache_get(cache.path.as_ref(), ruby)
         } {
             return Ok(value);
         }
@@ -129,7 +129,7 @@ impl NativeRequest {
     pub(crate) fn path_params(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(cached) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.path_params, ruby)
+            Self::cache_get(cache.path_params.as_ref(), ruby)
         } {
             return Ok(cached);
         }
@@ -141,7 +141,7 @@ impl NativeRequest {
     pub(crate) fn query(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(cached) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.query, ruby)
+            Self::cache_get(cache.query.as_ref(), ruby)
         } {
             return Ok(cached);
         }
@@ -153,7 +153,7 @@ impl NativeRequest {
     pub(crate) fn raw_query(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(cached) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.raw_query, ruby)
+            Self::cache_get(cache.raw_query.as_ref(), ruby)
         } {
             return Ok(cached);
         }
@@ -165,7 +165,7 @@ impl NativeRequest {
     pub(crate) fn headers(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(cached) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.headers, ruby)
+            Self::cache_get(cache.headers.as_ref(), ruby)
         } {
             return Ok(cached);
         }
@@ -177,7 +177,7 @@ impl NativeRequest {
     pub(crate) fn cookies(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(cached) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.cookies, ruby)
+            Self::cache_get(cache.cookies.as_ref(), ruby)
         } {
             return Ok(cached);
         }
@@ -189,7 +189,7 @@ impl NativeRequest {
     pub(crate) fn body(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(cached) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.body, ruby)
+            Self::cache_get(cache.body.as_ref(), ruby)
         } {
             return Ok(cached);
         }
@@ -201,7 +201,7 @@ impl NativeRequest {
     pub(crate) fn raw_body(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(cached) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.raw_body, ruby)
+            Self::cache_get(cache.raw_body.as_ref(), ruby)
         } {
             return Ok(cached);
         }
@@ -216,7 +216,7 @@ impl NativeRequest {
     pub(crate) fn params(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(value) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.params, ruby)
+            Self::cache_get(cache.params.as_ref(), ruby)
         } {
             return Ok(value);
         }
@@ -247,7 +247,7 @@ impl NativeRequest {
     pub(crate) fn to_h(ruby: &Ruby, this: &Self) -> Result<Value, Error> {
         if let Some(value) = {
             let cache = this.cache.borrow();
-            Self::cache_get(&cache.to_h, ruby)
+            Self::cache_get(cache.to_h.as_ref(), ruby)
         } {
             return Ok(value);
         }

@@ -310,7 +310,7 @@ impl RubyHandler {
         if let Some(validator) = &self.inner.response_validator {
             let candidate_body = match payload.body.clone() {
                 Some(body) => Some(body),
-                None => match try_parse_raw_body(&payload.raw_body) {
+                None => match try_parse_raw_body(payload.raw_body.as_ref()) {
                     Ok(parsed) => parsed,
                     Err(err) => {
                         return Err(ErrorResponseBuilder::structured_error(
@@ -409,7 +409,7 @@ impl Handler for RubyHandler {
     }
 }
 
-fn try_parse_raw_body(raw_body: &Option<Vec<u8>>) -> Result<Option<JsonValue>, String> {
+fn try_parse_raw_body(raw_body: Option<&Vec<u8>>) -> Result<Option<JsonValue>, String> {
     let Some(bytes) = raw_body else {
         return Ok(None);
     };

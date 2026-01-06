@@ -11,14 +11,14 @@ use tungstenite::{Message, WebSocket};
 use url::Url;
 
 #[derive(Debug)]
-pub(crate) enum WebSocketIoError {
+pub enum WebSocketIoError {
     Timeout,
     Closed,
     Other(String),
 }
 
 #[derive(Debug)]
-pub(crate) struct WebSocketConnection {
+pub struct WebSocketConnection {
     stream: WebSocket<MaybeTlsStream<TcpStream>>,
 }
 

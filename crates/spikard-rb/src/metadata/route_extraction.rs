@@ -132,19 +132,19 @@ pub fn route_metadata_to_ruby(ruby: &Ruby, metadata: &RouteMetadata) -> Result<V
 
     hash.aset(
         ruby.to_symbol("request_schema"),
-        option_json_to_ruby(ruby, &metadata.request_schema)?,
+        option_json_to_ruby(ruby, metadata.request_schema.as_ref())?,
     )?;
     hash.aset(
         ruby.to_symbol("response_schema"),
-        option_json_to_ruby(ruby, &metadata.response_schema)?,
+        option_json_to_ruby(ruby, metadata.response_schema.as_ref())?,
     )?;
     hash.aset(
         ruby.to_symbol("parameter_schema"),
-        option_json_to_ruby(ruby, &metadata.parameter_schema)?,
+        option_json_to_ruby(ruby, metadata.parameter_schema.as_ref())?,
     )?;
     hash.aset(
         ruby.to_symbol("file_params"),
-        option_json_to_ruby(ruby, &metadata.file_params)?,
+        option_json_to_ruby(ruby, metadata.file_params.as_ref())?,
     )?;
     hash.aset(
         ruby.to_symbol("body_param_name"),
@@ -155,7 +155,7 @@ pub fn route_metadata_to_ruby(ruby: &Ruby, metadata: &RouteMetadata) -> Result<V
             .unwrap_or_else(|| ruby.qnil().as_value()),
     )?;
 
-    hash.aset(ruby.to_symbol("cors"), cors_to_ruby(ruby, &metadata.cors)?)?;
+    hash.aset(ruby.to_symbol("cors"), cors_to_ruby(ruby, metadata.cors.as_ref())?)?;
 
     #[cfg(feature = "di")]
     {
@@ -172,7 +172,7 @@ pub fn route_metadata_to_ruby(ruby: &Ruby, metadata: &RouteMetadata) -> Result<V
 
     hash.aset(
         ruby.to_symbol("jsonrpc_method"),
-        option_json_to_ruby(ruby, &metadata.jsonrpc_method)?,
+        option_json_to_ruby(ruby, metadata.jsonrpc_method.as_ref())?,
     )?;
 
     Ok(hash.as_value())
@@ -281,7 +281,7 @@ pub fn parse_cors_config(ruby: &Ruby, value: Value) -> Result<Option<spikard_htt
 }
 
 /// Convert an optional JSON value to Ruby
-pub fn option_json_to_ruby(ruby: &Ruby, value: &Option<JsonValue>) -> Result<Value, Error> {
+pub fn option_json_to_ruby(ruby: &Ruby, value: Option<&JsonValue>) -> Result<Value, Error> {
     if let Some(json) = value {
         json_to_ruby(ruby, json)
     } else {
@@ -290,7 +290,7 @@ pub fn option_json_to_ruby(ruby: &Ruby, value: &Option<JsonValue>) -> Result<Val
 }
 
 /// Convert CORS config to Ruby hash
-pub fn cors_to_ruby(ruby: &Ruby, cors: &Option<spikard_http::CorsConfig>) -> Result<Value, Error> {
+pub fn cors_to_ruby(ruby: &Ruby, cors: Option<&spikard_http::CorsConfig>) -> Result<Value, Error> {
     if let Some(cors_config) = cors {
         let hash = ruby.hash_new();
         let origins = cors_config

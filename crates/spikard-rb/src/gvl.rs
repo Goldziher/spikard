@@ -37,7 +37,7 @@ where
     };
 
     unsafe {
-        rb_sys::rb_thread_call_with_gvl(Some(trampoline::<F, R>), &mut data as *mut _ as *mut c_void);
+        rb_sys::rb_thread_call_with_gvl(Some(trampoline::<F, R>), &raw mut data as *mut c_void);
         data.result.assume_init()
     }
 }
@@ -50,7 +50,7 @@ macro_rules! call_without_gvl {
             // Box the arguments to ensure they live on the heap for the entire duration of the FFI call
             let data = std::boxed::Box::new((
                 ($($arg,)+),
-                &mut result as *mut std::mem::MaybeUninit<$return_ty>,
+                &raw mut result as *mut std::mem::MaybeUninit<$return_ty>,
             ));
             let data_ptr = std::boxed::Box::into_raw(data) as *mut std::ffi::c_void;
 

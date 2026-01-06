@@ -189,12 +189,11 @@ impl WebSocketHandler for RubyWebSocketHandler {
             return None;
         }
 
-        let result = match reply_rx.await {
-            Ok(result) => result,
-            Err(_) => {
-                error!("Ruby WebSocket handler '{}' response channel closed", self.name);
-                return None;
-            }
+        let result = if let Ok(result) = reply_rx.await {
+            result
+        } else {
+            error!("Ruby WebSocket handler '{}' response channel closed", self.name);
+            return None;
         };
 
         match result {
@@ -220,12 +219,11 @@ impl WebSocketHandler for RubyWebSocketHandler {
                 return;
             }
 
-            let result = match reply_rx.await {
-                Ok(result) => result,
-                Err(_) => {
-                    error!("Ruby WebSocket handler '{}' on_connect channel closed", self.name);
-                    return;
-                }
+            let result = if let Ok(result) = reply_rx.await {
+                result
+            } else {
+                error!("Ruby WebSocket handler '{}' on_connect channel closed", self.name);
+                return;
             };
 
             if let Err(e) = result {
@@ -250,12 +248,11 @@ impl WebSocketHandler for RubyWebSocketHandler {
                 return;
             }
 
-            let result = match reply_rx.await {
-                Ok(result) => result,
-                Err(_) => {
-                    error!("Ruby WebSocket handler '{}' on_disconnect channel closed", self.name);
-                    return;
-                }
+            let result = if let Ok(result) = reply_rx.await {
+                result
+            } else {
+                error!("Ruby WebSocket handler '{}' on_disconnect channel closed", self.name);
+                return;
             };
 
             if let Err(e) = result {

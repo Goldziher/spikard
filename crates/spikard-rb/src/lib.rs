@@ -1020,11 +1020,11 @@ impl RubyHandler {
 
                 let wrapper_code = ruby
                     .eval::<Value>(
-                        r#"
+                        r"
                     lambda do |proc, request, kwargs|
                         proc.call(request, **kwargs)
                     end
-                "#,
+                ",
                     )
                     .map_err(|e| {
                         (
