@@ -937,25 +937,21 @@ fn collect_field_values(
     name: String,
     value: &Value,
 ) -> std::result::Result<(), String> {
-    match value {
-        Value::Array(items) => {
-            for item in items {
-                collect_field_values(fields, name.clone(), item)?;
-            }
-            Ok(())
+    if let Value::Array(items) = value {
+        for item in items {
+            collect_field_values(fields, name.clone(), item)?;
         }
-        _ => {
-            let string_value = match value {
-                Value::String(s) => s.clone(),
-                Value::Null => String::new(),
-                Value::Bool(b) => b.to_string(),
-                Value::Number(n) => n.to_string(),
-                other => serde_json::to_string(other).map_err(|e| e.to_string())?,
-            };
-            fields.push((name, string_value));
-            Ok(())
-        }
+    } else {
+        let string_value = match value {
+            Value::String(s) => s.clone(),
+            Value::Null => String::new(),
+            Value::Bool(b) => b.to_string(),
+            Value::Number(n) => n.to_string(),
+            other => serde_json::to_string(other).map_err(|e| e.to_string())?,
+        };
+        fields.push((name, string_value));
     }
+    Ok(())
 }
 
 fn parse_multipart_file(file: &Value) -> std::result::Result<MultipartFilePart, String> {

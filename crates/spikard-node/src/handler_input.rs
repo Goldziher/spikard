@@ -36,7 +36,7 @@ pub struct HandlerInput {
 
 impl From<&RequestData> for HandlerInput {
     fn from(data: &RequestData) -> Self {
-        HandlerInput {
+        Self {
             method: data.method.clone(),
             path: data.path.clone(),
             headers: (*data.headers).clone(),

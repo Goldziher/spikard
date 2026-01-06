@@ -261,7 +261,7 @@ impl FromNapiValue for HandlerReturnValue {
                     .lock()
                     .map_err(|_| Error::from_reason("Streaming handle registry is poisoned"))?;
                 if let Some(handle) = registry.remove(&handle_id) {
-                    return Ok(HandlerReturnValue::Streaming(handle));
+                    return Ok(Self::Streaming(handle));
                 }
 
                 return Err(Error::from_reason(format!(
@@ -274,7 +274,7 @@ impl FromNapiValue for HandlerReturnValue {
         let js_string = JsString::from_napi_value(env, value)?;
         let utf8 = js_string.into_utf8()?;
         let owned = utf8.as_str()?.to_owned();
-        Ok(HandlerReturnValue::Json(owned))
+        Ok(Self::Json(owned))
     }
 }
 
@@ -343,7 +343,7 @@ fn extract_stream_handle_id(handle_value: Unknown) -> Result<Option<i64>> {
             let raw = handle_value.value();
             let handle_obj = unsafe { Object::from_napi_value(raw.env, raw.value)? };
             if let Ok(handle_value) = handle_obj.get_named_property::<Unknown>("handle")
-                && let ValueType::Number = handle_value.get_type()?
+                && handle_value.get_type()? == ValueType::Number
             {
                 let handle_id = handle_value.coerce_to_number()?.get_int64()?;
                 return Ok(Some(handle_id));
