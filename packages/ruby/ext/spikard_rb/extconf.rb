@@ -7,7 +7,8 @@ default_profile = ENV.fetch('CARGO_PROFILE', 'release')
 
 create_rust_makefile('spikard_rb') do |config|
   config.profile = default_profile.to_sym
-  # Only use --locked in development to prevent lockfile updates
-  # Release builds need to update Cargo.lock after version bumps
-  config.extra_cargo_args = ['--locked'] unless default_profile == 'release'
+  # Always use --locked to maintain consistency with vendored crates.
+  # The vendor-crates.sh script patches Cargo.toml files and relies on a
+  # committed Cargo.lock to avoid workspace collision issues during builds.
+  config.extra_cargo_args = ['--locked']
 end
