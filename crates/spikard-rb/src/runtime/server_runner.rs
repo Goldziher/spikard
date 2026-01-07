@@ -11,7 +11,48 @@ use magnus::prelude::*;
 use magnus::{Error, RHash, Ruby, TryConvert, Value, r_hash::ForEach};
 use spikard_http::{Handler, Route, RouteMetadata, SchemaRegistry, Server};
 use std::sync::Arc;
+use tokio::runtime::Runtime;
 use tracing::{info, warn};
+
+/// Helper function to run the server startup logic without the GVL.
+///
+/// This is called via `call_without_gvl!` to release the GVL before blocking on the async runtime.
+/// This allows handlers to acquire the GVL during request processing.
+async fn start_server_async(
+    socket_addr: std::net::SocketAddr,
+    app_router: axum::Router,
+    background_config: spikard_http::BackgroundTaskConfig,
+) -> Result<(), String> {
+    let listener = tokio::net::TcpListener::bind(socket_addr)
+        .await
+        .map_err(|err| format!("Failed to bind to {socket_addr}: {err}"))?;
+
+    info!("Server listening on {}", socket_addr);
+
+    let background_runtime = spikard_http::BackgroundRuntime::start(background_config).await;
+    crate::background::install_handle(background_runtime.handle());
+
+    let serve_result = axum::serve(listener, app_router).await;
+
+    crate::background::clear_handle();
+
+    if let Err(err) = background_runtime.shutdown().await {
+        warn!("Failed to drain background tasks during shutdown: {:?}", err);
+    }
+
+    serve_result.map_err(|e| format!("Server error: {e}"))?;
+    Ok::<(), String>(())
+}
+
+/// Wrapper function for `call_without_gvl!` to start the server without the GVL.
+fn start_server_without_gvl(
+    runtime: &Runtime,
+    socket_addr: std::net::SocketAddr,
+    app_router: axum::Router,
+    background_config: spikard_http::BackgroundTaskConfig,
+) -> Result<(), String> {
+    runtime.block_on(start_server_async(socket_addr, app_router, background_config))
+}
 
 /// Start the Spikard HTTP server from Ruby
 ///
@@ -261,30 +302,16 @@ pub fn run_server(
         })?;
 
     let background_config = config.background_tasks.clone();
+    let runtime_ref = &runtime;
 
-    runtime
-        .block_on(async move {
-            let listener = tokio::net::TcpListener::bind(socket_addr)
-                .await
-                .map_err(|err| format!("Failed to bind to {socket_addr}: {err}"))?;
+    // Release the GVL before blocking on the async runtime to allow handlers to acquire it during request processing
+    let result = crate::call_without_gvl!(
+        start_server_without_gvl,
+        args: (runtime_ref, &Runtime, socket_addr, std::net::SocketAddr, app_router, axum::Router, background_config, spikard_http::BackgroundTaskConfig),
+        return_type: Result<(), String>
+    );
 
-            info!("Server listening on {}", socket_addr);
-
-            let background_runtime = spikard_http::BackgroundRuntime::start(background_config.clone()).await;
-            crate::background::install_handle(background_runtime.handle());
-
-            let serve_result = axum::serve(listener, app_router).await;
-
-            crate::background::clear_handle();
-
-            if let Err(err) = background_runtime.shutdown().await {
-                warn!("Failed to drain background tasks during shutdown: {:?}", err);
-            }
-
-            serve_result.map_err(|e| format!("Server error: {e}"))?;
-            Ok::<(), String>(())
-        })
-        .map_err(|msg| Error::new(ruby.exception_runtime_error(), msg))?;
+    result.map_err(|msg| Error::new(ruby.exception_runtime_error(), msg))?;
 
     Ok(())
 }
