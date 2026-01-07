@@ -298,7 +298,10 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
                         .map_err(|_| format!("Provide instance '{}' missing 'dependsOn' property", dep_name))?;
 
                     let depends_on = if let Some(arr) = depends_on_zval.array() {
-                        arr.values().filter_map(|v| v.string()).map(|s| s.to_string()).collect::<Vec<String>>()
+                        arr.values()
+                            .filter_map(|v| v.string())
+                            .map(|s| s.to_string())
+                            .collect::<Vec<String>>()
                     } else {
                         Vec::new()
                     };
