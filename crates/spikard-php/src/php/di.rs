@@ -16,7 +16,7 @@
 //! 4. Resolved values are wrapped in ZvalHandle (Send+Sync wrapper with ID)
 
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{Zval, ZendObject};
+use ext_php_rs::types::{ZendObject, Zval};
 use http::Request;
 use spikard_core::RequestData;
 use spikard_core::di::{Dependency, DependencyContainer, DependencyError, ResolvedDependencies};
