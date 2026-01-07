@@ -178,7 +178,7 @@ runs:
         bundle install
 
     - name: Setup PHP with Phalcon extension
-      if: steps.detect.outputs.language == 'php' && inputs.framework == 'phalcon-raw'
+      if: steps.detect.outputs.language == 'php' && startsWith(inputs.framework, 'phalcon-')
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.4'

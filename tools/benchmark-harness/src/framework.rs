@@ -294,6 +294,13 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         )
         .with_supported_categories(vec!["json-bodies".to_string()]),
         FrameworkConfig::new(
+            "morojs-raw",
+            vec!["server.ts".to_string()],
+            None,
+            "pnpm run start -- {port}",
+            None,
+        ),
+        FrameworkConfig::new(
             "kito-validation",
             vec!["server.ts".to_string()],
             None,
@@ -556,6 +563,7 @@ mod tests {
         assert!(names.contains(&"hono-raw"));
         assert!(names.contains(&"elysia-validation"));
         assert!(names.contains(&"morojs-validation"));
+        assert!(names.contains(&"morojs-raw"));
         assert!(names.contains(&"express-validation"));
         assert!(names.contains(&"express-raw"));
         assert!(names.contains(&"kito-validation"));
@@ -570,7 +578,7 @@ mod tests {
         assert!(names.contains(&"phalcon-raw"));
         assert!(names.contains(&"phalcon-validation"));
 
-        assert_eq!(registry.len(), 43);
+        assert_eq!(registry.len(), 44);
     }
 
     #[test]
@@ -626,7 +634,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 43);
+        assert_eq!(frameworks.len(), 44);
     }
 
     #[test]

@@ -75,7 +75,7 @@ const uuidParamSchema = schema({
 
 const dateParamSchema = schema({
 	params: t.object({
-		date: t.str().date(),
+		date: t.str(),
 	}),
 });
 
