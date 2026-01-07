@@ -265,9 +265,9 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
         _ => return Ok(None),
     };
 
-    let deps_array = if let Some(obj) = container_zval.object() {
+    let deps_array = if let Some(obj) = container_zval.object::<ZendObject>() {
         // Call getDependencies() method which returns the dependencies array
-        obj.call_method("getDependencies", vec![])
+        obj.try_call_method("getDependencies", vec![])
             .map_err(|e| format!("Failed to invoke getDependencies() method: {:?}", e))?
     } else {
         return Err("DI container must be an object".to_string());
@@ -298,7 +298,7 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
                         .map_err(|_| format!("Provide instance '{}' missing 'dependsOn' property", dep_name))?;
 
                     let depends_on = if let Some(arr) = depends_on_zval.array() {
-                        arr.values().filter_map(|v| v.string()).map(|s| s.to_string()).collect()
+                        arr.values().filter_map(|v| v.string()).map(|s| s.to_string()).collect::<Vec<String>>()
                     } else {
                         Vec::new()
                     };
