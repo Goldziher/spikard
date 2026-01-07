@@ -16,7 +16,7 @@
 //! 4. Resolved values are wrapped in ZvalHandle (Send+Sync wrapper with ID)
 
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::Zval;
+use ext_php_rs::types::{Zval, ZendObject};
 use http::Request;
 use spikard_core::RequestData;
 use spikard_core::di::{Dependency, DependencyContainer, DependencyError, ResolvedDependencies};
@@ -265,7 +265,7 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
         _ => return Ok(None),
     };
 
-    let deps_array = if let Some(obj) = container_zval.object::<ZendObject>() {
+    let deps_array = if let Some(obj) = container_zval.object() {
         // Call getDependencies() method which returns the dependencies array
         obj.try_call_method("getDependencies", vec![])
             .map_err(|e| format!("Failed to invoke getDependencies() method: {:?}", e))?
