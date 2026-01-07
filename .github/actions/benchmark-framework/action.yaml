@@ -54,7 +54,7 @@ runs:
         # ruby (spikard-ruby-*, hanami-api*, roda*), wasm (spikard-wasm-*)
         if [[ "$framework" == *"-rust" ]] || [[ "$framework" == "axum-baseline" ]] || [[ "$framework" == "spikard-rust-"* ]]; then
           echo "language=rust" >> $GITHUB_OUTPUT
-        elif [[ "$framework" == "phalcon-raw" ]] || [[ "$framework" == "trongate-raw" ]] || [[ "$framework" == "spikard-php-"* ]]; then
+        elif [[ "$framework" == phalcon* ]] || [[ "$framework" == "trongate-raw" ]] || [[ "$framework" == "spikard-php-"* ]]; then
           echo "language=php" >> $GITHUB_OUTPUT
         elif [[ "$framework" == fastapi* ]] || [[ "$framework" == robyn* ]] || [[ "$framework" == "spikard-python-"* ]]; then
           echo "language=python" >> $GITHUB_OUTPUT

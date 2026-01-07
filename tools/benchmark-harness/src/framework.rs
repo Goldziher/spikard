@@ -107,7 +107,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-ruby-validation",
             vec!["server.rb".to_string()],
             None,
-            "ruby server.rb {port}",
+            "bundle exec ruby server.rb {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -156,7 +156,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-ruby-raw",
             vec!["server.rb".to_string()],
             None,
-            "ruby server.rb {port}",
+            "bundle exec ruby server.rb {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -348,7 +348,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "hanami-api-validation",
             vec!["server.rb".to_string()],
             None,
-            "ruby server.rb {port}",
+            "bundle exec ruby server.rb {port}",
             None,
         )
         .with_supported_categories(vec!["json-bodies".to_string(), "forms".to_string()]),
@@ -356,14 +356,14 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "hanami-api-raw",
             vec!["server.rb".to_string()],
             None,
-            "ruby server.rb {port}",
+            "bundle exec ruby server.rb {port}",
             None,
         ),
         FrameworkConfig::new(
             "roda-validation",
             vec!["server.rb".to_string()],
             None,
-            "ruby server.rb {port}",
+            "bundle exec ruby server.rb {port}",
             None,
         )
         .with_supported_categories(vec!["json-bodies".to_string(), "forms".to_string()]),
@@ -371,7 +371,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "roda-raw",
             vec!["server.rb".to_string()],
             None,
-            "ruby server.rb {port}",
+            "bundle exec ruby server.rb {port}",
             None,
         ),
         FrameworkConfig::new(
