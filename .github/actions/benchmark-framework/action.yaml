@@ -234,6 +234,15 @@ runs:
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
       run: composer install
 
+    - name: Install non-Spikard PHP benchmark app dependencies
+      if: steps.detect.outputs.language == 'php' && !startsWith(inputs.framework, 'spikard-php-')
+      shell: bash
+      working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
+      run: |
+        if [ -f composer.json ]; then
+          composer install --no-dev --optimize-autoloader
+        fi
+
     - name: Setup Deno for WASM
       if: steps.detect.outputs.language == 'wasm'
       uses: denoland/setup-deno@v2
