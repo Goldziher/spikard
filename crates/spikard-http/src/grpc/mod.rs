@@ -45,11 +45,13 @@
 pub mod handler;
 pub mod service;
 pub mod streaming;
+pub mod framing;
 
 // Re-export main types
 pub use handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData, RpcMode};
 pub use service::{GenericGrpcService, copy_metadata, is_grpc_request, parse_grpc_path};
 pub use streaming::{MessageStream, StreamingRequest, StreamingResponse};
+pub use framing::parse_grpc_client_stream;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
