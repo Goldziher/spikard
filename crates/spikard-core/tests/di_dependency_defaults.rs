@@ -20,7 +20,7 @@ impl Dependency for DummyDependency {
         Box::pin(async move { Ok(Arc::new(()) as Arc<dyn Any + Send + Sync>) })
     }
 
-    fn key(&self) -> &str {
+    fn key(&self) -> &'static str {
         "dummy"
     }
 

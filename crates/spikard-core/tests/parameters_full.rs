@@ -1,7 +1,7 @@
 //! Comprehensive parameter validation tests
 //!
 //! These tests cover header, cookie, and query parameter validation scenarios
-//! using the ParameterValidator from spikard-core.
+//! using the `ParameterValidator` from spikard-core.
 
 use serde_json::json;
 use spikard_core::parameters::ParameterValidator;

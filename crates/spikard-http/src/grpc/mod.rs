@@ -42,16 +42,16 @@
 //! let config = GrpcConfig::default();
 //! ```
 
+pub mod framing;
 pub mod handler;
 pub mod service;
 pub mod streaming;
-pub mod framing;
 
 // Re-export main types
+pub use framing::parse_grpc_client_stream;
 pub use handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData, RpcMode};
 pub use service::{GenericGrpcService, copy_metadata, is_grpc_request, parse_grpc_path};
 pub use streaming::{MessageStream, StreamingRequest, StreamingResponse};
-pub use framing::parse_grpc_client_stream;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -152,7 +152,6 @@ pub struct GrpcConfig {
     /// HTTP/2 keepalive timeout in seconds
     #[serde(default = "default_keepalive_timeout")]
     pub keepalive_timeout: u64,
-
     // TODO: Consider adding in future versions:
     // pub max_stream_response_bytes: Option<usize>,  // Total bytes per streaming response
 }
@@ -207,9 +206,11 @@ const fn default_keepalive_timeout() -> u64 {
 /// registry.register("mypackage.UserService", Arc::new(user_handler), RpcMode::Unary);
 /// registry.register("mypackage.StreamService", Arc::new(stream_handler), RpcMode::ServerStreaming);
 /// ```
+type GrpcHandlerEntry = (Arc<dyn GrpcHandler>, RpcMode);
+
 #[derive(Clone)]
 pub struct GrpcRegistry {
-    handlers: Arc<HashMap<String, (Arc<dyn GrpcHandler>, RpcMode)>>,
+    handlers: Arc<HashMap<String, GrpcHandlerEntry>>,
 }
 
 impl GrpcRegistry {
@@ -227,12 +228,7 @@ impl GrpcRegistry {
     /// * `service_name` - Fully qualified service name (e.g., "mypackage.MyService")
     /// * `handler` - Handler implementation for this service
     /// * `rpc_mode` - The RPC mode this handler supports (Unary, ServerStreaming, etc.)
-    pub fn register(
-        &mut self,
-        service_name: impl Into<String>,
-        handler: Arc<dyn GrpcHandler>,
-        rpc_mode: RpcMode,
-    ) {
+    pub fn register(&mut self, service_name: impl Into<String>, handler: Arc<dyn GrpcHandler>, rpc_mode: RpcMode) {
         let handlers = Arc::make_mut(&mut self.handlers);
         handlers.insert(service_name.into(), (handler, rpc_mode));
     }
@@ -419,21 +415,9 @@ mod tests {
         let mut registry = GrpcRegistry::new();
 
         registry.register("unary.Service", Arc::new(TestHandler), RpcMode::Unary);
-        registry.register(
-            "server_stream.Service",
-            Arc::new(TestHandler),
-            RpcMode::ServerStreaming,
-        );
-        registry.register(
-            "client_stream.Service",
-            Arc::new(TestHandler),
-            RpcMode::ClientStreaming,
-        );
-        registry.register(
-            "bidi.Service",
-            Arc::new(TestHandler),
-            RpcMode::BidirectionalStreaming,
-        );
+        registry.register("server_stream.Service", Arc::new(TestHandler), RpcMode::ServerStreaming);
+        registry.register("client_stream.Service", Arc::new(TestHandler), RpcMode::ClientStreaming);
+        registry.register("bidi.Service", Arc::new(TestHandler), RpcMode::BidirectionalStreaming);
 
         let (_, mode) = registry.get("unary.Service").unwrap();
         assert_eq!(mode, RpcMode::Unary);

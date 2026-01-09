@@ -80,19 +80,18 @@ pub async fn route_grpc_request(
 
     // Dispatch based on RPC mode
     match rpc_mode {
-        RpcMode::Unary => handle_unary_request(service, service_name, method_name, config.max_message_size, request).await,
-        RpcMode::ServerStreaming => handle_server_streaming_request(service, service_name, method_name, config.max_message_size, request).await,
+        RpcMode::Unary => {
+            handle_unary_request(service, service_name, method_name, config.max_message_size, request).await
+        }
+        RpcMode::ServerStreaming => {
+            handle_server_streaming_request(service, service_name, method_name, config.max_message_size, request).await
+        }
         RpcMode::ClientStreaming => {
-            Err((
-                StatusCode::NOT_IMPLEMENTED,
-                "Client streaming not yet implemented".to_string(),
-            ))
+            handle_client_streaming_request(service, service_name, method_name, config.max_message_size, request).await
         }
         RpcMode::BidirectionalStreaming => {
-            Err((
-                StatusCode::NOT_IMPLEMENTED,
-                "Bidirectional streaming not yet implemented".to_string(),
-            ))
+            handle_bidirectional_streaming_request(service, service_name, method_name, config.max_message_size, request)
+                .await
         }
     }
 }
@@ -113,7 +112,10 @@ async fn handle_unary_request(
             // Check if error is due to size limit (axum returns "body size exceeded" or similar)
             let error_msg = e.to_string();
             if error_msg.contains("body") || error_msg.contains("size") || error_msg.contains("exceeded") {
-                return Err((StatusCode::PAYLOAD_TOO_LARGE, format!("Message exceeds maximum size of {} bytes", max_message_size)));
+                return Err((
+                    StatusCode::PAYLOAD_TOO_LARGE,
+                    format!("Message exceeds maximum size of {} bytes", max_message_size),
+                ));
             }
             return Err((StatusCode::BAD_REQUEST, format!("Failed to read request body: {}", e)));
         }
@@ -124,17 +126,13 @@ async fn handle_unary_request(
 
     // Copy headers to Tonic metadata
     for (key, value) in parts.headers.iter() {
-        if let Ok(value_str) = value.to_str() {
-            // Try to parse as ASCII metadata
-            if let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>() {
-                // Use key.as_str() directly instead of creating String
-                if let Ok(metadata_key) = key
-                    .as_str()
-                    .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
-                {
-                    tonic_request.metadata_mut().insert(metadata_key, metadata_value);
-                }
-            }
+        if let Ok(value_str) = value.to_str()
+            && let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
+            && let Ok(metadata_key) = key
+                .as_str()
+                .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
+        {
+            tonic_request.metadata_mut().insert(metadata_key, metadata_value);
         }
     }
 
@@ -194,7 +192,10 @@ async fn handle_server_streaming_request(
             // Check if error is due to size limit (axum returns "body size exceeded" or similar)
             let error_msg = e.to_string();
             if error_msg.contains("body") || error_msg.contains("size") || error_msg.contains("exceeded") {
-                return Err((StatusCode::PAYLOAD_TOO_LARGE, format!("Message exceeds maximum size of {} bytes", max_message_size)));
+                return Err((
+                    StatusCode::PAYLOAD_TOO_LARGE,
+                    format!("Message exceeds maximum size of {} bytes", max_message_size),
+                ));
             }
             return Err((StatusCode::BAD_REQUEST, format!("Failed to read request body: {}", e)));
         }
@@ -205,20 +206,21 @@ async fn handle_server_streaming_request(
 
     // Copy headers to Tonic metadata
     for (key, value) in parts.headers.iter() {
-        if let Ok(value_str) = value.to_str() {
-            if let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>() {
-                if let Ok(metadata_key) = key
-                    .as_str()
-                    .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
-                {
-                    tonic_request.metadata_mut().insert(metadata_key, metadata_value);
-                }
-            }
+        if let Ok(value_str) = value.to_str()
+            && let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
+            && let Ok(metadata_key) = key
+                .as_str()
+                .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
+        {
+            tonic_request.metadata_mut().insert(metadata_key, metadata_value);
         }
     }
 
     // Use the service bridge to handle the streaming request
-    let tonic_response = match service.handle_server_stream(service_name, method_name, tonic_request).await {
+    let tonic_response = match service
+        .handle_server_stream(service_name, method_name, tonic_request)
+        .await
+    {
         Ok(resp) => resp,
         Err(status) => {
             let status_code = grpc_status_to_http(status.code());
@@ -227,6 +229,154 @@ async fn handle_server_streaming_request(
     };
 
     // Convert Tonic response to Axum response
+    let body = tonic_response.into_inner();
+    let mut response = Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/grpc+proto");
+
+    // Add gRPC status trailer (success)
+    response = response.header("grpc-status", "0");
+
+    let response = response.body(body).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to build response: {}", e),
+        )
+    })?;
+
+    Ok(response)
+}
+
+/// Handle a client streaming RPC request
+async fn handle_client_streaming_request(
+    service: crate::grpc::GenericGrpcService,
+    service_name: String,
+    method_name: String,
+    max_message_size: usize,
+    request: Request<Body>,
+) -> Result<Response<Body>, (StatusCode, String)> {
+    // Extract request parts - keep body as stream for frame parsing
+    let (parts, body) = request.into_parts();
+
+    // Create a Tonic request with streaming body
+    // Body will be parsed by service.handle_client_stream using frame parser
+    let mut tonic_request = tonic::Request::new(body);
+
+    // Copy headers to Tonic metadata
+    for (key, value) in parts.headers.iter() {
+        if let Ok(value_str) = value.to_str()
+            && let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
+            && let Ok(metadata_key) = key
+                .as_str()
+                .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
+        {
+            tonic_request.metadata_mut().insert(metadata_key, metadata_value);
+        }
+    }
+
+    // Use the service bridge to handle the client streaming request
+    // Frame parsing and size validation happens in handle_client_stream
+    let tonic_response = match service
+        .handle_client_stream(service_name, method_name, tonic_request, max_message_size)
+        .await
+    {
+        Ok(resp) => resp,
+        Err(status) => {
+            let status_code = grpc_status_to_http(status.code());
+            return Err((status_code, status.message().to_string()));
+        }
+    };
+
+    // Convert Tonic response to Axum response
+    let payload = tonic_response.get_ref().clone();
+    let metadata = tonic_response.metadata();
+
+    let mut response = Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/grpc+proto");
+
+    // Copy metadata to response headers
+    for key_value in metadata.iter() {
+        if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value
+            && let Ok(header_value) = axum::http::HeaderValue::from_str(value.to_str().unwrap_or(""))
+        {
+            response = response.header(key.as_str(), header_value);
+        }
+    }
+
+    // Add gRPC status trailer (success)
+    response = response.header("grpc-status", "0");
+
+    // Convert bytes::Bytes to Body
+    let response = response.body(Body::from(payload)).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to build response: {}", e),
+        )
+    })?;
+
+    Ok(response)
+}
+
+/// Handle a bidirectional streaming RPC request
+///
+/// Bidirectional streaming allows both client and server to send multiple messages.
+/// This function:
+/// 1. Keeps the request body as a stream (not converting to bytes)
+/// 2. Copies HTTP headers to gRPC metadata
+/// 3. Passes the streaming body to the service for frame parsing
+/// 4. Returns the response stream from the handler
+///
+/// # Arguments
+///
+/// * `service` - The GenericGrpcService containing the handler
+/// * `service_name` - Fully qualified service name (e.g., "mypackage.ChatService")
+/// * `method_name` - Method name (e.g., "Chat")
+/// * `max_message_size` - Maximum size per message in bytes
+/// * `request` - Axum HTTP request with streaming body
+///
+/// # Returns
+///
+/// Response with streaming body containing response messages, or error with status code
+async fn handle_bidirectional_streaming_request(
+    service: crate::grpc::GenericGrpcService,
+    service_name: String,
+    method_name: String,
+    max_message_size: usize,
+    request: Request<Body>,
+) -> Result<Response<Body>, (StatusCode, String)> {
+    // Extract request parts - keep body as stream for frame parsing
+    let (parts, body) = request.into_parts();
+
+    // Create a Tonic request with streaming body
+    // Body will be parsed by service.handle_bidi_stream using frame parser
+    let mut tonic_request = tonic::Request::new(body);
+
+    // Copy HTTP headers to gRPC metadata
+    for (key, value) in parts.headers.iter() {
+        if let Ok(value_str) = value.to_str()
+            && let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
+            && let Ok(metadata_key) = key
+                .as_str()
+                .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
+        {
+            tonic_request.metadata_mut().insert(metadata_key, metadata_value);
+        }
+    }
+
+    // Call service handler - frame parsing and size validation happens inside
+    let tonic_response = match service
+        .handle_bidi_stream(service_name, method_name, tonic_request, max_message_size)
+        .await
+    {
+        Ok(response) => response,
+        Err(status) => {
+            let status_code = grpc_status_to_http(status.code());
+            return Err((status_code, status.message().to_string()));
+        }
+    };
+
+    // Convert Tonic response to Axum response with streaming body
     let body = tonic_response.into_inner();
     let mut response = Response::builder()
         .status(StatusCode::OK)

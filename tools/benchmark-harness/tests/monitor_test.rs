@@ -11,7 +11,7 @@ fn test_resource_sample_creation() {
     };
 
     assert_eq!(sample.memory_bytes, 1024 * 1024 * 50);
-    assert_eq!(sample.cpu_percent, 25.5);
+    assert!((sample.cpu_percent - 25.5).abs() < 1e-10);
 }
 
 #[test]
@@ -41,13 +41,13 @@ fn test_monitor_calculate_metrics_empty() {
 
     let metrics = monitor.calculate_metrics();
 
-    assert_eq!(metrics.avg_memory_mb, 0.0);
-    assert_eq!(metrics.peak_memory_mb, 0.0);
-    assert_eq!(metrics.p50_memory_mb, 0.0);
-    assert_eq!(metrics.p95_memory_mb, 0.0);
-    assert_eq!(metrics.p99_memory_mb, 0.0);
-    assert_eq!(metrics.avg_cpu_percent, 0.0);
-    assert_eq!(metrics.peak_cpu_percent, 0.0);
+    assert!(metrics.avg_memory_mb.abs() < 1e-10);
+    assert!(metrics.peak_memory_mb.abs() < 1e-10);
+    assert!(metrics.p50_memory_mb.abs() < 1e-10);
+    assert!(metrics.p95_memory_mb.abs() < 1e-10);
+    assert!(metrics.p99_memory_mb.abs() < 1e-10);
+    assert!(metrics.avg_cpu_percent.abs() < 1e-10);
+    assert!(metrics.peak_cpu_percent.abs() < 1e-10);
 }
 
 #[test]
@@ -168,7 +168,7 @@ fn test_percentile_edge_cases() {
     monitor.sample();
     let metrics = monitor.calculate_metrics();
 
-    assert_eq!(metrics.p50_memory_mb, metrics.p95_memory_mb);
-    assert_eq!(metrics.p95_memory_mb, metrics.p99_memory_mb);
-    assert_eq!(metrics.p99_memory_mb, metrics.peak_memory_mb);
+    assert!((metrics.p50_memory_mb - metrics.p95_memory_mb).abs() < 1e-10);
+    assert!((metrics.p95_memory_mb - metrics.p99_memory_mb).abs() < 1e-10);
+    assert!((metrics.p99_memory_mb - metrics.peak_memory_mb).abs() < 1e-10);
 }

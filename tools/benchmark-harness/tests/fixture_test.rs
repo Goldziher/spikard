@@ -108,7 +108,7 @@ fn test_fixture_from_dir() {
             }
         });
 
-        let path = temp_dir.path().join(format!("fixture_{}.json", i));
+        let path = temp_dir.path().join(format!("fixture_{i}.json"));
         std::fs::write(&path, serde_json::to_string_pretty(&fixture_json).unwrap()).unwrap();
     }
 

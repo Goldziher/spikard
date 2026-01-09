@@ -402,8 +402,8 @@ mod tests {
 
         let result = analyzer.welch_t_test(&sample1, &sample2, "test_metric");
 
-        assert_eq!(result.statistic, 0.0);
-        assert_eq!(result.p_value, 1.0);
+        assert!(result.statistic.abs() < 1e-10);
+        assert!((result.p_value - 1.0).abs() < 1e-10);
         assert!(!result.is_significant);
     }
 
@@ -429,8 +429,8 @@ mod tests {
 
         let result = analyzer.welch_t_test(&sample1, &sample2, "test_metric");
 
-        assert_eq!(result.statistic, 0.0);
-        assert_eq!(result.p_value, 1.0);
+        assert!(result.statistic.abs() < 1e-10);
+        assert!((result.p_value - 1.0).abs() < 1e-10);
         assert!(!result.is_significant);
     }
 
@@ -502,7 +502,7 @@ mod tests {
 
         let result = analyzer.cohens_d(&sample1, &sample2, "test_metric");
 
-        assert_eq!(result.cohens_d, 0.0);
+        assert!(result.cohens_d.abs() < 1e-10);
         assert_eq!(result.magnitude, "small");
     }
 

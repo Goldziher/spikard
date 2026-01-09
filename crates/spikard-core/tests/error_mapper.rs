@@ -466,7 +466,7 @@ fn test_error_context_includes_constraints() {
     let err = result.unwrap_err();
     assert!(err.errors[0].ctx.is_some());
     let ctx = err.errors[0].ctx.as_ref().unwrap();
-    assert_eq!(ctx.get("min_length").and_then(|v| v.as_u64()), Some(5));
+    assert_eq!(ctx.get("min_length").and_then(serde_json::Value::as_u64), Some(5));
 }
 
 #[test]
@@ -631,7 +631,7 @@ fn test_error_messages_are_user_friendly() {
     let msg = &err.errors[0].msg;
     assert!(msg.contains("18") || msg.contains("minimum"));
     assert!(!msg.contains("exclusiveMinimum"));
-    assert!(!msg.contains("$"));
+    assert!(!msg.contains('$'));
 }
 
 #[test]

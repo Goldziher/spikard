@@ -515,8 +515,8 @@ mod tests {
         let metrics = calculate_error_metrics(&throughput, &latency);
 
         assert_eq!(metrics.total_errors, 0);
-        assert_eq!(metrics.error_rate, 0.0);
-        assert_eq!(metrics.error_throughput_rps, 0.0);
+        assert!(metrics.error_rate.abs() < 1e-10);
+        assert!(metrics.error_throughput_rps.abs() < 1e-10);
         assert!(metrics.validation_error_p99_ms > 0.0);
         assert!(metrics.not_found_p99_ms > 0.0);
         assert!(metrics.server_error_p99_ms > 0.0);

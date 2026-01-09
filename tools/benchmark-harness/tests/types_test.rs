@@ -60,14 +60,14 @@ fn test_latency_metrics_from_oha_output() {
 
     let latency = LatencyMetrics::from(oha_output);
 
-    assert_eq!(latency.mean_ms, 50.0);
-    assert_eq!(latency.p50_ms, 30.0);
-    assert_eq!(latency.p90_ms, 80.0);
-    assert_eq!(latency.p95_ms, 100.0);
-    assert_eq!(latency.p99_ms, 200.0);
-    assert_eq!(latency.p999_ms, 400.0);
-    assert_eq!(latency.max_ms, 500.0);
-    assert_eq!(latency.min_ms, 1.0);
+    assert!((latency.mean_ms - 50.0).abs() < 1e-10);
+    assert!((latency.p50_ms - 30.0).abs() < 1e-10);
+    assert!((latency.p90_ms - 80.0).abs() < 1e-10);
+    assert!((latency.p95_ms - 100.0).abs() < 1e-10);
+    assert!((latency.p99_ms - 200.0).abs() < 1e-10);
+    assert!((latency.p999_ms - 400.0).abs() < 1e-10);
+    assert!((latency.max_ms - 500.0).abs() < 1e-10);
+    assert!((latency.min_ms - 1.0).abs() < 1e-10);
 }
 
 #[test]
@@ -99,14 +99,14 @@ fn test_latency_metrics_from_oha_output_with_none_values() {
 
     let latency = LatencyMetrics::from(oha_output);
 
-    assert_eq!(latency.mean_ms, 0.0);
-    assert_eq!(latency.p50_ms, 0.0);
-    assert_eq!(latency.p90_ms, 0.0);
-    assert_eq!(latency.p95_ms, 0.0);
-    assert_eq!(latency.p99_ms, 0.0);
-    assert_eq!(latency.p999_ms, 0.0);
-    assert_eq!(latency.max_ms, 0.0);
-    assert_eq!(latency.min_ms, 0.0);
+    assert!(latency.mean_ms.abs() < 1e-10);
+    assert!(latency.p50_ms.abs() < 1e-10);
+    assert!(latency.p90_ms.abs() < 1e-10);
+    assert!(latency.p95_ms.abs() < 1e-10);
+    assert!(latency.p99_ms.abs() < 1e-10);
+    assert!(latency.p999_ms.abs() < 1e-10);
+    assert!(latency.max_ms.abs() < 1e-10);
+    assert!(latency.min_ms.abs() < 1e-10);
 }
 
 #[test]
@@ -258,21 +258,21 @@ fn test_benchmark_result_serialization_minimal() {
 #[test]
 fn test_duration_to_ms() {
     let duration = std::time::Duration::from_secs(1);
-    assert_eq!(duration_to_ms(duration), 1000.0);
+    assert!((duration_to_ms(duration) - 1000.0).abs() < 1e-10);
 
     let duration = std::time::Duration::from_millis(500);
-    assert_eq!(duration_to_ms(duration), 500.0);
+    assert!((duration_to_ms(duration) - 500.0).abs() < 1e-10);
 
     let duration = std::time::Duration::from_micros(1500);
-    assert_eq!(duration_to_ms(duration), 1.5);
+    assert!((duration_to_ms(duration) - 1.5).abs() < 1e-10);
 }
 
 #[test]
 fn test_bytes_to_mb() {
-    assert_eq!(bytes_to_mb(1024 * 1024), 1.0);
-    assert_eq!(bytes_to_mb(1024 * 1024 * 10), 10.0);
-    assert_eq!(bytes_to_mb(1024 * 512), 0.5);
-    assert_eq!(bytes_to_mb(0), 0.0);
+    assert!((bytes_to_mb(1024 * 1024) - 1.0).abs() < 1e-10);
+    assert!((bytes_to_mb(1024 * 1024 * 10) - 10.0).abs() < 1e-10);
+    assert!((bytes_to_mb(1024 * 512) - 0.5).abs() < 1e-10);
+    assert!(bytes_to_mb(0).abs() < 1e-10);
 }
 
 #[test]

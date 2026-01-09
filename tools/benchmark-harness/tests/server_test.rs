@@ -30,6 +30,7 @@ fn test_find_available_port_when_blocked() {
     let port = find_available_port(start_port).unwrap();
     assert!(port >= start_port);
 
+    #[allow(clippy::branches_sharing_code)]
     if let Ok(_listener) = TcpListener::bind(("127.0.0.1", port)) {
         let port2 = find_available_port(start_port).unwrap();
 
@@ -95,7 +96,7 @@ fn test_server_handle_kill() {
 
     #[cfg(unix)]
     {
-        let status = unsafe { libc::kill(pid as i32, 0) };
+        let status = unsafe { libc::kill(pid.cast_signed(), 0) };
         assert_eq!(status, -1);
     }
 }
@@ -125,7 +126,7 @@ fn test_server_handle_drop() {
 
     #[cfg(unix)]
     {
-        let status = unsafe { libc::kill(pid as i32, 0) };
+        let status = unsafe { libc::kill(pid.cast_signed(), 0) };
         let _ = status;
     }
 }
@@ -192,7 +193,7 @@ async fn test_start_simple_python_server() {
 
     std::fs::write(
         &server_file,
-        r#"
+        r"
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -210,7 +211,7 @@ if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     server = HTTPServer(('127.0.0.1', port), Handler)
     server.serve_forever()
-"#,
+",
     )
     .unwrap();
 
@@ -232,7 +233,7 @@ if __name__ == '__main__':
         assert_eq!(handle.port, port);
 
         let client = reqwest::Client::new();
-        let url = format!("http://localhost:{}/", port);
+        let url = format!("http://localhost:{port}/");
         let response = client.get(&url).send().await;
 
         if let Ok(resp) = response {
@@ -241,6 +242,6 @@ if __name__ == '__main__':
 
         handle.kill().expect("Failed to kill server");
     } else if let Err(err) = result {
-        eprintln!("Expected error starting test server: {}", err);
+        eprintln!("Expected error starting test server: {err}");
     }
 }

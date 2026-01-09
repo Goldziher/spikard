@@ -31,7 +31,7 @@ type CleanupTask = Box<dyn FnOnce() -> BoxFuture<'static, ()> + Send>;
 ///
 /// // Insert a dependency
 /// let value = Arc::new(42i32);
-/// resolved.insert("answer".to_string(), value.clone());
+/// resolved.insert("answer".to_string(), value);
 ///
 /// // Retrieve with type safety
 /// let retrieved: Option<Arc<i32>> = resolved.get("answer");
@@ -335,7 +335,7 @@ mod tests {
     fn test_insert_and_get() {
         let mut resolved = ResolvedDependencies::new();
         let value = Arc::new(42i32);
-        resolved.insert("answer".to_string(), value.clone());
+        resolved.insert("answer".to_string(), value);
 
         let retrieved: Option<Arc<i32>> = resolved.get("answer");
         assert_eq!(retrieved.map(|v| *v), Some(42));

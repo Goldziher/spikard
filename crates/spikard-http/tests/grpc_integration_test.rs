@@ -4,7 +4,9 @@
 //! including handler registration, request routing, and response handling.
 
 use bytes::Bytes;
-use spikard_http::grpc::{GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData, RpcMode};
+use spikard_http::grpc::{
+    GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData, RpcMode,
+};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;

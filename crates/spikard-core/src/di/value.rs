@@ -275,7 +275,7 @@ mod tests {
     #[test]
     fn test_debug() {
         let dep = ValueDependency::new("test", 42i32);
-        let debug_str = format!("{:?}", dep);
+        let debug_str = format!("{dep:?}");
         assert!(debug_str.contains("ValueDependency"));
         assert!(debug_str.contains("test"));
     }

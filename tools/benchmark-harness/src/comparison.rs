@@ -529,8 +529,8 @@ mod tests {
 
     #[test]
     fn test_safe_divide() {
-        assert_eq!(safe_divide(10.0, 2.0), 5.0);
-        assert_eq!(safe_divide(10.0, 0.0), 1.0);
+        assert!((safe_divide(10.0, 2.0) - 5.0).abs() < 1e-10);
+        assert!((safe_divide(10.0, 0.0) - 1.0).abs() < 1e-10);
     }
 
     #[test]

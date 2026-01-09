@@ -7,9 +7,7 @@
 		"messages": [
 			{
 				"name": "EmptyStreamRequest",
-				"fields": [
-					{ "name": "request_id", "type": "string", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "request_id", "type": "string", "number": 1, "label": "required" }]
 			},
 			{
 				"name": "EmptyStreamResponse",

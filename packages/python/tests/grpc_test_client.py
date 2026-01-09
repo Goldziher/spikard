@@ -2,16 +2,31 @@
 gRPC Test Client for executing fixtures against running gRPC server.
 
 This module provides a wrapper for executing gRPC streaming fixtures
-in integration tests.
+in integration tests with support for:
+- All four streaming modes (unary, server, client, bidirectional)
+- Metadata headers (authentication, tracing, etc.)
+- Timeouts per request
+- JSON-encoded messages (compatible with Spikard's gRPC implementation)
+
+Usage:
+    async with GrpcTestClient() as client:
+        responses = await client.execute_server_streaming(
+            "example.v1.StreamService",
+            "GetStream",
+            {"request_id": "test-001"},
+            metadata={"authorization": "Bearer token"},
+            timeout=5.0,
+        )
 """
 
 from __future__ import annotations
 
 import json
-from typing import AsyncIterator
+from typing import TYPE_CHECKING, AsyncIterator
 
-import grpc
-from grpc import aio
+if TYPE_CHECKING:
+    import grpc
+    from grpc import aio
 
 
 class GrpcTestClient:
@@ -29,6 +44,9 @@ class GrpcTestClient:
 
     async def __aenter__(self) -> GrpcTestClient:
         """Async context manager entry."""
+        # Import grpc here to avoid import errors when grpcio not installed
+        from grpc import aio
+
         self.channel = aio.insecure_channel(self.server_address)
         return self
 
@@ -37,16 +55,39 @@ class GrpcTestClient:
         if self.channel:
             await self.channel.close()
 
+    def _prepare_metadata(self, metadata: dict[str, str] | None) -> list[tuple[str, str]] | None:
+        """
+        Convert metadata dict to gRPC metadata format.
+
+        Args:
+            metadata: Metadata dictionary from fixture
+
+        Returns:
+            List of (key, value) tuples or None
+        """
+        if not metadata:
+            return None
+
+        # gRPC metadata is a list of (key, value) tuples
+        return [(str(key), str(value)) for key, value in metadata.items()]
+
     async def execute_unary(
-        self, service_name: str, method_name: str, request: dict[str, object]
+        self,
+        service_name: str,
+        method_name: str,
+        request: dict[str, object],
+        metadata: dict[str, str] | None = None,
+        timeout: float | None = None,
     ) -> dict[str, object]:
         """
         Execute unary RPC from fixture.
 
         Args:
-            service_name: Fully qualified service name
+            service_name: Fully qualified service name (e.g., "example.v1.Service")
             method_name: Method name
             request: Request data as dictionary
+            metadata: Optional metadata headers
+            timeout: Optional timeout in seconds
 
         Returns:
             Response data as dictionary
@@ -62,11 +103,20 @@ class GrpcTestClient:
             response_deserializer=lambda x: json.loads(x.decode()),
         )
 
-        response: dict[str, object] = await stub(request)
+        response: dict[str, object] = await stub(
+            request,
+            metadata=self._prepare_metadata(metadata),
+            timeout=timeout,
+        )
         return response
 
     async def execute_server_streaming(
-        self, service_name: str, method_name: str, request: dict[str, object]
+        self,
+        service_name: str,
+        method_name: str,
+        request: dict[str, object],
+        metadata: dict[str, str] | None = None,
+        timeout: float | None = None,
     ) -> list[dict[str, object]]:
         """
         Execute server streaming RPC from fixture.
@@ -75,6 +125,8 @@ class GrpcTestClient:
             service_name: Fully qualified service name
             method_name: Method name
             request: Request data as dictionary
+            metadata: Optional metadata headers
+            timeout: Optional timeout in seconds
 
         Returns:
             List of response messages
@@ -91,7 +143,11 @@ class GrpcTestClient:
         )
 
         responses: list[dict[str, object]] = []
-        call = stub(request)
+        call = stub(
+            request,
+            metadata=self._prepare_metadata(metadata),
+            timeout=timeout,
+        )
 
         async for response in call:
             responses.append(response)
@@ -99,7 +155,12 @@ class GrpcTestClient:
         return responses
 
     async def execute_client_streaming(
-        self, service_name: str, method_name: str, requests: list[dict[str, object]]
+        self,
+        service_name: str,
+        method_name: str,
+        requests: list[dict[str, object]],
+        metadata: dict[str, str] | None = None,
+        timeout: float | None = None,
     ) -> dict[str, object]:
         """
         Execute client streaming RPC from fixture.
@@ -108,6 +169,8 @@ class GrpcTestClient:
             service_name: Fully qualified service name
             method_name: Method name
             requests: List of request messages
+            metadata: Optional metadata headers
+            timeout: Optional timeout in seconds
 
         Returns:
             Response data as dictionary
@@ -127,11 +190,20 @@ class GrpcTestClient:
             for req in requests:
                 yield req
 
-        response: dict[str, object] = await stub(request_iterator())
+        response: dict[str, object] = await stub(
+            request_iterator(),
+            metadata=self._prepare_metadata(metadata),
+            timeout=timeout,
+        )
         return response
 
     async def execute_bidirectional(
-        self, service_name: str, method_name: str, requests: list[dict[str, object]]
+        self,
+        service_name: str,
+        method_name: str,
+        requests: list[dict[str, object]],
+        metadata: dict[str, str] | None = None,
+        timeout: float | None = None,
     ) -> list[dict[str, object]]:
         """
         Execute bidirectional streaming RPC from fixture.
@@ -140,6 +212,8 @@ class GrpcTestClient:
             service_name: Fully qualified service name
             method_name: Method name
             requests: List of request messages
+            metadata: Optional metadata headers
+            timeout: Optional timeout in seconds
 
         Returns:
             List of response messages
@@ -160,7 +234,11 @@ class GrpcTestClient:
                 yield req
 
         responses: list[dict[str, object]] = []
-        call = stub(request_iterator())
+        call = stub(
+            request_iterator(),
+            metadata=self._prepare_metadata(metadata),
+            timeout=timeout,
+        )
 
         async for response in call:
             responses.append(response)

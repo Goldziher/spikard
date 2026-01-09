@@ -830,20 +830,11 @@ mod tests {
     fn test_request_data_large_json_body() {
         let mut large_obj = serde_json::Map::new();
         for i in 0..100 {
-            large_obj.insert(
-                format!("field_{}", i),
-                json!({"value": i, "name": format!("item_{}", i)}),
-            );
+            large_obj.insert(format!("field_{i}"), json!({"value": i, "name": format!("item_{}", i)}));
         }
         let body = json!(large_obj);
 
-        let data = create_request_data(
-            "/api/batch",
-            "POST",
-            body.clone(),
-            json!({}),
-            RequestDataCollections::default(),
-        );
+        let data = create_request_data("/api/batch", "POST", body, json!({}), RequestDataCollections::default());
 
         assert!(data.body.is_object());
         assert_eq!(data.body.as_object().unwrap().len(), 100);
@@ -1000,10 +991,10 @@ mod tests {
     #[test]
     fn test_request_data_empty_string_values() {
         let mut headers = HashMap::new();
-        headers.insert("empty-header".to_string(), "".to_string());
+        headers.insert("empty-header".to_string(), String::new());
 
         let mut path_params = HashMap::new();
-        path_params.insert("id".to_string(), "".to_string());
+        path_params.insert("id".to_string(), String::new());
 
         let data = create_request_data(
             "/api/test",
@@ -1017,8 +1008,8 @@ mod tests {
             },
         );
 
-        assert_eq!(data.headers.get("empty-header"), Some(&"".to_string()));
-        assert_eq!(data.path_params.get("id"), Some(&"".to_string()));
+        assert_eq!(data.headers.get("empty-header"), Some(&String::new()));
+        assert_eq!(data.path_params.get("id"), Some(&String::new()));
     }
 
     #[test]
@@ -1092,7 +1083,7 @@ mod tests {
             RequestDataCollections::default(),
         );
 
-        let debug_str = format!("{:?}", data);
+        let debug_str = format!("{data:?}");
         assert!(debug_str.contains("RequestData"));
         assert!(debug_str.contains("/api/test"));
     }

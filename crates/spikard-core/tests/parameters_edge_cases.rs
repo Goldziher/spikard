@@ -39,7 +39,7 @@ fn test_query_boolean_empty_string_coerces_to_false() {
     let validator = ParameterValidator::new(schema).expect("validator");
 
     let mut raw_query_params = HashMap::new();
-    raw_query_params.insert("flag".to_string(), vec!["".to_string()]);
+    raw_query_params.insert("flag".to_string(), vec![String::new()]);
 
     let extracted = validator.validate_and_extract(
         &json!({}),

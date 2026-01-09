@@ -58,6 +58,144 @@ fn call_server_stream(
 }
 ```
 
+
+- **gRPC Client Streaming Support**: Full implementation of gRPC client streaming mode
+  - `call_client_stream()` trait method for handlers receiving message streams
+  - `StreamingRequest` type containing service/method names, message stream, and metadata
+  - HTTP/2 gRPC frame parsing with per-message size validation
+  - Smart routing dispatches ClientStreaming mode to appropriate handler
+  - Frame parser enforces `max_message_size` on each message in stream (not total body)
+  - Helper utilities: `parse_grpc_client_stream()` for frame parsing with validation
+
+### Security
+
+- **Per-message size enforcement**: Client streaming now validates each gRPC frame against `max_message_size`, preventing resource exhaustion from large individual messages in multi-message streams
+- **Stream resource limits**: Handlers can return early errors without consuming entire stream, preventing memory buildup
+
+### Migration Guide - Client Streaming
+
+To implement a client streaming handler:
+
+```rust
+use futures_util::StreamExt;
+
+impl GrpcHandler for MyHandler {
+    fn rpc_mode(&self) -> RpcMode {
+        RpcMode::ClientStreaming
+    }
+
+    fn call_client_stream(
+        &self,
+        request: StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+        Box::pin(async move {
+            let mut stream = request.message_stream;
+            let mut total = 0;
+
+            // Consume stream message-by-message
+            while let Some(msg_result) = stream.next().await {
+                match msg_result {
+                    Ok(message) => {
+                        // Process message (size already validated)
+                        total += decode_number(&message);
+                    }
+                    Err(status) => {
+                        // Stream error (e.g., size limit exceeded)
+                        return Err(status);
+                    }
+                }
+            }
+
+            Ok(GrpcResponseData {
+                payload: encode_result(total),
+                metadata: MetadataMap::new(),
+            })
+        })
+    }
+}
+
+// Register with RpcMode::ClientStreaming
+registry.register("mypackage.MyService", Arc::new(MyHandler), RpcMode::ClientStreaming);
+```
+
+- **gRPC Bidirectional Streaming Support**: Full implementation of gRPC bidirectional streaming mode
+  - `call_bidi_stream()` trait method for handlers with full-duplex message streams
+  - Full-duplex communication: both client and server send streams of messages concurrently
+  - Independent request and response streams with proper backpressure handling
+  - Smart routing dispatches BidirectionalStreaming mode to appropriate handler
+  - Reuses HTTP/2 frame parser with per-message size validation from client streaming
+  - Supports chat, collaborative editing, and real-time bidirectional data flows
+
+### Migration Guide - Bidirectional Streaming
+
+To implement a bidirectional streaming handler:
+
+```rust
+use futures_util::StreamExt;
+
+impl GrpcHandler for MyHandler {
+    fn rpc_mode(&self) -> RpcMode {
+        RpcMode::BidirectionalStreaming
+    }
+
+    fn call_bidi_stream(
+        &self,
+        request: StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<MessageStream, Status>> + Send>> {
+        Box::pin(async move {
+            let request_stream = request.message_stream;
+
+            // Echo each message back as it arrives
+            let response_stream = request_stream.map(|msg_result| {
+                match msg_result {
+                    Ok(msg) => Ok(msg), // Echo back
+                    Err(e) => Err(e),
+                }
+            });
+
+            Ok(Box::pin(response_stream) as MessageStream)
+        })
+    }
+}
+
+// Register with RpcMode::BidirectionalStreaming
+registry.register("mypackage.ChatService", Arc::new(MyHandler), RpcMode::BidirectionalStreaming);
+```
+
+**Advanced pattern with async processing**:
+
+```rust
+fn call_bidi_stream(
+    &self,
+    request: StreamingRequest,
+) -> Pin<Box<dyn Future<Output = Result<MessageStream, Status>> + Send>> {
+    Box::pin(async move {
+        let mut request_stream = request.message_stream;
+        let (tx, rx) = tokio::sync::mpsc::channel(100);
+
+        // Spawn task to process incoming messages asynchronously
+        tokio::spawn(async move {
+            while let Some(msg_result) = request_stream.next().await {
+                match msg_result {
+                    Ok(msg) => {
+                        let response = process_message(msg);
+                        let _ = tx.send(Ok(response)).await;
+                    }
+                    Err(e) => {
+                        let _ = tx.send(Err(e)).await;
+                        break;
+                    }
+                }
+            }
+        });
+
+        // Convert mpsc receiver to MessageStream
+        let stream = tokio_stream::wrappers::ReceiverStream::new(rx);
+        Ok(Box::pin(stream) as MessageStream)
+    })
+}
+```
+
 ## [0.8.3] - 2026-01-05
 
 ### Fixed

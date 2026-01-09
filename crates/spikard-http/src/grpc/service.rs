@@ -155,13 +155,151 @@ impl GenericGrpcService {
         //
         // This would require implementing a custom StreamBody or similar that
         // understands gRPC error semantics.
-        let byte_stream = message_stream.map(|result| {
-            result.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
-        });
+        let byte_stream =
+            message_stream.map(|result| result.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
 
         let body = axum::body::Body::from_stream(byte_stream);
 
         // Create response with streaming body
+        let response = Response::new(body);
+
+        Ok(response)
+    }
+
+    /// Handle a client streaming RPC call
+    ///
+    /// Takes a request body stream of protobuf messages and returns a single response.
+    /// Parses the HTTP/2 body stream using gRPC frame parser, creates a MessageStream,
+    /// calls the handler's call_client_stream method, and converts the GrpcResponseData
+    /// back to a Tonic Response.
+    ///
+    /// # Arguments
+    ///
+    /// * `service_name` - Fully qualified service name
+    /// * `method_name` - Method name
+    /// * `request` - Axum request with streaming body containing HTTP/2 framed protobuf messages
+    /// * `max_message_size` - Maximum size per message (bytes)
+    ///
+    /// # Returns
+    ///
+    /// A Response with a single message body
+    ///
+    /// # Stream Handling
+    ///
+    /// The request body stream contains framed protobuf messages. Each frame is parsed
+    /// and validated for size:
+    /// - Messages within `max_message_size` are passed to the handler
+    /// - Messages exceeding the limit result in a ResourceExhausted error
+    /// - Invalid frames result in InvalidArgument errors
+    /// - The stream terminates when the client closes the write side
+    ///
+    /// # Frame Format
+    ///
+    /// Frames follow the gRPC HTTP/2 protocol format:
+    /// - 1 byte: compression flag (0 = uncompressed)
+    /// - 4 bytes: message size (big-endian)
+    /// - N bytes: message payload
+    ///
+    /// # Metadata and Trailers
+    ///
+    /// - Request metadata (headers) from the Tonic request is passed to the handler
+    /// - Response metadata from the handler is included in the response headers
+    /// - gRPC trailers (like grpc-status) should be handled by the caller
+    pub async fn handle_client_stream(
+        &self,
+        service_name: String,
+        method_name: String,
+        request: Request<axum::body::Body>,
+        max_message_size: usize,
+    ) -> Result<Response<Bytes>, Status> {
+        // Extract metadata and body from Tonic request
+        let (metadata, _extensions, body) = request.into_parts();
+
+        // Parse HTTP/2 body into stream of gRPC frames with size validation
+        let message_stream = crate::grpc::framing::parse_grpc_client_stream(body, max_message_size).await?;
+
+        // Create our internal streaming request representation
+        let streaming_request = crate::grpc::streaming::StreamingRequest {
+            service_name,
+            method_name,
+            message_stream,
+            metadata,
+        };
+
+        // Call the handler's client streaming method
+        let response: crate::grpc::handler::GrpcHandlerResult =
+            self.handler.call_client_stream(streaming_request).await;
+
+        // Convert result to Tonic response
+        match response {
+            Ok(grpc_response) => {
+                let mut tonic_response = Response::new(grpc_response.payload);
+                copy_metadata(&grpc_response.metadata, tonic_response.metadata_mut());
+                Ok(tonic_response)
+            }
+            Err(status) => Err(status),
+        }
+    }
+
+    /// Handle a bidirectional streaming RPC call
+    ///
+    /// Takes a request body stream and returns a stream of response messages.
+    /// Parses the HTTP/2 body stream using gRPC frame parser, creates a StreamingRequest,
+    /// calls the handler's call_bidi_stream method, and converts the MessageStream
+    /// back to an Axum streaming response body.
+    ///
+    /// # Arguments
+    ///
+    /// * `service_name` - Fully qualified service name
+    /// * `method_name` - Method name
+    /// * `request` - Axum request with streaming body containing HTTP/2 framed protobuf messages
+    /// * `max_message_size` - Maximum size per message (bytes)
+    ///
+    /// # Returns
+    ///
+    /// A Response with a streaming body containing response messages
+    ///
+    /// # Stream Handling
+    ///
+    /// - Request stream: Parsed from HTTP/2 body using frame parser
+    /// - Response stream: Converted from MessageStream to Axum Body
+    /// - Both streams are independent (full-duplex)
+    /// - Errors in either stream are propagated appropriately
+    ///
+    /// # Error Propagation
+    ///
+    /// Similar to server streaming, mid-stream errors in the response may not be
+    /// perfectly transmitted as gRPC trailers due to Axum Body::from_stream limitations.
+    /// See handle_server_stream() documentation for details.
+    pub async fn handle_bidi_stream(
+        &self,
+        service_name: String,
+        method_name: String,
+        request: Request<axum::body::Body>,
+        max_message_size: usize,
+    ) -> Result<Response<axum::body::Body>, Status> {
+        // Extract metadata and body from Tonic request
+        let (metadata, _extensions, body) = request.into_parts();
+
+        // Parse HTTP/2 body into stream of gRPC frames with size validation
+        let message_stream = crate::grpc::framing::parse_grpc_client_stream(body, max_message_size).await?;
+
+        // Create our internal streaming request representation
+        let streaming_request = crate::grpc::streaming::StreamingRequest {
+            service_name,
+            method_name,
+            message_stream,
+            metadata,
+        };
+
+        // Call the handler's bidirectional streaming method
+        let response_stream: MessageStream = self.handler.call_bidi_stream(streaming_request).await?;
+
+        // Convert MessageStream to axum Body (same as server streaming)
+        let byte_stream =
+            response_stream.map(|result| result.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+
+        let body = axum::body::Body::from_stream(byte_stream);
         let response = Response::new(body);
 
         Ok(response)

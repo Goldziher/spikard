@@ -440,7 +440,7 @@ mod tests {
                     let config: Option<Arc<String>> = resolved.get("config");
                     let config_value = config.map(|c| (*c).clone()).unwrap_or_default();
 
-                    Ok(Arc::new(format!("Service using {}", config_value)) as Arc<dyn Any + Send + Sync>)
+                    Ok(Arc::new(format!("Service using {config_value}")) as Arc<dyn Any + Send + Sync>)
                 })
             })
             .build();
@@ -524,7 +524,7 @@ mod tests {
             .singleton(false)
             .build();
 
-        let debug_str = format!("{:?}", factory);
+        let debug_str = format!("{factory:?}");
         assert!(debug_str.contains("FactoryDependency"));
         assert!(debug_str.contains("test"));
         assert!(debug_str.contains("dep1"));

@@ -7,9 +7,7 @@
 		"messages": [
 			{
 				"name": "NestedStreamRequest",
-				"fields": [
-					{ "name": "depth", "type": "int32", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "depth", "type": "int32", "number": 1, "label": "required" }]
 			},
 			{
 				"name": "Address",

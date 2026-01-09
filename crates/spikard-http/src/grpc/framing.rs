@@ -60,7 +60,7 @@
 //! }
 //! ```
 
-use bytes::{Buf, BytesMut, Bytes};
+use bytes::{Buf, Bytes, BytesMut};
 use futures_util::stream;
 use tonic::Status;
 
@@ -118,16 +118,11 @@ pub async fn parse_grpc_client_stream(
     let messages = parse_all_frames(buffer, max_message_size)?;
 
     // Convert to a MessageStream
-    Ok(Box::pin(
-        stream::iter(messages.into_iter().map(|bytes| Ok(bytes)))
-    ))
+    Ok(Box::pin(stream::iter(messages.into_iter().map(Ok))))
 }
 
 /// Internal: Parse all frames from a buffer
-fn parse_all_frames(
-    mut buffer: BytesMut,
-    max_message_size: usize,
-) -> Result<Vec<Bytes>, Status> {
+fn parse_all_frames(mut buffer: BytesMut, max_message_size: usize) -> Result<Vec<Bytes>, Status> {
     let mut messages = Vec::new();
 
     while !buffer.is_empty() {
@@ -146,12 +141,8 @@ fn parse_all_frames(
 
         // Read the message length (4 bytes, big-endian)
         let length_bytes = &buffer[1..5];
-        let message_length = u32::from_be_bytes([
-            length_bytes[0],
-            length_bytes[1],
-            length_bytes[2],
-            length_bytes[3],
-        ]) as usize;
+        let message_length =
+            u32::from_be_bytes([length_bytes[0], length_bytes[1], length_bytes[2], length_bytes[3]]) as usize;
 
         // Validate message length against max size
         if message_length > max_message_size {
@@ -189,9 +180,9 @@ mod tests {
     async fn test_single_frame_parsing() {
         // Frame: compression=0, length=5, message="hello"
         let frame = vec![
-            0x00,                      // compression: no
-            0x00, 0x00, 0x00, 0x05,   // length: 5 bytes (big-endian)
-            b'h', b'e', b'l', b'l', b'o',  // message
+            0x00, // compression: no
+            0x00, 0x00, 0x00, 0x05, // length: 5 bytes (big-endian)
+            b'h', b'e', b'l', b'l', b'o', // message
         ];
 
         let body = axum::body::Body::from(frame);
@@ -406,19 +397,16 @@ mod tests {
     fn test_big_endian_length_parsing() {
         // Test that length is correctly parsed as big-endian
         // Big-endian u32(256) = bytes [0x00, 0x00, 0x01, 0x00]
-        let buffer = BytesMut::from(&[
-            0x00,                      // compression flag
-            0x00, 0x00, 0x01, 0x00,   // length: 256 in big-endian
-        ][..]);
+        let buffer = BytesMut::from(
+            &[
+                0x00, // compression flag
+                0x00, 0x00, 0x01, 0x00, // length: 256 in big-endian
+            ][..],
+        );
 
         // Extract the 4-byte length manually to verify
         let length_bytes = &buffer[1..5];
-        let length = u32::from_be_bytes([
-            length_bytes[0],
-            length_bytes[1],
-            length_bytes[2],
-            length_bytes[3],
-        ]);
+        let length = u32::from_be_bytes([length_bytes[0], length_bytes[1], length_bytes[2], length_bytes[3]]);
 
         assert_eq!(length, 256);
     }
@@ -426,18 +414,14 @@ mod tests {
     #[test]
     fn test_big_endian_max_value() {
         // Test maximum u32 value in big-endian
-        let buffer = BytesMut::from(&[
-            0x00,
-            0xff, 0xff, 0xff, 0xff, // max u32
-        ][..]);
+        let buffer = BytesMut::from(
+            &[
+                0x00, 0xff, 0xff, 0xff, 0xff, // max u32
+            ][..],
+        );
 
         let length_bytes = &buffer[1..5];
-        let length = u32::from_be_bytes([
-            length_bytes[0],
-            length_bytes[1],
-            length_bytes[2],
-            length_bytes[3],
-        ]);
+        let length = u32::from_be_bytes([length_bytes[0], length_bytes[1], length_bytes[2], length_bytes[3]]);
 
         assert_eq!(length, u32::MAX);
     }

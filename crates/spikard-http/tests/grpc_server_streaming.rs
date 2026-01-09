@@ -9,20 +9,19 @@
 //! - Large payloads
 //! - Routing and mode validation
 
+use axum::body::Body;
+use axum::http::{Request, StatusCode};
 use bytes::Bytes;
+use futures_util::StreamExt;
+use spikard_http::grpc::streaming::{empty_message_stream, message_stream_from_vec};
 use spikard_http::grpc::{
-    GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData, MessageStream, RpcMode,
-    GrpcRegistry, GrpcConfig,
+    GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData, MessageStream, RpcMode,
 };
-use spikard_http::grpc::streaming::{message_stream_from_vec, empty_message_stream};
 use spikard_http::server::grpc_routing::route_grpc_request;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use tonic::metadata::MetadataMap;
-use futures_util::StreamExt;
-use axum::http::{Request, StatusCode};
-use axum::body::Body;
 
 mod common;
 
@@ -36,11 +35,7 @@ struct StreamTenMessagesHandler;
 impl GrpcHandler for StreamTenMessagesHandler {
     fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
         let _ = request;
-        Box::pin(async {
-            Err(tonic::Status::unimplemented(
-                "Use call_server_stream for streaming",
-            ))
-        })
+        Box::pin(async { Err(tonic::Status::unimplemented("Use call_server_stream for streaming")) })
     }
 
     fn service_name(&self) -> &'static str {
@@ -57,9 +52,7 @@ impl GrpcHandler for StreamTenMessagesHandler {
     ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
         Box::pin(async {
             // Create a stream of 10 messages
-            let messages: Vec<Bytes> = (0..10)
-                .map(|i| Bytes::from(format!("message_{}", i)))
-                .collect();
+            let messages: Vec<Bytes> = (0..10).map(|i| Bytes::from(format!("message_{}", i))).collect();
 
             Ok(message_stream_from_vec(messages))
         })
@@ -72,11 +65,7 @@ struct EmptyStreamHandler;
 impl GrpcHandler for EmptyStreamHandler {
     fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
         let _ = request;
-        Box::pin(async {
-            Err(tonic::Status::unimplemented(
-                "Use call_server_stream for streaming",
-            ))
-        })
+        Box::pin(async { Err(tonic::Status::unimplemented("Use call_server_stream for streaming")) })
     }
 
     fn service_name(&self) -> &'static str {
@@ -104,11 +93,7 @@ struct ErrorBeforeStreamHandler;
 impl GrpcHandler for ErrorBeforeStreamHandler {
     fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
         let _ = request;
-        Box::pin(async {
-            Err(tonic::Status::unimplemented(
-                "Use call_server_stream for streaming",
-            ))
-        })
+        Box::pin(async { Err(tonic::Status::unimplemented("Use call_server_stream for streaming")) })
     }
 
     fn service_name(&self) -> &'static str {
@@ -123,11 +108,7 @@ impl GrpcHandler for ErrorBeforeStreamHandler {
         &self,
         _request: GrpcRequestData,
     ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
-        Box::pin(async {
-            Err(tonic::Status::invalid_argument(
-                "Invalid request for streaming",
-            ))
-        })
+        Box::pin(async { Err(tonic::Status::invalid_argument("Invalid request for streaming")) })
     }
 }
 
@@ -136,9 +117,8 @@ fn create_error_mid_stream() -> MessageStream {
     use futures_util::stream::iter;
 
     // Create a stream with 5 successful messages and then an error
-    let messages: Vec<Result<Bytes, tonic::Status>> = (0..5)
-        .map(|i| Ok(Bytes::from(format!("message_{}", i))))
-        .collect();
+    let messages: Vec<Result<Bytes, tonic::Status>> =
+        (0..5).map(|i| Ok(Bytes::from(format!("message_{}", i)))).collect();
 
     let mut stream_items = messages;
     stream_items.push(Err(tonic::Status::internal("Stream processing error")));
@@ -152,11 +132,7 @@ struct ErrorMidStreamHandler;
 impl GrpcHandler for ErrorMidStreamHandler {
     fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
         let _ = request;
-        Box::pin(async {
-            Err(tonic::Status::unimplemented(
-                "Use call_server_stream for streaming",
-            ))
-        })
+        Box::pin(async { Err(tonic::Status::unimplemented("Use call_server_stream for streaming")) })
     }
 
     fn service_name(&self) -> &'static str {
@@ -171,9 +147,7 @@ impl GrpcHandler for ErrorMidStreamHandler {
         &self,
         _request: GrpcRequestData,
     ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
-        Box::pin(async {
-            Ok(create_error_mid_stream())
-        })
+        Box::pin(async { Ok(create_error_mid_stream()) })
     }
 }
 
@@ -183,11 +157,7 @@ struct StreamWithMetadataHandler;
 impl GrpcHandler for StreamWithMetadataHandler {
     fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
         let _ = request;
-        Box::pin(async {
-            Err(tonic::Status::unimplemented(
-                "Use call_server_stream for streaming",
-            ))
-        })
+        Box::pin(async { Err(tonic::Status::unimplemented("Use call_server_stream for streaming")) })
     }
 
     fn service_name(&self) -> &'static str {
@@ -203,9 +173,7 @@ impl GrpcHandler for StreamWithMetadataHandler {
         _request: GrpcRequestData,
     ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
         Box::pin(async {
-            let messages: Vec<Bytes> = (0..3)
-                .map(|i| Bytes::from(format!("message_{}", i)))
-                .collect();
+            let messages: Vec<Bytes> = (0..3).map(|i| Bytes::from(format!("message_{}", i))).collect();
 
             Ok(message_stream_from_vec(messages))
         })
@@ -218,11 +186,7 @@ struct LargePayloadStreamHandler;
 impl GrpcHandler for LargePayloadStreamHandler {
     fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
         let _ = request;
-        Box::pin(async {
-            Err(tonic::Status::unimplemented(
-                "Use call_server_stream for streaming",
-            ))
-        })
+        Box::pin(async { Err(tonic::Status::unimplemented("Use call_server_stream for streaming")) })
     }
 
     fn service_name(&self) -> &'static str {
@@ -284,11 +248,7 @@ struct VariableLengthStreamHandler {
 impl GrpcHandler for VariableLengthStreamHandler {
     fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
         let _ = request;
-        Box::pin(async {
-            Err(tonic::Status::unimplemented(
-                "Use call_server_stream for streaming",
-            ))
-        })
+        Box::pin(async { Err(tonic::Status::unimplemented("Use call_server_stream for streaming")) })
     }
 
     fn service_name(&self) -> &'static str {
@@ -305,9 +265,7 @@ impl GrpcHandler for VariableLengthStreamHandler {
     ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
         let count = self.count;
         Box::pin(async move {
-            let messages: Vec<Bytes> = (0..count)
-                .map(|i| Bytes::from(format!("item_{}", i)))
-                .collect();
+            let messages: Vec<Bytes> = (0..count).map(|i| Bytes::from(format!("item_{}", i))).collect();
 
             Ok(message_stream_from_vec(messages))
         })
@@ -582,22 +540,10 @@ async fn test_service_names() {
     let handlers: Vec<(Arc<dyn GrpcHandler>, &str)> = vec![
         (Arc::new(StreamTenMessagesHandler), "test.StreamService"),
         (Arc::new(EmptyStreamHandler), "test.EmptyStreamService"),
-        (
-            Arc::new(ErrorBeforeStreamHandler),
-            "test.ErrorBeforeService",
-        ),
-        (
-            Arc::new(ErrorMidStreamHandler),
-            "test.ErrorMidStreamService",
-        ),
-        (
-            Arc::new(StreamWithMetadataHandler),
-            "test.MetadataStreamService",
-        ),
-        (
-            Arc::new(LargePayloadStreamHandler),
-            "test.LargePayloadService",
-        ),
+        (Arc::new(ErrorBeforeStreamHandler), "test.ErrorBeforeService"),
+        (Arc::new(ErrorMidStreamHandler), "test.ErrorMidStreamService"),
+        (Arc::new(StreamWithMetadataHandler), "test.MetadataStreamService"),
+        (Arc::new(LargePayloadStreamHandler), "test.LargePayloadService"),
         (Arc::new(UnaryOnlyHandler), "test.UnaryOnlyService"),
     ];
 
@@ -704,9 +650,7 @@ struct ErrorAfterMessagesHandler;
 
 impl GrpcHandler for ErrorAfterMessagesHandler {
     fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
-        Box::pin(async {
-            Err(tonic::Status::unimplemented("Use call_server_stream"))
-        })
+        Box::pin(async { Err(tonic::Status::unimplemented("Use call_server_stream")) })
     }
 
     fn service_name(&self) -> &'static str {
@@ -766,7 +710,10 @@ async fn test_http_layer_mid_stream_error_closes_connection() {
     let result = route_grpc_request(registry, &config, request).await;
 
     // The route should initially succeed because the error is mid-stream
-    assert!(result.is_ok(), "Route should accept streaming response with deferred errors");
+    assert!(
+        result.is_ok(),
+        "Route should accept streaming response with deferred errors"
+    );
 
     let response = result.unwrap();
     // Response headers should be set up for streaming
@@ -812,7 +759,10 @@ async fn test_http_layer_partial_messages_before_error() {
     // We should get some response data (the partial messages or error indication)
     // The exact behavior depends on how Axum handles stream errors,
     // but the connection should have been initiated and transferred data
-    assert!(bytes.is_ok() || bytes.is_err(), "Body collection should complete (success or error)");
+    assert!(
+        bytes.is_ok() || bytes.is_err(),
+        "Body collection should complete (success or error)"
+    );
 }
 
 /// Test: Connection cleanup after mid-stream error
@@ -852,7 +802,10 @@ async fn test_http_layer_connection_cleanup() {
 
     // Wait for all concurrent requests to complete
     for handle in handles {
-        assert!(handle.await.is_ok(), "Concurrent request should complete without panicking");
+        assert!(
+            handle.await.is_ok(),
+            "Concurrent request should complete without panicking"
+        );
     }
 }
 
@@ -866,9 +819,7 @@ async fn test_http_layer_pre_stream_error_status_mapping() {
 
     impl GrpcHandler for PreStreamErrorHandler {
         fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
-            Box::pin(async {
-                Err(tonic::Status::unimplemented("Use call_server_stream"))
-            })
+            Box::pin(async { Err(tonic::Status::unimplemented("Use call_server_stream")) })
         }
 
         fn service_name(&self) -> &'static str {
@@ -891,7 +842,11 @@ async fn test_http_layer_pre_stream_error_status_mapping() {
     }
 
     let mut registry = GrpcRegistry::new();
-    registry.register("test.PreErrorService", Arc::new(PreStreamErrorHandler), RpcMode::ServerStreaming);
+    registry.register(
+        "test.PreErrorService",
+        Arc::new(PreStreamErrorHandler),
+        RpcMode::ServerStreaming,
+    );
     let registry = Arc::new(registry);
     let config = GrpcConfig::default();
 
@@ -904,7 +859,10 @@ async fn test_http_layer_pre_stream_error_status_mapping() {
     let result = route_grpc_request(registry, &config, request).await;
 
     // Pre-stream error should fail at the route level
-    assert!(result.is_err(), "Pre-stream errors should be caught by route_grpc_request");
+    assert!(
+        result.is_err(),
+        "Pre-stream errors should be caught by route_grpc_request"
+    );
 
     if let Err((status, message)) = result {
         // Should map to BAD_REQUEST for InvalidArgument
@@ -923,9 +881,7 @@ async fn test_http_layer_large_payload_then_error() {
 
     impl GrpcHandler for LargePayloadErrorHandler {
         fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
-            Box::pin(async {
-                Err(tonic::Status::unimplemented("Use call_server_stream"))
-            })
+            Box::pin(async { Err(tonic::Status::unimplemented("Use call_server_stream")) })
         }
 
         fn service_name(&self) -> &'static str {
@@ -942,9 +898,7 @@ async fn test_http_layer_large_payload_then_error() {
         ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
             Box::pin(async {
                 let large_data = vec![0xAB; 512 * 1024]; // 512KB
-                let messages: Vec<Bytes> = vec![
-                    Bytes::from(large_data),
-                ];
+                let messages: Vec<Bytes> = vec![Bytes::from(large_data)];
 
                 Ok(message_stream_from_vec(messages))
             })
@@ -1004,7 +958,10 @@ async fn test_http_layer_stream_termination_on_error() {
 
     // Verify response is properly constructed
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.headers().get("grpc-status").and_then(|v| v.to_str().ok()), Some("0"));
+    assert_eq!(
+        response.headers().get("grpc-status").and_then(|v| v.to_str().ok()),
+        Some("0")
+    );
 
     // The response body can be consumed
     let _body = response.into_body();

@@ -7,9 +7,7 @@
 		"messages": [
 			{
 				"name": "MetadataStreamRequest",
-				"fields": [
-					{ "name": "request_id", "type": "string", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "request_id", "type": "string", "number": 1, "label": "required" }]
 			},
 			{
 				"name": "MetadataStreamMessage",

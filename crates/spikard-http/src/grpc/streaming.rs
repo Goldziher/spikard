@@ -300,7 +300,9 @@ mod tests {
         let mut trailers = tonic::metadata::MetadataMap::new();
         trailers.insert(
             "x-request-id",
-            "test-123".parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>().unwrap(),
+            "test-123"
+                .parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
+                .unwrap(),
         );
 
         let response = StreamingResponse {

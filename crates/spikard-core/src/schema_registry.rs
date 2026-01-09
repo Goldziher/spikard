@@ -179,15 +179,14 @@ mod tests {
             }
         });
 
-        let handles: Vec<_> = (0..10)
+        let validators: Vec<_> = (0..10)
             .map(|_| {
                 let registry = StdArc::clone(&registry);
                 let schema = schema.clone();
                 thread::spawn(move || registry.get_or_compile(&schema).unwrap())
             })
+            .map(|h| h.join().unwrap())
             .collect();
-
-        let validators: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
 
         for i in 1..validators.len() {
             assert!(Arc::ptr_eq(&validators[0], &validators[i]));

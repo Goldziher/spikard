@@ -675,7 +675,7 @@ mod tests {
         let condition = ErrorCondition::EmailFormat;
         let (error_type, msg, ctx) = ErrorMapper::map_error(&condition, &schema, "", "");
         assert_eq!(error_type, "string_pattern_mismatch");
-        assert!(msg.contains("@"));
+        assert!(msg.contains('@'));
         assert!(ctx.is_some());
     }
 

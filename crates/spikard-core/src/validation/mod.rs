@@ -460,7 +460,7 @@ mod tests {
         });
 
         let result = validator.validate(&data);
-        eprintln!("Validation result: {:?}", result);
+        eprintln!("Validation result: {result:?}");
 
         assert!(result.is_err(), "Should have validation errors");
         let err = result.unwrap_err();

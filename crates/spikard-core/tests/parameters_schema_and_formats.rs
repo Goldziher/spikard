@@ -203,7 +203,7 @@ fn boolean_empty_string_is_coerced_to_false() {
 
     let validator = ParameterValidator::new(schema).expect("validator");
     let mut raw_query = HashMap::new();
-    raw_query.insert("flag".to_string(), vec!["".to_string()]);
+    raw_query.insert("flag".to_string(), vec![String::new()]);
 
     let extracted = validator
         .validate_and_extract(

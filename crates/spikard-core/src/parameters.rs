@@ -824,7 +824,7 @@ mod tests {
             &HashMap::new(),
             &HashMap::new(),
         );
-        assert!(result.is_ok(), "Validation should succeed: {:?}", result);
+        assert!(result.is_ok(), "Validation should succeed: {result:?}");
 
         let params = result.unwrap();
         assert_eq!(params, json!({"item_id": "foobar"}));
@@ -858,9 +858,9 @@ mod tests {
             &HashMap::new(),
         );
         if result.is_err() {
-            eprintln!("Error for 'True': {:?}", result);
+            eprintln!("Error for 'True': {result:?}");
         }
-        assert!(result.is_ok(), "Validation should succeed for 'True': {:?}", result);
+        assert!(result.is_ok(), "Validation should succeed for 'True': {result:?}");
         let params = result.unwrap();
         assert_eq!(params, json!({"value": true}));
 
@@ -873,7 +873,7 @@ mod tests {
             &HashMap::new(),
             &HashMap::new(),
         );
-        assert!(result.is_ok(), "Validation should succeed for '1': {:?}", result);
+        assert!(result.is_ok(), "Validation should succeed for '1': {result:?}");
         let params = result.unwrap();
         assert_eq!(params, json!({"value": true}));
 
@@ -886,7 +886,7 @@ mod tests {
             &HashMap::new(),
             &HashMap::new(),
         );
-        assert!(result.is_ok(), "Validation should succeed for 'false': {:?}", result);
+        assert!(result.is_ok(), "Validation should succeed for 'false': {result:?}");
         let params = result.unwrap();
         assert_eq!(params, json!({"value": false}));
 
@@ -899,7 +899,7 @@ mod tests {
             &HashMap::new(),
             &HashMap::new(),
         );
-        assert!(result.is_ok(), "Validation should succeed for 'TRUE': {:?}", result);
+        assert!(result.is_ok(), "Validation should succeed for 'TRUE': {result:?}");
         let params = result.unwrap();
         assert_eq!(params, json!({"value": true}));
     }
@@ -930,7 +930,7 @@ mod tests {
             &HashMap::new(),
             &HashMap::new(),
         );
-        assert!(result.is_ok(), "Validation should succeed for integer 1: {:?}", result);
+        assert!(result.is_ok(), "Validation should succeed for integer 1: {result:?}");
         let params = result.unwrap();
         assert_eq!(params, json!({"flag": true}));
 
@@ -944,7 +944,7 @@ mod tests {
             &HashMap::new(),
             &HashMap::new(),
         );
-        assert!(result.is_ok(), "Validation should succeed for integer 0: {:?}", result);
+        assert!(result.is_ok(), "Validation should succeed for integer 0: {result:?}");
         let params = result.unwrap();
         assert_eq!(params, json!({"flag": false}));
 
@@ -958,11 +958,7 @@ mod tests {
             &HashMap::new(),
             &HashMap::new(),
         );
-        assert!(
-            result.is_ok(),
-            "Validation should succeed for boolean true: {:?}",
-            result
-        );
+        assert!(result.is_ok(), "Validation should succeed for boolean true: {result:?}");
         let params = result.unwrap();
         assert_eq!(params, json!({"flag": true}));
 
@@ -978,8 +974,7 @@ mod tests {
         );
         assert!(
             result.is_ok(),
-            "Validation should succeed for boolean false: {:?}",
-            result
+            "Validation should succeed for boolean false: {result:?}"
         );
         let params = result.unwrap();
         assert_eq!(params, json!({"flag": false}));
@@ -1191,7 +1186,7 @@ mod tests {
 
         let validator = ParameterValidator::new(schema).unwrap();
         let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
-        raw_query_params.insert("flag".to_string(), vec!["".to_string()]);
+        raw_query_params.insert("flag".to_string(), vec![String::new()]);
 
         let result = validator
             .validate_and_extract(
@@ -1349,7 +1344,7 @@ mod tests {
 
         let validator = ParameterValidator::new(schema).unwrap();
         let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
-        raw_query_params.insert("flag".to_string(), vec!["".to_string()]);
+        raw_query_params.insert("flag".to_string(), vec![String::new()]);
 
         let result = validator.validate_and_extract(
             &json!({"flag": ""}),
@@ -1793,7 +1788,7 @@ mod tests {
             &HashMap::new(),
         );
 
-        assert!(result.is_ok(), "String parameter should pass: {:?}", result);
+        assert!(result.is_ok(), "String parameter should pass: {result:?}");
         let extracted = result.unwrap();
         assert_eq!(extracted["start_time"], json!(time_string));
     }
@@ -2386,7 +2381,7 @@ mod tests {
 
         let validator = ParameterValidator::new(schema).unwrap();
         let mut raw_query_params: HashMap<String, Vec<String>> = HashMap::new();
-        raw_query_params.insert("flag".to_string(), vec!["".to_string()]);
+        raw_query_params.insert("flag".to_string(), vec![String::new()]);
 
         let result = validator.validate_and_extract(
             &json!({"flag": ""}),

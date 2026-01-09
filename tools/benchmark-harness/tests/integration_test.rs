@@ -217,7 +217,7 @@ async fn test_monitor_during_load() {
     tokio::time::sleep(Duration::from_millis(500)).await;
 
     for _ in 0..10 {
-        let _v: Vec<u8> = (0..100000).map(|x| (x % 256) as u8).collect();
+        let _v: Vec<u8> = (0..100_000).map(|x| (x % 256) as u8).collect();
         tokio::time::sleep(Duration::from_millis(10)).await;
     }
 
@@ -359,8 +359,8 @@ fn test_benchmark_result_output_format() {
     assert_eq!(json["duration_secs"], 10);
     assert_eq!(json["concurrency"], 50);
     assert_eq!(json["throughput"]["total_requests"], 1000);
-    assert_eq!(json["latency"]["p99_ms"], 30.0);
-    assert_eq!(json["resources"]["peak_memory_mb"], 75.0);
+    assert!((json["latency"]["p99_ms"].as_f64().unwrap() - 30.0).abs() < 1e-10);
+    assert!((json["resources"]["peak_memory_mb"].as_f64().unwrap() - 75.0).abs() < 1e-10);
     assert_eq!(json["success"], true);
 
     assert!(json.get("startup").is_none());

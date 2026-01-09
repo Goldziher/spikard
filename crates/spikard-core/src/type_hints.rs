@@ -235,6 +235,7 @@ pub fn merge_parameter_schemas(auto_schema: &Value, explicit_schema: &Value) -> 
     result
 }
 
+#[allow(clippy::literal_string_with_formatting_args)]
 #[cfg(test)]
 mod tests {
     use super::*;

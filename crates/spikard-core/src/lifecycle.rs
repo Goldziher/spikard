@@ -465,11 +465,11 @@ mod tests {
     #[test]
     fn test_hook_result_debug_format() {
         let continue_result: HookResult<i32, String> = HookResult::Continue(100);
-        let debug_str = format!("{:?}", continue_result);
+        let debug_str = format!("{continue_result:?}");
         assert!(debug_str.contains("Continue"));
 
         let short_circuit_result: HookResult<i32, String> = HookResult::ShortCircuit("err".to_string());
-        let debug_str = format!("{:?}", short_circuit_result);
+        let debug_str = format!("{short_circuit_result:?}");
         assert!(debug_str.contains("ShortCircuit"));
     }
 
@@ -494,16 +494,16 @@ mod tests {
     #[test]
     fn test_lifecycle_hooks_debug_format_empty() {
         let hooks: LifecycleHooks<String, String> = LifecycleHooks::default();
-        let debug_str = format!("{:?}", hooks);
+        let debug_str = format!("{hooks:?}");
         assert!(debug_str.contains("LifecycleHooks"));
         assert!(debug_str.contains("on_request_count"));
-        assert!(debug_str.contains("0"));
+        assert!(debug_str.contains('0'));
     }
 
     #[test]
     fn test_lifecycle_hooks_clone() {
         let hooks1: LifecycleHooks<String, String> = LifecycleHooks::default();
-        let hooks2 = hooks1.clone();
+        let hooks2 = hooks1;
         assert!(hooks2.is_empty());
     }
 
@@ -566,7 +566,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     impl NativeLifecycleHook<String, String> for TestRequestHook {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "test_request_hook"
         }
 
@@ -628,7 +628,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     impl NativeLifecycleHook<String, String> for TestResponseHook {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "test_response_hook"
         }
 
@@ -783,7 +783,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     impl NativeLifecycleHook<String, String> for TestShortCircuitHook {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "short_circuit"
         }
 
@@ -858,7 +858,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     impl NativeLifecycleHook<String, String> for TestResponseShortCircuitHook {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "response_short_circuit"
         }
 
@@ -938,7 +938,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     impl NativeLifecycleHook<String, String> for TestAppendHook {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "append"
         }
 
@@ -994,7 +994,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     impl NativeLifecycleHook<String, String> for TestAppendResponseHook {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "append_response"
         }
 
@@ -1055,7 +1055,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     impl NativeLifecycleHook<String, String> for TestErrorHook {
-        fn name(&self) -> &str {
+        fn name(&self) -> &'static str {
             "error_hook"
         }
 
@@ -1160,9 +1160,9 @@ mod tests {
         #[cfg(target_arch = "wasm32")]
         hooks.add_on_request(Arc::new(TestRequestHookLocal));
 
-        let debug_str = format!("{:?}", hooks);
+        let debug_str = format!("{hooks:?}");
         assert!(debug_str.contains("on_request_count"));
-        assert!(debug_str.contains("1"));
+        assert!(debug_str.contains('1'));
     }
 
     #[cfg(not(target_arch = "wasm32"))]

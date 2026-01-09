@@ -249,6 +249,28 @@ pub trait GrpcHandler: Send + Sync {
     ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
         Box::pin(async { Err(tonic::Status::unimplemented("Server streaming not supported")) })
     }
+
+    /// Handle a client streaming RPC call
+    ///
+    /// Takes a stream of request messages and returns a single response message.
+    /// Default implementation returns `UNIMPLEMENTED` status.
+    fn call_client_stream(
+        &self,
+        _request: crate::grpc::streaming::StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send>> {
+        Box::pin(async { Err(tonic::Status::unimplemented("Client streaming not supported")) })
+    }
+
+    /// Handle a bidirectional streaming RPC call
+    ///
+    /// Takes a stream of request messages and returns a stream of response messages.
+    /// Default implementation returns `UNIMPLEMENTED` status.
+    fn call_bidi_stream(
+        &self,
+        _request: crate::grpc::streaming::StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<crate::grpc::streaming::MessageStream, tonic::Status>> + Send>> {
+        Box::pin(async { Err(tonic::Status::unimplemented("Bidirectional streaming not supported")) })
+    }
 }
 
 #[cfg(test)]
@@ -674,7 +696,9 @@ mod tests {
         let mut metadata = MetadataMap::new();
         metadata.insert(
             "x-request-id",
-            "test-request-123".parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>().unwrap(),
+            "test-request-123"
+                .parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
+                .unwrap(),
         );
 
         let request = GrpcRequestData {
@@ -924,7 +948,11 @@ mod tests {
                 &self,
                 _request: GrpcRequestData,
             ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
-                Box::pin(async { Ok(super::super::streaming::single_message_stream(Bytes::from("single_msg"))) })
+                Box::pin(async {
+                    Ok(super::super::streaming::single_message_stream(Bytes::from(
+                        "single_msg",
+                    )))
+                })
             }
         }
 
@@ -1032,9 +1060,7 @@ mod tests {
                 let code = self.error_code;
                 Box::pin(async move {
                     match code {
-                        tonic::Code::InvalidArgument => {
-                            Err(tonic::Status::invalid_argument("Invalid argument"))
-                        }
+                        tonic::Code::InvalidArgument => Err(tonic::Status::invalid_argument("Invalid argument")),
                         tonic::Code::FailedPrecondition => {
                             Err(tonic::Status::failed_precondition("Failed precondition"))
                         }

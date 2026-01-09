@@ -7,9 +7,7 @@
 		"messages": [
 			{
 				"name": "UnicodeStreamRequest",
-				"fields": [
-					{ "name": "filter", "type": "string", "number": 1, "label": "optional" }
-				]
+				"fields": [{ "name": "filter", "type": "string", "number": 1, "label": "optional" }]
 			},
 			{
 				"name": "UnicodeStreamMessage",

@@ -696,7 +696,7 @@ mod tests {
         let dep = ValueDependency::new("test", 42i32);
         container.register("test".to_string(), Arc::new(dep)).unwrap();
 
-        let debug_str = format!("{:?}", container);
+        let debug_str = format!("{container:?}");
         assert!(debug_str.contains("DependencyContainer"));
     }
 }

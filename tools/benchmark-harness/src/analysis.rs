@@ -574,17 +574,17 @@ mod tests {
 
     #[test]
     fn test_mean() {
-        assert_eq!(mean(&[1.0, 2.0, 3.0, 4.0, 5.0]), 3.0);
-        assert_eq!(mean(&[]), 0.0);
-        assert_eq!(mean(&[5.0]), 5.0);
+        assert!((mean(&[1.0, 2.0, 3.0, 4.0, 5.0]) - 3.0).abs() < 1e-10);
+        assert!(mean(&[]).abs() < 1e-10);
+        assert!((mean(&[5.0]) - 5.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_median() {
-        assert_eq!(median(&[1.0, 2.0, 3.0, 4.0, 5.0]), 3.0);
-        assert_eq!(median(&[1.0, 2.0, 3.0, 4.0]), 2.5);
-        assert_eq!(median(&[5.0]), 5.0);
-        assert_eq!(median(&[]), 0.0);
+        assert!((median(&[1.0, 2.0, 3.0, 4.0, 5.0]) - 3.0).abs() < 1e-10);
+        assert!((median(&[1.0, 2.0, 3.0, 4.0]) - 2.5).abs() < 1e-10);
+        assert!((median(&[5.0]) - 5.0).abs() < 1e-10);
+        assert!(median(&[]).abs() < 1e-10);
     }
 
     #[test]
@@ -610,7 +610,7 @@ mod tests {
         let cv = coefficient_of_variation(&values);
         assert!(cv > 0.0);
 
-        assert_eq!(coefficient_of_variation(&[0.0, 0.0]), 0.0);
+        assert!(coefficient_of_variation(&[0.0, 0.0]).abs() < 1e-10);
     }
 
     #[test]

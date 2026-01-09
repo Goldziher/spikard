@@ -34,8 +34,7 @@ async fn test_error_min_frameworks() {
         let error_msg = e.to_string();
         assert!(
             error_msg.contains("at least 2 frameworks"),
-            "Error should mention minimum 2 frameworks: {}",
-            error_msg
+            "Error should mention minimum 2 frameworks: {error_msg}"
         );
     }
 
@@ -66,8 +65,7 @@ async fn test_error_invalid_workload_suite() {
         let error_msg = e.to_string();
         assert!(
             error_msg.contains("not found") || error_msg.contains("Available suites"),
-            "Error should list available suites: {}",
-            error_msg
+            "Error should list available suites: {error_msg}"
         );
     }
 
@@ -82,7 +80,7 @@ async fn test_config_defaults() {
     assert_eq!(config.workload_suite, "all");
     assert_eq!(config.port, 8100);
     assert_eq!(config.warmup_requests, 100);
-    assert_eq!(config.significance_threshold, 0.05);
+    assert!((config.significance_threshold - 0.05).abs() < 1e-10);
     assert_eq!(config.duration_secs, 30);
     assert_eq!(config.concurrency, 100);
     assert_eq!(config.output_dir, PathBuf::from("benchmark-results"));
@@ -109,6 +107,7 @@ async fn test_port_allocation_strategy() {
     let expected_ports = [8100, 8110, 8120];
 
     for (idx, _fw) in config.frameworks.iter().enumerate() {
+        #[allow(clippy::cast_possible_truncation)]
         let allocated_port = config.port + (idx as u16 * 10);
         assert_eq!(allocated_port, expected_ports[idx]);
     }
@@ -116,7 +115,7 @@ async fn test_port_allocation_strategy() {
     std::fs::remove_dir_all("./test-output/port-test").ok();
 }
 
-/// Test CompareAnalyzer instantiation and basic properties
+/// Test `CompareAnalyzer` instantiation and basic properties
 #[tokio::test]
 async fn test_compare_analyzer_basics() {
     use benchmark_harness::compare::CompareAnalyzer;
@@ -151,7 +150,7 @@ async fn test_baseline_selection_logic() {
 
     let result = CompareResult {
         metadata: benchmark_harness::schema::Metadata::collect(),
-        frameworks: frameworks.clone(),
+        frameworks,
         configuration: benchmark_harness::schema::Configuration {
             duration_secs: 10,
             concurrency: 100,
@@ -170,7 +169,7 @@ async fn test_baseline_selection_logic() {
     assert_eq!(result.frameworks[0].name, "framework-a");
 }
 
-/// Test JSON serialization of CompareResult
+/// Test JSON serialization of `CompareResult`
 #[tokio::test]
 async fn test_compare_result_json_serialization() {
     use benchmark_harness::schema::compare::CompareResult;
@@ -252,8 +251,7 @@ async fn test_error_invalid_framework() {
         let error_msg = e.to_string();
         assert!(
             error_msg.contains("not found") || error_msg.contains("Framework"),
-            "Error should mention framework not found: {}",
-            error_msg
+            "Error should mention framework not found: {error_msg}"
         );
     }
 
