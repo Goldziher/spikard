@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **gRPC Streaming Fixture Integration** (Phases 1-4): Complete end-to-end fixture infrastructure for all 4 streaming modes
+  - 30+ JSON fixture files covering Unary, ServerStreaming, ClientStreaming, and BidirectionalStreaming modes
+  - Schema validation with semantic cross-reference checks (`testing_data/grpc/schema_definitions.json`)
+  - Fixture validation script (`scripts/validate_fixtures.py`) with comprehensive error reporting
+  - Cross-language parity tests verifying identical behavior across all 5 languages
+  - Metadata and timeout support in all gRPC clients (Python, TypeScript, Ruby, PHP, Rust)
+  - Stream generators for large fixture tests (sequential, random, timestamp-based patterns)
+  - Helper functions eliminating test duplication across languages
+  - CI workflow (`ci-grpc-fixtures.yaml`) for automated gRPC fixture validation
+
+- **gRPC Fixture Testing Suite** (120+ cross-language tests):
+  - Python: 30+ parametrized pytest tests with fixture loading, 80%+ code coverage
+  - TypeScript: 30+ vitest tests with metadata support and stream assertions
+  - Ruby: 30+ RSpec tests with block-based connection management and cleanup
+  - PHP: 30+ PHPUnit tests with PSR-12 compliance and 85%+ coverage
+  - All tests use shared fixture files for consistent validation across ecosystems
+
 - **gRPC server streaming support**: Full server streaming RPC implementation
   - Added `RpcMode` enum for declaring handler capabilities (Unary, ServerStreaming, ClientStreaming, BidirectionalStreaming)
   - Added `call_server_stream()` trait method to `GrpcHandler` for streaming implementations
