@@ -83,6 +83,51 @@ tasks:
     cmds:
       - python3 scripts/validate_fixtures.py
 
+  test:grpc:fixtures:
+    desc: "Run gRPC streaming fixture tests across all languages"
+    deps:
+      - test:grpc:python
+      - test:grpc:typescript
+      - test:grpc:ruby
+      - test:grpc:php
+
+  test:grpc:python:
+    desc: "Run Python gRPC streaming fixture tests"
+    deps:
+      - build:py
+    dir: packages/python
+    cmds:
+      - uv run pytest tests/test_grpc_fixtures.py -v --cov=spikard --cov-report=term-missing --cov-fail-under=80
+
+  test:grpc:typescript:
+    desc: "Run TypeScript gRPC streaming fixture tests"
+    deps:
+      - build:node
+    dir: packages/node
+    cmds:
+      - pnpm vitest run tests/grpc_fixtures.spec.ts --coverage
+
+  test:grpc:ruby:
+    desc: "Run Ruby gRPC streaming fixture tests"
+    deps:
+      - ruby:build
+    dir: packages/ruby
+    cmds:
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec rspec spec/grpc_fixtures_spec.rb --format documentation"
+
+  test:grpc:php:
+    desc: "Run PHP gRPC streaming fixture tests"
+    deps:
+      - php:build
+    dir: packages/php
+    cmds:
+      - php -d extension=../../target/release/libspikard_php.dylib vendor/bin/phpunit --configuration phpunit.xml --testsuite=grpc_fixtures --coverage-text
+
+  verify:coverage:
+    desc: "Verify code coverage thresholds across all language bindings"
+    cmds:
+      - python3 scripts/verify_coverage.py
+
   check:
     desc: "Run all checks without modifications (lint + format checks)"
     cmds:
