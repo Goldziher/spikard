@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **gRPC server streaming support**: Full server streaming RPC implementation
+  - Added `RpcMode` enum for declaring handler capabilities (Unary, ServerStreaming, ClientStreaming, BidirectionalStreaming)
+  - Added `call_server_stream()` trait method to `GrpcHandler` for streaming implementations
+  - Added `StreamingResponse` type with optional trailers field for response metadata after stream completion
+  - GrpcRegistry now stores (handler, RpcMode) tuples for proper request routing
+  - Streaming utilities: `message_stream_from_vec()`, `empty_message_stream()`, `single_message_stream()`, `error_stream()` helpers
+
+### Changed
+
+- **GrpcHandler trait breaking changes** (semver major):
+  - Removed `supports_streaming_requests()` method (replaced by `rpc_mode()`)
+  - Removed `supports_streaming_responses()` method (replaced by `rpc_mode()`)
+  - Added `rpc_mode() -> RpcMode` method with default implementation returning `RpcMode::Unary`
+  - Added `call_server_stream()` method with UNIMPLEMENTED default for backward compatibility
+  - GrpcRegistry registration now requires RpcMode parameter: `registry.register(handler, rpc_mode)`
+
+### Migration Guide
+
+For existing unary handlers:
+```rust
+// Before
+if !handler.supports_streaming_requests() {
+    // route to unary
+}
+
+// After
+match handler.rpc_mode() {
+    RpcMode::Unary => { /* unary routing */ }
+    RpcMode::ServerStreaming => { /* server streaming routing */ }
+    _ => { /* other modes */ }
+}
+```
+
+For implementing server streaming:
+```rust
+fn rpc_mode(&self) -> RpcMode {
+    RpcMode::ServerStreaming
+}
+
+fn call_server_stream(
+    &self,
+    request: GrpcRequestData,
+) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
+    Box::pin(async {
+        // Create and return message stream
+    })
+}
+```
+
 ## [0.8.3] - 2026-01-05
 
 ### Fixed

@@ -1,0 +1,69 @@
+{
+	"name": "Server streaming - 10 messages",
+	"description": "Tests server streaming RPC that returns a normal stream of 10 messages. Validates message ordering and complete stream delivery.",
+	"category": "server_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "ListRequest",
+				"fields": [
+					{ "name": "offset", "type": "int32", "number": 1, "label": "optional" },
+					{ "name": "limit", "type": "int32", "number": 2, "label": "optional" }
+				]
+			},
+			{
+				"name": "ListItem",
+				"fields": [
+					{ "name": "index", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "name", "type": "string", "number": 2, "label": "required" },
+					{ "name": "value", "type": "int32", "number": 3, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "StreamService",
+				"methods": [
+					{
+						"name": "ListItems",
+						"input_type": "ListRequest",
+						"output_type": "ListItem",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.StreamService",
+		"method": "ListItems"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"offset": 0,
+			"limit": 10
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [
+			{ "index": 0, "name": "Item-0", "value": 100 },
+			{ "index": 1, "name": "Item-1", "value": 101 },
+			{ "index": 2, "name": "Item-2", "value": 102 },
+			{ "index": 3, "name": "Item-3", "value": 103 },
+			{ "index": 4, "name": "Item-4", "value": 104 },
+			{ "index": 5, "name": "Item-5", "value": 105 },
+			{ "index": 6, "name": "Item-6", "value": 106 },
+			{ "index": 7, "name": "Item-7", "value": 107 },
+			{ "index": 8, "name": "Item-8", "value": 108 },
+			{ "index": 9, "name": "Item-9", "value": 109 }
+		],
+		"message": "10 messages streamed successfully"
+	},
+	"tags": ["server_streaming", "normal_case", "multiple_messages"]
+}

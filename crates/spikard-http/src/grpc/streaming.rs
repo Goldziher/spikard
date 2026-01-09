@@ -16,6 +16,53 @@ use tonic::Status;
 /// Each item in the stream is either:
 /// - Ok(Bytes): A serialized protobuf message
 /// - Err(Status): A gRPC error
+///
+/// # Backpressure Considerations
+///
+/// Streaming responses should implement backpressure handling to avoid memory buildup with slow clients:
+///
+/// - **Problem**: If a client reads slowly but the handler produces messages quickly, messages will
+///   queue in memory, potentially causing high memory usage or OOM errors.
+/// - **Solution**: The gRPC layer (Tonic) handles backpressure automatically via the underlying TCP/HTTP/2
+///   connection. However, handlers should be aware of this behavior.
+/// - **Best Practice**: For long-running or high-volume streams, implement rate limiting or flow control
+///   in the handler to avoid overwhelming the network buffer.
+///
+/// # Example: Rate-limited streaming
+///
+/// ```ignore
+/// use spikard_http::grpc::streaming::MessageStream;
+/// use bytes::Bytes;
+/// use std::pin::Pin;
+/// use std::time::Duration;
+/// use tokio::time::sleep;
+/// use futures_util::stream::{self, StreamExt};
+///
+/// // Handler that sends 1000 messages with rate limiting
+/// fn create_rate_limited_stream() -> MessageStream {
+///     let messages = (0..1000).map(|i| {
+///         Ok(Bytes::from(format!("message_{}", i)))
+///     });
+///
+///     // Stream with delay between messages to avoid overwhelming the client
+///     let stream = stream::iter(messages)
+///         .then(|msg| async {
+///             sleep(Duration::from_millis(1)).await;  // 1ms between messages
+///             msg
+///         });
+///
+///     Box::pin(stream)
+/// }
+/// ```
+///
+/// # Memory Management
+///
+/// Keep the following in mind when implementing large streams:
+///
+/// - Messages are buffered in the gRPC transport layer's internal queue
+/// - Slow clients will cause the queue to grow, increasing memory usage
+/// - Very large individual messages may cause buffer allocation spikes
+/// - Consider implementing stream chunking for very large responses (split one large message into many small ones)
 pub type MessageStream = Pin<Box<dyn Stream<Item = Result<Bytes, Status>> + Send>>;
 
 /// Request for client streaming RPC
@@ -34,12 +81,18 @@ pub struct StreamingRequest {
 
 /// Response for server streaming RPC
 ///
-/// Contains metadata and a stream of outgoing messages to the client.
+/// Contains metadata, a stream of outgoing messages, and optional trailers.
+/// Trailers are metadata sent after the stream completes (after all messages).
 pub struct StreamingResponse {
     /// Stream of outgoing protobuf messages
     pub message_stream: MessageStream,
-    /// Response metadata
+    /// Response metadata (sent before messages)
     pub metadata: tonic::metadata::MetadataMap,
+    /// Optional trailers (sent after stream completes)
+    ///
+    /// Trailers are useful for sending status information or metrics
+    /// after all messages have been sent.
+    pub trailers: Option<tonic::metadata::MetadataMap>,
 }
 
 /// Helper to create a message stream from a vector of bytes
@@ -234,8 +287,31 @@ mod tests {
         let response = StreamingResponse {
             message_stream: stream,
             metadata: tonic::metadata::MetadataMap::new(),
+            trailers: None,
         };
 
         assert!(response.metadata.is_empty());
+        assert!(response.trailers.is_none());
+    }
+
+    #[test]
+    fn test_streaming_response_with_trailers() {
+        let stream = empty_message_stream();
+        let mut trailers = tonic::metadata::MetadataMap::new();
+        trailers.insert(
+            "x-request-id",
+            "test-123".parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>().unwrap(),
+        );
+
+        let response = StreamingResponse {
+            message_stream: stream,
+            metadata: tonic::metadata::MetadataMap::new(),
+            trailers: Some(trailers),
+        };
+
+        assert!(response.metadata.is_empty());
+        assert!(response.trailers.is_some());
+        let trailers = response.trailers.unwrap();
+        assert_eq!(trailers.len(), 1);
     }
 }

@@ -1,0 +1,72 @@
+{
+	"name": "Server streaming - with metadata and trailers",
+	"description": "Tests server streaming RPC with gRPC metadata headers and trailers. Validates that metadata is accessible before streaming begins and trailers are delivered after stream completion.",
+	"category": "server_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "MetadataStreamRequest",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "MetadataStreamMessage",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "value", "type": "string", "number": 2, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "StreamService",
+				"methods": [
+					{
+						"name": "StreamWithMetadata",
+						"input_type": "MetadataStreamRequest",
+						"output_type": "MetadataStreamMessage",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.StreamService",
+		"method": "StreamWithMetadata"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"x-request-id": "metadata-stream-001",
+			"x-client-version": "1.0.0"
+		},
+		"message": {
+			"request_id": "metadata-stream-001"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"headers": {
+			"content-type": "application/grpc",
+			"x-stream-id": "stream-42",
+			"x-message-count": "3"
+		},
+		"stream": [
+			{ "id": 1, "value": "Message 1 with headers" },
+			{ "id": 2, "value": "Message 2 with headers" },
+			{ "id": 3, "value": "Message 3 with headers" }
+		],
+		"trailers": {
+			"x-stream-processed": "true",
+			"x-total-bytes": "256",
+			"grpc-status": "0",
+			"grpc-message": "OK"
+		},
+		"message": "Stream completed with metadata and trailers"
+	},
+	"tags": ["server_streaming", "metadata", "trailers", "headers"]
+}

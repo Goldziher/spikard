@@ -1,0 +1,55 @@
+{
+	"name": "Server streaming - empty stream",
+	"description": "Tests server streaming RPC that returns an empty stream. The server opens the stream but sends no messages before completing successfully.",
+	"category": "server_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "EmptyStreamRequest",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "EmptyStreamResponse",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "value", "type": "string", "number": 2, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "StreamService",
+				"methods": [
+					{
+						"name": "GetEmptyStream",
+						"input_type": "EmptyStreamRequest",
+						"output_type": "EmptyStreamResponse",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.StreamService",
+		"method": "GetEmptyStream"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"request_id": "empty-stream-001"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [],
+		"message": "Stream completed with no messages"
+	},
+	"tags": ["server_streaming", "empty", "edge_cases"]
+}

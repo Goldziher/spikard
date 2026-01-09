@@ -1,0 +1,62 @@
+{
+	"name": "Server streaming - single message",
+	"description": "Tests server streaming RPC that returns exactly one message. Verifies that single-message streams are properly handled and distinguished from unary responses.",
+	"category": "server_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "SingleMessageRequest",
+				"fields": [
+					{ "name": "query", "type": "string", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "SingleMessageResponse",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "content", "type": "string", "number": 2, "label": "required" },
+					{ "name": "timestamp", "type": "int64", "number": 3, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "StreamService",
+				"methods": [
+					{
+						"name": "GetSingleMessage",
+						"input_type": "SingleMessageRequest",
+						"output_type": "SingleMessageResponse",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.StreamService",
+		"method": "GetSingleMessage"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"query": "find_first"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [
+			{
+				"id": 42,
+				"content": "Single message in stream",
+				"timestamp": 1704067200000
+			}
+		],
+		"message": "Stream completed with one message"
+	},
+	"tags": ["server_streaming", "single_message", "edge_cases"]
+}

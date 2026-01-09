@@ -1,0 +1,112 @@
+{
+	"name": "Server streaming - nested object messages",
+	"description": "Tests server streaming RPC with complex nested message structures. Validates proper serialization and deserialization of deeply nested protobuf objects in streaming context.",
+	"category": "server_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "NestedStreamRequest",
+				"fields": [
+					{ "name": "depth", "type": "int32", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "Address",
+				"fields": [
+					{ "name": "street", "type": "string", "number": 1, "label": "required" },
+					{ "name": "city", "type": "string", "number": 2, "label": "required" },
+					{ "name": "zip", "type": "string", "number": 3, "label": "required" }
+				]
+			},
+			{
+				"name": "Contact",
+				"fields": [
+					{ "name": "phone", "type": "string", "number": 1, "label": "required" },
+					{ "name": "email", "type": "string", "number": 2, "label": "required" },
+					{ "name": "address", "type": "Address", "number": 3, "label": "required" }
+				]
+			},
+			{
+				"name": "Person",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "name", "type": "string", "number": 2, "label": "required" },
+					{ "name": "contact", "type": "Contact", "number": 3, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "StreamService",
+				"methods": [
+					{
+						"name": "StreamPeople",
+						"input_type": "NestedStreamRequest",
+						"output_type": "Person",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.StreamService",
+		"method": "StreamPeople"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"depth": 3
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [
+			{
+				"id": 1,
+				"name": "Alice Johnson",
+				"contact": {
+					"phone": "555-0001",
+					"email": "alice@example.com",
+					"address": {
+						"street": "123 Main St",
+						"city": "Springfield",
+						"zip": "12345"
+					}
+				}
+			},
+			{
+				"id": 2,
+				"name": "Bob Smith",
+				"contact": {
+					"phone": "555-0002",
+					"email": "bob@example.com",
+					"address": {
+						"street": "456 Oak Ave",
+						"city": "Shelbyville",
+						"zip": "67890"
+					}
+				}
+			},
+			{
+				"id": 3,
+				"name": "Carol White",
+				"contact": {
+					"phone": "555-0003",
+					"email": "carol@example.com",
+					"address": {
+						"street": "789 Pine Rd",
+						"city": "Capital City",
+						"zip": "13579"
+					}
+				}
+			}
+		],
+		"message": "3 people with nested objects streamed successfully"
+	},
+	"tags": ["server_streaming", "nested_messages", "complex_structures"]
+}

@@ -3,7 +3,7 @@
 //! This module handles routing gRPC requests to the appropriate handlers
 //! and multiplexing between HTTP/1.1 REST and HTTP/2 gRPC traffic.
 
-use crate::grpc::{GrpcRegistry, parse_grpc_path};
+use crate::grpc::{GrpcConfig, GrpcRegistry, RpcMode, parse_grpc_path};
 use axum::body::Body;
 use axum::http::{Request, Response, StatusCode};
 use std::sync::Arc;
@@ -42,6 +42,7 @@ fn grpc_status_to_http(code: tonic::Code) -> StatusCode {
 /// # Arguments
 ///
 /// * `registry` - gRPC handler registry
+/// * `config` - gRPC configuration with size limits
 /// * `request` - The incoming gRPC request
 ///
 /// # Returns
@@ -49,6 +50,7 @@ fn grpc_status_to_http(code: tonic::Code) -> StatusCode {
 /// A future that resolves to a gRPC response or error
 pub async fn route_grpc_request(
     registry: Arc<GrpcRegistry>,
+    config: &GrpcConfig,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
     // Extract the request path
@@ -66,18 +68,53 @@ pub async fn route_grpc_request(
     };
 
     // Look up the handler for this service
-    let handler = match registry.get(&service_name) {
-        Some(h) => h,
+    let (handler, rpc_mode) = match registry.get(&service_name) {
+        Some((h, mode)) => (h, mode),
         None => {
             return Err((StatusCode::NOT_FOUND, format!("Service not found: {}", service_name)));
         }
     };
 
-    // Convert the Axum request to bytes
+    // Create the service bridge
+    let service = crate::grpc::GenericGrpcService::new(handler);
+
+    // Dispatch based on RPC mode
+    match rpc_mode {
+        RpcMode::Unary => handle_unary_request(service, service_name, method_name, config.max_message_size, request).await,
+        RpcMode::ServerStreaming => handle_server_streaming_request(service, service_name, method_name, config.max_message_size, request).await,
+        RpcMode::ClientStreaming => {
+            Err((
+                StatusCode::NOT_IMPLEMENTED,
+                "Client streaming not yet implemented".to_string(),
+            ))
+        }
+        RpcMode::BidirectionalStreaming => {
+            Err((
+                StatusCode::NOT_IMPLEMENTED,
+                "Bidirectional streaming not yet implemented".to_string(),
+            ))
+        }
+    }
+}
+
+/// Handle a unary RPC request
+async fn handle_unary_request(
+    service: crate::grpc::GenericGrpcService,
+    service_name: String,
+    method_name: String,
+    max_message_size: usize,
+    request: Request<Body>,
+) -> Result<Response<Body>, (StatusCode, String)> {
+    // Convert the Axum request to bytes with the configured size limit
     let (parts, body) = request.into_parts();
-    let body_bytes = match axum::body::to_bytes(body, usize::MAX).await {
+    let body_bytes = match axum::body::to_bytes(body, max_message_size).await {
         Ok(bytes) => bytes,
         Err(e) => {
+            // Check if error is due to size limit (axum returns "body size exceeded" or similar)
+            let error_msg = e.to_string();
+            if error_msg.contains("body") || error_msg.contains("size") || error_msg.contains("exceeded") {
+                return Err((StatusCode::PAYLOAD_TOO_LARGE, format!("Message exceeds maximum size of {} bytes", max_message_size)));
+            }
             return Err((StatusCode::BAD_REQUEST, format!("Failed to read request body: {}", e)));
         }
     };
@@ -102,7 +139,6 @@ pub async fn route_grpc_request(
     }
 
     // Use the service bridge to handle the request
-    let service = crate::grpc::GenericGrpcService::new(handler);
     let tonic_response = match service.handle_unary(service_name, method_name, tonic_request).await {
         Ok(resp) => resp,
         Err(status) => {
@@ -142,6 +178,73 @@ pub async fn route_grpc_request(
     Ok(response)
 }
 
+/// Handle a server streaming RPC request
+async fn handle_server_streaming_request(
+    service: crate::grpc::GenericGrpcService,
+    service_name: String,
+    method_name: String,
+    max_message_size: usize,
+    request: Request<Body>,
+) -> Result<Response<Body>, (StatusCode, String)> {
+    // Convert the Axum request to bytes with the configured size limit
+    let (parts, body) = request.into_parts();
+    let body_bytes = match axum::body::to_bytes(body, max_message_size).await {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            // Check if error is due to size limit (axum returns "body size exceeded" or similar)
+            let error_msg = e.to_string();
+            if error_msg.contains("body") || error_msg.contains("size") || error_msg.contains("exceeded") {
+                return Err((StatusCode::PAYLOAD_TOO_LARGE, format!("Message exceeds maximum size of {} bytes", max_message_size)));
+            }
+            return Err((StatusCode::BAD_REQUEST, format!("Failed to read request body: {}", e)));
+        }
+    };
+
+    // Create a Tonic request
+    let mut tonic_request = tonic::Request::new(body_bytes);
+
+    // Copy headers to Tonic metadata
+    for (key, value) in parts.headers.iter() {
+        if let Ok(value_str) = value.to_str() {
+            if let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>() {
+                if let Ok(metadata_key) = key
+                    .as_str()
+                    .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
+                {
+                    tonic_request.metadata_mut().insert(metadata_key, metadata_value);
+                }
+            }
+        }
+    }
+
+    // Use the service bridge to handle the streaming request
+    let tonic_response = match service.handle_server_stream(service_name, method_name, tonic_request).await {
+        Ok(resp) => resp,
+        Err(status) => {
+            let status_code = grpc_status_to_http(status.code());
+            return Err((status_code, status.message().to_string()));
+        }
+    };
+
+    // Convert Tonic response to Axum response
+    let body = tonic_response.into_inner();
+    let mut response = Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/grpc+proto");
+
+    // Add gRPC status trailer (success)
+    response = response.header("grpc-status", "0");
+
+    let response = response.body(body).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to build response: {}", e),
+        )
+    })?;
+
+    Ok(response)
+}
+
 /// Check if an incoming request is a gRPC request
 ///
 /// Returns true if the request has a content-type starting with "application/grpc"
@@ -157,7 +260,7 @@ pub fn is_grpc_request(request: &Request<Body>) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
+    use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData, RpcMode};
     use bytes::Bytes;
     use std::future::Future;
     use std::pin::Pin;
@@ -182,8 +285,9 @@ mod tests {
     #[tokio::test]
     async fn test_route_grpc_request_success() {
         let mut registry = GrpcRegistry::new();
-        registry.register("test.EchoService", Arc::new(EchoHandler));
+        registry.register("test.EchoService", Arc::new(EchoHandler), RpcMode::Unary);
         let registry = Arc::new(registry);
+        let config = GrpcConfig::default();
 
         let request = Request::builder()
             .uri("/test.EchoService/Echo")
@@ -191,13 +295,14 @@ mod tests {
             .body(Body::from(Bytes::from("test payload")))
             .unwrap();
 
-        let result = route_grpc_request(registry, request).await;
+        let result = route_grpc_request(registry, &config, request).await;
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_route_grpc_request_service_not_found() {
         let registry = Arc::new(GrpcRegistry::new());
+        let config = GrpcConfig::default();
 
         let request = Request::builder()
             .uri("/nonexistent.Service/Method")
@@ -205,7 +310,7 @@ mod tests {
             .body(Body::from(Bytes::new()))
             .unwrap();
 
-        let result = route_grpc_request(registry, request).await;
+        let result = route_grpc_request(registry, &config, request).await;
         assert!(result.is_err());
 
         let (status, message) = result.unwrap_err();
@@ -216,6 +321,7 @@ mod tests {
     #[tokio::test]
     async fn test_route_grpc_request_invalid_path() {
         let registry = Arc::new(GrpcRegistry::new());
+        let config = GrpcConfig::default();
 
         let request = Request::builder()
             .uri("/invalid")
@@ -223,7 +329,7 @@ mod tests {
             .body(Body::from(Bytes::new()))
             .unwrap();
 
-        let result = route_grpc_request(registry, request).await;
+        let result = route_grpc_request(registry, &config, request).await;
         assert!(result.is_err());
 
         let (status, _message) = result.unwrap_err();
@@ -323,5 +429,50 @@ mod tests {
             grpc_status_to_http(tonic::Code::Unauthenticated),
             StatusCode::UNAUTHORIZED
         );
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_with_custom_max_message_size() {
+        let mut registry = GrpcRegistry::new();
+        registry.register("test.EchoService", Arc::new(EchoHandler), RpcMode::Unary);
+        let registry = Arc::new(registry);
+
+        let mut config = GrpcConfig::default();
+        config.max_message_size = 100; // Set small limit
+
+        let request = Request::builder()
+            .uri("/test.EchoService/Echo")
+            .header("content-type", "application/grpc")
+            .body(Body::from(Bytes::from("test payload")))
+            .unwrap();
+
+        // This should succeed since payload is small
+        let result = route_grpc_request(registry.clone(), &config, request).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_exceeds_max_message_size() {
+        let mut registry = GrpcRegistry::new();
+        registry.register("test.EchoService", Arc::new(EchoHandler), RpcMode::Unary);
+        let registry = Arc::new(registry);
+
+        let mut config = GrpcConfig::default();
+        config.max_message_size = 10; // Set very small limit
+
+        // Create a large payload that exceeds the limit
+        let large_payload = vec![b'x'; 1000];
+        let request = Request::builder()
+            .uri("/test.EchoService/Echo")
+            .header("content-type", "application/grpc")
+            .body(Body::from(Bytes::from(large_payload)))
+            .unwrap();
+
+        let result = route_grpc_request(registry, &config, request).await;
+        assert!(result.is_err());
+
+        let (status, message) = result.unwrap_err();
+        assert_eq!(status, StatusCode::PAYLOAD_TOO_LARGE);
+        assert!(message.contains("Message exceeds maximum size"));
     }
 }

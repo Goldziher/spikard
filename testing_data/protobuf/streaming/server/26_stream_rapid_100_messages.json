@@ -1,0 +1,68 @@
+{
+	"name": "Server streaming - rapid 100 message stream",
+	"description": "Tests server streaming RPC with 100 messages sent in rapid succession. Validates backpressure handling, buffering, and delivery of high-volume message streams without loss or corruption.",
+	"category": "server_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "RapidStreamRequest",
+				"fields": [
+					{ "name": "count", "type": "int32", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "RapidStreamMessage",
+				"fields": [
+					{ "name": "sequence", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "timestamp", "type": "int64", "number": 2, "label": "required" },
+					{ "name": "status", "type": "string", "number": 3, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "StreamService",
+				"methods": [
+					{
+						"name": "StreamRapidMessages",
+						"input_type": "RapidStreamRequest",
+						"output_type": "RapidStreamMessage",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.StreamService",
+		"method": "StreamRapidMessages"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"count": 100
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream_count": 100,
+		"stream_pattern": {
+			"start_sequence": 1,
+			"end_sequence": 100,
+			"format": "sequence numbers 1-100 in order"
+		},
+		"stream_sample": [
+			{ "sequence": 1, "timestamp": 1704067200000, "status": "processed" },
+			{ "sequence": 2, "timestamp": 1704067200001, "status": "processed" },
+			{ "sequence": 50, "timestamp": 1704067200049, "status": "processed" },
+			{ "sequence": 99, "timestamp": 1704067200098, "status": "processed" },
+			{ "sequence": 100, "timestamp": 1704067200099, "status": "processed" }
+		],
+		"message": "100 messages streamed successfully in sequence"
+	},
+	"tags": ["server_streaming", "high_volume", "performance", "backpressure"]
+}

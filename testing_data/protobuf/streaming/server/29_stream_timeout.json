@@ -1,0 +1,68 @@
+{
+	"name": "Server streaming - timeout scenario",
+	"description": "Tests server streaming RPC that exceeds the deadline/timeout. The server starts streaming but doesn't complete before the client-imposed timeout expires. Validates proper timeout handling and stream cancellation.",
+	"category": "server_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "LongStreamRequest",
+				"fields": [
+					{ "name": "delay_ms", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "message_count", "type": "int32", "number": 2, "label": "required" }
+				]
+			},
+			{
+				"name": "LongStreamMessage",
+				"fields": [
+					{ "name": "sequence", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "data", "type": "string", "number": 2, "label": "required" },
+					{ "name": "elapsed_ms", "type": "int64", "number": 3, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "StreamService",
+				"methods": [
+					{
+						"name": "StreamWithDelay",
+						"input_type": "LongStreamRequest",
+						"output_type": "LongStreamMessage",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.StreamService",
+		"method": "StreamWithDelay",
+		"timeout_ms": 1000
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"grpc-timeout": "1000m"
+		},
+		"message": {
+			"delay_ms": 500,
+			"message_count": 10
+		}
+	},
+	"expected_response": {
+		"status_code": "DEADLINE_EXCEEDED",
+		"stream": [
+			{ "sequence": 1, "data": "Message 1", "elapsed_ms": 500 },
+			{ "sequence": 2, "data": "Message 2", "elapsed_ms": 1000 }
+		],
+		"error": {
+			"code": 4,
+			"message": "Deadline exceeded while streaming messages"
+		},
+		"partial_delivery": true,
+		"note": "Stream was cancelled after exceeding the 1000ms timeout"
+	},
+	"tags": ["server_streaming", "timeout", "deadline_exceeded", "error_handling"]
+}

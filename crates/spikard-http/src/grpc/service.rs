@@ -5,7 +5,9 @@
 //! enabling language-agnostic gRPC handling.
 
 use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
+use crate::grpc::streaming::MessageStream;
 use bytes::Bytes;
+use futures_util::StreamExt;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
@@ -73,6 +75,96 @@ impl GenericGrpcService {
             }
             Err(status) => Err(status),
         }
+    }
+
+    /// Handle a server streaming RPC call
+    ///
+    /// Takes a single request and returns a stream of response messages.
+    /// Converts the Tonic Request into our GrpcRequestData format, calls the
+    /// handler's call_server_stream method, and converts the MessageStream
+    /// into a Tonic streaming response body.
+    ///
+    /// # Arguments
+    ///
+    /// * `service_name` - Fully qualified service name
+    /// * `method_name` - Method name
+    /// * `request` - Tonic request containing the serialized protobuf message
+    ///
+    /// # Returns
+    ///
+    /// A Response with a streaming body containing the message stream
+    ///
+    /// # Error Propagation Limitations
+    ///
+    /// When a stream returns an error mid-stream (after messages have begun
+    /// being sent), the error may not be perfectly transmitted to the client
+    /// as a gRPC trailer. This is due to limitations in Axum's `Body::from_stream`:
+    ///
+    /// - **Pre-stream errors** (before any messages): Properly converted to
+    ///   HTTP status codes and returned to the client
+    /// - **Mid-stream errors** (after messages have begun): The error is converted
+    ///   to a generic `BoxError`, and the stream terminates. The connection is
+    ///   properly closed, but the gRPC status code metadata is lost.
+    ///
+    /// For robust error handling in streaming RPCs:
+    /// - Prefer detecting errors early (before sending messages) when possible
+    /// - Include error information in the message stream itself if critical
+    ///   (application-level error messages in the protobuf)
+    /// - For true gRPC trailer support, consider implementing a custom Axum
+    ///   body type that wraps the stream and can inject trailers on error
+    ///
+    /// See: <https://github.com/tokio-rs/axum/discussions/2043>
+    pub async fn handle_server_stream(
+        &self,
+        service_name: String,
+        method_name: String,
+        request: Request<Bytes>,
+    ) -> Result<Response<axum::body::Body>, Status> {
+        // Extract metadata and payload from Tonic request
+        let (metadata, _extensions, payload) = request.into_parts();
+
+        // Create our internal request representation
+        let grpc_request = GrpcRequestData {
+            service_name,
+            method_name,
+            payload,
+            metadata,
+        };
+
+        // Call the handler's server streaming method
+        let message_stream: MessageStream = self.handler.call_server_stream(grpc_request).await?;
+
+        // Convert MessageStream to axum Body
+        //
+        // LIMITATION: When converting tonic::Status errors from the stream,
+        // we lose the gRPC status metadata. The Status is converted to a
+        // generic Box<dyn Error>, and Axum's Body::from_stream doesn't have
+        // special handling for gRPC error semantics.
+        //
+        // Current behavior:
+        // - Stream errors are converted to BoxError
+        // - Body stream terminates on the first error
+        // - Connection is properly closed
+        // - Error metadata (status code, message) is not transmitted to client
+        //
+        // TODO: Implement custom Body wrapper that can:
+        // 1. Capture tonic::Status errors
+        // 2. Extract status code and message
+        // 3. Inject gRPC trailers (grpc-status, grpc-message) when stream ends
+        // 4. Properly signal error to client while preserving partial messages
+        //
+        // This would require implementing a custom StreamBody or similar that
+        // understands gRPC error semantics.
+        let byte_stream = message_stream.map(|result| {
+            result.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+        });
+
+        let body = axum::body::Body::from_stream(byte_stream);
+
+        // Create response with streaming body
+        let response = Response::new(body);
+
+        Ok(response)
     }
 
     /// Get the service name from the handler

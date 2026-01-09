@@ -1,0 +1,83 @@
+{
+	"name": "Server streaming - unicode and special characters",
+	"description": "Tests server streaming RPC with messages containing unicode characters, emoji, special symbols, and multi-byte UTF-8 sequences. Validates proper encoding/decoding across the streaming pipeline.",
+	"category": "server_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "UnicodeStreamRequest",
+				"fields": [
+					{ "name": "filter", "type": "string", "number": 1, "label": "optional" }
+				]
+			},
+			{
+				"name": "UnicodeStreamMessage",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "text", "type": "string", "number": 2, "label": "required" },
+					{ "name": "description", "type": "string", "number": 3, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "StreamService",
+				"methods": [
+					{
+						"name": "StreamUnicodeMessages",
+						"input_type": "UnicodeStreamRequest",
+						"output_type": "UnicodeStreamMessage",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.StreamService",
+		"method": "StreamUnicodeMessages"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"encoding": "utf-8"
+		},
+		"message": {
+			"filter": "all"
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [
+			{
+				"id": 1,
+				"text": "Hello 世界",
+				"description": "Chinese characters"
+			},
+			{
+				"id": 2,
+				"text": "مرحبا بالعالم",
+				"description": "Arabic text"
+			},
+			{
+				"id": 3,
+				"text": "🚀 Rocket emoji 🌟 Star",
+				"description": "Emoji with special characters"
+			},
+			{
+				"id": 4,
+				"text": "Ñoño & Naïve",
+				"description": "Accented characters"
+			},
+			{
+				"id": 5,
+				"text": "Math: ∑ ∫ ∞ ≤ ≥ ≠",
+				"description": "Mathematical symbols"
+			}
+		],
+		"message": "Unicode stream completed successfully"
+	},
+	"tags": ["server_streaming", "unicode", "internationalization", "special_characters"]
+}

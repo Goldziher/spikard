@@ -4,7 +4,7 @@
 //! including handler registration, request routing, and response handling.
 
 use bytes::Bytes;
-use spikard_http::grpc::{GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData};
+use spikard_http::grpc::{GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData, RpcMode};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -102,7 +102,7 @@ fn test_grpc_registry_register_handler() {
     let mut registry = GrpcRegistry::new();
     let handler = Arc::new(EchoGrpcHandler);
 
-    registry.register("test.EchoService", handler);
+    registry.register("test.EchoService", handler, RpcMode::Unary);
 
     assert!(!registry.is_empty());
     assert_eq!(registry.len(), 1);
@@ -114,25 +114,28 @@ fn test_grpc_registry_get_handler() {
     let mut registry = GrpcRegistry::new();
     let handler = Arc::new(EchoGrpcHandler);
 
-    registry.register("test.EchoService", handler);
+    registry.register("test.EchoService", handler, RpcMode::Unary);
 
     let retrieved = registry.get("test.EchoService");
     assert!(retrieved.is_some());
-    assert_eq!(retrieved.unwrap().service_name(), "test.EchoService");
+    let (handler, mode) = retrieved.unwrap();
+    assert_eq!(handler.service_name(), "test.EchoService");
+    assert_eq!(mode, RpcMode::Unary);
 }
 
 #[test]
 fn test_grpc_registry_multiple_handlers() {
     let mut registry = GrpcRegistry::new();
 
-    registry.register("test.EchoService", Arc::new(EchoGrpcHandler));
+    registry.register("test.EchoService", Arc::new(EchoGrpcHandler), RpcMode::Unary);
     registry.register(
         "test.FixedService",
         Arc::new(FixedResponseHandler {
             response: Bytes::from("fixed"),
         }),
+        RpcMode::Unary,
     );
-    registry.register("test.ErrorService", Arc::new(ErrorGrpcHandler));
+    registry.register("test.ErrorService", Arc::new(ErrorGrpcHandler), RpcMode::Unary);
 
     assert_eq!(registry.len(), 3);
     assert!(registry.contains("test.EchoService"));
@@ -288,10 +291,9 @@ fn test_handler_service_name() {
 }
 
 #[test]
-fn test_handler_default_streaming_support() {
+fn test_handler_default_rpc_mode() {
     let handler = EchoGrpcHandler;
-    assert!(!handler.supports_streaming_requests());
-    assert!(!handler.supports_streaming_responses());
+    assert_eq!(handler.rpc_mode(), RpcMode::Unary);
 }
 
 #[test]

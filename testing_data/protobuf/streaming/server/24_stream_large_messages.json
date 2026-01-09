@@ -1,0 +1,79 @@
+{
+	"name": "Server streaming - 1MB messages",
+	"description": "Tests server streaming RPC with large message payloads (approximately 1MB each). Validates that the streaming framework can handle large individual messages without truncation or memory issues.",
+	"category": "server_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "LargeStreamRequest",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "message_count", "type": "int32", "number": 2, "label": "required" }
+				]
+			},
+			{
+				"name": "LargeStreamMessage",
+				"fields": [
+					{ "name": "message_id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "data", "type": "bytes", "number": 2, "label": "required" },
+					{ "name": "size", "type": "int64", "number": 3, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "StreamService",
+				"methods": [
+					{
+						"name": "StreamLargeMessages",
+						"input_type": "LargeStreamRequest",
+						"output_type": "LargeStreamMessage",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.StreamService",
+		"method": "StreamLargeMessages",
+		"middleware": {
+			"body_limit": {
+				"max_bytes": 10485760
+			}
+		}
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"request_id": "large-stream-001",
+			"message_count": 3
+		}
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [
+			{
+				"message_id": 1,
+				"data": "TGFyZ2UgbWVzc2FnZSAxIC0gVGhpcyBpcyBhcHByb3hpbWF0ZWx5IDEgTUIgb2YgZGF0YSBjb250YWluaW5nIGJpbmFyeSBwYXlsb2FkIGRhdGEgZm9yIHN0cmVhbWluZyB0ZXN0cy4gVGhlIHBlcmZvcm1hbmNlIG9mIGxhcmdlIG1lc3NhZ2Ugc3RyZWFtaW5nIGlzIGNyaXRpY2FsIGZvciBmaWxlIHRyYW5zZmVycywgdmlkZW8gc3RyZWFtaW5nLCBhbmQgb3RoZXIgaGlnaCBieXRlcmF0ZSBhcHBsaWNhdGlvbnMu",
+				"size": 1048576
+			},
+			{
+				"message_id": 2,
+				"data": "TGFyZ2UgbWVzc2FnZSAyIC0gU2Vjb25kIDEgTUIgbWVzc2FnZSBpbiB0aGUgc3RyZWFtLiBUaGlzIGZpeHR1cmUgdmFsaWRhdGVzIHRoYXQgdGhlIGdSUEMgaW1wbGVtZW50YXRpb24gY2FuIGhhbmRsZSBtdWx0aXBsZSBsYXJnZSBtZXNzYWdlcyBpbiBzdWNjZXNzaW9uIHdpdGhvdXQgbWVtb3J5IGlzc3VlcyBvciBzdHJlYW0gY29ycnVwdGlvbi4gRWFjaCBtZXNzYWdlIHNob3VsZCBiZSBwcm9wZXJseSBkZWxpbWl0ZWQgYW5kIGFjY291bnRlZCBmb3Iu",
+				"size": 1048576
+			},
+			{
+				"message_id": 3,
+				"data": "TGFyZ2UgbWVzc2FnZSAzIC0gVGhpcmQgMSBNQiBtZXNzYWdlLiBMYXJnZSBtZXNzYWdlIGhhbmRsaW5nIGlzIGEgY2FyZGluYWwgY2FwYWJpbGl0eSBmb3IgYSBnUlBDIGZyYW1ld29yay4gVGhpcyBmaXh0dXJlIGVuc3VyZXMgdGhhdCBvdXIgaW1wbGVtZW50YXRpb24gZXhjZWxzIGF0IGhhbmRsaW5nIGxhcmdlIHBheWxvYWRzIGVmZmljaWVudGx5IHdpdGggbWluaW1hbCBjb3B5aW5nLg==",
+				"size": 1048576
+			}
+		],
+		"message": "3 large messages streamed successfully"
+	},
+	"tags": ["server_streaming", "large_payloads", "performance"]
+}
