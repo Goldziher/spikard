@@ -55,5 +55,8 @@ Gem::Specification.new do |spec|
   # Runtime dependency for WebSocket test client (subprocess approach)
   spec.add_dependency 'rb_sys', '~> 0.9'
   spec.add_dependency 'websocket-client-simple', '~> 0.8'
+
+  # gRPC support for RPC services
+  spec.add_dependency 'grpc', '~> 1.60'
 end
 # rubocop:enable Metrics/BlockLength

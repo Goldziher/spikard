@@ -39,6 +39,8 @@
 	},
 	"require-dev": {
 		"friendsofphp/php-cs-fixer": "^3.91",
+		"google/protobuf": "^4.27",
+		"grpc/grpc": "^1.60",
 		"phpstan/extension-installer": "^1.4",
 		"phpstan/phpstan": "^1.12",
 		"phpunit/phpunit": "^11.3",
