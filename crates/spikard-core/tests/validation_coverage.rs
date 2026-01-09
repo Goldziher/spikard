@@ -32,10 +32,10 @@ fn validator_preprocesses_binary_file_objects_recursively() {
     });
 
     let data = json!({
-        "file": file_object.clone(),
-        "files": [file_object.clone()],
+        "file": &file_object,
+        "files": [&file_object],
         "nested": {
-            "inner": file_object,
+            "inner": &file_object,
             "other": 1
         }
     });
@@ -242,7 +242,7 @@ fn error_mapper_uses_schema_constraints_when_present() {
 
     let (ty, _msg, ctx) = ErrorMapper::map_error(&ErrorCondition::EmailFormat, &schema, "/properties/value", "generic");
     assert_eq!(ty, "string_pattern_mismatch");
-    assert!(ctx.as_ref().unwrap()["pattern"].as_str().unwrap().contains("@"));
+    assert!(ctx.as_ref().unwrap()["pattern"].as_str().unwrap().contains('@'));
 
     let (ty, _msg, ctx) = ErrorMapper::map_error(&ErrorCondition::UuidFormat, &schema, "/properties/value", "generic");
     assert_eq!(ty, "uuid_parsing");
