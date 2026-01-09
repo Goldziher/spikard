@@ -1,6 +1,5 @@
 {
 	"require": {
-		"php": ">=8.2",
-		"phalcon/cphalcon": "^5.9"
+		"php": ">=8.2"
 	}
 }

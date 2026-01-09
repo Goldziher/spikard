@@ -3,8 +3,7 @@
 	"description": "Phalcon PHP framework benchmark server for workload performance testing",
 	"version": "1.0.0",
 	"require": {
-		"php": ">=8.2",
-		"phalcon/cphalcon": "^5.9"
+		"php": ">=8.2"
 	},
 	"require-dev": {
 		"phpstan/phpstan": "^2.0"
