@@ -66,6 +66,32 @@ def discover_fixture_files(category: str, exclude_schema: bool = True) -> list[P
     return sorted(fixtures)
 
 
+def discover_protobuf_fixtures() -> dict[str, list[Path]]:
+    """
+    Discover gRPC protobuf streaming fixtures organized by subcategory.
+
+    Returns:
+        Dictionary mapping subcategories (server, client, bidirectional, errors)
+        to lists of fixture file paths
+    """
+    conftest_dir = Path(__file__).parent
+    testing_data_root = conftest_dir.parent.parent.parent / "testing_data"
+    protobuf_dir = testing_data_root / "protobuf" / "streaming"
+
+    result: dict[str, list[Path]] = {}
+
+    if not protobuf_dir.exists():
+        return result
+
+    for subcategory in ["server", "client", "bidirectional", "errors"]:
+        subcat_dir = protobuf_dir / subcategory
+        if subcat_dir.exists():
+            fixtures = sorted(subcat_dir.glob("*.json"))
+            result[subcategory] = fixtures
+
+    return result
+
+
 def load_fixture(fixture_path: Path) -> dict[str, object]:
     """
     Load a single fixture JSON file.
@@ -286,6 +312,61 @@ def background_fixtures(fixture_categories: dict[str, list[dict[str, object]]]) 
     return fixture_categories["background"]
 
 
+@pytest.fixture(scope="session")
+def protobuf_fixtures() -> dict[str, list[dict[str, object]]]:
+    """
+    Load all gRPC streaming fixtures organized by subcategory.
+
+    Returns:
+        Dictionary mapping subcategories (server, client, bidirectional, errors)
+        to lists of fixture data
+    """
+    fixtures_by_category = discover_protobuf_fixtures()
+
+    result: dict[str, list[dict[str, object]]] = {
+        "server": [],
+        "client": [],
+        "bidirectional": [],
+        "errors": [],
+    }
+
+    try:
+        for subcategory, paths in fixtures_by_category.items():
+            for fixture_path in paths:
+                data = load_fixture(fixture_path)
+                result[subcategory].append(data)
+    except (json.JSONDecodeError, OSError) as e:
+        pytest.fail(f"Failed to load protobuf fixture: {e}")
+
+    return result
+
+
+@pytest.fixture
+def protobuf_server_fixtures(protobuf_fixtures: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
+    """Fixture data for server streaming tests."""
+    return protobuf_fixtures["server"]
+
+
+@pytest.fixture
+def protobuf_client_fixtures(protobuf_fixtures: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
+    """Fixture data for client streaming tests."""
+    return protobuf_fixtures["client"]
+
+
+@pytest.fixture
+def protobuf_bidirectional_fixtures(
+    protobuf_fixtures: dict[str, list[dict[str, object]]]
+) -> list[dict[str, object]]:
+    """Fixture data for bidirectional streaming tests."""
+    return protobuf_fixtures["bidirectional"]
+
+
+@pytest.fixture
+def protobuf_error_fixtures(protobuf_fixtures: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
+    """Fixture data for gRPC error handling tests."""
+    return protobuf_fixtures["errors"]
+
+
 def get_fixture_ids(fixtures: list[dict[str, object]]) -> list[str]:
     """
     Generate test IDs from fixture names.
@@ -370,3 +451,52 @@ def fixture_validator(testing_data_root: Path) -> FixtureValidator:
             return True, []
 
     return validate_fixture
+
+
+@pytest.fixture(scope="session")
+async def grpc_server():
+    """
+    Start test gRPC server with fixture-driven handlers.
+
+    This is a placeholder fixture that will be implemented once the
+    Spikard gRPC server bindings are available. The fixture should:
+
+    1. Create dynamic handlers from fixtures for all streaming modes
+    2. Start the gRPC server on localhost:50051
+    3. Yield the server instance to tests
+    4. Clean up and shutdown the server after tests complete
+
+    Example implementation (when Spikard bindings are ready):
+
+    ```python
+    import asyncio
+    from spikard_py import SpikardServer, GrpcHandler, RpcMode
+
+    # Create handlers for each streaming mode
+    handlers = [
+        ServerStreamingEchoHandler(),
+        ClientStreamingAggregatorHandler(),
+        BidirectionalEchoHandler(),
+    ]
+
+    # Start server
+    server = SpikardServer()
+    for handler in handlers:
+        server.register_grpc_handler(handler)
+
+    server_task = asyncio.create_task(server.run("localhost", 50051))
+    await asyncio.sleep(0.5)  # Wait for server to start
+
+    yield server
+
+    # Cleanup
+    server_task.cancel()
+    try:
+        await server_task
+    except asyncio.CancelledError:
+        pass
+    ```
+    """
+    # TODO: Implement actual gRPC server with Spikard bindings
+    # For now, this is a placeholder that tests can skip until implemented
+    pytest.skip("gRPC server fixture not yet implemented - awaiting Spikard gRPC bindings")

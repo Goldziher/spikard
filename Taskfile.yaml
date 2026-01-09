@@ -77,6 +77,12 @@ tasks:
       - task: ruby:test
       - task: php:test
       - task: test:e2e
+
+  validate:fixtures:
+    desc: "Validate all gRPC streaming fixture files against schema"
+    cmds:
+      - python3 scripts/validate_fixtures.py
+
   check:
     desc: "Run all checks without modifications (lint + format checks)"
     cmds:

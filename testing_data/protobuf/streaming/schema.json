@@ -1,0 +1,191 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "gRPC Streaming Fixture Schema",
+  "description": "JSON Schema for gRPC streaming test fixtures",
+  "type": "object",
+  "required": ["name", "description", "category", "protobuf", "handler", "request", "expected_response", "tags"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable test case name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of what the test validates"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["server_streaming", "client_streaming", "bidirectional_streaming", "error"],
+      "description": "Category of streaming test"
+    },
+    "protobuf": {
+      "type": "object",
+      "required": ["package", "messages", "services"],
+      "properties": {
+        "package": {
+          "type": "string",
+          "description": "Protobuf package name"
+        },
+        "messages": {
+          "type": "array",
+          "description": "Protobuf message definitions",
+          "items": {
+            "type": "object",
+            "required": ["name", "fields"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "type", "number", "label"],
+                  "properties": {
+                    "name": {"type": "string"},
+                    "type": {"type": "string"},
+                    "number": {"type": "integer"},
+                    "label": {
+                      "type": "string",
+                      "enum": ["required", "optional", "repeated"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "services": {
+          "type": "array",
+          "description": "Protobuf service definitions",
+          "items": {
+            "type": "object",
+            "required": ["name", "methods"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "methods": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "input_type", "output_type", "client_streaming", "server_streaming"],
+                  "properties": {
+                    "name": {"type": "string"},
+                    "input_type": {"type": "string"},
+                    "output_type": {"type": "string"},
+                    "client_streaming": {"type": "boolean"},
+                    "server_streaming": {"type": "boolean"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "handler": {
+      "type": "object",
+      "required": ["service", "method"],
+      "properties": {
+        "service": {
+          "type": "string",
+          "description": "Fully qualified service name"
+        },
+        "method": {
+          "type": "string",
+          "description": "Method name"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "description": "Timeout in milliseconds (optional)"
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["metadata"],
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "description": "gRPC metadata headers"
+        },
+        "message": {
+          "type": "object",
+          "description": "Single request message (for unary/server streaming)"
+        },
+        "stream": {
+          "type": "array",
+          "description": "Stream of request messages (for client/bidirectional streaming)"
+        },
+        "stream_generator": {
+          "type": "string",
+          "description": "Description of stream generation logic (for large streams)"
+        },
+        "stream_size": {
+          "type": "integer",
+          "description": "Number of messages in generated stream"
+        },
+        "stream_note": {
+          "type": "string",
+          "description": "Additional notes about stream content"
+        }
+      },
+      "oneOf": [
+        {"required": ["message"]},
+        {"required": ["stream"]},
+        {"required": ["stream_generator", "stream_size"]}
+      ]
+    },
+    "expected_response": {
+      "type": "object",
+      "required": ["status_code"],
+      "properties": {
+        "status_code": {
+          "type": "string",
+          "description": "Expected gRPC status code"
+        },
+        "message": {
+          "oneOf": [
+            {"type": "object"},
+            {"type": "string"}
+          ],
+          "description": "Single response message (for unary/client streaming) or description"
+        },
+        "stream": {
+          "type": "array",
+          "description": "Stream of response messages (for server/bidirectional streaming)"
+        },
+        "error": {
+          "type": "object",
+          "description": "Expected error details for error test cases",
+          "properties": {
+            "code": {
+              "oneOf": [
+                {"type": "string"},
+                {"type": "integer"}
+              ],
+              "description": "gRPC status code (string name or integer)"
+            },
+            "message": {"type": "string"}
+          }
+        },
+        "partial_delivery": {
+          "type": "boolean",
+          "description": "Whether partial stream delivery occurred before error"
+        },
+        "note": {
+          "type": "string",
+          "description": "Additional context about the expected response"
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorizing and filtering tests"
+    }
+  }
+}
