@@ -609,7 +609,9 @@ def grpc_server():
     # Server lifecycle management
     server = None
     server_ready = threading.Event()
+    server_stop = threading.Event()
     server_error = None
+    server_loop = None
 
     async def run_server():
         """Run the server in its own async event loop."""
@@ -620,14 +622,22 @@ def grpc_server():
             server.add_insecure_port("[::]:50051")
             await server.start()
             server_ready.set()
-            await server.wait_for_termination()
+
+            # Wait for stop signal
+            while not server_stop.is_set():
+                await asyncio.sleep(0.1)
+
+            # Stop server gracefully
+            await server.stop(grace=0.1)
         except Exception as e:
             server_error = e
             server_ready.set()
 
     def run_in_thread():
         """Run the async server in a background thread."""
+        nonlocal server_loop
         loop = asyncio.new_event_loop()
+        server_loop = loop
         asyncio.set_event_loop(loop)
         try:
             loop.run_until_complete(run_server())
@@ -635,7 +645,7 @@ def grpc_server():
             loop.close()
 
     # Start server in background thread
-    server_thread = threading.Thread(target=run_in_thread, daemon=True)
+    server_thread = threading.Thread(target=run_in_thread, daemon=False)
     server_thread.start()
 
     # Wait for server to be ready
@@ -645,12 +655,6 @@ def grpc_server():
 
     yield server
 
-    # Cleanup: stop the server
-    if server:
-        # Create a new event loop to stop the server
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            loop.run_until_complete(server.stop(grace=0.1))
-        finally:
-            loop.close()
+    # Cleanup: signal the server to stop and wait for thread
+    server_stop.set()
+    server_thread.join(timeout=2.0)
