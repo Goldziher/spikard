@@ -28,7 +28,7 @@ Example:
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import AsyncGenerator, AsyncIterator, Protocol, runtime_checkable
 
 from _spikard import GrpcRequest, GrpcResponse  # type: ignore[attr-defined]
 
@@ -45,7 +45,9 @@ class GrpcHandler(Protocol):
     """Protocol for gRPC request handlers.
 
     Handlers must implement an async handle_request method that takes
-    a GrpcRequest and returns a GrpcResponse.
+    a GrpcRequest and returns a GrpcResponse. Optional streaming methods
+    can be implemented for server-streaming, client-streaming, and
+    bidirectional-streaming gRPC calls.
 
     The handler receives raw protobuf bytes and is responsible for:
     1. Deserializing the request payload using google.protobuf
@@ -53,25 +55,61 @@ class GrpcHandler(Protocol):
     3. Serializing the response using google.protobuf
     4. Returning a GrpcResponse with the serialized bytes
 
+    Streaming Methods:
+    - handle_server_stream: Server streams responses to client
+    - handle_client_stream: Client streams requests to server
+    - handle_bidi_stream: Client and server both stream
+
     Example:
         ```python
         class MyServiceHandler(GrpcHandler):
             async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-                # Deserialize request
+                # Unary RPC
                 req = my_pb2.MyRequest()
                 req.ParseFromString(request.payload)
 
-                # Process
                 result = await process_request(req)
-
-                # Serialize response
                 response = my_pb2.MyResponse(data=result)
                 return GrpcResponse(payload=response.SerializeToString())
+
+            async def handle_server_stream(self, request: GrpcRequest) -> AsyncGenerator[GrpcResponse, None]:
+                # Server streaming RPC
+                req = my_pb2.StreamRequest()
+                req.ParseFromString(request.payload)
+
+                async for item in stream_items(req):
+                    response = my_pb2.StreamResponse(data=item)
+                    yield GrpcResponse(payload=response.SerializeToString())
+
+            async def handle_client_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> GrpcResponse:
+                # Client streaming RPC
+                items = []
+                async for request in request_stream:
+                    req = my_pb2.StreamItem()
+                    req.ParseFromString(request.payload)
+                    items.append(req)
+
+                result = await aggregate_items(items)
+                response = my_pb2.AggregateResponse(data=result)
+                return GrpcResponse(payload=response.SerializeToString())
+
+            async def handle_bidi_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> AsyncGenerator[GrpcResponse, None]:
+                # Bidirectional streaming RPC
+                async for request in request_stream:
+                    req = my_pb2.BidiRequest()
+                    req.ParseFromString(request.payload)
+
+                    response = await process_bidi_item(req)
+                    response_pb = my_pb2.BidiResponse(data=response)
+                    yield GrpcResponse(payload=response_pb.SerializeToString())
         ```
     """
 
     async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-        """Handle a gRPC request.
+        """Handle a unary gRPC request.
+
+        This method is required and handles the basic unary RPC pattern
+        where the client sends a single request and receives a single response.
 
         Args:
             request: The gRPC request containing service name, method name,
@@ -84,6 +122,121 @@ class GrpcHandler(Protocol):
         Raises:
             Exception: Any exception raised will be converted to a gRPC
                       INTERNAL error status.
+        """
+        ...
+
+    async def handle_server_stream(
+        self, request: GrpcRequest
+    ) -> AsyncGenerator[GrpcResponse, None]:
+        """Handle a server-streaming gRPC request.
+
+        This method is optional and handles the server-streaming RPC pattern
+        where the client sends a single request and receives a stream of responses.
+
+        The handler should yield GrpcResponse objects for each item in the stream.
+        The stream terminates when this async generator completes.
+
+        Args:
+            request: The gRPC request containing service name, method name,
+                    serialized protobuf payload, and metadata.
+
+        Yields:
+            GrpcResponse objects, one for each item in the response stream.
+
+        Raises:
+            Exception: Any exception raised will be converted to a gRPC
+                      INTERNAL error status, and the stream will terminate.
+
+        Example:
+            ```python
+            async def handle_server_stream(self, request):
+                req = my_pb2.ListRequest()
+                req.ParseFromString(request.payload)
+
+                for item in database.query(req.filter):
+                    response = my_pb2.Item(data=item)
+                    yield GrpcResponse(payload=response.SerializeToString())
+            ```
+        """
+        ...
+
+    async def handle_client_stream(
+        self, request_stream: AsyncIterator[GrpcRequest]
+    ) -> GrpcResponse:
+        """Handle a client-streaming gRPC request.
+
+        This method is optional and handles the client-streaming RPC pattern
+        where the client sends a stream of requests and the server sends a
+        single response after consuming the entire stream.
+
+        The handler receives an async iterator of GrpcRequest objects representing
+        the client's request stream. It should consume the stream and return a
+        single GrpcResponse.
+
+        Args:
+            request_stream: An async iterator yielding GrpcRequest objects from
+                           the client.
+
+        Returns:
+            GrpcResponse containing the serialized protobuf response and
+            optional metadata.
+
+        Raises:
+            Exception: Any exception raised will be converted to a gRPC
+                      INTERNAL error status.
+
+        Example:
+            ```python
+            async def handle_client_stream(self, request_stream):
+                items = []
+                async for request in request_stream:
+                    item = my_pb2.DataItem()
+                    item.ParseFromString(request.payload)
+                    items.append(item)
+
+                result = aggregate(items)
+                response = my_pb2.AggregateResult(sum=result)
+                return GrpcResponse(payload=response.SerializeToString())
+            ```
+        """
+        ...
+
+    async def handle_bidi_stream(
+        self, request_stream: AsyncIterator[GrpcRequest]
+    ) -> AsyncGenerator[GrpcResponse, None]:
+        """Handle a bidirectional-streaming gRPC request.
+
+        This method is optional and handles the bidirectional-streaming RPC
+        pattern where both client and server stream data concurrently. The
+        server reads from the request stream and yields responses as they
+        are ready.
+
+        The handler receives an async iterator of GrpcRequest objects and
+        should yield GrpcResponse objects. Both can occur concurrently as
+        per the gRPC streaming protocol.
+
+        Args:
+            request_stream: An async iterator yielding GrpcRequest objects from
+                           the client.
+
+        Yields:
+            GrpcResponse objects representing the server's response stream.
+
+        Raises:
+            Exception: Any exception raised will be converted to a gRPC
+                      INTERNAL error status, and the stream will terminate.
+
+        Example:
+            ```python
+            async def handle_bidi_stream(self, request_stream):
+                async for request in request_stream:
+                    msg = my_pb2.Message()
+                    msg.ParseFromString(request.payload)
+
+                    response = await process_message(msg)
+                    response_pb = my_pb2.MessageResponse(reply=response)
+                    yield GrpcResponse(payload=response_pb.SerializeToString())
+            ```
         """
         ...
 

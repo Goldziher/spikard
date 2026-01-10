@@ -1,0 +1,72 @@
+{
+	"name": "Client streaming - 10 messages sum",
+	"description": "Tests client streaming RPC where client sends 10 integer values. Server sums all values and returns result.",
+	"category": "client_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "NumberInput",
+				"fields": [
+					{ "name": "sequence_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "number", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "index", "type": "int32", "number": 3, "label": "required" }
+				]
+			},
+			{
+				"name": "SumResponse",
+				"fields": [
+					{ "name": "sequence_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "count", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "sum", "type": "int64", "number": 3, "label": "required" },
+					{ "name": "status", "type": "string", "number": 4, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "MathService",
+				"methods": [
+					{
+						"name": "SumNumbers",
+						"input_type": "NumberInput",
+						"output_type": "SumResponse",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.MathService",
+		"method": "SumNumbers"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{ "sequence_id": "seq-001", "number": 10, "index": 0 },
+			{ "sequence_id": "seq-001", "number": 20, "index": 1 },
+			{ "sequence_id": "seq-001", "number": 30, "index": 2 },
+			{ "sequence_id": "seq-001", "number": 40, "index": 3 },
+			{ "sequence_id": "seq-001", "number": 50, "index": 4 },
+			{ "sequence_id": "seq-001", "number": 60, "index": 5 },
+			{ "sequence_id": "seq-001", "number": 70, "index": 6 },
+			{ "sequence_id": "seq-001", "number": 80, "index": 7 },
+			{ "sequence_id": "seq-001", "number": 90, "index": 8 },
+			{ "sequence_id": "seq-001", "number": 100, "index": 9 }
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"sequence_id": "seq-001",
+			"count": 10,
+			"sum": 550,
+			"status": "COMPLETE"
+		}
+	},
+	"tags": ["client_streaming", "multiple_messages", "computation", "sum"]
+}

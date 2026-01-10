@@ -112,9 +112,14 @@ def extract_service_method(
     Returns:
         Tuple of (service_name, method_name, method_definition)
     """
+    # Use handler.service for fully qualified service name (e.g., "example.v1.StreamService")
+    # This matches the key format used in the server's fixture map
+    handler = fixture["handler"]
+    service_name = handler["service"]
+
+    # Get method definition from protobuf for streaming mode validation
     protobuf = fixture["protobuf"]
     service = protobuf["services"][0]
-    service_name = service["name"]
 
     # Find method matching streaming mode
     methods = service["methods"]

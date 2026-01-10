@@ -1,0 +1,53 @@
+{
+	"name": "Bidirectional streaming - transform to uppercase",
+	"description": "Tests bidirectional streaming RPC where server transforms incoming messages to uppercase.",
+	"category": "bidirectional_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "TextMessage",
+				"fields": [
+					{ "name": "content", "type": "string", "number": 1, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "TransformService",
+				"methods": [
+					{
+						"name": "Transform",
+						"input_type": "TextMessage",
+						"output_type": "TextMessage",
+						"client_streaming": true,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.TransformService",
+		"method": "Transform"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{ "content": "hello" },
+			{ "content": "world" },
+			{ "content": "test" }
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [
+			{ "content": "HELLO" },
+			{ "content": "WORLD" },
+			{ "content": "TEST" }
+		]
+	},
+	"tags": ["bidirectional_streaming", "transform", "uppercase"]
+}

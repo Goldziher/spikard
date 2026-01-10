@@ -1,0 +1,45 @@
+{
+	"name": "Bidirectional streaming - both streams empty",
+	"description": "Tests bidirectional streaming RPC where both request and response streams are empty.",
+	"category": "bidirectional_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "Message",
+				"fields": [
+					{ "name": "data", "type": "string", "number": 1, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "EmptyBothService",
+				"methods": [
+					{
+						"name": "Empty",
+						"input_type": "Message",
+						"output_type": "Message",
+						"client_streaming": true,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.EmptyBothService",
+		"method": "Empty"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": []
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": []
+	},
+	"tags": ["bidirectional_streaming", "empty", "both_streams"]
+}

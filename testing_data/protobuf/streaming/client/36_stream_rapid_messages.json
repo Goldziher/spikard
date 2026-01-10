@@ -1,0 +1,69 @@
+{
+	"name": "Client streaming - rapid high-frequency messages",
+	"description": "Tests client streaming RPC with rapid-fire message delivery. Server handles 50 messages in quick succession and returns aggregated metrics.",
+	"category": "client_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "Event",
+				"fields": [
+					{ "name": "event_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "timestamp", "type": "int64", "number": 2, "label": "required" },
+					{ "name": "metric_value", "type": "float", "number": 3, "label": "required" }
+				]
+			},
+			{
+				"name": "EventMetrics",
+				"fields": [
+					{ "name": "event_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "event_count", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "min_value", "type": "float", "number": 3, "label": "required" },
+					{ "name": "max_value", "type": "float", "number": 4, "label": "required" },
+					{ "name": "avg_value", "type": "float", "number": 5, "label": "required" },
+					{ "name": "throughput_mps", "type": "float", "number": 6, "label": "required" },
+					{ "name": "status", "type": "string", "number": 7, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "MetricsService",
+				"methods": [
+					{
+						"name": "ProcessEvents",
+						"input_type": "Event",
+						"output_type": "EventMetrics",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.MetricsService",
+		"method": "ProcessEvents"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream_note": "50 rapid-fire events with timestamps in 100ms window",
+		"stream_size": 50,
+		"stream_generator": "Rapid: timestamp=[base..base+100ms], metric_value=[0.1..5.0]"
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"event_id": "rapid-batch-001",
+			"event_count": 50,
+			"min_value": 0.1,
+			"max_value": 5.0,
+			"avg_value": 2.55,
+			"throughput_mps": 500.0,
+			"status": "PROCESSED"
+		}
+	},
+	"tags": ["client_streaming", "high_frequency", "performance", "metrics"]
+}

@@ -1,0 +1,90 @@
+{
+	"name": "Client streaming - metadata preserved in response",
+	"description": "Tests client streaming RPC where request metadata is forwarded to and preserved in the response. Validates metadata propagation through streaming pipeline.",
+	"category": "client_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "MetadataCarryingRequest",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "user_id", "type": "string", "number": 2, "label": "required" },
+					{ "name": "payload", "type": "string", "number": 3, "label": "required" }
+				]
+			},
+			{
+				"name": "MetadataResponse",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "processed_by", "type": "string", "number": 2, "label": "required" },
+					{ "name": "received_user_id", "type": "string", "number": 3, "label": "required" },
+					{ "name": "message_count", "type": "int32", "number": 4, "label": "required" },
+					{ "name": "trace_id", "type": "string", "number": 5, "label": "optional" },
+					{ "name": "status", "type": "string", "number": 6, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "MetadataService",
+				"methods": [
+					{
+						"name": "ProcessWithMetadata",
+						"input_type": "MetadataCarryingRequest",
+						"output_type": "MetadataResponse",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.MetadataService",
+		"method": "ProcessWithMetadata"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"authorization": "Bearer token-xyz123",
+			"x-trace-id": "trace-abc456",
+			"x-user-id": "user-789",
+			"custom-header": "custom-value"
+		},
+		"stream": [
+			{
+				"request_id": "req-meta-001",
+				"user_id": "user-789",
+				"payload": "First message with metadata"
+			},
+			{
+				"request_id": "req-meta-001",
+				"user_id": "user-789",
+				"payload": "Second message with metadata"
+			},
+			{
+				"request_id": "req-meta-001",
+				"user_id": "user-789",
+				"payload": "Third message with metadata"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"request_id": "req-meta-001",
+			"processed_by": "grpc-handler-1",
+			"received_user_id": "user-789",
+			"message_count": 3,
+			"trace_id": "trace-abc456",
+			"status": "COMPLETE_WITH_METADATA"
+		},
+		"metadata": {
+			"x-trace-id": "trace-abc456",
+			"x-processed-by": "grpc-handler-1",
+			"content-type": "application/grpc"
+		}
+	},
+	"tags": ["client_streaming", "metadata", "request_headers", "context_propagation"]
+}

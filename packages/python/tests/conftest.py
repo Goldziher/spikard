@@ -456,13 +456,11 @@ def fixture_validator(testing_data_root: Path) -> FixtureValidator:
 @pytest.fixture(scope="session")
 def grpc_server():
     """
-    Start minimal test gRPC server with simple echo/aggregation handlers.
+    Start fixture-driven test gRPC server.
 
-    Implements a gRPC server on localhost:50051 supporting all four streaming modes:
-    - Unary: Echo request back as response
-    - Server streaming: Echo single request back as stream
-    - Client streaming: Aggregate stream of messages into single response
-    - Bidirectional streaming: Echo back each received message
+    Implements a gRPC server on localhost:50051 supporting all four streaming modes.
+    The server loads fixture data and returns expected responses based on the
+    service/method being called, enabling real fixture-driven testing.
 
     The server uses JSON-encoded messages compatible with the GrpcTestClient.
 
@@ -478,25 +476,91 @@ def grpc_server():
     import asyncio
     import threading
 
-    class MinimalTestServicer:
-        """Minimal test service supporting all four streaming modes."""
+    # Load all fixtures into memory
+    fixture_map: dict[str, dict[str, object]] = {}
+    fixtures_by_category = discover_protobuf_fixtures()
+    for subcategory, paths in fixtures_by_category.items():
+        for fixture_path in paths:
+            fixture_data = load_fixture(fixture_path)
+            # Extract handler info
+            handler_info = fixture_data.get("handler", {})
+            if isinstance(handler_info, dict):
+                service = handler_info.get("service")
+                method = handler_info.get("method")
+                if service and method:
+                    key = f"{service}/{method}"
+                    fixture_map[key] = fixture_data
 
-        async def handle_unary(self, request: dict, context) -> dict:
-            """Unary RPC: echo request back."""
+    class FixtureDrivenServicer:
+        """Fixture-driven test service supporting all four streaming modes."""
+
+        def __init__(self, fixtures: dict[str, dict[str, object]]):
+            self.fixtures = fixtures
+
+        def get_fixture_for_method(self, method_path: str) -> dict[str, object] | None:
+            """
+            Look up fixture data for a given method path.
+
+            Args:
+                method_path: Full method path like "/example.v1.StreamService/GetSingleMessage"
+
+            Returns:
+                Fixture data or None if not found
+            """
+            # Extract service and method from path: /package.Service/Method
+            parts = method_path.strip("/").split("/")
+            if len(parts) == 2:
+                service_method = parts[0]  # e.g., "example.v1.StreamService"
+                method_name = parts[1]  # e.g., "GetSingleMessage"
+                key = f"{service_method}/{method_name}"
+                return self.fixtures.get(key)
+            return None
+
+        async def handle_unary(self, request: dict, context, method_path: str) -> dict:
+            """Unary RPC: return expected response from fixture."""
+            fixture = self.get_fixture_for_method(method_path)
+            if fixture:
+                expected = fixture.get("expected_response", {})
+                if isinstance(expected, dict):
+                    message = expected.get("message")
+                    if isinstance(message, dict):
+                        return message
+            # Fallback: echo request
             return request
 
-        async def handle_server_stream(self, request: dict, context):
-            """Server streaming RPC: return empty stream by default."""
-            # Return empty stream - tests will drive what actually comes back
+        async def handle_server_stream(self, request: dict, context, method_path: str):
+            """Server streaming RPC: yield messages from fixture."""
+            fixture = self.get_fixture_for_method(method_path)
+            if fixture:
+                expected = fixture.get("expected_response", {})
+                if isinstance(expected, dict):
+                    stream = expected.get("stream")
+                    if isinstance(stream, list):
+                        for message in stream:
+                            if isinstance(message, dict):
+                                yield message
+                        return
+            # Fallback: empty stream
             return
             yield  # unreachable, but needed for async generator syntax
 
-        async def handle_client_stream(self, request_iterator, context) -> dict:
-            """Client streaming RPC: aggregate stream into single response."""
+        async def handle_client_stream(self, request_iterator, context, method_path: str) -> dict:
+            """Client streaming RPC: aggregate messages and return fixture response."""
+            # Consume the stream
             messages = []
             async for msg in request_iterator:
                 messages.append(msg)
 
+            # Return fixture response
+            fixture = self.get_fixture_for_method(method_path)
+            if fixture:
+                expected = fixture.get("expected_response", {})
+                if isinstance(expected, dict):
+                    message = expected.get("message")
+                    if isinstance(message, dict):
+                        return message
+
+            # Fallback: aggregation summary
             if messages:
                 return {
                     "message_count": len(messages),
@@ -505,27 +569,29 @@ def grpc_server():
                 }
             return {"message_count": 0}
 
-        async def handle_bidi_stream(self, request_iterator, context):
-            """Bidirectional streaming RPC: echo each message."""
-            async for msg in request_iterator:
-                yield msg
+        async def handle_bidi_stream(self, request_iterator, context, method_path: str):
+            """Bidirectional streaming RPC: yield fixture responses."""
+            fixture = self.get_fixture_for_method(method_path)
+            expected_messages = []
+
+            if fixture:
+                expected = fixture.get("expected_response", {})
+                if isinstance(expected, dict):
+                    stream = expected.get("stream")
+                    if isinstance(stream, list):
+                        expected_messages = [msg for msg in stream if isinstance(msg, dict)]
+
+            # If we have expected messages, yield them
+            if expected_messages:
+                for message in expected_messages:
+                    yield message
+            else:
+                # Fallback: echo each message
+                async for msg in request_iterator:
+                    yield msg
 
     # Create handler functions
-    servicer = MinimalTestServicer()
-
-    async def unary_handler(request: dict, context) -> dict:
-        return await servicer.handle_unary(request, context)
-
-    async def server_stream_handler(request: dict, context):
-        async for msg in servicer.handle_server_stream(request, context):
-            yield msg
-
-    async def client_stream_handler(request_iterator, context) -> dict:
-        return await servicer.handle_client_stream(request_iterator, context)
-
-    async def bidi_stream_handler(request_iterator, context):
-        async for msg in servicer.handle_bidi_stream(request_iterator, context):
-            yield msg
+    servicer = FixtureDrivenServicer(fixture_map)
 
     def deserialize(data: bytes) -> dict:
         return json.loads(data.decode("utf-8"))
@@ -553,17 +619,17 @@ def grpc_server():
 
             # Create adaptive handlers for this specific method
             async def adaptive_unary_handler(request: dict, context):
-                return await servicer.handle_unary(request, context)
+                return await servicer.handle_unary(request, context, method)
 
             async def adaptive_server_stream_handler(request: dict, context):
-                async for msg in servicer.handle_server_stream(request, context):
+                async for msg in servicer.handle_server_stream(request, context, method):
                     yield msg
 
             async def adaptive_client_stream_handler(request_iterator, context):
-                return await servicer.handle_client_stream(request_iterator, context)
+                return await servicer.handle_client_stream(request_iterator, context, method)
 
             async def adaptive_bidi_stream_handler(request_iterator, context):
-                async for msg in servicer.handle_bidi_stream(request_iterator, context):
+                async for msg in servicer.handle_bidi_stream(request_iterator, context, method):
                     yield msg
 
             # Create handlers for all possible streaming modes
@@ -592,7 +658,33 @@ def grpc_server():
                 ),
             }
 
-            # Try to infer streaming mode from method name
+            # Try to determine streaming mode from fixture data first
+            fixture = servicer.get_fixture_for_method(method)
+            if fixture:
+                # Check protobuf service definition
+                protobuf = fixture.get("protobuf", {})
+                if isinstance(protobuf, dict):
+                    services = protobuf.get("services", [])
+                    if isinstance(services, list) and services:
+                        service = services[0]
+                        if isinstance(service, dict):
+                            methods = service.get("methods", [])
+                            if isinstance(methods, list):
+                                for method_def in methods:
+                                    if isinstance(method_def, dict):
+                                        client_streaming = method_def.get("client_streaming", False)
+                                        server_streaming = method_def.get("server_streaming", False)
+
+                                        if client_streaming and server_streaming:
+                                            return handlers["bidi"]
+                                        elif client_streaming:
+                                            return handlers["client_stream"]
+                                        elif server_streaming:
+                                            return handlers["server_stream"]
+                                        else:
+                                            return handlers["unary"]
+
+            # Fallback: infer from method name
             method_lower = method_name.lower()
             if "stream" in method_lower:
                 if "client" in method_lower or "upload" in method_lower or "send" in method_lower:

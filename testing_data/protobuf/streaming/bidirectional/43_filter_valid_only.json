@@ -1,0 +1,53 @@
+{
+	"name": "Bidirectional streaming - filter valid messages",
+	"description": "Tests bidirectional streaming RPC where server filters out invalid messages during streaming.",
+	"category": "bidirectional_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "DataPoint",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "value", "type": "int32", "number": 2, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "FilterService",
+				"methods": [
+					{
+						"name": "FilterValid",
+						"input_type": "DataPoint",
+						"output_type": "DataPoint",
+						"client_streaming": true,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.FilterService",
+		"method": "FilterValid"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{ "id": "point-1", "value": 10 },
+			{ "id": "point-2", "value": -5 },
+			{ "id": "point-3", "value": 25 }
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [
+			{ "id": "point-1", "value": 10 },
+			{ "id": "point-3", "value": 25 }
+		]
+	},
+	"tags": ["bidirectional_streaming", "filter", "validation"]
+}

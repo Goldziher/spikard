@@ -1,0 +1,57 @@
+{
+	"name": "Bidirectional streaming - error mid-stream",
+	"description": "Tests bidirectional streaming RPC where server returns error after processing some messages.",
+	"category": "bidirectional_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "Request",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "Response",
+				"fields": [
+					{ "name": "id", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "status", "type": "string", "number": 2, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ErrorService",
+				"methods": [
+					{
+						"name": "ProcessWithError",
+						"input_type": "Request",
+						"output_type": "Response",
+						"client_streaming": true,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ErrorService",
+		"method": "ProcessWithError"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{ "id": 1 },
+			{ "id": 2 },
+			{ "id": 3 },
+			{ "id": 4 }
+		]
+	},
+	"expected_response": {
+		"status_code": "INTERNAL",
+		"message": "Error after processing 2 messages"
+	},
+	"tags": ["bidirectional_streaming", "error", "mid_stream"]
+}

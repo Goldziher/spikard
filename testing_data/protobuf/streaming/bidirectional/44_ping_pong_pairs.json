@@ -1,0 +1,60 @@
+{
+	"name": "Bidirectional streaming - ping/pong pairs",
+	"description": "Tests bidirectional streaming RPC with request-response pairs (ping-pong pattern).",
+	"category": "bidirectional_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "Ping",
+				"fields": [
+					{ "name": "sequence", "type": "int32", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "Pong",
+				"fields": [
+					{ "name": "sequence", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "response", "type": "string", "number": 2, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "PingService",
+				"methods": [
+					{
+						"name": "PingPong",
+						"input_type": "Ping",
+						"output_type": "Pong",
+						"client_streaming": true,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.PingService",
+		"method": "PingPong"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{ "sequence": 1 },
+			{ "sequence": 2 },
+			{ "sequence": 3 }
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [
+			{ "sequence": 1, "response": "pong" },
+			{ "sequence": 2, "response": "pong" },
+			{ "sequence": 3, "response": "pong" }
+		]
+	},
+	"tags": ["bidirectional_streaming", "ping_pong", "request_response"]
+}

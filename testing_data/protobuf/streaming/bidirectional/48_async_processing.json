@@ -1,0 +1,61 @@
+{
+	"name": "Bidirectional streaming - async processing with delays",
+	"description": "Tests bidirectional streaming RPC with asynchronous message processing.",
+	"category": "bidirectional_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "Task",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "name", "type": "string", "number": 2, "label": "required" }
+				]
+			},
+			{
+				"name": "Result",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "status", "type": "string", "number": 2, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "AsyncService",
+				"methods": [
+					{
+						"name": "ProcessAsync",
+						"input_type": "Task",
+						"output_type": "Result",
+						"client_streaming": true,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.AsyncService",
+		"method": "ProcessAsync"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{ "id": "task-1", "name": "process_1" },
+			{ "id": "task-2", "name": "process_2" },
+			{ "id": "task-3", "name": "process_3" }
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [
+			{ "id": "task-1", "status": "processed" },
+			{ "id": "task-2", "status": "processed" },
+			{ "id": "task-3", "status": "processed" }
+		]
+	},
+	"tags": ["bidirectional_streaming", "async", "processing"]
+}

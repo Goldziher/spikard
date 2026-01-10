@@ -1,0 +1,67 @@
+{
+	"name": "Client streaming - single message aggregation",
+	"description": "Tests client streaming RPC where client sends a single message. Server acknowledges and returns aggregated result.",
+	"category": "client_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "DataPoint",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "value", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "timestamp", "type": "int64", "number": 3, "label": "optional" }
+				]
+			},
+			{
+				"name": "AggregateResponse",
+				"fields": [
+					{ "name": "count", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "total", "type": "int64", "number": 2, "label": "required" },
+					{ "name": "average", "type": "double", "number": 3, "label": "required" },
+					{ "name": "status", "type": "string", "number": 4, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "AggregateService",
+				"methods": [
+					{
+						"name": "AggregateData",
+						"input_type": "DataPoint",
+						"output_type": "AggregateResponse",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.AggregateService",
+		"method": "AggregateData"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{
+				"id": "point-001",
+				"value": 42,
+				"timestamp": 1672531200
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"count": 1,
+			"total": 42,
+			"average": 42.0,
+			"status": "AGGREGATED"
+		}
+	},
+	"tags": ["client_streaming", "single_message", "aggregation"]
+}

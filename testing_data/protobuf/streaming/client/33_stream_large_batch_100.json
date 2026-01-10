@@ -1,0 +1,65 @@
+{
+	"name": "Client streaming - large batch 100 messages",
+	"description": "Tests client streaming RPC with 100 messages in the stream. Validates performance with large batch aggregation.",
+	"category": "client_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "BatchItem",
+				"fields": [
+					{ "name": "batch_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "item_number", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "value", "type": "int32", "number": 3, "label": "required" }
+				]
+			},
+			{
+				"name": "BatchSummary",
+				"fields": [
+					{ "name": "batch_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "total_items", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "total_value", "type": "int64", "number": 3, "label": "required" },
+					{ "name": "average_value", "type": "double", "number": 4, "label": "required" },
+					{ "name": "status", "type": "string", "number": 5, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "BatchService",
+				"methods": [
+					{
+						"name": "ProcessBatch",
+						"input_type": "BatchItem",
+						"output_type": "BatchSummary",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.BatchService",
+		"method": "ProcessBatch"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream_note": "100 messages with sequential item numbers 0-99, values 1-100",
+		"stream_size": 100,
+		"stream_generator": "Sequential: item_number=[0..99], value=[1..100]"
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"batch_id": "batch-large-001",
+			"total_items": 100,
+			"total_value": 5050,
+			"average_value": 50.5,
+			"status": "PROCESSED"
+		}
+	},
+	"tags": ["client_streaming", "large_batch", "performance", "aggregation"]
+}

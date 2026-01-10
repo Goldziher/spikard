@@ -1,0 +1,61 @@
+{
+	"name": "Client streaming - empty stream returns default",
+	"description": "Tests client streaming RPC where client sends no messages (empty stream). Server gracefully handles empty input and returns default response.",
+	"category": "client_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "OptionalInput",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "optional" },
+					{ "name": "data", "type": "string", "number": 2, "label": "optional" }
+				]
+			},
+			{
+				"name": "DefaultResponse",
+				"fields": [
+					{ "name": "request_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "message_count", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "result", "type": "string", "number": 3, "label": "required" },
+					{ "name": "is_default", "type": "bool", "number": 4, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "OptionalService",
+				"methods": [
+					{
+						"name": "ProcessOptional",
+						"input_type": "OptionalInput",
+						"output_type": "DefaultResponse",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.OptionalService",
+		"method": "ProcessOptional"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [],
+		"stream_note": "Empty stream - no messages sent"
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"request_id": "empty-stream-req",
+			"message_count": 0,
+			"result": "DEFAULT_RESULT",
+			"is_default": true
+		}
+	},
+	"tags": ["client_streaming", "empty_stream", "default_handling", "edge_cases"]
+}

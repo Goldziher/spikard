@@ -1,0 +1,55 @@
+{
+	"name": "Bidirectional streaming - chat conversation",
+	"description": "Tests bidirectional streaming RPC simulating a chat-like service with alternating messages.",
+	"category": "bidirectional_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "ChatMessage",
+				"fields": [
+					{ "name": "user", "type": "string", "number": 1, "label": "required" },
+					{ "name": "message", "type": "string", "number": 2, "label": "required" },
+					{ "name": "timestamp", "type": "int64", "number": 3, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ChatService",
+				"methods": [
+					{
+						"name": "Chat",
+						"input_type": "ChatMessage",
+						"output_type": "ChatMessage",
+						"client_streaming": true,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ChatService",
+		"method": "Chat"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{ "user": "alice", "message": "Hello Bob", "timestamp": 1000 },
+			{ "user": "alice", "message": "How are you?", "timestamp": 1001 },
+			{ "user": "alice", "message": "I'm doing great!", "timestamp": 1002 }
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream": [
+			{ "user": "alice", "message": "Hello Bob", "timestamp": 1000 },
+			{ "user": "alice", "message": "How are you?", "timestamp": 1001 },
+			{ "user": "alice", "message": "I'm doing great!", "timestamp": 1002 }
+		]
+	},
+	"tags": ["bidirectional_streaming", "chat", "conversation"]
+}

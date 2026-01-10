@@ -1,0 +1,75 @@
+{
+	"name": "Client streaming - validation failure mid-stream",
+	"description": "Tests client streaming RPC where a message fails validation in the middle of the stream. Server rejects the stream and returns error.",
+	"category": "client_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "ValidatedInput",
+				"fields": [
+					{ "name": "id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "email", "type": "string", "number": 2, "label": "required" },
+					{ "name": "age", "type": "int32", "number": 3, "label": "required" }
+				]
+			},
+			{
+				"name": "ValidationResponse",
+				"fields": [
+					{ "name": "processed", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "status", "type": "string", "number": 2, "label": "required" },
+					{ "name": "error_message", "type": "string", "number": 3, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ValidationService",
+				"methods": [
+					{
+						"name": "ValidateUsers",
+						"input_type": "ValidatedInput",
+						"output_type": "ValidationResponse",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ValidationService",
+		"method": "ValidateUsers"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{
+				"id": "user-001",
+				"email": "user1@example.com",
+				"age": 25
+			},
+			{
+				"id": "user-002",
+				"email": "user2@example.com",
+				"age": 30
+			},
+			{
+				"id": "user-003",
+				"email": "invalid-email",
+				"age": 35
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": "INVALID_ARGUMENT",
+		"message": {
+			"processed": 2,
+			"status": "VALIDATION_FAILED",
+			"error_message": "Invalid email format at message index 2: invalid-email"
+		}
+	},
+	"tags": ["client_streaming", "validation", "error_handling", "mid_stream"]
+}

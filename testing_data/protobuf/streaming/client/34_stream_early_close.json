@@ -1,0 +1,78 @@
+{
+	"name": "Client streaming - early stream close",
+	"description": "Tests client streaming RPC where client closes stream after sending 3 messages instead of the expected 5. Server should gracefully handle partial stream.",
+	"category": "client_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "ChunkData",
+				"fields": [
+					{ "name": "session_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "sequence", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "data", "type": "string", "number": 3, "label": "required" }
+				]
+			},
+			{
+				"name": "ChunkAcknowledgment",
+				"fields": [
+					{ "name": "session_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "received_chunks", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "expected_chunks", "type": "int32", "number": 3, "label": "optional" },
+					{ "name": "status", "type": "string", "number": 4, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "StreamService",
+				"methods": [
+					{
+						"name": "SendChunks",
+						"input_type": "ChunkData",
+						"output_type": "ChunkAcknowledgment",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.StreamService",
+		"method": "SendChunks"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{
+				"session_id": "sess-early-001",
+				"sequence": 0,
+				"data": "First chunk"
+			},
+			{
+				"session_id": "sess-early-001",
+				"sequence": 1,
+				"data": "Second chunk"
+			},
+			{
+				"session_id": "sess-early-001",
+				"sequence": 2,
+				"data": "Third chunk"
+			}
+		],
+		"stream_note": "Client closes stream after 3 messages; expected were 5"
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"session_id": "sess-early-001",
+			"received_chunks": 3,
+			"expected_chunks": 5,
+			"status": "INCOMPLETE"
+		}
+	},
+	"tags": ["client_streaming", "early_close", "partial_stream", "edge_cases"]
+}

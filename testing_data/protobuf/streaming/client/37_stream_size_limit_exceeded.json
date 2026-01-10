@@ -1,0 +1,74 @@
+{
+	"name": "Client streaming - message size limit exceeded",
+	"description": "Tests client streaming RPC where one message exceeds the max_message_size limit. Server rejects the oversized message and terminates the stream.",
+	"category": "client_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "PayloadMessage",
+				"fields": [
+					{ "name": "message_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "payload", "type": "bytes", "number": 2, "label": "required" },
+					{ "name": "size_bytes", "type": "int32", "number": 3, "label": "required" }
+				]
+			},
+			{
+				"name": "ProcessingStatus",
+				"fields": [
+					{ "name": "message_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "processed_count", "type": "int32", "number": 2, "label": "required" },
+					{ "name": "status", "type": "string", "number": 3, "label": "required" },
+					{ "name": "error_detail", "type": "string", "number": 4, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "PayloadService",
+				"methods": [
+					{
+						"name": "ProcessPayloads",
+						"input_type": "PayloadMessage",
+						"output_type": "ProcessingStatus",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.PayloadService",
+		"method": "ProcessPayloads"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc",
+			"grpc-max-message-size": "4096"
+		},
+		"stream": [
+			{
+				"message_id": "payload-001",
+				"payload": "SmFzdCBub3JtYWwgc2l6ZWQgbWVzc2FnZQ==",
+				"size_bytes": 32
+			},
+			{
+				"message_id": "payload-002",
+				"payload": "T3ZlcnNpemVkIHBheWxvYWQgd2l0aCBzaXplIDEwMjQwIGJ5dGVzIC1yZXBlYXRlZCBjb250ZW50IHRvIGV4Y2VlZCBsaW1pdA==",
+				"size_bytes": 10240,
+				"note": "This message exceeds max_message_size of 4096 bytes"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": "RESOURCE_EXHAUSTED",
+		"message": {
+			"message_id": "payload-002",
+			"processed_count": 1,
+			"status": "FAILED",
+			"error_detail": "Message payload size 10240 exceeds maximum allowed size 4096"
+		}
+	},
+	"tags": ["client_streaming", "size_limit", "resource_exhausted", "error_handling"]
+}

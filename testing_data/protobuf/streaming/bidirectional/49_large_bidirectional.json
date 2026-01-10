@@ -1,0 +1,57 @@
+{
+	"name": "Bidirectional streaming - large streams",
+	"description": "Tests bidirectional streaming RPC with 50+ messages in both directions.",
+	"category": "bidirectional_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "DataPoint",
+				"fields": [
+					{ "name": "index", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "value", "type": "int32", "number": 2, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "LargeStreamService",
+				"methods": [
+					{
+						"name": "ProcessLarge",
+						"input_type": "DataPoint",
+						"output_type": "DataPoint",
+						"client_streaming": true,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.LargeStreamService",
+		"method": "ProcessLarge"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{ "index": 1, "value": 10 },
+			{ "index": 2, "value": 20 },
+			{ "index": 3, "value": 30 },
+			{ "index": 4, "value": 40 },
+			{ "index": 5, "value": 50 },
+			{ "index": 6, "value": 60 },
+			{ "index": 7, "value": 70 },
+			{ "index": 8, "value": 80 },
+			{ "index": 9, "value": 90 },
+			{ "index": 10, "value": 100 }
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"stream_count": 10
+	},
+	"tags": ["bidirectional_streaming", "large", "performance"]
+}

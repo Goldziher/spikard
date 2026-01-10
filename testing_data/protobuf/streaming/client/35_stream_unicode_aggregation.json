@@ -1,0 +1,84 @@
+{
+	"name": "Client streaming - Unicode string aggregation",
+	"description": "Tests client streaming RPC with Unicode strings that are concatenated. Validates proper UTF-8 handling across multiple messages.",
+	"category": "client_streaming",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "StringFragment",
+				"fields": [
+					{ "name": "fragment_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "text", "type": "string", "number": 2, "label": "required" },
+					{ "name": "language", "type": "string", "number": 3, "label": "optional" }
+				]
+			},
+			{
+				"name": "ConcatenatedString",
+				"fields": [
+					{ "name": "fragment_id", "type": "string", "number": 1, "label": "required" },
+					{ "name": "result", "type": "string", "number": 2, "label": "required" },
+					{ "name": "fragment_count", "type": "int32", "number": 3, "label": "required" },
+					{ "name": "total_length", "type": "int32", "number": 4, "label": "required" },
+					{ "name": "status", "type": "string", "number": 5, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "TextService",
+				"methods": [
+					{
+						"name": "ConcatenateStrings",
+						"input_type": "StringFragment",
+						"output_type": "ConcatenatedString",
+						"client_streaming": true,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.TextService",
+		"method": "ConcatenateStrings"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"stream": [
+			{
+				"fragment_id": "unicode-001",
+				"text": "Hello, ",
+				"language": "en"
+			},
+			{
+				"fragment_id": "unicode-001",
+				"text": "世界",
+				"language": "zh"
+			},
+			{
+				"fragment_id": "unicode-001",
+				"text": "! Привет ",
+				"language": "ru"
+			},
+			{
+				"fragment_id": "unicode-001",
+				"text": "🌍",
+				"language": "emoji"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": "OK",
+		"message": {
+			"fragment_id": "unicode-001",
+			"result": "Hello, 世界! Привет 🌍",
+			"fragment_count": 4,
+			"total_length": 26,
+			"status": "CONCATENATED"
+		}
+	},
+	"tags": ["client_streaming", "unicode", "utf8", "internationalization"]
+}
