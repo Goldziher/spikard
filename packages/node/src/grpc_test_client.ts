@@ -35,6 +35,7 @@
 export class GrpcTestClient {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private channel: any = null;
+	private serverAddress: string;
 
 	/**
 	 * Initialize gRPC test client.
@@ -42,8 +43,34 @@ export class GrpcTestClient {
 	 * @param serverAddress - Server address in format "host:port"
 	 */
 	constructor(serverAddress: string = "localhost:50051") {
-		// Store address for potential future use (e.g., reconnection)
-		void serverAddress;
+		this.serverAddress = serverAddress;
+		this.initializeChannel();
+	}
+
+	/**
+	 * Initialize the gRPC channel using @grpc/grpc-js.
+	 *
+	 * This is called automatically in the constructor.
+	 * The channel is created with insecure credentials for test purposes.
+	 */
+	private initializeChannel(): void {
+		try {
+			// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+			const grpc = require("@grpc/grpc-js");
+
+			// Create insecure channel for testing
+			this.channel = new grpc.Channel(
+				this.serverAddress,
+				grpc.ChannelCredentials.createInsecure(),
+			);
+		} catch (error) {
+			// If grpc-js is not available or channel creation fails,
+			// the channel will be null and API calls will fail with proper error
+			console.error(
+				`Failed to initialize gRPC channel to ${this.serverAddress}:`,
+				error instanceof Error ? error.message : String(error),
+			);
+		}
 	}
 
 	/**
@@ -78,7 +105,9 @@ export class GrpcTestClient {
 		timeout?: number,
 	): Promise<Record<string, unknown>> {
 		if (!this.channel) {
-			throw new Error("Channel not initialized. Call connect() first.");
+			throw new Error(
+				`Channel not initialized. Cannot connect to ${this.serverAddress}. Is the gRPC server running?`,
+			);
 		}
 
 		const method = `/${serviceName}/${methodName}`;
@@ -130,7 +159,9 @@ export class GrpcTestClient {
 		timeout?: number,
 	): Promise<Array<Record<string, unknown>>> {
 		if (!this.channel) {
-			throw new Error("Channel not initialized. Call connect() first.");
+			throw new Error(
+				`Channel not initialized. Cannot connect to ${this.serverAddress}. Is the gRPC server running?`,
+			);
 		}
 
 		const method = `/${serviceName}/${methodName}`;
@@ -188,7 +219,9 @@ export class GrpcTestClient {
 		timeout?: number,
 	): Promise<Record<string, unknown>> {
 		if (!this.channel) {
-			throw new Error("Channel not initialized. Call connect() first.");
+			throw new Error(
+				`Channel not initialized. Cannot connect to ${this.serverAddress}. Is the gRPC server running?`,
+			);
 		}
 
 		const method = `/${serviceName}/${methodName}`;
@@ -249,7 +282,9 @@ export class GrpcTestClient {
 		timeout?: number,
 	): Promise<Array<Record<string, unknown>>> {
 		if (!this.channel) {
-			throw new Error("Channel not initialized. Call connect() first.");
+			throw new Error(
+				`Channel not initialized. Cannot connect to ${this.serverAddress}. Is the gRPC server running?`,
+			);
 		}
 
 		const method = `/${serviceName}/${methodName}`;

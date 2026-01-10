@@ -21,10 +21,11 @@ workspace = true
 [features]
 default = ["di"]
 di = ["spikard-core/di"]
+grpc = ["tonic", "spikard-http"]
 
 [dependencies]
 spikard-core = { workspace = true, features = ["di"] }
-spikard-http = { workspace = true }
+spikard-http = { workspace = true, optional = true }
 http.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -45,7 +46,7 @@ bytes = "1.11"
 futures = "0.3"
 futures-util = "0.3"
 async-stream = "0.3"
-tonic = { version = "0.12", features = ["transport"] }
+tonic = { version = "0.12", features = ["transport"], optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

@@ -1711,7 +1711,6 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     let _ = NativeDependencyRegistry::mark as fn(&NativeDependencyRegistry, &Marker);
     let _ = NativeRequest::mark as fn(&NativeRequest, &Marker);
     let _ = RubyHandler::mark as fn(&RubyHandler, &Marker);
-    let _ = grpc::handler::RubyGrpcHandler::mark as fn(&grpc::handler::RubyGrpcHandler, &Marker);
     let _ = mark as fn(&NativeTestClient, &Marker);
 
     Ok(())

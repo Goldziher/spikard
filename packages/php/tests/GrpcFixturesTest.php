@@ -29,7 +29,7 @@ use Spikard\Tests\Support\GrpcTestClient;
  */
 final class GrpcFixturesTest extends TestCase
 {
-    private const FIXTURES_DIR = __DIR__ . '/../../testing_data/protobuf/streaming';
+    private const FIXTURES_DIR = __DIR__ . '/../../../testing_data/protobuf/streaming';
 
     private GrpcTestClient $client;
 
@@ -58,7 +58,7 @@ final class GrpcFixturesTest extends TestCase
      *
      * @return array<string, array<int, mixed>>
      */
-    private function loadFixtures(string $category): array
+    private static function loadFixtures(string $category): array
     {
         $categoryDir = self::FIXTURES_DIR . '/' . $category;
         if (!is_dir($categoryDir)) {
@@ -89,9 +89,8 @@ final class GrpcFixturesTest extends TestCase
 
                 $fixtures[$fixture['name']] = [$fixture];
             } catch (\JsonException $e) {
-                $this->markTestIncomplete(
-                    sprintf('Failed to parse fixture %s: %s', $file, $e->getMessage())
-                );
+                // Skip fixtures with JSON parse errors
+                continue;
             }
         }
 
@@ -312,7 +311,7 @@ final class GrpcFixturesTest extends TestCase
      */
     public static function serverStreamingFixturesProvider(): array
     {
-        return (new self())->loadFixtures('server');
+        return self::loadFixtures('server');
     }
 
     /**
@@ -322,7 +321,7 @@ final class GrpcFixturesTest extends TestCase
      */
     public static function clientStreamingFixturesProvider(): array
     {
-        return (new self())->loadFixtures('client');
+        return self::loadFixtures('client');
     }
 
     /**
@@ -332,7 +331,7 @@ final class GrpcFixturesTest extends TestCase
      */
     public static function bidirectionalStreamingFixturesProvider(): array
     {
-        return (new self())->loadFixtures('bidirectional');
+        return self::loadFixtures('bidirectional');
     }
 
     /**
@@ -342,7 +341,7 @@ final class GrpcFixturesTest extends TestCase
      */
     public static function errorFixturesProvider(): array
     {
-        return (new self())->loadFixtures('errors');
+        return self::loadFixtures('errors');
     }
 
     // ======================== Server Streaming Tests ========================

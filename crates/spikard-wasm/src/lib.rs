@@ -10,6 +10,7 @@
 mod lifecycle;
 mod matching;
 mod types;
+#[cfg(feature = "grpc")]
 pub mod grpc;
 
 use crate::lifecycle::{

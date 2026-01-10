@@ -231,6 +231,64 @@ function validateSingleResponse(response: Record<string, unknown>, expectedRespo
 }
 
 /**
+ * Map gRPC numeric status code to string name.
+ *
+ * @param code - Numeric gRPC status code
+ * @returns String name of the status code (e.g., "INVALID_ARGUMENT")
+ */
+function grpcCodeToName(code: number): string {
+	const codeNames: Record<number, string> = {
+		0: "OK",
+		1: "CANCELLED",
+		2: "UNKNOWN",
+		3: "INVALID_ARGUMENT",
+		4: "DEADLINE_EXCEEDED",
+		5: "NOT_FOUND",
+		6: "ALREADY_EXISTS",
+		7: "PERMISSION_DENIED",
+		8: "RESOURCE_EXHAUSTED",
+		9: "FAILED_PRECONDITION",
+		10: "ABORTED",
+		11: "OUT_OF_RANGE",
+		12: "UNIMPLEMENTED",
+		13: "INTERNAL",
+		14: "UNAVAILABLE",
+		15: "DATA_LOSS",
+		16: "UNAUTHENTICATED",
+	};
+	return codeNames[code] || `UNKNOWN(${code})`;
+}
+
+/**
+ * Map gRPC string status name to numeric code.
+ *
+ * @param codeStr - String gRPC status name (e.g., "INVALID_ARGUMENT")
+ * @returns Numeric gRPC status code or undefined if not found
+ */
+function stringCodeToNumber(codeStr: string): number | undefined {
+	const codeMap: Record<string, number> = {
+		OK: 0,
+		CANCELLED: 1,
+		UNKNOWN: 2,
+		INVALID_ARGUMENT: 3,
+		DEADLINE_EXCEEDED: 4,
+		NOT_FOUND: 5,
+		ALREADY_EXISTS: 6,
+		PERMISSION_DENIED: 7,
+		RESOURCE_EXHAUSTED: 8,
+		FAILED_PRECONDITION: 9,
+		ABORTED: 10,
+		OUT_OF_RANGE: 11,
+		UNIMPLEMENTED: 12,
+		INTERNAL: 13,
+		UNAVAILABLE: 14,
+		DATA_LOSS: 15,
+		UNAUTHENTICATED: 16,
+	};
+	return codeMap[codeStr];
+}
+
+/**
  * Validate gRPC error against expected error.
  *
  * @param error - Captured error from try/catch
@@ -242,14 +300,18 @@ function validateErrorResponse(error: unknown, expectedResponse: Record<string, 
 	const expectedCode = expectedError.code as string | number | undefined;
 	const expectedMessage = expectedError.message as string | undefined;
 
-	// Cast error to check code (gRPC errors have code property)
+	// Cast error to check status (gRPC errors have status property for the numeric code)
 	const grpcError = error as Record<string, unknown>;
 
-	// Validate error code
+	// DEBUG: Log error properties
+	// DEBUG: Log error properties
+
+	// Validate error code - gRPC-js uses .status for the numeric status code
 	if (typeof expectedCode === "string") {
-		expect(grpcError.code).toBe(expectedCode);
+		const actualCodeName = grpcCodeToName(grpcError.status as number);
+		expect(actualCodeName).toBe(expectedCode);
 	} else if (typeof expectedCode === "number") {
-		expect(grpcError.code).toBe(expectedCode);
+		expect(grpcError.status).toBe(expectedCode);
 	}
 
 	// Validate error message if specified

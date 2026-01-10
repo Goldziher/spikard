@@ -497,7 +497,7 @@ fn invoke_php_client_stream_handler(
             tonic::Status::internal(format!(
                     "PHP client stream handler '{}' failed: {:?}",
                     service_name, e
-                ))
+                )
             })
         })?;
 
