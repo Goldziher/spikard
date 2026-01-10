@@ -540,11 +540,50 @@ def grpc_server():
 
         async def handle_server_stream(self, request: dict, context, method_path: str):
             """Server streaming RPC: yield messages from fixture or raise error."""
+            import asyncio
+            import time
+
             fixture = self.get_fixture_for_method(method_path)
             if fixture:
                 expected = fixture.get("expected_response", {})
                 if isinstance(expected, dict):
-                    # Check for error response
+                    # Check if this fixture has timeout behavior
+                    handler_config = fixture.get("handler", {})
+                    timeout_ms = handler_config.get("timeout_ms") if isinstance(handler_config, dict) else None
+
+                    # Check if request contains delay_ms for simulating slow streaming
+                    delay_ms = request.get("delay_ms", 0) if isinstance(request, dict) else 0
+
+                    # Track elapsed time to enforce timeout
+                    start_time = time.time()
+                    messages_sent = 0
+
+                    # Yield all messages from stream first
+                    stream = expected.get("stream")
+                    if isinstance(stream, list):
+                        for message in stream:
+                            if isinstance(message, dict):
+                                # Check if we've exceeded the timeout
+                                if timeout_ms is not None:
+                                    elapsed_ms = (time.time() - start_time) * 1000
+                                    if elapsed_ms > timeout_ms:
+                                        # Timeout exceeded: abort with DEADLINE_EXCEEDED
+                                        status_code = expected.get("status_code", "DEADLINE_EXCEEDED")
+                                        error = expected.get("error", {})
+                                        error_message = error.get("message", "Deadline exceeded while streaming messages") if isinstance(error, dict) else "Deadline exceeded"
+                                        status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.DEADLINE_EXCEEDED)
+                                        await context.abort(status, error_message)
+                                        return
+
+                                # Yield the message
+                                yield message
+                                messages_sent += 1
+
+                                # Simulate delay between messages if specified
+                                if delay_ms > 0:
+                                    await asyncio.sleep(delay_ms / 1000.0)
+
+                    # Check for error response after yielding messages (mid-stream error)
                     error = expected.get("error")
                     if isinstance(error, dict):
                         status_code = expected.get("status_code", "UNKNOWN")
@@ -552,13 +591,6 @@ def grpc_server():
                         # Map status code string to grpc.StatusCode
                         status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
                         await context.abort(status, error_message)
-
-                    stream = expected.get("stream")
-                    if isinstance(stream, list):
-                        for message in stream:
-                            if isinstance(message, dict):
-                                yield message
-                        return
             # Fallback: empty stream
             return
             yield  # unreachable, but needed for async generator syntax
@@ -601,6 +633,9 @@ def grpc_server():
             """Bidirectional streaming RPC: yield fixture responses or raise error."""
             fixture = self.get_fixture_for_method(method_path)
             expected_messages = []
+            should_error = False
+            error_status = None
+            error_message = None
 
             if fixture:
                 expected = fixture.get("expected_response", {})
@@ -608,11 +643,12 @@ def grpc_server():
                     # Check for error response
                     error = expected.get("error")
                     if isinstance(error, dict):
+                        should_error = True
                         status_code = expected.get("status_code", "UNKNOWN")
-                        error_message = error.get("message", "Unknown error")
+                        error_message_from_fixture = error.get("message", "Unknown error")
                         # Map status code string to grpc.StatusCode
-                        status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
-                        await context.abort(status, error_message)
+                        error_status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
+                        error_message = error_message_from_fixture
 
                     stream = expected.get("stream")
                     if isinstance(stream, list):
@@ -622,6 +658,23 @@ def grpc_server():
             if expected_messages:
                 for message in expected_messages:
                     yield message
+                # After yielding messages, check for error (mid-stream error)
+                if should_error:
+                    await context.abort(error_status, error_message)
+            elif should_error:
+                # For error cases without expected messages, consume a few messages
+                # then abort with the proper error status code.
+                # This simulates detecting an error condition (rate limiting, etc.)
+                message_count = 0
+                async for _ in request_iterator:
+                    message_count += 1
+                    # After reading first message or a few messages, abort with the fixture error
+                    # This ensures the server initiates the error, not the client buffer
+                    if message_count >= 1:
+                        await context.abort(error_status, error_message)
+                        return
+                # If somehow we get here without messages, still abort
+                await context.abort(error_status, error_message)
             else:
                 # Fallback: echo each message
                 async for msg in request_iterator:

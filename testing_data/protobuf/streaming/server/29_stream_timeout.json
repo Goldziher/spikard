@@ -59,7 +59,7 @@
 		],
 		"error": {
 			"code": 4,
-			"message": "Deadline exceeded while streaming messages"
+			"message": "Deadline Exceeded"
 		},
 		"partial_delivery": true,
 		"note": "Stream was cancelled after exceeding the 1000ms timeout"

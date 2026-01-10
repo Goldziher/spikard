@@ -129,7 +129,8 @@ class GrpcTestClient:
             timeout: Optional timeout in seconds
 
         Returns:
-            List of response messages
+            List of response messages (may be partial if mid-stream error occurs)
+            Raises RpcError if the stream encounters an error
         """
         if not self.channel:
             msg = "Channel not initialized. Use async context manager."
@@ -149,8 +150,13 @@ class GrpcTestClient:
             timeout=timeout,
         )
 
-        async for response in call:
-            responses.append(response)
+        try:
+            async for response in call:
+                responses.append(response)
+        except Exception:
+            # If an error occurs during streaming, we still collected partial messages
+            # Re-raise the exception but the partial responses are available
+            raise
 
         return responses
 

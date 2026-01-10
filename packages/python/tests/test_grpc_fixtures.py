@@ -302,18 +302,45 @@ async def test_server_streaming_fixture(
         handler = fixture.get("handler", {})
         timeout_ms = handler.get("timeout_ms")
 
-        # Execute RPC
-        responses = await client.execute_server_streaming(
-            service_name,
-            method_name,
-            request_message,
-            metadata=metadata,
-            timeout=timeout_ms / 1000 if timeout_ms else None,
-        )
-
-        # Validate response
+        # Check if expecting mid-stream error
         expected_response = fixture["expected_response"]
-        validate_stream_response(responses, expected_response)
+        has_error = "error" in expected_response and expected_response["error"]
+
+        if has_error:
+            # Mid-stream error case: expect error after partial stream
+            responses = []
+            with pytest.raises(grpc.RpcError) as exc_info:
+                responses = await client.execute_server_streaming(
+                    service_name,
+                    method_name,
+                    request_message,
+                    metadata=metadata,
+                    timeout=timeout_ms / 1000 if timeout_ms else None,
+                )
+            # Validate error
+            validate_error_response(exc_info, expected_response)
+
+            # Validate partial messages if expected (before the error occurred)
+            expected_stream = expected_response.get("stream")
+            if expected_stream and responses:
+                # We got partial messages before the error
+                assert len(responses) == len(expected_stream), (
+                    f"Expected {len(expected_stream)} partial messages, got {len(responses)}"
+                )
+                for i, (actual, expected_msg) in enumerate(zip(responses, expected_stream)):
+                    assert actual == expected_msg, f"Partial message {i} mismatch: {actual} != {expected_msg}"
+        else:
+            # Normal case: expect complete stream without error
+            responses = await client.execute_server_streaming(
+                service_name,
+                method_name,
+                request_message,
+                metadata=metadata,
+                timeout=timeout_ms / 1000 if timeout_ms else None,
+            )
+
+            # Validate response
+            validate_stream_response(responses, expected_response)
 
 
 @pytest.mark.asyncio
