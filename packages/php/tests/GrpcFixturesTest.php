@@ -175,11 +175,15 @@ final class GrpcFixturesTest extends TestCase
         /** @var array<string, mixed> $protobuf */
         $protobuf = $fixture['protobuf'];
 
+        // Build fully qualified service name: "package.ServiceName"
+        /** @var string $package */
+        $package = $protobuf['package'];
+
         /** @var array<int, array<string, mixed>> $services */
         $services = $protobuf['services'];
         /** @var array<string, mixed> $service */
         $service = $services[0];
-        $serviceName = $service['name'];
+        $serviceName = $package . '.' . $service['name'];
 
         /** @var array<int, array<string, mixed>> $methods */
         $methods = $service['methods'];

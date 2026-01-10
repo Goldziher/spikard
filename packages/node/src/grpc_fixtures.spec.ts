@@ -118,9 +118,11 @@ function extractServiceMethod(
 	streamingMode?: string,
 ): [string, string, Record<string, unknown>] {
 	const protobuf = fixture.protobuf as Record<string, unknown>;
+	// Build fully qualified service name: "package.ServiceName"
+	const packageName = protobuf.package as string;
 	const services = protobuf.services as Array<Record<string, unknown>>;
 	const service = services[0];
-	const serviceName = service.name as string;
+	const serviceName = `${packageName}.${service.name as string}`;
 
 	const methods = service.methods as Array<Record<string, unknown>>;
 

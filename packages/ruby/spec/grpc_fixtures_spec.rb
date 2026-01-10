@@ -89,8 +89,10 @@ end
 #
 def extract_service_method(fixture, streaming_mode = nil)
   protobuf = fixture["protobuf"]
+  package = protobuf["package"]
   service = protobuf["services"][0]
-  service_name = service["name"]
+  # Build fully qualified service name: "example.v1.StreamService"
+  service_name = "#{package}.#{service["name"]}"
 
   # Find method matching streaming mode
   methods = service["methods"]

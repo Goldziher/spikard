@@ -34,7 +34,7 @@
  */
 export class GrpcTestClient {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private channel: any = null;
+	private grpc: any = null;
 	private serverAddress: string;
 
 	/**
@@ -44,30 +44,24 @@ export class GrpcTestClient {
 	 */
 	constructor(serverAddress: string = "localhost:50051") {
 		this.serverAddress = serverAddress;
-		this.initializeChannel();
+		this.initializeGrpc();
 	}
 
 	/**
-	 * Initialize the gRPC channel using @grpc/grpc-js.
+	 * Initialize the gRPC module using @grpc/grpc-js.
 	 *
 	 * This is called automatically in the constructor.
-	 * The channel is created with insecure credentials for test purposes.
+	 * Stores a reference to the grpc module for making dynamic RPC calls.
 	 */
-	private initializeChannel(): void {
+	private initializeGrpc(): void {
 		try {
 			// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-			const grpc = require("@grpc/grpc-js");
-
-			// Create insecure channel for testing
-			this.channel = new grpc.Channel(
-				this.serverAddress,
-				grpc.ChannelCredentials.createInsecure(),
-			);
+			this.grpc = require("@grpc/grpc-js");
 		} catch (error) {
-			// If grpc-js is not available or channel creation fails,
-			// the channel will be null and API calls will fail with proper error
+			// If grpc-js is not available, the grpc reference will be null
+			// and API calls will fail with proper error
 			console.error(
-				`Failed to initialize gRPC channel to ${this.serverAddress}:`,
+				`Failed to initialize gRPC module:`,
 				error instanceof Error ? error.message : String(error),
 			);
 		}
@@ -77,14 +71,20 @@ export class GrpcTestClient {
 	 * Prepare metadata from dictionary format to gRPC format.
 	 *
 	 * @param metadata - Metadata dictionary from fixture
-	 * @returns List of [key, value] tuples or null
+	 * @returns Metadata object for gRPC calls or null
 	 */
-	private prepareMetadata(metadata?: Record<string, string>): Array<[string, string]> | null {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	private prepareMetadata(metadata?: Record<string, string>): any | null {
 		if (!metadata || Object.keys(metadata).length === 0) {
 			return null;
 		}
 
-		return Object.entries(metadata).map(([key, value]) => [key, value]);
+		// Create a proper Metadata object using @grpc/grpc-js
+		const grpcMetadata = new this.grpc.Metadata();
+		for (const [key, value] of Object.entries(metadata)) {
+			grpcMetadata.set(key, value);
+		}
+		return grpcMetadata;
 	}
 
 	/**
@@ -104,40 +104,52 @@ export class GrpcTestClient {
 		metadata?: Record<string, string>,
 		timeout?: number,
 	): Promise<Record<string, unknown>> {
-		if (!this.channel) {
+		if (!this.grpc) {
 			throw new Error(
-				`Channel not initialized. Cannot connect to ${this.serverAddress}. Is the gRPC server running?`,
+				`gRPC module not initialized. Cannot connect to ${this.serverAddress}. Is @grpc/grpc-js installed?`,
 			);
 		}
 
 		const method = `/${serviceName}/${methodName}`;
 
-		// Create stub for unary RPC
+		// Create a dynamic client for making unary RPC calls
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const stub = this.channel.makeUnaryRequest(
-			method,
-			(value: Record<string, unknown>) => {
-				return Buffer.from(JSON.stringify(value));
-			},
-			(value: Buffer) => {
-				return JSON.parse(value.toString("utf-8"));
-			},
-			request,
-			{
-				metadata: this.prepareMetadata(metadata),
-				timeout: timeout ? timeout * 1000 : undefined,
-			},
-		);
+		const client = new this.grpc.Client() as any;
 
 		return new Promise((resolve, reject) => {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			stub((err: any, value: any) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve(value);
-				}
-			});
+			try {
+				// Make the unary RPC call directly
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				client.makeUnaryRequest(
+					this.serverAddress,
+					method,
+					(value: Record<string, unknown>) => {
+						return Buffer.from(JSON.stringify(value));
+					},
+					(value: Buffer) => {
+						return JSON.parse(value.toString("utf-8"));
+					},
+					request,
+					this.prepareMetadata(metadata),
+					{
+						deadline: timeout ? new Date(Date.now() + timeout * 1000) : undefined,
+					},
+					(err: Error | null, value: Record<string, unknown> | undefined) => {
+						try {
+							if (err) {
+								reject(err);
+							} else {
+								resolve(value || {});
+							}
+						} finally {
+							client.close();
+						}
+					},
+				);
+			} catch (error) {
+				client.close();
+				reject(error);
+			}
 		});
 	}
 
@@ -158,46 +170,60 @@ export class GrpcTestClient {
 		metadata?: Record<string, string>,
 		timeout?: number,
 	): Promise<Array<Record<string, unknown>>> {
-		if (!this.channel) {
+		if (!this.grpc) {
 			throw new Error(
-				`Channel not initialized. Cannot connect to ${this.serverAddress}. Is the gRPC server running?`,
+				`gRPC module not initialized. Cannot connect to ${this.serverAddress}. Is @grpc/grpc-js installed?`,
 			);
 		}
 
 		const method = `/${serviceName}/${methodName}`;
 
-		// Create stub for server streaming RPC
+		// Create a dynamic client for making server streaming RPC calls
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const call = this.channel.makeServerStreamRequest(
-			method,
-			(value: Record<string, unknown>) => {
-				return Buffer.from(JSON.stringify(value));
-			},
-			(value: Buffer) => {
-				return JSON.parse(value.toString("utf-8"));
-			},
-			request,
-			{
-				metadata: this.prepareMetadata(metadata),
-				timeout: timeout ? timeout * 1000 : undefined,
-			},
-		);
+		const client = new this.grpc.Client() as any;
 
 		return new Promise((resolve, reject) => {
 			const responses: Array<Record<string, unknown>> = [];
 
-			call.on("data", (response: Record<string, unknown>) => {
-				responses.push(response);
-			});
+			try {
+				// Make the server streaming RPC call
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const call = client.makeServerStreamRequest(
+					this.serverAddress,
+					method,
+					(value: Record<string, unknown>) => {
+						return Buffer.from(JSON.stringify(value));
+					},
+					(value: Buffer) => {
+						return JSON.parse(value.toString("utf-8"));
+					},
+					request,
+					this.prepareMetadata(metadata),
+					{
+						deadline: timeout ? new Date(Date.now() + timeout * 1000) : undefined,
+					},
+				);
 
-			call.on("end", () => {
-				resolve(responses);
-			});
+				// Register error handler FIRST to catch errors early
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				call.on("error", (err: any) => {
+					client.close();
+					reject(err);
+				});
 
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			call.on("error", (err: any) => {
-				reject(err);
-			});
+				// Then register data and end handlers
+				call.on("data", (response: Record<string, unknown>) => {
+					responses.push(response);
+				});
+
+				call.on("end", () => {
+					client.close();
+					resolve(responses);
+				});
+			} catch (error) {
+				client.close();
+				reject(error);
+			}
 		});
 	}
 
@@ -218,49 +244,64 @@ export class GrpcTestClient {
 		metadata?: Record<string, string>,
 		timeout?: number,
 	): Promise<Record<string, unknown>> {
-		if (!this.channel) {
+		if (!this.grpc) {
 			throw new Error(
-				`Channel not initialized. Cannot connect to ${this.serverAddress}. Is the gRPC server running?`,
+				`gRPC module not initialized. Cannot connect to ${this.serverAddress}. Is @grpc/grpc-js installed?`,
 			);
 		}
 
 		const method = `/${serviceName}/${methodName}`;
 
-		// Create stub for client streaming RPC
+		// Create a dynamic client for making client streaming RPC calls
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const call = this.channel.makeClientStreamRequest(
-			method,
-			(value: Record<string, unknown>) => {
-				return Buffer.from(JSON.stringify(value));
-			},
-			(value: Buffer) => {
-				return JSON.parse(value.toString("utf-8"));
-			},
-			{
-				metadata: this.prepareMetadata(metadata),
-				timeout: timeout ? timeout * 1000 : undefined,
-			},
-		);
+		const client = new this.grpc.Client() as any;
 
 		return new Promise((resolve, reject) => {
-			// Write all requests
-			const writeRequests = () => {
+			try {
+				// Make the client streaming RPC call
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const call = client.makeClientStreamRequest(
+					this.serverAddress,
+					method,
+					(value: Record<string, unknown>) => {
+						return Buffer.from(JSON.stringify(value));
+					},
+					(value: Buffer) => {
+						return JSON.parse(value.toString("utf-8"));
+					},
+					this.prepareMetadata(metadata),
+					{
+						deadline: timeout ? new Date(Date.now() + timeout * 1000) : undefined,
+					},
+					(err: Error | null, value: Record<string, unknown> | undefined) => {
+						try {
+							if (err) {
+								reject(err);
+							} else {
+								resolve(value || {});
+							}
+						} finally {
+							client.close();
+						}
+					},
+				);
+
+				// Register error handler FIRST to catch errors early
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				call.on("error", (err: any) => {
+					client.close();
+					reject(err);
+				});
+
+				// Write all requests after error handler is registered
 				for (const request of requests) {
 					call.write(request);
 				}
 				call.end();
-			};
-
-			call.on("data", (response: Record<string, unknown>) => {
-				resolve(response);
-			});
-
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			call.on("error", (err: any) => {
-				reject(err);
-			});
-
-			writeRequests();
+			} catch (error) {
+				client.close();
+				reject(error);
+			}
 		});
 	}
 
@@ -281,64 +322,76 @@ export class GrpcTestClient {
 		metadata?: Record<string, string>,
 		timeout?: number,
 	): Promise<Array<Record<string, unknown>>> {
-		if (!this.channel) {
+		if (!this.grpc) {
 			throw new Error(
-				`Channel not initialized. Cannot connect to ${this.serverAddress}. Is the gRPC server running?`,
+				`gRPC module not initialized. Cannot connect to ${this.serverAddress}. Is @grpc/grpc-js installed?`,
 			);
 		}
 
 		const method = `/${serviceName}/${methodName}`;
 
-		// Create stub for bidirectional streaming RPC
+		// Create a dynamic client for making bidirectional streaming RPC calls
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const call = this.channel.makeBidiStreamRequest(
-			method,
-			(value: Record<string, unknown>) => {
-				return Buffer.from(JSON.stringify(value));
-			},
-			(value: Buffer) => {
-				return JSON.parse(value.toString("utf-8"));
-			},
-			{
-				metadata: this.prepareMetadata(metadata),
-				timeout: timeout ? timeout * 1000 : undefined,
-			},
-		);
+		const client = new this.grpc.Client() as any;
 
 		return new Promise((resolve, reject) => {
 			const responses: Array<Record<string, unknown>> = [];
 
-			// Write all requests
-			const writeRequests = () => {
+			try {
+				// Make the bidirectional streaming RPC call
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const call = client.makeBidiStreamRequest(
+					this.serverAddress,
+					method,
+					(value: Record<string, unknown>) => {
+						return Buffer.from(JSON.stringify(value));
+					},
+					(value: Buffer) => {
+						return JSON.parse(value.toString("utf-8"));
+					},
+					this.prepareMetadata(metadata),
+					{
+						deadline: timeout ? new Date(Date.now() + timeout * 1000) : undefined,
+					},
+				);
+
+				// Register error handler FIRST to catch errors early
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				call.on("error", (err: any) => {
+					client.close();
+					reject(err);
+				});
+
+				// Then register data and end handlers
+				call.on("data", (response: Record<string, unknown>) => {
+					responses.push(response);
+				});
+
+				call.on("end", () => {
+					client.close();
+					resolve(responses);
+				});
+
+				// Write all requests after error handler is registered
 				for (const request of requests) {
 					call.write(request);
 				}
 				call.end();
-			};
-
-			call.on("data", (response: Record<string, unknown>) => {
-				responses.push(response);
-			});
-
-			call.on("end", () => {
-				resolve(responses);
-			});
-
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			call.on("error", (err: any) => {
-				reject(err);
-			});
-
-			writeRequests();
+			} catch (error) {
+				client.close();
+				reject(error);
+			}
 		});
 	}
 
 	/**
-	 * Initialize the gRPC channel (internal use for fixture tests).
+	 * Set the gRPC module (internal use for fixture tests).
 	 *
-	 * @param grpcChannel - The gRPC channel to use
+	 * Allows injection of a custom gRPC module for testing purposes.
+	 *
+	 * @param grpcModule - The gRPC module to use
 	 */
-	setChannel(grpcChannel: unknown): void {
-		this.channel = grpcChannel;
+	setGrpcModule(grpcModule: unknown): void {
+		this.grpc = grpcModule;
 	}
 }
