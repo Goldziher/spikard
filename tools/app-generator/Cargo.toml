@@ -2,7 +2,7 @@
 
 [package]
 name = "app-generator"
-version = "0.8.3"
+version = "0.9.0"
 edition = "2024"
 rust-version = "1.88"
 

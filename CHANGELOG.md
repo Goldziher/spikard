@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-01-10
+
 ### Added
+
+- **Ruby gRPC Streaming Handlers**: Full implementation of all 4 streaming modes for Ruby bindings
+  - RubyGrpcRequest/RubyGrpcResponse wrapper types for Ruby FFI
+  - RubyGrpcHandler implementing GrpcHandler trait with unary, server, client, and bidirectional streaming
+  - DOS protection limits (payload size, metadata entries/size, stream message count, total bytes)
+  - Handler timeout (30 seconds) to prevent hung handlers
+  - SAFETY-documented unsafe blocks for Ruby GVL handling
+  - Error message sanitization (log full errors, return generic messages to clients)
+  - Magnus Ruby FFI integration with Opaque<Value> for proper GVL management
+
+- **PHP gRPC Streaming Handlers**: Full implementation of all 4 streaming modes for PHP bindings
+  - PhpGrpcRequest/PhpGrpcResponse wrapper types for PHP FFI
+  - PhpGrpcHandler implementing GrpcHandler trait
+  - DOS protection and timeout handling matching Ruby implementation
 
 - **gRPC Streaming Fixture Integration** (Phases 1-4): Complete end-to-end fixture infrastructure for all 4 streaming modes
   - 30+ JSON fixture files covering Unary, ServerStreaming, ClientStreaming, and BidirectionalStreaming modes

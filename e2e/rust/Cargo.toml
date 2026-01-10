@@ -1,6 +1,6 @@
 [package]
 name = "spikard-e2e-app"
-version = "0.8.3"
+version = "0.9.0"
 edition = "2024"
 publish = false
 
