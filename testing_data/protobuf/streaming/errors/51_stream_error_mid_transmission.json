@@ -1,0 +1,62 @@
+{
+	"name": "Error handling - stream error mid-transmission",
+	"description": "Tests server streaming RPC that errors after yielding 3 messages. The stream opens successfully and delivers 3 messages before encountering an INTERNAL error. Validates that partial stream data is delivered before the error is signaled.",
+	"category": "error",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "StreamRequest",
+				"fields": [
+					{ "name": "count", "type": "int32", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "StreamResponse",
+				"fields": [
+					{ "name": "index", "type": "int32", "number": 1, "label": "required" },
+					{ "name": "data", "type": "string", "number": 2, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ErrorTestService",
+				"methods": [
+					{
+						"name": "StreamWithError",
+						"input_type": "StreamRequest",
+						"output_type": "StreamResponse",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ErrorTestService",
+		"method": "StreamWithError"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"count": 5
+		}
+	},
+	"expected_response": {
+		"status_code": "INTERNAL",
+		"stream": [
+			{ "index": 1, "data": "Message 1" },
+			{ "index": 2, "data": "Message 2" },
+			{ "index": 3, "data": "Message 3" }
+		],
+		"error": {
+			"code": 13,
+			"message": "Stream processing error at index 3"
+		}
+	},
+	"tags": ["server_streaming", "error_handling", "partial_stream", "mid_transmission"]
+}

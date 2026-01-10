@@ -517,11 +517,21 @@ def grpc_server():
             return None
 
         async def handle_unary(self, request: dict, context, method_path: str) -> dict:
-            """Unary RPC: return expected response from fixture."""
+            """Unary RPC: return expected response from fixture or raise error."""
             fixture = self.get_fixture_for_method(method_path)
             if fixture:
                 expected = fixture.get("expected_response", {})
                 if isinstance(expected, dict):
+                    # Check for error response
+                    error = expected.get("error")
+                    if isinstance(error, dict):
+                        status_code = expected.get("status_code", "UNKNOWN")
+                        error_message = error.get("message", "Unknown error")
+                        # Map status code string to grpc.StatusCode
+                        status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
+                        await context.abort(status, error_message)
+                        return {}  # Unreachable, but needed for type checker
+
                     message = expected.get("message")
                     if isinstance(message, dict):
                         return message
@@ -529,11 +539,20 @@ def grpc_server():
             return request
 
         async def handle_server_stream(self, request: dict, context, method_path: str):
-            """Server streaming RPC: yield messages from fixture."""
+            """Server streaming RPC: yield messages from fixture or raise error."""
             fixture = self.get_fixture_for_method(method_path)
             if fixture:
                 expected = fixture.get("expected_response", {})
                 if isinstance(expected, dict):
+                    # Check for error response
+                    error = expected.get("error")
+                    if isinstance(error, dict):
+                        status_code = expected.get("status_code", "UNKNOWN")
+                        error_message = error.get("message", "Unknown error")
+                        # Map status code string to grpc.StatusCode
+                        status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
+                        await context.abort(status, error_message)
+
                     stream = expected.get("stream")
                     if isinstance(stream, list):
                         for message in stream:
@@ -545,7 +564,7 @@ def grpc_server():
             yield  # unreachable, but needed for async generator syntax
 
         async def handle_client_stream(self, request_iterator, context, method_path: str) -> dict:
-            """Client streaming RPC: aggregate messages and return fixture response."""
+            """Client streaming RPC: aggregate messages and return fixture response or raise error."""
             # Consume the stream
             messages = []
             async for msg in request_iterator:
@@ -556,6 +575,15 @@ def grpc_server():
             if fixture:
                 expected = fixture.get("expected_response", {})
                 if isinstance(expected, dict):
+                    # Check for error response
+                    error = expected.get("error")
+                    if isinstance(error, dict):
+                        status_code = expected.get("status_code", "UNKNOWN")
+                        error_message = error.get("message", "Unknown error")
+                        # Map status code string to grpc.StatusCode
+                        status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
+                        await context.abort(status, error_message)
+
                     message = expected.get("message")
                     if isinstance(message, dict):
                         return message
@@ -570,13 +598,22 @@ def grpc_server():
             return {"message_count": 0}
 
         async def handle_bidi_stream(self, request_iterator, context, method_path: str):
-            """Bidirectional streaming RPC: yield fixture responses."""
+            """Bidirectional streaming RPC: yield fixture responses or raise error."""
             fixture = self.get_fixture_for_method(method_path)
             expected_messages = []
 
             if fixture:
                 expected = fixture.get("expected_response", {})
                 if isinstance(expected, dict):
+                    # Check for error response
+                    error = expected.get("error")
+                    if isinstance(error, dict):
+                        status_code = expected.get("status_code", "UNKNOWN")
+                        error_message = error.get("message", "Unknown error")
+                        # Map status code string to grpc.StatusCode
+                        status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
+                        await context.abort(status, error_message)
+
                     stream = expected.get("stream")
                     if isinstance(stream, list):
                         expected_messages = [msg for msg in stream if isinstance(msg, dict)]

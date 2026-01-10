@@ -1,0 +1,61 @@
+{
+  "name": "Error handling - permission denied (client streaming)",
+  "description": "Tests client streaming RPC accessing unauthorized resource. Expects PERMISSION_DENIED status when client sends restricted access level requests. Demonstrates permission validation on streaming upload operations.",
+  "category": "error",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "UploadRequest",
+        "fields": [
+          { "name": "data", "type": "string", "number": 1, "label": "required" },
+          { "name": "access_level", "type": "string", "number": 2, "label": "required" }
+        ]
+      },
+      {
+        "name": "UploadResponse",
+        "fields": [
+          { "name": "status", "type": "string", "number": 1, "label": "required" }
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "ErrorTestService",
+        "methods": [
+          {
+            "name": "UploadRestricted",
+            "input_type": "UploadRequest",
+            "output_type": "UploadResponse",
+            "client_streaming": true,
+            "server_streaming": false
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.ErrorTestService",
+    "method": "UploadRestricted"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "stream": [
+      {
+        "data": "file1",
+        "access_level": "admin"
+      }
+    ]
+  },
+  "expected_response": {
+    "status_code": "PERMISSION_DENIED",
+    "error": {
+      "code": "PERMISSION_DENIED",
+      "message": "Insufficient permissions for admin level access"
+    },
+    "note": "Client attempted to upload with admin access level but current caller lacks required permissions"
+  },
+  "tags": ["grpc_status", "client_streaming", "auth", "error", "permission_denied"]
+}

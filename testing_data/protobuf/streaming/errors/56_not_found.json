@@ -1,0 +1,66 @@
+{
+	"name": "Error handling - resource not found",
+	"description": "Tests NOT_FOUND gRPC status code. Returned when the requested resource does not exist. Validates unary RPC requesting non-existent resource.",
+	"category": "error",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "ResourceRequest",
+				"fields": [
+					{
+						"name": "id",
+						"type": "string",
+						"number": 1,
+						"label": "required"
+					}
+				]
+			},
+			{
+				"name": "ResourceResponse",
+				"fields": [
+					{
+						"name": "data",
+						"type": "string",
+						"number": 1,
+						"label": "required"
+					}
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ErrorTestService",
+				"methods": [
+					{
+						"name": "GetResource",
+						"input_type": "ResourceRequest",
+						"output_type": "ResourceResponse",
+						"client_streaming": false,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ErrorTestService",
+		"method": "GetResource"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"id": "nonexistent-123"
+		}
+	},
+	"expected_response": {
+		"status_code": "NOT_FOUND",
+		"error": {
+			"code": "NOT_FOUND",
+			"message": "Resource not found: nonexistent-123"
+		}
+	},
+	"tags": ["grpc_status", "error_handling", "not_found"]
+}

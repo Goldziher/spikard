@@ -1,0 +1,61 @@
+{
+	"name": "Error handling - invalid request payload",
+	"description": "Tests server streaming RPC with invalid request payload. Validates that INVALID_ARGUMENT status is returned when required field is missing from the request message. The server should reject the malformed payload before beginning the stream.",
+	"category": "error",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "ValidationRequest",
+				"fields": [
+					{ "name": "query", "type": "string", "number": 1, "label": "required" },
+					{ "name": "limit", "type": "int32", "number": 2, "label": "optional" }
+				]
+			},
+			{
+				"name": "ValidationResponse",
+				"fields": [
+					{ "name": "error_code", "type": "string", "number": 1, "label": "optional" },
+					{ "name": "message", "type": "string", "number": 2, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ErrorTestService",
+				"methods": [
+					{
+						"name": "ValidateRequest",
+						"input_type": "ValidationRequest",
+						"output_type": "ValidationResponse",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ErrorTestService",
+		"method": "ValidateRequest"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"limit": 10
+		}
+	},
+	"expected_response": {
+		"error": {
+			"code": "INVALID_ARGUMENT",
+			"message": "Missing required field: query"
+		},
+		"status_code": "INVALID_ARGUMENT",
+		"error_message": "Missing required field: query",
+		"stream": [],
+		"details": "Request validation failed due to missing required field 'query' in ValidationRequest message. Server streaming was not initiated."
+	},
+	"tags": ["server_streaming", "error_handling", "validation", "invalid_argument"]
+}

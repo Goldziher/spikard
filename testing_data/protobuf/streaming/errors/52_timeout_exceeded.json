@@ -1,0 +1,58 @@
+{
+	"name": "Error handling - deadline exceeded",
+	"description": "Tests server streaming RPC that exceeds deadline. Expects DEADLINE_EXCEEDED status when RPC time exceeds configured timeout.",
+	"category": "error",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "TimeoutRequest",
+				"fields": [
+					{ "name": "delay_ms", "type": "int32", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "TimeoutResponse",
+				"fields": [
+					{ "name": "data", "type": "string", "number": 1, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ErrorTestService",
+				"methods": [
+					{
+						"name": "SlowStream",
+						"input_type": "TimeoutRequest",
+						"output_type": "TimeoutResponse",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ErrorTestService",
+		"method": "SlowStream",
+		"timeout_ms": 100
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"delay_ms": 500
+		}
+	},
+	"expected_response": {
+		"status_code": "DEADLINE_EXCEEDED",
+		"error": {
+			"code": "DEADLINE_EXCEEDED",
+			"message": "RPC exceeded deadline of 100ms"
+		},
+		"stream": []
+	},
+	"tags": ["grpc_status", "deadline_exceeded", "streaming", "error_handling", "timeout"]
+}

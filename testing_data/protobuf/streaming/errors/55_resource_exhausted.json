@@ -1,0 +1,57 @@
+{
+  "name": "Error handling - resource exhausted",
+  "description": "Tests bidirectional streaming RPC exceeding rate limits. Expects RESOURCE_EXHAUSTED status when client attempts to send 100 messages in rapid succession, exceeding the 100 requests/second rate limit threshold.",
+  "category": "error",
+  "protobuf": {
+    "package": "example.v1",
+    "messages": [
+      {
+        "name": "ChatMessage",
+        "fields": [
+          { "name": "text", "type": "string", "number": 1, "label": "required" },
+          { "name": "timestamp", "type": "int64", "number": 2, "label": "required" }
+        ]
+      },
+      {
+        "name": "ChatResponse",
+        "fields": [
+          { "name": "reply", "type": "string", "number": 1, "label": "required" }
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "ErrorTestService",
+        "methods": [
+          {
+            "name": "RateLimitedChat",
+            "input_type": "ChatMessage",
+            "output_type": "ChatResponse",
+            "client_streaming": true,
+            "server_streaming": true
+          }
+        ]
+      }
+    ]
+  },
+  "handler": {
+    "service": "example.v1.ErrorTestService",
+    "method": "RateLimitedChat"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "stream_generator": "sequential",
+    "stream_size": 100
+  },
+  "expected_response": {
+    "status_code": "RESOURCE_EXHAUSTED",
+    "error": {
+      "code": "RESOURCE_EXHAUSTED",
+      "message": "Rate limit exceeded: 100 requests/second"
+    },
+    "note": "Client exceeded the configured rate limit of 100 messages per second by attempting to send 100 messages in rapid succession during bidirectional streaming"
+  },
+  "tags": ["grpc_status", "bidirectional_streaming", "rate_limiting", "error", "resource_exhausted"]
+}

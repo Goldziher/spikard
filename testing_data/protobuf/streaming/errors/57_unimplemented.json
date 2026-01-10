@@ -1,0 +1,58 @@
+{
+	"name": "Error handling - unimplemented method",
+	"description": "Tests unary RPC calling an unimplemented method. Validates that UNIMPLEMENTED status is returned when the server does not support the requested RPC method. This fixture ensures proper error handling for feature requests that are not yet available in the current server implementation.",
+	"category": "error",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "FeatureRequest",
+				"fields": [
+					{ "name": "feature_name", "type": "string", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "FeatureResponse",
+				"fields": [
+					{ "name": "available", "type": "bool", "number": 1, "label": "optional" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ErrorTestService",
+				"methods": [
+					{
+						"name": "FutureFeature",
+						"input_type": "FeatureRequest",
+						"output_type": "FeatureResponse",
+						"client_streaming": false,
+						"server_streaming": false
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ErrorTestService",
+		"method": "FutureFeature"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"feature_name": "experimental_v2"
+		}
+	},
+	"expected_response": {
+		"error": {
+			"code": "UNIMPLEMENTED",
+			"message": "Method FutureFeature is not implemented"
+		},
+		"status_code": "UNIMPLEMENTED",
+		"error_message": "Method FutureFeature is not implemented",
+		"details": "The server does not implement the requested RPC method FutureFeature. This method is planned for a future release and is not currently available in this version of the service."
+	},
+	"tags": ["grpc_status", "error_handling", "unimplemented", "rpc_not_supported"]
+}

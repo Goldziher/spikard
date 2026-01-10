@@ -27,6 +27,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import grpc
 import pytest
 
 from grpc_test_client import GrpcTestClient

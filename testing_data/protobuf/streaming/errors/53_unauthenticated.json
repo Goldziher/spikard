@@ -1,0 +1,58 @@
+{
+	"name": "Error handling - unauthenticated server streaming request",
+	"description": "Tests server streaming RPC without required auth metadata. Expects UNAUTHENTICATED status when authorization header is missing.",
+	"category": "error",
+	"protobuf": {
+		"package": "example.v1",
+		"messages": [
+			{
+				"name": "SecureRequest",
+				"fields": [
+					{ "name": "resource", "type": "string", "number": 1, "label": "required" }
+				]
+			},
+			{
+				"name": "SecureResponse",
+				"fields": [
+					{ "name": "data", "type": "string", "number": 1, "label": "required" }
+				]
+			}
+		],
+		"services": [
+			{
+				"name": "ErrorTestService",
+				"methods": [
+					{
+						"name": "SecureStream",
+						"input_type": "SecureRequest",
+						"output_type": "SecureResponse",
+						"client_streaming": false,
+						"server_streaming": true
+					}
+				]
+			}
+		]
+	},
+	"handler": {
+		"service": "example.v1.ErrorTestService",
+		"method": "SecureStream"
+	},
+	"request": {
+		"metadata": {
+			"content-type": "application/grpc"
+		},
+		"message": {
+			"resource": "protected_data"
+		}
+	},
+	"expected_response": {
+		"error": {
+			"code": "UNAUTHENTICATED",
+			"message": "Missing authorization metadata"
+		},
+		"status_code": "UNAUTHENTICATED",
+		"error_message": "Missing authorization metadata",
+		"stream": []
+	},
+	"tags": ["grpc_status", "authentication", "error_handling", "server_streaming"]
+}
