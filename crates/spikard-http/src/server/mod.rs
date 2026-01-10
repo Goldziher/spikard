@@ -937,6 +937,7 @@ impl Server {
                 #[cfg(not(feature = "di"))]
                 {
                     crate::RouteMetadata {
+                        handler_dependencies: Some(route.handler_dependencies.clone()),
                         method: route.method.to_string(),
                         path: route.path.clone(),
                         handler_name: route.handler_name.clone(),

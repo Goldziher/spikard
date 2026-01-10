@@ -24,6 +24,7 @@ di = ["spikard-core/di"]
 
 [dependencies]
 spikard-core = { workspace = true, features = ["di"] }
+spikard-http = { workspace = true }
 http.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -42,7 +43,9 @@ uuid = { version = "1.19", features = ["v4", "js"] }
 time = { version = "0.3", default-features = false, features = ["formatting", "parsing", "macros", "std"] }
 bytes = "1.11"
 futures = "0.3"
+futures-util = "0.3"
 async-stream = "0.3"
+tonic = { version = "0.12", features = ["transport"] }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
