@@ -31,19 +31,22 @@ class GrpcTestClient
   #
   def initialize(server_address = "localhost:50051")
     @server_address = server_address
-    @channel = nil
+    @stub = nil
   end
 
   ##
   # Connect to gRPC server.
   #
-  # Creates an insecure gRPC channel to the server.
+  # Creates an insecure gRPC client stub to the server.
   #
   def connect
-    @channel = GRPC::Core::Channel.new(
+    # Create insecure credentials for test environment
+    creds = :this_channel_is_insecure
+
+    # Create a ClientStub that will be used for all RPC calls
+    @stub = GRPC::ClientStub.new(
       @server_address,
-      nil,
-      :this_channel_is_insecure
+      creds
     )
   end
 
@@ -51,10 +54,10 @@ class GrpcTestClient
   # Close connection to gRPC server.
   #
   def disconnect
-    return unless @channel
+    return unless @stub
 
-    @channel.close
-    @channel = nil
+    # ClientStub doesn't have explicit close, but we clear the reference
+    @stub = nil
   end
 
   ##
@@ -72,17 +75,43 @@ class GrpcTestClient
   ##
   # Prepare metadata for gRPC call.
   #
-  # Converts metadata Hash to gRPC metadata format.
+  # Converts metadata Hash to gRPC metadata format (Hash of strings).
   #
   # @param metadata [Hash<String, String>, nil] Metadata dictionary from fixture
   #
-  # @return [Array<Array<String, String>>, nil] List of [key, value] pairs or nil
+  # @return [Hash<String, String>, nil] Metadata hash or nil
   #
   def prepare_metadata(metadata)
     return nil if metadata.nil? || metadata.empty?
 
-    # gRPC metadata is an array of [key, value] pairs
-    metadata.map { |key, value| [key.to_s, value.to_s] }
+    # Convert all keys and values to strings for gRPC
+    result = {}
+    metadata.each do |key, value|
+      result[key.to_s] = value.to_s
+    end
+    result
+  end
+
+  ##
+  # Marshal function: converts Hash to JSON bytes.
+  #
+  # @param obj [Hash] Object to marshal
+  #
+  # @return [String] JSON-encoded bytes
+  #
+  def self.marshal(obj)
+    JSON.generate(obj).encode("UTF-8")
+  end
+
+  ##
+  # Unmarshal function: converts JSON bytes to Hash.
+  #
+  # @param bytes [String] JSON-encoded bytes
+  #
+  # @return [Hash] Parsed object
+  #
+  def self.unmarshal(bytes)
+    JSON.parse(bytes.b)
   end
 
   ##
@@ -97,25 +126,26 @@ class GrpcTestClient
   # @return [Hash] Response data as dictionary
   #
   def execute_unary(service_name, method_name, request, metadata: nil, timeout: nil)
-    raise "Channel not initialized. Use with_connection block." unless @channel
+    raise "Stub not initialized. Use with_connection block." unless @stub
 
     method_path = "/#{service_name}/#{method_name}"
 
-    # Create unary RPC stub
-    stub = create_unary_stub(method_path)
+    # Build options hash
+    options = {
+      deadline: compute_deadline(timeout)
+    }
+    options[:metadata] = prepare_metadata(metadata) if metadata
 
-    # Serialize request to JSON bytes
-    request_bytes = JSON.generate(request).encode("UTF-8")
-
-    # Call RPC
-    response_bytes = stub.call(
-      request_bytes,
-      metadata: prepare_metadata(metadata),
-      timeout: timeout
+    # Call unary RPC using ClientStub
+    response = @stub.request_response(
+      method_path,
+      request,
+      self.class.method(:marshal),
+      self.class.method(:unmarshal),
+      **options
     )
 
-    # Deserialize response
-    JSON.parse(response_bytes.b)
+    response
   rescue StandardError => e
     raise_grpc_error(e)
   end
@@ -132,26 +162,29 @@ class GrpcTestClient
   # @return [Array<Hash>] List of response messages
   #
   def execute_server_streaming(service_name, method_name, request, metadata: nil, timeout: nil)
-    raise "Channel not initialized. Use with_connection block." unless @channel
+    raise "Stub not initialized. Use with_connection block." unless @stub
 
     method_path = "/#{service_name}/#{method_name}"
 
-    # Create server streaming RPC stub
-    stub = create_server_streaming_stub(method_path)
+    # Build options hash
+    options = {
+      deadline: compute_deadline(timeout)
+    }
+    options[:metadata] = prepare_metadata(metadata) if metadata
 
-    # Serialize request to JSON bytes
-    request_bytes = JSON.generate(request).encode("UTF-8")
-
-    # Call RPC and collect responses
+    # Call server streaming RPC using ClientStub
     responses = []
-    enum = stub.call(
-      request_bytes,
-      metadata: prepare_metadata(metadata),
-      timeout: timeout
+    enum = @stub.server_streamer(
+      method_path,
+      request,
+      self.class.method(:marshal),
+      self.class.method(:unmarshal),
+      **options
     )
 
-    enum.each do |response_bytes|
-      responses << JSON.parse(response_bytes.b)
+    # Collect all responses from the stream
+    enum.each do |response|
+      responses << response
     end
 
     responses
@@ -171,25 +204,31 @@ class GrpcTestClient
   # @return [Hash] Response data as dictionary
   #
   def execute_client_streaming(service_name, method_name, requests, metadata: nil, timeout: nil)
-    raise "Channel not initialized. Use with_connection block." unless @channel
+    raise "Stub not initialized. Use with_connection block." unless @stub
 
     method_path = "/#{service_name}/#{method_name}"
 
-    # Create client streaming RPC stub
-    stub = create_client_streaming_stub(method_path)
-
     # Create request enumerator
-    request_enum = requests.map { |req| JSON.generate(req).encode("UTF-8") }
+    request_enum = Enumerator.new do |yielder|
+      requests.each { |req| yielder.yield req }
+    end
 
-    # Call RPC
-    response_bytes = stub.call(
+    # Build options hash
+    options = {
+      deadline: compute_deadline(timeout)
+    }
+    options[:metadata] = prepare_metadata(metadata) if metadata
+
+    # Call client streaming RPC using ClientStub
+    response = @stub.client_streamer(
+      method_path,
       request_enum,
-      metadata: prepare_metadata(metadata),
-      timeout: timeout
+      self.class.method(:marshal),
+      self.class.method(:unmarshal),
+      **options
     )
 
-    # Deserialize response
-    JSON.parse(response_bytes.b)
+    response
   rescue StandardError => e
     raise_grpc_error(e)
   end
@@ -206,26 +245,34 @@ class GrpcTestClient
   # @return [Array<Hash>] List of response messages
   #
   def execute_bidirectional(service_name, method_name, requests, metadata: nil, timeout: nil)
-    raise "Channel not initialized. Use with_connection block." unless @channel
+    raise "Stub not initialized. Use with_connection block." unless @stub
 
     method_path = "/#{service_name}/#{method_name}"
 
-    # Create bidirectional streaming RPC stub
-    stub = create_bidirectional_stub(method_path)
-
     # Create request enumerator
-    request_enum = requests.map { |req| JSON.generate(req).encode("UTF-8") }
+    request_enum = Enumerator.new do |yielder|
+      requests.each { |req| yielder.yield req }
+    end
 
-    # Call RPC and collect responses
+    # Build options hash
+    options = {
+      deadline: compute_deadline(timeout)
+    }
+    options[:metadata] = prepare_metadata(metadata) if metadata
+
+    # Call bidirectional streaming RPC using ClientStub
     responses = []
-    enum = stub.call(
+    enum = @stub.bidi_streamer(
+      method_path,
       request_enum,
-      metadata: prepare_metadata(metadata),
-      timeout: timeout
+      self.class.method(:marshal),
+      self.class.method(:unmarshal),
+      **options
     )
 
-    enum.each do |response_bytes|
-      responses << JSON.parse(response_bytes.b)
+    # Collect all responses from the stream
+    enum.each do |response|
+      responses << response
     end
 
     responses
@@ -236,83 +283,28 @@ class GrpcTestClient
   private
 
   ##
-  # Create unary RPC stub.
+  # Compute deadline from timeout in seconds.
   #
-  # @param method_path [String] Full method path (e.g., "/service/Method")
+  # @param timeout [Float, nil] Timeout in seconds
   #
-  # @return [GRPC::GenericService::Stub] Unary stub
+  # @return [Time, nil] Deadline time or nil for no timeout
   #
-  def create_unary_stub(method_path)
-    @channel.create_call(
-      method_path,
-      nil,
-      nil,
-      nil,
-      {}
-    )
+  def compute_deadline(timeout)
+    return nil if timeout.nil?
+
+    Time.now + timeout
   end
 
   ##
-  # Create server streaming RPC stub.
-  #
-  # @param method_path [String] Full method path (e.g., "/service/Method")
-  #
-  # @return [GRPC::GenericService::Stub] Server streaming stub
-  #
-  def create_server_streaming_stub(method_path)
-    @channel.create_call(
-      method_path,
-      nil,
-      nil,
-      nil,
-      {}
-    )
-  end
-
-  ##
-  # Create client streaming RPC stub.
-  #
-  # @param method_path [String] Full method path (e.g., "/service/Method")
-  #
-  # @return [GRPC::GenericService::Stub] Client streaming stub
-  #
-  def create_client_streaming_stub(method_path)
-    @channel.create_call(
-      method_path,
-      nil,
-      nil,
-      nil,
-      {}
-    )
-  end
-
-  ##
-  # Create bidirectional streaming RPC stub.
-  #
-  # @param method_path [String] Full method path (e.g., "/service/Method")
-  #
-  # @return [GRPC::GenericService::Stub] Bidirectional stub
-  #
-  def create_bidirectional_stub(method_path)
-    @channel.create_call(
-      method_path,
-      nil,
-      nil,
-      nil,
-      {}
-    )
-  end
-
-  ##
-  # Convert standard errors to gRPC RpcError for consistent error handling.
+  # Convert standard errors to gRPC error for consistent error handling.
   #
   # @param error [StandardError] Original error
   #
-  # @raise [GRPC::RpcError] Converted gRPC error
+  # @raise [GRPC::BadStatus] Converted gRPC error
   #
   def raise_grpc_error(error)
     # If already a gRPC error, re-raise as-is
-    raise error if error.is_a?(GRPC::RpcError)
+    raise error if error.is_a?(GRPC::BadStatus)
 
     # Wrap other errors as gRPC errors
     raise GRPC::BadStatus.new(GRPC::Core::StatusCodes::INTERNAL, error.message)

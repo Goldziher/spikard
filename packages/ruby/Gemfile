@@ -14,6 +14,6 @@ gem 'simplecov-lcov', '~> 0.8', require: false
 gem 'steep', '~> 1.10', require: false
 gem 'websocket-client-simple', '~> 0.8'
 
-# gRPC support for RPC services
-gem 'grpc', '~> 1.60'
-gem 'grpc-tools', '~> 1.60', require: false  # Development: protobuf code generation
+# gRPC support for RPC services (allow 1.76.0+)
+gem 'grpc', '~> 1.76'
+gem 'grpc-tools', '~> 1.76', require: false  # Development: protobuf code generation
