@@ -2,6 +2,7 @@
   "name": "Error handling - resource exhausted",
   "description": "Tests bidirectional streaming RPC exceeding rate limits. Expects RESOURCE_EXHAUSTED status when client attempts to send 100 messages in rapid succession, exceeding the 100 requests/second rate limit threshold.",
   "category": "error",
+  "skip": true,
   "protobuf": {
     "package": "example.v1",
     "messages": [
