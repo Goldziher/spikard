@@ -40,6 +40,9 @@ hmac = "0.12"
 sha2 = "0.10"
 uuid = { version = "1.19", features = ["v4", "js"] }
 time = { version = "0.3", default-features = false, features = ["formatting", "parsing", "macros", "std"] }
+bytes = "1.11"
+futures = "0.3"
+async-stream = "0.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

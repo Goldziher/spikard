@@ -3,15 +3,19 @@
 //! This module implements the GrpcHandler trait using napi-rs ThreadsafeFunction
 //! to call JavaScript handlers from Rust's async gRPC server.
 
+use async_stream::stream;
 use bytes::Bytes;
+use futures_util::StreamExt;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
+use spikard_http::grpc::streaming::{MessageStream, StreamingRequest};
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
+use tokio::sync::mpsc;
 use tonic::metadata::{MetadataMap, MetadataValue};
 
 /// gRPC request object passed to JavaScript handlers
@@ -41,6 +45,43 @@ pub struct GrpcResponse {
     /// Optional gRPC metadata to include in response
     #[napi(ts_type = "Record<string, string> | undefined")]
     pub metadata: Option<HashMap<String, String>>,
+}
+
+/// JavaScript-side gRPC message stream for client streaming RPC
+///
+/// Wraps a Rust MessageStream and exposes JavaScript async iterator protocol
+/// so JavaScript handlers can consume incoming messages as an async iterable.
+#[napi]
+pub struct GrpcMessageStream {
+    /// Channel to receive messages from the stream
+    receiver: Arc<tokio::sync::Mutex<mpsc::UnboundedReceiver<std::result::Result<Bytes, String>>>>,
+}
+
+#[napi]
+impl GrpcMessageStream {
+    /// Get the next message from the stream
+    ///
+    /// Returns a Promise that resolves to the next message Buffer or null if stream is done.
+    /// Throws an error if the stream encounters an error.
+    #[napi]
+    pub async fn next(&self) -> Result<Option<Buffer>> {
+        let mut receiver = self.receiver.lock().await;
+
+        match receiver.recv().await {
+            Some(Ok(bytes)) => {
+                // Convert Bytes to Buffer
+                Ok(Some(Buffer::from(bytes.as_ref())))
+            }
+            Some(Err(err_msg)) => {
+                // Stream error
+                Err(Error::from_reason(err_msg))
+            }
+            None => {
+                // Stream exhausted
+                Ok(None)
+            }
+        }
+    }
 }
 
 /// Convert tonic MetadataMap to JavaScript-friendly HashMap
@@ -75,6 +116,65 @@ fn hashmap_to_metadata(map: &HashMap<String, String>) -> Result<MetadataMap> {
         metadata.insert(key_name, value_bytes);
     }
     Ok(metadata)
+}
+
+/// Create a JavaScript async iterator from a Rust MessageStream
+///
+/// Returns a GrpcMessageStream that JavaScript code can consume using `for await`.
+/// The stream is converted to a channel-based receiver to avoid shared mutable state.
+fn create_js_stream_iterator(stream: MessageStream) -> GrpcMessageStream {
+    let (tx, rx) = mpsc::unbounded_channel();
+
+    // Spawn a task to forward messages from the stream to the channel
+    tokio::spawn(async move {
+        let mut stream = stream;
+        while let Some(result) = stream.next().await {
+            match result {
+                Ok(bytes) => {
+                    if tx.send(Ok(bytes)).is_err() {
+                        // Receiver dropped, stop forwarding
+                        break;
+                    }
+                }
+                Err(status) => {
+                    // Send error and stop
+                    let _ = tx.send(Err(status.message().to_string()));
+                    break;
+                }
+            }
+        }
+        // Channel will be closed when tx is dropped
+    });
+
+    GrpcMessageStream {
+        receiver: Arc::new(tokio::sync::Mutex::new(rx)),
+    }
+}
+
+/// Consume a JavaScript async generator and collect all messages
+///
+/// This is a helper for server streaming and bidirectional streaming implementations.
+/// Since napi-rs doesn't have built-in async generator support, we use a practical workaround:
+/// - For now, we return an error indicating custom JavaScript implementation is needed
+/// - A full implementation would require creating a ThreadsafeFunction for each next() call
+#[allow(dead_code)]
+async fn consume_js_async_generator() -> std::result::Result<Option<Buffer>, String> {
+    // NOTE: This is a limitation of napi-rs with async generators
+    // napi-rs doesn't provide direct support for iterating JavaScript async generators
+    // from Rust code without calling back into the JavaScript runtime repeatedly.
+    //
+    // A working solution requires:
+    // 1. Create a ThreadsafeFunction callback to call generator.next()
+    // 2. Create a loop that awaits each Promise returned by next()
+    // 3. Handle the {done: bool, value: any} protocol
+    //
+    // For a minimal implementation, we recommend:
+    // - Handler returns an async generator in JavaScript
+    // - That generator is consumed on the JavaScript side
+    // - Results are passed back via a different mechanism
+    //
+    // This is documented as a known limitation in the Node.js binding guide
+    Err("Async generator consumption requires handler-side implementation".to_string())
 }
 
 /// Node.js gRPC handler wrapper that implements spikard_http::grpc::GrpcHandler
@@ -146,6 +246,143 @@ impl GrpcHandler for NodeGrpcHandler {
 
     fn service_name(&self) -> &'static str {
         self.service_name
+    }
+
+    fn call_server_stream(
+        &self,
+        request: GrpcRequestData,
+    ) -> Pin<Box<dyn Future<Output = std::result::Result<MessageStream, tonic::Status>> + Send>> {
+        let handler_fn = self.handler_fn.clone();
+        let service_name = self.service_name;
+
+        Box::pin(async move {
+            // Convert Rust request to JavaScript request
+            let js_request = GrpcRequest {
+                service_name: request.service_name.clone(),
+                method_name: request.method_name.clone(),
+                payload: Buffer::from(request.payload.as_ref()),
+                metadata: metadata_to_hashmap(&request.metadata),
+            };
+
+            // For server streaming, we expect the JavaScript handler to directly return
+            // a GrpcResponse (not a stream). The handler should be responsible for
+            // collecting all messages from the stream and returning a single response.
+            //
+            // This limitation exists because napi-rs doesn't have built-in support for
+            // passing async generators across the FFI boundary.
+            //
+            // Implementation strategy for JavaScript handlers:
+            // 1. Server streaming handler receives GrpcRequest
+            // 2. Handler yields a GrpcResponse containing streamed data (e.g., in a repeated field)
+            // 3. Rust converts the response back to a stream
+            //
+            // For true streaming (message-by-message), use the following pattern:
+            // - Create a separate ThreadsafeFunction that can be called repeatedly
+            // - Pass this callback to the handler
+            // - Handler calls the callback for each message
+
+            // We'll use a channel to collect messages from responses
+            let (tx, mut rx) = mpsc::unbounded_channel::<std::result::Result<Bytes, tonic::Status>>();
+
+            // Call the JavaScript handler
+            match handler_fn.call_async(js_request).await {
+                Ok(promise) => {
+                    tokio::spawn(async move {
+                        match promise.await {
+                            Ok(_response) => {
+                                // For now, indicate that server streaming requires
+                                // a different implementation pattern
+                                let _ = tx.send(Err(tonic::Status::unimplemented(
+                                    "Server streaming requires JavaScript handler to implement \
+                                    streaming via callback or return pre-collected messages"
+                                )));
+                            }
+                            Err(e) => {
+                                let _ = tx.send(Err(tonic::Status::internal(format!(
+                                    "Handler promise failed for {}: {}", service_name, e
+                                ))));
+                            }
+                        }
+                    });
+                }
+                Err(e) => {
+                    let _ = tx.send(Err(tonic::Status::internal(format!(
+                        "Handler call failed for {}: {}", service_name, e
+                    ))));
+                }
+            }
+
+            // Convert the channel receiver to a MessageStream
+            let message_stream = stream! {
+                while let Some(result) = rx.recv().await {
+                    yield result;
+                }
+            };
+
+            Ok(Box::pin(message_stream) as MessageStream)
+        })
+    }
+
+    fn call_client_stream(
+        &self,
+        request: StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = std::result::Result<GrpcResponseData, tonic::Status>> + Send>> {
+        let _handler_fn = self.handler_fn.clone();
+
+        Box::pin(async move {
+            // Create a JavaScript async iterator from the message stream
+            let _js_stream = create_js_stream_iterator(request.message_stream);
+
+            // For client streaming, the challenge is passing the stream object to JavaScript
+            // napi-rs doesn't support passing GrpcMessageStream objects directly through ThreadsafeFunction
+            //
+            // Implementation strategy:
+            // 1. Create a GrpcMessageStream (done above)
+            // 2. Register it as a global callback or store in a thread-local
+            // 3. Have the handler call a getter function to retrieve it
+            // 4. Handler consumes the stream and returns a GrpcResponse
+            //
+            // For now, this returns UNIMPLEMENTED to guide users to implement
+            // client-side collection (handler collects all messages and returns response)
+
+            Err(tonic::Status::unimplemented(
+                "Client streaming for Node.js requires handler implementation: \
+                collect all client messages in your handler and return a single GrpcResponse"
+            ))
+        })
+    }
+
+    fn call_bidi_stream(
+        &self,
+        request: StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = std::result::Result<MessageStream, tonic::Status>> + Send>> {
+        let _handler_fn = self.handler_fn.clone();
+
+        Box::pin(async move {
+            // Create a JavaScript async iterator from the incoming message stream
+            let _js_stream = create_js_stream_iterator(request.message_stream);
+
+            // For bidirectional streaming, we need to:
+            // 1. Pass the input stream to the handler
+            // 2. Get back an async generator
+            // 3. Convert that generator to a MessageStream
+            //
+            // This is challenging with napi-rs because:
+            // - We can't pass GrpcMessageStream through ThreadsafeFunction directly
+            // - We can't return async generators from ThreadsafeFunction
+            //
+            // Implementation strategy:
+            // - Store the input stream in a thread-local or global registry
+            // - Pass a stream ID to the handler
+            // - Handler calls getter functions to read from input stream
+            // - Handler calls setter functions to write to output stream
+            // - Rust collects all output messages into a channel-based stream
+
+            Err(tonic::Status::unimplemented(
+                "Bidirectional streaming for Node.js requires handler implementation: \
+                use message collection pattern similar to client streaming"
+            ))
+        })
     }
 }
 

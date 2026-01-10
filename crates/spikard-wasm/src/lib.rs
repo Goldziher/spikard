@@ -10,6 +10,7 @@
 mod lifecycle;
 mod matching;
 mod types;
+pub mod grpc;
 
 use crate::lifecycle::{
     WasmLifecycleHooks, parse_hooks, request_from_payload, request_into_payload, response_from_value,
