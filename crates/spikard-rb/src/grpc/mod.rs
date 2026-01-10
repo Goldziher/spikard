@@ -1,9 +1,7 @@
 //! Ruby gRPC bindings for Spikard
 //!
-//! This module provides a bridge between Ruby code and Spikard's gRPC runtime,
-//! allowing Ruby handlers to process gRPC requests using protobuf serialization.
+//! This module provides a placeholder for Ruby gRPC handler integration.
+//! TODO: Implement Ruby gRPC handlers following the pattern established
+//! in the Python and TypeScript bindings.
 
 pub mod handler;
-
-#[allow(unused_imports)]
-pub use handler::{RubyGrpcHandler, RubyGrpcRequest, RubyGrpcResponse};
