@@ -63,12 +63,12 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.10"
+          python-version: "3.14"
           cache-prefix: build-wheels
 
       - name: Build Python wheels
         shell: bash
-        run: bash scripts/ci/python/build-wheels.sh "3.10"
+        run: bash scripts/ci/python/build-wheels.sh "3.14"
 
       - name: Upload wheels artifact
         uses: actions/upload-artifact@v6
@@ -96,7 +96,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.10"
+          python-version: "3.14"
           cache-prefix: test-python
 
       - name: Download wheels artifact
@@ -133,7 +133,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.10"
+          python-version: "3.14"
           cache-prefix: python-sdist
 
       - name: Sync workspace deps
@@ -166,7 +166,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.10"
+          python-version: "3.14"
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v7

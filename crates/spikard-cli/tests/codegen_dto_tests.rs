@@ -414,7 +414,8 @@ assert instance.message == "hello"
     );
 
     let pythonpath = pythonpath_value(&stub_dir);
-    let status = Command::new("python3")
+    let status = Command::new("uv")
+        .args(&["run", "python"])
         .env("PYTHONPATH", pythonpath)
         .arg("-c")
         .arg(script)
@@ -431,7 +432,8 @@ fn compile_python_file(code: &str) -> Result<()> {
     let module_path = dir.path().join("async_app.py");
     fs::write(&module_path, code)?;
     let pythonpath = pythonpath_value(&stub_dir);
-    let status = Command::new("python3")
+    let status = Command::new("uv")
+        .args(&["run", "python"])
         .env("PYTHONPATH", pythonpath)
         .arg("-m")
         .arg("py_compile")
